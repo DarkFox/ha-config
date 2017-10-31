@@ -1,0 +1,200 @@
+homeassistant:
+  customize:
+    sensor.tradfri_remote_control:
+      icon: mdi:battery
+
+    sensor.external_ip:
+      friendly_name: External IP Address
+      icon: mdi:source-branch
+
+    binary_sensor.workday_sensor:
+      friendly_name: Weekday
+
+    # Speed Test Sensor
+    sensor.speedtest_ping:
+      friendly_name: Ping Speed
+
+    sensor.speedtest_upload:
+      friendly_name: Upload Speed
+
+    sensor.speedtest_download:
+      friendly_name: Download Speed
+
+    # System Info Sensor
+    sensor.cpu_speed:
+      friendly_name: CPU Speed
+
+    sensor.cpu_use:
+      friendly_name: CPU Usage
+
+    sensor.disk_free_:
+      friendly_name: Available Disk
+
+    sensor.ram_free:
+      friendly_name: Available Memory
+
+    sensor.average_load_1m:
+      friendly_name: Average Load - 1 Minutes
+    sensor.average_load_5m:
+      friendly_name: Average Load - 5 Minutes
+    sensor.average_load_15m:
+      friendly_name: Average Load - 15 Minutes
+
+    sensor.last_boot:
+      friendly_name: Last Boot
+
+    sensor.since_last_boot:
+      friendly_name: Up Since
+
+    sensor.time:
+      friendly_name: Time
+
+    sensor.date:
+      friendly_name: Date
+
+    automation.login_failure:
+      friendly_name: Alert Login Failures
+
+    automation.startup_notification:
+      friendly_name: Notify Startup Events
+      icon: mdi:thumb-up
+
+    automation.update_available_notification:
+      friendly_name: Notify of new updates
+      icon: mdi:update
+
+group:
+  System Monitor:
+    entities:
+      - sensor.cpu_use
+      - sensor.ram_free
+      - sensor.disk_free_
+      - sensor.average_load_1m
+      - sensor.average_load_5m
+      - sensor.average_load_15m
+      - sensor.last_boot
+      - sensor.since_last_boot
+      - sensor.ha_installed_version
+      - sensor.ha_current_version
+      - sensor.ha_last_restart
+
+  Internet Speed:
+    entities:
+      - sensor.speedtest_ping
+      - sensor.speedtest_upload
+      - sensor.speedtest_download
+      - sensor.external_ip
+
+  date_time:
+    name: 'Time and Date'
+    entities:
+      - sensor.time
+      - sensor.date
+      - binary_sensor.workday_sensor
+
+  # Travel Time:
+  #   entities:
+  #     - sensor.home2work
+  #     - sensor.work2home
+  #     - sensor.suresh2home
+  #     - sensor.suresh2work
+
+  Home Assistant Automations:
+    entities:
+      - automation.notify_of_new_external_ip
+      - automation.startup_notification
+      - automation.update_available_notification
+
+sensor:
+  - platform: rest
+    resource: http://ip.jsontest.com
+    name: external_ip
+    value_template: '{{ value_json.ip }}'
+    scan_interval: 1800
+
+  - platform: time_date
+    display_options:
+      - 'time'
+      - 'date'
+
+  - platform: speedtest
+    minute:
+      - 0
+      - 30
+    monitored_conditions:
+      - ping
+      - download
+      - upload
+
+  - platform: systemmonitor
+    resources:
+      - type: disk_free
+        arg: /
+      - type: memory_free
+      - type: processor_use
+      - type: last_boot
+      - type: since_last_boot
+      - type: load_1m
+      - type: load_5m
+      - type: load_15m
+
+  - platform: rest
+    resource: https://pypi.python.org/pypi/homeassistant/json
+    name: HA Current Version
+    value_template: '{{ value_json.info.version }}'
+    scan_interval: 86400
+
+  - platform: version
+    name: HA Installed Version
+
+  - platform: template
+    sensors:
+      ha_last_restart:
+        value_template: '{{ as_timestamp(states.automation.startup_notification.attributes.last_triggered) | timestamp_custom("%b %d %X") }}'
+        friendly_name: HA Last Restart
+
+automation:
+  - alias: Notify Of New External IP
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: sensor.external_ip
+    condition:
+      - condition: template
+        value_template: "{% if trigger.from_state and trigger.to_state %} true {% else %} false {% endif %}"
+      - condition: template
+        value_template: "{% if trigger.from_state.state == 'unknown' %} false {% else %} true {% endif %}"
+      - condition: template
+        value_template: "{% if trigger.to_state.state == 'unknown' %} false {% else %} true {% endif %}"
+    action:
+      - service: notify.phone
+        data:
+          message: "Your External IP changed from {{ trigger.from_state.state }} to {{ trigger.to_state.state }}"
+
+  - alias: Update Available Notification
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: updater.updater
+    action:
+      - service: notify.mac
+        data:
+          message: "New HASS update is available. Please update!"
+
+  - alias: Clear TTS Cache
+    initial_state: true
+    trigger:
+      platform: time
+      at: '4:45:00'
+    action:
+      service: tts.clear_cache
+
+  - alias: Startup Notification
+    initial_state: true
+    trigger:
+      platform: homeassistant
+      event: start
+    action:
+      - service: notify.mac
+        data:
+          message: "Home Assistant has successfully rebooted!"

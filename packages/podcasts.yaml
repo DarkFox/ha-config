@@ -1,0 +1,28 @@
+homeassistant:
+  customize:
+    sensor.podcast_bbc_minute:
+      friendly_name: Latest BBC Minute Episode
+    sensor.podcast_daily_tech_news_show:
+      friendly_name: Latest Daily Tech News Show Episode
+
+sensor:
+  - platform: scrape
+    resource: http://wsrss.bbc.co.uk/bizdev/bbcminute/bbcminute.rss
+    name: podcast_bbc_minute
+    select: 'enclosure:nth-of-type(1)'
+    attribute: url
+    scan_interval: 900
+
+  - platform: scrape
+    resource: http://feeds.feedburner.com/DailyTechNewsShow
+    name: podcast_daily_tech_news_show
+    select: 'enclosure:nth-of-type(1)'
+    attribute: url
+    scan_interval: 1800
+
+  - platform: scrape
+    resource: http://arkiv.radio24syv.dk/audiopodcast/channel/3561248
+    name: podcast_24syv_nyheder
+    select: 'enclosure:nth-of-type(1)'
+    attribute: url
+    scan_interval: 900

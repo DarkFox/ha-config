@@ -1,0 +1,215 @@
+homeassistant:
+  customize:
+    input_select.theme:
+      persistent: true
+    input_select.light_profile:
+      persistent: true
+
+group:
+  light_profile:
+    name: Light Profile
+    entities:
+      - input_select.theme
+      - input_select.light_profile
+
+  light_profile_triggers:
+    name: Light Profile Triggers
+    entities:
+      - group.hallway_motion_triggers
+      - group.bathroom_motion_triggers
+      - group.kitchen_motion_triggers
+      - group.livingroom_motion_triggers
+      - group.office_motion_triggers
+      - group.bedroom_motion_triggers
+
+  light_profile_rooms:
+    entities:
+      - group.hallway_light_profile
+      - group.bathroom_light_profile
+      - group.kitchen_light_profile
+      - group.livingroom_light_profile
+      - group.office_light_profile
+      - group.bedroom_light_profile
+
+  light_profile_themes:
+    entities:
+      - input_select.theme
+      - sensor.theme_primary_color
+      - sensor.theme_primary_color_hue
+      - sensor.theme_secondary_color
+
+input_select:
+  light_profile:
+    name: Light Profile
+    options:
+      - Bright
+      - Default
+      - Dimmed
+      - Ambient
+      - Night
+      - 'Off'
+    initial: Default
+  inactive_light_profile:
+    name: Inactive Light Profile
+    options:
+      - Default
+      - Dimmed
+      - Ambient
+      - Night
+      - 'Off'
+    initial: Dimmed
+
+  theme:
+    name: Theme
+    options:
+      - Tron
+      - Halloween
+      - Little
+      - Portal
+      - Red and Blue
+      - Yellow and Green
+      - Screaming Pink
+      - Red
+      - Green
+      - Blue
+      - Yellow
+      - Purple
+    initial: Portal
+
+sensor:
+  - platform: template
+    sensors:
+      theme_primary_color: # Usually the warmer color
+        friendly_name: Primary Color
+        value_template: >
+          {% if is_state('input_select.theme', 'Tron') -%}
+            255,49,0
+          {% elif is_state('input_select.theme', 'Halloween') -%}
+            255,25,0
+          {% elif is_state('input_select.theme', 'Little') -%}
+            255,24,240
+          {% elif is_state('input_select.theme', 'Portal') -%}
+            255,25,0
+          {% elif is_state('input_select.theme', 'Red and Blue') -%}
+            255,0,0
+          {% elif is_state('input_select.theme', 'Yellow and Green') -%}
+            255,49,0
+          {% elif is_state('input_select.theme', 'Screaming Pink') -%}
+            255,0,127
+          {% elif is_state('input_select.theme', 'Red') -%}
+            255,0,0
+          {% elif is_state('input_select.theme', 'Green') -%}
+            64,255,0
+          {% elif is_state('input_select.theme', 'Blue') -%}
+            0,0,255
+          {% elif is_state('input_select.theme', 'Yellow') -%}
+            255,25,0
+          {% elif is_state('input_select.theme', 'Purple') -%}
+            156,0,255
+          {% endif -%}
+      theme_primary_color_hue: # Adjusted colors for hue bulbs, because they're weird.
+        friendly_name: Primary Color Hue Bulbs
+        value_template: >
+          {% if is_state('input_select.theme', 'Tron') -%}
+            255,174,0
+          {% elif is_state('input_select.theme', 'Halloween') -%}
+            255,112,0
+          {% elif is_state('input_select.theme', 'Little') -%}
+            145,53,255
+          {% elif is_state('input_select.theme', 'Portal') -%}
+            255,112,0
+          {% elif is_state('input_select.theme', 'Red and Blue') -%}
+            255,0,0
+          {% elif is_state('input_select.theme', 'Yellow and Green') -%}
+            255,174,0
+          {% elif is_state('input_select.theme', 'Screaming Pink') -%}
+            255,0,252
+          {% elif is_state('input_select.theme', 'Red') -%}
+            255,0,0
+          {% elif is_state('input_select.theme', 'Green') -%}
+            64,255,0
+          {% elif is_state('input_select.theme', 'Blue') -%}
+            0,0,255
+          {% elif is_state('input_select.theme', 'Yellow') -%}
+            255,174,0
+          {% elif is_state('input_select.theme', 'Purple') -%}
+            122,0,255
+          {% endif -%}
+
+      theme_secondary_color: # Usually the colder color
+        friendly_name: Secondary Color
+        value_template: >
+          {% if is_state('input_select.theme', 'Tron') -%}
+            0,255,252
+          {% elif is_state('input_select.theme', 'Halloween') -%}
+            156,0,255
+          {% elif is_state('input_select.theme', 'Little') -%}
+            9,67,255
+          {% elif is_state('input_select.theme', 'Portal') -%}
+            0,25,255
+          {% elif is_state('input_select.theme', 'Red and Blue') -%}
+            0,0,255
+          {% elif is_state('input_select.theme', 'Yellow and Green') -%}
+            0,255,0
+          {% elif is_state('input_select.theme', 'Screaming Pink') -%}
+            255,0,127
+          {% elif is_state('input_select.theme', 'Red') -%}
+            255,0,0
+          {% elif is_state('input_select.theme', 'Green') -%}
+            0,255,0
+          {% elif is_state('input_select.theme', 'Blue') -%}
+            0,127,255
+          {% elif is_state('input_select.theme', 'Yellow') -%}
+            255,49,0
+          {% elif is_state('input_select.theme', 'Purple') -%}
+            255,24,240
+          {% endif -%}
+
+automation:
+  - alias: Inactive Light Profile Setter
+    trigger:
+      platform: state
+      entity_id: input_select.light_profile
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.inactive_light_profile
+        option: >
+          {% if is_state('input_select.light_profile', 'Bright') %}
+            Default
+          {% elif is_state('input_select.light_profile', 'Default') %}
+            Dimmed
+          {% elif is_state('input_select.light_profile', 'Dimmed') %}
+            Ambient
+          {% elif is_state('input_select.light_profile', 'Ambient') %}
+            Night
+          {% else %}
+            Off
+          {% endif %}
+
+
+scene:
+  - name: Bright
+    entities:
+      input_select.light_profile:
+        option: 'Bright'
+  - name: Default
+    entities:
+      input_select.light_profile:
+        option: 'Default'
+  - name: Dimmed
+    entities:
+      input_select.light_profile:
+        option: 'Dimmed'
+  - name: Ambient
+    entities:
+      input_select.light_profile:
+        option: 'Ambient'
+  - name: Night
+    entities:
+      input_select.light_profile:
+        option: 'Night'
+  - name: Off
+    entities:
+      input_select.light_profile:
+        option: 'Off'

@@ -1,0 +1,103 @@
+group:
+  playlist:
+    name: Playlist
+    entities:
+      - input_select.playlist
+      - input_select.playlist_player
+
+input_select:
+  playlist:
+    name: Playlist
+    options:
+      - ''
+  playlist_player:
+    name: Playlist Player
+    initial: None
+    options:
+      - None
+      - media_player.all_speakers
+      - media_player.bedroom_speakers
+      - media_player.east_side_speakers
+      - media_player.kitchen_chromecast
+      - media_player.kitchen_speakers
+      - media_player.office
+      - media_player.office_soundbar
+      - media_player.office_speakers
+      - media_player.projector_chromecast
+      - media_player.tv_chromecast
+      - media_player.tv_soundbar
+      - media_player.west_side_speakers
+
+automation:
+  - alias: playlist_start
+    trigger:
+      platform: state
+      entity_id: input_select.playlist
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: "{{ not is_state('input_select.playlist_player', 'None') }}"
+        - condition: template
+          value_template: "{{ not is_state('input_select.playlist', '') }}"
+        - condition: template
+          value_template: "{{ not is_state('input_select.playlist', '==END==') }}"
+    action:
+      service: media_player.play_media
+      data_template:
+        entity_id: "{{ states.input_select.playlist_player.state }}"
+        media_content_id: "{{ states.input_select.playlist.state }}"
+        media_content_type: EPISODE
+
+  - alias: playlist_next
+    trigger:
+      platform: state
+      entity_id:
+        - media_player.all_speakers
+        - media_player.bedroom_speakers
+        - media_player.east_side_speakers
+        - media_player.kitchen_chromecast
+        - media_player.kitchen_speakers
+        - media_player.office
+        - media_player.office_soundbar
+        - media_player.office_speakers
+        - media_player.projector_chromecast
+        - media_player.tv_chromecast
+        - media_player.tv_soundbar
+        - media_player.west_side_speakers
+      from: 'playing'
+      to: 'idle'
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: "{{ is_state(states.input_select.playlist_player.state, 'idle') }}"
+        - condition: template
+          value_template: "{{ not is_state('input_select.playlist_player', 'None') }}"
+        - condition: template
+          value_template: "{{ not is_state('input_select.playlist', '') }}"
+        - condition: template
+          value_template: "{{ not is_state('input_select.playlist', '==END==') }}"
+    action:
+      service: input_select.select_next
+      data:
+        entity_id: input_select.playlist
+
+  - alias: playlist_end
+    trigger:
+      platform: state
+      entity_id: input_select.playlist
+      to: '==END=='
+    action:
+      - service: media_player.turn_off
+        data_template:
+          entity_id: "{{ states.input_select.playlist_player.state }}"
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.playlist_player
+          option: 'None'
+      - service: input_select.set_options
+        data:
+          entity_id: input_select.playlist
+          options:
+            - ''

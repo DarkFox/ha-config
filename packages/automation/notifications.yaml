@@ -1,0 +1,50 @@
+automation:
+  - alias: Bathroom Window Warning
+    trigger:
+      platform: state
+      entity_id: binary_sensor.apartment_door
+      to: 'on'
+    condition:
+      condition: state
+      entity_id: binary_sensor.bathroom_window
+      state: 'on'
+    action:
+      - service: notify.phone
+        data:
+          title: "Home Assistant"
+          message: "The bathroom window is open, remember to close it before leaving!"
+          data:
+            icon: https://goo.gl/xeetdy
+
+  - alias: Bathroom Aired Out
+    trigger:
+      platform: numeric_state
+      entity_id: sensor.toilet_mould_indicator
+      below: 66
+    condition:
+      condition: state
+      entity_id: binary_sensor.bathroom_window
+      state: 'on'
+    action:
+      - service: notify.phone
+        data:
+          title: "Home Assistant"
+          message: "Bathroom sufficiently aired out, you can close the window now."
+          data:
+            icon: https://goo.gl/xeetdy
+
+  - alias: Apartment Door Lock Notification
+    trigger:
+      platform: state
+      entity_id: binary_sensor.apartment_lock
+      to: 'on'
+      for:
+        minutes: 3
+    action:
+      - service: notify.phone
+        data_template:
+          title: Home Assistant
+          message: "Apartment door is not locked!"
+          data:
+            icon: https://goo.gl/xeetdy
+            vibration: 0,500,100,500,100,500

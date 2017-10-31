@@ -1,0 +1,117 @@
+group:
+  hallway_tablet:
+    name: Hallway Tablet
+    entities:
+      - input_number.hallway_tablet_brightness
+      - switch.hallway_tablet
+  kitchen_tablet:
+    name: Kitchen Tablet
+    entities:
+      - input_number.kitchen_tablet_brightness
+      - switch.kitchen_tablet
+
+input_number:
+  hallway_tablet_brightness:
+    name: Hallway Tablet Brightness
+    initial: 30
+    min: 0
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:white-balance-sunny
+  kitchen_tablet_brightness:
+    name: Kitchen Tablet Brightness
+    initial: 30
+    min: 0
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:white-balance-sunny
+
+automation:
+  - alias: Hallway Tablet Brightness Moved
+    trigger:
+      platform: state
+      entity_id: input_number.hallway_tablet_brightness
+    action:
+      - service: joaoapps_join.nexus_send_tasker
+        data_template:
+          command: 'brightness=:={{ states.input_number.hallway_tablet_brightness.state }}'
+
+  - alias: Hallway Tablet Brightness Changed
+    trigger:
+      platform: state
+      entity_id: sensor.hallway_tablet_brightness
+    action:
+       service: input_number.set_value
+       data_template:
+        entity_id: input_number.hallway_tablet_brightness
+        value: '{{ states.sensor.hallway_tablet_brightness.state | int }}'
+
+  - alias: Kitchen Tablet Brightness Moved
+    trigger:
+      platform: state
+      entity_id: input_number.kitchen_tablet_brightness
+    action:
+      - service: joaoapps_join.tablet_send_tasker
+        data_template:
+          command: 'brightness=:={{ states.input_number.kitchen_tablet_brightness.state }}'
+
+  - alias: Kitchen Tablet Brightness Changed
+    trigger:
+      platform: state
+      entity_id: sensor.kitchen_tablet_brightness
+    action:
+       service: input_number.set_value
+       data_template:
+        entity_id: input_number.kitchen_tablet_brightness
+        value: '{{ states.sensor.kitchen_tablet_brightness.state | int }}'
+
+switch:
+  - platform: command_line
+    switches:
+      xperia_switch:
+        command_on: "curl -X POST -d 'command=ON' http://192.168.33.104:8765/screen"
+        command_off: "curl -X POST -d 'command=OFF' http://192.168.33.104:8765/screen"
+      kitchen_tablet_switch:
+        command_on: "curl -X POST -d 'command=ON' http://192.168.33.100:8765/screen"
+        command_off: "curl -X POST -d 'command=OFF' http://192.168.33.100:8765/screen"
+      hallway_tablet_switch:
+        command_on: "curl -X POST -d 'command=ON' http://192.168.33.105:8765/screen"
+        command_off: "curl -X POST -d 'command=OFF' http://192.168.33.105:8765/screen"
+
+  - platform: template
+    switches:
+      xperia:
+        friendly_name: Xperia Tablet
+        value_template: "{{ is_state('binary_sensor.xperia_state', 'on') }}"
+        turn_on:
+          service: switch.turn_on
+          data:
+            entity_id: switch.xperia_switch
+        turn_off:
+          service: switch.turn_off
+          data:
+            entity_id: switch.xperia_switch
+      kitchen_tablet:
+        friendly_name: Kitchen Tablet
+        value_template: "{{ is_state('binary_sensor.kitchen_tablet_state', 'on') }}"
+        turn_on:
+          service: switch.turn_on
+          data:
+            entity_id: switch.kitchen_tablet_switch
+        turn_off:
+          service: switch.turn_off
+          data:
+            entity_id: switch.kitchen_tablet_switch
+      hallway_tablet:
+        friendly_name: Hallway Tablet
+        value_template: "{{ is_state('binary_sensor.hallway_tablet_state', 'on') }}"
+        turn_on:
+          service: switch.turn_on
+          data:
+            entity_id: switch.hallway_tablet_switch
+        turn_off:
+          service: switch.turn_off
+          data:
+            entity_id: switch.hallway_tablet_switch

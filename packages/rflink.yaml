@@ -1,0 +1,284 @@
+rflink:
+  port: /dev/ttyACM1
+
+light:
+  platform: rflink
+  automatic_add: false
+  device_defaults:
+    fire_event: true
+    signal_repetitions: 2
+
+switch:
+  platform: rflink
+  device_defaults:
+    fire_event: true
+    signal_repetitions: 2
+  devices:
+    # Apartment Door Lock
+    ev1527_03d3e0_0a:
+      name: apartment_lock_open
+      fire_event: true
+    ev1527_03d3e0_0e:
+      name: apartment_lock_close
+      fire_event: true
+
+    # Door Switches
+    ev1527_03b350_0a:
+      name: apartment_door_open
+      fire_event: true
+    ev1527_03b350_0e:
+      name: apartment_door_close
+      fire_event: true
+
+    ev1527_03d4d0_0a:
+      name: bathroom_window_open
+      fire_event: true
+    ev1527_03d4d0_0e:
+      name: bathroom_window_close
+      fire_event: true
+
+    # Power Switches - Old
+    tristate_80aaa1_10: # 1
+      name: Kitchen TV
+    tristate_80aaa4_10: # 2
+      name: Switch 2
+    tristate_80aa90_10: # 3
+      name: Switch 3
+
+    # Power Switches - New
+    tristate_82a2a1_10: # 1
+      name: office_desk_speaker_switch
+      aliases:
+        - tristate_8a22a1_10
+    tristate_82a2a4_10: # 2
+      name: bedroom_speaker_switch
+      aliases:
+        - tristate_8a22a4_10
+    tristate_82a290_10: # 3
+      name: Bedroom Fan
+      aliases:
+        - tristate_8a2290_10
+    tristate_82a260_10: # 4
+      name: kitchen_speaker_switch
+      aliases:
+        - tristate_8a2260_10
+    tristate_8a21a0_10: # 5
+      name: Vacuum Charger
+      aliases:
+        - tristate_82a1a0_10
+
+    # Sensors
+    conrad_c2785c_0a:
+      name: Storage Room Motion
+
+    # Livingroom Remote:
+    ev1527_06f890_01:
+      name: livingroom_remote_off
+    ev1527_06f890_04:
+      name: livingroom_remote_light
+    ev1527_06f890_05:
+      name: livingroom_remote_bright_plus
+    ev1527_06f890_06:
+      name: livingroom_remote_bright_minus
+    ev1527_06f890_07:
+      name: livingroom_remote_100
+    ev1527_06f890_08:
+      name: livingroom_remote_50
+    ev1527_06f890_09:
+      name: livingroom_remote_25
+    ev1527_06f890_0b:
+      name: livingroom_remote_mode_plus
+    ev1527_06f891_01:
+      name: livingroom_remote_mode_minus
+    ev1527_06f890_0d:
+      name: livingroom_remote_speed_minus
+    ev1527_06f890_0f:
+      name: livingroom_remote_speed_plus
+
+    # Bedroom Remote:
+    ev1527_023870_01:
+      name: bedroom_remote_off
+    ev1527_023870_04:
+      name: bedroom_remote_light
+    ev1527_023870_05:
+      name: bedroom_remote_bright_plus
+    ev1527_023870_06:
+      name: bedroom_remote_bright_minus
+    ev1527_023870_07:
+      name: bedroom_remote_100
+    ev1527_023870_08:
+      name: bedroom_remote_50
+    ev1527_023870_09:
+      name: bedroom_remote_25
+    ev1527_023870_0b:
+      name: bedroom_remote_mode_plus
+    ev1527_023871_01:
+      name: bedroom_remote_mode_minus
+    ev1527_023870_0d:
+      name: bedroom_remote_speed_minus
+    ev1527_023870_0f:
+      name: bedroom_remote_speed_plus
+
+sensor:
+  platform: rflink
+  automatic_add: false
+
+homeassistant:
+  customize:
+    switch.office_desk_speaker_switch:
+      friendly_name: Office Desk Speaker Switch
+      icon: mdi:speaker
+      assumed_state: false
+    switch.bedroom_speaker_switch:
+      friendly_name: Bedroom Speaker Switch
+      icon: mdi:speaker
+      assumed_state: false
+    switch.kitchen_speaker_switch:
+      friendly_name: Kitchen Speaker Switch
+      icon: mdi:speaker
+      assumed_state: false
+
+    switch.apartment_lock_open:
+      hidden: true
+    switch.apartment_lock_close:
+      hidden: true
+    switch.apartment_door_open:
+      hidden: true
+    switch.apartment_door_close:
+      hidden: true
+    input_boolean.apartment_door:
+      hidden: true
+    switch.bathroom_window_open:
+      hidden: true
+    switch.bathroom_window_close:
+      hidden: true
+    input_boolean.bathroom_window:
+      hidden: true
+
+automation:
+  - alias: apartment_lock_open
+    trigger:
+      platform: event
+      event_type: button_pressed
+      event_data:
+        entity_id: switch.apartment_lock_open
+    action:
+      service: input_boolean.turn_on
+      data:
+        entity_id: input_boolean.apartment_lock
+
+  - alias: apartment_lock_close
+    trigger:
+      platform: event
+      event_type: button_pressed
+      event_data:
+        entity_id: switch.apartment_lock_close
+    action:
+      service: input_boolean.turn_off
+      data:
+        entity_id: input_boolean.apartment_lock
+
+  - alias: apartment_door_open
+    trigger:
+      platform: event
+      event_type: button_pressed
+      event_data:
+        entity_id: switch.apartment_door_open
+    action:
+      service: input_boolean.turn_on
+      data:
+        entity_id: input_boolean.apartment_door
+
+  - alias: apartment_door_close
+    trigger:
+      platform: event
+      event_type: button_pressed
+      event_data:
+        entity_id: switch.apartment_door_close
+    action:
+      service: input_boolean.turn_off
+      data:
+        entity_id: input_boolean.apartment_door
+
+
+  - alias: bathroom_window_open
+    trigger:
+      platform: event
+      event_type: button_pressed
+      event_data:
+        entity_id: switch.bathroom_window_open
+    action:
+      service: input_boolean.turn_on
+      data:
+        entity_id: input_boolean.bathroom_window
+
+  - alias: bathroom_window_close
+    trigger:
+      platform: event
+      event_type: button_pressed
+      event_data:
+        entity_id: switch.bathroom_window_close
+    action:
+      service: input_boolean.turn_off
+      data:
+        entity_id: input_boolean.bathroom_window
+
+input_boolean:
+  apartment_lock:
+    initial: off
+  apartment_door:
+    initial: off
+  bathroom_window:
+    initial: off
+
+binary_sensor:
+  - platform: template
+    sensors:
+      apartment_lock:
+        friendly_name: Apartment Door Lock
+        entity_id: input_boolean.apartment_lock
+        value_template: "{{ is_state('input_boolean.apartment_lock', 'on') }}"
+        device_class: safety
+
+      apartment_door:
+        friendly_name: Apartment Door
+        entity_id: input_boolean.apartment_door
+        value_template: "{{ is_state('input_boolean.apartment_door', 'on') }}"
+        device_class: opening
+
+      bathroom_window:
+        friendly_name: Bathroom Window
+        entity_id: input_boolean.bathroom_window
+        value_template: "{{ is_state('input_boolean.bathroom_window', 'on') }}"
+        device_class: opening
+
+group:
+  livingroom_remote:
+    name: Livingroom Remote
+    entities:
+      - switch.livingroom_remote_off
+      - switch.livingroom_remote_light
+      - switch.livingroom_remote_bright_plus
+      - switch.livingroom_remote_bright_minus
+      - switch.livingroom_remote_100
+      - switch.livingroom_remote_50
+      - switch.livingroom_remote_25
+      - switch.livingroom_remote_mode_plus
+      - switch.livingroom_remote_mode_minus
+      - switch.livingroom_remote_speed_minus
+      - switch.livingroom_remote_speed_plus
+
+  bedroom_remote:
+    name: Bedroom Remote
+    entities:
+      - switch.bedroom_remote_off
+      - switch.bedroom_remote_light
+      - switch.bedroom_remote_bright_plus
+      - switch.bedroom_remote_bright_minus
+      - switch.bedroom_remote_100
+      - switch.bedroom_remote_50
+      - switch.bedroom_remote_25
+      - switch.bedroom_remote_mode_plus
+      - switch.bedroom_remote_mode_minus
+      - switch.bedroom_remote_speed_minus
+      - switch.bedroom_remote_speed_plus

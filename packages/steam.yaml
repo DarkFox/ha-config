@@ -1,0 +1,17 @@
+homeassistant:
+  customize:
+    sensor.steam_game:
+      icon: mdi:gamepad
+
+sensor:
+  - platform: steam_online
+    api_key: !secret steam_api_key
+    accounts:
+      - 76561197970641649
+
+  - platform: template
+    sensors:
+      steam_game:
+        friendly_name: Playing Now
+        value_template: "{{ states.sensor.steam_76561197970641649.attributes.Game if states.sensor.steam_76561197970641649 else 'None' }}"
+        entity_id: sensor.steam_76561197970641649

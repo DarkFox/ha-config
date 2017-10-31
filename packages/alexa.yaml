@@ -1,0 +1,283 @@
+automation:
+  - alias: alexa_timer
+    trigger:
+      platform: state
+      entity_id: sensor.alexa_timer
+    action:
+      service: script.turn_on
+      entity_id: script.alexa_timer
+
+  - alias: alexa_alarm
+    trigger:
+      platform: state
+      entity_id: sensor.alexa_alarm
+    action:
+      service: script.turn_on
+      entity_id: script.alexa_alarm
+
+script:
+  alexa_timer:
+    sequence:
+      - service: mqtt.publish
+        data:
+          topic: "milight/0x4242/rgb_cct/1"
+          payload: "{'status': 'on', 'mode': 7}"
+      - service: mqtt.publish
+        data:
+          topic: "milight/0x4243/rgb_cct/2"
+          payload: "{'status': 'on', 'mode': 7}"
+      - service: mqtt.publish
+        data:
+          topic: "milight/0x7E92/rgbw/3"
+          payload: "{'status': 'on', 'mode': 6}"
+      - delay:
+          seconds: 20
+      - service: mqtt.publish
+        data:
+          topic: "milight/0x4242/rgb_cct/1"
+          payload: "{'status': 'off'}"
+      - service: mqtt.publish
+        data:
+          topic: "milight/0x4242/rgb_cct/1"
+          payload: "{'status': 'off'}"
+      - service: mqtt.publish
+        data:
+          topic: "milight/0x4243/rgb_cct/2"
+          payload: "{'status': 'off'}"
+
+  alexa_alarm:
+    sequence:
+      - service: mqtt.publish
+        data:
+          topic: "milight/0x4242/rgb_cct/1"
+          payload: "{'status': 'on', 'mode': 6}"
+      - service: mqtt.publish
+        data:
+          topic: "milight/0x4243/rgb_cct/2"
+          payload: "{'status': 'on', 'mode': 6}"
+      - service: mqtt.publish
+        data:
+          topic: "milight/0x7E92/rgbw/3"
+          payload: "{'status': 'on', 'mode': 5}"
+      - delay:
+          seconds: 60
+      - service: mqtt.publish
+        data:
+          topic: "milight/0x4242/rgb_cct/1"
+          payload: "{'status': 'off'}"
+      - service: mqtt.publish
+        data:
+          topic: "milight/0x4242/rgb_cct/1"
+          payload: "{'status': 'off'}"
+      - service: mqtt.publish
+        data:
+          topic: "milight/0x4243/rgb_cct/2"
+          payload: "{'status': 'off'}"
+
+alexa:
+  intents:
+    DimLightsIntent:
+      action:
+        service: input_select.select_next
+        entity_id: input_select.light_profile
+      speech:
+        type: plaintext
+        text: >
+          Dimming the lights.
+
+    BrightenLightsIntent:
+      action:
+        service: input_select.select_previous
+        entity_id: input_select.light_profile
+      speech:
+        type: plaintext
+        text: >
+          Brightening the lights.
+
+    WorkTravelTime:
+      speech:
+        type: plaintext
+        text: >
+          Current travel time to work is {{ states("sensor.travel_time_to_work") }} minutes.
+
+    WeatherReport:
+      speech:
+        type: plaintext
+        text: >
+          The weather is {{ states("sensor.pws_weather") }} with a high of {{ states("sensor.pws_temp_high_1d_c") }} degrees
+          and a low of {{ states("sensor.pws_temp_low_1d_c") }}. There is a {{ states("sensor.pws_precip_1d") }}% chance of rain.
+
+    PlayLastTwitchStreamIntent:
+      action:
+        service: media_extractor.play_media
+        data_template:
+          entity_id: "media_player.{{ Device | lower | replace(' ', '_') }}"
+          media_content_id: "{{ states('sensor.twitch_stream') }}"
+          media_content_type: TVSHOW
+      speech:
+        type: plaintext
+        text: >
+          Sending {{ states.sensor.twitch_stream.attributes.stream_name }} to {{ Device }}
+
+# Hide groups and devices from haaska
+homeassistant:
+  customize_glob:
+    "group.light_profile_*":
+      haaska_hidden: true
+    "group.motion_triggers_*":
+      haaska_hidden: true
+
+    "switch.livingroom_remote_*":
+      haaska_hidden: true
+    "switch.bedroom_remote_*":
+      haaska_hidden: true
+
+    "switch.tv_remote_*":
+      haaska_hidden: true
+    "switch.tv_soundbar_*":
+      haaska_hidden: true
+
+    "switch.hdmi_matrix_*":
+      haaska_hidden: true
+    "switch.projector_soundbar_*":
+      haaska_hidden: true
+    "switch.projector_*":
+      haaska_hidden: true
+    "switch.hdmi_switch_*":
+      haaska_hidden: true
+    "switch.fan_remote_*":
+      haaska_hidden: true
+
+    "script.*":
+      haaska_hidden: true
+    "automation.*":
+      haaska_hidden: true
+
+  customize:
+    # Stuff to hide
+    scene.false:
+      haaska_hidden: true
+
+    group.energy_meter:
+      haaska_hidden: true
+    group.date_time:
+      haaska_hidden: true
+    group.travel_time:
+      haaska_hidden: true
+    group.weather_view:
+      haaska_hidden: true
+    group.sleep_as_android:
+      haaska_hidden: true
+
+    group.fan_remote:
+      haaska_hidden: true
+    group.tv_remote:
+      haaska_hidden: true
+    group.tv_soundbar_remote:
+      haaska_hidden: true
+    group.projector_remote:
+      haaska_hidden: true
+    group.hdmi_matrix_remote:
+      haaska_hidden: true
+    group.hdmi_switch_remote:
+      haaska_hidden: true
+    group.projector_soundbar_remote:
+      haaska_hidden: true
+
+    group.livingroom_remote:
+      haaska_hidden: true
+    group.bedroom_remote:
+      haaska_hidden: true
+
+    input_boolean.iss_pass:
+      haaska_hidden: true
+    switch.apartment_lock:
+      haaska_hidden: true
+    switch.apartment_door:
+      haaska_hidden: true
+    switch.bathroom_window:
+      haaska_hidden: true
+    switch.storage_room_motion:
+      haaska_hidden: true
+
+    group.activity:
+      haaska_hidden: true
+    group.system_monitor:
+      haaska_hidden: true
+
+    group.bedroom_media:
+      haaska_hidden: true
+    group.kitchen_media:
+      haaska_hidden: true
+    group.office_media:
+      haaska_hidden: true
+    group.livingroom_media:
+      haaska_hidden: true
+    group.internet_speed:
+      haaska_hidden: true
+    group.all_automations:
+      haaska_hidden: true
+    group.all_devices:
+      haaska_hidden: true
+    group.all_scripts:
+      haaska_hidden: true
+    group.all_switches:
+      haaska_hidden: true
+    group.bathroom_group:
+      haaska_hidden: true
+    group.bedroom_group:
+      haaska_hidden: true
+    group.storage_room:
+      haaska_hidden: true
+    group.hallway:
+      haaska_hidden: true
+    group.home_assistant_automations:
+      haaska_hidden: true
+    group.home_view:
+      haaska_hidden: true
+    group.kitchen:
+      haaska_hidden: true
+    group.livingroom:
+      haaska_hidden: true
+    group.office:
+      haaska_hidden: true
+    group.withings_scale:
+      haaska_hidden: true
+    group.weather:
+      haaska_hidden: true
+    group.daily_forecast:
+      haaska_hidden: true
+    group.wunderground:
+      haaska_hidden: true
+    group.livingroom_climate:
+      haaska_hidden: true
+    group.relative_humidity:
+      haaska_hidden: true
+
+    group.multisensors:
+      haaska_hidden: true
+    group.hallway_sensors:
+      haaska_hidden: true
+    group.livingroom_sensors:
+      haaska_hidden: true
+    group.office_sensors:
+      haaska_hidden: true
+    group.kitchen_sensors:
+      haaska_hidden: true
+    group.bathroom_sensors:
+      haaska_hidden: true
+    group.bedroom_sensors:
+      haaska_hidden: true
+    group.batteries:
+      haaska_hidden: true
+    group.motion_sensors:
+      haaska_hidden: true
+    group.temperature_sensors:
+      haaska_hidden: true
+
+    group.light_profile:
+      haaska_hidden: true
+
+    # Stuff to show
+    script.fix_soundbar_lag:
+      haaska_hidden: false

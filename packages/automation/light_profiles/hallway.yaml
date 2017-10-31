@@ -1,0 +1,256 @@
+homeassistant:
+  customize:
+    input_boolean.hallway_activity_override:
+      persistent: true
+    input_select.room_state_hallway:
+      persistent: true
+
+script:
+  light_profile_hallway_bright:
+    sequence:
+      # White temp lights
+      - service: light.turn_on
+        data:
+          brightness: 255
+          color_temp: 331
+          entity_id:
+            - light.hallway
+      - service: input_number.set_value
+        data:
+         entity_id: input_number.hallway_tablet_brightness
+         value: 100
+
+  light_profile_hallway_default:
+    sequence:
+      # White temp lights
+      - service: light.turn_on
+        data:
+          brightness: 255
+          color_temp: 331
+          entity_id:
+            - light.hallway
+      - service: input_number.set_value
+        data:
+         entity_id: input_number.hallway_tablet_brightness
+         value: 80
+
+  light_profile_hallway_dimmed:
+    sequence:
+      # White temp lights
+      - service: light.turn_on
+        data:
+          brightness: 72
+          color_temp: 331
+          entity_id:
+            - light.hallway
+      - service: input_number.set_value
+        data:
+         entity_id: input_number.hallway_tablet_brightness
+         value: 50
+
+  light_profile_hallway_ambient:
+    sequence:
+      # Primary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 72
+          rgb_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.hallway
+      - service: input_number.set_value
+        data:
+         entity_id: input_number.hallway_tablet_brightness
+         value: 25
+
+  light_profile_hallway_night:
+    sequence:
+      # Primary RGB lights
+      - service: light.turn_on
+        data:
+          brightness: 1
+          rgb_color: [255, 0, 0]
+          entity_id:
+            - light.hallway
+      - service: input_number.set_value
+        data:
+         entity_id: input_number.hallway_tablet_brightness
+         value: 0
+
+  light_profile_hallway_off:
+    sequence:
+      # Primary RGB lights
+      - service: light.turn_off
+        data:
+          entity_id:
+            - light.hallway
+
+input_boolean:
+  hallway_activity_override:
+    name: Hallway Activity Override
+    initial: off
+
+input_select:
+  room_state_hallway:
+    name: Hallway State
+    options:
+      - active
+      - inactive
+      - 'off'
+    initial: 'off'
+
+group:
+  light_profile_hallway:
+    entities:
+      - binary_sensor.hallway_activity
+      - input_boolean.hallway_activity_override
+      - input_select.light_profile
+
+  light_profile_scenes_hallway:
+    name: Hallway Scenes
+    entities:
+      - script.light_profile_hallway_bright
+      - script.light_profile_hallway_default
+      - script.light_profile_hallway_dimmed
+      - script.light_profile_hallway_ambient
+      - script.light_profile_hallway_night
+      - script.light_profile_hallway_off
+
+  light_profile_automations_hallway:
+    entities:
+      - automation.light_profile_change_active_hallway
+      - automation.light_profile_change_inactive_hallway
+      - automation.light_profile_change_off_hallway
+
+  motion_triggers_hallway:
+    entities:
+      - automation.room_state_active_trigger_hallway
+      - automation.room_state_inactive_trigger_hallway
+      - automation.room_state_off_trigger_hallway
+
+
+binary_sensor:
+  - platform: template
+    sensors:
+      hallway_activity:
+        friendly_name: 'hallway Activity'
+        value_template: >
+          {% if is_state('binary_sensor.hallway_sensor', 'on')
+          or is_state('input_boolean.hallway_activity_override', 'on')
+          or is_state('binary_sensor.apartment_door', 'on') -%}
+            true
+          {% else -%}
+            false
+          {% endif -%}
+        entity_id:
+          - binary_sensor.hallway_sensor
+          - input_boolean.hallway_activity_override
+          - binary_sensor.apartment_door
+
+automation:
+  # Room State Triggers #
+  - alias: room_state_active_trigger_hallway
+    trigger:
+      platform: state
+      entity_id: binary_sensor.hallway_activity
+      to: 'on'
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.room_state_hallway
+        option: 'active'
+
+  - alias: room_state_inactive_trigger_hallway
+    trigger:
+      platform: state
+      entity_id: binary_sensor.hallway_activity
+      to: 'off'
+      for:
+        minutes: 5
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.room_state_hallway
+        option: 'inactive'
+
+  - alias: room_state_off_trigger_hallway
+    trigger:
+      platform: state
+      entity_id: binary_sensor.hallway_activity
+      to: 'off'
+      for:
+        minutes: 10
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.room_state_hallway
+        option: 'off'
+
+  # Room State Actions #
+  - alias: hallway_tablet_on
+    trigger:
+      platform: state
+      entity_id: input_select.room_state_hallway
+      to: 'active'
+    action:
+      service: switch.turn_on
+      data:
+        entity_id: switch.hallway_tablet
+
+  - alias: hallway_tablet_off
+    trigger:
+      platform: state
+      entity_id: input_select.room_state_hallway
+      to: 'inactive'
+    action:
+      service: switch.turn_off
+      data:
+        entity_id: switch.hallway_tablet
+
+  # Room Scene Triggers #
+  - alias: light_profile_change_active_hallway
+    trigger:
+      - platform: state
+        entity_id: input_select.room_state_hallway
+      - platform: state
+        entity_id: input_select.light_profile
+    condition:
+      - condition: state
+        entity_id: input_select.room_state_hallway
+        state: 'active'
+    action:
+      service: script.turn_on
+      data_template:
+        entity_id: >
+          script.light_profile_hallway_{{ states('input_select.light_profile') | lower }}
+
+  - alias: light_profile_change_inactive_hallway
+    trigger:
+      - platform: state
+        entity_id: input_select.room_state_hallway
+      - platform: state
+        entity_id: input_select.inactive_light_profile
+    condition:
+      - condition: state
+        entity_id: input_select.room_state_hallway
+        state: 'inactive'
+    action:
+      service: script.turn_on
+      data_template:
+        entity_id: >
+          script.light_profile_hallway_{{ states('input_select.inactive_light_profile') | lower }}
+
+  - alias: light_profile_change_off_hallway
+    trigger:
+      - platform: state
+        entity_id: input_select.room_state_hallway
+      - platform: state
+        entity_id: input_select.light_profile
+    condition:
+      - condition: state
+        entity_id: input_select.room_state_hallway
+        state: 'off'
+    action:
+      service: script.turn_on
+      data_template:
+        entity_id: >
+          script.light_profile_hallway_off

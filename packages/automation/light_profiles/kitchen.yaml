@@ -1,0 +1,298 @@
+homeassistant:
+  customize:
+    input_boolean.kitchen_activity_override:
+      persistent: true
+    input_select.room_state_kitchen:
+      persistent: true
+
+
+script:
+  light_profile_kitchen_bright:
+    sequence:
+      # White temp lights
+      - service: light.turn_on
+        data:
+          brightness: 255
+          color_temp: 250
+          entity_id:
+            - light.kitchen
+      # Switchable Lights
+      - service: light.turn_on
+        data:
+          entity_id:
+            - light.kitchen_sink
+            - light.kitchen_stove
+            - light.cafe_table
+      # Secondary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 255
+          rgb_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.kitchen_cabinets
+
+  light_profile_kitchen_default:
+    sequence:
+      # White temp lights
+      - service: light.turn_on
+        data:
+          brightness: 255
+          color_temp: 350
+          entity_id:
+            - light.kitchen
+      # Switchable Lights
+      - service: light.turn_on
+        data:
+          entity_id:
+            - light.kitchen_sink
+            - light.kitchen_stove
+            - light.cafe_table
+      # Secondary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 172
+          rgb_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.kitchen_cabinets
+
+  light_profile_kitchen_dimmed:
+    sequence:
+      # Off lights
+      - service: light.turn_off
+        data:
+          entity_id:
+            - light.kitchen
+            - light.cafe_table
+      # Switchable Lights
+      - service: light.turn_on
+        data:
+          entity_id:
+            - light.kitchen_sink
+            - light.kitchen_stove
+      # Secondary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 64
+          rgb_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.kitchen_cabinets
+
+  light_profile_kitchen_ambient:
+    sequence:
+      # Off lights
+      - service: light.turn_off
+        data:
+          entity_id:
+            - light.kitchen_sink
+            - light.kitchen_stove
+            - light.cafe_table
+      # Primary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 32
+          rgb_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.kitchen
+      # Secondary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 32
+          rgb_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.kitchen_cabinets
+
+  light_profile_kitchen_night:
+    sequence:
+      # Off lights
+      - service: light.turn_off
+        data:
+          entity_id:
+            - light.kitchen_sink
+            - light.kitchen_stove
+            - light.kitchen
+            - light.cafe_table
+      # Secondary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 8
+          rgb_color: [255, 0, 0]
+          entity_id:
+            - light.kitchen_cabinets
+
+  light_profile_kitchen_off:
+    sequence:
+      # Off lights
+      - service: light.turn_off
+        data:
+          entity_id:
+            - group.kitchen_light
+
+group:
+  light_profile_kitchen:
+    entities:
+      - binary_sensor.kitchen_activity
+      - input_boolean.kitchen_activity_override
+      - input_select.light_profile
+
+  light_profile_scenes_kitchen:
+    name: Kitchen Scenes
+    entities:
+      - script.light_profile_kitchen_bright
+      - script.light_profile_kitchen_dimmed
+      - script.light_profile_kitchen_ambient
+      - script.light_profile_kitchen_night
+      - script.light_profile_kitchen_off
+
+  light_profile_automations_kitchen:
+    entities:
+      - group.motion_triggers_kitchen
+      - automation.light_profile_change_active_kitchen
+      - automation.light_profile_change_inactive_kitchen
+      - automation.light_profile_change_off_kitchen
+
+  motion_triggers_kitchen:
+    entities:
+      - automation.room_state_active_trigger_kitchen
+      - automation.room_state_inactive_trigger_kitchen
+      - automation.room_state_off_trigger_kitchen
+
+input_boolean:
+  kitchen_activity_override:
+    name: Kitchen Activity Override
+    initial: off
+
+input_select:
+  room_state_kitchen:
+    name: Kitchen State
+    options:
+      - active
+      - inactive
+      - 'off'
+    initial: 'off'
+
+binary_sensor:
+  - platform: template
+    sensors:
+      kitchen_activity:
+        friendly_name: 'Kitchen Activity'
+        value_template: >
+          {% if is_state('binary_sensor.kitchen_sensor', 'on')
+          or is_state('input_boolean.kitchen_activity_override', 'on')
+          or is_state('input_select.latest_motion', 'Kitchen') -%}
+            true
+          {% else -%}
+            false
+          {% endif -%}
+        entity_id:
+          - binary_sensor.kitchen_sensor
+          - input_boolean.kitchen_activity_override
+          - input_select.latest_motion
+
+automation:
+  # Room State Triggers #
+  - alias: room_state_active_trigger_kitchen
+    trigger:
+      platform: state
+      entity_id: binary_sensor.kitchen_activity
+      to: 'on'
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.room_state_kitchen
+        option: 'active'
+
+  - alias: room_state_inactive_trigger_kitchen
+    trigger:
+      platform: state
+      entity_id: binary_sensor.kitchen_activity
+      to: 'off'
+      for:
+        minutes: 5
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.room_state_kitchen
+        option: 'inactive'
+
+  - alias: room_state_off_trigger_kitchen
+    trigger:
+      platform: state
+      entity_id: binary_sensor.kitchen_activity
+      to: 'off'
+      for:
+        minutes: 10
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.room_state_kitchen
+        option: 'off'
+
+  # Room State Actions #
+  - alias: kitchen_tablet_on
+    trigger:
+      platform: state
+      entity_id: input_select.room_state_kitchen
+      to: 'active'
+    action:
+      service: switch.turn_on
+      data:
+        entity_id: switch.kitchen_tablet
+
+  - alias: kitchen_tablet_off
+    trigger:
+      platform: state
+      entity_id: input_select.room_state_kitchen
+      to: 'inactive'
+    action:
+      service: switch.turn_off
+      data:
+        entity_id: switch.kitchen_tablet
+
+  # Room Scene Triggers #
+  - alias: light_profile_change_active_kitchen
+    trigger:
+      - platform: state
+        entity_id: input_select.room_state_kitchen
+      - platform: state
+        entity_id: input_select.light_profile
+    condition:
+      - condition: state
+        entity_id: input_select.room_state_kitchen
+        state: 'active'
+    action:
+      service: script.turn_on
+      data_template:
+        entity_id: >
+          script.light_profile_kitchen_{{ states('input_select.light_profile') | lower }}
+
+  - alias: light_profile_change_inactive_kitchen
+    trigger:
+      - platform: state
+        entity_id: input_select.room_state_kitchen
+      - platform: state
+        entity_id: input_select.inactive_light_profile
+    condition:
+      - condition: state
+        entity_id: input_select.room_state_kitchen
+        state: 'inactive'
+    action:
+      service: script.turn_on
+      data_template:
+        entity_id: >
+          script.light_profile_kitchen_{{ states('input_select.inactive_light_profile') | lower }}
+
+  - alias: light_profile_change_off_kitchen
+    trigger:
+      - platform: state
+        entity_id: input_select.room_state_kitchen
+      - platform: state
+        entity_id: input_select.light_profile
+    condition:
+      - condition: state
+        entity_id: input_select.room_state_kitchen
+        state: 'off'
+    action:
+      service: script.turn_on
+      data_template:
+        entity_id: >
+          script.light_profile_kitchen_off

@@ -1,0 +1,464 @@
+mqtt:
+  broker: 127.0.0.1
+  port: 1883
+  client_id: hassbian
+  keepalive: 60
+  username: homeassistant
+  password: !secret mosquitto_password
+
+homeassistant:
+  customize:
+    light.hallway_tablet:
+      icon: mdi:tablet-android
+      friendly_name: "Hallway Tablet"
+    sensor.energy_meter_kwh:
+      friendly_name: "Energy Meter (kWh)"
+      icon: mdi:flash
+    sensor.energy_meter_watt:
+      friendly_name: "Energy Meter (Watt)"
+      icon: mdi:speedometer
+    sensor.energy_meter_watt_mean:
+      friendly_name: "Energy Meter (Watt) Stats"
+      icon: mdi:speedometer
+    sensor.sleep_tracker:
+      friendly_name: 'Sleep Tracker'
+      icon: mdi:sleep
+    sensor.phone_alarm:
+      friendly_name: 'Phone Alarm'
+      icon: mdi:bell
+    sensor.party_button_battery:
+      friendly_name: Party Button Battery
+      icon: mdi:battery
+    switch.party_button:
+      friendly_name: Party Button
+      icon: mdi:nuke
+
+group:
+  energy_meter:
+    name: 'Energy Meter'
+    entities:
+      - sensor.energy_meter_kwh
+      - sensor.energy_meter_watt
+      - sensor.energy_meter_watt_mean
+  sleep_as_android:
+    name: 'Sleep as Android'
+    entities:
+      - sensor.sleep_tracker
+      - sensor.phone_alarm
+  candles:
+    name: 'Candles'
+    entities:
+      - light.candle_1
+      - light.candle_2
+
+  party_button:
+    name: Party Button
+    entities:
+      - sensor.party_button_battery
+      - switch.party_button
+
+# Effect speed sliders for h801 units.
+input_number:
+  tv_shelf_effect_speed:
+    name: TV Shelf Effect Speed
+    initial: 30
+    min: 25
+    max: 30000
+    step: 25
+
+automation:
+  - alias: Update TV Shelf Effect Speed
+    trigger:
+      platform: mqtt
+      topic: "001AB084/rgb/effect_speed/status"
+    action:
+      service: input_number.set_value
+      data_template:
+        entity_id: input_number.tv_shelf_effect_speed
+        value: '{{ trigger.payload }}'
+
+  - alias: Set TV Shelf Effect Speed
+    trigger:
+      platform: state
+      entity_id: input_number.tv_shelf_effect_speed
+    action:
+      service: mqtt.publish
+      data_template:
+        topic: "001AB084/rgb/effect_speed/set"
+        payload: '{{ states.input_number.tv_shelf_effect_speed.state }}'
+
+sensor:
+  - platform: mqtt
+    name: energy_meter_kwh
+    state_topic: "meter/1/reading"
+    unit_of_measurement: "kWh"
+    value_template: '{{ value_json.kwhr }}'
+  - platform: mqtt
+    name: energy_meter_watt
+    state_topic: "meter/1/reading"
+    unit_of_measurement: "W"
+    value_template: '{{ value_json.power }}'
+  - platform: statistics
+    name: energy_meter_watt
+    entity_id: sensor.energy_meter_watt
+  - platform: template
+    sensors:
+      energy_meter_watt_change:
+        friendly_name: 'Energy Watt Change'
+        unit_of_measurement: "W"
+        value_template: '{{ states.sensor.energy_meter_watt_mean.attributes.change | float }}'
+
+  - platform: mqtt
+    name: sleep_tracker
+    state_topic: 'sleeptracker/tracking/state'
+  - platform: mqtt
+    name: phone_alarm
+    state_topic: 'sleeptracker/alarm/state'
+
+  - platform: mqtt
+    name: party_button_battery
+    state_topic: '00C16B3E/party/battery/status'
+    unit_of_measurement: "v"
+    value_template: '{{ value | float / 1000 }}'
+
+switch:
+  - platform: mqtt
+    name: party_button
+    state_topic: "00C16B3E/party/button/status"
+    command_topic: "00C16B3E/party/button/switch"
+
+light:
+  - platform: mqtt
+    name: "TV Shelf"
+    retain: true
+    state_topic: "001AB084/rgb/light/status"
+    command_topic: "001AB084/rgb/light/switch"
+    brightness_state_topic: "001AB084/rgb/brightness/status"
+    brightness_command_topic: "001AB084/rgb/brightness/set"
+    rgb_state_topic: "001AB084/rgb/rgb/status"
+    rgb_command_topic: "001AB084/rgb/rgb/set"
+    effect_state_topic: "001AB084/rgb/effect/status"
+    effect_command_topic: "001AB084/rgb/effect/set"
+    effect_list:
+      - rainbow
+      - random
+      - fade
+      - blink
+      - rainbow_flash
+      - random_flash
+
+  - platform: mqtt
+    name: "Bar Desk"
+    retain: true
+    state_topic: "0023743D/rgb/light/status"
+    command_topic: "0023743D/rgb/light/switch"
+    brightness_state_topic: "0023743D/rgb/brightness/status"
+    brightness_command_topic: "0023743D/rgb/brightness/set"
+    rgb_state_topic: "0023743D/rgb/rgb/status"
+    rgb_command_topic: "0023743D/rgb/rgb/set"
+    effect_state_topic: "0023743D/rgb/effect/status"
+    effect_command_topic: "0023743D/rgb/effect/set"
+    effect_list:
+      - rainbow
+      - random
+      - fade
+      - blink
+      - rainbow_flash
+      - random_flash
+
+  - platform: mqtt
+    name: "Cabinet Spots"
+    retain: true
+    state_topic: "0023743D/w1/light/status"
+    command_topic: "0023743D/w1/light/switch"
+    brightness_state_topic: "0023743D/w1/brightness/status"
+    brightness_command_topic: "0023743D/w1/brightness/set"
+
+  - platform: mqtt
+    name: "Cabinet Shelves"
+    retain: true
+    state_topic: "0023743D/w2/light/status"
+    command_topic: "0023743D/w2/light/switch"
+    brightness_state_topic: "0023743D/w2/brightness/status"
+    brightness_command_topic: "0023743D/w2/brightness/set"
+
+  - platform: mqtt
+    name: "Windowsill"
+    retain: true
+    state_topic: "00236FEE/rgb/light/status"
+    command_topic: "00236FEE/rgb/light/switch"
+    brightness_state_topic: "00236FEE/rgb/brightness/status"
+    brightness_command_topic: "00236FEE/rgb/brightness/set"
+    rgb_state_topic: "00236FEE/rgb/rgb/status"
+    rgb_command_topic: "00236FEE/rgb/rgb/set"
+    effect_state_topic: "00236FEE/rgb/effect/status"
+    effect_command_topic: "00236FEE/rgb/effect/set"
+    effect_list:
+      - rainbow
+      - random
+      - fade
+      - blink
+      - rainbow_flash
+      - random_flash
+
+
+  - platform: mqtt
+    name: "TV Backlight"
+    retain: true
+    state_topic: "002358ED/rgb/light/status"
+    command_topic: "002358ED/rgb/light/switch"
+    brightness_state_topic: "002358ED/rgb/brightness/status"
+    brightness_command_topic: "002358ED/rgb/brightness/set"
+    rgb_state_topic: "002358ED/rgb/rgb/status"
+    rgb_command_topic: "002358ED/rgb/rgb/set"
+    effect_state_topic: "002358ED/rgb/effect/status"
+    effect_command_topic: "002358ED/rgb/effect/set"
+    effect_list:
+      - rainbow
+      - random
+      - fade
+      - blink
+      - rainbow_flash
+      - random_flash
+
+
+  - platform: mqtt
+    name: "Office Desk Shelf"
+    retain: true
+    state_topic: "0023750F/rgb/light/status"
+    command_topic: "0023750F/rgb/light/switch"
+    brightness_state_topic: "0023750F/rgb/brightness/status"
+    brightness_command_topic: "0023750F/rgb/brightness/set"
+    rgb_state_topic: "0023750F/rgb/rgb/status"
+    rgb_command_topic: "0023750F/rgb/rgb/set"
+    effect_state_topic: "0023750F/rgb/effect/status"
+    effect_command_topic: "0023750F/rgb/effect/set"
+    effect_list:
+      - rainbow
+      - random
+      - fade
+      - blink
+      - rainbow_flash
+      - random_flash
+
+
+  - platform: mqtt
+    name: "Office Desk"
+    retain: true
+    state_topic: "0023750F/w1/light/status"
+    command_topic: "0023750F/w1/light/switch"
+    brightness_state_topic: "0023750F/w1/brightness/status"
+    brightness_command_topic: "0023750F/w1/brightness/set"
+
+  - platform: mqtt
+    name: "Bed Shelves"
+    retain: true
+    state_topic: "00227723/rgb/light/status"
+    command_topic: "00227723/rgb/light/switch"
+    brightness_state_topic: "00227723/rgb/brightness/status"
+    brightness_command_topic: "00227723/rgb/brightness/set"
+    rgb_state_topic: "00227723/rgb/rgb/status"
+    rgb_command_topic: "00227723/rgb/rgb/set"
+    effect_state_topic: "00227723/rgb/effect/status"
+    effect_command_topic: "00227723/rgb/effect/set"
+    effect_list:
+      - rainbow
+      - random
+      - fade
+      - blink
+      - rainbow_flash
+      - random_flash
+
+
+  - platform: mqtt
+    name: "Bed"
+    retain: true
+    state_topic: "00227723/w1/light/status"
+    command_topic: "00227723/w1/light/switch"
+    brightness_state_topic: "00227723/w1/brightness/status"
+    brightness_command_topic: "00227723/w1/brightness/set"
+
+  - platform: mqtt
+    name: "Office Shelves"
+    retain: true
+    state_topic: "00192899/w1/light/status"
+    command_topic: "00192899/w1/light/switch"
+    brightness_state_topic: "00192899/w1/brightness/status"
+    brightness_command_topic: "00192899/w1/brightness/set"
+
+  - platform: mqtt
+    name: "Display Cabinet"
+    retain: true
+    state_topic: "001AAD0C/w1/light/status"
+    command_topic: "001AAD0C/w1/light/switch"
+    brightness_state_topic: "001AAD0C/w1/brightness/status"
+    brightness_command_topic: "001AAD0C/w1/brightness/set"
+
+  - platform: mqtt
+    name: "Sofa Corner"
+    retain: true
+    state_topic: "001AABB8/rgb/light/status"
+    command_topic: "001AABB8/rgb/light/switch"
+    brightness_state_topic: "001AABB8/rgb/brightness/status"
+    brightness_command_topic: "001AABB8/rgb/brightness/set"
+    rgb_state_topic: "001AABB8/rgb/rgb/status"
+    rgb_command_topic: "001AABB8/rgb/rgb/set"
+    effect_state_topic: "001AABB8/rgb/effect/status"
+    effect_command_topic: "001AABB8/rgb/effect/set"
+    effect_list:
+      - rainbow
+      - random
+      - fade
+      - blink
+      - rainbow_flash
+      - random_flash
+
+
+  - platform: mqtt_json
+    name: Screen Shelf
+    retain: true
+    state_topic: "bruh/screen-shelf"
+    command_topic: "bruh/screen-shelf/set"
+    brightness: true
+    rgb: true
+    effect: true
+    effect_list:
+      - bpm
+      - candy cane
+      - confetti
+      - cyclon rainbow
+      - dots
+      - fire
+      - glitter
+      - juggle
+      - lightning
+      - police all
+      - police one
+      - rainbow
+      - rainbow with glitter
+      - sinelon
+      - twinkle
+      - noise
+      - ripple
+      - solid
+
+  - platform: mqtt_json
+    name: Office Shelf Bar
+    retain: true
+    state_topic: "bruh/office-shelf-bar"
+    command_topic: "bruh/office-shelf-bar/set"
+    brightness: true
+    rgb: true
+    effect: true
+    effect_list:
+      - bpm
+      - candy cane
+      - confetti
+      - cyclon rainbow
+      - dots
+      - fire
+      - glitter
+      - juggle
+      - lightning
+      - police all
+      - police one
+      - rainbow
+      - rainbow with glitter
+      - sinelon
+      - twinkle
+      - noise
+      - ripple
+      - solid
+
+  - platform: mqtt
+    name: "Kitchen Cabinets"
+    retain: true
+    state_topic: "001AAF03/rgb/light/status"
+    command_topic: "001AAF03/rgb/light/switch"
+    brightness_state_topic: "001AAF03/rgb/brightness/status"
+    brightness_command_topic: "001AAF03/rgb/brightness/set"
+    rgb_state_topic: "001AAF03/rgb/rgb/status"
+    rgb_command_topic: "001AAF03/rgb/rgb/set"
+    effect_state_topic: "001AAF03/rgb/effect/status"
+    effect_command_topic: "001AAF03/rgb/effect/set"
+    effect_list:
+      - rainbow
+      - random
+      - fade
+      - blink
+      - rainbow_flash
+      - random_flash
+
+  - platform: mqtt
+    name: "Hobby Desk"
+    retain: true
+    state_topic: "00192B4F/w1/light/status"
+    command_topic: "00192B4F/w1/light/switch"
+    brightness_state_topic: "00192B4F/w1/brightness/status"
+    brightness_command_topic: "00192B4F/w1/brightness/set"
+
+  - platform: mqtt
+    name: "Kitchen Table"
+    state_topic: "0086269B/w1/light/status"
+    command_topic: "0086269B/w1/light/switch"
+
+  - platform: mqtt_json
+    name: "Candle 1"
+    command_topic: "milight/0x4242/rgb_cct/1"
+    state_topic: "milight/state/0x4242/rgb_cct/1"
+    brightness: true
+    rgb: true
+    color_temp: true
+
+
+  - platform: mqtt_json
+    name: "Candle 2"
+    command_topic: "milight/0x4242/rgb_cct/2"
+    state_topic: "milight/state/0x4242/rgb_cct/2"
+    brightness: true
+    rgb: true
+    color_temp: true
+
+  - platform: mqtt_json
+    name: "Bedside"
+    command_topic: "milight/0x4243/rgb_cct/1"
+    state_topic: "milight/state/0x4243/rgb_cct/1"
+    brightness: true
+    rgb: true
+    color_temp: true
+
+  - platform: mqtt_json
+    name: "Globe"
+    command_topic: "milight/0x4243/rgb_cct/2"
+    state_topic: "milight/state/0x4243/rgb_cct/2"
+    brightness: true
+    rgb: true
+    color_temp: true
+
+  - platform: mqtt
+    name: "Cafe Table"
+    state_topic: "stat/cafe/POWER"
+    command_topic: "cmnd/cafe/POWER"
+    qos: 1
+    payload_on: "ON"
+    payload_off: "OFF"
+    retain: true
+
+
+  - platform: mqtt
+    name: "Kitchen Sink"
+    state_topic: "stat/kitchen1/POWER"
+    command_topic: "cmnd/kitchen1/POWER"
+    qos: 1
+    payload_on: "ON"
+    payload_off: "OFF"
+    retain: true
+
+  - platform: mqtt
+    name: "Kitchen Stove"
+    state_topic: "stat/kitchen2/POWER"
+    command_topic: "cmnd/kitchen2/POWER"
+    qos: 1
+    payload_on: "ON"
+    payload_off: "OFF"
+    retain: true

@@ -1,0 +1,377 @@
+homeassistant:
+  customize:
+    input_boolean.bedroom_activity_override:
+      persistent: true
+    input_select.room_state_bedroom:
+      persistent: true
+    input_select.bedroom_light_profile:
+      persistent: true
+
+script:
+  light_profile_bedroom_bright:
+    sequence:
+      # White temp lights
+      - service: light.turn_on
+        data:
+          brightness: 255
+          color_temp: 370
+          entity_id:
+            - group.cloud
+      # Dimmable Lights
+      - service: light.turn_on
+        data:
+          brightness: 255
+          entity_id:
+            - light.bed
+      # Primary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 255
+          rgb_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.globe
+      # Secondary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 255
+          rgb_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.bed_shelves
+
+  light_profile_bedroom_default:
+    sequence:
+      # Off Lights
+      - service: light.turn_off
+        data:
+          entity_id:
+            - light.cloud_west
+            - light.cloud_east
+      # White temp lights
+      - service: light.turn_on
+        data:
+          brightness: 255
+          color_temp: 370
+          entity_id:
+            - light.cloud_north
+      # Dimmable Lights
+      - service: light.turn_on
+        data:
+          brightness: 255
+          entity_id:
+            - light.bed
+      # Primary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 255
+          rgb_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.globe
+      # Secondary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 255
+          rgb_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.bed_shelves
+
+  light_profile_bedroom_dimmed:
+    sequence:
+      # Dimmable Lights
+      - service: light.turn_on
+        data:
+          brightness: 64
+          entity_id:
+            - light.bed
+      # Primary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 86
+          rgb_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.globe
+            - group.cloud
+      # Secondary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 26
+          rgb_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.bed_shelves
+
+  light_profile_bedroom_ambient:
+    sequence:
+      # Off Lights
+      - service: light.turn_off
+        data:
+          entity_id:
+            - light.cloud_west
+            - light.cloud_east
+            - light.bed
+      # Primary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 1
+          rgb_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.cloud_north
+            - light.globe
+      # Secondary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 127
+          rgb_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.bed_shelves
+
+  light_profile_bedroom_night:
+    sequence:
+      # Off Lights
+      - service: light.turn_off
+        data:
+          entity_id:
+            - group.cloud
+            - light.globe
+      # Secondary RGB lights
+      - service: light.turn_on
+        data:
+          brightness: 48
+          rgb_color: [255,0,0]
+          entity_id:
+            - light.bed_shelves
+      - service: script.turn_on
+        data_template:
+          entity_id: >-
+            {% if is_state('sensor.sleep_tracker', 'paused') -%}
+              script.conditional_bed_light_off
+            {% else -%}
+              script.conditional_bed_light_on
+            {% endif -%}
+
+  light_profile_bedroom_off:
+    sequence:
+      # Off Lights
+      - service: light.turn_off
+        data:
+          entity_id:
+            - group.bedroom_light
+
+  conditional_bed_light_on:
+    sequence:
+      - service: light.turn_on
+        data:
+          brightness: 1
+          entity_id:
+            - light.bed
+
+  conditional_bed_light_off:
+    sequence:
+      - service: light.turn_off
+        data:
+          entity_id:
+            - light.bed
+group:
+  light_profile_bedroom:
+    entities:
+      - binary_sensor.bedroom_activity
+      - input_boolean.bedroom_activity_override
+      - input_select.light_profile
+      - input_select.bedroom_light_profile
+
+  light_profile_scenes_bedroom:
+    name: Bedroom Scenes
+    entities:
+      - script.light_profile_bedroom_bright
+      - script.light_profile_bedroom_default
+      - script.light_profile_bedroom_dimmed
+      - script.light_profile_bedroom_ambient
+      - script.light_profile_bedroom_night
+      - script.light_profile_bedroom_off
+
+  light_profile_automations_bedroom:
+    entities:
+      - automation.light_profile_change_active_bedroom
+      - automation.light_profile_change_inactive_bedroom
+      - automation.light_profile_change_off_bedroom
+
+  motion_triggers_bedroom:
+    entities:
+      - automation.room_state_active_trigger_bedroom
+      - automation.room_state_inactive_trigger_bedroom
+      - automation.room_state_off_trigger_bedroom
+
+input_boolean:
+  bedroom_activity_override:
+    name: Bedroom Activity Override
+    initial: off
+
+input_select:
+  room_state_bedroom:
+    name: Bedroom State
+    options:
+      - active
+      - inactive
+      - 'off'
+    initial: 'off'
+
+  bedroom_light_profile:
+    name: Bedroom Light Profile
+    options:
+      - Bright
+      - Default
+      - Dimmed
+      - Ambient
+      - Night
+      - 'Off'
+    initial: Bright
+  bedroom_inactive_light_profile:
+    options:
+      - Default
+      - Dimmed
+      - Ambient
+      - Night
+      - 'Off'
+    initial: Dimmed
+
+binary_sensor:
+  - platform: template
+    sensors:
+      bedroom_activity:
+        friendly_name: 'Bedroom Activity'
+        value_template: >
+          {% if is_state('binary_sensor.bedroom_sensor', 'on')
+          or is_state('input_boolean.bedroom_activity_override', 'on')
+          or is_state('input_select.latest_motion', 'Bedroom')
+          or is_state('input_select.martin_activity', 'Sleeping')
+          or is_state('input_select.martin_activity', 'Waking') -%}
+            true
+          {% else -%}
+            false
+          {% endif -%}
+        entity_id:
+          - binary_sensor.bedroom_sensor
+          - input_boolean.bedroom_activity_override
+          - input_select.latest_motion
+          - input_select.martin_activity
+
+automation:
+  - alias: Bedroom Inactive Light Profile Setter
+    trigger:
+      platform: state
+      entity_id: input_select.bedroom_light_profile
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.bedroom_inactive_light_profile
+        option: >
+          {% if is_state('input_select.bedroom_light_profile', 'Bright') %}
+            Default
+          {% elif is_state('input_select.bedroom_light_profile', 'Default') %}
+            Dimmed
+          {% elif is_state('input_select.bedroom_light_profile', 'Dimmed') %}
+            Ambient
+          {% elif is_state('input_select.bedroom_light_profile', 'Ambient') %}
+            Night
+          {% else %}
+            Off
+          {% endif %}
+
+  - alias: bedroom_light_profile_sync
+    trigger:
+      platform: state
+      entity_id: input_select.light_profile
+    condition:
+      condition: state
+      entity_id: input_boolean.guests
+      state: 'off'
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.bedroom_light_profile
+        option: "{{trigger.to_state.state}}"
+
+  # Room State Triggers #
+  - alias: room_state_active_trigger_bedroom
+    trigger:
+      platform: state
+      entity_id: binary_sensor.bedroom_activity
+      to: 'on'
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.room_state_bedroom
+        option: 'active'
+
+  - alias: room_state_inactive_trigger_bedroom
+    trigger:
+      platform: state
+      entity_id: binary_sensor.bedroom_activity
+      to: 'off'
+      for:
+        minutes: 5
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.room_state_bedroom
+        option: 'inactive'
+
+  - alias: room_state_off_trigger_bedroom
+    trigger:
+      platform: state
+      entity_id: binary_sensor.bedroom_activity
+      to: 'off'
+      for:
+        minutes: 10
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.room_state_bedroom
+        option: 'off'
+
+  # Room Scene Triggers #
+  - alias: light_profile_change_active_bedroom
+    trigger:
+      - platform: state
+        entity_id: input_select.room_state_bedroom
+      - platform: state
+        entity_id: input_select.bedroom_light_profile
+    condition:
+      - condition: state
+        entity_id: input_select.room_state_bedroom
+        state: 'active'
+    action:
+      service: script.turn_on
+      data_template:
+        entity_id: >
+          script.light_profile_bedroom_{{ states('input_select.bedroom_light_profile') | lower }}
+
+  - alias: light_profile_change_inactive_bedroom
+    trigger:
+      - platform: state
+        entity_id: input_select.room_state_bedroom
+      - platform: state
+        entity_id: input_select.bedroom_inactive_light_profile
+    condition:
+      - condition: state
+        entity_id: input_select.room_state_bedroom
+        state: 'inactive'
+    action:
+      service: script.turn_on
+      data_template:
+        entity_id: >
+          script.light_profile_bedroom_{{ states('input_select.bedroom_inactive_light_profile') | lower }}
+
+  - alias: light_profile_change_off_bedroom
+    trigger:
+      - platform: state
+        entity_id: input_select.room_state_bedroom
+      - platform: state
+        entity_id: input_select.bedroom_light_profile
+    condition:
+      - condition: state
+        entity_id: input_select.room_state_bedroom
+        state: 'off'
+    action:
+      service: script.turn_on
+      data_template:
+        entity_id: >
+          script.light_profile_bedroom_off

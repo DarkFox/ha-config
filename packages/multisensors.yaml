@@ -1,0 +1,212 @@
+###############################################################################
+#   @author         :   Mahasri Kalavala
+#   @date           :   04/15/2017
+#   @package        :   Multi Sensors
+#   @description    :   Multi Sensor Stuff
+###############################################################################
+homeassistant:
+  customize:
+    zwave.bedroom:
+      hidden: false
+      friendly_name: Bedroom Multi-Sensor
+    zwave.toilet:
+      hidden: false
+      friendly_name: Bathroom Multi-Sensor
+    zwave.kitchen:
+      hidden: false
+      friendly_name: Kitchen Multi-Sensor
+    zwave.livingroom:
+      hidden: false
+      friendly_name: Livingroom Multi-Sensor
+    zwave.office:
+      hidden: false
+      friendly_name: Office Multi-Sensor
+    zwave.hallway:
+      hidden: false
+      friendly_name: Hallway Multi-Sensor
+
+    # Multi Sensor default data
+    sensor.bedroom_alarm_type:
+      hidden: true
+    sensor.bedroom_alarm_level:
+      hidden: true
+    sensor.bedroom_sourcenodeid:
+      hidden: true
+    sensor.bedroom_burglar:
+      hidden: true
+
+    sensor.toilet_alarm_type:
+      hidden: true
+    sensor.toilet_alarm_level:
+      hidden: true
+    sensor.toilet_sourcenodeid:
+      hidden: true
+    sensor.toilet_burglar:
+      hidden: true
+
+    sensor.kitchen_alarm_type:
+      hidden: true
+    sensor.kitchen_alarm_level:
+      hidden: true
+    sensor.kitchen_sourcenodeid:
+      hidden: true
+    sensor.kitchen_burglar:
+      hidden: true
+
+    sensor.livingroom_alarm_type:
+      hidden: true
+    sensor.livingroom_alarm_level:
+      hidden: true
+    sensor.livingroom_sourcenodeid:
+      hidden: true
+    sensor.livingroom_burglar:
+      hidden: true
+
+    sensor.office_alarm_type:
+      hidden: true
+    sensor.office_alarm_level:
+      hidden: true
+    sensor.office_sourcenodeid:
+      hidden: true
+    sensor.office_burglar:
+      hidden: true
+
+    sensor.hallway_alarm_type:
+      hidden: true
+    sensor.hallway_alarm_level:
+      hidden: true
+    sensor.hallway_sourcenodeid:
+      hidden: true
+    sensor.hallway_burglar:
+      hidden: true
+
+    binary_sensor.bedroom_sensor:
+      device_class: motion
+      friendly_name: Bedroom Activity
+    sensor.bedroom_luminance:
+      friendly_name: Bedroom Light Level
+      icon: mdi:white-balance-sunny
+    sensor.bedroom_relative_humidity:
+      friendly_name: Bedroom Humidity
+      icon: mdi:water-percent
+    sensor.bedroom_temperature:
+      friendly_name: Bedroom Temperature
+
+    binary_sensor.toilet_sensor:
+      device_class: motion
+      friendly_name: Bathroom Activity
+    sensor.toilet_luminance:
+      friendly_name: Bathroom Light Level
+      icon: mdi:white-balance-sunny
+    sensor.toilet_relative_humidity:
+      friendly_name: Bathroom Humidity
+      icon: mdi:water-percent
+    sensor.toilet_temperature:
+      friendly_name: Bathroom Temperature
+
+    binary_sensor.kitchen_sensor:
+      device_class: motion
+      friendly_name: Kitchen Activity
+    sensor.kitchen_luminance:
+      friendly_name: Kitchen Light Level
+      icon: mdi:white-balance-sunny
+    sensor.kitchen_relative_humidity:
+      friendly_name: Kitchen Humidity
+      icon: mdi:water-percent
+    sensor.kitchen_temperature:
+      friendly_name: Kitchen Temperature
+
+    binary_sensor.livingroom_sensor:
+      device_class: motion
+      friendly_name: Livingroom Activity
+    sensor.livingroom_luminance:
+      friendly_name: Livingroom Light Level
+      icon: mdi:white-balance-sunny
+    sensor.livingroom_relative_humidity:
+      friendly_name: Livingroom Humidity
+      icon: mdi:water-percent
+    sensor.livingroom_temperature:
+      friendly_name: Livingroom Temperature
+
+    binary_sensor.office_sensor:
+      device_class: motion
+      friendly_name: Office Activity
+    sensor.office_luminance:
+      friendly_name: Office Light Level
+      icon: mdi:white-balance-sunny
+    sensor.office_relative_humidity:
+      friendly_name: Office Humidity
+      icon: mdi:water-percent
+    sensor.office_temperature:
+      friendly_name: Office Temperature
+
+    binary_sensor.hallway_sensor:
+      device_class: motion
+      friendly_name: Hallway Activity
+    sensor.hallway_luminance:
+      friendly_name: Hallway Light Level
+      icon: mdi:white-balance-sunny
+    sensor.hallway_relative_humidity:
+      friendly_name: Hallway Humidity
+      icon: mdi:water-percent
+    sensor.hallway_temperature:
+      friendly_name: Hallway Temperature
+
+group:
+  multisensors:
+    control: hidden
+    entities:
+      - group.livingroom_sensors
+      - group.bedroom_sensors
+      - group.bathroom_sensors
+      - group.kitchen_sensors
+      - group.office_sensors
+      - group.hallway_sensors
+
+sensor:
+  - platform: mold_indicator
+    name: Toilet Mould Indicator
+    indoor_temp_sensor: sensor.toilet_temperature
+    indoor_humidity_sensor: sensor.toilet_relative_humidity
+    outdoor_temp_sensor: sensor.pws_temp_c
+    calibration_factor: 1.44
+
+  - platform: statistics
+    name: toilet_temperature
+    entity_id: sensor.toilet_temperature
+  - platform: statistics
+    name: toilet_relative_humidity
+    entity_id: sensor.toilet_relative_humidity
+
+  - platform: template
+    sensors:
+      toilet_relative_humidity_change:
+        unit_of_measurement: "%"
+        friendly_name: 'Toilet Humidity Change'
+        value_template: '{{ states.sensor.toilet_relative_humidity_mean.attributes.change | float }}'
+
+  - platform: template
+    sensors:
+      hallway_multisensor_battery:
+        value_template: >-
+          {{ states.zwave.hallway.attributes["battery_level"] }}
+        friendly_name: Hallway Multi-Sensor Battery
+        unit_of_measurement: "%"
+        icon_template: >-
+          {% if states.zwave.hallway.attributes["battery_level"] %}
+          {% set battery_level = states.zwave.hallway.attributes["battery_level"]|int('unknown') %}
+          {% if battery_level == 'unknown' %}
+            mdi:battery-unknown
+          {% else %}
+            {% set battery_round = (battery_level|int / 10)|int * 10 %}
+            {% if battery_round >= 100 %}
+              mdi:battery
+            {% elif battery_round > 0 %}
+              mdi:battery-{{ battery_round }}
+            {% else %}
+              mdi:battery-alert
+            {% endif %}
+          {% endif %}
+          {% else %}
+            mdi:battery-unknown
+          {% endif %}

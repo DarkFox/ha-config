@@ -1,0 +1,37 @@
+automation:
+  # Vacuum Charger
+  # Turn the vacuum charger off after 16 hours,
+  # to avoid damaging the battery.
+  - alias: Vacuum Charger
+    trigger:
+      platform: state
+      entity_id: switch.vacuum_charger
+      to: 'on'
+      for:
+        hours: 16
+    action:
+      service: switch.turn_off
+      data:
+        entity_id: switch.vacuum_charger
+
+  - alias: Storage Room Activity Trigger
+    trigger:
+      platform: state
+      entity_id: switch.storage_room_motion
+      to: 'on'
+    action:
+      service: light.turn_on
+      data_template:
+        entity_id: light.storage_room
+
+  - alias: Storage Room inactive trigger
+    trigger:
+      platform: state
+      entity_id: switch.storage_room_motion
+      to: 'off'
+      for:
+        minutes: 1
+    action:
+      service: light.turn_off
+      data_template:
+        entity_id: light.storage_room

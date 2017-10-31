@@ -1,0 +1,422 @@
+homeassistant:
+  customize:
+    input_boolean.livingroom_activity_override:
+      persistent: true
+    input_select.room_state_livingroom:
+      persistent: true
+
+script:
+  light_profile_livingroom_bright:
+    sequence:
+      # White temp lights
+      - service: light.turn_on
+        data:
+          brightness: 255
+          color_temp: 370
+          entity_id:
+            - light.livingroom_spot_1
+            - light.livingroom_spot_2
+            - light.livingroom_spot_3
+            - light.sofa_table
+            - light.dining_table
+      # Dimmable Lights
+      - service: light.turn_on
+        data:
+          brightness: 255
+          entity_id:
+            - light.display_cabinet
+            - light.cabinet_shelves
+            - light.cabinet_spots
+      # Primary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 255
+          rgb_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.tv_backlight
+            - light.bar_desk
+      # Secondary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 255
+          rgb_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.sofa_corner
+            - light.windowsill
+            - light.tv_shelf
+      # Candles
+      - service: light.turn_on
+        data:
+          brightness: 127
+          rgb_color: [84,64,32]
+          entity_id:
+            - light.candle_1
+      - delay: 00:00:01
+      - service: light.turn_on
+        data:
+          brightness: 127
+          rgb_color: [84,64,32]
+          entity_id:
+            - light.candle_2
+
+  light_profile_livingroom_default:
+    sequence:
+      # Off Lights
+      - service: light.turn_off
+        data:
+          entity_id:
+            - light.livingroom_spot_1
+            - light.livingroom_spot_3
+      # White temp lights
+      - service: light.turn_on
+        data:
+          brightness: 100
+          color_temp: 370
+          entity_id:
+            - light.livingroom_spot_2
+      - service: light.turn_on
+        data:
+          brightness: 172
+          color_temp: 430
+          entity_id:
+            - light.sofa_table
+            - light.dining_table
+      # Dimmable Lights
+      - service: light.turn_on
+        data:
+          brightness: 127
+          entity_id:
+            - light.display_cabinet
+            - light.cabinet_shelves
+            - light.cabinet_spots
+      # Primary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 192
+          rgb_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.tv_backlight
+      - service: light.turn_on
+        data_template:
+          brightness: 255
+          rgb_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.bar_desk
+      # Secondary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 255
+          rgb_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.tv_shelf
+            - light.sofa_corner
+            - light.windowsill
+      # Candles
+      - service: light.turn_on
+        data:
+          brightness: 127
+          rgb_color: [84,64,32]
+          entity_id:
+            - light.candle_1
+      - delay: 00:00:01
+      - service: light.turn_on
+        data:
+          brightness: 127
+          rgb_color: [84,64,32]
+          entity_id:
+                - light.candle_2
+
+  light_profile_livingroom_dimmed:
+    sequence:
+      # Off Lights
+      - service: light.turn_off
+        data:
+          entity_id:
+            - light.livingroom_spot_1
+            - light.livingroom_spot_2
+            - light.livingroom_spot_3
+            - light.dining_table
+      # White temp lights
+      - service: light.turn_on
+        data:
+          brightness: 50
+          color_temp: 500
+          entity_id:
+            - light.sofa_table
+      # Dimmable Lights
+      - service: light.turn_on
+        data:
+          brightness: 32
+          entity_id:
+            - light.display_cabinet
+            - light.cabinet_shelves
+            - light.cabinet_spots
+      # Primary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 127
+          rgb_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.tv_backlight
+            - light.bar_desk
+      - service: light.turn_on
+        data_template:
+          brightness: 127
+          rgb_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.candle_1
+      # Secondary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 127
+          rgb_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.tv_shelf
+            - light.sofa_corner
+            - light.windowsill
+            - light.candle_2
+
+  light_profile_livingroom_ambient:
+    sequence:
+      # Off Lights
+      - service: light.turn_off
+        data:
+          entity_id:
+            - light.livingroom_spot_1
+            - light.livingroom_spot_2
+            - light.livingroom_spot_3
+            - light.dining_table
+            - light.cabinet_spots
+      # Dimmable Lights
+      - service: light.turn_on
+        data:
+          brightness: 1
+          entity_id:
+            - light.display_cabinet
+            - light.cabinet_shelves
+      # Primary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 32
+          rgb_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.tv_backlight
+      - service: light.turn_on
+        data_template:
+          brightness: 72
+          rgb_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.bar_desk
+      - service: light.turn_on
+        data_template:
+          brightness: 72
+          rgb_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.candle_1
+            - light.sofa_table
+      # Secondary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 72
+          rgb_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.tv_shelf
+            - light.sofa_corner
+            - light.windowsill
+            - light.candle_2
+
+  light_profile_livingroom_night:
+    sequence:
+      # Off Lights
+      - service: light.turn_off
+        data:
+          entity_id:
+            - light.candle_1
+            - light.livingroom_spot_1
+            - light.livingroom_spot_2
+            - light.livingroom_spot_3
+            - light.dining_table
+            - light.sofa_table
+            - light.cabinet_spots
+            - light.cabinet_shelves
+            - light.display_cabinet
+      - delay: 00:00:01
+      - service: light.turn_off
+        data:
+          entity_id:
+            - light.candle_2
+      # Primary RGB lights
+      - service: light.turn_on
+        data:
+          brightness: 72
+          rgb_color: [45,0,0]
+          entity_id:
+            - light.tv_shelf
+      - service: light.turn_on
+        data:
+          brightness: 32
+          rgb_color: [45,0,0]
+          entity_id:
+            - light.tv_backlight
+            - light.bar_desk
+            - light.sofa_corner
+            - light.windowsill
+
+  light_profile_livingroom_off:
+    sequence:
+      # Off Lights
+      - service: light.turn_off
+        data:
+          entity_id: group.livingroom_light
+
+
+input_boolean:
+  livingroom_activity_override:
+    name: Livingroom Activity Override
+    initial: off
+
+input_select:
+  room_state_livingroom:
+    name: Livingroom State
+    options:
+      - active
+      - inactive
+      - 'off'
+    initial: 'off'
+
+group:
+  light_profile_livingroom:
+    entities:
+      - binary_sensor.livingroom_activity
+      - input_boolean.livingroom_activity_override
+      - input_select.light_profile
+
+  light_profile_scenes_livingroom:
+    name: Livingroom Scenes
+    entities:
+      - script.light_profile_livingroom_bright
+      - script.light_profile_livingroom_default
+      - script.light_profile_livingroom_dimmed
+      - script.light_profile_livingroom_ambient
+      - script.light_profile_livingroom_night
+      - script.light_profile_livingroom_off
+
+  light_profile_automations_livingroom:
+    entities:
+      - automation.light_profile_change_active_livingroom
+      - automation.light_profile_change_inactive_livingroom
+      - automation.light_profile_change_off_livingroom
+
+  motion_triggers_livingroom:
+    entities:
+      - automation.room_state_active_trigger_livingroom
+      - automation.room_state_inactive_trigger_livingroom
+      - automation.room_state_off_trigger_livingroom
+
+binary_sensor:
+  - platform: template
+    sensors:
+      livingroom_activity:
+        friendly_name: 'Livingroom Activity'
+        value_template: >
+          {% if is_state('binary_sensor.livingroom_sensor', 'on')
+          or is_state('input_boolean.livingroom_activity_override', 'on')
+          or is_state('media_player.tv_chromecast', 'playing')
+          or is_state('input_select.latest_motion', 'Livingroom') -%}
+            true
+          {% else -%}
+            false
+          {% endif -%}
+        entity_id:
+          - binary_sensor.livingroom_sensor
+          - input_boolean.livingroom_activity_override
+          - media_player.tv_chromecast
+          - input_select.latest_motion
+
+automation:
+  # Room State Triggers #
+  - alias: room_state_active_trigger_livingroom
+    trigger:
+      platform: state
+      entity_id: binary_sensor.livingroom_activity
+      to: 'on'
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.room_state_livingroom
+        option: 'active'
+
+  - alias: room_state_inactive_trigger_livingroom
+    trigger:
+      platform: state
+      entity_id: binary_sensor.livingroom_activity
+      to: 'off'
+      for:
+        minutes: 5
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.room_state_livingroom
+        option: 'inactive'
+
+  - alias: room_state_off_trigger_livingroom
+    trigger:
+      platform: state
+      entity_id: binary_sensor.livingroom_activity
+      to: 'off'
+      for:
+        minutes: 10
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.room_state_livingroom
+        option: 'off'
+
+  # Room Scene Triggers #
+  - alias: light_profile_change_active_livingroom
+    trigger:
+      - platform: state
+        entity_id: input_select.room_state_livingroom
+      - platform: state
+        entity_id: input_select.light_profile
+    condition:
+      - condition: state
+        entity_id: input_select.room_state_livingroom
+        state: 'active'
+    action:
+      service: script.turn_on
+      data_template:
+        entity_id: >
+          script.light_profile_livingroom_{{ states('input_select.light_profile') | lower }}
+
+  - alias: light_profile_change_inactive_livingroom
+    trigger:
+      - platform: state
+        entity_id: input_select.room_state_livingroom
+      - platform: state
+        entity_id: input_select.inactive_light_profile
+    condition:
+      - condition: state
+        entity_id: input_select.room_state_livingroom
+        state: 'inactive'
+    action:
+      service: script.turn_on
+      data_template:
+        entity_id: >
+          script.light_profile_livingroom_{{ states('input_select.inactive_light_profile') | lower }}
+
+  - alias: light_profile_change_off_livingroom
+    trigger:
+      - platform: state
+        entity_id: input_select.room_state_livingroom
+      - platform: state
+        entity_id: input_select.light_profile
+    condition:
+      - condition: state
+        entity_id: input_select.room_state_livingroom
+        state: 'off'
+    action:
+      service: script.turn_on
+      data_template:
+        entity_id: >
+          script.light_profile_livingroom_off

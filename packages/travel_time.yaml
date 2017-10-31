@@ -1,0 +1,40 @@
+group:
+  travel_time:
+    name: Travel Time
+    entities:
+      - sensor.travel_time_to_work_citymapper
+      - sensor.travel_time_to_work_public_transit
+      - sensor.travel_time_to_work_bicycling
+      - sensor.travel_time_to_work_driving
+
+sensor:
+  - platform: rest
+    name: Travel time to work (Citymapper)
+    resource: !secret citymapper_url
+    value_template: "{{ value_json.travel_time_minutes }}"
+    unit_of_measurement: 'min'
+    scan_interval: 60
+
+  - platform: google_travel_time
+    name: Travel time to work (Driving)
+    api_key: !secret google_directions_secret
+    origin: zone.home
+    destination: !secret work_address
+    options:
+      mode: driving
+
+  - platform: google_travel_time
+    name: Travel time to work (Public Transit)
+    api_key: !secret google_directions_secret
+    origin: zone.home
+    destination: !secret work_address
+    options:
+      mode: transit
+
+  - platform: google_travel_time
+    name: Travel time to work (Bicycling)
+    api_key: !secret google_directions_secret
+    origin: zone.home
+    destination: !secret work_address
+    options:
+      mode: bicycling

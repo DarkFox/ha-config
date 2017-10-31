@@ -1,0 +1,47 @@
+automation:
+  - alias: kitchen_tv_chromecast
+    trigger:
+      platform: template
+      value_template: "{% if is_state('media_player.kitchen_chromecast', 'off') %}false{% else %}true{% endif %}"
+    action:
+      service: switch.turn_on
+      data:
+        entity_id: switch.kitchen_tv
+
+  - alias: kitchen_tv_chromecast_off
+    trigger:
+      platform: state
+      entity_id: media_player.kitchen_chromecast
+      to: 'off'
+      for:
+        minutes: 1
+    action:
+      service: switch.turn_off
+      data:
+        entity_id: switch.kitchen_tv
+
+  - alias: projector_soundbar_chromecast_audio
+    trigger:
+      platform: state
+      entity_id: media_player.office_soundbar
+      to: 'playing'
+    action:
+      service: script.turn_on
+      data:
+        entity_id: script.projector_soundbar_chromecast_audio
+
+
+script:
+  projector_soundbar_chromecast_audio:
+    alias: "Switch to Chromecast Audio on projector soundbar"
+    sequence:
+      - service: switch.turn_on
+        entity_id: switch.projector_soundbar_power
+      - delay:
+          seconds: 10
+      - service: switch.turn_on
+        entity_id: switch.projector_soundbar_input_analog
+      - delay:
+          seconds: 1
+      - service: script.turn_on
+        entity_id: script.fix_soundbar_lag
