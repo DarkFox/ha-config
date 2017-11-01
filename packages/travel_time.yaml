@@ -1,20 +1,23 @@
+homeassistant:
+  customize:
+    sensor.s_train_b_status:
+      friendly_name: S-Tog Linje B Status
+      entity_picture: http://www.dsb.dk/globalassets/s-tog-overblik/ikoner/b.png
+    sensor.s_train_message:
+      friendly_name: S-Tog Driftbesked
+      icon: mdi:train
+
 group:
   travel_time:
     name: Travel Time
     entities:
-      - sensor.travel_time_to_work_citymapper
       - sensor.travel_time_to_work_public_transit
       - sensor.travel_time_to_work_bicycling
       - sensor.travel_time_to_work_driving
+      - sensor.s_train_b_status
+      - sensor.s_train_message
 
 sensor:
-  - platform: rest
-    name: Travel time to work (Citymapper)
-    resource: !secret citymapper_url
-    value_template: "{{ value_json.travel_time_minutes }}"
-    unit_of_measurement: 'min'
-    scan_interval: 60
-
   - platform: google_travel_time
     name: Travel time to work (Driving)
     api_key: !secret google_directions_secret
@@ -38,3 +41,15 @@ sensor:
     destination: !secret work_address
     options:
       mode: bicycling
+
+  - platform: scrape
+    resource: http://www.dsb.dk/trafikinformation/s-tog-overblik/
+    name: s_train_message
+    select: 'div.FooterFreeText'
+    scan_interval: 300
+
+  - platform: scrape
+    resource: http://www.dsb.dk/trafikinformation/s-tog-overblik/
+    name: s_train_b_status
+    select: 'table.RepeaterTable tr:nth-of-type(2) td.TDItemLabel div b'
+    scan_interval: 300
