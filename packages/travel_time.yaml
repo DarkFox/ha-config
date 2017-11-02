@@ -12,10 +12,18 @@ group:
     name: Travel Time
     entities:
       - sensor.travel_time_to_work_driving
+      - sensor.travel_time_to_work_public_transit
       - sensor.s_train_b_status
       - sensor.s_train_message
 
 sensor:
+  - platform: rest
+    name: Travel time to work (Public Transit)
+    resource: !secret citymapper_url
+    value_template: "{{ value_json.travel_time_minutes }}"
+    unit_of_measurement: 'min'
+    scan_interval: 300
+
   - platform: google_travel_time
     name: Travel time to work (Driving)
     api_key: !secret google_directions_secret
