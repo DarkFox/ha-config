@@ -11,8 +11,6 @@ group:
   travel_time:
     name: Travel Time
     entities:
-      - sensor.travel_time_to_work_public_transit
-      - sensor.travel_time_to_work_bicycling
       - sensor.travel_time_to_work_driving
       - sensor.s_train_b_status
       - sensor.s_train_message
@@ -26,30 +24,16 @@ sensor:
     options:
       mode: driving
 
-  - platform: google_travel_time
-    name: Travel time to work (Public Transit)
-    api_key: !secret google_directions_secret
-    origin: zone.home
-    destination: !secret work_address
-    options:
-      mode: transit
-
-  - platform: google_travel_time
-    name: Travel time to work (Bicycling)
-    api_key: !secret google_directions_secret
-    origin: zone.home
-    destination: !secret work_address
-    options:
-      mode: bicycling
-
   - platform: scrape
     resource: http://www.dsb.dk/trafikinformation/s-tog-overblik/
     name: s_train_message
     select: 'div.FooterFreeText'
+    value_template: "{{ value | trim }}"
     scan_interval: 300
 
   - platform: scrape
     resource: http://www.dsb.dk/trafikinformation/s-tog-overblik/
     name: s_train_b_status
     select: 'table.RepeaterTable tr:nth-of-type(2) td.TDItemLabel div b'
+    value_template: "{{ value | trim }}"
     scan_interval: 300
