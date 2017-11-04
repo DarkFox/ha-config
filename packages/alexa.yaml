@@ -74,50 +74,45 @@ script:
           topic: "milight/0x4243/rgb_cct/2"
           payload: "{'status': 'off'}"
 
-alexa:
-  intents:
-    DimLightsIntent:
-      action:
-        service: input_select.select_next
-        entity_id: input_select.light_profile
-      speech:
-        type: plaintext
-        text: >
-          Dimming the lights.
+intent_script:
+  DimLightsIntent:
+    action:
+      service: input_select.select_next
+      entity_id: input_select.light_profile
+    speech:
+      text: >
+        Dimming the lights.
 
-    BrightenLightsIntent:
-      action:
-        service: input_select.select_previous
-        entity_id: input_select.light_profile
-      speech:
-        type: plaintext
-        text: >
-          Brightening the lights.
+  BrightenLightsIntent:
+    action:
+      service: input_select.select_previous
+      entity_id: input_select.light_profile
+    speech:
+      text: >
+        Brightening the lights.
 
-    WorkTravelTime:
-      speech:
-        type: plaintext
-        text: >
-          Current travel time to work is {{ states("sensor.travel_time_to_work") }} minutes.
+  WorkTravelTime:
+    speech:
+      text: >
+        Current travel time to work is {{ states("sensor.travel_time_to_work") }} minutes.
 
-    WeatherReport:
-      speech:
-        type: plaintext
-        text: >
-          The weather is {{ states("sensor.pws_weather") }} with a high of {{ states("sensor.pws_temp_high_1d_c") }} degrees
-          and a low of {{ states("sensor.pws_temp_low_1d_c") }}. There is a {{ states("sensor.pws_precip_1d") }}% chance of rain.
+  WeatherReport:
+    speech:
+      text: >
+        The weather is {{ states("sensor.pws_weather") }} with a high of {{ states("sensor.pws_temp_high_1d_c") }} degrees
+        and a low of {{ states("sensor.pws_temp_low_1d_c") }}. There is a {{ states("sensor.pws_precip_1d") }}% chance of rain.
 
-    PlayLastTwitchStreamIntent:
-      action:
-        service: media_extractor.play_media
-        data_template:
-          entity_id: "media_player.{{ Device | lower | replace(' ', '_') }}"
-          media_content_id: "{{ states('sensor.twitch_stream') }}"
-          media_content_type: TVSHOW
-      speech:
-        type: plaintext
-        text: >
-          Sending {{ states.sensor.twitch_stream.attributes.stream_name }} to {{ Device }}
+  PlayLastTwitchStreamIntent:
+    action:
+      service: media_extractor.play_media
+      data_template:
+        entity_id: "media_player.{{ Device | lower | replace(' ', '_') }}"
+        media_content_id: "{{ states('sensor.twitch_stream') }}"
+        media_content_type: TVSHOW
+    speech:
+      type: plaintext
+      text: >
+        Sending {{ states.sensor.twitch_stream.attributes.stream_name }} to {{ Device }}
 
 # Hide groups and devices from haaska
 homeassistant:
