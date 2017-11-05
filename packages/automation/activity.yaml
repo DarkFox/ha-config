@@ -50,6 +50,34 @@ input_select:
       - Unknown
 
 script:
+  morning_briefing:
+    alias: Morning Briefing
+    sequence:
+      - service: tts.google_say
+        data_template:
+          entity_id: "{{ device_entity_id }}"
+          message: >
+            Godmorgen. Klokken er {{ states.sensor.time.state }}.
+            Vejrudsigt: {{ states('sensor.pws_temp_c') | replace('.',',') }}° og {{ states('sensor.pws_weather') }}.
+            {% if is_state('sensor.weekday', 'on') -%}
+              S-Tog Linje B:
+              {% if is_state('sensor.s_train_b_status', 'Til tiden') -%}
+                Kører normalt.
+              {% else -%}
+                 {{ states('sensor.s_train_b_status') }}. {{ states('sensor.s_train_message') }}
+                 Estimeret rejsetid: {{ states('sensor.travel_time_to_work_public_transit') }} minutter.
+              {%- endif -%}
+            {%- endif -%}
+          language: 'da'
+
+  alexa_calendar:
+    alias: Alexa Calendar
+    sequence:
+      - service: tts.google_say
+        data_template:
+          entity_id: "{{ device_entity_id }}"
+          message: Alexa, what's today's schedule?
+
   morning_lights:
     alias: Turn lights to bright and turn off the fan.
     sequence:
@@ -300,32 +328,18 @@ automation:
       entity_id: input_select.martin_activity
       to: 'Waking'
     action:
-      - service: tts.google_say
-        entity_id: media_player.bedroom_speakers
-        data_template:
-          message: >
-            Godmorgen. Klokken er {{ states.sensor.time.state }}.
-            Vejrudsigt: {{ states('sensor.pws_temp_c') | replace('.',',') }}° og {{ states('sensor.pws_weather') }}.
-            {% if is_state('sensor.weekday', 'on') -%}
-              S-Tog Linje B:
-              {% if is_state('sensor.s_train_b_status', 'Til tiden') -%}
-                Kører normalt.
-              {% else -%}
-                 {{ states('sensor.s_train_b_status') }}. {{ states('sensor.s_train_message') }}
-                 Estimeret rejsetid: {{ states('sensor.travel_time_to_work_public_transit') }} minutter.
-              {%- endif -%}
-            {%- endif -%}
-          language: 'da'
-      - delay:
-          seconds: 30
       - service: input_select.select_option
         data:
           entity_id: input_select.playlist_player
-          option: 'media_player.east_side_speakers'
+          option: 'media_player.bedroom_speakers'
       - service: input_select.set_options
         data_template:
           entity_id: input_select.playlist
           options:
+            - "==SCRIPT==morning_briefing"
+            - "==SCRIPT==alexa_calendar"
+            - "==SWITCH==east_side_speakers"
+            - "==SCRIPT==playlist_delay_30"
             - "{{ states.sensor.podcast_bbc_minute.state }}"
             - "{{ states.sensor.podcast_24syv_nyheder.state }}"
             - "{{ states.sensor.podcast_daily_tech_news_show.state }}"
