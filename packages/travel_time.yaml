@@ -6,6 +6,8 @@ homeassistant:
     sensor.s_train_message:
       friendly_name: S-Tog Driftbesked
       icon: mdi:train
+    sensor.work_arrival_time:
+      hidden: true
     sensor.citymapper_key:
       hidden: true
     sensor.home_latitude:
@@ -25,6 +27,41 @@ group:
       - sensor.travel_time_to_work_public_transit
       - sensor.s_train_b_status
       - sensor.s_train_message
+
+automation:
+  - alias: citymapper_updater
+    trigger:
+      platform: time
+      minutes: '/5'
+      seconds: 00
+    condition:
+      condition: time
+      after: '7:00:00'
+      before: '09:00:00'
+      weekday:
+        - mon
+        - tue
+        - wed
+        - thu
+        - fri
+    action:
+      - service: notify.citymapper_url
+        data_template:
+          message: 'https://developer.citymapper.com/api/1/traveltime/?startcoord={{ states("sensor.home_latitude") }}%2C{{ states("sensor.home_longitude") }}&endcoord={{ states("sensor.work_latitude") }}%2C{{ states("sensor.work_longitude") }}&time_type=arrival&key={{ states("sensor.citymapper_key") }}&time={{ states("sensor.work_arrival_time") }}'
+      - service: shell_command.citymapper_get_data
+      - delay:
+          seconds: 5
+      - service: shell_command.citymapper_cleanup
+
+notify:
+  - platform: file
+    name: citymapper_url
+    filename: /share/citymapper_url.txt
+    timestamp: false
+
+shell_command:
+  citymapper_get_data: xargs -n 1 curl -o /share/citymapper_out.json -X GET < /share/citymapper_url.txt
+  citymapper_cleanup: rm /share/citymapper_url.txt
 
 sensor:
   - platform: template
@@ -47,15 +84,11 @@ sensor:
       work_longitude:
         value_template: !secret work_longitude
 
-
-  - platform: command_line
-    command: >
-     echo '"https://developer.citymapper.com/api/1/traveltime/?startcoord={{ states('sensor.home_latitude') }}%2C{{ states('sensor.home_longitude') }}&endcoord={{ states('sensor.work_latitude') }}%2C{{ states('sensor.work_longitude') }}&time_type=arrival&key={{ states('sensor.citymapper_key') }}&time={{ states('sensor.work_arrival_time') }}"' > /share/curlstring.txt;
-     xargs -n 1 curl -X GET < /share/curlstring.txt
+  - platform: file
+    file_path: /share/citymapper_out.json
     name: Travel time to work (Public Transit)
     value_template: "{{ value_json.travel_time_minutes }}"
     unit_of_measurement: 'min'
-    scan_interval: 300
 
   - platform: google_travel_time
     name: Travel time to work (Driving)
