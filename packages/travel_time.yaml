@@ -6,6 +6,16 @@ homeassistant:
     sensor.s_train_message:
       friendly_name: S-Tog Driftbesked
       icon: mdi:train
+    sensor.citymapper_key:
+      hidden: true
+    sensor.home_latitude:
+      hidden: true
+    sensor.home_longitude:
+      hidden: true
+    sensor.work_latitude:
+      hidden: true
+    sensor.work_longitude:
+      hidden: true
 
 group:
   travel_time:
@@ -17,9 +27,32 @@ group:
       - sensor.s_train_message
 
 sensor:
-  - platform: rest
+  - platform: template
+    sensors:
+      work_arrival_time:
+        value_template: >
+          {% if now().hour > 9 %}
+            {{ (as_timestamp(now()) + 86400) | timestamp_custom("%Y-%m-%d") }}T09%3A00%3A00%2B0100
+          {% else %}
+            {{ as_timestamp(now()) | timestamp_custom("%Y-%m-%d") }}T09%3A00%3A00%2B0100
+          {% endif %}
+      citymapper_key:
+        value_template: !secret citymapper_key
+      home_latitude:
+        value_template: !secret home_latitude
+      home_longitude:
+        value_template: !secret home_longitude
+      work_latitude:
+        value_template: !secret work_latitude
+      work_longitude:
+        value_template: !secret work_longitude
+
+
+  - platform: command_line
+    command: >
+     echo '"https://developer.citymapper.com/api/1/traveltime/?startcoord={{ states('sensor.home_latitude') }}%2C{{ states('sensor.home_longitude') }}&endcoord={{ states('sensor.work_latitude') }}%2C{{ states('sensor.work_longitude') }}&time_type=arrival&key={{ states('sensor.citymapper_key') }}&time={{ states('sensor.work_arrival_time') }}"' > /share/curlstring.txt;
+     xargs -n 1 curl -X GET < /share/curlstring.txt
     name: Travel time to work (Public Transit)
-    resource: !secret citymapper_url
     value_template: "{{ value_json.travel_time_minutes }}"
     unit_of_measurement: 'min'
     scan_interval: 300
