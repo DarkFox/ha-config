@@ -50,49 +50,6 @@ input_select:
       - Unknown
 
 script:
-  morning_briefing:
-    alias: Morning Briefing
-    sequence:
-      - service: tts.google_say
-        data_template:
-          entity_id: "{{ device_entity_id }}"
-          message: >
-            Godmorgen. Klokken er {{ states.sensor.time.state }}.
-            Vejrudsigt: {{ states('sensor.pws_temp_c') | replace('.',',') }}° og {{ states('sensor.pws_weather') }}.
-            {% if is_state('sensor.weekday', 'on') -%}
-              S-Tog Linje B:
-              {% if is_state('sensor.s_train_b_status', 'Til tiden') -%}
-                Kører normalt.
-              {% else -%}
-                 {{ states('sensor.s_train_b_status') }}. {{ states('sensor.s_train_message') }}
-                 Estimeret rejsetid: {{ states('sensor.travel_time_to_work_public_transit') }} minutter.
-              {%- endif -%}
-            {%- endif -%}
-          language: 'da'
-
-  alexa_calendar:
-    alias: Alexa Calendar
-    sequence:
-      - service: tts.google_say
-        data_template:
-          entity_id: "{{ device_entity_id }}"
-          message: Alexa, what's today's schedule?
-
-  morning_lights:
-    alias: Turn lights to bright and turn off the fan.
-    sequence:
-      - service: input_select.select_option
-        data_template:
-          option: 'Default'
-          entity_id: >
-            {% if is_state('input_boolean.guests', 'on') %}
-              input_select.bedroom_light_profile
-            {% else %}
-              input_select.light_profile
-            {% endif %}
-      - service: switch.turn_off
-        entity_id: switch.bedroom_fan
-
   return_to_previous_activity:
     alias: "Return to previous activity"
     sequence:
@@ -263,7 +220,6 @@ automation:
         entity_id: input_select.martin_activity
         option: Showering
 
-
   - alias: kitchen_activity
     trigger:
       platform: state
@@ -279,78 +235,10 @@ automation:
         entity_id: input_select.martin_activity
         option: In the kitchen
 
-  - alias: sleeping_activity
-    trigger:
-      platform: state
-      entity_id: sensor.sleep_tracker
-      to: 'tracking'
-    action:
-      service: input_select.select_option
-      data:
-        entity_id: input_select.martin_activity
-        option: Sleeping
-
-  - alias: waking_activity
-    trigger:
-      platform: state
-      entity_id: sensor.phone_alarm
-      to: 'snooze'
-    action:
-      service: input_select.select_option
-      data:
-        entity_id: input_select.martin_activity
-        option: Waking
-
   ##########################
   # Activity based actions #
   ##########################
-  - alias: morning_awake
-    trigger:
-      platform: state
-      entity_id: binary_sensor.hallway_sensor
-      to: 'on'
-    condition:
-        condition: state
-        entity_id: input_select.martin_activity
-        state: 'Waking'
-    action:
-      - service: script.turn_on
-        data:
-          entity_id: script.morning_lights
-      - service: joaoapps_join.phone_send_tasker
-        data:
-          command: "sleep_tracking_stop"
-
-
-  - alias: morning_podcast
-    trigger:
-      platform: state
-      entity_id: input_select.martin_activity
-      to: 'Waking'
-    action:
-      - service: input_select.select_option
-        data:
-          entity_id: input_select.playlist_player
-          option: 'media_player.bedroom_speakers'
-      - service: input_select.set_options
-        data_template:
-          entity_id: input_select.playlist
-          options:
-            - "==SCRIPT==morning_briefing"
-            - "==SCRIPT==alexa_calendar"
-            - "==SWITCH==east_side_speakers"
-            - "==SCRIPT==playlist_delay_30"
-            - "{{ states.sensor.podcast_bbc_minute.state }}"
-            - "{{ states.sensor.podcast_24syv_nyheder.state }}"
-            - "{{ states.sensor.podcast_daily_tech_news_show.state }}"
-            - "==END=="
-      - delay:
-          seconds: 2
-      - service: media_player.volume_set
-        data_template:
-          entity_id: 'media_player.east_side_speakers'
-          volume_level: 0.3
-
+  
   - alias: pause_tv_chromecast_on_activity_change
     trigger:
       platform: state
