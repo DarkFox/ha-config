@@ -27,7 +27,7 @@ script:
       - service: light.turn_on
         data_template:
           brightness: 255
-          rgb_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[2]|int }}" ]
+          rgb_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[2]|int }}" ]
           entity_id:
             - light.globe
       # Secondary RGB lights
@@ -63,7 +63,7 @@ script:
       - service: light.turn_on
         data_template:
           brightness: 255
-          rgb_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[2]|int }}" ]
+          rgb_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[2]|int }}" ]
           entity_id:
             - light.globe
       # Secondary RGB lights
@@ -86,9 +86,14 @@ script:
       - service: light.turn_on
         data_template:
           brightness: 86
-          rgb_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[2]|int }}" ]
+          rgb_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[2]|int }}" ]
           entity_id:
             - light.globe
+      - service: light.turn_on
+        data_template:
+          brightness: 86
+          rgb_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[2]|int }}" ]
+          entity_id:
             - group.cloud
       # Secondary RGB lights
       - service: light.turn_on
@@ -111,14 +116,19 @@ script:
       - service: light.turn_on
         data_template:
           brightness: 1
+          rgb_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.globe
+      - service: light.turn_on
+        data_template:
+          brightness: 1
           rgb_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[2]|int }}" ]
           entity_id:
             - light.cloud_north
-            - light.globe
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
-          brightness: 127
+          brightness: 64
           rgb_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[2]|int }}" ]
           entity_id:
             - light.bed_shelves
@@ -169,6 +179,27 @@ script:
         data:
           entity_id:
             - light.bed
+
+  light_profile_bedroom_party:
+    sequence:
+      # Off Lights
+      - service: light.turn_off
+        data:
+          entity_id:
+            - light.bed
+      - service: light.turn_on
+        data_template:
+          effect: "rainbow"
+          entity_id:
+            - light.globe
+            - light.bed_shelves
+      - service: light.turn_on
+        data_template:
+          effect: "colorloop"
+          entity_id:
+            - light.cloud_north
+            - light.cloud_west
+            - light.cloud_east
 group:
   light_profile_bedroom:
     entities:
@@ -334,6 +365,10 @@ automation:
         entity_id: input_select.room_state_bedroom
       - platform: state
         entity_id: input_select.bedroom_light_profile
+      - platform: state
+        entity_id: input_select.theme
+      - platform: state
+        entity_id: switch.party_button
     condition:
       - condition: state
         entity_id: input_select.room_state_bedroom
@@ -342,7 +377,11 @@ automation:
       service: script.turn_on
       data_template:
         entity_id: >
-          script.light_profile_bedroom_{{ states('input_select.bedroom_light_profile') | lower }}
+          {% if is_state('switch.party_button', 'on') -%}
+            script.light_profile_bedroom_party
+          {% else -%}
+            script.light_profile_bedroom_{{ states('input_select.bedroom_light_profile') | lower }}
+          {%- endif -%}
 
   - alias: light_profile_change_inactive_bedroom
     trigger:
@@ -350,6 +389,8 @@ automation:
         entity_id: input_select.room_state_bedroom
       - platform: state
         entity_id: input_select.bedroom_inactive_light_profile
+      - platform: state
+        entity_id: input_select.theme
     condition:
       - condition: state
         entity_id: input_select.room_state_bedroom

@@ -127,6 +127,26 @@ script:
           entity_id:
             - group.kitchen_light
 
+  light_profile_kitchen_party:
+    sequence:
+      # Off lights
+      - service: light.turn_off
+        data:
+          entity_id:
+            - light.kitchen_sink
+            - light.kitchen_stove
+            - light.cafe_table
+      - service: light.turn_on
+        data_template:
+          effect: "rainbow"
+          entity_id:
+            - light.kitchen_cabinets
+      - service: light.turn_on
+        data_template:
+          effect: "colorloop"
+          entity_id:
+            - light.kitchen
+
 group:
   light_profile_kitchen:
     entities:
@@ -255,6 +275,10 @@ automation:
         entity_id: input_select.room_state_kitchen
       - platform: state
         entity_id: input_select.light_profile
+      - platform: state
+        entity_id: input_select.theme
+      - platform: state
+        entity_id: switch.party_button
     condition:
       - condition: state
         entity_id: input_select.room_state_kitchen
@@ -263,7 +287,11 @@ automation:
       service: script.turn_on
       data_template:
         entity_id: >
-          script.light_profile_kitchen_{{ states('input_select.light_profile') | lower }}
+          {% if is_state('switch.party_button', 'on') -%}
+            script.light_profile_kitchen_party
+          {% else -%}
+            script.light_profile_kitchen_{{ states('input_select.light_profile') | lower }}
+          {% endif -%}
 
   - alias: light_profile_change_inactive_kitchen
     trigger:
@@ -271,6 +299,8 @@ automation:
         entity_id: input_select.room_state_kitchen
       - platform: state
         entity_id: input_select.inactive_light_profile
+      - platform: state
+        entity_id: input_select.theme
     condition:
       - condition: state
         entity_id: input_select.room_state_kitchen

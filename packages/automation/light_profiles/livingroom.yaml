@@ -51,12 +51,6 @@ script:
           rgb_color: [84,64,32]
           entity_id:
             - light.candle_1
-      - delay: 00:00:01
-      - service: light.turn_on
-        data:
-          brightness: 127
-          rgb_color: [84,64,32]
-          entity_id:
             - light.candle_2
 
   light_profile_livingroom_default:
@@ -118,13 +112,7 @@ script:
           rgb_color: [84,64,32]
           entity_id:
             - light.candle_1
-      - delay: 00:00:01
-      - service: light.turn_on
-        data:
-          brightness: 127
-          rgb_color: [84,64,32]
-          entity_id:
-                - light.candle_2
+            - light.candle_2
 
   light_profile_livingroom_dimmed:
     sequence:
@@ -135,7 +123,6 @@ script:
             - light.livingroom_spot_1
             - light.livingroom_spot_2
             - light.livingroom_spot_3
-            - light.dining_table
       # White temp lights
       - service: light.turn_on
         data:
@@ -165,6 +152,13 @@ script:
           rgb_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[2]|int }}" ]
           entity_id:
             - light.candle_1
+            - light.candle_2
+      - service: light.turn_on
+        data_template:
+          brightness: 32
+          rgb_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[2]|int }}" ]
+          entity_id:
+            - light.dining_table
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
@@ -174,7 +168,6 @@ script:
             - light.tv_shelf
             - light.sofa_corner
             - light.windowsill
-            - light.candle_2
 
   light_profile_livingroom_ambient:
     sequence:
@@ -185,7 +178,6 @@ script:
             - light.livingroom_spot_1
             - light.livingroom_spot_2
             - light.livingroom_spot_3
-            - light.dining_table
             - light.cabinet_spots
       # Dimmable Lights
       - service: light.turn_on
@@ -212,8 +204,10 @@ script:
           brightness: 72
           rgb_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[2]|int }}" ]
           entity_id:
-            - light.candle_1
+            - light.dining_table
             - light.sofa_table
+            - light.candle_1
+            - light.candle_2
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
@@ -223,7 +217,6 @@ script:
             - light.tv_shelf
             - light.sofa_corner
             - light.windowsill
-            - light.candle_2
 
   light_profile_livingroom_night:
     sequence:
@@ -232,35 +225,36 @@ script:
         data:
           entity_id:
             - light.candle_1
+            - light.candle_2
             - light.livingroom_spot_1
             - light.livingroom_spot_2
             - light.livingroom_spot_3
-            - light.dining_table
             - light.sofa_table
             - light.cabinet_spots
             - light.cabinet_shelves
             - light.display_cabinet
-      - delay: 00:00:01
-      - service: light.turn_off
-        data:
-          entity_id:
-            - light.candle_2
+            - light.tv_backlight
       # Primary RGB lights
       - service: light.turn_on
         data:
           brightness: 72
-          rgb_color: [45,0,0]
+          rgb_color: [255,0,0]
           entity_id:
             - light.tv_shelf
+            - light.bar_desk
       - service: light.turn_on
         data:
-          brightness: 32
-          rgb_color: [45,0,0]
+          brightness: 8
+          rgb_color: [255,0,0]
           entity_id:
-            - light.tv_backlight
-            - light.bar_desk
             - light.sofa_corner
             - light.windowsill
+      - service: light.turn_on
+        data:
+          brightness: 1
+          rgb_color: [255,0,0]
+          entity_id:
+            - light.dining_table
 
   light_profile_livingroom_off:
     sequence:
@@ -268,6 +262,41 @@ script:
       - service: light.turn_off
         data:
           entity_id: group.livingroom_light
+
+  light_profile_livingroom_party:
+    sequence:
+      # Off Lights
+      - service: light.turn_off
+        data:
+          entity_id:
+            - light.livingroom_spot_1
+            - light.livingroom_spot_2
+            - light.livingroom_spot_3
+            - light.dining_table
+            - light.cabinet_spots
+      # Dimmable Lights
+      - service: light.turn_on
+        data:
+          brightness: 1
+          entity_id:
+            - light.display_cabinet
+            - light.cabinet_shelves
+      - service: light.turn_on
+        data_template:
+          effect: "rainbow"
+          entity_id:
+            - light.tv_shelf
+            - light.sofa_corner
+            - light.windowsill
+            - light.candle_2
+            - light.candle_1
+            - light.bar_desk
+            - light.tv_backlight
+      - service: light.turn_on
+        data_template:
+          effect: "colorloop"
+          entity_id:
+            - light.sofa_table
 
 
 input_boolean:
@@ -379,6 +408,10 @@ automation:
         entity_id: input_select.room_state_livingroom
       - platform: state
         entity_id: input_select.light_profile
+      - platform: state
+        entity_id: input_select.theme
+      - platform: state
+        entity_id: switch.party_button
     condition:
       - condition: state
         entity_id: input_select.room_state_livingroom
@@ -387,7 +420,11 @@ automation:
       service: script.turn_on
       data_template:
         entity_id: >
-          script.light_profile_livingroom_{{ states('input_select.light_profile') | lower }}
+          {% if is_state('switch.party_button', 'on') -%}
+            script.light_profile_livingroom_party
+          {% else -%}
+            script.light_profile_livingroom_{{ states('input_select.light_profile') | lower }}
+          {% endif -%}
 
   - alias: light_profile_change_inactive_livingroom
     trigger:
@@ -395,6 +432,8 @@ automation:
         entity_id: input_select.room_state_livingroom
       - platform: state
         entity_id: input_select.inactive_light_profile
+      - platform: state
+        entity_id: input_select.theme
     condition:
       - condition: state
         entity_id: input_select.room_state_livingroom

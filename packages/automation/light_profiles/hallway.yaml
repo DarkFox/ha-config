@@ -84,6 +84,18 @@ script:
           entity_id:
             - light.hallway
 
+  light_profile_hallway_party:
+    sequence:
+      - service: light.turn_on
+        data_template:
+          effect: "colorloop"
+          entity_id:
+            - light.hallway
+      - service: input_number.set_value
+        data:
+         entity_id: input_number.hallway_tablet_brightness
+         value: 25
+
 input_boolean:
   hallway_activity_override:
     name: Hallway Activity Override
@@ -213,6 +225,10 @@ automation:
         entity_id: input_select.room_state_hallway
       - platform: state
         entity_id: input_select.light_profile
+      - platform: state
+        entity_id: input_select.theme
+      - platform: state
+        entity_id: switch.party_button
     condition:
       - condition: state
         entity_id: input_select.room_state_hallway
@@ -221,7 +237,11 @@ automation:
       service: script.turn_on
       data_template:
         entity_id: >
-          script.light_profile_hallway_{{ states('input_select.light_profile') | lower }}
+          {% if is_state('switch.party_button', 'on') -%}
+            script.light_profile_hallway_party
+          {% else -%}
+            script.light_profile_hallway_{{ states('input_select.light_profile') | lower }}
+          {% endif -%}
 
   - alias: light_profile_change_inactive_hallway
     trigger:
@@ -229,6 +249,8 @@ automation:
         entity_id: input_select.room_state_hallway
       - platform: state
         entity_id: input_select.inactive_light_profile
+      - platform: state
+        entity_id: input_select.theme
     condition:
       - condition: state
         entity_id: input_select.room_state_hallway
