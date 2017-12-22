@@ -49,6 +49,19 @@ input_select:
     options:
       - Unknown
 
+binary_sensor:
+  - platform: template
+    sensors:
+      motion_last10:
+        value_template: '{{(as_timestamp(now())-as_timestamp(states.input_select.latest_motion.last_changed)) < 600 }}'
+        friendly_name: Motion in Last 10 min
+        device_class: motion
+      motion_last30:
+        value_template: '{{(as_timestamp(now())-as_timestamp(states.input_select.latest_motion.last_changed)) < 1800 }}'
+        friendly_name: Motion in Last 30 min
+        device_class: motion
+
+
 script:
   return_to_previous_activity:
     alias: "Return to previous activity"
@@ -238,7 +251,7 @@ automation:
   ##########################
   # Activity based actions #
   ##########################
-  
+
   - alias: pause_tv_chromecast_on_activity_change
     trigger:
       platform: state
