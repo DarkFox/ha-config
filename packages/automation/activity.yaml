@@ -52,14 +52,18 @@ input_select:
 binary_sensor:
   - platform: template
     sensors:
-      motion_last10:
-        value_template: '{{(as_timestamp(now())-as_timestamp(states.input_select.latest_motion.last_changed)) < 600 }}'
-        friendly_name: Motion in Last 10 min
+      activity_last10:
+        value_template: "{{ is_state('group.activity_sensors', 'on') }}"
+        friendly_name: Activity in Last 10 min
         device_class: motion
-      motion_last30:
-        value_template: '{{(as_timestamp(now())-as_timestamp(states.input_select.latest_motion.last_changed)) < 1800 }}'
-        friendly_name: Motion in Last 30 min
+        delay_off:
+          minutes: 10
+      activity_last30:
+        value_template: "{{ is_state('group.activity_sensors', 'on') }}"
+        friendly_name: Activity in Last 30 min
         device_class: motion
+        delay_off:
+          minutes: 30
 
 
 script:
