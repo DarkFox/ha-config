@@ -12,6 +12,46 @@ counter:
     icon: mdi:alarm-snooze
 
 script:
+  bedroom_sunrise:
+    alias: Bedroom Sunrise
+    sequence:
+      - service: light.turn_on
+        data:
+          brightness: 48
+          rgb_color: [255,0,0]
+          entity_id: light.bed_shelves
+
+      # Turn the lights to low brightness at a very warm temperature
+      - service: light.turn_on
+        data:
+          transition: 60
+          brightness: 51
+          kelvin: 2700
+          entity_id: light.cloud_north
+
+      # Wait 5 seconds
+      - delay: 00:00:05
+
+      # Over ten minutes, turn the lights a little brighter and to a
+      # cooler-than-soft-white color.
+      - service: light.turn_on
+        data:
+          transition: 600
+          brightness: 63
+          kelvin: 3600
+          entity_id: light.cloud_north
+
+      # Wait again
+      - delay: 00:00:05
+
+      # Finally, over fifteen minutes, shift the lights to a cool white at 90%.
+      - service: light.turn_on
+        data:
+          transition: 900
+          brightness: 230
+          kelvin: 4200
+          entity_id: light.cloud_north
+
   morning_briefing:
     alias: Morning Briefing
     sequence:
@@ -107,35 +147,19 @@ automation:
       entity_id: binary_sensor.martin_presence
       state: 'on'
     action:
-      service: input_select.select_option
-      data_template:
-        option: 'Night'
-        entity_id: >
-          {% if is_state('input_boolean.guests', 'on') %}
-            input_select.bedroom_light_profile
-          {% else %}
-            input_select.light_profile
-          {% endif %}
+      - service: input_select.select_option
+        data_template:
+          option: 'Night'
+          entity_id: >
+            {% if is_state('input_boolean.guests', 'on') %}
+              input_select.bedroom_light_profile
+            {% else %}
+              input_select.light_profile
+            {% endif %}
+      - service: light.turn_off
+        data:
+          entity_id: light.bed_light
 
-  - alias: sleep_stopped
-    trigger:
-      platform: state
-      entity_id: sensor.sleep_tracker
-      to: 'stopped'
-    condition:
-      condition: state
-      entity_id: binary_sensor.martin_presence
-      state: 'on'
-    action:
-      service: input_select.select_option
-      data_template:
-        option: 'Ambient'
-        entity_id: >
-          {% if is_state('input_boolean.guests', 'on') %}
-            input_select.bedroom_light_profile
-          {% else %}
-            input_select.light_profile
-          {% endif %}
 
   - alias: alarm_ringing
     trigger:
@@ -143,59 +167,16 @@ automation:
       entity_id: sensor.phone_alarm
       to: 'ringing'
     condition:
-      condition: state
-      entity_id: binary_sensor.martin_presence
-      state: 'on'
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.martin_presence
+          state: 'on'
+        - condition: numeric_state
+          entity_id: counter.snooze_counter
+          below: 1
     action:
-      service: input_select.select_option
-      data_template:
-        option: 'Ambient'
-        entity_id: >
-          {% if is_state('input_boolean.guests', 'on') %}
-            input_select.bedroom_light_profile
-          {% else %}
-            input_select.light_profile
-          {% endif %}
-
-  - alias: alarm_snooze
-    trigger:
-      platform: state
-      entity_id: sensor.phone_alarm
-      to: 'snooze'
-    condition:
-      condition: state
-      entity_id: binary_sensor.martin_presence
-      state: 'on'
-    action:
-      service: input_select.select_option
-      data_template:
-        option: 'Night'
-        entity_id: >
-          {% if is_state('input_boolean.guests', 'on') %}
-            input_select.bedroom_light_profile
-          {% else %}
-            input_select.light_profile
-          {% endif %}
-
-  - alias: alarm_dismissed
-    trigger:
-      platform: state
-      entity_id: sensor.phone_alarm
-      to: 'dismissed'
-    condition:
-      condition: state
-      entity_id: binary_sensor.martin_presence
-      state: 'on'
-    action:
-      service: input_select.select_option
-      data_template:
-        option: 'Ambient'
-        entity_id: >
-          {% if is_state('input_boolean.guests', 'on') %}
-            input_select.bedroom_light_profile
-          {% else %}
-            input_select.light_profile
-          {% endif %}
+      service: script.bedroom_sunrise
 
   # Actions
   - alias: sleeping_activity
