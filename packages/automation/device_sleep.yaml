@@ -1,4 +1,27 @@
 automation:
+  # Bathroom #
+  - alias: Bathroom Speaker trigger
+    trigger:
+      platform: state
+      entity_id: input_select.room_state_bathroom
+      to: 'active'
+    action:
+      service: media_player.volume_mute
+      data:
+        entity_id: media_player.bathroom_speaker
+        is_volume_muted: false
+
+  - alias: Bathroom Speaker inactive trigger
+    trigger:
+      platform: state
+      entity_id: input_select.room_state_bathroom
+      to: 'off'
+    action:
+      service: media_player.volume_mute
+      data_template:
+        entity_id: media_player.bathroom_speaker
+        is_volume_muted: true
+
   # Bedroom #
   - alias: Bedroom Speaker trigger
     trigger:
@@ -73,12 +96,40 @@ automation:
         entity_id: switch.projector_soundbar_power
 
   # Livingroom #
+  - alias: Livingroom Speaker trigger
+    trigger:
+      platform: state
+      entity_id: input_select.room_state_livingroom
+      to: 'active'
+    action:
+      service: media_player.volume_mute
+      data:
+        entity_id: media_player.tv_soundbar
+        is_volume_muted: false
+
   - alias: Livingroom inactive trigger
     trigger:
       platform: state
       entity_id: input_select.room_state_livingroom
       to: 'off'
     action:
+      - service: switch.turn_off
+        data:
+          entity_id: switch.tv
+      - service: media_player.volume_mute
+        data:
+          entity_id: media_player.tv_soundbar
+          is_volume_muted: true
+
+  # Home #
+  - alias: Home inactive trigger
+    trigger:
+      platform: state
+      entity_id: binary_sensor.martin_presence
+      to: 'off'
+    action:
       service: switch.turn_off
       data:
-        entity_id: switch.tv
+        entity_id:
+          - switch.tv
+          - switch.tv_soundbar
