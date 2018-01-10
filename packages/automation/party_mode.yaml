@@ -1,0 +1,33 @@
+group:
+  party_mode:
+    name: Party Mode
+    entities:
+      - input_boolean.party_mode
+      - switch.party_button
+      - sensor.party_button_battery
+
+input_boolean:
+  party_mode:
+    initial: off
+    icon: mdi:cake-variant
+
+automation:
+  - alias: party_button_on
+    trigger:
+      platform: state
+      entity_id: switch.party_button
+      to: 'on'
+    action:
+      service: input_boolean.turn_on
+      data:
+        entity_id: input_boolean.party_mode
+
+  - alias: party_button_off
+    trigger:
+      platform: state
+      entity_id: switch.party_button
+      to: 'on'
+    action:
+      service: input_boolean.turn_off
+      data:
+        entity_id: input_boolean.party_mode
