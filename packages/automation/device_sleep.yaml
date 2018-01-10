@@ -18,7 +18,7 @@ automation:
       to: 'off'
     action:
       service: media_player.volume_mute
-      data_template:
+      data:
         entity_id: media_player.bathroom_speaker
         is_volume_muted: true
 
@@ -40,7 +40,7 @@ automation:
       to: 'off'
     action:
       service: switch.turn_off
-      data_template:
+      data:
         entity_id: switch.bedroom_speaker_switch
 
   # Kitchen #
@@ -51,7 +51,7 @@ automation:
       to: 'active'
     action:
       service: switch.turn_on
-      data_template:
+      data:
         entity_id: switch.kitchen_speaker_switch
 
   - alias: Kitchen Speaker inactive trigger
@@ -61,7 +61,7 @@ automation:
       to: 'off'
     action:
       service: switch.turn_off
-      data_template:
+      data:
         entity_id: switch.kitchen_speaker_switch
 
   # Office #
@@ -72,7 +72,7 @@ automation:
       to: 'active'
     action:
       service: switch.turn_on
-      data_template:
+      data:
         entity_id: switch.office_desk_speaker_switch
 
   - alias: Office Speaker inactive trigger
@@ -82,7 +82,7 @@ automation:
       to: 'off'
     action:
       service: switch.turn_off
-      data_template:
+      data:
         entity_id: switch.office_desk_speaker_switch
 
   - alias: Projector Soundbar inactive trigger
@@ -92,8 +92,22 @@ automation:
       to: 'off'
     action:
       service: switch.turn_off
-      data_template:
+      data:
         entity_id: switch.projector_soundbar_power
+
+  - alias: Office space heater turn on
+    trigger:
+      platform: state
+      entity_id: input_select.room_state_office
+      to: 'active'
+    condition:
+      condition: numeric_state
+      entity_id: 'sensor.office_temperature'
+      below: '21'
+    action:
+      service: switch.turn_on
+      data:
+        entity_id: switch.space_heater
 
   # Livingroom #
   - alias: Livingroom Speaker trigger
@@ -133,3 +147,4 @@ automation:
         entity_id:
           - switch.tv
           - switch.tv_soundbar
+          - switch.space_heater
