@@ -14,6 +14,7 @@ group:
     entities:
       - input_select.theme
       - input_select.light_profile
+      - light.apartment_light_level
 
   light_profile_triggers:
     name: Light Profile Triggers
@@ -80,6 +81,13 @@ input_select:
       - Yellow
       - Purple
     initial: Portal
+
+light:
+  - platform: mqtt_json
+    name: apartment light level
+    command_topic: "virtual/apartment-light-level/set"
+    brightness: true
+    retain: true
 
 sensor:
   - platform: template
@@ -183,6 +191,36 @@ sensor:
           {% endif -%}
 
 automation:
+  - alias: Apartment light level initializer
+    initial_state: true
+    trigger:
+      platform: homeassistant
+      event: start
+    action:
+      - service: light.turn_on
+        data:
+          entity_id: light.apartment_light_level
+          brightness: 127
+
+  - alias: Apartment light level setter
+    trigger:
+      - platform: numeric_state
+        entity_id: light.apartment_light_level
+        value_template: '{{ state.attributes.brightness }}'
+        below: 120
+      - platform: numeric_state
+        entity_id: light.apartment_light_level
+        value_template: '{{ state.attributes.brightness }}'
+        above: 135
+    action:
+      - service_template: "input_select.select_{%- if states.light.apartment_light_level.attributes.brightness | int < 120 -%}next{%- else -%}previous{%- endif -%}"
+        data:
+          entity_id: input_select.light_profile
+      - service: light.turn_on
+        data:
+          entity_id: light.apartment_light_level
+          brightness: 127
+
   - alias: Inactive Light Profile Setter
     trigger:
       platform: state
@@ -226,7 +264,7 @@ scene:
     entities:
       input_select.light_profile:
         option: 'Night'
-  - name: Off
+  - name: 'Off'
     entities:
       input_select.light_profile:
         option: 'Off'
