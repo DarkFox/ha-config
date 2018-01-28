@@ -102,6 +102,19 @@ group:
       - automation.startup_notification
       - automation.update_available_notification
 
+input_boolean:
+  home_assistant_started:
+    initial: off
+
+binary_sensor:
+  - platform: template
+    sensors:
+      home_assistant_started_delayed:
+        delay_on:
+          minutes: 1
+        value_template: >-
+          {{ is_state('input_boolean.home_assistant_started', 'on') }}
+
 sensor:
   - platform: rest
     resource: http://ip.jsontest.com
