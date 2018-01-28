@@ -1,7 +1,33 @@
+group:
+  martin_presence:
+    entities:
+      - binary_sensor.martin_presence
+      - binary_sensor.martin_presence_delayed
+      - binary_sensor.martin_presence_extended
+      - binary_sensor.activity_last10
+      - binary_sensor.activity_last30
+
 binary_sensor:
+  - platform: template
+    sensors:
+      martin_presence_delayed:
+        friendly_name: 'Martin Presence - Delayed'
+        device_class: presence
+        delay_off:
+          minutes: 10
+        value_template: >-
+          {{ is_state('binary_sensor.martin_presence', 'on') }}
+      martin_presence_extended:
+        friendly_name: 'Martin Presence - Extended Away'
+        device_class: presence
+        delay_off:
+          hours: 24
+        value_template: >-
+          {{ is_state('binary_sensor.martin_presence', 'on') }}
+
   - platform: bayesian
-    prior: 0.5
     name: 'Martin Presence'
+    prior: 0.5
     probability_threshold: 0.9
     observations:
       - entity_id: 'device_tracker.ping_galaxy_s8'
