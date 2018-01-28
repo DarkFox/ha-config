@@ -101,6 +101,7 @@ group:
       - automation.notify_of_new_external_ip
       - automation.startup_notification
       - automation.update_available_notification
+      - automation.speedtest
 
 input_boolean:
   home_assistant_started:
@@ -128,8 +129,7 @@ sensor:
       - 'date'
 
   - platform: speedtest
-    minute:
-      - 44
+    manual: true
     monitored_conditions:
       - ping
       - download
@@ -163,6 +163,19 @@ sensor:
         friendly_name: HA Last Restart
 
 automation:
+  - alias: speedtest
+    initial_state: true
+    trigger:
+      platform: time
+      minutes: 44
+      seconds: 0
+    condition:
+      - condition: state
+        entity_id: sensor.steam_game
+        state: ''
+    action:
+      - service: sensor.update_speedtest
+
   - alias: Notify Of New External IP
     initial_state: true
     trigger:
