@@ -227,6 +227,7 @@ group:
   light_profile_office:
     entities:
       - binary_sensor.office_activity
+      - binary_sensor.hobby_desk_activity
       - input_boolean.office_activity_override
       - input_select.light_profile
       - input_select.office_light_profile
@@ -290,12 +291,24 @@ input_select:
 binary_sensor:
   - platform: template
     sensors:
+      hobby_desk_activity:
+        friendly_name: 'Hobby Desk Activity'
+        value_template: >
+          {% if is_state('binary_sensor.home_assistant_started_delayed', 'off') -%}
+            false
+          {% elif not is_state('light.hobby_desk_lamp', 'unavailable') -%}
+            true
+          {% else -%}
+            false
+          {% endif -%}
+
       office_activity:
         friendly_name: 'Office Activity'
         value_template: >
           {% if is_state('binary_sensor.office_sensor', 'on')
           or is_state('input_boolean.office_activity_override', 'on')
           or is_state('switch.pc', 'on')
+          or is_state('binary_sensor.hobby_desk_activity', 'on')
           or is_state('media_player.projector_chromecast', 'playing')
           or is_state('input_select.latest_motion', 'Office') -%}
             true
@@ -304,6 +317,53 @@ binary_sensor:
           {% endif -%}
 
 automation:
+  - alias: hobby desk pinger on
+    trigger:
+      platform: time
+      minutes: '/5'
+      seconds: 0
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: light.hobby_desk_lamp
+          state: 'on'
+        - condition: state
+          entity_id: binary_sensor.home_assistant_started_delayed
+          state: 'on'
+    action:
+      - service_template: "light.turn_on"
+        data:
+          entity_id: light.hobby_desk_lamp
+          brightness: 254
+      - service_template: "light.turn_on"
+        data:
+          entity_id: light.hobby_desk_lamp
+          brightness: 255
+
+  - alias: hobby desk pinger off
+    trigger:
+      platform: time
+      minutes: '/5'
+      seconds: 0
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: light.hobby_desk_lamp
+          state: 'off'
+        - condition: state
+          entity_id: binary_sensor.home_assistant_started_delayed
+          state: 'on'
+    action:
+      - service_template: "light.turn_on"
+        data:
+          entity_id: light.hobby_desk_lamp
+          brightness: 1
+      - service_template: "light.turn_off"
+        data:
+          entity_id: light.hobby_desk_lamp
+
   - alias: Office Inactive Light Profile Setter
     trigger:
       platform: state
