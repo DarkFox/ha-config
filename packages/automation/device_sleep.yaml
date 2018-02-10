@@ -76,9 +76,10 @@ automation:
       entity_id: input_select.room_state_kitchen
       to: 'active'
     action:
-      service: switch.turn_on
+      service: media_player.volume_mute
       data:
-        entity_id: switch.kitchen_speaker_switch
+        entity_id: media_player.kitchen_speaker
+        is_volume_muted: false
 
   - alias: Kitchen Speaker inactive trigger
     trigger:
@@ -86,9 +87,25 @@ automation:
       entity_id: input_select.room_state_kitchen
       to: 'off'
     action:
-      service: switch.turn_off
+      service: media_player.volume_mute
       data:
-        entity_id: switch.kitchen_speaker_switch
+        entity_id: media_player.kitchen_speaker
+        is_volume_muted: true
+
+  - alias: Kitchen Speaker play inactive
+    trigger:
+      platform: state
+      entity_id: media_player.kitchen_speaker
+      to: 'playing'
+    condition:
+      condition: state
+      entity_id: input_select.room_state_kitchen
+      state: 'off'
+    action:
+      service: media_player.volume_mute
+      data:
+        entity_id: media_player.kitchen_speaker
+        is_volume_muted: true
 
   # Office #
   - alias: Office Speaker active trigger
