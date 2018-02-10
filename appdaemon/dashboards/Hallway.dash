@@ -1,0 +1,127 @@
+#
+# Main arguments, all optional
+#
+title: Hallway Panel
+widget_dimensions: [114, 58]
+widget_margins: [5, 5]
+columns: 5
+global_parameters:
+  use_comma: 1
+
+s_train_status:
+  title: S-Tog
+  widget_type: sensor
+  entity: sensor.s_train_b_next
+  sub_entity: sensor.s_train_b_status
+  units: "min"
+  widget_style: "background-color: #6DB657;"
+  value_style: "color: #ffffff; font-size: %300; font-weight: bold;"
+  unit_style: "color: #ffffff;"
+
+travel_time:
+  title: Rejsetid
+  widget_type: sensor
+  entity: sensor.travel_time_to_work_public_transit
+  sub_entity: sensor.travel_time_to_work_public_transit_last_updated
+  value_style: "color: #ffffff; font-size: %300; font-weight: bold;"
+  unit_style: "color: #ffffff;"
+
+wind:
+  title: Vind
+  widget_type: sensor
+  entity: sensor.dark_sky_wind_speed_name
+  sub_entity: sensor.dark_sky_wind_bearing_name
+  container_style: 'font-size: 150%;'
+
+outside_temp:
+  title: Temperatur
+  widget_type: sensor
+  precision: 1
+  entity: sensor.dark_sky_temperature
+  sub_entity: sensor.dark_sky_apparent_temperature_text
+
+precip:
+  title: Nedbør
+  widget_type: sensor
+  entity: sensor.dark_sky_precip_intensity
+  sub_entity: sensor.dark_sky_precip_and_probability
+  precision: 1
+
+weather_summary:
+  title: DMI Vejrudsigt
+  widget_type: sensor
+  entity: sensor.dmi_city_weather
+  container_style: 'font-size: 150%; margin-top: 20px;'
+
+more_weather:
+  title: Vejr Detaljer
+  widget_type: navigate
+  dashboard: Hallway-weather
+  icon_inactive: fa-cloud
+  args:
+    timeout: 60
+    return: Hallway
+
+got_guests:
+  widget_type: input_boolean
+  entity: input_boolean.guests
+  title: Gæster
+  use_hass_icon: 1
+
+space_heater:
+  widget_type: switch
+  entity: switch.space_heater
+  title: Radiator
+  use_hass_icon: 1
+
+all_speakers:
+  title: All Speakers
+  widget_type: media_player
+  entity: media_player.all_speakers
+  step: 5
+east_side_speakers:
+  title: East Side Speakers
+  widget_type: media_player
+  entity: media_player.east_side_speakers
+  step: 5
+
+# afgang_frame:
+#     widget_type: iframe
+#     frame_style: >
+#         width: 294px; height: 194px;
+#         transform: scale(1.25);
+#         transform-origin: 50% 0;
+#     refresh: 15
+#     url_list:
+#         - http://www.dsb.dk/Rejseplan/bin/stboard.exe/mn?L=vs_stblivemap&input=8600679&productsFilter=00001&
+#
+# stog_frame:
+#     widget_type: iframe
+#     frame_style: >
+#         width: 1280px; height: 720px;
+#         transform: scale(0.34);
+#         transform-origin: 50% 0;
+#     refresh: 30
+#     url_list:
+#         - http://www.dsb.dk/trafikinformation/s-tog-overblik/
+
+
+layout:
+    # 1,                  2,                  3,                  4,                  5
+    - include: datetime
+    - include: scene_widgets
+    - include: playlist_controls
+    - date(2x1)         ,                     spacer,             clock(2x1)
+    - bright_scene(1x2),  s_train_status(1x2),weather_summary(2x2),                   more_weather(1x2)
+    -
+    - default_scene(1x2), travel_time(1x2),   outside_temp(1x2),  precip(1x2),        wind(1x2)
+    -
+    - dimmed_scene(1x2)
+    -
+    - ambient_scene(1x2), spacer(3x2),                                                space_heater(1x2)
+    -
+    - night_scene(1x2),   playlist_current(4x1)
+    -                     playlist_previous,  playlist_end,       playlist_next,      playlist_player
+    - off_scene(1x2),     all_speakers(2x4),                      east_side_speakers(2x4)
+    -
+    - got_guests(1x2)
