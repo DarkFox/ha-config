@@ -59,13 +59,14 @@ script:
         data_template:
           entity_id: "{{ device_entity_id }}"
           message: >
-            Godmorgen. Klokken er {{ states.sensor.time.state }}.
-            Vejrudsigt: {{ states('sensor.pws_temp_c') | replace('.',',') }}° og {{ states('sensor.pws_weather') }}.
-            {% if is_state('binary_sensor.workday_sensor', 'on') -%}
+            {{ states.sensor.tts_greeting.state }}. Klokken er {{ states.sensor.time.state }}.
+            Vejrudsigt: {{ states.sensor.dmi_city_weather.state }}. {{ states.sensor.dark_sky_temperature.state }}˚
+            og {{ states.sensor.dark_sky_wind_speed_name.state }} vind.
+            {% if is_state('binary_sensor.workday_sensor', 'on') and now().hour < 12 -%}
               S-Tog Linje B:
-              {% if is_state('sensor.s_train_b_status', 'Til tiden') -%}
+              {%- if is_state('sensor.s_train_b_status', 'Til tiden') -%}
                 Kører normalt.
-              {% else -%}
+              {%- else -%}
                  {{ states('sensor.s_train_b_status') }}. {{ states('sensor.s_train_message') }}
                  Estimeret rejsetid: {{ states('sensor.travel_time_to_work_public_transit') }} minutter.
               {%- endif -%}
