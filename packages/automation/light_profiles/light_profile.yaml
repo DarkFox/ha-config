@@ -4,9 +4,12 @@ homeassistant:
       persistent: true
     input_select.light_profile:
       persistent: true
-
     group.light_profile:
       order: 1
+    script.dim_light_profile:
+      icon: mdi:brightness-low
+    script.brighten_light_profile:
+      icon: mdi:brightness-high
 
 group:
   light_profile:
@@ -204,6 +207,54 @@ sensor:
             255,25,0
           {% endif -%}
 
+script:
+  dim_light_profile:
+    sequence:
+      service: input_select.select_next
+      entity_id: input_select.light_profile
+
+  brighten_light_profile:
+    sequence:
+      service: input_select.select_previous
+      entity_id: input_select.light_profile
+
+  activate_bright_scene:
+    sequence:
+      service: input_select.select_option
+      data:
+        entity_id: input_select.light_profile
+        option: Bright
+  activate_default_scene:
+    sequence:
+      service: input_select.select_option
+      data:
+        entity_id: input_select.light_profile
+        option: Default
+  activate_dimmed_scene:
+    sequence:
+      service: input_select.select_option
+      data:
+        entity_id: input_select.light_profile
+        option: Dimmed
+  activate_ambient_scene:
+    sequence:
+      service: input_select.select_option
+      data:
+        entity_id: input_select.light_profile
+        option: Ambient
+  activate_night_scene:
+    sequence:
+      service: input_select.select_option
+      data:
+        entity_id: input_select.light_profile
+        option: Night
+  activate_off_scene:
+    sequence:
+      service: input_select.select_option
+      data:
+        entity_id: input_select.light_profile
+        option: 'Off'
+
 automation:
   - alias: Apartment light level initializer
     initial_state: true
@@ -255,7 +306,6 @@ automation:
           {% else %}
             Off
           {% endif %}
-
 
 scene:
   - name: Bright
