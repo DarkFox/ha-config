@@ -3,6 +3,9 @@ homeassistant:
     sensor.s_train_b_status:
       friendly_name: S-Tog Linje B Status
       entity_picture: http://www.dsb.dk/globalassets/s-tog-overblik/ikoner/b.png
+    sensor.s_train_b_next:
+      friendly_name: S-Tog Linje B Næste Afgang
+      entity_picture: http://www.dsb.dk/globalassets/s-tog-overblik/ikoner/b.png
     sensor.s_train_message:
       friendly_name: S-Tog Driftbesked
       icon: mdi:train
@@ -27,6 +30,7 @@ group:
       - sensor.travel_time_to_work_public_transit
       - sensor.s_train_b_status
       - sensor.s_train_message
+      - sensor.s_train_b_next
 
 automation:
   - alias: citymapper_updater
@@ -69,7 +73,7 @@ sensor:
       work_arrival_time:
         value_template: >
           {% if now().hour > 9 %}
-            {{ (as_timestamp(now()) + 86400) | timestamp_custom("%Y-%m-%d") }}T09%3A00%3A00%2B0100
+            {{ (as_timestamp(now()) + 86400) | timestamp_custom("%Y-%m-%d") }}T09%3A30%3A00%2B0100
           {% else %}
             {{ as_timestamp(now()) | timestamp_custom("%Y-%m-%d") }}T09%3A00%3A00%2B0100
           {% endif %}
@@ -83,6 +87,8 @@ sensor:
         value_template: !secret work_latitude
       work_longitude:
         value_template: !secret work_longitude
+      travel_time_to_work_public_transit_last_updated:
+        value_template: "{{ as_timestamp(states.sensor.travel_time_to_work_public_transit.last_updated) |timestamp_custom('%a, %H:%M', True) }}"
 
   - platform: file
     file_path: /share/citymapper_out.json
@@ -103,11 +109,18 @@ sensor:
     name: s_train_message
     select: 'div.FooterFreeText'
     value_template: "{{ value | trim }}"
-    scan_interval: 300
+    scan_interval: 120
 
   - platform: scrape
     resource: http://www.dsb.dk/trafikinformation/s-tog-overblik/
     name: s_train_b_status
     select: 'table.RepeaterTable tr:nth-of-type(2) td.TDItemLabel div b'
     value_template: "{{ value | trim }}"
-    scan_interval: 300
+    scan_interval: 120
+
+  - platform: scrape
+    resource: "http://www.dsb.dk/Rejseplan/bin/stboard.exe/mn?L=vs_dsbticker&amp;ml=m&amp;&input=Br%F8ndby%F8ster%20st!&dirInput=N%F8rreport%20St.&boardType=dep&selectDate=today&productsFilter=00001000000&additionalTime=&start=yes&disableEquivs=yes&ignoreMasts=1&outputMode=tickerDataOnly&maxJourneys=5%27"
+    name: s_train_b_next
+    select: '.hfsWidget_resultTableRow_time div:nth-of-type(1)'
+    value_template: "{{ value | trim }}"
+    scan_interval: 30
