@@ -131,15 +131,18 @@ automation:
       entity_id: binary_sensor.martin_presence
       state: 'on'
     action:
-      service: input_select.select_option
-      data_template:
-        option: 'Off'
-        entity_id: >
-          {% if is_state('input_boolean.guests', 'on') %}
-            input_select.bedroom_light_profile
-          {% else %}
-            input_select.light_profile
-          {% endif %}
+      - service: input_select.select_option
+        data_template:
+          option: 'Off'
+          entity_id: >
+            {% if is_state('input_boolean.guests', 'on') %}
+              input_select.bedroom_light_profile
+            {% else %}
+              input_select.light_profile
+            {% endif %}
+      - service: light.turn_off
+        data:
+          entity_id: light.bed
 
   - alias: sleep_paused
     trigger:
@@ -162,7 +165,7 @@ automation:
             {% endif %}
       - service: light.turn_off
         data:
-          entity_id: light.bed_light
+          entity_id: light.bed
 
 
   - alias: alarm_ringing
@@ -204,9 +207,18 @@ automation:
       entity_id: sensor.phone_alarm
       to: 'snooze'
     action:
-      service: counter.increment
-      data:
-        entity_id: counter.snooze_counter
+      - service: counter.increment
+        data:
+          entity_id: counter.snooze_counter
+      - service: input_select.select_option
+        data_template:
+          option: 'Ambient'
+          entity_id: >
+            {% if is_state('input_boolean.guests', 'on') %}
+              input_select.bedroom_light_profile
+            {% else %}
+              input_select.light_profile
+            {% endif %}
 
   - alias: snooze_counter_reset
     trigger:
@@ -233,6 +245,15 @@ automation:
           entity_id: input_select.martin_activity
           option: Waking
       - service: input_select.select_option
+        data_template:
+          option: 'Dimmed'
+          entity_id: >
+            {% if is_state('input_boolean.guests', 'on') %}
+              input_select.bedroom_light_profile
+            {% else %}
+              input_select.light_profile
+            {% endif %}
+      - service: input_select.select_option
         data:
           entity_id: input_select.playlist_player
           option: 'media_player.east_side_speakers'
@@ -243,14 +264,15 @@ automation:
           entity_id: input_select.playlist
           options:
             - "==SCRIPT==morning_briefing"
-            - "{{ states.sensor.podcast_daily_tech_news_show.state }}"
+            - "{{ states.sensor.podcast_bbc_minute.state }}"
+            - "{{ states.sensor.podcast_24syv_nyheder.state }}"
             - "==END=="
       - delay:
           seconds: 2
       - service: media_player.volume_set
         data_template:
           entity_id: 'media_player.east_side_speakers'
-          volume_level: 0.35
+          volume_level: 0.45
 
   - alias: morning_awake
     trigger:
@@ -273,18 +295,6 @@ automation:
       - service: joaoapps_join.phone_send_tasker
         data:
           command: "sleep_tracking_stop"
-
-
-  - alias: morning_podcast
-    trigger:
-      platform: state
-      entity_id: input_select.martin_activity
-      to: 'Waking'
-    condition:
-      condition: state
-      entity_id: binary_sensor.martin_presence
-      state: 'on'
-    action:
       - service: input_select.select_option
         data:
           entity_id: input_select.playlist_player
@@ -296,12 +306,11 @@ automation:
           entity_id: input_select.playlist
           options:
             - "==SCRIPT==morning_briefing"
-            - "{{ states.sensor.podcast_bbc_minute.state }}"
-            - "{{ states.sensor.podcast_24syv_nyheder.state }}"
+            - "{{ states.sensor.podcast_daily_tech_news_show.state }}"
             - "==END=="
       - delay:
           seconds: 2
       - service: media_player.volume_set
         data_template:
           entity_id: 'media_player.east_side_speakers'
-          volume_level: 0.35
+          volume_level: 0.45
