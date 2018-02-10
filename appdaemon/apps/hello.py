@@ -1,4 +1,4 @@
-import appdaemon.appapi as appapi
+import appdaemon.plugins.hass.hassapi as hass
 
 #
 # Hellow World App
@@ -6,7 +6,7 @@ import appdaemon.appapi as appapi
 # Args:
 #
 
-class HelloWorld(appapi.AppDaemon):
+class HelloWorld(hass.Hass):
 
   def initialize(self):
      self.log("Hello from AppDaemon")
