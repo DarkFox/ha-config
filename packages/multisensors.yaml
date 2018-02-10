@@ -184,29 +184,3 @@ sensor:
         unit_of_measurement: "%"
         friendly_name: 'Toilet Humidity Change'
         value_template: '{{ states.sensor.toilet_relative_humidity_mean.attributes.change | float }}'
-
-  - platform: template
-    sensors:
-      hallway_multisensor_battery:
-        value_template: >-
-          {{ states.zwave.hallway.attributes["battery_level"] }}
-        friendly_name: Hallway Multi-Sensor Battery
-        unit_of_measurement: "%"
-        icon_template: >-
-          {% if states.zwave.hallway.attributes["battery_level"] %}
-          {% set battery_level = states.zwave.hallway.attributes["battery_level"]|int('unknown') %}
-          {% if battery_level == 'unknown' %}
-            mdi:battery-unknown
-          {% else %}
-            {% set battery_round = (battery_level|int / 10)|int * 10 %}
-            {% if battery_round >= 100 %}
-              mdi:battery
-            {% elif battery_round > 0 %}
-              mdi:battery-{{ battery_round }}
-            {% else %}
-              mdi:battery-alert
-            {% endif %}
-          {% endif %}
-          {% else %}
-            mdi:battery-unknown
-          {% endif %}
