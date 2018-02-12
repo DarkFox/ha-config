@@ -1,3 +1,10 @@
+homeassistant:
+  customize:
+    input_boolean.livingroom_activity_override:
+      persistent: true
+    input_select.room_state_livingroom:
+      persistent: true
+
 script:
   light_profile_livingroom_bright:
     sequence:
@@ -17,8 +24,6 @@ script:
             - light.livingroom_spot_3
             - light.sofa_lamp
             - light.dining_table
-            - light.candle_1
-            - light.candle_2
       # Dimmable Lights
       - service: light.turn_on
         data:
@@ -51,6 +56,14 @@ script:
             - light.windowsill
             - light.tv_shelf
             - light.sofa_table
+      # Candles
+      - service: light.turn_on
+        data:
+          brightness: 127
+          rgb_color: [84,64,32]
+          entity_id:
+            - light.candle_1
+            - light.candle_2
 
   light_profile_livingroom_default:
     sequence:
@@ -322,13 +335,11 @@ script:
 input_boolean:
   livingroom_activity_override:
     name: Livingroom Activity Override
-    restore_state: true
     initial: off
 
 input_select:
   room_state_livingroom:
     name: Livingroom State
-    restore_state: true
     options:
       - active
       - inactive
