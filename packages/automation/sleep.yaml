@@ -60,8 +60,9 @@ script:
           entity_id: "{{ device_entity_id }}"
           message: >
             {{ states.sensor.tts_greeting.state }}. Klokken er {{ states.sensor.time.state }}.
-            Vejrudsigt: {{ states.sensor.dmi_city_weather.state }}. {{ states.sensor.dark_sky_temperature.state }}˚
-            og {{ states.sensor.dark_sky_wind_speed_name.state }} vind.
+            Vejrudsigt: {{ states.sensor.dmi_city_weather.state }}.
+            {{ states.sensor.dark_sky_temperature.state | replace('.', ',') }}˚
+            og {{ states.sensor.dark_sky_wind_speed_name.state }}.
             {% if is_state('binary_sensor.workday_sensor', 'on') and now().hour < 12 -%}
               S-Tog Linje B:
               {%- if is_state('sensor.s_train_b_status', 'Til tiden') -%}
@@ -99,6 +100,7 @@ script:
 
 automation:
   - alias: bedtime
+    initial_state: True
     trigger:
       platform: state
       entity_id: sensor.phone_alarm
@@ -122,6 +124,7 @@ automation:
             {% endif %}
 
   - alias: sleep_time
+    initial_state: True
     trigger:
       platform: state
       entity_id: sensor.sleep_tracker
@@ -145,6 +148,7 @@ automation:
           entity_id: light.bed
 
   - alias: sleep_paused
+    initial_state: True
     trigger:
       platform: state
       entity_id: sensor.sleep_tracker
@@ -169,6 +173,7 @@ automation:
 
 
   - alias: alarm_ringing
+    initial_state: True
     trigger:
       platform: state
       entity_id: sensor.phone_alarm
@@ -187,6 +192,7 @@ automation:
 
   # Actions
   - alias: sleeping_activity
+    initial_state: True
     trigger:
       platform: state
       entity_id: sensor.sleep_tracker
@@ -202,6 +208,7 @@ automation:
         option: Sleeping
 
   - alias: snoozing_activity
+    initial_state: True
     trigger:
       platform: state
       entity_id: sensor.phone_alarm
@@ -221,6 +228,7 @@ automation:
             {% endif %}
 
   - alias: snooze_counter_reset
+    initial_state: True
     trigger:
       platform: state
       entity_id: sensor.phone_alarm
@@ -231,6 +239,7 @@ automation:
         entity_id: counter.snooze_counter
 
   - alias: alarm_dismissed_activity
+    initial_state: True
     trigger:
       platform: state
       entity_id: sensor.phone_alarm
@@ -275,6 +284,7 @@ automation:
           volume_level: 0.45
 
   - alias: morning_awake
+    initial_state: True
     trigger:
       platform: state
       entity_id: binary_sensor.hallway_sensor
