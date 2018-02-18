@@ -8,33 +8,6 @@ columns: 9
 global_parameters:
   use_comma: 1
 
-wind:
-  title: Vind
-  widget_type: sensor
-  entity: sensor.dark_sky_wind_speed_name
-  sub_entity: sensor.dark_sky_wind_bearing_name
-  container_style: 'font-size: 150%;'
-
-outside_temp:
-  title: Temperatur
-  widget_type: sensor
-  precision: 1
-  entity: sensor.dark_sky_temperature
-  sub_entity: sensor.dark_sky_apparent_temperature_text
-
-precip:
-  title: Nedbør
-  widget_type: sensor
-  entity: sensor.dark_sky_precip_intensity
-  sub_entity: sensor.dark_sky_precip_and_probability
-  precision: 1
-
-weather_summary:
-  title: DMI Vejrudsigt
-  widget_type: sensor
-  entity: sensor.dmi_city_weather
-  container_style: 'font-size: 150%; margin-top: 20px;'
-
 more_weather:
   title: Vejr Detaljer
   widget_type: navigate
@@ -44,60 +17,25 @@ more_weather:
     timeout: 60
     return: TabS2
 
-got_guests:
-  widget_type: input_boolean
-  entity: input_boolean.guests
-  title: Gæster
-  use_hass_icon: 1
-
-space_heater:
-  widget_type: switch
-  entity: switch.space_heater
-  title: Radiator
-  use_hass_icon: 1
-
-sleep_tracker:
-  title: Sleep Tracker
-  widget_type: sensor
-  entity: sensor.sleep_tracker
-  sub_entity: sensor.phone_alarm
-
-# afgang_frame:
-#     widget_type: iframe
-#     frame_style: >
-#         width: 294px; height: 194px;
-#         transform: scale(1.25);
-#         transform-origin: 50% 0;
-#     refresh: 15
-#     url_list:
-#         - http://www.dsb.dk/Rejseplan/bin/stboard.exe/mn?L=vs_stblivemap&input=8600679&productsFilter=00001&
-#
-# stog_frame:
-#     widget_type: iframe
-#     frame_style: >
-#         width: 1280px; height: 720px;
-#         transform: scale(0.34);
-#         transform-origin: 50% 0;
-#     refresh: 30
-#     url_list:
-#         - http://www.dsb.dk/trafikinformation/s-tog-overblik/
-
-
 layout:
   - include: datetime
+  - include: rss_widgets
   - include: travel_widgets
-  - include: scene_widgets
+  - include: weather_widgets
+  - include: light_profile_widgets
+  - include: switch_widgets
+  - include: sensor_widgets
   - include: playlist_controls
   - include: speaker_widgets
-  - date(2x1), spacer(5x1), clock(2x1)
-  - s_train_status(1x2), travel_time(1x2), spacer(1x2), weather_summary(2x2), outside_temp(1x2), precip(1x2), wind(1x2), more_weather(1x2)
+  - date(2x1), dr_alle(5x1), clock(2x1)
+  - s_train_status(1x2), travel_time(1x2), spacer(1x2), weather_summary(2x2), temperature(1x2), precip(1x2), wind_name(1x2), more_weather(1x2)
   -
-  - sleep_tracker(1x2), spacer(2x2), all_speakers(2x4), east_side_speakers(2x4), bedroom_speakers(2x4)
+  - s_train_message(2x2), spacer(1x2), all_speakers(2x4), east_side_speakers(2x4), bedroom_speakers(2x4)
   -
+  - sleep_tracker(1x2)
   -
-  -
-  - spacer(5x1), playlist_current(4x1), spacer(4x2)
-  - spacer(5x1), playlist_previous, playlist_end, playlist_next, playlist_player
+  - energy_meter(1x2), livingroom_climate(1x2), office_climate(1x2), bedroom_climate(1x2), spacer(1x1), playlist_current(4x1), spacer(4x2)
+  - spacer(1x1), playlist_previous, playlist_end, playlist_next, playlist_player
   -
   - theme(2x1)
   - bright_scene(1x2), default_scene(1x2), dimmed_scene(1x2), ambient_scene(1x2), night_scene(1x2), off_scene(1x2), got_guests(1x2), spacer, space_heater(1x2)

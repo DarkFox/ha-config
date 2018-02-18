@@ -38,6 +38,7 @@ class DMICityWeather(hass.Hass):
         report = data.select_one("#KN p:nth-of-type(3)").get_text()
 
         attributes = {
+            "friendly_name": 'DMI Byvejr',
             "dateline": dateline,
             "validity": validity,
             "report": report,
