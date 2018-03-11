@@ -17,7 +17,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['pyconnectedcars==0.1.5']
+REQUIREMENTS = ['pyconnectedcars==0.2.1']
 
 DOMAIN = 'connectedcars'
 
@@ -39,7 +39,7 @@ NOTIFICATION_ID = 'connectedcars_integration_notification'
 NOTIFICATION_TITLE = 'ConnectedCars integration setup'
 
 CONNECTEDCARS_COMPONENTS = [
-    'sensor', 'lock', 'binary_sensor', 'device_tracker'
+    'sensor', 'binary_sensor', 'device_tracker'
 ]
 
 

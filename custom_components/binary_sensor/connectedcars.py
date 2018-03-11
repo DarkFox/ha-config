@@ -7,7 +7,7 @@ import logging
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, ENTITY_ID_FORMAT)
-from homeassistant.components.connectedcars import DOMAIN as CONNECTEDCARS_DOMAIN, ConnectedCarsDevice
+from custom_components.connectedcars import DOMAIN as CONNECTEDCARS_DOMAIN, ConnectedCarsDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the ConnectedCars binary sensor."""
     devices = [
         ConnectedCarsBinarySensor(
-            device, hass.data[CONNECTEDCARS_DOMAIN]['controller'], 'connectivity')
+            device, hass.data[CONNECTEDCARS_DOMAIN]['controller'])
         for device in hass.data[CONNECTEDCARS_DOMAIN]['devices']['binary_sensor']]
     add_devices(devices, True)
 
@@ -26,12 +26,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ConnectedCarsBinarySensor(ConnectedCarsDevice, BinarySensorDevice):
     """Implement an ConnectedCars binary sensor for parking and charger."""
 
-    def __init__(self, connectedcars_device, controller, sensor_type):
+    def __init__(self, connectedcars_device, controller):
         """Initialise of a ConnectedCars binary sensor."""
         super().__init__(connectedcars_device, controller)
         self._state = False
         self.entity_id = ENTITY_ID_FORMAT.format(self.connectedcars_id)
-        self._sensor_type = sensor_type
+        if connectedcars_device.type == 'lock':
+            self._sensor_type = 'lock'
+        else:
+            self._sensor_type = 'problem'
 
     @property
     def device_class(self):

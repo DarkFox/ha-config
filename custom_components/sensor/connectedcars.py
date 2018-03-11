@@ -8,9 +8,9 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
-from homeassistant.components.connectedcars import DOMAIN as CONNECTEDCARS_DOMAIN
-from homeassistant.components.connectedcars import ConnectedCarsDevice
-from homeassistant.const import LENGTH_KILOMETERS
+from custom_components.connectedcars import DOMAIN as CONNECTEDCARS_DOMAIN
+from custom_components.connectedcars import ConnectedCarsDevice
+from homeassistant.const import (LENGTH_KILOMETERS, VOLUME_LITERS)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,6 +66,8 @@ class ConnectedCarsSensor(ConnectedCarsDevice, Entity):
 
         self.current_value = self.connectedcars_device.get_value()
         if self.connectedcars_device.bin_type == 0x5:
-            self._unit = units
+            self._unit = VOLUME_LITERS
         elif self.connectedcars_device.bin_type in (0xA, 0xB):
             self._unit = LENGTH_KILOMETERS
+        else:
+            self._unit = units

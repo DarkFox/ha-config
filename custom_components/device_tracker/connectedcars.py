@@ -6,7 +6,7 @@ https://home-assistant.io/components/device_tracker.connectedcars/
 """
 import logging
 
-from homeassistant.components.connectedcars import DOMAIN as CONNECTEDCARS_DOMAIN
+from custom_components.connectedcars import DOMAIN as CONNECTEDCARS_DOMAIN
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util import slugify
 
