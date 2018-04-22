@@ -1,55 +1,14 @@
-emulated_hue:
-  expose_by_default: true
-  exposed_domains:
-    - light
-    - switch
-    - cover
-    - fan
-    - scene
-    - climate
-
-# Hide groups and devices from haaska
-homeassistant:
-  customize:
-    # Stuff to show
-    script.fix_soundbar_lag:
-      emulated_hue_hidden: false
-
-    switch.airconditoner:
-      emulated_hue_hidden: false
-
-    switch.livingroom_fan:
-      emulated_hue_hidden: false
-
-    switch.pc:
-      emulated_hue_hidden: false
-
-    switch.space_heater:
-      emulated_hue_hidden: false
-
-    switch.tv:
-      emulated_hue_hidden: false
-
-    switch.vacuum_charger:
-      emulated_hue_hidden: false
-
-    light.apartment_light_level:
-      emulated_hue_name: light profile
-
 google_assistant:
   project_id: !secret google_assistant_project_id
   client_id: !secret google_assistant_client_id
   access_token: !secret google_assistant_access_token
   agent_user_id: !secret google_assistant_agent_user_id
   api_key: !secret google_assistant_api_key
-  expose_by_default: false
+  expose_by_default: true
   exposed_domains:
     - light
-    - switch
-    - cover
-    - fan
     - scene
-    - climate
+    - media_player
   entity_config:
     scene.ambient:
       name: Ambient Scene
@@ -82,83 +41,10 @@ google_assistant:
       expose: true
     switch.vacuum_charger:
       expose: true
-
-
-automation:
-  - alias: alexa_timer
-    trigger:
-      platform: state
-      entity_id: sensor.alexa_timer
-    action:
-      service: script.turn_on
-      entity_id: script.alexa_timer
-
-  - alias: alexa_alarm
-    trigger:
-      platform: state
-      entity_id: sensor.alexa_alarm
-    action:
-      service: script.turn_on
-      entity_id: script.alexa_alarm
-
-script:
-  alexa_timer:
-    sequence:
-      - service: mqtt.publish
-        data:
-          topic: "milight/0x4242/rgb_cct/1"
-          payload: "{'status': 'on', 'mode': 7}"
-      - service: mqtt.publish
-        data:
-          topic: "milight/0x4243/rgb_cct/2"
-          payload: "{'status': 'on', 'mode': 7}"
-      - service: mqtt.publish
-        data:
-          topic: "milight/0x7E92/rgbw/3"
-          payload: "{'status': 'on', 'mode': 6}"
-      - delay:
-          seconds: 20
-      - service: mqtt.publish
-        data:
-          topic: "milight/0x4242/rgb_cct/1"
-          payload: "{'status': 'off'}"
-      - service: mqtt.publish
-        data:
-          topic: "milight/0x4242/rgb_cct/1"
-          payload: "{'status': 'off'}"
-      - service: mqtt.publish
-        data:
-          topic: "milight/0x4243/rgb_cct/2"
-          payload: "{'status': 'off'}"
-
-  alexa_alarm:
-    sequence:
-      - service: mqtt.publish
-        data:
-          topic: "milight/0x4242/rgb_cct/1"
-          payload: "{'status': 'on', 'mode': 6}"
-      - service: mqtt.publish
-        data:
-          topic: "milight/0x4243/rgb_cct/2"
-          payload: "{'status': 'on', 'mode': 6}"
-      - service: mqtt.publish
-        data:
-          topic: "milight/0x7E92/rgbw/3"
-          payload: "{'status': 'on', 'mode': 5}"
-      - delay:
-          seconds: 60
-      - service: mqtt.publish
-        data:
-          topic: "milight/0x4242/rgb_cct/1"
-          payload: "{'status': 'off'}"
-      - service: mqtt.publish
-        data:
-          topic: "milight/0x4242/rgb_cct/1"
-          payload: "{'status': 'off'}"
-      - service: mqtt.publish
-        data:
-          topic: "milight/0x4243/rgb_cct/2"
-          payload: "{'status': 'off'}"
+    switch.bedroom_fan:
+      expose: true
+    switch.office_fan:
+      expose: true
 
 intent_script:
   DimLightsIntent:
