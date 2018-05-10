@@ -21,8 +21,10 @@ script:
       - service: light.turn_on
         data:
           brightness: 255
+          color_temp: 350
           entity_id:
             - light.bed
+            - light.bedside
       # Primary RGB lights
       - service: light.turn_on
         data_template:
@@ -46,6 +48,7 @@ script:
           entity_id:
             - light.cloud_west
             - light.cloud_east
+            - light.bedside
       # White temp lights
       - service: light.turn_on
         data:
@@ -53,11 +56,6 @@ script:
           color_temp: 370
           entity_id:
             - light.cloud_north
-      # Dimmable Lights
-      - service: light.turn_on
-        data:
-          brightness: 255
-          entity_id:
             - light.bed
       # Primary RGB lights
       - service: light.turn_on
@@ -76,12 +74,17 @@ script:
 
   light_profile_bedroom_dimmed:
     sequence:
+      - service: light.turn_off
+        data:
+          entity_id:
+            - light.bed
       # Dimmable Lights
       - service: light.turn_on
         data:
           brightness: 64
+          color_temp: 350
           entity_id:
-            - light.bed
+            - light.bedside
       # Primary RGB lights
       - service: light.turn_on
         data_template:
@@ -98,7 +101,7 @@ script:
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
-          brightness: 26
+          brightness: 127
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           entity_id:
             - light.bed_shelves
@@ -113,6 +116,12 @@ script:
             - light.cloud_east
             - light.bed
       # Primary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 48
+          hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
+          entity_id:
+            - light.bedside
       - service: light.turn_on
         data_template:
           brightness: 1
@@ -143,6 +152,13 @@ script:
             - light.bedroom_ps
             - light.bed
       # Secondary RGB lights
+      - service: light.turn_on
+        data:
+          brightness: 32
+          rgb_color: [255,0,0]
+          entity_id:
+            - light.bed_shelves
+      # Bedside light
       - service: script.turn_on
         data_template:
           entity_id: >-
@@ -164,19 +180,18 @@ script:
     sequence:
       - service: light.turn_on
         data:
-          brightness: 100
+          brightness: 32
           rgb_color: [255,0,0]
           entity_id:
             - light.bed_shelves
+            - light.bedside
 
   conditional_bed_light_off:
     sequence:
-      - service: light.turn_on
+      - service: light.turn_off
         data:
-          brightness: 48
-          rgb_color: [255,0,0]
           entity_id:
-            - light.bed_shelves
+            - light.bedside
 
   light_profile_bedroom_party:
     sequence:
