@@ -188,9 +188,16 @@ automation:
           entity_id: counter.snooze_counter
           below: 1
     action:
-      service: script.bedroom_sunrise
+      - service: input_select.select_option
+        data_template:
+          option: 'Night'
+          entity_id: >
+            {% if is_state('input_boolean.guests', 'on') %}
+              input_select.bedroom_light_profile
+            {% else %}
+              input_select.light_profile
+            {% endif %}
 
-  # Actions
   - alias: sleeping_activity
     initial_state: true
     trigger:
@@ -214,6 +221,7 @@ automation:
       entity_id: sensor.phone_alarm
       to: 'snooze'
     action:
+      - service: script.bedroom_sunrise
       - service: counter.increment
         data:
           entity_id: counter.snooze_counter
@@ -281,7 +289,7 @@ automation:
       - service: media_player.volume_set
         data_template:
           entity_id: 'media_player.east_side_speakers'
-          volume_level: 0.45
+          volume_level: 0.5
 
   - alias: morning_awake
     initial_state: true
@@ -316,6 +324,7 @@ automation:
           entity_id: input_select.playlist
           options:
             - "==SCRIPT==morning_briefing"
+            - "{{ states.sensor.podcast_bbc_minute.state }}"
             - "{{ states.sensor.podcast_daily_tech_news_show.state }}"
             - "==END=="
       - delay:
@@ -323,4 +332,4 @@ automation:
       - service: media_player.volume_set
         data_template:
           entity_id: 'media_player.east_side_speakers'
-          volume_level: 0.45
+          volume_level: 0.5
