@@ -11,11 +11,10 @@ homeassistant:
       icon: mdi:television
 
 group:
-  livingroom_climate:
-    name: Livingroom Climate
+  airconditoner:
     entities:
       - switch.airconditoner
-      - switch.livingroom_fan
+      - switch.airconditoner_fan
 
   fan_remote:
     name: Fan Remote
@@ -25,41 +24,15 @@ group:
       - switch.fan_remote_timer
       - switch.fan_remote_mode
 
-  tv_remote:
-    name: TV Remote
+  living_room_tv_remote:
+    name: Living Room TV Remote
     entities:
-      - switch.tv
-      - switch.tv_remote_source
-      - switch.tv_remote_hdmi1
-      - switch.tv_remote_hdmi2
-      - switch.tv_remote_hdmi3
-      - switch.tv_remote_hdmi4
-      - switch.tv_remote_back
-      - switch.tv_remote_volume_up
-      - switch.tv_remote_volume_down
-      - switch.tv_remote_mute
-      - switch.tv_remote_home
-      - switch.tv_remote_exit
-      - switch.tv_remote_ok
-      - switch.tv_remote_up
-      - switch.tv_remote_down
-      - switch.tv_remote_left
-      - switch.tv_remote_right
-      - switch.tv_remote_num_1
-      - switch.tv_remote_num_2
-      - switch.tv_remote_num_3
-      - switch.tv_remote_num_4
-      - switch.tv_remote_num_5
-      - switch.tv_remote_num_6
-      - switch.tv_remote_num_7
-      - switch.tv_remote_num_8
-      - switch.tv_remote_num_9
-      - switch.tv_remote_num_0
-      - switch.tv_remote_text
-      - switch.tv_remote_subtitles
-      - switch.tv_remote_ch_up
-      - switch.tv_remote_ch_down
-      - switch.tv_remote_options
+      - switch.living_room_tv_power
+      - switch.living_room_tv_remote_hdmi1
+      - switch.living_room_tv_remote_hdmi2
+      - switch.living_room_tv_remote_hdmi3
+      - switch.living_room_tv_remote_hdmi4
+      - switch.living_room_tv_remote_mute
 
   tv_soundbar_remote:
     name: TV Soundbar Remote
@@ -222,96 +195,106 @@ script:
       - service: switch.turn_on
         entity_id: switch.projector_soundbar_menu
 
+  livingroom_fan_on:
+    sequence:
+      - service: switch.turn_on
+        data:
+          entity_id: switch.livingroom_fan_power
+      - service: input_boolean.turn_on
+        entity_id: input_boolean.livingroom_fan_state
+
+  livingroom_fan_off:
+    sequence:
+      - service: switch.turn_off
+        data:
+          entity_id: switch.livingroom_fan_power
+      - service: input_boolean.turn_off
+        entity_id: input_boolean.livingroom_fan_state
+
+  livingroom_fan_speed:
+    sequence:
+      - service: switch.turn_on
+        entity_id: switch.livingroom_fan_power
+      - service: input_select.select_next
+        entity_id: input_select.livingroom_fan_speed
+
+  livingroom_fan_osc:
+    sequence:
+      - service: switch.turn_on
+        entity_id: switch.livingroom_fan_swing
+      - service: input_boolean.toggle
+        entity_id: input_boolean.livingroom_fan_osc
+
+
+input_boolean:
+  livingroom_fan_state:
+    name: 'livingroom_fan_state'
+  livingroom_fan_osc:
+    name: 'livingroom_fan_osc'
+
+input_select:
+  livingroom_fan_speed:
+    options:
+      - 'low'
+      - 'medium'
+      - 'high'
+
+fan:
+  - platform: template
+    fans:
+      livingroom_fan:
+        friendly_name: "Livingroom fan"
+        value_template: "{{ states('input_boolean.livingroom_fan_state') }}"
+        speed_template: "{{ states('input_select.livingroom_fan_speed') }}"
+        oscillating_template: "{{ states('input_boolean.livingroom_fan_osc') }}"
+        turn_on:
+          service: script.livingroom_fan_on
+        turn_off:
+          service: script.livingroom_fan_off
+        set_speed:
+          service: script.livingroom_fan_speed
+          data_template:
+            speed: "{{ speed }}"
+        set_oscillating:
+          service: script.livingroom_fan_oscillating
+          data_template:
+            oscillating: "{{ oscillating }}"
+        speeds:
+          - 'low'
+          - 'medium'
+          - 'high'
 
 switch:
-  # Livingroom Broadlink
+  # Living Room Broadlink
   - platform: broadlink
     host: 192.168.33.8
     mac: '34:ea:34:b2:f4:5a'
     switches:
-      # A/C
-      airconditoner:
-        # Turn on state = Cooling 22º Fan Auto.
-        command_on: 'JgDKAJOSEzQTEBM0EzQQExATFDQTEBATEDcQExATEDcQOBASEDcQNxATEDcQNxA4EDYSNRM0ExATNBMQEBMQExATEBMQFA8TEDgRNRM0ExATEBMQExAQNxATEBMQExA3EDgRNRM0E6mRlRA3EBMQNxA3EBQPExE2EhETEBM0ExATEBA3EDcQExA3EDcQExA4ETUTNBM0EzQTNBMQEDcQExATEBMQExATEBMQExI1EzQTNBMQExAQExATEDcQExAUDxMQOBE1EzQTNBMADQUAAAAAAAAAAAAAAAAAAA=='
-        command_off: 'JgDKAJCVEjcQExI1EjUTEBMQEzQTEBMQEzQTEBMQEDoSNBMQEzQSERM0EzQTNBM0ExATNBA3EDcQExATEBQPExA4ERESERM0EzQTNBMQExAQExATEBMQExATEBMQOBE1EjUTNBM0E6mRlRA3EBMQNxA3FBESERM0ExATEBM0ExAQExA3EDcQExA3EBMQOBE1EjUTNBMQEzQTNBM0EBMQExATEBMQNxAUDxMQOBE1EDcQExATEBMQFA8TEhESERMQEzQTNBM0EDcQNxAADQUAAAAAAAAAAAAAAAAAAA=='
-
       # Fan
-      livingroom_fan:
+      livingroom_fan_power:
         command_on: 'JgC2ACgQKA8MKycQKA8MKwwrDSoNKg0qKA8MAAEHKA8nEAwrKA8nEAwrDCsMKwwrDCsnEAwAAQcoDycQDCsnECcQCywMKwssDCsLLCgPCwABCCgPKA8LLCgPJxALKw0qDSoNKgwrKQ4MAAEHKBAoDg0qKA8oDw0qDSoNKg0qDCspDg0AAQYpDikODCsoDygPDSoMKw0qDSoNKigPDAABBykOKA8MKycQJxANKg0qDSoNKg0qKA8NAA0FAAA='
         command_off: 'JgDCACgPKA8MKycQKA8MKw0qDSoMKwwrDSoo6ycQJxANKigPKA8MKwwrDCsNKgwrDCso6ycQJxAMKygPKA8MKwwrDCsLLAwqDSop6ikPKA8LKykPJw8MKwwrDCsNKg0qDSoo6ygPKQ4NKikOKA8MKw0qDSoNKgwrDCsp6ikOKA8MKygPKA8MKw0qDSoNKg0qDCso6ygPKA8MKygPKA8NKgwrDSoMKwwrDSoo6ygPKA8MKygPJxAMKwwrDCsMKwwrDCsoAA0FAAAAAAAA'
-      fan_remote_timer:
+      livingroom_fan_timer:
         command_on: 'JgDQACkOKQ4MKykOKQ4MKw0qDSopDg0qDSoNAAEGKA8oDwwrKA8nEA0qDSoNKigPDCsNKg0AAQYoDycQDSooDycQDSoNKg0qJxAMKwwrDAABBycQJxAMKycQKA8MKwwrCywoDwwrDCsMAAEHJxAoDwsrKQ8oDgwrDCsNKikODSoNKgwAAQcoDykODCsoDykODSoNKgwrKA0PKg0qDQABBigPKA0OKygPJxAMKw0qDSonEA0qDCsNAAEGJxAnEA0qKA8oDw0qDSoNKigPDSoNKg0ADQUAAAAAAAAAAA=='
       livingroom_fan_swing:
         command_on: 'JgDqACkPKA8MKycQJxAMKwwrKA8MKwwrDSoNAAEGJxAnEAwrKA8nEA0qDSooDwwrDCsMKwwAAQcnECgQCysoDycQDCsMKygPDCsMKgwsDAABBygPKBAKKygQKA8MKg0qKQ8LKw0qDSoNAAEGKQ4pDgwrKQ4oDw0qDSooDw0qDSoNKg0AAQYoECcPDCsnDioPDCsMKygPDCsMKwwrDQABBicQKA8NKicQKBALKw0qJxAMKwwrDCsMAAEHJxAnEAwrJxAoDwwrDCsnEAwrCywMKwwAAQcoDycNDyopDygPCysNKigPDCsMKw0qDQANBQAAAAAAAAAAAAAAAAAA'
-      fan_remote_mode:
+      livingroom_fan_mode:
         command_on: 'JgAEASgPJxALLCgNKg8LLAwqDCsNKigQCysMAAEFKg8pDgwrKA8oDw0qDSoNKgwrKA8MKw0AAQYoDygPDCsoDycQDSoNKg0qDSonEAwrDQABBigPKA8MKygPJw0PKwwrDCsLLCgPCywLAAEHKBAoDwwqKBAnDw0qDSoNKg0qKQ4NKgwAAQcoDykODCsoDygPDCsMKw0qDSonEAwrDAABBygPKA8MKygQJhANKgwrDSoNKigPDCsNAAEGKA8nEAwrJxAoDwwrDCsMKwwrKA8LLAwAAQcoDycQCywoDygJEioNKg0qDSopDg0qDQABBigPKA8NKikOKA8MKwwrDCsMKygPDSoMAA0FAAAAAA=='
 
-      # TV
-      tv:
+      # Living Room TV
+      living_room_tv_power:
         command_on:  'JgBUAEsVERUoEiYUJRURFSgSFBIlFhAVERURFREAA0BMFREWJBUoEicTERUlFREVKBIUEhURFBIUAAM9TxIUEiUWJBUoEhQSJRYQFiQVFBIRFREVFAANBQAAAAA='
         command_off: 'JgBUAEwWJBUoEiYUJRURFSgSFBIlFhAWEBURFREAAy5NEyUVKBIoEiUWEBUoEhQSKBITExEWEBYQAAMtTxIlFiQVKBInExMTJRURFSgSFBIUEhMTEgANBQAAAAA='
-      tv_remote_source:
-        command_on: 'JgBwAE0VJRYRFiYVERYSFSYVERYmFBIWERYRFhIAA0xNFSYVERYmFREWEhUmFBMVJhQSFRIWERYSAANNTRQnFBMUJhUTFBMUJhUTFCYVEhUSFRMUEwADTEwWJRUSFiUVExQTFSYUExQmFRMUExQTFBMADQUAAAAAAAAAAA=='
-      tv_remote_hdmi1:
+      living_room_tv_remote_hdmi1:
         command_on: 'JgBmAEwWEBUoEhQSJxMlFREVKBIUEyYTERcmEigSExMSFBEAAqZOExMSJRURFiQVKBIUEiUWEBYkFRQSKBIlFREWEBURAAKlTRQRFiQVERUoEiUWEBYkFREVKBITEyUWJBURFREVEQANBQAA'
-      tv_remote_hdmi2:
+      living_room_tv_remote_hdmi2:
         command_on: 'JgBmAEsVJRUoEhQSJRUoExMSKBITEygUERUoEiUVERYQFREAApZOEyUVKBIUEigSJRYQFSgSEhQoEhQSKBIlFREVERUUAAKVTxIlFiQVERYnEiUWEBUlFRQSKBITEyUVKBIUEhQSFAANBQAA'
-      tv_remote_hdmi3:
+      living_room_tv_remote_hdmi3:
         command_on: 'JgBmAEwVERYQFSUVKBIlFhAWJBURFSgSFBIlFSUVFBIUEhQAAqJMFREVERYmEyUVKBIUEicTERYkFREVKBImFBEWEBYQAAKlTxIUEhMTJRUoEigSExMlFREVJRUUEigSJRYQFREVEQANBQAA'
-      tv_remote_hdmi4:
+      living_room_tv_remote_hdmi4:
         command_on: 'JgBmAEsVKBIUEiUWJBUoEhQSJRURFSgSFBInEyUVERUSFRAAApZPEiYUERYkFSgSJxMRFSUVERUoEhQSJRYkFREVFBIUAAKTTBcnEhQSJxMlFSgSFBIoEhMTJRURFSgSJxMRGRISFAANBQAA'
-      tv_remote_back:
-        command_on: 'JgCIAE0VJhQmFRIVExQSFSYVEhUmFSYVJhQSFiUVEhUTFCcAAoZPFSUWJhURFhEWEhUmFREWJhQmFSUWEhUlFhIVERYlAAKJTRUmFSYVEhUSFREWJRYRFiUVJhUlFhEWJhUSFREWJQACiU4UJhUlFhEWEhUSFSUWEhUmFSYUJhUTFCYVEhUSFSUADQU='
-      tv_remote_volume_up:
-        command_on: 'JgBUAEwVEhYmFBIVEhYlFRIVEhYmFBIVEhYRFhIAA2BNFRIVJRYRFhIVJhURFhIVJRYRFhIVExQTAANfTRUSFSUWERYSFSYVERYRFiYVERYRFhIVEgANBQAAAAA='
-      tv_remote_volume_down:
-        command_on: 'JgBwAE4UJxQlFhIVEhUmFREWEhUlFhEWEhUSFRMAA0tNFSYVJhUSFRIVJRYSFRIVJRYSFRIVEhUSAANNTRUlFSYVEhUTFCcUEhUSFScUExQSFRIVEwADTE0VJhUlFRMVEhUmFBMVEhUlFRIVEhYSFREADQUAAAAAAAAAAA=='
-      tv_remote_mute:
+      living_room_tv_remote_mute:
         command_on: 'JgBwAEwVEhYRFiYUExQmFRMUEhUnFBIVEhUSFhEAA2BNFhIVExQmFRIVJRYSFREWJRYRFhIVEhUSAANgTRUSFRIVJhUSFSUWERYSFSYVEhURFhIVEwADXk8UEhUTFCYVEhUlFhIVEhUmFREWEhUSFRMADQUAAAAAAAAAAA=='
-      tv_remote_home:
-        command_on: 'JgBUAE0VExQSFRMUEhUSFiUVJhUmFREWEhUSFRMAA19MFhIVEhUSFRIVExUlFSYVJRYRFhIVEhUTAANfThQSFRIWERYRFhMUJRYmFCYVEhUTFBIVEgANBQAAAAA='
-      tv_remote_exit:
-        command_on: 'JgCIAE0VJhUmFBIVExUSFSUVEhUnFCYVJhURFiUVExUSFSYAAohOFCcUJhURFhIVEhUmFRIVJhUmFCcUEhUmFRIVExQmAAKIThQmFSYVERYSFRIVJRYSFSYVJRUmFRMUJhUSFRIVJgACiU0VJRUmFRIVExQTFCYVEhUlFiUWJRUSFSYVEhUSFSYADQU='
-      tv_remote_ok:
-        command_on: 'JgBwAE0VJhQSFiUVExQSFiYUJhUmFRIVEhUSFRIAAzlMFiUVEhYmFBIVEhYlFSYVJhURFhEWEhUSAAM5ThQmFRIVJhURFhIVJhUlFScUEhUTFBMUEwADOUwVJhUSFSYVExQSFSUWJhUlFRMUEhYRFhIADQUAAAAAAAAAAA=='
-      tv_remote_up:
-        command_on: 'JgBwAE0VERYRFiYUEhYlFSYVJhUmFBIWERYRFhIAAzlNFBMVEhUmFBMVJRUmFSYVJRUSFRMVEhUSAAM5TRUTFBIVJhUSFSYVJhQnFCUWEhUSFRIVEwADOE4UEhUSFScUExQmFSYVJhQmFRMUEhUSFRIADQUAAAAAAAAAAA=='
-      tv_remote_down:
-        command_on: 'JgBwAEwWJRUTFSYUExQnFCUWJRUnFBIVEhUSFRMAAyVNFSUVEhUnFBIVJhUlFiYUJhUTFBMUEhUSAAMmTRUlFhIVJRYSFSUVJhUlFiYVERYSFRIVEwADJE4UJhUSFSYVEhUmFSUVJhUlFhIVEhUSFRMADQUAAAAAAAAAAA=='
-      tv_remote_left:
-        command_on: 'JgBwAEwVEhYSFSUVEhYmFCYVEhUmFREWEhUSFRIAA0xOFBIVExUlFRIVJxQlFhIVJRYSFRIVEhUSAANNTRUSFRIVJRYSFSYVJhQSFScUExQTFBIWEgADTE0VEhUSFSYVEhUlFiUWERYmFBIVExURFhEADQUAAAAAAAAAAA=='
-      tv_remote_right:
-        command_on: 'JgBwAE4UJhUlFhIVEhUmFSUVEhYmFBMUExURFhEAAzlNFSYVJhURFhIVJhUlFRMVJhQSFRMUEhYRAAM6TBYmFSYUEhUSFSYVJRYSFSYVERYSFRIVEgADOU0VJhUlFRMVEhUlFSYVEhUmFRMUExQSFRIADQUAAAAAAAAAAA=='
-      tv_remote_num_1:
-        command_on: 'JgBUAEwWEhURFhIVEhUTFBIVExQmFRMUEhUSFhIAA4dNFRMUEhUTFBMVERYRFhEWJhUSFRIVEhUSAAOHTRUTFBIVExQSFRIWEhURFiYVEhURFhIVEgANBQAAAAA='
-      tv_remote_num_2:
-        command_on: 'JgBUAE0VJRUTFRIVERYSFRMUEhUmFRMUEhUSFRMAA3NOFCYVExQSFRIVExQTFRIVJhQSFhEWERYSAANzTRUlFhIVExQSFRIVExUSFSYUEhUSFhEWEQANBQAAAAA='
-      tv_remote_num_3:
-        command_on: 'JgBwAEwWEhUlFRIWEhURFhIVExQlFhEWEhUSFRMAA3NNFRIVJhUSFRIVEhUTFBIVJhUSFRIVExUSAANzTRUSFSYVEhUSFRMUEhUSFiUVEhUSFRMVEQADdE4UExQmFRIVExQSFRMVERYmFBMVEhUSFRIADQUAAAAAAAAAAA=='
-      tv_remote_num_4:
-        command_on: 'JgBwAE4UJRYlFhEWERYSFRMUExQmFRIVExQTFBMAA2BNFSYUJhUSFRIVExQTFRIVJhQSFhIVERYSAANgTBYmFCYVEhUTFBMUEhYSFSYUExQSFhIVEQADYUwWJRYmFBIVExQSFhIVEhUlFhEWERYSFRIADQUAAAAAAAAAAA=='
-      tv_remote_num_5:
-        command_on: 'JgBwAE4UExQSFSYVExQSFRIVExUmFBIVEhYSFREAA3ROFBIVEhUmFRMUExQTFBMVJhQSFRIVExURAAN1TRUSFRIVJhQSFhIVEhUTFCYVERYSFRMUEgADdE0VEhUSFSYVEhUSFRIVEhUmFRMUEhUSFRMADQUAAAAAAAAAAA=='
-      tv_remote_num_6:
-        command_on: 'JgBwAE4UJhUSFSUWERYSFRIVExQmFRIVEhUSFRMAA19OFCYVEhUmFRIVERYSFRIVJhUSFRIVExQSAANhTRUmFBIVJhUSFRMUEhYRFiUVExQTFREWEQADYU0VJRUTFSYUExQSFhEWEhUlFhIVERYSFRMADQUAAAAAAAAAAA=='
-      tv_remote_num_7:
-        command_on: 'JgBUAE0VEhUlFiUVExURFhIVEhUmFREWEhUTFBMAA19MFhIVJhUmFBIWERYSFRIVJhUSFRIVEhUTAANgTBUTFCYVJhUSFRMUExQTFCYVExQSFRMUEwANBQAAAAA='
-      tv_remote_num_8:
-        command_on: 'JgBwAEwWJhQmFSYVERYRFhIVEhUmFRIVEhUSFRIAA01NFSYUJhUmFRIVEhUSFRMUJhUSFRIVEhUSAANNTRUlFiUVJhUTFBIVEhUTFSYUEhUSFhIVEgADTE4UJhUmFSUVEhUSFhEWEhUmFBMVEhURFhIADQUAAAAAAAAAAA=='
-      tv_remote_num_9:
-        command_on: 'JgBUAE0UEhYRFhIVJRUSFhIVEhUlFhIVEhUSFRIAA3RMFhMUEhUSFSYVExQTFBMUJhUSFRIVEhUTAANzTRUSFRIVEhUmFRIVEhUTFCYVEhUSFRIVEwANBQAAAAA='
-      tv_remote_num_0:
-        command_on: 'JgBUAE0VJRUTFREWJhQSFRIWERYmFBMVEhURFhMAA19NFSYUExQSFiUVExQSFhEWJRUSFhEWERYRAANhTRUlFhIVEhUlFhEWEhUSFSUWEhUSFRMUEgANBQAAAAA='
-      tv_remote_text:
-        command_on: 'JgBUAE0VJhQmFSYVJRUmFSYVERYmFREWEhUSFRMAAxFNFCYVJhUmFSYUJhUmFRIVJhQTFREWERYSAAMSTRUmFSYUJxQlFiYUJxQTFCYVExQTFBIVEgANBQAAAAA='
-      tv_remote_subtitles:
-        command_on: 'JgCIAE0UEhYRFhIVJhURFiUVExQnFCYVJRYRFiUVEhYRFiUAAp1MFRIWEhURFiUWERYlFRIVJxQmFSYVERYmFBIWEhUmAAKcTRUSFRIVEhUmFRMUJRYSFSYVJRUnFBIVJhUSFRIVJgACnE0VExQSFRIWJRUSFScUEhUmFSYVJRUSFScUExQSFSYADQU='
-      tv_remote_ch_up:
-        command_on: 'JgBUAE0VEhUSFhIVEhUlFhIVEhUlFhEWEhUSFRIAA3NNFRIVExURFhIVJRYRFhIVJRUTFRIVERYSAAN0TRUSFRMUExQSFScUEhUTFCYVEhUSFRIVEwANBQAAAAA='
-      tv_remote_ch_down:
-        command_on: 'JgBwAE0VJhQTFREWEhUmFRIVEhUlFhIVEhUSFRIAA2BMFiYUExUSFRIVJRYRFhIVJRUSFhIVEhUSAANgTRUmFRIVEhUSFSYVEhUSFSYVEhUSFRMUEgADYU0UJxQTFBIVExUmFBMUEhYmFBMUEhUTFRIADQUAAAAAAAAAAA=='
-      tv_remote_options:
-        command_on: 'JgCIAE0VERYlFSYVExQmFSUWERYmFCcUJhUSFSUWERYSFSUAAnZNFRIVJhUlFhEWJhQnFBMUJhUlFiUVExQmFRIVEhUnAAJ0ThQSFSUWJRYRFiUVJxQSFSYVJRUmFRIVJhUTFBMUJwACdE0VExQnFCUWEhUmFSYUExQnFCUWJRYRFiYUExQTFSYADQU='
 
       # TV Soundbar
       tv_soundbar_power:
@@ -494,3 +477,13 @@ switch:
         command_on: 'JgAIAU4UJhUmFSUWJhUTFCYVEhUTFREWEhUTFCYVEhUTFRIVJhUSFScUJhUTAAG9ThUmFSYVJRYlFhIVJhUSFRIVEhYSFRIVJxQTFBMVEhUmFRIVJhUmFRMAAb1OFSUWJRYmFSUWEhUmFRMUExQSFhIVExQmFRMUEhYTFCYVEhYlFiYUEwABvk4UJxQnFCYVJhUTFCYVExUSFRIVEhUTFSUVExUTFBIVJhUSFiYUJhUSAAG/TRUmFSYVJRYlFhIVJhUTFBIVEhYSFRMUJhUTFREWEhUmFRMUJxQmFRIAAb9MFiUWJRYlFiUWERYmFRIVEhUTFREWEhUmFRIVEhYRFiUWEhUmFSUWEgANBQ=='
       projector_soundbar_mute:
         command_on: 'JgDMAEwWEhUSFScUEhYmFREWEhUSFRIWERYSFSYVJhUTFBIAAuNOFBMVEhUlFhIVJhUSFRIWEhUSFRIVEhYlFiUWERYSAALiTRYRFhIVJhUTFCYVExUSFRIVEhUTFRIVJRYmFRIVEgAC400VEhUTFSUWERYmFRIVEhUSFhEWEhUSFSYVJxQSFhEAAuNNFRMVEhUmFRMUJxQSFRIWEhUSFRMVEhUlFiUWEhUSAALiTRYSFRIVJhUSFiUWERYSFRIVEhYRFhMUJhUmFRIVEgANBQAAAAAAAAAAAAAAAA=='
+
+      # A/C
+      airconditoner:
+        # Turn on state = Cooling 22º Fan Auto.
+        command_on:  'JgDKAJOSEzQTEBM0EzQQExATFDQTEBATEDcQExATEDcQOBASEDcQNxATEDcQNxA4EDYSNRM0ExATNBMQEBMQExATEBMQFA8TEDgRNRM0ExATEBMQExAQNxATEBMQExA3EDgRNRM0E6mRlRA3EBMQNxA3EBQPExE2EhETEBM0ExATEBA3EDcQExA3EDcQExA4ETUTNBM0EzQTNBMQEDcQExATEBMQExATEBMQExI1EzQTNBMQExAQExATEDcQExAUDxMQOBE1EzQTNBMADQUAAAAAAAAAAAAAAAAAAA=='
+        command_off: 'JgDKAJCVEjcQExI1EjUTEBMQEzQTEBMQEzQTEBMQEDoSNBMQEzQSERM0EzQTNBM0ExATNBA3EDcQExATEBQPExA4ERESERM0EzQTNBMQExAQExATEBMQExATEBMQOBE1EjUTNBM0E6mRlRA3EBMQNxA3FBESERM0ExATEBM0ExAQExA3EDcQExA3EBMQOBE1EjUTNBMQEzQTNBM0EBMQExATEBMQNxAUDxMQOBE1EDcQExATEBMQFA8TEhESERMQEzQTNBM0EDcQNxAADQUAAAAAAAAAAAAAAAAAAA=='
+
+      airconditoner_fan:
+        command_on:  'JgDKAJGREjYRExI2ETYSExETETYSExETEjYRExISEjYRNhITETcRExISEjYSNhE2EjYSNhI2EjYSNhISEhISEhISEhISEhI2EjYSNhISEhISNhISEhISEhISEhMRNhI2EhISNhI2Eq2RkBM1EhISNhI2EhISEhI2EhISEhI2EhISEhI2EjYSEhI2EhISEhI2EjYSNhI2ETYSNhI2EjYSEhISEhISEhISEhMRNxE2EjYSEhISEjYSEhISEhMRExETETYSNhISEjYSNhIADQUAAAAAAAAAAAAAAAAAAA=='
+        command_off: 'JgDKAJCVEjcQExI1EjUTEBMQEzQTEBMQEzQTEBMQEDoSNBMQEzQSERM0EzQTNBM0ExATNBA3EDcQExATEBQPExA4ERESERM0EzQTNBMQExAQExATEBMQExATEBMQOBE1EjUTNBM0E6mRlRA3EBMQNxA3FBESERM0ExATEBM0ExAQExA3EDcQExA3EBMQOBE1EjUTNBMQEzQTNBM0EBMQExATEBMQNxAUDxMQOBE1EDcQExATEBMQFA8TEhESERMQEzQTNBM0EDcQNxAADQUAAAAAAAAAAAAAAAAAAA=='
