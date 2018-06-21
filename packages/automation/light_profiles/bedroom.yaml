@@ -23,7 +23,7 @@ script:
           brightness: 255
           color_temp: 350
           entity_id:
-            - light.bed
+            - light.bedroom_shelf_strip
             - light.bedside
       # Primary RGB lights
       - service: light.turn_on
@@ -31,14 +31,14 @@ script:
           brightness: 255
           hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
           entity_id:
-            - light.bedroom_ps
+            - light.bedroom_shelves
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
           brightness: 255
-          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
+          hs_color: [ "{{ states.sensor.theme_secondary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color_hue.state.split(',')[1]|int }}" ]
           entity_id:
-            - light.bed_shelves
+            - light.bedroom_ps
 
   light_profile_bedroom_default:
     sequence:
@@ -48,7 +48,6 @@ script:
           entity_id:
             - light.cloud_west
             - light.cloud_east
-            - light.bedside
       # White temp lights
       - service: light.turn_on
         data:
@@ -56,42 +55,48 @@ script:
           color_temp: 370
           entity_id:
             - light.cloud_north
-            - light.bed
+            - light.bedroom_shelf_strip
+      - service: light.turn_on
+        data:
+          brightness: 200
+          color_temp: 370
+          entity_id:
+            - light.bedside
       # Primary RGB lights
       - service: light.turn_on
         data_template:
           brightness: 255
           hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
           entity_id:
-            - light.bedroom_ps
+            - light.bedroom_shelves
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
           brightness: 255
-          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
+          hs_color: [ "{{ states.sensor.theme_secondary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color_hue.state.split(',')[1]|int }}" ]
           entity_id:
-            - light.bed_shelves
+            - light.bedroom_ps
 
   light_profile_bedroom_dimmed:
     sequence:
       - service: light.turn_off
         data:
           entity_id:
-            - light.bed
+            - light.bedroom_shelf_strip
       # Dimmable Lights
       - service: light.turn_on
         data:
-          brightness: 64
+          brightness: 32
           color_temp: 350
           entity_id:
-            - light.bedside
+            - light.bedroom_shelf_strip
       # Primary RGB lights
       - service: light.turn_on
         data_template:
           brightness: 86
           hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
           entity_id:
-            - light.bedroom_ps
+            - light.bedroom_shelves
       - service: light.turn_on
         data_template:
           brightness: 86
@@ -102,9 +107,10 @@ script:
       - service: light.turn_on
         data_template:
           brightness: 127
-          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
+          hs_color: [ "{{ states.sensor.theme_secondary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color_hue.state.split(',')[1]|int }}" ]
           entity_id:
-            - light.bed_shelves
+            - light.bedside
+            - light.bedroom_ps
 
   light_profile_bedroom_ambient:
     sequence:
@@ -114,20 +120,13 @@ script:
           entity_id:
             - light.cloud_west
             - light.cloud_east
-            - light.bed
+            - light.bedroom_shelf_strip
       # Primary RGB lights
-      - service: light.turn_on
-        data_template:
-          brightness: 48
-          hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
-          entity_id:
-            - light.bedside
-      - service: light.turn_on
-        data_template:
-          brightness: 1
-          hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
-          entity_id:
-            - light.bedroom_ps
+      # - service: light.turn_on
+      #   data_template:
+      #     brightness: 1
+      #     hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
+      #     entity_id:
       - service: light.turn_on
         data_template:
           brightness: 1
@@ -140,7 +139,14 @@ script:
           brightness: 64
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           entity_id:
-            - light.bed_shelves
+            - light.bedroom_shelves
+      - service: light.turn_on
+        data_template:
+          brightness: 64
+          hs_color: [ "{{ states.sensor.theme_secondary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color_hue.state.split(',')[1]|int }}" ]
+          entity_id:
+            - light.bedside
+            - light.bedroom_ps
 
   light_profile_bedroom_night:
     sequence:
@@ -150,23 +156,20 @@ script:
           entity_id:
             - group.cloud
             - light.bedroom_ps
-            - light.bed
-      # Secondary RGB lights
+            - light.bedroom_shelf_strip
       - service: light.turn_on
         data:
           brightness: 32
           rgb_color: [255,0,0]
           entity_id:
-            - light.bed_shelves
-      # Bedside light
-      - service: script.turn_on
-        data_template:
-          entity_id: >-
-            {% if is_state('sensor.sleep_tracker', 'paused') -%}
-              script.conditional_bed_light_off
-            {% else -%}
-              script.conditional_bed_light_on
-            {% endif -%}
+            - light.bedroom_shelves
+      - service: light.turn_on
+        data:
+          brightness: 1
+          rgb_color: [255,0,0]
+          entity_id:
+            - light.bedside
+
 
   light_profile_bedroom_off:
     sequence:
@@ -176,36 +179,19 @@ script:
           entity_id:
             - group.bedroom_light
 
-  conditional_bed_light_on:
-    sequence:
-      - service: light.turn_on
-        data:
-          brightness: 32
-          rgb_color: [255,0,0]
-          entity_id:
-            - light.bed_shelves
-            - light.bedside
-
-  conditional_bed_light_off:
-    sequence:
-      - service: light.turn_off
-        data:
-          entity_id:
-            - light.bedside
-
   light_profile_bedroom_party:
     sequence:
       # Off Lights
       - service: light.turn_off
         data:
           entity_id:
-            - light.bed
+            - light.bedroom_shelf_strip
       - service: light.turn_on
         data_template:
           effect: "rainbow"
           entity_id:
             - light.bedroom_ps
-            - light.bed_shelves
+            - light.bedroom_shelves
       - service: light.turn_on
         data_template:
           effect: "colorloop"
