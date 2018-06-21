@@ -1,0 +1,210 @@
+homeassistant:
+  customize:
+    input_boolean.storage_room_activity_override:
+      persistent: true
+    input_select.room_state_storage_room:
+      persistent: true
+
+script:
+  light_profile_storage_room_bright:
+    sequence:
+      # White temp lights
+      - service: light.turn_on
+        data:
+          brightness: 255
+          entity_id:
+            - light.storage_room
+
+  light_profile_storage_room_default:
+    sequence:
+      # White temp lights
+      - service: light.turn_on
+        data:
+          brightness: 255
+          entity_id:
+            - light.storage_room
+
+  light_profile_storage_room_dimmed:
+    sequence:
+      # White temp lights
+      - service: light.turn_on
+        data:
+          brightness: 127
+          entity_id:
+            - light.storage_room
+
+  light_profile_storage_room_ambient:
+    sequence:
+      # White temp lights
+      - service: light.turn_on
+        data:
+          brightness: 64
+          entity_id:
+            - light.storage_room
+
+  light_profile_storage_room_night:
+    sequence:
+      # White temp lights
+      - service: light.turn_on
+        data:
+          brightness: 1
+          entity_id:
+            - light.storage_room
+
+  light_profile_storage_room_off:
+    sequence:
+      # Primary RGB lights
+      - service: light.turn_off
+        data:
+          entity_id:
+            - light.storage_room
+
+group:
+  light_profile_storage_room:
+    entities:
+      - binary_sensor.storage_room_activity
+      - input_boolean.storage_room_activity_override
+      - input_select.light_profile
+      - input_select.room_state_storage_room
+
+  light_profile_scenes_storage_room:
+    name: Storage Room Scenes
+    entities:
+      - script.light_profile_storage_room_bright
+      - script.light_profile_storage_room_default
+      - script.light_profile_storage_room_dimmed
+      - script.light_profile_storage_room_ambient
+      - script.light_profile_storage_room_night
+      - script.light_profile_storage_room_off
+
+  light_profile_automations_storage_room:
+    entities:
+      - automation.light_profile_change_active_storage_room
+      - automation.light_profile_change_inactive_storage_room
+      - automation.light_profile_change_off_storage_room
+
+  motion_triggers_storage_room:
+    entities:
+      - automation.room_state_active_trigger_storage_room
+      - automation.room_state_inactive_trigger_storage_room
+      - automation.room_state_off_trigger_storage_room
+
+input_boolean:
+  storage_room_activity_override:
+    name: Storage Room Activity Override
+    initial: off
+
+input_select:
+  room_state_storage_room:
+    name: Storage Room State
+    options:
+      - active
+      - inactive
+      - 'off'
+    initial: 'off'
+
+binary_sensor:
+  - platform: template
+    sensors:
+      storage_room_activity:
+        friendly_name: 'Storage Room Activity'
+        value_template: >
+          {% if is_state('binary_sensor.storage_room_door', 'on')
+          or is_state('switch.storage_room_motion', 'on')
+          or is_state('input_boolean.storage_room_activity_override', 'on') -%}
+            true
+          {% else -%}
+            false
+          {% endif -%}
+
+automation:
+  # Room State Triggers #
+  - alias: room_state_active_trigger_storage_room
+    trigger:
+      platform: state
+      entity_id: binary_sensor.storage_room_activity
+      to: 'on'
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.room_state_storage_room
+        option: 'active'
+
+  - alias: room_state_inactive_trigger_storage_room
+    trigger:
+      platform: state
+      entity_id: binary_sensor.storage_room_activity
+      to: 'off'
+      for:
+        seconds: 30
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.room_state_storage_room
+        option: 'inactive'
+
+  - alias: room_state_off_trigger_storage_room
+    trigger:
+      platform: state
+      entity_id: binary_sensor.storage_room_activity
+      to: 'off'
+      for:
+        minutes: 1
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.room_state_storage_room
+        option: 'off'
+
+  # Room Scene Triggers #
+  - alias: light_profile_change_active_storage_room
+    trigger:
+      - platform: state
+        entity_id: input_select.room_state_storage_room
+      - platform: state
+        entity_id: input_select.light_profile
+      - platform: state
+        entity_id: input_select.theme
+    condition:
+      - condition: state
+        entity_id: input_select.room_state_storage_room
+        state: 'active'
+    action:
+      service: script.turn_on
+      data_template:
+        entity_id: >
+          script.light_profile_storage_room_{{ states('input_select.light_profile') | lower }}
+
+  - alias: light_profile_change_inactive_storage_room
+    trigger:
+      - platform: state
+        entity_id: input_select.room_state_storage_room
+      - platform: state
+        entity_id: input_select.inactive_light_profile
+      - platform: state
+        entity_id: input_select.theme
+    condition:
+      - condition: state
+        entity_id: input_select.room_state_storage_room
+        state: 'inactive'
+    action:
+      service: script.turn_on
+      data_template:
+        entity_id: >
+          script.light_profile_storage_room_{{ states('input_select.inactive_light_profile') | lower }}
+
+  - alias: light_profile_change_off_storage_room
+    trigger:
+      - platform: state
+        entity_id: input_select.room_state_storage_room
+      - platform: state
+        entity_id: input_select.light_profile
+    condition:
+      - condition: state
+        entity_id: input_select.room_state_storage_room
+        state: 'off'
+    action:
+      service: script.turn_on
+      data_template:
+        entity_id: >
+          script.light_profile_storage_room_off

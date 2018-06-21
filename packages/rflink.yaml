@@ -33,6 +33,12 @@ homeassistant:
       hidden: true
     input_boolean.bathroom_window:
       hidden: true
+    switch.storage_room_door_open:
+      hidden: true
+    switch.storage_room_door_close:
+      hidden: true
+    input_boolean.storage_room_door:
+      hidden: true
 
 rflink:
   port: /dev/ttyACM1
@@ -71,6 +77,13 @@ switch:
       fire_event: true
     ev1527_03d4d0_0e:
       name: bathroom_window_close
+      fire_event: true
+
+    ev1527_0388a0_0a:
+      name: storage_room_door_open
+      fire_event: true
+    ev1527_0388a0_0e:
+      name: storage_room_door_close
       fire_event: true
 
     # Power Switches - Old
@@ -227,12 +240,38 @@ automation:
       data:
         entity_id: input_boolean.bathroom_window
 
+
+  - alias: storage_room_door_open
+    trigger:
+      platform: event
+      event_type: button_pressed
+      event_data:
+        entity_id: switch.storage_room_door_open
+    action:
+      service: input_boolean.turn_on
+      data:
+        entity_id: input_boolean.storage_room_door
+
+  - alias: storage_room_door_close
+    trigger:
+      platform: event
+      event_type: button_pressed
+      event_data:
+        entity_id: switch.storage_room_door_close
+    action:
+      service: input_boolean.turn_off
+      data:
+        entity_id: input_boolean.storage_room_door
+
+
 input_boolean:
   apartment_lock:
     initial: off
   apartment_door:
     initial: off
   bathroom_window:
+    initial: off
+  storage_room_door:
     initial: off
 
 binary_sensor:
@@ -251,6 +290,11 @@ binary_sensor:
       bathroom_window:
         friendly_name: Bathroom Window
         value_template: "{{ is_state('input_boolean.bathroom_window', 'on') }}"
+        device_class: opening
+
+      storage_room_door:
+        friendly_name: Storage Room Door
+        value_template: "{{ is_state('input_boolean.storage_room_door', 'on') }}"
         device_class: opening
 
 group:
