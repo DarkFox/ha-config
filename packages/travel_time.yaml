@@ -2,27 +2,13 @@ homeassistant:
   customize:
     sensor.s_train_b_status:
       friendly_name: S-Tog Linje B Status
-      entity_picture: http://www.dsb.dk/globalassets/s-tog-overblik/ikoner/b.png
+      entity_picture: !secret s_tog_icon_url
     sensor.s_train_b_next:
       friendly_name: S-Tog Linje B Næste Afgang
-      entity_picture: http://www.dsb.dk/globalassets/s-tog-overblik/ikoner/b.png
+      entity_picture: !secret s_tog_icon_url
     sensor.s_train_message:
       friendly_name: S-Tog Driftbesked
       icon: mdi:train
-    sensor.travel_time_to_work_public_transit_last_updated:
-      hidden: true
-    sensor.work_arrival_time:
-      hidden: true
-    sensor.citymapper_key:
-      hidden: true
-    sensor.home_latitude:
-      hidden: true
-    sensor.home_longitude:
-      hidden: true
-    sensor.work_latitude:
-      hidden: true
-    sensor.work_longitude:
-      hidden: true
 
 group:
   travel_time:
@@ -34,69 +20,14 @@ group:
       - sensor.s_train_message
       - sensor.s_train_b_next
 
-automation:
-  - alias: citymapper_updater
-    trigger:
-      platform: time
-      minutes: '/5'
-      seconds: 00
-    condition:
-      condition: time
-      after: '7:00:00'
-      before: '09:00:00'
-      weekday:
-        - mon
-        - tue
-        - wed
-        - thu
-        - fri
-    action:
-      - service: notify.citymapper_url
-        data_template:
-          message: 'https://developer.citymapper.com/api/1/traveltime/?startcoord={{ states("sensor.home_latitude") }}%2C{{ states("sensor.home_longitude") }}&endcoord={{ states("sensor.work_latitude") }}%2C{{ states("sensor.work_longitude") }}&time_type=arrival&key={{ states("sensor.citymapper_key") }}&time={{ states("sensor.work_arrival_time") }}'
-      - service: shell_command.citymapper_get_data
-      - delay:
-          seconds: 5
-      - service: shell_command.citymapper_cleanup
-
-notify:
-  - platform: file
-    name: citymapper_url
-    filename: /share/citymapper_url.txt
-    timestamp: false
-
-shell_command:
-  citymapper_get_data: xargs -n 1 curl -o /share/citymapper_out.json -X GET < /share/citymapper_url.txt
-  citymapper_cleanup: rm /share/citymapper_url.txt
-
 sensor:
-  - platform: template
-    sensors:
-      work_arrival_time:
-        value_template: >
-          {% if now().hour > 9 %}
-            {{ (as_timestamp(now()) + 86400) | timestamp_custom("%Y-%m-%d") }}T09%3A30%3A00%2B0100
-          {% else %}
-            {{ as_timestamp(now()) | timestamp_custom("%Y-%m-%d") }}T09%3A00%3A00%2B0100
-          {% endif %}
-      citymapper_key:
-        value_template: !secret citymapper_key
-      home_latitude:
-        value_template: !secret home_latitude
-      home_longitude:
-        value_template: !secret home_longitude
-      work_latitude:
-        value_template: !secret work_latitude
-      work_longitude:
-        value_template: !secret work_longitude
-      travel_time_to_work_public_transit_last_updated:
-        value_template: "{{ as_timestamp(states.sensor.travel_time_to_work_public_transit.last_updated) |timestamp_custom('%a, %H:%M', True) }}"
-
-  # - platform: file
-  #   file_path: /share/citymapper_out.json
-  #   name: Travel time to work (Public Transit)
-  #   value_template: "{{ value_json.travel_time_minutes }}"
-  #   unit_of_measurement: 'min'
+  - platform: google_travel_time
+    name: Martin to Home
+    api_key: !secret google_directions_secret
+    origin: device_tracker.google_maps_100030983205114312365
+    destination: zone.home
+    options:
+      mode: driving
 
   - platform: google_travel_time
     name: Travel time to work (Driving)
@@ -105,6 +36,14 @@ sensor:
     destination: !secret work_address
     options:
       mode: driving
+
+  - platform: google_travel_time
+    name: Travel time to work (Public Transit)
+    api_key: !secret google_directions_secret
+    origin: zone.home
+    destination: !secret work_address
+    options:
+      mode: transit
 
   - platform: scrape
     resource: http://www.dsb.dk/trafikinformation/s-tog-overblik/
