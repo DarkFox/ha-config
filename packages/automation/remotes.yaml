@@ -193,9 +193,15 @@ automation:
   # Office Hue Dimmer #
   - alias: office_dimmer_on
     trigger:
-      - platform: state
-        entity_id: sensor.hue_office_dimmer
-        to: 'click_1'
+
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: sensor.office_dimmer
+          state: '1_click_up'
+        - condition: template
+          value_template: '{{ states.sensor.office_dimmer.last_updated.strftime("%H:%M:%S") == utcnow().strftime("%H:%M:%S") }}'
     action:
       service: input_select.select_option
       data_template:
@@ -209,17 +215,22 @@ automation:
 
   - alias: office_dimmer_up
     trigger:
-      - platform: state
-        entity_id: sensor.hue_office_dimmer
-        to: 'click_2'
+
     condition:
-      condition: template
-      value_template: >
-        {% if is_state('input_boolean.guests', 'on') %}
-          {{ states.input_select.office_light_profile.state != 'Bright' }}
-        {% else %}
-          {{ states.input_select.light_profile.state != 'Bright' }}
-        {% endif %}
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: sensor.office_dimmer
+          state: '2_click_up'
+        - condition: template
+          value_template: '{{ states.sensor.office_dimmer.last_updated.strftime("%H:%M:%S") == utcnow().strftime("%H:%M:%S") }}'
+        - condition: template
+          value_template: >
+            {% if is_state('input_boolean.guests', 'on') %}
+              {{ states.input_select.office_light_profile.state != 'Bright' }}
+            {% else %}
+              {{ states.input_select.light_profile.state != 'Bright' }}
+            {% endif %}
     action:
       service: input_select.select_previous
       data_template:
@@ -232,17 +243,22 @@ automation:
 
   - alias: office_dimmer_down
     trigger:
-      - platform: state
-        entity_id: sensor.hue_office_dimmer
-        to: 'click_3'
+
     condition:
-      condition: template
-      value_template: >
-        {% if is_state('input_boolean.guests', 'on') %}
-          {{ states.input_select.office_light_profile.state != 'Off' }}
-        {% else %}
-          {{ states.input_select.light_profile.state != 'Off' }}
-        {% endif %}
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: sensor.office_dimmer
+          state: '3_click_up'
+        - condition: template
+          value_template: '{{ states.sensor.office_dimmer.last_updated.strftime("%H:%M:%S") == utcnow().strftime("%H:%M:%S") }}'
+        - condition: template
+          value_template: >
+            {% if is_state('input_boolean.guests', 'on') %}
+              {{ states.input_select.office_light_profile.state != 'Off' }}
+            {% else %}
+              {{ states.input_select.light_profile.state != 'Off' }}
+            {% endif %}
     action:
       service: input_select.select_next
       data_template:
@@ -255,9 +271,15 @@ automation:
 
   - alias: office_dimmer_off
     trigger:
-      - platform: state
-        entity_id: sensor.hue_office_dimmer
-        to: 'click_4'
+
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: sensor.office_dimmer
+          state: '4_click_up'
+        - condition: template
+          value_template: '{{ states.sensor.office_dimmer.last_updated.strftime("%H:%M:%S") == utcnow().strftime("%H:%M:%S") }}'
     action:
       service: input_select.select_option
       data_template:
@@ -273,8 +295,15 @@ automation:
   - alias: bedroom_dimmer_on
     trigger:
       - platform: state
-        entity_id: sensor.hue_bedroom_dimmer
-        to: 'click_1'
+        entity_id: sensor.bedroom_dimmer_last_updated
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: '{{ states.sensor.bedroom_dimmer.last_updated.strftime("%H:%M:%S") == utcnow().strftime("%H:%M:%S") }}'
+        - condition: state
+          entity_id: sensor.bedroom_dimmer
+          state: '1_click_up'
     action:
       service: input_select.select_option
       data_template:
@@ -289,16 +318,22 @@ automation:
   - alias: bedroom_dimmer_up
     trigger:
       - platform: state
-        entity_id: sensor.hue_bedroom_dimmer
-        to: 'click_2'
+        entity_id: sensor.bedroom_dimmer_last_updated
     condition:
-      condition: template
-      value_template: >
-        {% if is_state('input_boolean.guests', 'on') %}
-          {{ states.input_select.bedroom_light_profile.state != 'Bright' }}
-        {% else %}
-          {{ states.input_select.light_profile.state != 'Bright' }}
-        {% endif %}
+      condition: and
+      conditions:
+        - condition: template
+          value_template: '{{ states.sensor.bedroom_dimmer.last_updated.strftime("%H:%M:%S") == utcnow().strftime("%H:%M:%S") }}'
+        - condition: state
+          entity_id: sensor.bedroom_dimmer
+          state: '2_click_up'
+        - condition: template
+          value_template: >
+            {% if is_state('input_boolean.guests', 'on') %}
+              {{ states.input_select.bedroom_light_profile.state != 'Bright' }}
+            {% else %}
+              {{ states.input_select.light_profile.state != 'Bright' }}
+            {% endif %}
     action:
       service: input_select.select_previous
       data_template:
@@ -312,16 +347,22 @@ automation:
   - alias: bedroom_dimmer_down
     trigger:
       - platform: state
-        entity_id: sensor.hue_bedroom_dimmer
-        to: 'click_3'
+        entity_id: sensor.bedroom_dimmer_last_updated
     condition:
-      condition: template
-      value_template: >
-        {% if is_state('input_boolean.guests', 'on') %}
-          {{ states.input_select.bedroom_light_profile.state != 'Off' }}
-        {% else %}
-          {{ states.input_select.light_profile.state != 'Off' }}
-        {% endif %}
+      condition: and
+      conditions:
+        - condition: template
+          value_template: '{{ states.sensor.bedroom_dimmer.last_updated.strftime("%H:%M:%S") == utcnow().strftime("%H:%M:%S") }}'
+        - condition: state
+          entity_id: sensor.bedroom_dimmer
+          state: '3_click_up'
+        - condition: template
+          value_template: >
+            {% if is_state('input_boolean.guests', 'on') %}
+              {{ states.input_select.bedroom_light_profile.state != 'Off' }}
+            {% else %}
+              {{ states.input_select.light_profile.state != 'Off' }}
+            {% endif %}
     action:
       service: input_select.select_next
       data_template:
@@ -335,8 +376,15 @@ automation:
   - alias: bedroom_dimmer_off
     trigger:
       - platform: state
-        entity_id: sensor.hue_bedroom_dimmer
-        to: 'click_4'
+        entity_id: sensor.bedroom_dimmer_last_updated
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: '{{ states.sensor.bedroom_dimmer.last_updated.strftime("%H:%M:%S") == utcnow().strftime("%H:%M:%S") }}'
+        - condition: state
+          entity_id: sensor.bedroom_dimmer
+          state: '4_click_up'
     action:
       service: input_select.select_option
       data_template:
@@ -347,3 +395,78 @@ automation:
           {% else %}
             input_select.light_profile
           {% endif %}
+
+  - alias: bedroom_dimmer_override_on
+    trigger:
+      - platform: state
+        entity_id: sensor.bedroom_dimmer_last_updated
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: '{{ states.sensor.bedroom_dimmer.last_updated.strftime("%H:%M:%S") == utcnow().strftime("%H:%M:%S") }}'
+        - condition: state
+          entity_id: sensor.bedroom_dimmer
+          state: '1_hold_up'
+    action:
+      service: input_boolean.toggle
+      data:
+        entity_id: input_boolean.bedroom_activity_override
+
+  - alias: bedroom_dimmer_bedside_bright
+    trigger:
+      - platform: state
+        entity_id: sensor.bedroom_dimmer_last_updated
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: '{{ states.sensor.bedroom_dimmer.last_updated.strftime("%H:%M:%S") == utcnow().strftime("%H:%M:%S") }}'
+        - condition: state
+          entity_id: sensor.bedroom_dimmer
+          state: '2_hold_up'
+    action:
+      service: light.turn_on
+      data:
+        brightness: 255
+        color_temp: 350
+        entity_id:
+          - light.bedside
+
+  - alias: bedroom_dimmer_bedside_night
+    trigger:
+      - platform: state
+        entity_id: sensor.bedroom_dimmer_last_updated
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: '{{ states.sensor.bedroom_dimmer.last_updated.strftime("%H:%M:%S") == utcnow().strftime("%H:%M:%S") }}'
+        - condition: state
+          entity_id: sensor.bedroom_dimmer
+          state: '3_hold_up'
+    action:
+      service: light.turn_on
+      data:
+        brightness: 1
+        rgb_color: [255,0,0]
+        entity_id:
+          - light.bedside
+
+  - alias: bedroom_dimmer_bedside_off
+    trigger:
+      - platform: state
+        entity_id: sensor.bedroom_dimmer_last_updated
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: '{{ states.sensor.bedroom_dimmer.last_updated.strftime("%H:%M:%S") == utcnow().strftime("%H:%M:%S") }}'
+        - condition: state
+          entity_id: sensor.bedroom_dimmer
+          state: '4_hold_up'
+    action:
+      service: light.turn_off
+      data:
+        entity_id:
+          - light.bedside

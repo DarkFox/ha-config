@@ -3,86 +3,17 @@ light:
   host: 192.168.33.4
   allow_hue_groups: false
 
-homeassistant:
-  customize:
-    sensor.hue_office_dimmer:
-      hidden: true
-    sensor.hue_bedroom_dimmer:
-      hidden: true
-
-# automation:
-#  # Automation triggers when dimmer 1 button 1 is pressed once
-#  - alias: Office Dimmer Button 1 Clicked
-#    trigger:
-#      - platform: state
-#        entity_id: sensor.hue_office_dimmer
-#        to: 'click_1'
-#    action:
-#      - service: light.turn_on
-#        data:
-#          entity_id: light.living_room
-#
-#  # Automation triggers when dimmer 1 button 1 is held for about 2+ seconds
-#  - alias: Office Dimmer Button 1 Held
-#    trigger:
-#      - platform: state
-#        entity_id: sensor.hue_office_dimmer
-#        to: 'hold_1'
-#    action:
-#      - service: light.turn_on
-#        data:
-#          entity_id: light.dining_room
-
-
-################################################
-## Sensor
-################################################
-
 sensor:
-  - platform: rest
-    name: Hue Office Dimmer
-    resource: !secret hue_office_remote_url
-    # If you notice errors in your log, increase scan_interval to 2
-    scan_interval: 1
-    value_template: >-
-      {# Grab the lastupdated time and convert it to a timestamp #}
-      {% set lastupdated = as_timestamp(value_json.state.lastupdated ~ '-00:00')|int %}
-      {# Compare the lastupdated against the current timestamps #}
-      {% if as_timestamp(now())|int - lastupdated > 3 %}
-        {# If no events have happened in the past 3 seconds, show 'idle' as state #}
-        idle
-      {% else %}
-        {# Get the buttonevent that was triggered #}
-        {% set buttonevent = value_json.state.buttonevent|string %}
-        {# Example button event: 4003 #}
-        {# buttonevent[0] = 4 = button number #}
-        {# buttonevent[3] = 3 = button event #}
-        {# If buttonevent[3] is even (X000 or X002), the button was clicked #}
-        {# If buttonevent[3] is odd (X001 or X003), the button was held #}
-        {# The ~ operator is used to concatenate strings #}
-        {{ ('hold' if buttonevent[3]|int is odd else 'click') ~ '_' ~ buttonevent[0] }}
-      {% endif %}
+  - platform: hue
+    ip_address: 192.168.33.4
+    token: !secret hue_token
 
-  - platform: rest
-    name: Hue Bedroom Dimmer
-    resource: !secret hue_bedroom_remote_url
-    # If you notice errors in your log, increase scan_interval to 2
-    scan_interval: 1
-    value_template: >-
-      {# Grab the lastupdated time and convert it to a timestamp #}
-      {% set lastupdated = as_timestamp(value_json.state.lastupdated ~ '-00:00')|int %}
-      {# Compare the lastupdated against the current timestamps #}
-      {% if as_timestamp(now())|int - lastupdated > 3 %}
-        {# If no events have happened in the past 3 seconds, show 'idle' as state #}
-        idle
-      {% else %}
-        {# Get the buttonevent that was triggered #}
-        {% set buttonevent = value_json.state.buttonevent|string %}
-        {# Example button event: 4003 #}
-        {# buttonevent[0] = 4 = button number #}
-        {# buttonevent[3] = 3 = button event #}
-        {# If buttonevent[3] is even (X000 or X002), the button was clicked #}
-        {# If buttonevent[3] is odd (X001 or X003), the button was held #}
-        {# The ~ operator is used to concatenate strings #}
-        {{ ('hold' if buttonevent[3]|int is odd else 'click') ~ '_' ~ buttonevent[0] }}
-      {% endif %}
+  - platform: template
+    sensors:
+      office_dimmer_last_updated:
+        value_template: '{{ states.sensor.office_dimmer.last_updated }}'
+
+  - platform: template
+    sensors:
+      bedroom_dimmer_last_updated:
+        value_template: '{{ states.sensor.bedroom_dimmer.last_updated }}'
