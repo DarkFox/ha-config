@@ -268,3 +268,82 @@ automation:
           {% else %}
             input_select.light_profile
           {% endif %}
+
+  # Bedroom Hue Dimmer #
+  - alias: bedroom_dimmer_on
+    trigger:
+      - platform: state
+        entity_id: sensor.hue_bedroom_dimmer
+        to: 'click_1'
+    action:
+      service: input_select.select_option
+      data_template:
+        option: 'Default'
+        entity_id: >
+          {% if is_state('input_boolean.guests', 'on') %}
+            input_select.bedroom_light_profile
+          {% else %}
+            input_select.light_profile
+          {% endif %}
+
+  - alias: bedroom_dimmer_up
+    trigger:
+      - platform: state
+        entity_id: sensor.hue_bedroom_dimmer
+        to: 'click_2'
+    condition:
+      condition: template
+      value_template: >
+        {% if is_state('input_boolean.guests', 'on') %}
+          {{ states.input_select.bedroom_light_profile.state != 'Bright' }}
+        {% else %}
+          {{ states.input_select.light_profile.state != 'Bright' }}
+        {% endif %}
+    action:
+      service: input_select.select_previous
+      data_template:
+        entity_id: >
+          {% if is_state('input_boolean.guests', 'on') %}
+            input_select.bedroom_light_profile
+          {% else %}
+            input_select.light_profile
+          {% endif %}
+
+  - alias: bedroom_dimmer_down
+    trigger:
+      - platform: state
+        entity_id: sensor.hue_bedroom_dimmer
+        to: 'click_3'
+    condition:
+      condition: template
+      value_template: >
+        {% if is_state('input_boolean.guests', 'on') %}
+          {{ states.input_select.bedroom_light_profile.state != 'Off' }}
+        {% else %}
+          {{ states.input_select.light_profile.state != 'Off' }}
+        {% endif %}
+    action:
+      service: input_select.select_next
+      data_template:
+        entity_id: >
+          {% if is_state('input_boolean.guests', 'on') %}
+            input_select.bedroom_light_profile
+          {% else %}
+            input_select.light_profile
+          {% endif %}
+
+  - alias: bedroom_dimmer_off
+    trigger:
+      - platform: state
+        entity_id: sensor.hue_bedroom_dimmer
+        to: 'click_4'
+    action:
+      service: input_select.select_option
+      data_template:
+        option: 'Off'
+        entity_id: >
+          {% if is_state('input_boolean.guests', 'on') %}
+            input_select.bedroom_light_profile
+          {% else %}
+            input_select.light_profile
+          {% endif %}
