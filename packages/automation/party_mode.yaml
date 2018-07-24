@@ -12,6 +12,17 @@ input_boolean:
     icon: mdi:cake-variant
 
 automation:
+  # Refresh party button state, when button is turned on.
+  - alias: party_button_available
+    trigger:
+      platform: state
+      entity_id: switch.party_button
+      from: 'unavailable'
+    action:
+      service_template: switch.turn_{{ states.input_boolean.party_mode.state }}
+      data:
+        entity_id: switch.party_button
+
   - alias: party_button_on
     trigger:
       platform: state
@@ -26,7 +37,7 @@ automation:
     trigger:
       platform: state
       entity_id: switch.party_button
-      to: 'on'
+      to: 'off'
     action:
       service: input_boolean.turn_off
       data:
