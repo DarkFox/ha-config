@@ -15,19 +15,13 @@ script:
   bedroom_sunrise:
     alias: Bedroom Sunrise
     sequence:
-      - service: light.turn_on
-        data:
-          brightness: 48
-          rgb_color: [255,0,0]
-          entity_id: light.bedroom_shelves
-
       # Turn the lights to low brightness at a very warm temperature
       - service: light.turn_on
         data:
           transition: 60
           brightness: 51
           kelvin: 2700
-          entity_id: light.cloud_north
+          entity_id: light.bedside
 
       # Wait 5 seconds
       - delay: 00:00:05
@@ -39,7 +33,7 @@ script:
           transition: 600
           brightness: 63
           kelvin: 3600
-          entity_id: light.cloud_north
+          entity_id: light.bedside
 
       # Wait again
       - delay: 00:00:05
@@ -50,7 +44,7 @@ script:
           transition: 900
           brightness: 230
           kelvin: 4200
-          entity_id: light.cloud_north
+          entity_id: light.bedside
 
   morning_briefing:
     alias: Morning Briefing
@@ -73,6 +67,15 @@ script:
               {%- endif -%}
             {%- endif -%}
           language: 'da'
+
+  wakeup_playlist:
+    alias: Wakeup Playlist
+    sequence:
+      - service: tts.google_say
+        data_template:
+          entity_id: "{{ device_entity_id }}"
+          message: >
+            Hey Google. Shuffle {{ now().strftime("%A") }}, from Spotify, on {{ state_attr(device_entity_id, 'friendly_name') }}.
 
   alexa_calendar:
     alias: Alexa Calendar
@@ -99,7 +102,87 @@ script:
 
 
 automation:
-  - alias: bedtime
+  - alias: sleep_tracking_activity
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: sensor.sleep_tracker
+      to: 'tracking'
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.martin_presence_delayed
+          state: 'on'
+        - condition: template
+          value_template: "{{ not is_state('input_select.martin_activity', 'Sleeping') }}"
+    action:
+      service: input_select.select_option
+      data:
+        entity_id: input_select.martin_activity
+        option: Sleeping
+
+  - alias: sleep_paused_activity
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: sensor.sleep_tracker
+      to: 'paused'
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.martin_presence_delayed
+          state: 'on'
+        - condition: template
+          value_template: "{{ not is_state('input_select.martin_activity', 'Sleep Paused') }}"
+    action:
+      service: input_select.select_option
+      data:
+        entity_id: input_select.martin_activity
+        option: "Sleep Paused"
+
+  - alias: alarm_ringing_activity
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: sensor.phone_alarm
+      to: 'ringing'
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.martin_presence_delayed
+          state: 'on'
+        - condition: template
+          value_template: "{{ not is_state('input_select.martin_activity', 'Waking') }}"
+    action:
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.martin_activity
+          option: Waking
+
+  - alias: alarm_dismissed_activity
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: sensor.phone_alarm
+      to: 'dismissed'
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.martin_presence_delayed
+          state: 'on'
+        - condition: template
+          value_template: "{{ not is_state('input_select.martin_activity', 'Awake') }}"
+    action:
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.martin_activity
+          option: Awake
+
+  - alias: bedtime_action
     initial_state: true
     trigger:
       platform: state
@@ -107,12 +190,19 @@ automation:
       to: 'bedtime'
     condition:
       condition: state
-      entity_id: binary_sensor.martin_presence
+      entity_id: binary_sensor.martin_presence_delayed
       state: 'on'
     action:
-      - service: switch.turn_off
-        data:
-          entity_id: switch.space_heater
+      - service: input_select.select_option
+        data_template:
+          option: 'Ambient'
+          entity_id: >
+            {% if is_state('input_boolean.guests', 'on') %}
+              input_select.bedroom_light_profile
+            {% else %}
+              input_select.light_profile
+            {% endif %}
+      - delay: 00:30:00
       - service: input_select.select_option
         data_template:
           option: 'Night'
@@ -123,16 +213,12 @@ automation:
               input_select.light_profile
             {% endif %}
 
-  - alias: sleep_time
+  - alias: sleeping_action
     initial_state: true
     trigger:
       platform: state
-      entity_id: sensor.sleep_tracker
-      to: 'tracking'
-    condition:
-      condition: state
-      entity_id: binary_sensor.martin_presence
-      state: 'on'
+      entity_id: input_select.martin_activity
+      to: 'Sleeping'
     action:
       - service: input_select.select_option
         data_template:
@@ -143,19 +229,16 @@ automation:
             {% else %}
               input_select.light_profile
             {% endif %}
-      - service: light.turn_off
-        data:
-          entity_id: light.bedroom_shelf_strip
 
-  - alias: sleep_paused
+  - alias: sleep_paused_action
     initial_state: true
     trigger:
       platform: state
-      entity_id: sensor.sleep_tracker
-      to: 'paused'
+      entity_id: input_select.martin_activity
+      to: 'Sleep Paused'
     condition:
       condition: state
-      entity_id: binary_sensor.martin_presence
+      entity_id: binary_sensor.martin_presence_delayed
       state: 'on'
     action:
       - service: input_select.select_option
@@ -167,26 +250,14 @@ automation:
             {% else %}
               input_select.light_profile
             {% endif %}
-      - service: light.turn_off
-        data:
-          entity_id: light.bedroom_shelf_strip
 
 
-  - alias: alarm_ringing
+  - alias: waking_action
     initial_state: true
     trigger:
       platform: state
-      entity_id: sensor.phone_alarm
-      to: 'ringing'
-    condition:
-      condition: and
-      conditions:
-        - condition: state
-          entity_id: binary_sensor.martin_presence
-          state: 'on'
-        - condition: numeric_state
-          entity_id: counter.snooze_counter
-          below: 1
+      entity_id: input_select.martin_activity
+      to: 'Waking'
     action:
       - service: input_select.select_option
         data_template:
@@ -197,70 +268,18 @@ automation:
             {% else %}
               input_select.light_profile
             {% endif %}
-
-  - alias: sleeping_activity
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: sensor.sleep_tracker
-      to: 'tracking'
-    condition:
-      condition: state
-      entity_id: binary_sensor.martin_presence
-      state: 'on'
-    action:
-      service: input_select.select_option
-      data:
-        entity_id: input_select.martin_activity
-        option: Sleeping
-
-  - alias: snoozing_activity
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: sensor.phone_alarm
-      to: 'snooze'
-    action:
       - service: script.bedroom_sunrise
-      - service: counter.increment
+      - service: script.wakeup_playlist
         data:
-          entity_id: counter.snooze_counter
-      - service: input_select.select_option
-        data_template:
-          option: 'Ambient'
-          entity_id: >
-            {% if is_state('input_boolean.guests', 'on') %}
-              input_select.bedroom_light_profile
-            {% else %}
-              input_select.light_profile
-            {% endif %}
+          device_entity_id: "media_player.east_side_speakers"
 
-  - alias: snooze_counter_reset
+  - alias: awake_action
     initial_state: true
     trigger:
       platform: state
-      entity_id: sensor.phone_alarm
-      to: 'dismissed'
+      entity_id: input_select.martin_activity
+      to: 'Awake'
     action:
-      service: counter.reset
-      data:
-        entity_id: counter.snooze_counter
-
-  - alias: alarm_dismissed_activity
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: sensor.phone_alarm
-      to: 'dismissed'
-    condition:
-      condition: state
-      entity_id: binary_sensor.martin_presence
-      state: 'on'
-    action:
-      - service: input_select.select_option
-        data:
-          entity_id: input_select.martin_activity
-          option: Waking
       - service: input_select.select_option
         data_template:
           option: 'Ambient'
@@ -283,6 +302,7 @@ automation:
             - "==SCRIPT==morning_briefing"
             - "{{ states.sensor.podcast_bbc_minute.state }}"
             - "{{ states.sensor.podcast_24syv_nyheder.state }}"
+            - "==SCRIPT==wakeup_playlist"
             - "==END=="
       - delay:
           seconds: 2
@@ -291,7 +311,7 @@ automation:
           entity_id: 'media_player.east_side_speakers'
           volume_level: 0.5
 
-  - alias: morning_awake
+  - alias: up_and_walking_activity
     initial_state: true
     trigger:
       platform: state
@@ -301,11 +321,11 @@ automation:
       condition: and
       conditions:
         - condition: state
-          entity_id: binary_sensor.martin_presence
+          entity_id: binary_sensor.martin_presence_delayed
           state: 'on'
         - condition: state
           entity_id: input_select.martin_activity
-          state: 'Waking'
+          state: 'Awake'
     action:
       - service: script.turn_on
         data:
