@@ -55,8 +55,12 @@ script:
           message: >
             {{ states.sensor.tts_greeting.state }}. Klokken er {{ states.sensor.time.state }}.
             Vejrudsigt: {{ states.sensor.dmi_city_weather.state }}.
-            {{ states.sensor.dark_sky_temperature.state | replace('.', ',') }}˚
-            og {{ states.sensor.dark_sky_wind_speed_name.state }}.
+            Temperaturer mellem {{ states.sensor.dark_sky_daily_high_temperature.state | replace('.', ',') }}
+            og {{ states.sensor.dark_sky_daily_low_temperature.state | replace('.', ',') }}˚,
+            med {{ states.sensor.dark_sky_wind_speed_name.state }}.
+            {% if states('sensor.dark_sky_precip_probability')|int > 25 -%}
+              {{ states.sensor.dark_sky_precip_probability.state }}% risiko for {{ states.sensor.dark_sky_precip_dk.state }}.
+            {%- endif -%}
             {% if is_state('binary_sensor.workday_sensor', 'on') and now().hour < 12 -%}
               S-Tog Linje B:
               {%- if is_state('sensor.s_train_b_status', 'Til tiden') -%}
