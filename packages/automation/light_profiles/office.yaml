@@ -1,12 +1,3 @@
-homeassistant:
-  customize:
-    input_boolean.office_activity_override:
-      persistent: true
-    input_select.room_state_office:
-      persistent: true
-    input_select.office_light_profile:
-      persistent: true
-
 script:
   light_profile_office_bright:
     sequence:
@@ -16,14 +7,14 @@ script:
           brightness: 255
           color_temp: 370
           entity_id:
-            - group.office_spots
+            - light.office_spots
             - light.office_strip
       # Dimmable Lights
       - service: light.turn_on
         data:
           brightness: 255
           entity_id:
-            - light.office_desk
+            - light.office_desk_spots
             - light.office_shelves
             - light.hobby_desk
       # Primary RGB lights
@@ -33,7 +24,6 @@ script:
           hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
           entity_id:
             - light.office_desk_shelf
-            - light.office_shelf_bar
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
@@ -41,6 +31,7 @@ script:
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           entity_id:
             - light.screen_shelf
+            - light.office_shelf_bar
 
   light_profile_office_default:
     sequence:
@@ -50,13 +41,13 @@ script:
           brightness: 150
           color_temp: 370
           entity_id:
-            - group.office_spots
+            - light.office_spots
       # Dimmable Lights
       - service: light.turn_on
         data:
           brightness: 255
           entity_id:
-            - light.office_desk
+            - light.office_desk_spots
             - light.office_shelves
             - light.hobby_desk
       # Primary RGB lights
@@ -72,7 +63,6 @@ script:
           hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
           entity_id:
             - light.office_desk_shelf
-            - light.office_shelf_bar
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
@@ -80,6 +70,7 @@ script:
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           entity_id:
             - light.screen_shelf
+            - light.office_shelf_bar
 
   light_profile_office_dimmed:
     sequence:
@@ -87,15 +78,15 @@ script:
       - service: light.turn_off
         data:
           entity_id:
-            - group.office_spots
+            - light.office_spots
       # Dimmable Lights
       - service: light.turn_on
         data:
           brightness: 127
           entity_id:
-            - light.office_desk
             - light.office_shelves
             - light.hobby_desk
+            - light.office_desk_spots
       # Primary RGB lights
       - service: light.turn_on
         data_template:
@@ -108,7 +99,6 @@ script:
           brightness: 127
           hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
           entity_id:
-            - light.office_shelf_bar
             - light.office_desk_shelf
       # Secondary RGB lights
       - service: light.turn_on
@@ -117,6 +107,7 @@ script:
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           entity_id:
             - light.screen_shelf
+            - light.office_shelf_bar
 
   light_profile_office_ambient:
     sequence:
@@ -124,15 +115,15 @@ script:
       - service: light.turn_off
         data:
           entity_id:
-            - group.office_spots
-            - light.office_desk
+            - light.office_spots
             - light.hobby_desk
       # Dimmable Lights
       - service: light.turn_on
         data:
-          brightness: 1
+          brightness: 24
           entity_id:
             - light.office_shelves
+            - light.office_desk_spots
       # Primary RGB lights
       - service: light.turn_on
         data_template:
@@ -145,14 +136,15 @@ script:
           brightness: 42
           hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
           entity_id:
-            - light.office_shelf_bar
             - light.office_desk_shelf
+      # Secondary RGB lights
       - service: light.turn_on
         data_template:
           brightness: 127
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           entity_id:
             - light.screen_shelf
+            - light.office_shelf_bar
 
   light_profile_office_night:
     sequence:
@@ -160,8 +152,8 @@ script:
       - service: light.turn_off
         data:
           entity_id:
-            - group.office_spots
-            - light.office_desk
+            - light.office_spots
+            - light.office_desk_spots
             - light.hobby_desk
             - light.office_shelves
       # Primary RGB lights
@@ -170,7 +162,6 @@ script:
           brightness: 16
           rgb_color: [255, 0, 0]
           entity_id:
-            - light.office_shelf_bar
             - light.office_desk_shelf
       # Secondary RGB lights
       - service: light.turn_on
@@ -178,6 +169,7 @@ script:
           brightness: 24
           rgb_color: [255, 0, 0]
           entity_id:
+            - light.office_shelf_bar
             - light.office_strip
             - light.screen_shelf
 
@@ -195,8 +187,8 @@ script:
       - service: light.turn_off
         data:
           entity_id:
-            - group.office_spots
-            - light.office_desk
+            - light.office_spots
+            - light.office_desk_spots
             - light.hobby_desk
       # Dimmable Lights
       - service: light.turn_on
@@ -262,6 +254,15 @@ input_select:
       - 'off'
     initial: 'off'
 
+  office_state_override:
+    name: Office State Override
+    options:
+      - None
+      - active
+      - inactive
+      - 'off'
+    initial: None
+
   office_light_profile:
     name: Office Light Profile
     options:
@@ -304,7 +305,8 @@ binary_sensor:
           or is_state('switch.pc', 'on')
           or is_state('binary_sensor.hobby_desk_activity', 'on')
           or is_state('media_player.projector_chromecast', 'playing')
-          or is_state('input_select.latest_motion', 'Office') -%}
+          or is_state('input_select.latest_motion', 'Office')
+          or as_timestamp(now()) - as_timestamp(states.switch.office_pc_motion.last_updated) | int < 300 -%}
             true
           {% else -%}
             false

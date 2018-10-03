@@ -167,7 +167,28 @@ sensor:
         value_template: '{{ as_timestamp(states.automation.startup_notification.attributes.last_triggered) | timestamp_custom("%b %d %X") }}'
         friendly_name: HA Last Restart
 
+script:
+  restart_wallpanels:
+    sequence:
+      - service: mqtt.publish
+        data:
+          topic: wallpanel/hallwaytablet/command
+          payload: '{"wake": true, "clearCache": true, "reload": true}'
+      - service: mqtt.publish
+        data:
+          topic: wallpanel/firetablet/command
+          payload: '{"wake": true, "clearCache": true, "reload": true}'
+
 automation:
+  - alias: After Loaded
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: binary_sensor.home_assistant_loaded
+      to: 'on'
+    action:
+      - service: script.restart_wallpanels
+
   - alias: speedtest
     initial_state: true
     trigger:
@@ -222,6 +243,7 @@ automation:
       platform: homeassistant
       event: start
     action:
+      - service: script.restart_wallpanels
       - service: notify.mac
         data:
           message: "Home Assistant has successfully rebooted!"

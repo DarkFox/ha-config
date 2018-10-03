@@ -45,8 +45,10 @@ group:
       - sensor.dmi_city_weather
       - sensor.dark_sky_temperature
       - sensor.dark_sky_apparent_temperature
-      - sensor.dark_sky_daily_high_temperature
-      - sensor.dark_sky_daily_low_temperature
+      - sensor.dark_sky_daytime_high_temperature
+      - sensor.dark_sky_daytime_low_temperature
+      - sensor.dark_sky_overnight_high_temperature
+      - sensor.dark_sky_overnight_low_temperature
       - sensor.dark_sky_wind_speed_name
       - sensor.dark_sky_wind_bearing_name
       - sensor.dark_sky_humidity
@@ -65,16 +67,21 @@ group:
       - sensor.dark_sky_apparent_temperature
       - sensor.dark_sky_apparent_temperature_text
       - sensor.dark_sky_cloud_coverage
-      - sensor.dark_sky_daily_high_apparent_temperature
-      - sensor.dark_sky_daily_high_temperature
-      - sensor.dark_sky_daily_low_apparent_temperature
-      - sensor.dark_sky_daily_low_temperature
       - sensor.dark_sky_daily_max_precip_intensity
       - sensor.dark_sky_daily_summary
+      - sensor.dark_sky_dew_point
       - sensor.dark_sky_hourly_summary
       - sensor.dark_sky_humidity
       - sensor.dark_sky_icon
       - sensor.dark_sky_minutely_summary
+      - sensor.dark_sky_daytime_high_apparent_temperature
+      - sensor.dark_sky_daytime_low_apparent_temperature
+      - sensor.dark_sky_overnight_high_apparent_temperature
+      - sensor.dark_sky_overnight_low_apparent_temperature
+      - sensor.dark_sky_daytime_high_temperature
+      - sensor.dark_sky_daytime_low_temperature
+      - sensor.dark_sky_overnight_high_temperature
+      - sensor.dark_sky_overnight_low_temperature
       - sensor.dark_sky_ozone
       - sensor.dark_sky_precip
       - sensor.dark_sky_precip_and_probability
@@ -87,8 +94,8 @@ group:
       - sensor.dark_sky_uv_index
       - sensor.dark_sky_visibility
       - sensor.dark_sky_wind_bearing
-      - sensor.dark_sky_wind_speed
       - sensor.dark_sky_wind_bearing_name
+      - sensor.dark_sky_wind_speed
       - sensor.dark_sky_wind_speed_name
 
 sensor:
@@ -103,7 +110,12 @@ sensor:
       - precip_intensity
       - precip_probability
       - temperature
+      - temperature_high
+      - temperature_low
       - apparent_temperature
+      - apparent_temperature_high
+      - apparent_temperature_low
+      - dew_point
       - wind_speed
       - wind_bearing
       - cloud_cover
@@ -114,15 +126,18 @@ sensor:
       - minutely_summary
       - hourly_summary
       - daily_summary
-      - temperature_max
-      - temperature_min
-      - apparent_temperature_max
-      - apparent_temperature_min
       - precip_intensity_max
       - uv_index
 
   - platform: template
     sensors:
+      dark_sky_high_temperature:
+        value_template: "{{ states.sensor.dark_sky_daytime_high_temperature.state or states.sensor.dark_sky_overnight_high_temperature.state }}"
+        unit_of_measurement: "°"
+      dark_sky_low_temperature:
+        value_template: "{{ states.sensor.dark_sky_daytime_low_temperature.state or states.sensor.dark_sky_overnight_low_temperature.state }}"
+        unit_of_measurement: "°"
+
       dark_sky_precip_dk:
         value_template: >-
           {%- if is_state("sensor.dark_sky_precip", "rain") -%}

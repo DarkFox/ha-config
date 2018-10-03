@@ -1,10 +1,3 @@
-homeassistant:
-  customize:
-    input_boolean.hallway_activity_override:
-      persistent: true
-    input_select.room_state_hallway:
-      persistent: true
-
 script:
   light_profile_hallway_bright:
     sequence:
@@ -18,7 +11,7 @@ script:
       - service: input_number.set_value
         data:
          entity_id: input_number.hallway_tablet_brightness
-         value: 100
+         value: 255
 
   light_profile_hallway_default:
     sequence:
@@ -32,7 +25,7 @@ script:
       - service: input_number.set_value
         data:
          entity_id: input_number.hallway_tablet_brightness
-         value: 80
+         value: 127
 
   light_profile_hallway_dimmed:
     sequence:
@@ -46,7 +39,7 @@ script:
       - service: input_number.set_value
         data:
          entity_id: input_number.hallway_tablet_brightness
-         value: 50
+         value: 76
 
   light_profile_hallway_ambient:
     sequence:
@@ -111,6 +104,15 @@ input_select:
       - 'off'
     initial: 'off'
 
+  hallway_state_override:
+    name: Hallway State Override
+    options:
+      - None
+      - active
+      - inactive
+      - 'off'
+    initial: None
+
 group:
   light_profile_hallway:
     entities:
@@ -149,7 +151,8 @@ binary_sensor:
         value_template: >
           {% if is_state('binary_sensor.hallway_sensor', 'on')
           or is_state('input_boolean.hallway_activity_override', 'on')
-          or is_state('binary_sensor.apartment_door', 'on') -%}
+          or is_state('binary_sensor.apartment_door', 'on')
+          or is_state('binary_sensor.bathroom_activity', 'on') -%}
             true
           {% else -%}
             false

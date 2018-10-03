@@ -2,13 +2,13 @@ homeassistant:
   customize:
     binary_sensor.xperia_state:
       hidden: true
-    binary_sensor.kitchen_tablet_state:
+    binary_sensor.fire_tablet_state:
       hidden: true
     binary_sensor.hallway_tablet_state:
       hidden: true
     switch.xperia_switch:
       hidden: true
-    switch.kitchen_tablet_switch:
+    switch.fire_tablet_switch:
       hidden: true
     switch.hallway_tablet_switch:
       hidden: true
@@ -19,35 +19,34 @@ group:
     name: Tablet Sensors
     entities:
       - sensor.hallway_tablet_brightness
-      - sensor.kitchen_tablet_brightness
+      - sensor.fire_tablet_brightness
 
   hallway_tablet:
     name: Hallway Tablet
     entities:
       - input_number.hallway_tablet_brightness
       - switch.hallway_tablet
-  kitchen_tablet:
-    name: Kitchen Tablet
+  fire_tablet:
+    name: Fire Tablet
     entities:
-      - input_number.kitchen_tablet_brightness
-      - switch.kitchen_tablet
+      - input_number.fire_tablet_brightness
+      - switch.fire_tablet
 
 input_number:
   hallway_tablet_brightness:
     name: Hallway Tablet Brightness
-    initial: 30
+    initial: 76
     min: 0
     max: 100
     step: 1
     unit_of_measurement: "%"
     icon: mdi:white-balance-sunny
-  kitchen_tablet_brightness:
-    name: Kitchen Tablet Brightness
-    initial: 30
+  fire_tablet_brightness:
+    name: Fire Tablet Brightness
+    initial: 76
     min: 0
-    max: 100
+    max: 255
     step: 1
-    unit_of_measurement: "%"
     icon: mdi:white-balance-sunny
 
 automation:
@@ -70,24 +69,24 @@ automation:
         entity_id: input_number.hallway_tablet_brightness
         value: '{{ states.sensor.hallway_tablet_brightness.state | int }}'
 
-  - alias: Kitchen Tablet Brightness Moved
+  - alias: Fire Tablet Brightness Moved
     trigger:
       platform: state
-      entity_id: input_number.kitchen_tablet_brightness
+      entity_id: input_number.fire_tablet_brightness
     action:
-      - service: joaoapps_join.tablet_send_tasker
+      - service: joaoapps_join.fire_tablet_send_tasker
         data_template:
-          command: 'brightness=:={{ states.input_number.kitchen_tablet_brightness.state }}'
+          command: 'brightness=:={{ states.input_number.fire_tablet_brightness.state }}'
 
-  - alias: Kitchen Tablet Brightness Changed
+  - alias: Fire Tablet Brightness Changed
     trigger:
       platform: state
-      entity_id: sensor.kitchen_tablet_brightness
+      entity_id: sensor.fire_tablet_brightness
     action:
        service: input_number.set_value
        data_template:
-        entity_id: input_number.kitchen_tablet_brightness
-        value: '{{ states.sensor.kitchen_tablet_brightness.state | int }}'
+        entity_id: input_number.fire_tablet_brightness
+        value: '{{ states.sensor.fire_tablet_brightness.state | int }}'
 
 switch:
   - platform: command_line
@@ -95,9 +94,6 @@ switch:
       xperia_switch:
         command_on: "curl -X POST -d 'command=ON' http://192.168.33.104:8765/screen"
         command_off: "curl -X POST -d 'command=OFF' http://192.168.33.104:8765/screen"
-      kitchen_tablet_switch:
-        command_on: "curl -X POST -d 'command=ON' http://192.168.33.100:8765/screen"
-        command_off: "curl -X POST -d 'command=OFF' http://192.168.33.100:8765/screen"
       hallway_tablet_switch:
         command_on: "curl -X POST -d 'command=ON' http://192.168.33.105:8765/screen"
         command_off: "curl -X POST -d 'command=OFF' http://192.168.33.105:8765/screen"
@@ -115,17 +111,17 @@ switch:
           service: switch.turn_off
           data:
             entity_id: switch.xperia_switch
-      kitchen_tablet:
-        friendly_name: Kitchen Tablet
-        value_template: "{{ is_state('binary_sensor.kitchen_tablet_state', 'on') }}"
+      fire_tablet:
+        friendly_name: Fire Tablet
+        value_template: "{{ is_state('binary_sensor.fire_tablet_state', 'on') }}"
         turn_on:
-          service: switch.turn_on
+          service: joaoapps_join.fire_tablet_send_tasker
           data:
-            entity_id: switch.kitchen_tablet_switch
+            command: "screen=:=ON"
         turn_off:
-          service: switch.turn_off
+          service: joaoapps_join.fire_tablet_send_tasker
           data:
-            entity_id: switch.kitchen_tablet_switch
+            command: "screen=:=OFF"
       hallway_tablet:
         friendly_name: Hallway Tablet
         value_template: "{{ is_state('binary_sensor.hallway_tablet_state', 'on') }}"

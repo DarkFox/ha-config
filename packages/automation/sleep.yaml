@@ -5,6 +5,19 @@ group:
       - sensor.sleep_tracker
       - sensor.phone_alarm
       - counter.snooze_counter
+      - input_select.sleep_state
+
+input_select:
+  sleep_state:
+    options:
+      - awake
+      - bedtime
+      - in bed
+      - sleeping
+      - paused
+      - alarm
+      - snoozing
+      - waking
 
 counter:
   snooze_counter:
@@ -12,40 +25,6 @@ counter:
     icon: mdi:alarm-snooze
 
 script:
-  bedroom_sunrise:
-    alias: Bedroom Sunrise
-    sequence:
-      # Turn the lights to low brightness at a very warm temperature
-      - service: light.turn_on
-        data:
-          transition: 60
-          brightness: 51
-          kelvin: 2700
-          entity_id: light.bedside
-
-      # Wait 5 seconds
-      - delay: 00:00:05
-
-      # Over ten minutes, turn the lights a little brighter and to a
-      # cooler-than-soft-white color.
-      - service: light.turn_on
-        data:
-          transition: 600
-          brightness: 63
-          kelvin: 3600
-          entity_id: light.bedside
-
-      # Wait again
-      - delay: 00:00:05
-
-      # Finally, over fifteen minutes, shift the lights to a cool white at 90%.
-      - service: light.turn_on
-        data:
-          transition: 900
-          brightness: 230
-          kelvin: 4200
-          entity_id: light.bedside
-
   morning_briefing:
     alias: Morning Briefing
     sequence:
@@ -55,18 +34,18 @@ script:
           message: >
             {{ states.sensor.tts_greeting.state }}. Klokken er {{ states.sensor.time.state }}.
             Vejrudsigt: {{ states.sensor.dmi_city_weather.state }}.
-            Temperaturer mellem {{ states.sensor.dark_sky_daily_high_temperature.state | replace('.', ',') }}
-            og {{ states.sensor.dark_sky_daily_low_temperature.state | replace('.', ',') }}˚,
-            med {{ states.sensor.dark_sky_wind_speed_name.state }}.
+            Temperaturer mellem {{ (states.sensor.dark_sky_daytime_low_temperature.state or states.sensor.dark_sky_overnight_low_temperature.state) | round | int }}
+            {{- '' }} og {{ (states.sensor.dark_sky_daytime_high_temperature.state or states.sensor.dark_sky_overnight_high_temperature.state) | round | int }}˚,
+            {{- '' }} med {{ states.sensor.dark_sky_wind_speed_name.state }}.
             {% if states('sensor.dark_sky_precip_probability')|int > 25 -%}
-              {{ states.sensor.dark_sky_precip_probability.state }}% risiko for {{ states.sensor.dark_sky_precip_dk.state }}.
-            {%- endif -%}
+              {{ states.sensor.dark_sky_precip_probability.state|round|int }}% risiko for op til {{ states.sensor.dark_sky_precip_intensity.state | round | int }} mm {{ states.sensor.dark_sky_precip_dk.state }}.
+            {%- endif %}
             {% if is_state('binary_sensor.workday_sensor', 'on') and now().hour < 12 -%}
               S-Tog Linje B:
-              {%- if is_state('sensor.s_train_b_status', 'Til tiden') -%}
+              {% if is_state('sensor.s_train_b_status', 'Til tiden') -%}
                 Kører normalt.
-              {%- else -%}
-                 {{ states('sensor.s_train_b_status') }}. {{ states('sensor.s_train_message') }}
+              {% else -%}
+                 {{ states('sensor.s_train_b_status') }}. {{ states('sensor.s_train_message') }}.
                  Estimeret rejsetid: {{ states('sensor.travel_time_to_work_public_transit') }} minutter.
               {%- endif -%}
             {%- endif -%}
@@ -75,38 +54,66 @@ script:
   wakeup_playlist:
     alias: Wakeup Playlist
     sequence:
-      - service: tts.google_say
+      - service: script.assistant_command
         data_template:
-          entity_id: "{{ device_entity_id }}"
-          message: >
-            Hey Google. Shuffle {{ now().strftime("%A") }}, from Spotify, on {{ state_attr(device_entity_id, 'friendly_name') }}.
-
-  alexa_calendar:
-    alias: Alexa Calendar
-    sequence:
-      - service: tts.google_say
-        data_template:
-          entity_id: "{{ device_entity_id }}"
-          message: Alexa, what's today's schedule?
-
-  morning_lights:
-    alias: Turn lights to default and turn off the fan.
-    sequence:
-      - service: input_select.select_option
-        data_template:
-          option: 'Default'
-          entity_id: >
-            {% if is_state('input_boolean.guests', 'on') %}
-              input_select.bedroom_light_profile
-            {% else %}
-              input_select.light_profile
-            {% endif %}
-      - service: switch.turn_off
-        entity_id: switch.bedroom_fan
-
+          command: >-
+            Shuffle {{ now().strftime("%A") }} from Spotify on {{ state_attr(device_entity_id, 'friendly_name') }}
 
 automation:
-  - alias: sleep_tracking_activity
+
+  #######################
+  # SLEEP STATE MACHINE #
+  #######################
+
+  - alias: sleep_state_bedtime
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: sensor.phone_alarm
+      to: 'bedtime'
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.martin_presence_delayed
+          state: 'on'
+        - condition: state
+          entity_id: input_select.sleep_state
+          state: 'awake'
+    action:
+      service: input_select.select_option
+      data:
+        entity_id: input_select.sleep_state
+        option: bedtime
+
+  - alias: sleep_state_in_bed
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.bedroom_sensor
+        to: 'on'
+      - platform: state
+        entity_id: input_select.sleep_state
+        to: 'bedtime'
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.bedroom_sensor
+          state: 'on'
+        - condition: state
+          entity_id: input_select.sleep_state
+          state: 'bedtime'
+        - condition: state
+          entity_id: binary_sensor.martin_presence_delayed
+          state: 'on'
+    action:
+      service: input_select.select_option
+      data:
+        entity_id: input_select.sleep_state
+        option: in bed
+
+  - alias: sleep_state_sleeping
     initial_state: true
     trigger:
       platform: state
@@ -118,15 +125,55 @@ automation:
         - condition: state
           entity_id: binary_sensor.martin_presence_delayed
           state: 'on'
-        - condition: template
-          value_template: "{{ not is_state('input_select.martin_activity', 'Sleeping') }}"
+        - condition: or
+          conditions:
+            - condition: state
+              entity_id: input_select.sleep_state
+              state: in bed
+            - condition: state
+              entity_id: input_select.sleep_state
+              state: paused
     action:
-      service: input_select.select_option
-      data:
-        entity_id: input_select.martin_activity
-        option: Sleeping
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.sleep_state
+          option: sleeping
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.martin_activity
+          option: Sleeping
 
-  - alias: sleep_paused_activity
+
+  - alias: sleep_state_sleeping_cancelled
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: sensor.sleep_tracker
+      to: 'stopped'
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.martin_presence_delayed
+          state: 'on'
+        - condition: time
+          after: "20:00:00"
+          before: "05:00:00"
+        - condition: or
+          conditions:
+            - condition: state
+              entity_id: input_select.sleep_state
+              state: sleeping
+            - condition: state
+              entity_id: input_select.sleep_state
+              state: paused
+    action:
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.sleep_state
+          option: bedtime
+
+  - alias: sleep_state_paused
     initial_state: true
     trigger:
       platform: state
@@ -138,15 +185,16 @@ automation:
         - condition: state
           entity_id: binary_sensor.martin_presence_delayed
           state: 'on'
-        - condition: template
-          value_template: "{{ not is_state('input_select.martin_activity', 'Sleep Paused') }}"
+        - condition: state
+          entity_id: input_select.sleep_state
+          state: sleeping
     action:
       service: input_select.select_option
       data:
-        entity_id: input_select.martin_activity
-        option: "Sleep Paused"
+        entity_id: input_select.sleep_state
+        option: paused
 
-  - alias: alarm_ringing_activity
+  - alias: sleep_state_alarm
     initial_state: true
     trigger:
       platform: state
@@ -158,44 +206,99 @@ automation:
         - condition: state
           entity_id: binary_sensor.martin_presence_delayed
           state: 'on'
-        - condition: template
-          value_template: "{{ not is_state('input_select.martin_activity', 'Waking') }}"
+        - condition: or
+          conditions:
+            - condition: state
+              entity_id: input_select.sleep_state
+              state: in bed
+            - condition: state
+              entity_id: input_select.sleep_state
+              state: sleeping
+            - condition: state
+              entity_id: input_select.sleep_state
+              state: paused
     action:
       - service: input_select.select_option
         data:
-          entity_id: input_select.martin_activity
-          option: Waking
+          entity_id: input_select.sleep_state
+          option: alarm
 
-  - alias: alarm_dismissed_activity
+  - alias: sleep_state_snoozing
     initial_state: true
     trigger:
       platform: state
       entity_id: sensor.phone_alarm
-      to: 'dismissed'
+      to: 'snooze'
     condition:
       condition: and
       conditions:
         - condition: state
           entity_id: binary_sensor.martin_presence_delayed
           state: 'on'
-        - condition: template
-          value_template: "{{ not is_state('input_select.martin_activity', 'Awake') }}"
+        - condition: state
+          entity_id: input_select.sleep_state
+          state: alarm
     action:
       - service: input_select.select_option
         data:
-          entity_id: input_select.martin_activity
-          option: Awake
+          entity_id: input_select.sleep_state
+          option: snoozing
+
+  - alias: sleep_state_waking
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: sensor.phone_alarm
+      to: 'dismissed'
+    condition:
+      condition: or
+      conditions:
+        - condition: state
+          entity_id: input_select.sleep_state
+          state: alarm
+        - condition: state
+          entity_id: input_select.sleep_state
+          state: snoozing
+    action:
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.sleep_state
+          option: waking
+
+  - alias: sleep_state_awake
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: binary_sensor.hallway_sensor
+      to: 'on'
+    condition:
+      condition: or
+      conditions:
+        - condition: state
+          entity_id: input_select.sleep_state
+          state: alarm
+        - condition: state
+          entity_id: input_select.sleep_state
+          state: snoozing
+        - condition: state
+          entity_id: input_select.sleep_state
+          state: waking
+    action:
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.sleep_state
+          option: awake
+
+  ######################
+  # ACTIONS START HERE #
+  ######################
 
   - alias: bedtime_action
     initial_state: true
     trigger:
       platform: state
-      entity_id: sensor.phone_alarm
+      entity_id: input_select.sleep_state
       to: 'bedtime'
-    condition:
-      condition: state
-      entity_id: binary_sensor.martin_presence_delayed
-      state: 'on'
     action:
       - service: input_select.select_option
         data_template:
@@ -207,6 +310,9 @@ automation:
               input_select.light_profile
             {% endif %}
       - delay: 00:30:00
+      - condition: state
+        entity_id: input_select.sleep_state
+        state: 'bedtime'
       - service: input_select.select_option
         data_template:
           option: 'Night'
@@ -217,12 +323,39 @@ automation:
               input_select.light_profile
             {% endif %}
 
+  - alias: in_bed_action
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_select.sleep_state
+      to: 'in bed'
+    action:
+      - service: input_select.select_option
+        data_template:
+          option: 'Night'
+          entity_id: >
+            {% if is_state('input_boolean.guests', 'on') %}
+              input_select.bedroom_light_profile
+            {% else %}
+              input_select.light_profile
+            {% endif %}
+      - delay:
+          seconds: 3
+      - service: light.turn_on
+        data:
+          brightness: 127
+          color_temp: 460
+          entity_id: light.bedside
+
   - alias: sleeping_action
     initial_state: true
     trigger:
       platform: state
-      entity_id: input_select.martin_activity
-      to: 'Sleeping'
+      entity_id: input_select.sleep_state
+      to: 'sleeping'
+      from: 'in bed'
+      for:
+        seconds: 10
     action:
       - service: input_select.select_option
         data_template:
@@ -238,12 +371,8 @@ automation:
     initial_state: true
     trigger:
       platform: state
-      entity_id: input_select.martin_activity
-      to: 'Sleep Paused'
-    condition:
-      condition: state
-      entity_id: binary_sensor.martin_presence_delayed
-      state: 'on'
+      entity_id: input_select.sleep_state
+      to: 'paused'
     action:
       - service: input_select.select_option
         data_template:
@@ -255,34 +384,30 @@ automation:
               input_select.light_profile
             {% endif %}
 
-
-  - alias: waking_action
+  - alias: resume_sleep_action
     initial_state: true
     trigger:
       platform: state
-      entity_id: input_select.martin_activity
-      to: 'Waking'
+      entity_id: input_select.sleep_state
+      to: 'sleeping'
+      from: 'paused'
     action:
       - service: input_select.select_option
         data_template:
-          option: 'Night'
+          option: 'Off'
           entity_id: >
             {% if is_state('input_boolean.guests', 'on') %}
               input_select.bedroom_light_profile
             {% else %}
               input_select.light_profile
             {% endif %}
-      - service: script.bedroom_sunrise
-      - service: script.wakeup_playlist
-        data:
-          device_entity_id: "media_player.east_side_speakers"
 
-  - alias: awake_action
+  - alias: alarm_action
     initial_state: true
     trigger:
       platform: state
-      entity_id: input_select.martin_activity
-      to: 'Awake'
+      entity_id: input_select.sleep_state
+      to: 'alarm'
     action:
       - service: input_select.select_option
         data_template:
@@ -293,12 +418,54 @@ automation:
             {% else %}
               input_select.light_profile
             {% endif %}
+      - service: script.wakeup_playlist
+        data:
+          device_entity_id: "media_player.bedroom_speaker"
+      - delay:
+          seconds: 12
+      - service: media_player.volume_set
+        data_template:
+          entity_id: 'media_player.bedroom_speaker'
+          volume_level: 0.2
+
+  - alias: snoozing_action
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_select.sleep_state
+      to: 'snoozing'
+      from: 'alarm'
+    action:
+      - service: input_select.select_option
+        data_template:
+          option: 'Ambient'
+          entity_id: >
+            {% if is_state('input_boolean.guests', 'on') %}
+              input_select.bedroom_light_profile
+            {% else %}
+              input_select.light_profile
+            {% endif %}
+
+  - alias: waking_action
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_select.sleep_state
+      to: 'waking'
+    action:
+      - service: input_select.select_option
+        data_template:
+          option: 'Dimmed'
+          entity_id: >
+            {% if is_state('input_boolean.guests', 'on') %}
+              input_select.bedroom_light_profile
+            {% else %}
+              input_select.light_profile
+            {% endif %}
       - service: input_select.select_option
         data:
           entity_id: input_select.playlist_player
-          option: 'media_player.east_side_speakers'
-      - delay:
-          seconds: 1
+          option: 'media_player.bedroom_speaker'
       - service: input_select.set_options
         data_template:
           entity_id: input_select.playlist
@@ -312,28 +479,45 @@ automation:
           seconds: 2
       - service: media_player.volume_set
         data_template:
-          entity_id: 'media_player.east_side_speakers'
-          volume_level: 0.5
+          entity_id: 'media_player.bedroom_speaker'
+          volume_level: 0.33
 
-  - alias: up_and_walking_activity
+  - alias: slow_waking_action
     initial_state: true
     trigger:
       platform: state
-      entity_id: binary_sensor.hallway_sensor
-      to: 'on'
-    condition:
-      condition: and
-      conditions:
-        - condition: state
-          entity_id: binary_sensor.martin_presence_delayed
-          state: 'on'
-        - condition: state
-          entity_id: input_select.martin_activity
-          state: 'Awake'
+      entity_id: input_select.sleep_state
+      to: 'waking'
+      for:
+        minutes: 15
     action:
-      - service: script.turn_on
-        data:
-          entity_id: script.morning_lights
+      - service: input_select.select_option
+        data_template:
+          option: 'Default'
+          entity_id: >
+            {% if is_state('input_boolean.guests', 'on') %}
+              input_select.bedroom_light_profile
+            {% else %}
+              input_select.light_profile
+            {% endif %}
+
+  - alias: awake_activity
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_select.sleep_state
+      to: 'awake'
+      from: 'waking'
+    action:
+      - service: input_select.select_option
+        data_template:
+          option: 'Default'
+          entity_id: >
+            {% if is_state('input_boolean.guests', 'on') %}
+              input_select.bedroom_light_profile
+            {% else %}
+              input_select.light_profile
+            {% endif %}
       - service: joaoapps_join.phone_send_tasker
         data:
           command: "sleep_tracking_stop"

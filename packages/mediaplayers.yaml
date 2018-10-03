@@ -1,30 +1,35 @@
+homeassistant:
+  customize:
+    sensor.spotify_source:
+      hidden: true
+
 media_player:
-  - platform: universal
-    name: projector
-    children:
-      - binary_sensor.projector_power
-      - media_player.projector_chromecast
-    commands:
-      turn_on:
-        service: switch.turn_on
-        data:
-          entity_id: switch.projector_power
-      turn_off:
-        service: script.projector_off
-      volume_up:
-        service: switch.turn_on
-        data:
-          entity_id: switch.projector_vol_up
-      volume_down:
-        service: switch.turn_on
-        data:
-          entity_id: switch.projector_vol_dn
-      volume_mute:
-        service: switch.turn_on
-        data:
-          entity_id: switch.projector_mute
-    attributes:
-      state: binary_sensor.projector_power
+  # - platform: universal
+  #   name: projector
+  #   children:
+  #     - binary_sensor.projector_power
+  #     - media_player.projector_chromecast
+  #   commands:
+  #     turn_on:
+  #       service: switch.turn_on
+  #       data:
+  #         entity_id: switch.projector_power
+  #     turn_off:
+  #       service: script.projector_off
+  #     volume_up:
+  #       service: switch.turn_on
+  #       data:
+  #         entity_id: switch.projector_vol_up
+  #     volume_down:
+  #       service: switch.turn_on
+  #       data:
+  #         entity_id: switch.projector_vol_dn
+  #     volume_mute:
+  #       service: switch.turn_on
+  #       data:
+  #         entity_id: switch.projector_mute
+  #   attributes:
+  #     state: binary_sensor.projector_power
 
   - platform: spotify
     client_id: !secret spotify_id
@@ -41,3 +46,77 @@ media_player:
       data:
         mac: !secret LGwebOSTV_MAC
         broadcast_address: "192.168.33.255"
+
+sensor:
+  - platform: template
+    sensors:
+      spotify_source:
+        value_template: '{{ states.media_player.spotify.attributes.source }}'
+
+
+automation:
+  # Notify when group becomes unavailable
+  - alias: 'All Speakers unavailable'
+    trigger:
+      platform: state
+      entity_id: media_player.all_speakers
+      to: 'unavailable'
+      for:
+        minutes: 3
+    action:
+      service: notify.phone
+      data:
+        message: "Lost connection to minis"
+        title: "Home Assistant"
+
+  - alias: 'Minis unavailable'
+    trigger:
+      platform: state
+      entity_id: media_player.minis
+      to: 'unavailable'
+      for:
+        minutes: 3
+    action:
+      service: notify.phone
+      data:
+        message: "Lost connection to Minis"
+        title: "Home Assistant"
+
+  - alias: 'East Side Speakers unavailable'
+    trigger:
+      platform: state
+      entity_id: media_player.east_side_speakers
+      to: 'unavailable'
+      for:
+        minutes: 3
+    action:
+      service: notify.phone
+      data:
+        message: "Lost connection to East Side Speakers"
+        title: "Home Assistant"
+
+  - alias: 'Office Speakers unavailable'
+    trigger:
+      platform: state
+      entity_id: media_player.office_speakers
+      to: 'unavailable'
+      for:
+        minutes: 3
+    action:
+      service: notify.phone
+      data:
+        message: "Lost connection to Office Speakers"
+        title: "Home Assistant"
+
+  - alias: 'West Side Speakers unavailable'
+    trigger:
+      platform: state
+      entity_id: media_player.west_side_speakers
+      to: 'unavailable'
+      for:
+        minutes: 3
+    action:
+      service: notify.phone
+      data:
+        message: "Lost connection to West Side Speakers"
+        title: "Home Assistant"

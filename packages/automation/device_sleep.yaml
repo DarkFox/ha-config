@@ -44,10 +44,12 @@ automation:
       entity_id: input_select.room_state_bathroom
       state: 'off'
     action:
-      service: media_player.volume_mute
-      data:
-        entity_id: media_player.bathroom_speaker
-        is_volume_muted: true
+      - delay:
+          seconds: 1
+      - service: media_player.volume_mute
+        data:
+          entity_id: media_player.bathroom_speaker
+          is_volume_muted: true
 
   # Bedroom #
   - alias: Bedroom Speaker active trigger
@@ -70,15 +72,6 @@ automation:
       data:
         entity_id: switch.bedroom_speaker_switch
 
-  - alias: Bedroom projector inactive trigger
-    trigger:
-      platform: state
-      entity_id: input_select.room_state_bedroom
-      to: 'off'
-    action:
-      service: media_player.turn_off
-      data:
-        entity_id: media_player.projector
 
   # Kitchen #
   - alias: Kitchen Speaker active trigger
@@ -113,10 +106,12 @@ automation:
       entity_id: input_select.room_state_kitchen
       state: 'off'
     action:
-      service: media_player.volume_mute
-      data:
-        entity_id: media_player.kitchen_speaker
-        is_volume_muted: true
+      - delay:
+          seconds: 1
+      - service: media_player.volume_mute
+        data:
+          entity_id: media_player.kitchen_speaker
+          is_volume_muted: true
 
   # Office #
   - alias: Office Speaker active trigger
@@ -139,29 +134,29 @@ automation:
       data:
         entity_id: switch.office_desk_speaker_switch
 
-  - alias: Projector Soundbar inactive trigger
-    trigger:
-      platform: state
-      entity_id: input_select.room_state_office
-      to: 'off'
-    action:
-      service: switch.turn_off
-      data:
-        entity_id: switch.projector_soundbar_power
+  # - alias: Projector Soundbar inactive trigger
+  #   trigger:
+  #     platform: state
+  #     entity_id: input_select.room_state_office
+  #     to: 'off'
+  #   action:
+  #     service: switch.turn_off
+  #     data:
+  #       entity_id: switch.projector_soundbar_power
 
-  - alias: Office space heater turn on
-    trigger:
-      platform: state
-      entity_id: input_select.room_state_office
-      to: 'active'
-    condition:
-      condition: numeric_state
-      entity_id: 'sensor.office_temperature'
-      below: '21'
-    action:
-      service: switch.turn_on
-      data:
-        entity_id: switch.space_heater
+  # - alias: Office space heater turn on
+  #   trigger:
+  #     platform: state
+  #     entity_id: input_select.room_state_office
+  #     to: 'active'
+  #   condition:
+  #     condition: numeric_state
+  #     entity_id: 'sensor.office_temperature'
+  #     below: '21'
+  #   action:
+  #     service: switch.turn_on
+  #     data:
+  #       entity_id: switch.space_heater
 
   # Livingroom #
   - alias: Livingroom Speaker trigger
@@ -172,7 +167,7 @@ automation:
     action:
       service: media_player.volume_mute
       data:
-        entity_id: media_player.tv_soundbar
+        entity_id: media_player.tv_soundbar_songpal
         is_volume_muted: false
 
   - alias: Livingroom inactive trigger
@@ -186,23 +181,76 @@ automation:
           entity_id: switch.living_room_tv_power
       - service: media_player.volume_mute
         data:
-          entity_id: media_player.tv_soundbar
+          entity_id: media_player.tv_soundbar_songpal
           is_volume_muted: true
 
   - alias: Livingroom Speaker play inactive
     trigger:
       platform: state
-      entity_id: media_player.livingroom_speaker
+      entity_id: media_player.tv_soundbar
       to: 'playing'
     condition:
       condition: state
       entity_id: input_select.room_state_livingroom
       state: 'off'
     action:
-      service: media_player.volume_mute
-      data:
-        entity_id: media_player.livingroom_speaker
-        is_volume_muted: true
+      - delay:
+          seconds: 1
+      - service: media_player.volume_mute
+        data:
+          entity_id: media_player.tv_soundbar_songpal
+          is_volume_muted: true
+
+  # Turn off soundbar if unused for 1 minute.
+  - alias: Livingroom Soundbar inactive
+    trigger:
+      - platform: state
+        entity_id: media_player.tv_soundbar
+        to: 'off'
+        for:
+          minutes: 1
+      - platform: state
+        entity_id: device_tracker.ping_tv
+        to: 'off'
+        for:
+          minutes: 1
+      - platform: state
+        entity_id: media_player.spotify
+        to: 'idle'
+        for:
+          minutes: 1
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: input_boolean.home_assistant_started
+          state: 'on'
+        - condition: state
+          entity_id: media_player.tv_soundbar
+          state: 'off'
+        - condition: state
+          entity_id: device_tracker.ping_tv
+          state: 'off'
+        - condition: and
+          conditions:
+            - condition: state
+              entity_id: media_player.spotify
+              state: 'idle'
+            - condition: or
+              conditions:
+              - condition: state
+                entity_id: sensor.spotify_source
+                state: 'All Speakers'
+              - condition: state
+                entity_id: sensor.spotify_source
+                state: 'West Side Speakers'
+              - condition: state
+                entity_id: sensor.spotify_source
+                state: 'TV Soundbar'
+    action:
+      - service: media_player.turn_off
+        data:
+          entity_id: media_player.tv_soundbar_songpal
 
 
   # Home #

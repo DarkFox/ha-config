@@ -1,12 +1,3 @@
-homeassistant:
-  customize:
-    input_boolean.bedroom_activity_override:
-      persistent: true
-    input_select.room_state_bedroom:
-      persistent: true
-    input_select.bedroom_light_profile:
-      persistent: true
-
 script:
   light_profile_bedroom_bright:
     sequence:
@@ -22,7 +13,7 @@ script:
           brightness: 255
           color_temp: 370
           entity_id:
-            - group.cloud
+            - light.cloud
       # Dimmable Lights
       - service: light.turn_on
         data:
@@ -120,7 +111,7 @@ script:
           brightness: 86
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           entity_id:
-            - group.cloud
+            - light.cloud
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
@@ -184,21 +175,17 @@ script:
       - service: light.turn_off
         data:
           entity_id:
-            - group.cloud
+            - light.cloud
             - light.bedroom_shelf_strip
-      - service: light.turn_on
-        data:
-          brightness: 32
-          rgb_color: [255,0,0]
-          entity_id:
             - light.bedroom_shelves
+            - light.bedside
+            - light.bedroom_ps
       - service: light.turn_on
         data:
           brightness: 1
           rgb_color: [255,0,0]
           entity_id:
-            - light.bedside
-            - light.bedroom_ps
+            - light.cloud_west
 
 
   light_profile_bedroom_off:
@@ -291,6 +278,15 @@ input_select:
       - inactive
       - 'off'
     initial: 'off'
+
+  bedroom_state_override:
+    name: Bedroom State Override
+    options:
+      - None
+      - active
+      - inactive
+      - 'off'
+    initial: None
 
   bedroom_light_profile:
     name: Bedroom Light Profile
