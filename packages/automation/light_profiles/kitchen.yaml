@@ -226,13 +226,16 @@ input_select:
       - active
       - inactive
       - 'off'
-    initial: None
 
 binary_sensor:
   - platform: template
     sensors:
       kitchen_activity:
         friendly_name: 'Kitchen Activity'
+        entity_id:
+          - binary_sensor.kitchen_sensor
+          - input_boolean.kitchen_activity_override
+          - input_select.latest_motion
         value_template: >
           {% if is_state('binary_sensor.kitchen_sensor', 'on')
           or is_state('input_boolean.kitchen_activity_override', 'on')
@@ -281,30 +284,12 @@ automation:
         entity_id: input_select.room_state_kitchen
         option: 'off'
 
-  # Room State Actions #
-  - alias: fire_tablet_on
-    trigger:
-      platform: state
-      entity_id: input_select.room_state_kitchen
-      to: 'active'
-    action:
-      service: switch.turn_on
-      data:
-        entity_id: switch.fire_tablet
-
-  - alias: fire_tablet_off
-    trigger:
-      platform: state
-      entity_id: input_select.room_state_kitchen
-      to: 'inactive'
-    action:
-      service: switch.turn_off
-      data:
-        entity_id: switch.fire_tablet
-
   # Room Scene Triggers #
   - alias: light_profile_change_active_kitchen
     trigger:
+      - platform: state
+        entity_id: input_boolean.refresh_light_profile
+        to: 'on'
       - platform: state
         entity_id: input_select.room_state_kitchen
       - platform: state
@@ -330,6 +315,9 @@ automation:
   - alias: light_profile_change_inactive_kitchen
     trigger:
       - platform: state
+        entity_id: input_boolean.refresh_light_profile
+        to: 'on'
+      - platform: state
         entity_id: input_select.room_state_kitchen
       - platform: state
         entity_id: input_select.inactive_light_profile
@@ -347,6 +335,9 @@ automation:
 
   - alias: light_profile_change_off_kitchen
     trigger:
+      - platform: state
+        entity_id: input_boolean.refresh_light_profile
+        to: 'on'
       - platform: state
         entity_id: input_select.room_state_kitchen
       - platform: state

@@ -13,17 +13,19 @@ binary_sensor:
       martin_presence_delayed:
         friendly_name: 'Martin Presence - Delayed'
         device_class: presence
-        delay_off:
-          minutes: 10
+        entity_id: binary_sensor.martin_presence
         value_template: >-
           {{ is_state('binary_sensor.martin_presence', 'on') }}
+        delay_off:
+          minutes: 10
       martin_presence_extended:
         friendly_name: 'Martin Presence - Extended Away'
         device_class: presence
-        delay_off:
-          hours: 24
+        entity_id: binary_sensor.martin_presence
         value_template: >-
           {{ is_state('binary_sensor.martin_presence', 'on') }}
+        delay_off:
+          hours: 24
 
   - platform: bayesian
     name: 'Martin Presence'
@@ -38,11 +40,6 @@ binary_sensor:
       - entity_id: 'device_tracker.google_maps_102040676821115196041'
         prob_given_true: 0.9
         prob_given_false: 0.2
-        platform: 'state'
-        to_state: 'home'
-      - entity_id: 'device_tracker.ping_tv'
-        prob_given_true: 0.8
-        prob_given_false: 0.1
         platform: 'state'
         to_state: 'home'
       - entity_id: 'binary_sensor.activity_last30'

@@ -50,7 +50,6 @@ input_select:
       - Ambient
       - Night
       - 'Off'
-    initial: Default
   inactive_light_profile:
     name: Inactive Light Profile
     options:
@@ -59,7 +58,6 @@ input_select:
       - Ambient
       - Night
       - 'Off'
-    initial: Dimmed
 
   theme:
     name: Theme
@@ -83,6 +81,10 @@ input_select:
       - Spring Blossom
     initial: Portal
 
+input_boolean:
+  refresh_light_profile:
+    initial: off
+
 light:
   - platform: mqtt_json
     name: apartment light level
@@ -95,6 +97,7 @@ sensor:
     sensors:
       theme_primary_color: # Usually the warmer color
         friendly_name: Primary Color
+        entity_id: input_select.theme
         value_template: >
           {% if is_state('input_select.theme', 'Tron') -%}
             45,100
@@ -134,11 +137,12 @@ sensor:
 
       theme_primary_color_hue:
         friendly_name: Secondary Color Hue
+        entity_id: input_select.theme
         value_template: >
           {% if is_state('input_select.theme', 'Tron') -%}
             45,100
           {% elif is_state('input_select.theme', 'Halloween') -%}
-            15,100
+            25,100
           {% elif is_state('input_select.theme', 'Christmas') -%}
             0,100
           {% elif is_state('input_select.theme', 'Little') -%}
@@ -174,11 +178,12 @@ sensor:
 
       theme_secondary_color: # Usually the colder color
         friendly_name: Secondary Color
+        entity_id: input_select.theme
         value_template: >
           {% if is_state('input_select.theme', 'Tron') -%}
             179,100
           {% elif is_state('input_select.theme', 'Halloween') -%}
-            277,100
+            295,100
           {% elif is_state('input_select.theme', 'Christmas') -%}
             0,0
           {% elif is_state('input_select.theme', 'Little') -%}
@@ -213,6 +218,7 @@ sensor:
 
       theme_secondary_color_hue:
         friendly_name: Secondary Color Hue
+        entity_id: input_select.theme
         value_template: >
           {% if is_state('input_select.theme', 'Tron') -%}
             199,100
@@ -300,6 +306,18 @@ script:
         option: 'Off'
 
 automation:
+  - alias: Reset refresh_light_profile
+    trigger:
+      platform: state
+      entity_id: input_boolean.refresh_light_profile
+      to: 'on'
+    action:
+      - delay:
+         seconds: 5
+      - service: input_boolean.turn_off
+        data:
+          entity_id: input_boolean.refresh_light_profile
+
   - alias: Apartment light level initializer
     initial_state: true
     trigger:

@@ -132,13 +132,20 @@ sensor:
   - platform: template
     sensors:
       dark_sky_high_temperature:
+        entity_id:
+          - sensor.dark_sky_daytime_high_temperature
+          - sensor.dark_sky_overnight_high_temperature
         value_template: "{{ states.sensor.dark_sky_daytime_high_temperature.state or states.sensor.dark_sky_overnight_high_temperature.state }}"
         unit_of_measurement: "°"
       dark_sky_low_temperature:
+        entity_id:
+          - sensor.dark_sky_daytime_low_temperature
+          - sensor.dark_sky_overnight_low_temperature
         value_template: "{{ states.sensor.dark_sky_daytime_low_temperature.state or states.sensor.dark_sky_overnight_low_temperature.state }}"
         unit_of_measurement: "°"
 
       dark_sky_precip_dk:
+        entity_id: sensor.dark_sky_precip
         value_template: >-
           {%- if is_state("sensor.dark_sky_precip", "rain") -%}
             Regn
@@ -150,11 +157,16 @@ sensor:
             Ingen
           {%- endif -%}
       dark_sky_precip_and_probability:
+        entity_id:
+          - sensor.dark_sky_precip_dk
+          - sensor.dark_sky_precip_probability
         value_template: "{{ states.sensor.dark_sky_precip_dk.state }}, {{ states.sensor.dark_sky_precip_probability.state | int }}%"
       dark_sky_apparent_temperature_text:
+        entity_id: sensor.dark_sky_apparent_temperature
         value_template: "Føles: {{ states.sensor.dark_sky_apparent_temperature.state | replace('.', ',') }} ˚C"
       dark_sky_wind_bearing_name:
         friendly_name: Vindretning
+        entity_id: sensor.dark_sky_wind_bearing
         value_template: >-
           {% if states.sensor.dark_sky_wind_bearing.state | float<=11 %}Nord
           {% elif states.sensor.dark_sky_wind_bearing.state | float>348 %}Nord
@@ -176,6 +188,7 @@ sensor:
           {%- endif %}
       dark_sky_wind_speed_name:
         friendly_name: Vindhastighed
+        entity_id: sensor.dark_sky_wind_speed
         value_template: >-
           {% if states.sensor.dark_sky_wind_speed.state | float<=0.3 %}Stille
           {% elif states.sensor.dark_sky_wind_speed.state | float<=1.5 | float>0.3 %}Næsten stille

@@ -252,7 +252,6 @@ input_select:
       - active
       - inactive
       - 'off'
-    initial: 'off'
 
   office_state_override:
     name: Office State Override
@@ -261,7 +260,6 @@ input_select:
       - active
       - inactive
       - 'off'
-    initial: None
 
   office_light_profile:
     name: Office Light Profile
@@ -272,7 +270,7 @@ input_select:
       - Ambient
       - Night
       - 'Off'
-    initial: Default
+
   office_inactive_light_profile:
     options:
       - Default
@@ -280,14 +278,15 @@ input_select:
       - Ambient
       - Night
       - 'Off'
-    initial: Dimmed
-
 
 binary_sensor:
   - platform: template
     sensors:
       hobby_desk_activity:
         friendly_name: 'Hobby Desk Activity'
+        entity_id:
+          - binary_sensor.home_assistant_loaded
+          - light.hobby_desk_lamp
         value_template: >
           {% if is_state('binary_sensor.home_assistant_loaded', 'off') -%}
             false
@@ -299,14 +298,20 @@ binary_sensor:
 
       office_activity:
         friendly_name: 'Office Activity'
+        entity_id:
+          - binary_sensor.office_sensor
+          - input_boolean.office_pc_motion
+          - input_boolean.office_activity_override
+          - switch.pc
+          - media_player.projector_chromecast
+          - input_select.latest_motion
         value_template: >
           {% if is_state('binary_sensor.office_sensor', 'on')
+          or is_state('input_boolean.office_pc_motion', 'on')
           or is_state('input_boolean.office_activity_override', 'on')
           or is_state('switch.pc', 'on')
-          or is_state('binary_sensor.hobby_desk_activity', 'on')
           or is_state('media_player.projector_chromecast', 'playing')
-          or is_state('input_select.latest_motion', 'Office')
-          or as_timestamp(now()) - as_timestamp(states.switch.office_pc_motion.last_updated) | int < 300 -%}
+          or is_state('input_select.latest_motion', 'Office') -%}
             true
           {% else -%}
             false
@@ -437,6 +442,9 @@ automation:
   - alias: light_profile_change_active_office
     trigger:
       - platform: state
+        entity_id: input_boolean.refresh_light_profile
+        to: 'on'
+      - platform: state
         entity_id: input_select.room_state_office
       - platform: state
         entity_id: input_select.office_light_profile
@@ -461,6 +469,9 @@ automation:
   - alias: light_profile_change_inactive_office
     trigger:
       - platform: state
+        entity_id: input_boolean.refresh_light_profile
+        to: 'on'
+      - platform: state
         entity_id: input_select.room_state_office
       - platform: state
         entity_id: input_select.office_inactive_light_profile
@@ -478,6 +489,9 @@ automation:
 
   - alias: light_profile_change_off_office
     trigger:
+      - platform: state
+        entity_id: input_boolean.refresh_light_profile
+        to: 'on'
       - platform: state
         entity_id: input_select.room_state_office
       - platform: state

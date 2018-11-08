@@ -25,7 +25,7 @@ script:
       - service: input_number.set_value
         data:
           entity_id: input_number.fire_tablet_brightness
-          value: 127
+          value: 255
 
   light_profile_bathroom_dimmed:
     sequence:
@@ -39,7 +39,7 @@ script:
       - service: input_number.set_value
         data:
           entity_id: input_number.fire_tablet_brightness
-          value: 76
+          value: 127
 
   light_profile_bathroom_ambient:
     sequence:
@@ -53,7 +53,7 @@ script:
       - service: input_number.set_value
         data:
           entity_id: input_number.fire_tablet_brightness
-          value: 25
+          value: 64
 
   light_profile_bathroom_night:
     sequence:
@@ -67,7 +67,7 @@ script:
       - service: input_number.set_value
         data:
           entity_id: input_number.fire_tablet_brightness
-          value: 0
+          value: 24
 
   light_profile_bathroom_off:
     sequence:
@@ -132,13 +132,17 @@ input_select:
       - active
       - inactive
       - 'off'
-    initial: None
 
 binary_sensor:
   - platform: template
     sensors:
       bathroom_activity:
         friendly_name: 'Bathroom Activity'
+        entity_id:
+          - binary_sensor.toilet_sensor
+          - input_boolean.bathroom_activity_override
+          - input_select.latest_motion
+          - input_select.martin_activity
         value_template: >
           {% if is_state('binary_sensor.toilet_sensor', 'on')
           or is_state('input_boolean.bathroom_activity_override', 'on')
@@ -150,6 +154,27 @@ binary_sensor:
           {% endif -%}
 
 automation:
+  # Room State Actions #
+  - alias: fire_tablet_on
+    trigger:
+      platform: state
+      entity_id: input_select.room_state_bathroom
+      to: 'active'
+    action:
+      service: switch.turn_on
+      data:
+        entity_id: switch.fire_tablet
+
+  - alias: fire_tablet_off
+    trigger:
+      platform: state
+      entity_id: input_select.room_state_bathroom
+      to: 'inactive'
+    action:
+      service: switch.turn_off
+      data:
+        entity_id: switch.fire_tablet
+
   # Room State Triggers #
   - alias: room_state_active_trigger_bathroom
     trigger:
@@ -192,6 +217,9 @@ automation:
   - alias: light_profile_change_active_bathroom
     trigger:
       - platform: state
+        entity_id: input_boolean.refresh_light_profile
+        to: 'on'
+      - platform: state
         entity_id: input_select.room_state_bathroom
       - platform: state
         entity_id: input_select.light_profile
@@ -210,6 +238,9 @@ automation:
   - alias: light_profile_change_inactive_bathroom
     trigger:
       - platform: state
+        entity_id: input_boolean.refresh_light_profile
+        to: 'on'
+      - platform: state
         entity_id: input_select.room_state_bathroom
       - platform: state
         entity_id: input_select.inactive_light_profile
@@ -227,6 +258,9 @@ automation:
 
   - alias: light_profile_change_off_bathroom
     trigger:
+      - platform: state
+        entity_id: input_boolean.refresh_light_profile
+        to: 'on'
       - platform: state
         entity_id: input_select.room_state_bathroom
       - platform: state

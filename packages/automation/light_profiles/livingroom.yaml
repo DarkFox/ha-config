@@ -340,7 +340,6 @@ input_select:
       - active
       - inactive
       - 'off'
-    initial: None
 
 group:
   light_profile_livingroom:
@@ -376,6 +375,11 @@ binary_sensor:
     sensors:
       livingroom_activity:
         friendly_name: 'Livingroom Activity'
+        entity_id:
+          - binary_sensor.livingroom_sensor
+          - input_boolean.livingroom_activity_override
+          - media_player.living_room_chromecast
+          - input_select.latest_motion
         value_template: >
           {% if is_state('binary_sensor.livingroom_sensor', 'on')
           or is_state('input_boolean.livingroom_activity_override', 'on')
@@ -429,6 +433,9 @@ automation:
   - alias: light_profile_change_active_livingroom
     trigger:
       - platform: state
+        entity_id: input_boolean.refresh_light_profile
+        to: 'on'
+      - platform: state
         entity_id: input_select.room_state_livingroom
       - platform: state
         entity_id: input_select.light_profile
@@ -453,6 +460,9 @@ automation:
   - alias: light_profile_change_inactive_livingroom
     trigger:
       - platform: state
+        entity_id: input_boolean.refresh_light_profile
+        to: 'on'
+      - platform: state
         entity_id: input_select.room_state_livingroom
       - platform: state
         entity_id: input_select.inactive_light_profile
@@ -470,6 +480,9 @@ automation:
 
   - alias: light_profile_change_off_livingroom
     trigger:
+      - platform: state
+        entity_id: input_boolean.refresh_light_profile
+        to: 'on'
       - platform: state
         entity_id: input_select.room_state_livingroom
       - platform: state

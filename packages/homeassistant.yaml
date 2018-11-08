@@ -115,10 +115,11 @@ binary_sensor:
   - platform: template
     sensors:
       home_assistant_loaded:
-        delay_on:
-          minutes: 1
+        entity_id: input_boolean.home_assistant_started
         value_template: >-
           {{ is_state('input_boolean.home_assistant_started', 'on') }}
+        delay_on:
+          minutes: 1
 
 sensor:
   - platform: rest
@@ -131,6 +132,9 @@ sensor:
     display_options:
       - 'time'
       - 'date'
+      - 'date_time'
+      - 'time_utc'
+      - 'beat'
 
   - platform: speedtest
     manual: true
@@ -164,6 +168,7 @@ sensor:
   - platform: template
     sensors:
       ha_last_restart:
+        entity_id: automation.startup_notification
         value_template: '{{ as_timestamp(states.automation.startup_notification.attributes.last_triggered) | timestamp_custom("%b %d %X") }}'
         friendly_name: HA Last Restart
 
@@ -250,3 +255,8 @@ automation:
       - service: input_boolean.turn_on
         data:
           entity_id: input_boolean.home_assistant_started
+      - delay:
+         seconds: 2
+      - service: input_boolean.turn_on
+        data:
+          entity_id: input_boolean.refresh_light_profile

@@ -111,7 +111,6 @@ input_select:
       - active
       - inactive
       - 'off'
-    initial: None
 
 group:
   light_profile_hallway:
@@ -148,6 +147,11 @@ binary_sensor:
     sensors:
       hallway_activity:
         friendly_name: 'hallway Activity'
+        entity_id:
+          - binary_sensor.hallway_sensor
+          - input_boolean.hallway_activity_override
+          - binary_sensor.apartment_door
+          - binary_sensor.bathroom_activity
         value_template: >
           {% if is_state('binary_sensor.hallway_sensor', 'on')
           or is_state('input_boolean.hallway_activity_override', 'on')
@@ -222,6 +226,9 @@ automation:
   - alias: light_profile_change_active_hallway
     trigger:
       - platform: state
+        entity_id: input_boolean.refresh_light_profile
+        to: 'on'
+      - platform: state
         entity_id: input_select.room_state_hallway
       - platform: state
         entity_id: input_select.light_profile
@@ -246,6 +253,9 @@ automation:
   - alias: light_profile_change_inactive_hallway
     trigger:
       - platform: state
+        entity_id: input_boolean.refresh_light_profile
+        to: 'on'
+      - platform: state
         entity_id: input_select.room_state_hallway
       - platform: state
         entity_id: input_select.inactive_light_profile
@@ -263,6 +273,9 @@ automation:
 
   - alias: light_profile_change_off_hallway
     trigger:
+      - platform: state
+        entity_id: input_boolean.refresh_light_profile
+        to: 'on'
       - platform: state
         entity_id: input_select.room_state_hallway
       - platform: state
