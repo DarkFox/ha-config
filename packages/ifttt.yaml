@@ -1,2 +1,51 @@
+homeassistant:
+  customize:
+    sensor.sleep_tracker:
+      icon: mdi:sleep
+    sensor.phone_alarm:
+      icon: mdi:bell
+
 ifttt:
   key: !secret ifttt_key
+
+automation:
+  - alias: Update Phone Alarm State
+    trigger:
+      platform: event
+      event_type: ifttt_webhook_received
+      event_data:
+        action: phone_alarm_state
+    action:
+      service_template: 'input_text.set_value'
+      data_template:
+        entity_id: 'input_text.phone_alarm'
+        value: '{{ trigger.event.data.state }}'
+  - alias: Update Sleep Tracker State
+    trigger:
+      platform: event
+      event_type: ifttt_webhook_received
+      event_data:
+        action: sleep_tracker_state
+    action:
+      service_template: 'input_text.set_value'
+      data_template:
+        entity_id: 'input_text.sleep_tracker'
+        value: '{{ trigger.event.data.state }}'
+
+input_text:
+  phone_alarm:
+    name: Phone Alarm
+  sleep_tracker:
+    name: Sleep Tracker
+
+sensor:
+  - platform: template
+    sensors:
+      phone_alarm:
+        friendly_name: 'Phone Alarm'
+        entity_id: input_text.phone_alarm
+        value_template: "{{ states.input_text.phone_alarm.state }}"
+      sleep_tracker:
+        friendly_name: 'Phone Alarm'
+        entity_id: input_text.sleep_tracker
+        value_template: "{{ states.input_text.sleep_tracker.state }}"
