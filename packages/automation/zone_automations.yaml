@@ -1,0 +1,57 @@
+proximity:
+  home:
+    ignored_zones:
+      - grsted
+      - forldre
+    devices:
+      - device_tracker.google_maps_102040676821115196041
+    tolerance: 10
+
+input_datetime:
+  visited_parents:
+    has_date: true
+    has_time: true
+
+automation:
+  - alias: set_visited_parents
+    trigger:
+      - platform: zone
+        entity_id: device_tracker.google_maps_102040676821115196041
+        zone: zone.forldre
+        event: enter
+      - platform: zone
+        entity_id: device_tracker.google_maps_102040676821115196041
+        zone: zone.forldre
+        event: leave
+    action:
+      service: input_datetime.set_datetime
+      entity_id: input_datetime.visited_parents
+      data_template:
+        time: "{{states.sensor.time.state}}"
+        date: "{{states.sensor.date.state}}"
+
+  - alias: visit_parents_reminder
+    trigger:
+      platform: time
+      at: '18:00:00'
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: '{{ now().weekday() == 0 }}'
+        - condition: template
+          value_template: >
+            {%-
+              set visited_time = as_timestamp(states('input_datetime.visited_parents'))
+            -%}
+            {%-
+              set current_time = as_timestamp(now())
+            -%}
+            {{ (((current_time - visited_time)/60/60/24) | int) > 30 }}
+    action:
+      service: notify.phone
+      data:
+        message: "Det er ved at være lang tid siden du har besøgt Mor og Far."
+        title: "Home Assistant"
+        data:
+          icon: "https://goo.gl/xeetdy"
