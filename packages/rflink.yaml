@@ -1,18 +1,5 @@
 homeassistant:
   customize:
-    switch.office_desk_speaker_switch:
-      friendly_name: Office Desk Speaker Switch
-      icon: mdi:speaker
-      assumed_state: false
-    switch.bedroom_speaker_switch:
-      friendly_name: Bedroom Speaker Switch
-      icon: mdi:speaker
-      assumed_state: false
-    switch.kitchen_speaker_switch:
-      friendly_name: Kitchen Speaker Switch
-      icon: mdi:speaker
-      assumed_state: false
-
     switch.space_heater:
       icon: mdi:radiator
       assumed_state: true
@@ -97,15 +84,15 @@ switch:
 
     # Power Switches - New
     tristate_82a2a1_10: # 1
-      name: office_desk_speaker_switch
+      name: unused_no_0612
       aliases:
         - tristate_8a22a1_10
     tristate_82a2a4_10: # 2
-      name: bedroom_speaker_switch
+      name: unused_no_0615
       aliases:
         - tristate_8a22a4_10
     tristate_82a290_10: # 3
-      name: Kitchen TV
+      name: unused_no_0611
       aliases:
         - tristate_8a2290_10
     tristate_82a260_10: # 4
@@ -116,13 +103,6 @@ switch:
       name: Vacuum Charger
       aliases:
         - tristate_82a1a0_10
-
-    # Sensors
-    conrad_c2785c_0a:
-      name: Storage Room Motion
-
-    conrad_9eb85c_0a:
-      name: Office PC Motion
 
     # Livingroom Remote:
     ev1527_06f890_01:
@@ -172,9 +152,49 @@ switch:
     ev1527_023870_0f:
       name: bedroom_remote_speed_plus
 
-sensor:
-  platform: rflink
-  automatic_add: false
+binary_sensor:
+  - platform: rflink
+    devices:
+      conrad_c2785c_0a:
+        name: Storage Room Motion
+        device_class: motion
+        off_delay: 60
+
+      conrad_9eb85c_0a:
+        name: Office PC Motion
+        device_class: motion
+        off_delay: 60
+
+      conrad_85b85c_0a: # -0314
+        name: Bed Motion
+        device_class: motion
+        off_delay: 60
+
+  - platform: template
+    sensors:
+      apartment_lock:
+        friendly_name: Apartment Door Lock
+        entity_id: input_boolean.apartment_lock
+        value_template: "{{ is_state('input_boolean.apartment_lock', 'on') }}"
+        device_class: lock
+
+      apartment_door:
+        friendly_name: Apartment Door
+        entity_id: input_boolean.apartment_door
+        value_template: "{{ is_state('input_boolean.apartment_door', 'on') }}"
+        device_class: opening
+
+      bathroom_window:
+        friendly_name: Bathroom Window
+        entity_id: input_boolean.bathroom_window
+        value_template: "{{ is_state('input_boolean.bathroom_window', 'on') }}"
+        device_class: opening
+
+      storage_room_door:
+        friendly_name: Storage Room Door
+        entity_id: input_boolean.storage_room_door
+        value_template: "{{ is_state('input_boolean.storage_room_door', 'on') }}"
+        device_class: opening
 
 automation:
   - alias: apartment_lock_open
@@ -267,7 +287,6 @@ automation:
       data:
         entity_id: input_boolean.storage_room_door
 
-
 input_boolean:
   apartment_lock:
     initial: off
@@ -277,29 +296,6 @@ input_boolean:
     initial: off
   storage_room_door:
     initial: off
-
-binary_sensor:
-  - platform: template
-    sensors:
-      apartment_lock:
-        friendly_name: Apartment Door Lock
-        value_template: "{{ is_state('input_boolean.apartment_lock', 'on') }}"
-        device_class: lock
-
-      apartment_door:
-        friendly_name: Apartment Door
-        value_template: "{{ is_state('input_boolean.apartment_door', 'on') }}"
-        device_class: opening
-
-      bathroom_window:
-        friendly_name: Bathroom Window
-        value_template: "{{ is_state('input_boolean.bathroom_window', 'on') }}"
-        device_class: opening
-
-      storage_room_door:
-        friendly_name: Storage Room Door
-        value_template: "{{ is_state('input_boolean.storage_room_door', 'on') }}"
-        device_class: opening
 
 group:
   livingroom_remote:
