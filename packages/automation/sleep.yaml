@@ -84,10 +84,9 @@ automation:
   - alias: sleep_state_in_bed
     initial_state: true
     trigger:
-      - platform: event
-        event_type: button_pressed
-        event_data:
-          entity_id: binary_sensor.bed_motion
+      - platform: state
+        entity_id: binary_sensor.bed_motion
+        to: 'on'
       - platform: state
         entity_id: input_select.sleep_state
         to: 'bedtime'
@@ -95,8 +94,8 @@ automation:
       condition: and
       conditions:
         - condition: state
-          entity_id: binary_sensor.bedroom_activity
-          state: 'on'
+          entity_id: binary_sensor.bed_motion
+          to: 'on'
         - condition: state
           entity_id: input_select.sleep_state
           state: 'bedtime'
