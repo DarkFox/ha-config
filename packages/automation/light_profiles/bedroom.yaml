@@ -233,9 +233,14 @@ script:
           rgb_color: [255,0,0]
           entity_id:
             - light.bed_shelf_rgb
-      - condition: state
-        entity_id: input_select.sleep_state
-        state: 'in bed'
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: input_select.sleep_state
+            state: 'bedtime'
+          - condition: state
+            entity_id: input_select.sleep_state
+            state: 'in bed'
       - service: light.turn_on
         data:
           brightness: 32
@@ -377,6 +382,7 @@ binary_sensor:
         entity_id:
           - binary_sensor.bedroom_sensor
           - binary_sensor.bed_motion
+          - binary_sensor.bedroom_floor_motion
           - input_boolean.bedroom_activity_override
           - input_select.latest_motion
           - input_select.martin_activity
@@ -386,6 +392,7 @@ binary_sensor:
         value_template: >
           {% if is_state('binary_sensor.bedroom_sensor', 'on')
           or is_state('binary_sensor.bed_motion', 'on')
+          or is_state('binary_sensor.bedroom_floor_motion', 'on')
           or is_state('input_boolean.bedroom_activity_override', 'on')
           or is_state('input_select.latest_motion', 'Bedroom')
           or is_state('input_select.martin_activity', 'Sleeping')

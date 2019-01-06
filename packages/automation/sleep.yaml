@@ -88,6 +88,9 @@ automation:
       - platform: state
         entity_id: input_select.sleep_state
         to: 'bedtime'
+      - platform: state
+        entity_id: binary_sensor.bedroom_floor_motion
+        to: 'off'
     condition:
       condition: and
       conditions:
@@ -100,6 +103,9 @@ automation:
         - condition: state
           entity_id: binary_sensor.martin_presence_delayed
           state: 'on'
+        - condition: state
+          entity_id: binary_sensor.bedroom_floor_motion
+          state: 'off'
     action:
       service: input_select.select_option
       data:
@@ -169,9 +175,15 @@ automation:
   - alias: sleep_state_paused
     initial_state: true
     trigger:
-      platform: state
-      entity_id: sensor.sleep_tracker
-      to: 'paused'
+      - platform: state
+        entity_id: sensor.sleep_tracker
+        to: 'paused'
+      - platform: state
+        entity_id: binary_sensor.bedroom_floor_motion
+        to: 'on'
+      - platform: state
+        entity_id: binary_sensor.hallway_sensor
+        to: 'on'
     condition:
       condition: and
       conditions:
@@ -186,6 +198,39 @@ automation:
       data:
         entity_id: input_select.sleep_state
         option: paused
+
+  - alias: sleep_state_unpause
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.bed_motion
+        to: 'on'
+      - platform: state
+        entity_id: input_select.sleep_state
+        to: 'paused'
+      - platform: state
+        entity_id: binary_sensor.bedroom_floor_motion
+        to: 'off'
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.bed_motion
+          state: 'on'
+        - condition: state
+          entity_id: input_select.sleep_state
+          state: 'paused'
+        - condition: state
+          entity_id: input_select.latest_motion
+          state: 'Bedroom'
+        - condition: state
+          entity_id: binary_sensor.bedroom_floor_motion
+          state: 'off'
+    action:
+      service: input_select.select_option
+      data:
+        entity_id: input_select.sleep_state
+        option: sleeping
 
   - alias: sleep_state_alarm
     initial_state: true
@@ -261,9 +306,12 @@ automation:
   - alias: sleep_state_awake
     initial_state: true
     trigger:
-      platform: state
-      entity_id: binary_sensor.hallway_sensor
-      to: 'on'
+      - platform: state
+        entity_id: binary_sensor.hallway_sensor
+        to: 'on'
+      - platform: state
+        entity_id: binary_sensor.bedroom_floor_motion
+        to: 'on'
     condition:
       condition: or
       conditions:
@@ -367,6 +415,9 @@ automation:
       entity_id: input_select.sleep_state
       to: 'paused'
     action:
+      - service: joaoapps_join.phone_send_tasker
+        data:
+          command: "sleep_tracking_pause"
       - service: input_select.select_option
         data_template:
           option: 'Night'
@@ -385,6 +436,9 @@ automation:
       to: 'sleeping'
       from: 'paused'
     action:
+      - service: joaoapps_join.phone_send_tasker
+        data:
+          command: "sleep_tracking_resume"
       - service: input_select.select_option
         data_template:
           option: 'Off'
@@ -419,6 +473,8 @@ automation:
         data_template:
           entity_id: input_select.playlist
           options:
+            - "==SCRIPT==morning_briefing"
+            - "{{ states.sensor.podcast_bbc_minute.state }}"
             - "http://ice1.somafm.com/poptron-128-aac"
             - "==END=="
       - delay:
@@ -426,7 +482,7 @@ automation:
       - service: media_player.volume_set
         data_template:
           entity_id: 'media_player.bedroom_speaker'
-          volume_level: 0.25
+          volume_level: 0.30
 
   - alias: snoozing_action
     initial_state: true
@@ -455,7 +511,7 @@ automation:
     action:
       - service: input_select.select_option
         data_template:
-          option: 'Dimmed'
+          option: 'Ambient'
           entity_id: >
             {% if is_state('input_boolean.guests', 'on') %}
               input_select.bedroom_light_profile
@@ -480,7 +536,7 @@ automation:
       - service: media_player.volume_set
         data_template:
           entity_id: 'media_player.bedroom_speaker'
-          volume_level: 0.25
+          volume_level: 0.40
 
   - alias: awake_activity
     initial_state: true
@@ -515,6 +571,7 @@ automation:
             - "==SCRIPT==morning_briefing"
             - "{{ states.sensor.podcast_bbc_minute.state }}"
             - "{{ states.sensor.podcast_daily_tech_news_show.state }}"
+            - "{{ states.sensor.podcast_24syv_nyheder.state }}"
             - "http://ice1.somafm.com/poptron-128-aac"
             - "==END=="
       - delay:
