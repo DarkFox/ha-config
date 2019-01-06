@@ -113,6 +113,35 @@ automation:
           entity_id: media_player.kitchen_speaker
           is_volume_muted: true
 
+
+  - alias: Kitchen TV active trigger
+    trigger:
+      platform: state
+      entity_id: input_select.room_state_kitchen
+      to: 'active'
+    condition:
+      condition: state
+      entity_id: media_player.kitchen_chromecast
+      state: 'playing'
+    action:
+      service: switch.turn_on
+      data:
+        entity_id: switch.kitchen_tv_switch
+
+  - alias: Kitchen TV inactive trigger
+    trigger:
+      platform: state
+      entity_id: input_select.room_state_kitchen
+      to: 'off'
+    condition:
+      condition: state
+      entity_id: media_player.kitchen_chromecast
+      state: 'playing'
+    action:
+      service: switch.turn_off
+      data:
+        entity_id: switch.kitchen_tv_switch
+
   # Office #
   - alias: Office Speaker active trigger
     trigger:
