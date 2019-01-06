@@ -40,67 +40,38 @@ media_player:
 
 automation:
   # Notify when group becomes unavailable
-  - alias: 'All Speakers unavailable'
+  - alias: 'Cast Group Unavailable'
     trigger:
       platform: state
-      entity_id: media_player.all_speakers
+      entity_id:
+        - media_player.all_speakers
+        - media_player.minis
+        - media_player.east_side_speakers
+        - media_player.office_speakers
+        - media_player.west_side_speakers
       to: 'unavailable'
       for:
-        minutes: 3
+        minutes: 10
     action:
       service: notify.phone
-      data:
-        message: "Lost connection to minis"
+      data_template:
+        message: >
+          Lost connection to {{ state_attr(trigger.entity_id, "friendly_name") }}
         title: "Home Assistant"
 
-  - alias: 'Minis unavailable'
-    trigger:
-      platform: state
-      entity_id: media_player.minis
-      to: 'unavailable'
-      for:
-        minutes: 3
-    action:
-      service: notify.phone
-      data:
-        message: "Lost connection to Minis"
-        title: "Home Assistant"
-
-  - alias: 'East Side Speakers unavailable'
-    trigger:
-      platform: state
-      entity_id: media_player.east_side_speakers
-      to: 'unavailable'
-      for:
-        minutes: 3
-    action:
-      service: notify.phone
-      data:
-        message: "Lost connection to East Side Speakers"
-        title: "Home Assistant"
-
-  - alias: 'Office Speakers unavailable'
-    trigger:
-      platform: state
-      entity_id: media_player.office_speakers
-      to: 'unavailable'
-      for:
-        minutes: 3
-    action:
-      service: notify.phone
-      data:
-        message: "Lost connection to Office Speakers"
-        title: "Home Assistant"
-
-  - alias: 'West Side Speakers unavailable'
-    trigger:
-      platform: state
-      entity_id: media_player.west_side_speakers
-      to: 'unavailable'
-      for:
-        minutes: 3
-    action:
-      service: notify.phone
-      data:
-        message: "Lost connection to West Side Speakers"
-        title: "Home Assistant"
+  # - alias: 'Cast Group Available'
+  #   trigger:
+  #     platform: state
+  #     entity_id:
+  #       - media_player.all_speakers
+  #       - media_player.minis
+  #       - media_player.east_side_speakers
+  #       - media_player.office_speakers
+  #       - media_player.west_side_speakers
+  #     from: 'unavailable'
+  #   action:
+  #     service: notify.phone
+  #     data_template:
+  #       message: >
+  #         Reconnected to {{ state_attr(trigger.entity_id, "friendly_name") }}
+  #       title: "Home Assistant"
