@@ -31,17 +31,16 @@ script:
       - service: homeassistant.update_entity
         data:
           entity_id: sensor.tts_greeting
-      - service: tts.google_say
+      - service: tts.amazon_polly_say
         data_template:
           entity_id: "{{ device_entity_id }}"
           message: >
-            {{ states.sensor.tts_greeting.state }}. Klokken er {{ states.sensor.time.state }}.
-            Vejrudsigt: {{ states.sensor.dmi_city_weather.state }}.
-            Temperaturer mellem {{ (states.sensor.dark_sky_daytime_low_temperature.state or states.sensor.dark_sky_overnight_low_temperature.state) | round | int }}
-            {{- '' }} og {{ (states.sensor.dark_sky_daytime_high_temperature.state or states.sensor.dark_sky_overnight_high_temperature.state) | round | int }}˚,
-            {{- '' }} med {{ states.sensor.dark_sky_wind_speed_name.state }}.
+            {{ states("sensor.tts_greeting") }}. Klokken er {{ states("sensor.time") }}.
+            Vejrudsigt: {{ states("sensor.dmi_city_weather") }}.
+            {{ states("sensor.dark_sky_temperature") | round | int }} grader,
+            {{- '' }} med {{ states("sensor.dark_sky_wind_speed_name") }}.
             {% if states('sensor.dark_sky_precip_probability')|int > 25 -%}
-              {{ states.sensor.dark_sky_precip_probability.state|round|int }}% risiko for op til {{ states.sensor.dark_sky_precip_intensity.state | round | int }} mm {{ states.sensor.dark_sky_precip_dk.state }}.
+              {{ states("sensor.dark_sky_precip_probability")|round|int }}% risiko for op til {{ states("sensor.dark_sky_precip_intensity") | round | int }} mm {{ states("sensor.dark_sky_precip_dk") }}.
             {%- endif %}
             {% if is_state('binary_sensor.workday_sensor', 'on') and now().hour < 12 -%}
               S-Tog Linje B:
@@ -52,7 +51,6 @@ script:
                  Estimeret rejsetid: {{ states('sensor.travel_time_to_work_public_transit') }} minutter.
               {%- endif -%}
             {%- endif -%}
-          language: 'da'
 
 automation:
 
