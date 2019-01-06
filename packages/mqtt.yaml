@@ -42,34 +42,34 @@ group:
       - light.display_cabinet_bottom
 
 # Effect speed sliders for h801 units.
-input_number:
-  tv_shelf_effect_speed:
-    name: TV Shelf Effect Speed
-    initial: 30
-    min: 25
-    max: 30000
-    step: 25
-
-automation:
-  - alias: Update TV Shelf Effect Speed
-    trigger:
-      platform: mqtt
-      topic: "001AB084/rgb/effect_speed/status"
-    action:
-      service: input_number.set_value
-      data_template:
-        entity_id: input_number.tv_shelf_effect_speed
-        value: '{{ trigger.payload }}'
-
-  - alias: Set TV Shelf Effect Speed
-    trigger:
-      platform: state
-      entity_id: input_number.tv_shelf_effect_speed
-    action:
-      service: mqtt.publish
-      data_template:
-        topic: "001AB084/rgb/effect_speed/set"
-        payload: '{{ states.input_number.tv_shelf_effect_speed.state }}'
+# input_number:
+#   tv_shelf_effect_speed:
+#     name: TV Shelf Effect Speed
+#     initial: 30
+#     min: 25
+#     max: 30000
+#     step: 25
+#
+# automation:
+#   - alias: Update TV Shelf Effect Speed
+#     trigger:
+#       platform: mqtt
+#       topic: "001AB084/rgb/effect_speed/status"
+#     action:
+#       service: input_number.set_value
+#       data_template:
+#         entity_id: input_number.tv_shelf_effect_speed
+#         value: '{{ trigger.payload }}'
+#
+#   - alias: Set TV Shelf Effect Speed
+#     trigger:
+#       platform: state
+#       entity_id: input_number.tv_shelf_effect_speed
+#     action:
+#       service: mqtt.publish
+#       data_template:
+#         topic: "001AB084/rgb/effect_speed/set"
+#         payload: '{{ states.input_number.tv_shelf_effect_speed.state }}'
 
 sensor:
   - platform: mqtt
@@ -353,7 +353,8 @@ light:
       - random_flash
 
 
-  - platform: mqtt_json
+  - platform: mqtt
+    schema: json
     name: Screen Shelf
     retain: true
     state_topic: "bruh/screen-shelf"
@@ -381,7 +382,8 @@ light:
       - ripple
       - solid
 
-  - platform: mqtt_json
+  - platform: mqtt
+    schema: json
     name: Office Shelf Bar
     retain: true
     state_topic: "bruh/office-shelf-bar"
@@ -409,7 +411,8 @@ light:
       - ripple
       - solid
 
-  - platform: mqtt_json
+  - platform: mqtt
+    schema: json
     name: Sofa Table
     retain: true
     state_topic: "bruh/WS2811string"

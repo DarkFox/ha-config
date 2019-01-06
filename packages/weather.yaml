@@ -126,7 +126,6 @@ sensor:
       - minutely_summary
       - hourly_summary
       - daily_summary
-      - precip_intensity_max
       - uv_index
 
   - platform: template
@@ -156,14 +155,17 @@ sensor:
           {%- else -%}
             Ingen
           {%- endif -%}
+
       dark_sky_precip_and_probability:
         entity_id:
           - sensor.dark_sky_precip_dk
           - sensor.dark_sky_precip_probability
         value_template: "{{ states.sensor.dark_sky_precip_dk.state }}, {{ states.sensor.dark_sky_precip_probability.state | int }}%"
+
       dark_sky_apparent_temperature_text:
         entity_id: sensor.dark_sky_apparent_temperature
-        value_template: "Føles: {{ states.sensor.dark_sky_apparent_temperature.state | replace('.', ',') }} ˚C"
+        value_template: "Føles som {{ states.sensor.dark_sky_apparent_temperature.state | replace('.', ',') }} ˚C"
+
       dark_sky_wind_bearing_name:
         friendly_name: Vindretning
         entity_id: sensor.dark_sky_wind_bearing
@@ -186,6 +188,8 @@ sensor:
           {% elif states.sensor.dark_sky_wind_bearing.state | float<=326 | float>304 %}Vest Nordvest
           {% elif states.sensor.dark_sky_wind_bearing.state | float<=348 | float>326 %}Nord Nordvest
           {%- endif %}
+          ({{ states.sensor.dark_sky_wind_bearing.state }}°)
+
       dark_sky_wind_speed_name:
         friendly_name: Vindhastighed
         entity_id: sensor.dark_sky_wind_speed
