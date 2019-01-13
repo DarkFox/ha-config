@@ -9,22 +9,43 @@ automation:
       data:
         name: orange
 
-  - alias: 'Set dark theme for the night'
-    initial_state: True
+  - alias: Light Profile Frontend Theme Setter
     trigger:
-      - platform: time
-        at: '21:00'
+      platform: state
+      entity_id: input_select.light_profile
     action:
       service: frontend.set_theme
-      data:
-        name: darkorange
+      data_template:
+        name: >
+          {% if is_state('input_select.light_profile', 'Bright') %}
+            orange
+          {% elif is_state('input_select.light_profile', 'Default') %}
+            orange
+          {% elif is_state('input_select.light_profile', 'Dimmed') %}
+            darkorange
+          {% elif is_state('input_select.light_profile', 'Ambient') %}
+            darkorange
+          {% else %}
+            darkorange
+          {% endif %}
 
-  - alias: 'Set light theme for the day'
-    initial_state: True
-    trigger:
-      - platform: time
-        at: '8:00'
-    action:
-      service: frontend.set_theme
-      data:
-        name: orange
+  #
+  # - alias: 'Set dark theme for the night'
+  #   initial_state: True
+  #   trigger:
+  #     - platform: time
+  #       at: '21:00'
+  #   action:
+  #     service: frontend.set_theme
+  #     data:
+  #       name: darkorange
+  #
+  # - alias: 'Set light theme for the day'
+  #   initial_state: True
+  #   trigger:
+  #     - platform: time
+  #       at: '8:00'
+  #   action:
+  #     service: frontend.set_theme
+  #     data:
+  #       name: orange
