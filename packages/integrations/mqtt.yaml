@@ -6,9 +6,6 @@ mqtt:
 
 homeassistant:
   customize:
-    light.hallway_tablet:
-      icon: mdi:tablet-android
-      friendly_name: "Hallway Tablet"
     sensor.energy_meter_kwh:
       friendly_name: "Energy Meter (kWh)"
       icon: mdi:flash
@@ -81,7 +78,7 @@ sensor:
     name: energy_meter_watt
     state_topic: "meter/1/reading"
     unit_of_measurement: "W"
-    value_template: '{{ value_json.power }}'
+    value_template: '{{ value_json.power | int }}'
   - platform: statistics
     name: energy_meter_watt
     entity_id: sensor.energy_meter_watt
@@ -107,53 +104,6 @@ sensor:
     unit_of_measurement: "v"
     value_template: '{{ value | float / 1000 }}'
 
-
-  # Hallway Tablet
-
-  - platform: mqtt
-    state_topic: "wallpanel/hallwaytablet/sensor/battery"
-    name: "Hallway Tablet Battery Level"
-    unit_of_measurement: "%"
-    value_template: "{{ value_json.value }}"
-    json_attributes:
-      - charging
-      - acPlugged
-      - usbPlugged
-
-  - platform: mqtt
-    state_topic: "wallpanel/hallwaytablet/sensor/magneticField"
-    name: "Hallway Tablet Magnetic Field"
-    unit_of_measurement: "uT"
-    value_template: "{{ value_json.value }}"
-
-  - platform: mqtt
-    state_topic: "wallpanel/hallwaytablet/sensor/light"
-    name: "Hallway Tablet Light Level"
-    unit_of_measurement: "lx"
-    value_template: "{{ value_json.value }}"
-
-  - platform: mqtt
-    state_topic: "wallpanel/hallwaytablet/state"
-    name: "Hallway Tablet URL"
-    value_template: "{{ value_json.currentUrl }}"
-
-  # Bathroom Tablet
-
-  - platform: mqtt
-    state_topic: "wallpanel/firetablet/sensor/battery"
-    name: "Bathroom Tablet Battery Level"
-    unit_of_measurement: "%"
-    value_template: "{{ value_json.value }}"
-    json_attributes:
-      - charging
-      - acPlugged
-      - usbPlugged
-
-  - platform: mqtt
-    state_topic: "wallpanel/firetablet/state"
-    name: "Bathroom Tablet URL"
-    value_template: "{{ value_json.currentUrl }}"
-
 switch:
   - platform: mqtt
     name: party_button
@@ -162,25 +112,6 @@ switch:
     availability_topic: "00C16B3E/partybutton/available"
 
 light:
-  - platform: mqtt
-    schema: template
-    name: "Hallway Tablet"
-    brightness_state_topic: "wallpanel/hallwaytablet/state"
-    brightness_template: "{{ value_json.brightness }}"
-    command_topic: "wallpanel/hallwaytablet/command"
-    command_on_template: "{\"wake\": true, \"brightness\": {{brightness}}}"
-    command_off_template: "{\"wake\": false, \"brightness\": {{brightness}}}"
-
-  - platform: mqtt
-    schema: template
-    name: "Bathroom Tablet"
-    brightness_state_topic: "wallpanel/firetablet/state"
-    brightness_template: "{{ value_json.brightness }}"
-    command_topic: "wallpanel/firetablet/command"
-    command_on_template: "{\"wake\": true, \"brightness\": {{brightness}}}"
-    command_off_template: "{\"wake\": false, \"brightness\": {{brightness}}}"
-
-
   - platform: mqtt
     name: "TV Shelf"
     state_topic: "001AB084/rgb/light/status"

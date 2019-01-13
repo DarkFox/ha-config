@@ -1,0 +1,100 @@
+automation:
+  # /api/webhook/Dtr3qWJmnJ76HCdWBMydusfdE8hVyWmh
+  - alias: hallway_tablet_screen_webhook
+    initial_state: True
+    trigger:
+      platform: webhook
+      webhook_id: hallway_tablet_screen.Dtr3qWJmnJ76HCdWBMydusfdE8hVyWmh
+    action:
+      service_template: "input_boolean.turn_{{ trigger.json.state }}"
+      data:
+        entity_id: input_boolean.hallway_tablet_screen
+  - alias: hallway_tablet_brightness_webhook
+    initial_state: True
+    trigger:
+      platform: webhook
+      webhook_id: hallway_tablet_brightness.Dtr3qWJmnJ76HCdWBMydusfdE8hVyWmh
+    action:
+      service: input_number.set_value
+      data_template:
+        entity_id: input_number.hallway_tablet_brightness
+        value: "{{ trigger.json.state / 100 * 255 | int }}"
+
+  - alias: bathroom_tablet_screen_webhook
+    initial_state: True
+    trigger:
+      platform: webhook
+      webhook_id: bathroom_tablet_screen.Dtr3qWJmnJ76HCdWBMydusfdE8hVyWmh
+    action:
+      service_template: "input_boolean.turn_{{ trigger.json.state }}"
+      data:
+        entity_id: input_boolean.bathroom_tablet_screen
+  - alias: bathroom_tablet_brightness_webhook
+    initial_state: True
+    trigger:
+      platform: webhook
+      webhook_id: bathroom_tablet_brightness.Dtr3qWJmnJ76HCdWBMydusfdE8hVyWmh
+    action:
+      service: input_number.set_value
+      data_template:
+        entity_id: input_number.bathroom_tablet_brightness
+        value: "{{ trigger.json.state }}"
+
+input_boolean:
+  hallway_tablet_screen:
+    name: hallway_tablet_screen
+  bathroom_tablet_screen:
+    name: bathroom_tablet_screen
+
+input_number:
+  hallway_tablet_brightness:
+    name: hallway_tablet_brightness
+    min: 0
+    max: 255
+  bathroom_tablet_brightness:
+    name: bathroom_tablet_brightness
+    min: 0
+    max: 255
+
+light:
+  - platform: template
+    lights:
+      hallway_tablet:
+        friendly_name: "Hallway Tablet"
+        level_template: "{{ states('input_number.hallway_tablet_brightness')|int }}"
+        value_template: "{{ states('input_boolean.hallway_tablet_screen') }}"
+        turn_on:
+          service: joaoapps_join.nexus_send_tasker
+          data:
+            command: "screen=:=on"
+        turn_off:
+          service: joaoapps_join.nexus_send_tasker
+          data:
+            command: "screen=:=off"
+        set_level:
+          - service: joaoapps_join.nexus_send_tasker
+            data:
+              command: "screen=:=on"
+          - service: joaoapps_join.nexus_send_tasker
+            data_template:
+              command: "brightness=:={{ brightness / 255 * 100 |int }}"
+
+      bathroom_tablet:
+        friendly_name: "Bathroom Tablet"
+        level_template: "{{ states('input_number.bathroom_tablet_brightness')|int }}"
+        value_template: "{{ states('input_boolean.bathroom_tablet_screen') }}"
+        turn_on:
+          service: joaoapps_join.fire_tablet_send_tasker
+          data:
+            command: "screen=:=on"
+        turn_off:
+          service: joaoapps_join.fire_tablet_send_tasker
+          data:
+            command: "screen=:=off"
+        set_level:
+          - service: joaoapps_join.fire_tablet_send_tasker
+            data:
+              command: "screen=:=on"
+          - service: joaoapps_join.fire_tablet_send_tasker
+            data_template:
+              command: "brightness=:={{brightness}}"
