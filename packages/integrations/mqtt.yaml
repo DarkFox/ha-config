@@ -38,36 +38,6 @@ group:
       - light.display_cabinet_top
       - light.display_cabinet_bottom
 
-# Effect speed sliders for h801 units.
-# input_number:
-#   tv_shelf_effect_speed:
-#     name: TV Shelf Effect Speed
-#     initial: 30
-#     min: 25
-#     max: 30000
-#     step: 25
-#
-# automation:
-#   - alias: Update TV Shelf Effect Speed
-#     trigger:
-#       platform: mqtt
-#       topic: "001AB084/rgb/effect_speed/status"
-#     action:
-#       service: input_number.set_value
-#       data_template:
-#         entity_id: input_number.tv_shelf_effect_speed
-#         value: '{{ trigger.payload }}'
-#
-#   - alias: Set TV Shelf Effect Speed
-#     trigger:
-#       platform: state
-#       entity_id: input_number.tv_shelf_effect_speed
-#     action:
-#       service: mqtt.publish
-#       data_template:
-#         topic: "001AB084/rgb/effect_speed/set"
-#         payload: '{{ states.input_number.tv_shelf_effect_speed.state }}'
-
 sensor:
   - platform: mqtt
     name: energy_meter_kwh
@@ -449,84 +419,85 @@ light:
     payload_on: "ON"
     payload_off: "OFF"
 
-
-
-  # - platform: mqtt
-  #   name: "Desk Spot 3"
-  #   state_topic: "stat/deskspots/RESULT"
-  #   state_value_template: '{%- if value_json["PWM"]["PWM5"]| int > 0 -%} 1023 {%- else -%} 0 {%- endif -%}'
-  #   command_topic: "cmnd/deskspots/PWM5"
-  #   on_command_type: 'brightness'
-  #   brightness_state_topic: "stat/deskspots/RESULT"
-  #   brightness_command_topic: "cmnd/deskspots/PWM5"
-  #   brightness_value_template: '{{value_json["PWM"]["PWM5"]}}'
-  #   brightness_scale: 1023
-  #   qos: 0
-  #   payload_on: '1023'
-  #   payload_off: '0'
-  #   retain: true
-  #   optimistic: false
-  #
-  # - platform: mqtt
-  #   name: "Desk Spot 2"
-  #   state_topic: "stat/deskspots/RESULT"
-  #   state_value_template: '{%- if value_json["PWM"]["PWM4"]| int > 0 -%} 1023 {%- else -%} 0 {%- endif -%}'
-  #   command_topic: "cmnd/deskspots/PWM4"
-  #   on_command_type: 'brightness'
-  #   brightness_state_topic: "stat/deskspots/RESULT"
-  #   brightness_command_topic: "cmnd/deskspots/PWM4"
-  #   brightness_value_template: '{{value_json["PWM"]["PWM4"]}}'
-  #   brightness_scale: 1023
-  #   qos: 0
-  #   payload_on: '1023'
-  #   payload_off: '0'
-  #   retain: true
-  #   optimistic: false
-  #
-  # - platform: mqtt
-  #   name: "Desk Spot 4"
-  #   state_topic: "stat/deskspots/RESULT"
-  #   state_value_template: '{%- if value_json["PWM"]["PWM1"]| int > 0 -%} 1023 {%- else -%} 0 {%- endif -%}'
-  #   command_topic: "cmnd/deskspots/PWM1"
-  #   on_command_type: 'brightness'
-  #   brightness_state_topic: "stat/deskspots/RESULT"
-  #   brightness_command_topic: "cmnd/deskspots/PWM1"
-  #   brightness_value_template: '{{value_json["PWM"]["PWM1"]}}'
-  #   brightness_scale: 1023
-  #   qos: 0
-  #   payload_on: '1023'
-  #   payload_off: '0'
-  #   retain: true
-  #   optimistic: false
-  #
-  # - platform: mqtt
-  #   name: "Desk Spot 1"
-  #   state_topic: "stat/deskspots/RESULT"
-  #   state_value_template: '{%- if value_json["PWM"]["PWM2"]| int > 0 -%} 1023 {%- else -%} 0 {%- endif -%}'
-  #   command_topic: "cmnd/deskspots/PWM2"
-  #   on_command_type: 'brightness'
-  #   brightness_state_topic: "stat/deskspots/RESULT"
-  #   brightness_command_topic: "cmnd/deskspots/PWM2"
-  #   brightness_value_template: '{{value_json["PWM"]["PWM2"]}}'
-  #   brightness_scale: 1023
-  #   qos: 0
-  #   payload_on: '1023'
-  #   payload_off: '0'
-  #   retain: true
-  #   optimistic: false
-
-  # - platform: mqtt
-  #   name: "Desk Spot Blue"
-  #   state_topic: "stat/deskspots/RESULT"
-  #   state_value_template: '{%- if value_json["PWM"]["PWM3"]| int > 0 -%} 1023 {%- else -%} 0 {%- endif -%}'
-  #   command_topic: "cmnd/deskspots/PWM3"
-  #   on_command_type: 'brightness'
-  #   brightness_state_topic: "stat/deskspots/RESULT"
-  #   brightness_command_topic: "cmnd/deskspots/PWM3"
-  #   brightness_value_template: '{{value_json["PWM"]["PWM3"]}}'
-  #   brightness_scale: 1023
-  #   qos: 0
-  #   payload_on: '1023'
-  #   payload_off: '0'
-  #   retain: true
-  #   optimistic: false
+  - brightness: true
+    flash: true
+    name: Desk Spot 4
+    platform: mqtt
+    schema: json
+    state_topic: deskspots/light/desk_spot_4/state
+    command_topic: deskspots/light/desk_spot_4/command
+    availability_topic: deskspots/status
+  - brightness: true
+    flash: true
+    name: Desk Spot 1
+    platform: mqtt
+    schema: json
+    state_topic: deskspots/light/desk_spot_1/state
+    command_topic: deskspots/light/desk_spot_1/command
+    availability_topic: deskspots/status
+  - brightness: true
+    flash: true
+    name: Desk Spot 2
+    platform: mqtt
+    schema: json
+    state_topic: deskspots/light/desk_spot_2/state
+    command_topic: deskspots/light/desk_spot_2/command
+    availability_topic: deskspots/status
+  - brightness: true
+    flash: true
+    name: Desk Spot 3
+    platform: mqtt
+    schema: json
+    state_topic: deskspots/light/desk_spot_3/state
+    command_topic: deskspots/light/desk_spot_3/command
+    availability_topic: deskspots/status
+  - brightness: true
+    flash: true
+    name: bed_shelf w1
+    platform: mqtt
+    schema: json
+    state_topic: bed_shelf/light/bed_shelf_w1/state
+    command_topic: bed_shelf/light/bed_shelf_w1/command
+    availability_topic: bed_shelf/status
+  - brightness: true
+    flash: true
+    name: bed_shelf w2
+    platform: mqtt
+    schema: json
+    state_topic: bed_shelf/light/bed_shelf_w2/state
+    command_topic: bed_shelf/light/bed_shelf_w2/command
+    availability_topic: bed_shelf/status
+  - brightness: true
+    rgb: true
+    flash: true
+    name: bed_shelf rgb
+    platform: mqtt
+    schema: json
+    state_topic: bed_shelf/light/bed_shelf_rgb/state
+    command_topic: bed_shelf/light/bed_shelf_rgb/command
+    availability_topic: bed_shelf/status
+  - brightness: true
+    flash: true
+    name: bedroom_cupboard w1
+    platform: mqtt
+    schema: json
+    state_topic: bedroom_cupboard/light/bedroom_cupboard_w1/state
+    command_topic: bedroom_cupboard/light/bedroom_cupboard_w1/command
+    availability_topic: bedroom_cupboard/status
+  - brightness: true
+    flash: true
+    name: bedroom_cupboard w2
+    platform: mqtt
+    schema: json
+    state_topic: bedroom_cupboard/light/bedroom_cupboard_w2/state
+    command_topic: bedroom_cupboard/light/bedroom_cupboard_w2/command
+    availability_topic: bedroom_cupboard/status
+  - brightness: true
+    rgb: true
+    flash: true
+    name: bedroom_cupboard rgb
+    platform: mqtt
+    schema: json
+    state_topic: bedroom_cupboard/light/bedroom_cupboard_rgb/state
+    command_topic: bedroom_cupboard/light/bedroom_cupboard_rgb/command
+    availability_topic: bedroom_cupboard/status
