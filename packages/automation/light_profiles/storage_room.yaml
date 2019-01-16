@@ -63,7 +63,7 @@ group:
       - binary_sensor.storage_room_activity
       - input_boolean.storage_room_activity_override
       - input_select.light_profile
-      - input_select.room_state_storage_room
+      - input_select.storage_room_room_state
 
   light_profile_scenes_storage_room:
     name: Storage Room Scenes
@@ -90,23 +90,35 @@ group:
 input_boolean:
   storage_room_activity_override:
     name: Storage Room Activity Override
-    initial: off
+  storage_room_separate_light_profile:
+    name: Storage Room Separate Light Profile
 
 input_select:
-  room_state_storage_room:
+  storage_room_room_state:
     name: Storage Room State
     options:
       - active
       - inactive
       - 'off'
 
-  storage_room_state_override:
-    name: Storage Room State Override
+  storage_room_light_profile:
+    name: storage room Light Profile
     options:
-      - None
-      - active
-      - inactive
-      - 'off'
+      - Bright
+      - Default
+      - Dimmed
+      - Ambient
+      - Night
+      - 'Off'
+
+  storage_room_inactive_light_profile:
+    options:
+      - Default
+      - Dimmed
+      - Ambient
+      - Night
+      - 'Off'
+
 
 binary_sensor:
   - platform: template
@@ -129,110 +141,3 @@ binary_sensor:
           {% else -%}
             false
           {% endif -%}
-
-automation:
-  # Room State Triggers #
-  - alias: room_state_active_trigger_storage_room
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: binary_sensor.storage_room_activity
-      to: 'on'
-    action:
-      service: input_select.select_option
-      data_template:
-        entity_id: input_select.room_state_storage_room
-        option: 'active'
-
-  - alias: room_state_inactive_trigger_storage_room
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: binary_sensor.storage_room_activity
-      to: 'off'
-      for:
-        seconds: 30
-    action:
-      service: input_select.select_option
-      data_template:
-        entity_id: input_select.room_state_storage_room
-        option: 'inactive'
-
-  - alias: room_state_off_trigger_storage_room
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: binary_sensor.storage_room_activity
-      to: 'off'
-      for:
-        minutes: 1
-    action:
-      service: input_select.select_option
-      data_template:
-        entity_id: input_select.room_state_storage_room
-        option: 'off'
-
-  # Room Scene Triggers #
-  - alias: light_profile_change_active_storage_room
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: input_boolean.refresh_light_profile
-        to: 'on'
-      - platform: state
-        entity_id: input_select.room_state_storage_room
-      - platform: state
-        entity_id: input_select.light_profile
-      - platform: state
-        entity_id: input_select.theme
-    condition:
-      - condition: state
-        entity_id: input_select.room_state_storage_room
-        state: 'active'
-    action:
-      service: script.turn_on
-      data_template:
-        entity_id: >
-          script.light_profile_storage_room_{{ states('input_select.light_profile') | lower }}
-
-  - alias: light_profile_change_inactive_storage_room
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: input_boolean.refresh_light_profile
-        to: 'on'
-      - platform: state
-        entity_id: input_select.room_state_storage_room
-      - platform: state
-        entity_id: input_select.inactive_light_profile
-      - platform: state
-        entity_id: input_select.theme
-    condition:
-      - condition: state
-        entity_id: input_select.room_state_storage_room
-        state: 'inactive'
-    action:
-      service: script.turn_on
-      data_template:
-        entity_id: >
-          script.light_profile_storage_room_{{ states('input_select.inactive_light_profile') | lower }}
-
-  - alias: light_profile_change_off_storage_room
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: input_boolean.refresh_light_profile
-        to: 'on'
-      - platform: state
-        entity_id: input_select.room_state_storage_room
-      - platform: state
-        entity_id: input_select.light_profile
-    condition:
-      - condition: state
-        entity_id: input_select.room_state_storage_room
-        state: 'off'
-    action:
-      service: script.turn_on
-      data_template:
-        entity_id: >
-          script.light_profile_storage_room_off

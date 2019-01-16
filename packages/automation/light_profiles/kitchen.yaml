@@ -196,23 +196,35 @@ group:
 input_boolean:
   kitchen_activity_override:
     name: Kitchen Activity Override
-    initial: off
+  kitchen_separate_light_profile:
+    name: Kitchen Separate Light Profile
 
 input_select:
-  room_state_kitchen:
+  kitchen_room_state:
     name: Kitchen State
     options:
       - active
       - inactive
       - 'off'
 
-  kitchen_state_override:
-    name: Kitchen State Override
+  kitchen_light_profile:
+    name: kitchen Light Profile
     options:
-      - None
-      - active
-      - inactive
-      - 'off'
+      - Bright
+      - Default
+      - Dimmed
+      - Ambient
+      - Night
+      - 'Off'
+
+  kitchen_inactive_light_profile:
+    options:
+      - Default
+      - Dimmed
+      - Ambient
+      - Night
+      - 'Off'
+
 
 binary_sensor:
   - platform: template
@@ -231,116 +243,3 @@ binary_sensor:
           {% else -%}
             false
           {% endif -%}
-
-automation:
-  # Room State Triggers #
-  - alias: room_state_active_trigger_kitchen
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: binary_sensor.kitchen_activity
-      to: 'on'
-    action:
-      service: input_select.select_option
-      data_template:
-        entity_id: input_select.room_state_kitchen
-        option: 'active'
-
-  - alias: room_state_inactive_trigger_kitchen
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: binary_sensor.kitchen_activity
-      to: 'off'
-      for:
-        minutes: 2
-    action:
-      service: input_select.select_option
-      data_template:
-        entity_id: input_select.room_state_kitchen
-        option: 'inactive'
-
-  - alias: room_state_off_trigger_kitchen
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: binary_sensor.kitchen_activity
-      to: 'off'
-      for:
-        minutes: 5
-    action:
-      service: input_select.select_option
-      data_template:
-        entity_id: input_select.room_state_kitchen
-        option: 'off'
-
-  # Room Scene Triggers #
-  - alias: light_profile_change_active_kitchen
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: input_boolean.refresh_light_profile
-        to: 'on'
-      - platform: state
-        entity_id: input_select.room_state_kitchen
-      - platform: state
-        entity_id: input_select.light_profile
-      - platform: state
-        entity_id: input_select.theme
-      - platform: state
-        entity_id: input_boolean.party_mode
-    condition:
-      - condition: state
-        entity_id: input_select.room_state_kitchen
-        state: 'active'
-    action:
-      service: script.turn_on
-      data_template:
-        entity_id: >
-          {% if is_state('input_boolean.party_mode', 'on') -%}
-            script.light_profile_kitchen_party
-          {% else -%}
-            script.light_profile_kitchen_{{ states('input_select.light_profile') | lower }}
-          {% endif -%}
-
-  - alias: light_profile_change_inactive_kitchen
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: input_boolean.refresh_light_profile
-        to: 'on'
-      - platform: state
-        entity_id: input_select.room_state_kitchen
-      - platform: state
-        entity_id: input_select.inactive_light_profile
-      - platform: state
-        entity_id: input_select.theme
-    condition:
-      - condition: state
-        entity_id: input_select.room_state_kitchen
-        state: 'inactive'
-    action:
-      service: script.turn_on
-      data_template:
-        entity_id: >
-          script.light_profile_kitchen_{{ states('input_select.inactive_light_profile') | lower }}
-
-  - alias: light_profile_change_off_kitchen
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: input_boolean.refresh_light_profile
-        to: 'on'
-      - platform: state
-        entity_id: input_select.room_state_kitchen
-      - platform: state
-        entity_id: input_select.light_profile
-    condition:
-      - condition: state
-        entity_id: input_select.room_state_kitchen
-        state: 'off'
-    action:
-      service: script.turn_on
-      data_template:
-        entity_id: >
-          script.light_profile_kitchen_off

@@ -1,0 +1,239 @@
+# bathroom
+# bedroom
+# hallway
+# kitchen
+# living_room
+# office
+# storage_room
+
+automation:
+  # Light Profile #
+  - alias: rooms global profile change
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id:
+          - input_select.theme
+          - input_select.light_profile
+          - input_boolean.refresh_light_profile
+          - input_boolean.party_mode
+    action:
+      - service: python_script.activate_room_light_profile
+        data:
+          room: bathroom
+      - service: python_script.activate_room_light_profile
+        data:
+          room: bedroom
+      - service: python_script.activate_room_light_profile
+        data:
+          room: hallway
+      - service: python_script.activate_room_light_profile
+        data:
+          room: kitchen
+      - service: python_script.activate_room_light_profile
+        data:
+          room: living_room
+      - service: python_script.activate_room_light_profile
+        data:
+          room: office
+      - service: python_script.activate_room_light_profile
+        data:
+          room: storage_room
+
+  - alias: Room Light Profile Changed
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id:
+        - input_select.bathroom_light_profile
+        - input_select.bedroom_light_profile
+        - input_select.hallway_light_profile
+        - input_select.kitchen_light_profile
+        - input_select.living_room_light_profile
+        - input_select.office_light_profile
+        - input_select.storage_room_light_profile
+    action:
+      - service: input_select.select_option
+        data_template:
+          entity_id: "input_select.{{ trigger.entity_id.replace('input_select.', '').replace('_light_profile', '') }}_inactive_light_profile"
+          option: >
+            {%- set entity_id = 'input_select.' + trigger.entity_id.replace('input_select.', '').replace('_light_profile', '') + '_light_profile' -%}
+            {%- if is_state(entity_id, 'Bright') -%}
+              Default
+            {%- elif is_state(entity_id, 'Default') -%}
+              Dimmed
+            {%- elif is_state(entity_id, 'Dimmed') -%}
+              Ambient
+            {%- elif is_state(entity_id, 'Ambient') -%}
+              Night
+            {%- else -%}
+              Off
+            {%- endif -%}
+      - service: python_script.activate_room_light_profile
+        data:
+          room: "{{ trigger.entity_id.replace('input_select.', '').replace('_light_profile', '') }}"
+      - condition: and
+        conditions:
+          condition: template
+          value_template: "{{ 'True' if is_state('input_boolean.' + trigger.entity_id.replace('input_select.', '').replace('_light_profile', '') + '_separate_light_profile', 'off') }}"
+      - service: input_select.select_option
+        data_template:
+          entity_id: "input_select.light_profile"
+          option: "{{ trigger.to_state.state }}"
+
+  - alias: rooms state change
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id:
+          - input_select.bathroom_room_state
+          - input_select.bedroom_room_state
+          - input_select.hallway_room_state
+          - input_select.kitchen_room_state
+          - input_select.living_room_room_state
+          - input_select.office_room_state
+          - input_select.storage_room_room_state
+    action:
+      service: python_script.activate_room_light_profile
+      data:
+        room: "{{ trigger.entity_id.replace('input_select.', '').replace('_room_state', '') }}"
+
+  - alias: Room activity override on
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id:
+        - input_boolean.bathroom_activity_override
+        - input_boolean.bedroom_activity_override
+        - input_boolean.hallway_activity_override
+        - input_boolean.kitchen_activity_override
+        - input_boolean.living_room_activity_override
+        - input_boolean.office_activity_override
+        - input_boolean.storage_room_activity_override
+      to: 'on'
+    action:
+      - service: input_select.select_option
+        data_template:
+          entity_id: "input_select.{{ trigger.entity_id.replace('input_boolean.', '').replace('_activity_override', '') }}_room_state"
+          option: 'active'
+
+  - alias: Room separate light profile off resync
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id:
+        - input_boolean.bathroom_separate_light_profile
+        - input_boolean.bedroom_separate_light_profile
+        - input_boolean.hallway_separate_light_profile
+        - input_boolean.kitchen_separate_light_profile
+        - input_boolean.living_room_separate_light_profile
+        - input_boolean.office_separate_light_profile
+        - input_boolean.storage_room_separate_light_profile
+      to: 'off'
+    action:
+      service: python_script.sync_room_light_profile_from_global
+      data:
+        room: "{{ trigger.entity_id.replace('input_boolean.', '').replace('_light_profile', '') }}"
+
+  # Room State #
+  - alias: Room State Active Trigger
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id:
+        - binary_sensor.bathroom_activity
+        - binary_sensor.bedroom_activity
+        - binary_sensor.hallway_activity
+        - binary_sensor.kitchen_activity
+        - binary_sensor.living_room_activity
+        - binary_sensor.office_activity
+        - binary_sensor.storage_room_activity
+      to: 'on'
+    condition:
+      condition: template
+      value_template: "{{ 'True' if is_state('input_boolean.' + trigger.entity_id.replace('binary_sensor.', '').replace('_activity', '') + '_activity_override', 'off') }}"
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: "input_select.{{ trigger.entity_id.replace('binary_sensor.', '').replace('_activity', '') }}_room_state"
+        option: 'active'
+
+  - alias: Room State Inactive Trigger
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id:
+        - binary_sensor.bathroom_activity
+        - binary_sensor.bedroom_activity
+        - binary_sensor.hallway_activity
+        - binary_sensor.kitchen_activity
+        - binary_sensor.living_room_activity
+        - binary_sensor.office_activity
+        - binary_sensor.storage_room_activity
+      to: 'off'
+      for:
+        minutes: 2
+    condition:
+      condition: template
+      value_template: "{{ 'True' if is_state('input_boolean.' + trigger.entity_id.replace('binary_sensor.', '').replace('_activity', '') + '_activity_override', 'off') }}"
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: "input_select.{{ trigger.entity_id.replace('binary_sensor.', '').replace('_activity', '') }}_room_state"
+        option: 'inactive'
+
+  - alias: Room State Off Trigger
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id:
+        - binary_sensor.bathroom_activity
+        - binary_sensor.bedroom_activity
+        - binary_sensor.hallway_activity
+        - binary_sensor.kitchen_activity
+        - binary_sensor.living_room_activity
+        - binary_sensor.office_activity
+        - binary_sensor.storage_room_activity
+      to: 'off'
+      for:
+        minutes: 5
+    condition:
+      condition: template
+      value_template: "{{ 'True' if is_state('input_boolean.' + trigger.entity_id.replace('binary_sensor.', '').replace('_activity', '') + '_activity_override', 'off') }}"
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: "input_select.{{ trigger.entity_id.replace('binary_sensor.', '').replace('_activity', '') }}_room_state"
+        option: 'off'
+
+# script:
+#   sync_room_light_profile_from_global:
+#     sequence:
+#       - condition: and
+#         conditions:
+#           condition: template
+#           value_template: "{{ 'True' if is_state('input_boolean.' + room + '_separate_light_profile', 'off') }}"
+#       - service: input_select.select_option
+#         data_template:
+#           entity_id: "input_select.{{ room }}_light_profile"
+#           option: "{{ states('input_select.light_profile') }}"
+  
+#   activate_room_light_profile:
+#     sequence:
+#       - service: script.turn_on
+#         data_template:
+#           entity_id: script.sync_room_light_profile_from_global
+#           variables:
+#             room: "{{ room }}"
+#       - service: script.turn_on
+#         data_template:
+#           entity_id: >
+#             {%- if is_state('input_boolean.party_mode', 'on') -%}
+#               script.light_profile_{{ room }}_party
+#             {%- elif is_state('input_select.' + room + '_room_state', 'active') -%}
+#               script.light_profile_{{ room }}_{{ states('input_select.' + room + '_light_profile') | lower }}
+#             {%- elif is_state('input_select.' + room + '_room_state', 'active') -%}
+#               script.light_profile_{{ room }}_{{ states('input_select.' + room + '_inactive_light_profile') | lower }}
+#             {%- else %}
+#               script.light_profile_{{ room }}_off
+#             {%- endif -%}

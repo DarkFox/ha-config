@@ -84,7 +84,7 @@ group:
       - binary_sensor.bathroom_activity
       - input_boolean.bathroom_activity_override
       - input_select.light_profile
-      - input_select.room_state_bathroom
+      - input_select.bathroom_room_state
 
   light_profile_scenes_bathroom:
     name: Bathroom Scenes
@@ -111,23 +111,34 @@ group:
 input_boolean:
   bathroom_activity_override:
     name: Bathroom Activity Override
-    initial: off
+  bathroom_separate_light_profile:
+    name: Bathroom Separate Light Profile
 
 input_select:
-  room_state_bathroom:
+  bathroom_room_state:
     name: Bathroom State
     options:
       - active
       - inactive
       - 'off'
 
-  bathroom_state_override:
-    name: Bathroom State Override
+  bathroom_light_profile:
+    name: bathroom Light Profile
     options:
-      - None
-      - active
-      - inactive
-      - 'off'
+      - Bright
+      - Default
+      - Dimmed
+      - Ambient
+      - Night
+      - 'Off'
+
+  bathroom_inactive_light_profile:
+    options:
+      - Default
+      - Dimmed
+      - Ambient
+      - Night
+      - 'Off'
 
 binary_sensor:
   - platform: template
@@ -155,7 +166,7 @@ automation:
     initial_state: true
     trigger:
       platform: state
-      entity_id: input_select.room_state_bathroom
+      entity_id: input_select.bathroom_room_state
       to: 'active'
     action:
       service: switch.turn_on
@@ -166,115 +177,9 @@ automation:
     initial_state: true
     trigger:
       platform: state
-      entity_id: input_select.room_state_bathroom
+      entity_id: input_select.bathroom_room_state
       to: 'inactive'
     action:
       service: switch.turn_off
       data:
         entity_id: switch.fire_tablet
-
-  # Room State Triggers #
-  - alias: room_state_active_trigger_bathroom
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: binary_sensor.bathroom_activity
-      to: 'on'
-    action:
-      service: input_select.select_option
-      data_template:
-        entity_id: input_select.room_state_bathroom
-        option: 'active'
-
-  - alias: room_state_inactive_trigger_bathroom
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: binary_sensor.bathroom_activity
-      to: 'off'
-      for:
-        minutes: 5
-    action:
-      service: input_select.select_option
-      data_template:
-        entity_id: input_select.room_state_bathroom
-        option: 'inactive'
-
-  - alias: room_state_off_trigger_bathroom
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: binary_sensor.bathroom_activity
-      to: 'off'
-      for:
-        minutes: 10
-    action:
-      service: input_select.select_option
-      data_template:
-        entity_id: input_select.room_state_bathroom
-        option: 'off'
-
-  # Room Scene Triggers #
-  - alias: light_profile_change_active_bathroom
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: input_boolean.refresh_light_profile
-        to: 'on'
-      - platform: state
-        entity_id: input_select.room_state_bathroom
-      - platform: state
-        entity_id: input_select.light_profile
-      - platform: state
-        entity_id: input_select.theme
-    condition:
-      - condition: state
-        entity_id: input_select.room_state_bathroom
-        state: 'active'
-    action:
-      service: script.turn_on
-      data_template:
-        entity_id: >
-          script.light_profile_bathroom_{{ states('input_select.light_profile') | lower }}
-
-  - alias: light_profile_change_inactive_bathroom
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: input_boolean.refresh_light_profile
-        to: 'on'
-      - platform: state
-        entity_id: input_select.room_state_bathroom
-      - platform: state
-        entity_id: input_select.inactive_light_profile
-      - platform: state
-        entity_id: input_select.theme
-    condition:
-      - condition: state
-        entity_id: input_select.room_state_bathroom
-        state: 'inactive'
-    action:
-      service: script.turn_on
-      data_template:
-        entity_id: >
-          script.light_profile_bathroom_{{ states('input_select.inactive_light_profile') | lower }}
-
-  - alias: light_profile_change_off_bathroom
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: input_boolean.refresh_light_profile
-        to: 'on'
-      - platform: state
-        entity_id: input_select.room_state_bathroom
-      - platform: state
-        entity_id: input_select.light_profile
-    condition:
-      - condition: state
-        entity_id: input_select.room_state_bathroom
-        state: 'off'
-    action:
-      service: script.turn_on
-      data_template:
-        entity_id: >
-          script.light_profile_bathroom_off

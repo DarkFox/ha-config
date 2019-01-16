@@ -209,54 +209,16 @@ script:
           entity_id:
             - light.office_strip
 
-group:
-  light_profile_office:
-    entities:
-      - binary_sensor.office_activity
-      - binary_sensor.hobby_desk_activity
-      - input_boolean.office_activity_override
-      - input_select.light_profile
-      - input_select.office_light_profile
-
-  light_profile_scenes_office:
-    name: Office Scenes
-    entities:
-      - script.light_profile_office_bright
-      - script.light_profile_office_default
-      - script.light_profile_office_dimmed
-      - script.light_profile_office_ambient
-      - script.light_profile_office_night
-      - script.light_profile_office_off
-
-  light_profile_automations_office:
-    entities:
-      - automation.light_profile_change_active_office
-      - automation.light_profile_change_inactive_office
-      - automation.light_profile_change_off_office
-
-  motion_triggers_office:
-    entities:
-      - automation.room_state_active_trigger_office
-      - automation.room_state_inactive_trigger_office
-      - automation.room_state_off_trigger_office
-
 input_boolean:
   office_activity_override:
     name: Office Activity Override
-    initial: off
+  office_separate_light_profile:
+    name: Office Separate Light Profile
 
 input_select:
-  room_state_office:
+  office_room_state:
     name: Office State
     options:
-      - active
-      - inactive
-      - 'off'
-
-  office_state_override:
-    name: Office State Override
-    options:
-      - None
       - active
       - inactive
       - 'off'
@@ -302,20 +264,22 @@ binary_sensor:
           - binary_sensor.office_sensor
           - input_boolean.office_pc_motion
           - input_boolean.office_activity_override
+          - input_select.office_room_state
           - switch.pc
           - media_player.projector_chromecast
           - input_select.latest_motion
         value_template: >
-          {% if is_state('binary_sensor.office_sensor', 'on')
+          {%- if is_state('input_boolean.office_activity_override', 'on') -%}
+            {{ 'true' if is_state('input_select.office_room_state', 'active') else 'false' }}
+          {%- elif is_state('binary_sensor.office_sensor', 'on')
           or is_state('input_boolean.office_pc_motion', 'on')
-          or is_state('input_boolean.office_activity_override', 'on')
           or is_state('switch.pc', 'on')
           or is_state('media_player.projector_chromecast', 'playing')
           or is_state('input_select.latest_motion', 'Office') -%}
             true
-          {% else -%}
+          {%- else -%}
             false
-          {% endif -%}
+          {%- endif -%}
 
 automation:
   - alias: hobby desk pinger on
@@ -366,152 +330,3 @@ automation:
       - service_template: "light.turn_off"
         data:
           entity_id: light.hobby_desk_lamp
-
-  - alias: Office Inactive Light Profile Setter
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: input_select.office_light_profile
-    action:
-      service: input_select.select_option
-      data_template:
-        entity_id: input_select.office_inactive_light_profile
-        option: >
-          {% if is_state('input_select.office_light_profile', 'Bright') %}
-            Default
-          {% elif is_state('input_select.office_light_profile', 'Default') %}
-            Dimmed
-          {% elif is_state('input_select.office_light_profile', 'Dimmed') %}
-            Ambient
-          {% elif is_state('input_select.office_light_profile', 'Ambient') %}
-            Night
-          {% else %}
-            Off
-          {% endif %}
-
-  - alias: office_light_profile_sync
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: input_select.light_profile
-    condition:
-      condition: state
-      entity_id: input_boolean.guests
-      state: 'off'
-    action:
-      service: input_select.select_option
-      data_template:
-        entity_id: input_select.office_light_profile
-        option: "{{trigger.to_state.state}}"
-
-  # Room State Triggers #
-  - alias: room_state_active_trigger_office
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: binary_sensor.office_activity
-      to: 'on'
-    action:
-      service: input_select.select_option
-      data_template:
-        entity_id: input_select.room_state_office
-        option: 'active'
-
-  - alias: room_state_inactive_trigger_office
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: binary_sensor.office_activity
-      to: 'off'
-      for:
-        minutes: 2
-    action:
-      service: input_select.select_option
-      data_template:
-        entity_id: input_select.room_state_office
-        option: 'inactive'
-
-  - alias: room_state_off_trigger_office
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: binary_sensor.office_activity
-      to: 'off'
-      for:
-        minutes: 5
-    action:
-      service: input_select.select_option
-      data_template:
-        entity_id: input_select.room_state_office
-        option: 'off'
-
-  # Room Scene Triggers #
-  - alias: light_profile_change_active_office
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: input_boolean.refresh_light_profile
-        to: 'on'
-      - platform: state
-        entity_id: input_select.room_state_office
-      - platform: state
-        entity_id: input_select.office_light_profile
-      - platform: state
-        entity_id: input_select.theme
-      - platform: state
-        entity_id: input_boolean.party_mode
-    condition:
-      - condition: state
-        entity_id: input_select.room_state_office
-        state: 'active'
-    action:
-      service: script.turn_on
-      data_template:
-        entity_id: >
-          {% if is_state('input_boolean.party_mode', 'on') -%}
-            script.light_profile_office_party
-          {% else -%}
-            script.light_profile_office_{{ states('input_select.office_light_profile') | lower }}
-          {% endif -%}
-
-  - alias: light_profile_change_inactive_office
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: input_boolean.refresh_light_profile
-        to: 'on'
-      - platform: state
-        entity_id: input_select.room_state_office
-      - platform: state
-        entity_id: input_select.office_inactive_light_profile
-      - platform: state
-        entity_id: input_select.theme
-    condition:
-      - condition: state
-        entity_id: input_select.room_state_office
-        state: 'inactive'
-    action:
-      service: script.turn_on
-      data_template:
-        entity_id: >
-          script.light_profile_office_{{ states('input_select.office_inactive_light_profile') | lower }}
-
-  - alias: light_profile_change_off_office
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: input_boolean.refresh_light_profile
-        to: 'on'
-      - platform: state
-        entity_id: input_select.room_state_office
-      - platform: state
-        entity_id: input_select.office_light_profile
-    condition:
-      - condition: state
-        entity_id: input_select.room_state_office
-        state: 'off'
-    action:
-      service: script.turn_on
-      data_template:
-        entity_id: >
-          script.light_profile_office_off
