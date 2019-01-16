@@ -18,26 +18,26 @@ automation:
           - input_boolean.refresh_light_profile
           - input_boolean.party_mode
     action:
-      - service: python_script.activate_room_light_profile
-        data:
+      - event: activate_room_profile
+        event_data:
           room: bathroom
-      - service: python_script.activate_room_light_profile
-        data:
+      - event: activate_room_profile
+        event_data:
           room: bedroom
-      - service: python_script.activate_room_light_profile
-        data:
+      - event: activate_room_profile
+        event_data:
           room: hallway
-      - service: python_script.activate_room_light_profile
-        data:
+      - event: activate_room_profile
+        event_data:
           room: kitchen
-      - service: python_script.activate_room_light_profile
-        data:
+      - event: activate_room_profile
+        event_data:
           room: living_room
-      - service: python_script.activate_room_light_profile
-        data:
+      - event: activate_room_profile
+        event_data:
           room: office
-      - service: python_script.activate_room_light_profile
-        data:
+      - event: activate_room_profile
+        event_data:
           room: storage_room
 
   - alias: Room Light Profile Changed
@@ -69,8 +69,8 @@ automation:
             {%- else -%}
               Off
             {%- endif -%}
-      - service: python_script.activate_room_light_profile
-        data:
+      - event: activate_room_profile
+        event_data_template:
           room: "{{ trigger.entity_id.replace('input_select.', '').replace('_light_profile', '') }}"
       - condition: and
         conditions:
@@ -94,8 +94,8 @@ automation:
           - input_select.office_room_state
           - input_select.storage_room_room_state
     action:
-      service: python_script.activate_room_light_profile
-      data:
+      event: activate_room_profile
+      event_data_template:
         room: "{{ trigger.entity_id.replace('input_select.', '').replace('_room_state', '') }}"
 
   - alias: Room activity override on
@@ -131,9 +131,9 @@ automation:
         - input_boolean.storage_room_separate_light_profile
       to: 'off'
     action:
-      service: python_script.sync_room_light_profile_from_global
-      data:
-        room: "{{ trigger.entity_id.replace('input_boolean.', '').replace('_light_profile', '') }}"
+      - event: sync_light_profile
+        event_data_template:
+          room: "{{ trigger.entity_id.replace('input_boolean.', '').replace('_light_profile', '') }}"
 
   # Room State #
   - alias: Room State Active Trigger
@@ -206,34 +206,37 @@ automation:
         entity_id: "input_select.{{ trigger.entity_id.replace('binary_sensor.', '').replace('_activity', '') }}_room_state"
         option: 'off'
 
-# script:
-#   sync_room_light_profile_from_global:
-#     sequence:
-#       - condition: and
-#         conditions:
-#           condition: template
-#           value_template: "{{ 'True' if is_state('input_boolean.' + room + '_separate_light_profile', 'off') }}"
-#       - service: input_select.select_option
-#         data_template:
-#           entity_id: "input_select.{{ room }}_light_profile"
-#           option: "{{ states('input_select.light_profile') }}"
+  - alias: sync_room_light_profile_from_global
+    trigger:
+      platform: event
+      event_type: sync_light_profile
+    action:
+      - condition: and
+        conditions:
+          condition: template
+          value_template: "{{ 'True' if is_state('input_boolean.' + trigger.event.data.room + '_separate_light_profile', 'off') }}"
+      - service: input_select.select_option
+        data_template:
+          entity_id: "input_select.{{ trigger.event.data.room }}_light_profile"
+          option: "{{ states('input_select.light_profile') }}"
   
-#   activate_room_light_profile:
-#     sequence:
-#       - service: script.turn_on
-#         data_template:
-#           entity_id: script.sync_room_light_profile_from_global
-#           variables:
-#             room: "{{ room }}"
-#       - service: script.turn_on
-#         data_template:
-#           entity_id: >
-#             {%- if is_state('input_boolean.party_mode', 'on') -%}
-#               script.light_profile_{{ room }}_party
-#             {%- elif is_state('input_select.' + room + '_room_state', 'active') -%}
-#               script.light_profile_{{ room }}_{{ states('input_select.' + room + '_light_profile') | lower }}
-#             {%- elif is_state('input_select.' + room + '_room_state', 'active') -%}
-#               script.light_profile_{{ room }}_{{ states('input_select.' + room + '_inactive_light_profile') | lower }}
-#             {%- else %}
-#               script.light_profile_{{ room }}_off
-#             {%- endif -%}
+  - alias: activate_room_light_profile
+    trigger:
+      platform: event
+      event_type: activate_room_profile
+    action:
+      - event: sync_light_profile
+        event_data_template:
+          room: "{{ trigger.event.data.room }}"
+      - service: script.turn_on
+        data_template:
+          entity_id: >
+            {%- if is_state('input_boolean.party_mode', 'on') -%}
+              script.light_profile_{{ trigger.event.data.room }}_party
+            {%- elif is_state('input_select.' + trigger.event.data.room + '_room_state', 'active') -%}
+              script.light_profile_{{ trigger.event.data.room }}_{{ states('input_select.' + trigger.event.data.room + '_light_profile') | lower }}
+            {%- elif is_state('input_select.' + trigger.event.data.room + '_room_state', 'active') -%}
+              script.light_profile_{{ trigger.event.data.room }}_{{ states('input_select.' + trigger.event.data.room + '_inactive_light_profile') | lower }}
+            {%- else %}
+              script.light_profile_{{ trigger.event.data.room }}_off
+            {%- endif -%}
