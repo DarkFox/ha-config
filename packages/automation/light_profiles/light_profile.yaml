@@ -2,6 +2,7 @@ homeassistant:
   customize:
     script.dim_light_profile:
       icon: mdi:brightness-low
+
     script.brighten_light_profile:
       icon: mdi:brightness-high
 
@@ -15,6 +16,7 @@ input_select:
       - Ambient
       - Night
       - 'Off'
+
   inactive_light_profile:
     name: Inactive Light Profile
     options:
@@ -127,7 +129,6 @@ light:
             option: 'Off'
         turn_off:
           event: light_profile_off_null
-          
 
 sensor:
   - platform: template
@@ -212,7 +213,6 @@ sensor:
             327,9
           {% endif -%}
 
-
       theme_secondary_color: # Usually the colder color
         friendly_name: Secondary Color
         entity_id: input_select.theme
@@ -293,28 +293,32 @@ sensor:
             339,58
           {% endif -%}
 
-
 scene:
   - name: Bright
     entities:
       input_select.light_profile:
         option: 'Bright'
+ 
   - name: Default
     entities:
       input_select.light_profile:
         option: 'Default'
+
   - name: Dimmed
     entities:
       input_select.light_profile:
         option: 'Dimmed'
+
   - name: Ambient
     entities:
       input_select.light_profile:
         option: 'Ambient'
+
   - name: Night
     entities:
       input_select.light_profile:
         option: 'Night'
+
   - name: 'Off'
     entities:
       input_select.light_profile:
@@ -325,12 +329,10 @@ script:
     sequence:
       service: input_select.select_next
       entity_id: input_select.light_profile
-
   brighten_light_profile:
     sequence:
       service: input_select.select_previous
       entity_id: input_select.light_profile
-
   activate_bright_scene:
     sequence:
       service: input_select.select_option
@@ -422,6 +424,7 @@ automation:
             Off
           {% endif %}
 
+  # Room States and light profile #
   # bathroom
   # bedroom
   # hallway
@@ -430,7 +433,6 @@ automation:
   # office
   # storage_room
 
-  # Room States and light profile #
   - alias: rooms global profile change
     initial_state: true
     trigger:
@@ -560,7 +562,6 @@ automation:
           entity_id: "input_select.{{ trigger.entity_id.replace('input_boolean.', '').replace('_separate_light_profile', '') }}_light_profile"
           option: "{{ states('input_select.light_profile') }}"
 
-  # Room State #
   - alias: Room State Active Trigger
     initial_state: true
     trigger:
