@@ -1,5 +1,5 @@
 script:
-  light_profile_livingroom_bright:
+  light_profile_living_room_bright:
     sequence:
       - service: light.turn_off
         data:
@@ -52,7 +52,7 @@ script:
             - light.tv_shelf
             - light.sofa_table
 
-  light_profile_livingroom_default:
+  light_profile_living_room_default:
     sequence:
       # White temp lights
       - service: light.turn_on
@@ -112,7 +112,7 @@ script:
             - light.sofa_table
             - light.display_cabinet_bottom
 
-  light_profile_livingroom_dimmed:
+  light_profile_living_room_dimmed:
     sequence:
       # Off Lights
       - service: light.turn_off
@@ -170,7 +170,7 @@ script:
             - light.sofa_table
             - light.display_cabinet_bottom
 
-  light_profile_livingroom_ambient:
+  light_profile_living_room_ambient:
     sequence:
       # Off Lights
       - service: light.turn_off
@@ -228,7 +228,7 @@ script:
             - light.sofa_table
             - light.display_cabinet_bottom
 
-  light_profile_livingroom_night:
+  light_profile_living_room_night:
     sequence:
       # Off Lights
       - service: light.turn_off
@@ -270,14 +270,14 @@ script:
             - light.globe
             - light.tv_backlight
 
-  light_profile_livingroom_off:
+  light_profile_living_room_off:
     sequence:
       # Off Lights
       - service: light.turn_off
         data:
           entity_id: group.livingroom_lights
 
-  light_profile_livingroom_party:
+  light_profile_living_room_party:
     sequence:
       # Off Lights
       - service: light.turn_off
@@ -316,20 +316,20 @@ script:
             - light.dining_table
 
 input_boolean:
-  livingroom_activity_override:
+  living_room_activity_override:
     name: Livingroom Activity Override
-  livingroom_separate_light_profile:
+  living_room_separate_light_profile:
     name: Living Room Separate Light Profile
 
 input_select:
-  livingroom_room_state:
+  living_room_room_state:
     name: Livingroom State
     options:
       - active
       - inactive
       - 'off'
 
-  livingroom_light_profile:
+  living_room_light_profile:
     name: living room Light Profile
     options:
       - Bright
@@ -339,7 +339,7 @@ input_select:
       - Night
       - 'Off'
 
-  livingroom_inactive_light_profile:
+  living_room_inactive_light_profile:
     options:
       - Default
       - Dimmed
@@ -349,47 +349,47 @@ input_select:
 
 
 group:
-  light_profile_livingroom:
+  light_profile_living_room:
     entities:
-      - binary_sensor.livingroom_activity
-      - input_boolean.livingroom_activity_override
+      - binary_sensor.living_room_activity
+      - input_boolean.living_room_activity_override
       - input_select.light_profile
 
-  light_profile_scenes_livingroom:
+  light_profile_scenes_living_room:
     name: Livingroom Scenes
     entities:
-      - script.light_profile_livingroom_bright
-      - script.light_profile_livingroom_default
-      - script.light_profile_livingroom_dimmed
-      - script.light_profile_livingroom_ambient
-      - script.light_profile_livingroom_night
-      - script.light_profile_livingroom_off
+      - script.light_profile_living_room_bright
+      - script.light_profile_living_room_default
+      - script.light_profile_living_room_dimmed
+      - script.light_profile_living_room_ambient
+      - script.light_profile_living_room_night
+      - script.light_profile_living_room_off
 
-  light_profile_automations_livingroom:
+  light_profile_automations_living_room:
     entities:
-      - automation.light_profile_change_active_livingroom
-      - automation.light_profile_change_inactive_livingroom
-      - automation.light_profile_change_off_livingroom
+      - automation.light_profile_change_active_living_room
+      - automation.light_profile_change_inactive_living_room
+      - automation.light_profile_change_off_living_room
 
-  motion_triggers_livingroom:
+  motion_triggers_living_room:
     entities:
-      - automation.room_state_active_trigger_livingroom
-      - automation.room_state_inactive_trigger_livingroom
-      - automation.room_state_off_trigger_livingroom
+      - automation.room_state_active_trigger_living_room
+      - automation.room_state_inactive_trigger_living_room
+      - automation.room_state_off_trigger_living_room
 
 binary_sensor:
   - platform: template
     sensors:
-      livingroom_activity:
+      living_room_activity:
         friendly_name: 'Livingroom Activity'
         entity_id:
-          - binary_sensor.livingroom_sensor
-          - input_boolean.livingroom_activity_override
+          - binary_sensor.living_room_sensor
+          - input_boolean.living_room_activity_override
           - media_player.living_room_chromecast
           - input_select.latest_motion
         value_template: >
-          {% if is_state('binary_sensor.livingroom_sensor', 'on')
-          or is_state('input_boolean.livingroom_activity_override', 'on')
+          {% if is_state('binary_sensor.living_room_sensor', 'on')
+          or is_state('input_boolean.living_room_activity_override', 'on')
           or is_state('media_player.living_room_chromecast', 'playing')
           or is_state('input_select.latest_motion', 'Livingroom') -%}
             true
