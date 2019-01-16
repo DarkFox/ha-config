@@ -13,14 +13,9 @@ automation:
           state: '1_click_up'
     action:
       service: input_select.select_option
-      data_template:
+      data:
         option: 'Default'
-        entity_id: >
-          {% if is_state('input_boolean.office_separate_light_profile', 'on') %}
-            input_select.office_light_profile
-          {% else %}
-            input_select.light_profile
-          {% endif %}
+        entity_id: input_select.office_light_profile
 
   - alias: office_dimmer_up
     initial_state: true
@@ -35,20 +30,11 @@ automation:
           state: '2_click_up'
         - condition: template
           value_template: >
-            {% if is_state('input_boolean.office_separate_light_profile', 'on') %}
-              {{ states.input_select.office_light_profile.state != 'Bright' }}
-            {% else %}
-              {{ states.input_select.light_profile.state != 'Bright' }}
-            {% endif %}
+            {{ states.input_select.office_light_profile.state != 'Bright' }}
     action:
       service: input_select.select_previous
-      data_template:
-        entity_id: >
-          {% if is_state('input_boolean.office_separate_light_profile', 'on') %}
-            input_select.office_light_profile
-          {% else %}
-            input_select.light_profile
-          {% endif %}
+      data:
+        entity_id: input_select.office_light_profile
 
   - alias: office_dimmer_down
     initial_state: true
@@ -63,20 +49,11 @@ automation:
           state: '3_click_up'
         - condition: template
           value_template: >
-            {% if is_state('input_boolean.office_separate_light_profile', 'on') %}
-              {{ states.input_select.office_light_profile.state != 'Off' }}
-            {% else %}
-              {{ states.input_select.light_profile.state != 'Off' }}
-            {% endif %}
+            {{ states.input_select.office_light_profile.state != 'Off' }}
     action:
       service: input_select.select_next
-      data_template:
-        entity_id: >
-          {% if is_state('input_boolean.office_separate_light_profile', 'on') %}
-            input_select.office_light_profile
-          {% else %}
-            input_select.light_profile
-          {% endif %}
+      data:
+        entity_id: input_select.office_light_profile
 
   - alias: office_dimmer_off
     initial_state: true
@@ -91,14 +68,9 @@ automation:
           state: '4_click_up'
     action:
       service: input_select.select_option
-      data_template:
+      data:
         option: 'Off'
-        entity_id: >
-          {% if is_state('input_boolean.office_separate_light_profile', 'on') %}
-            input_select.office_light_profile
-          {% else %}
-            input_select.light_profile
-          {% endif %}
+        entity_id: input_select.office_light_profile
 
   - alias: office_activity_override_toggle
     initial_state: true
@@ -134,12 +106,15 @@ automation:
         - condition: state
           entity_id: input_boolean.office_activity_override
           state: 'on'
+        - condition: template
+          value_template: >
+            {{ states.input_select.office_room_state.state != 'active' }}
     action:
       - service: input_select.select_previous
         data:
           entity_id: input_select.office_room_state
 
-  - alias: office_override_room_state_up
+  - alias: office_override_room_state_down
     initial_state: true
     trigger:
       - platform: state
@@ -153,6 +128,9 @@ automation:
         - condition: state
           entity_id: input_boolean.office_activity_override
           state: 'on'
+        - condition: template
+          value_template: >
+            {{ states.input_select.office_room_state.state != 'off' }}
     action:
       - service: input_select.select_next
         data:
