@@ -11,10 +11,13 @@ resources:
     type: js
   - url: /local/custom-lovelace/calendar-card/calendar-card.js?v=1.2.2
     type: module
-  - url: /local/custom-lovelace/mini-media-player/mini-media-player.js?v=0.9.8
+  - url: /local/custom-lovelace/mini-media-player/mini-media-player.js?v=0.9.8dev2
     type: module
   - url: /local/custom-lovelace/compact-custom-header/compact-custom-header.js?v=0.0.4
     type: js
+  - url: /local/custom-lovelace/lovelace-layout-card/layout-card.js?v=0.0.1
+    type: js
+
 title: Home
 views:
   - title: loading
@@ -27,13 +30,15 @@ views:
           - type: 'custom:compact-custom-header'
             clock: options
             clock_format: 24
+            notification: true, false
+            voice: true, false
             user_agent: Android, Nexus, KFFOWI
             user_agent_views:
               - 2,3,4,5,6,7,8,9   # Default view.
-              - '12' # Phone view
+              - 2,3,4,5,6,7,8,9,12 # Phone view
               - '10' # Hallway tablet view
               - '11' # Bathroom tablet view
-          
+
           - type: markdown
             content: "Loading..."
 
@@ -42,177 +47,181 @@ views:
     icon: 'mdi:home'
     panel: true
     cards:
-      - type: vertical-stack
+      - type: custom:layout-card
         cards:
           - type: 'custom:compact-custom-header'
             clock: options
             clock_format: 24
+            notification: true, false
+            voice: true, false
             user_agent: Android, Nexus, KFFOWI
             user_agent_views:
               - 2,3,4,5,6,7,8,9   # Default view.
-              - '12' # Phone view
+              - 2,3,4,5,6,7,8,9,12 # Phone view
               - '10' # Hallway tablet view
               - '11' # Bathroom tablet view
-          
-          - type: horizontal-stack
+
+          - type: vertical-stack
             cards:
-              - type: vertical-stack
-                cards:
-                  - type: glance
-                    columns: 3
-                    show_state: false
-                    entities:
-                      - entity: light.light_profile_bright
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_default
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_dimmed
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_ambient
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_night
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_off
-                        tap_action:
-                          action: toggle
-                  
-                  - type: entities
-                    title: ''
-                    show_header_toggle: false
-                    entities:
-                      - entity: input_select.theme
-                  
-                  - type: entities
-                    title: Presence
-                    show_header_toggle: false
-                    entities:
-                      - device_tracker.google_maps_102040676821115196041
-                      - binary_sensor.martin_presence
-                      - binary_sensor.martin_presence_delayed
-                      - binary_sensor.martin_presence_extended
-                      - binary_sensor.activity_last10
-                      - binary_sensor.activity_last30
-                  
-                  - type: entities
-                    title: Activity Tracker
-                    show_header_toggle: false
-                    entities:
-                      - input_select.martin_activity
-                      - input_select.latest_motion
-                      - input_boolean.guests
-              
-              - type: vertical-stack
-                cards:
-                  - type: gauge
-                    entity: sensor.energy_meter_watt
-                    name: Strømforbrug
-                    max: 3000
-                    min: 0
-                  
-                  - type: history-graph
-                    title: Temperatures
-                    entities:
-                      - entity: sensor.livingroom_temperature
-                        name: Stue
-                      - entity: sensor.bedroom_temperature
-                        name: Soveværelse
-                      - entity: sensor.toilet_temperature
-                        name: Toilet
-                      - entity: sensor.kitchen_temperature
-                        name: Køkken
-                      - entity: sensor.office_temperature
-                        name: Kontor
-                      - entity: sensor.hallway_temperature
-                        name: Gang
-                  
-                  - type: entities
-                    title: Travel Time
-                    show_header_toggle: false
-                    entities:
-                      - proximity.home
-                      - sensor.home_dir_of_travel
-                      - sensor.travel_time_to_work_driving
-                      - sensor.travel_time_to_work_public_transit
-                      - sensor.s_train_b_status
-                      - sensor.s_train_message
-                      - sensor.s_train_b_next
-              
-              - type: vertical-stack
-                cards:
-                  - type: weather-forecast
-                    entity: weather.dark_sky
-                  
-                  - type: custom:calendar-card
-                    title: ""
-                    numberOfDays: 8
-                    entities:
-                      - calendar.holidays_in_denmark
-                      - calendar.martin_darkfoxdk_eberhardt_tripit
-                      - calendar.martin_eberhardt
-                      - calendar.todoist
-                  
-                  - type: entities
-                    title: Playlist
-                    show_header_toggle: false
-                    entities:
-                      - input_select.playlist
-                      - input_select.playlist_player
-                  
-                  - type: conditional
-                    conditions:
-                      - entity: media_player.all_speakers
-                        state_not: 'off'
-                    card:
-                      type: custom:mini-media-player
-                      artwork: cover
-                      power_color: true
-                      hide_volume: true
-                      show_progress: true
-                      entity: media_player.all_speakers
-                  
-                  - type: conditional
-                    conditions:
-                      - entity: media_player.east_side_speakers
-                        state_not: 'off'
-                    card:
-                      type: custom:mini-media-player
-                      artwork: cover
-                      power_color: true
-                      hide_volume: true
-                      show_progress: true
-                      entity: media_player.east_side_speakers
-                  
-                  - type: conditional
-                    conditions:
-                      - entity: media_player.west_side_speakers
-                        state_not: 'off'
-                    card:
-                      type: custom:mini-media-player
-                      artwork: cover
-                      power_color: true
-                      hide_volume: true
-                      show_progress: true
-                      entity: media_player.west_side_speakers
-                  
-                  - type: custom:mini-media-player
-                    artwork: cover
-                    power_color: true
-                    hide_volume: true
-                    show_progress: true
-                    entity: media_player.minis
-                  
-                  - type: entities
-                    title: Party Mode
-                    show_header_toggle: false
-                    entities:
-                      - input_boolean.party_mode
-                      - switch.party_button
-                      - sensor.party_button_battery
+              - type: glance
+                columns: 3
+                show_state: false
+                entities:
+                  - entity: light.light_profile_bright
+                    tap_action:
+                      action: toggle
+                  - entity: light.light_profile_default
+                    tap_action:
+                      action: toggle
+                  - entity: light.light_profile_dimmed
+                    tap_action:
+                      action: toggle
+                  - entity: light.light_profile_ambient
+                    tap_action:
+                      action: toggle
+                  - entity: light.light_profile_night
+                    tap_action:
+                      action: toggle
+                  - entity: light.light_profile_off
+                    tap_action:
+                      action: toggle
+
+              - type: entities
+                title: ''
+                show_header_toggle: false
+                entities:
+                  - entity: input_select.theme
+
+              - type: entities
+                title: Presence
+                show_header_toggle: false
+                entities:
+                  - device_tracker.google_maps_102040676821115196041
+                  - binary_sensor.martin_presence
+                  - binary_sensor.martin_presence_delayed
+                  - binary_sensor.martin_presence_extended
+                  - binary_sensor.activity_last10
+                  - binary_sensor.activity_last30
+
+              - type: entities
+                title: Activity Tracker
+                show_header_toggle: false
+                entities:
+                  - input_select.martin_activity
+                  - input_select.latest_motion
+                  - input_boolean.guests
+
+          - break
+
+          - type: vertical-stack
+            cards:
+              - type: gauge
+                entity: sensor.energy_meter_watt
+                name: Strømforbrug
+                max: 3000
+                min: 0
+
+              - type: history-graph
+                title: Temperatures
+                entities:
+                  - entity: sensor.livingroom_temperature
+                    name: Stue
+                  - entity: sensor.bedroom_temperature
+                    name: Soveværelse
+                  - entity: sensor.toilet_temperature
+                    name: Toilet
+                  - entity: sensor.kitchen_temperature
+                    name: Køkken
+                  - entity: sensor.office_temperature
+                    name: Kontor
+                  - entity: sensor.hallway_temperature
+                    name: Gang
+
+              - type: entities
+                title: Travel Time
+                show_header_toggle: false
+                entities:
+                  - proximity.home
+                  - sensor.home_dir_of_travel
+                  - sensor.travel_time_to_work_driving
+                  - sensor.travel_time_to_work_public_transit
+                  - sensor.s_train_b_status
+                  - sensor.s_train_message
+                  - sensor.s_train_b_next
+
+          - break
+
+          - type: vertical-stack
+            cards:
+              - type: weather-forecast
+                entity: weather.dark_sky
+
+              - type: custom:calendar-card
+                title: ""
+                numberOfDays: 8
+                entities:
+                  - calendar.holidays_in_denmark
+                  - calendar.martin_darkfoxdk_eberhardt_tripit
+                  - calendar.martin_eberhardt
+                  - calendar.todoist
+
+              - type: entities
+                title: Playlist
+                show_header_toggle: false
+                entities:
+                  - input_select.playlist
+                  - input_select.playlist_player
+
+              - type: conditional
+                conditions:
+                  - entity: media_player.all_speakers
+                    state_not: 'off'
+                card:
+                  type: custom:mini-media-player
+                  artwork: cover
+                  power_color: true
+                  hide_volume: true
+                  show_progress: true
+                  entity: media_player.all_speakers
+
+              - type: conditional
+                conditions:
+                  - entity: media_player.east_side_speakers
+                    state_not: 'off'
+                card:
+                  type: custom:mini-media-player
+                  artwork: cover
+                  power_color: true
+                  hide_volume: true
+                  show_progress: true
+                  entity: media_player.east_side_speakers
+
+              - type: conditional
+                conditions:
+                  - entity: media_player.west_side_speakers
+                    state_not: 'off'
+                card:
+                  type: custom:mini-media-player
+                  artwork: cover
+                  power_color: true
+                  hide_volume: true
+                  show_progress: true
+                  entity: media_player.west_side_speakers
+
+              - type: custom:mini-media-player
+                artwork: cover
+                power_color: true
+                hide_volume: true
+                show_progress: true
+                entity: media_player.minis
+
+              - type: entities
+                title: Party Mode
+                show_header_toggle: false
+                entities:
+                  - input_boolean.party_mode
+                  - switch.party_button
+                  - sensor.party_button_battery
   # /Home
 
   - title: Hallway
@@ -220,254 +229,288 @@ views:
     icon: 'mdi:arrow-all'
     panel: true
     cards:
-      - type: vertical-stack
+      - type: custom:layout-card
         cards:
           - type: 'custom:compact-custom-header'
             clock: options
             clock_format: 24
+            notification: true, false
+            voice: true, false
             user_agent: Android, Nexus, KFFOWI
             user_agent_views:
               - 2,3,4,5,6,7,8,9   # Default view.
-              - '12' # Phone view
+              - 2,3,4,5,6,7,8,9,12 # Phone view
               - '10' # Hallway tablet view
               - '11' # Bathroom tablet view
-          
-          - type: horizontal-stack
+
+          - type: vertical-stack
             cards:
-              - type: vertical-stack
-                cards:
-                  - type: glance
-                    columns: 3
-                    show_state: false
-                    entities:
-                      - entity: light.light_profile_bright
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_default
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_dimmed
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_ambient
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_night
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_off
-                        tap_action:
-                          action: toggle
-                  
-                  - type: entities
-                    entities:
-                      - entity: input_select.hallway_room_state
-                      - entity: binary_sensor.hallway_activity
-                      - entity: input_boolean.hallway_activity_override
-                    show_header_toggle: false
-                    title: Light Profile - Hallway
-                  
-                  - type: entities
-                    title: Hallway Lights
-                    show_header_toggle: true
-                    entities:
-                      - light.hallway
-              
-              - type: vertical-stack
-                cards:
-                  - type: entities
-                    title: Hallway Sensors
-                    show_header_toggle: false
-                    entities:
-                      - binary_sensor.hallway_sensor
-                      - binary_sensor.apartment_door
-                      - binary_sensor.apartment_lock
-                      - sensor.hallway_luminance
-                      - sensor.hallway_relative_humidity
-                      - sensor.hallway_temperature
-              
-              - type: vertical-stack
-                cards:
-                  - type: entities
-                    entities:
-                      - entity: light.hallway_tablet
-                    show_header_toggle: false
-                    title: Hallway Tablet
+              - type: glance
+                columns: 3
+                show_state: false
+                entities:
+                  - entity: light.hallway_light_profile_bright
+                    tap_action:
+                      action: toggle
+                  - entity: light.hallway_light_profile_default
+                    tap_action:
+                      action: toggle
+                  - entity: light.hallway_light_profile_dimmed
+                    tap_action:
+                      action: toggle
+                  - entity: light.hallway_light_profile_ambient
+                    tap_action:
+                      action: toggle
+                  - entity: light.hallway_light_profile_night
+                    tap_action:
+                      action: toggle
+                  - entity: light.hallway_light_profile_off
+                    tap_action:
+                      action: toggle
+                  - entity: binary_sensor.hallway_activity
+                    name: Activity
+                  - entity: light.hallway_activity_override
+                    name: Activity Override
+                    tap_action:
+                      action: toggle
+                  - entity: light.hallway_separate_light_profile
+                    name: Separate
+                    tap_action:
+                      action: toggle
+
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.hallway_activity_override
+                    state: 'on'
+                card:
+                  type: entities
+                  show_title: false
+                  show_header_toggle: false
+                  entities:
+                    - entity: input_select.hallway_room_state
+
+              - type: entities
+                title: Hallway Lights
+                show_header_toggle: true
+                entities:
+                  - light.hallway
+
+          - break
+
+          - type: vertical-stack
+            cards:
+              - type: entities
+                title: Hallway Sensors
+                show_header_toggle: false
+                entities:
+                  - binary_sensor.hallway_sensor
+                  - binary_sensor.apartment_door
+                  - binary_sensor.apartment_lock
+                  - sensor.hallway_luminance
+                  - sensor.hallway_relative_humidity
+                  - sensor.hallway_temperature
+
+          - break
+
+          - type: vertical-stack
+            cards:
+              - type: entities
+                entities:
+                  - entity: light.hallway_tablet
+                show_header_toggle: false
+                title: Hallway Tablet
   # /Hallway
 
   - path: living-room
-    title: Livingroom
+    title: Living Room
     icon: 'mdi:sofa'
     panel: true
     cards:
-      - type: vertical-stack
+      - type: custom:layout-card
         cards:
           - type: 'custom:compact-custom-header'
             clock: options
             clock_format: 24
+            notification: true, false
+            voice: true, false
             user_agent: Android, Nexus, KFFOWI
             user_agent_views:
               - 2,3,4,5,6,7,8,9   # Default view.
-              - '12' # Phone view
+              - 2,3,4,5,6,7,8,9,12 # Phone view
               - '10' # Hallway tablet view
               - '11' # Bathroom tablet view
-          
-          - type: horizontal-stack
+
+          - type: vertical-stack
             cards:
-              - type: vertical-stack
-                cards:
-                  - type: glance
-                    columns: 3
-                    show_state: false
-                    entities:
-                      - entity: light.light_profile_bright
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_default
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_dimmed
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_ambient
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_night
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_off
-                        tap_action:
-                          action: toggle
-                  
-                  - type: entities
-                    entities:
-                      - entity: input_select.livingroom_room_state
-                      - entity: binary_sensor.livingroom_activity
-                      - entity: input_boolean.livingroom_activity_override
-                    show_header_toggle: false
-                    title: Light Profile - Livingroom
-                  
-                  - type: glance
-                    entities:
-                      - entity: light.sofa_table
-                        name: Under Sofabord
-                        tap_action:
-                          action: toggle
-                      - entity: light.sofa_lamp
-                        name: Sofabord
-                        tap_action:
-                          action: toggle
-                      - entity: light.dining_table
-                        name: Spisebord
-                        tap_action:
-                          action: toggle
-                      - entity: light.tv_shelf
-                        name: TV Hylde
-                        tap_action:
-                          action: toggle
-                      - entity: light.tv_backlight
-                        name: TV Bagbelysning
-                        tap_action:
-                          action: toggle
-                      - entity: light.windowsill
-                        name: Vindueskarm
-                        tap_action:
-                          action: toggle
-                      - entity: light.sofa_corner
-                        name: Sofahjørne
-                        tap_action:
-                          action: toggle
-                      - entity: light.bar_desk
-                        name: Bar
-                        tap_action:
-                          action: toggle
-                      - entity: light.cabinet_shelves
-                        name: Reol
-                        tap_action:
-                          action: toggle
-                      - entity: light.cabinet_spots
-                        name: Reol Spots
-                        tap_action:
-                          action: toggle
-                      - entity: light.display_cabinet_front
-                        name: Vitrineskab Front
-                        tap_action:
-                          action: toggle
-                      - entity: light.display_cabinet_top
-                        name: Vitrineskab Top
-                        tap_action:
-                          action: toggle
-                      - entity: light.display_cabinet_bottom
-                        name: Vitrineskab Bund
-                        tap_action:
-                          action: toggle
-                      - entity: light.globe
-                        name: Globe
-                        tap_action:
-                          action: toggle
-                      - entity: light.candles
-                        name: Lysestager
-                        tap_action:
-                          action: toggle
-                      - entity: light.livingroom_spots
-                        name: Spots
-                        tap_action:
-                          action: toggle
-                    title: Livingroom Lights
-                    show_state: false
-              
-              - type: vertical-stack
-                cards:
-                  - type: entities
-                    title: Livingroom Sensors
-                    show_header_toggle: false
-                    entities:
-                      - binary_sensor.livingroom_sensor
-                      - sensor.livingroom_luminance
-                      - sensor.livingroom_relative_humidity
-                      - sensor.livingroom_temperature
-                      - sensor.living_room_noise_level
-                      - sensor.living_room_noise_level_stats_mean
-                      - sensor.living_room_wifi_signal
-              
-              - type: vertical-stack
-                cards:
-                  - type: entities
-                    title: Living Room Media
-                    show_header_toggle: false
-                    entities:
-                      - switch.living_room_tv_power
-                  
-                  - type: conditional
-                    card:
-                      type: custom:mini-media-player
-                      artwork: cover
-                      power_color: true
-                      hide_volume: true
-                      show_progress: true
-                      entity: media_player.living_room_chromecast
-                    conditions:
-                      - entity: media_player.living_room_chromecast
-                        state_not: 'off'
-                  
-                  - type: conditional
-                    card:
-                      type: custom:mini-media-player
-                      artwork: cover
-                      power_color: true
-                      hide_volume: true
-                      show_progress: true
-                      entity: media_player.living_room_soundbar
-                    conditions:
-                      - entity: media_player.living_room_soundbar
-                        state_not: 'off'
-                  
-                  - type: custom:mini-media-player
-                    artwork: cover
-                    power_color: true
-                    hide_volume: true
-                    show_progress: true
-                    entity: media_player.living_room_mini
+              - type: glance
+                columns: 3
+                show_state: false
+                entities:
+                  - entity: light.living_room_light_profile_bright
+                    tap_action:
+                      action: toggle
+                  - entity: light.living_room_light_profile_default
+                    tap_action:
+                      action: toggle
+                  - entity: light.living_room_light_profile_dimmed
+                    tap_action:
+                      action: toggle
+                  - entity: light.living_room_light_profile_ambient
+                    tap_action:
+                      action: toggle
+                  - entity: light.living_room_light_profile_night
+                    tap_action:
+                      action: toggle
+                  - entity: light.living_room_light_profile_off
+                    tap_action:
+                      action: toggle
+                  - entity: binary_sensor.living_room_activity
+                    name: Activity
+                  - entity: light.living_room_activity_override
+                    name: Activity Override
+                    tap_action:
+                      action: toggle
+                  - entity: light.living_room_separate_light_profile
+                    name: Separate
+                    tap_action:
+                      action: toggle
+
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.living_room_activity_override
+                    state: 'on'
+                card:
+                  type: entities
+                  show_title: false
+                  show_header_toggle: false
+                  entities:
+                    - entity: input_select.living_room_room_state
+
+              - type: glance
+                entities:
+                  - entity: light.sofa_table
+                    name: Under Sofabord
+                    tap_action:
+                      action: toggle
+                  - entity: light.sofa_lamp
+                    name: Sofabord
+                    tap_action:
+                      action: toggle
+                  - entity: light.dining_table
+                    name: Spisebord
+                    tap_action:
+                      action: toggle
+                  - entity: light.tv_shelf
+                    name: TV Hylde
+                    tap_action:
+                      action: toggle
+                  - entity: light.tv_backlight
+                    name: TV Bagbelysning
+                    tap_action:
+                      action: toggle
+                  - entity: light.windowsill
+                    name: Vindueskarm
+                    tap_action:
+                      action: toggle
+                  - entity: light.sofa_corner
+                    name: Sofahjørne
+                    tap_action:
+                      action: toggle
+                  - entity: light.bar_desk
+                    name: Bar
+                    tap_action:
+                      action: toggle
+                  - entity: light.cabinet_shelves
+                    name: Reol
+                    tap_action:
+                      action: toggle
+                  - entity: light.cabinet_spots
+                    name: Reol Spots
+                    tap_action:
+                      action: toggle
+                  - entity: light.display_cabinet_front
+                    name: Vitrineskab Front
+                    tap_action:
+                      action: toggle
+                  - entity: light.display_cabinet_top
+                    name: Vitrineskab Top
+                    tap_action:
+                      action: toggle
+                  - entity: light.display_cabinet_bottom
+                    name: Vitrineskab Bund
+                    tap_action:
+                      action: toggle
+                  - entity: light.globe
+                    name: Globe
+                    tap_action:
+                      action: toggle
+                  - entity: light.candles
+                    name: Lysestager
+                    tap_action:
+                      action: toggle
+                  - entity: light.livingroom_spots
+                    name: Spots
+                    tap_action:
+                      action: toggle
+                title: Livingroom Lights
+                show_state: false
+
+          - break
+
+          - type: vertical-stack
+            cards:
+              - type: entities
+                title: Livingroom Sensors
+                show_header_toggle: false
+                entities:
+                  - binary_sensor.livingroom_sensor
+                  - sensor.livingroom_luminance
+                  - sensor.livingroom_relative_humidity
+                  - sensor.livingroom_temperature
+                  - sensor.living_room_noise_level
+                  - sensor.living_room_noise_level_stats_mean
+                  - sensor.living_room_wifi_signal
+
+          - break
+
+          - type: vertical-stack
+            cards:
+              - type: entities
+                title: Living Room Media
+                show_header_toggle: false
+                entities:
+                  - switch.living_room_tv_power
+
+              - type: conditional
+                card:
+                  type: custom:mini-media-player
+                  artwork: cover
+                  power_color: true
+                  hide_volume: true
+                  show_progress: true
+                  entity: media_player.living_room_chromecast
+                conditions:
+                  - entity: media_player.living_room_chromecast
+                    state_not: 'off'
+
+              - type: conditional
+                card:
+                  type: custom:mini-media-player
+                  artwork: cover
+                  power_color: true
+                  hide_volume: true
+                  show_progress: true
+                  entity: media_player.living_room_soundbar
+                conditions:
+                  - entity: media_player.living_room_soundbar
+                    state_not: 'off'
+
+              - type: custom:mini-media-player
+                artwork: cover
+                power_color: true
+                hide_volume: true
+                show_progress: true
+                entity: media_player.living_room_mini
   # /Livingroom
 
   - title: Bedroom
@@ -475,160 +518,176 @@ views:
     icon: 'mdi:hotel'
     panel: true
     cards:
-      - type: vertical-stack
+      - type: custom:layout-card
         cards:
           - type: 'custom:compact-custom-header'
             clock: options
             clock_format: 24
+            notification: true, false
+            voice: true, false
             user_agent: Android, Nexus, KFFOWI
             user_agent_views:
               - 2,3,4,5,6,7,8,9   # Default view.
-              - '12' # Phone view
+              - 2,3,4,5,6,7,8,9,12 # Phone view
               - '10' # Hallway tablet view
               - '11' # Bathroom tablet view
-          
-          - type: horizontal-stack
+
+          - type: vertical-stack
             cards:
-              - type: vertical-stack
-                cards:
-                  - type: glance
-                    columns: 3
-                    show_state: false
-                    entities:
-                      - entity: light.light_profile_bright
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_default
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_dimmed
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_ambient
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_night
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_off
-                        tap_action:
-                          action: toggle
-                  
-                  - type: entities
-                    entities:
-                      - entity: input_select.bedroom_room_state
-                      - entity: binary_sensor.bedroom_activity
-                      - entity: input_boolean.bedroom_activity_override
-                      - entity: input_select.bedroom_light_profile
-                    show_header_toggle: false
-                    title: Light Profile - Bedroom
-                  
-                  - type: glance
-                    entities:
-                      - entity: light.bedroom_shelf_strip
-                        name: Hylde Lampe
-                        tap_action:
-                          action: toggle
-                      - entity: light.bedside
-                        name: Sengelampe
-                        tap_action:
-                          action: toggle
-                      - entity: light.bedroom_shelves
-                        name: Hylde Spots
-                        tap_action:
-                          action: toggle
-                      - entity: light.bedroom_cupboard_rgb
-                        name: Reol
-                        tap_action:
-                          action: toggle
-                      - entity: light.bed_shelf_rgb
-                        name: Sidebord
-                        tap_action:
-                          action: toggle
-                      - entity: light.bedroom_ps
-                        name: Projektør
-                        tap_action:
-                          action: toggle
-                      - entity: light.cloud
-                        name: Sky
-                        tap_action:
-                          action: toggle
-                    title: Bedroom Lights
-                    show_state: false
-              
-              - type: vertical-stack
-                cards:
-                  - type: entities
-                    title: Bedroom Sensors
-                    show_header_toggle: false
-                    entities:
-                      - binary_sensor.bedroom_sensor
-                      - sensor.bedroom_luminance
-                      - sensor.bedroom_relative_humidity
-                      - sensor.bedroom_temperature
-                      - sensor.bedroom_noise_level
-                      - sensor.bedroom_noise_level_stats_mean
-                      - sensor.bedroom_wifi_signal
-                  
-                  - type: entities
-                    title: Sleep as Android
-                    show_header_toggle: false
-                    entities:
-                      - sensor.sleep_tracker
-                      - sensor.phone_alarm
-                      - counter.snooze_counter
-                      - input_select.sleep_state
-              
-              - type: vertical-stack
-                cards:
-                  - type: entities
-                    title: Bedroom Media
-                    show_header_toggle: true
-                    entities:
-                      - switch.bedroom_speaker_switch
-                  
-                  - type: conditional
-                    card:
-                      type: custom:mini-media-player
-                      artwork: cover
-                      power_color: true
-                      hide_volume: true
-                      show_progress: true
-                      entity: media_player.bedroom_tv
-                    conditions:
-                      - entity: media_player.bedroom_tv
-                        state_not: 'off'
-                  
-                  - type: conditional
-                    card:
-                      type: custom:mini-media-player
-                      artwork: cover
-                      power_color: true
-                      hide_volume: true
-                      show_progress: true
-                      entity: media_player.bedroom_chromecast
-                    conditions:
-                      - entity: media_player.bedroom_chromecast
-                        state_not: 'off'
-                  
-                  - type: conditional
-                    card:
-                      type: custom:mini-media-player
-                      artwork: cover
-                      power_color: true
-                      hide_volume: true
-                      show_progress: true
-                      entity: media_player.bedroom_speaker
-                    conditions:
-                      - entity: media_player.bedroom_speaker
-                        state_not: 'off'
-                  
-                  - type: custom:mini-media-player
-                    artwork: cover
-                    power_color: true
-                    hide_volume: true
-                    show_progress: true
-                    entity: media_player.bedroom_mini
+              - type: glance
+                columns: 3
+                show_state: false
+                entities:
+                  - entity: light.bedroom_light_profile_bright
+                    tap_action:
+                      action: toggle
+                  - entity: light.bedroom_light_profile_default
+                    tap_action:
+                      action: toggle
+                  - entity: light.bedroom_light_profile_dimmed
+                    tap_action:
+                      action: toggle
+                  - entity: light.bedroom_light_profile_ambient
+                    tap_action:
+                      action: toggle
+                  - entity: light.bedroom_light_profile_night
+                    tap_action:
+                      action: toggle
+                  - entity: light.bedroom_light_profile_off
+                    tap_action:
+                      action: toggle
+                  - entity: binary_sensor.bedroom_activity
+                    name: Activity
+                  - entity: light.bedroom_activity_override
+                    name: Activity Override
+                    tap_action:
+                      action: toggle
+                  - entity: light.bedroom_separate_light_profile
+                    name: Separate
+                    tap_action:
+                      action: toggle
+
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.bedroom_activity_override
+                    state: 'on'
+                card:
+                  type: entities
+                  show_title: false
+                  show_header_toggle: false
+                  entities:
+                    - entity: input_select.bedroom_room_state
+
+              - type: glance
+                entities:
+                  - entity: light.bedroom_shelf_strip
+                    name: Hylde Lampe
+                    tap_action:
+                      action: toggle
+                  - entity: light.bedside
+                    name: Sengelampe
+                    tap_action:
+                      action: toggle
+                  - entity: light.bedroom_shelves
+                    name: Hylde Spots
+                    tap_action:
+                      action: toggle
+                  - entity: light.bedroom_cupboard_rgb
+                    name: Reol
+                    tap_action:
+                      action: toggle
+                  - entity: light.bed_shelf_rgb
+                    name: Sidebord
+                    tap_action:
+                      action: toggle
+                  - entity: light.bedroom_ps
+                    name: Projektør
+                    tap_action:
+                      action: toggle
+                  - entity: light.cloud
+                    name: Sky
+                    tap_action:
+                      action: toggle
+                title: Bedroom Lights
+                show_state: false
+
+          - break
+
+          - type: vertical-stack
+            cards:
+              - type: entities
+                title: Bedroom Sensors
+                show_header_toggle: false
+                entities:
+                  - binary_sensor.bedroom_sensor
+                  - sensor.bedroom_luminance
+                  - sensor.bedroom_relative_humidity
+                  - sensor.bedroom_temperature
+                  - sensor.bedroom_noise_level
+                  - sensor.bedroom_noise_level_stats_mean
+                  - sensor.bedroom_wifi_signal
+
+              - type: entities
+                title: Sleep as Android
+                show_header_toggle: false
+                entities:
+                  - sensor.sleep_tracker
+                  - sensor.phone_alarm
+                  - counter.snooze_counter
+                  - input_select.sleep_state
+
+          - break
+
+          - type: vertical-stack
+            cards:
+              - type: entities
+                title: Bedroom Media
+                show_header_toggle: true
+                entities:
+                  - switch.bedroom_speaker_switch
+
+              - type: conditional
+                card:
+                  type: custom:mini-media-player
+                  artwork: cover
+                  power_color: true
+                  hide_volume: true
+                  show_progress: true
+                  entity: media_player.bedroom_tv
+                conditions:
+                  - entity: media_player.bedroom_tv
+                    state_not: 'off'
+
+              - type: conditional
+                card:
+                  type: custom:mini-media-player
+                  artwork: cover
+                  power_color: true
+                  hide_volume: true
+                  show_progress: true
+                  entity: media_player.bedroom_chromecast
+                conditions:
+                  - entity: media_player.bedroom_chromecast
+                    state_not: 'off'
+
+              - type: conditional
+                card:
+                  type: custom:mini-media-player
+                  artwork: cover
+                  power_color: true
+                  hide_volume: true
+                  show_progress: true
+                  entity: media_player.bedroom_speaker
+                conditions:
+                  - entity: media_player.bedroom_speaker
+                    state_not: 'off'
+
+              - type: custom:mini-media-player
+                artwork: cover
+                power_color: true
+                hide_volume: true
+                show_progress: true
+                entity: media_player.bedroom_mini
   # /Bedroom
 
   - title: Bathroom
@@ -636,88 +695,105 @@ views:
     icon: 'mdi:water-pump'
     panel: true
     cards:
-      - type: vertical-stack
+      - type: custom:layout-card
         cards:
           - type: 'custom:compact-custom-header'
             clock: options
             clock_format: 24
+            notification: true, false
+            voice: true, false
             user_agent: Android, Nexus, KFFOWI
             user_agent_views:
               - 2,3,4,5,6,7,8,9   # Default view.
-              - '12' # Phone view
+              - 2,3,4,5,6,7,8,9,12 # Phone view
               - '10' # Hallway tablet view
               - '11' # Bathroom tablet view
-          
-          - type: horizontal-stack
+
+          - type: vertical-stack
             cards:
-              - type: vertical-stack
-                cards:
-                  - type: glance
-                    columns: 3
-                    show_state: false
-                    entities:
-                      - entity: light.light_profile_bright
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_default
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_dimmed
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_ambient
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_night
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_off
-                        tap_action:
-                          action: toggle
-                  
-                  - type: entities
-                    entities:
-                      - entity: input_select.bathroom_room_state
-                      - entity: binary_sensor.bathroom_activity
-                      - entity: input_boolean.bathroom_activity_override
-                    show_header_toggle: false
-                    title: Light Profile - Bathroom
-                  
-                  - type: entities
-                    title: Bathroom Lights
-                    show_header_toggle: true
-                    entities:
-                      - light.bathroom
-              
-              - type: vertical-stack
-                cards:
-                  - type: entities
-                    title: Bathroom Sensors
-                    show_header_toggle: false
-                    entities:
-                      - binary_sensor.toilet_sensor
-                      - binary_sensor.bathroom_window
-                      - sensor.toilet_luminance
-                      - sensor.toilet_relative_humidity
-                      - sensor.toilet_temperature
-                      - sensor.toilet_mold_indicator
-                      - sensor.toilet_relative_humidity_change
-                      - sensor.bathroom_wifi_signal
-              
-              - type: vertical-stack
-                cards:
-                  - type: entities
-                    title: Bathroom Tablet
-                    show_header_toggle: false
-                    entities:
-                      - entity: light.bathroom_tablet
-                  
-                  - type: custom:mini-media-player
-                    artwork: cover
-                    power_color: true
-                    hide_volume: true
-                    show_progress: true
-                    entity: media_player.bathroom_speaker
+              - type: glance
+                columns: 3
+                show_state: false
+                entities:
+                  - entity: light.bathroom_light_profile_bright
+                    tap_action:
+                      action: toggle
+                  - entity: light.bathroom_light_profile_default
+                    tap_action:
+                      action: toggle
+                  - entity: light.bathroom_light_profile_dimmed
+                    tap_action:
+                      action: toggle
+                  - entity: light.bathroom_light_profile_ambient
+                    tap_action:
+                      action: toggle
+                  - entity: light.bathroom_light_profile_night
+                    tap_action:
+                      action: toggle
+                  - entity: light.bathroom_light_profile_off
+                    tap_action:
+                      action: toggle
+                  - entity: binary_sensor.bathroom_activity
+                    name: Activity
+                  - entity: light.bathroom_activity_override
+                    name: Activity Override
+                    tap_action:
+                      action: toggle
+                  - entity: light.bathroom_separate_light_profile
+                    name: Separate
+                    tap_action:
+                      action: toggle
+
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.bathroom_activity_override
+                    state: 'on'
+                card:
+                  type: entities
+                  show_title: false
+                  show_header_toggle: false
+                  entities:
+                    - entity: input_select.bathroom_room_state
+
+              - type: entities
+                title: Bathroom Lights
+                show_header_toggle: true
+                entities:
+                  - light.bathroom
+
+          - break
+
+          - type: vertical-stack
+            cards:
+              - type: entities
+                title: Bathroom Sensors
+                show_header_toggle: false
+                entities:
+                  - binary_sensor.toilet_sensor
+                  - binary_sensor.bathroom_window
+                  - sensor.toilet_luminance
+                  - sensor.toilet_relative_humidity
+                  - sensor.toilet_temperature
+                  - sensor.toilet_mold_indicator
+                  - sensor.toilet_relative_humidity_change
+                  - sensor.bathroom_wifi_signal
+
+          - break
+
+          - type: vertical-stack
+            cards:
+              - type: entities
+                title: Bathroom Tablet
+                show_header_toggle: false
+                entities:
+                  - entity: light.bathroom_tablet
+
+              - type: custom:mini-media-player
+                artwork: cover
+                power_color: true
+                hide_volume: true
+                show_progress: true
+                entity: media_player.bathroom_speaker
   # /Bathroom
 
   - title: Kitchen
@@ -725,118 +801,135 @@ views:
     icon: 'mdi:food-fork-drink'
     panel: true
     cards:
-      - type: vertical-stack
+      - type: custom:layout-card
         cards:
           - type: 'custom:compact-custom-header'
             clock: options
             clock_format: 24
+            notification: true, false
+            voice: true, false
             user_agent: Android, Nexus, KFFOWI
             user_agent_views:
               - 2,3,4,5,6,7,8,9   # Default view.
-              - '12' # Phone view
+              - 2,3,4,5,6,7,8,9,12 # Phone view
               - '10' # Hallway tablet view
               - '11' # Bathroom tablet view
-          
-          - type: horizontal-stack
+
+          - type: vertical-stack
             cards:
-              - type: vertical-stack
-                cards:
-                  - type: glance
-                    columns: 3
-                    show_state: false
-                    entities:
-                      - entity: light.light_profile_bright
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_default
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_dimmed
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_ambient
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_night
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_off
-                        tap_action:
-                          action: toggle
-                  
-                  - type: entities
-                    title: Light Profile - Kitchen
-                    show_header_toggle: false
-                    entities:
-                      - entity: input_select.kitchen_room_state
-                      - entity: binary_sensor.kitchen_activity
-                      - entity: input_boolean.kitchen_activity_override
-                  
-                  - type: glance
-                    title: Kitchen Lights
-                    show_state: false
-                    entities:
-                      - entity: light.kitchen
-                        name: Loftlampe
-                        tap_action:
-                          action: toggle
-                      - entity: light.kitchen_sink
-                        name: Vask
-                        tap_action:
-                          action: toggle
-                      - entity: light.kitchen_stove
-                        name: Ovn
-                        tap_action:
-                          action: toggle
-                      - entity: light.kitchen_cabinets
-                        name: Underskabe
-                        tap_action:
-                          action: toggle
-                      - entity: light.kitchen_spots
-                        name: Spots
-                        tap_action:
-                          action: toggle
-              
-              - type: vertical-stack
-                cards:
-                  - type: entities
-                    title: Kitchen Sensors
-                    show_header_toggle: false
-                    entities:
-                      - binary_sensor.kitchen_sensor
-                      - sensor.kitchen_luminance
-                      - sensor.kitchen_relative_humidity
-                      - sensor.kitchen_temperature
-                      - sensor.kitchen_noise_level
-                      - sensor.kitchen_noise_level_stats_mean
-                      - sensor.kitchen_wifi_signal
-              
-              - type: vertical-stack
-                cards:
-                  - type: entities
-                    title: Kitchen Media
-                    show_header_toggle: true
-                    entities:
-                      - switch.kitchen_tv_switch
-                  
-                  - type: conditional
-                    card:
-                      type: custom:mini-media-player
-                      artwork: cover
-                      power_color: true
-                      hide_volume: true
-                      show_progress: true
-                      entity: media_player.kitchen_chromecast
-                    conditions:
-                      - entity: media_player.kitchen_chromecast
-                        state_not: 'off'
-                  
-                  - type: custom:mini-media-player
-                    artwork: cover
-                    power_color: true
-                    hide_volume: true
-                    show_progress: true
-                    entity: media_player.kitchen_mini
+              - type: glance
+                columns: 3
+                show_state: false
+                entities:
+                  - entity: light.kitchen_light_profile_bright
+                    tap_action:
+                      action: toggle
+                  - entity: light.kitchen_light_profile_default
+                    tap_action:
+                      action: toggle
+                  - entity: light.kitchen_light_profile_dimmed
+                    tap_action:
+                      action: toggle
+                  - entity: light.kitchen_light_profile_ambient
+                    tap_action:
+                      action: toggle
+                  - entity: light.kitchen_light_profile_night
+                    tap_action:
+                      action: toggle
+                  - entity: light.kitchen_light_profile_off
+                    tap_action:
+                      action: toggle
+                  - entity: binary_sensor.kitchen_activity
+                    name: Activity
+                  - entity: light.kitchen_activity_override
+                    name: Activity Override
+                    tap_action:
+                      action: toggle
+                  - entity: light.kitchen_separate_light_profile
+                    name: Separate
+                    tap_action:
+                      action: toggle
+
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.kitchen_activity_override
+                    state: 'on'
+                card:
+                  type: entities
+                  show_title: false
+                  show_header_toggle: false
+                  entities:
+                    - entity: input_select.kitchen_room_state
+
+              - type: glance
+                title: Kitchen Lights
+                show_state: false
+                entities:
+                  - entity: light.kitchen
+                    name: Loftlampe
+                    tap_action:
+                      action: toggle
+                  - entity: light.kitchen_sink
+                    name: Vask
+                    tap_action:
+                      action: toggle
+                  - entity: light.kitchen_stove
+                    name: Ovn
+                    tap_action:
+                      action: toggle
+                  - entity: light.kitchen_cabinets
+                    name: Underskabe
+                    tap_action:
+                      action: toggle
+                  - entity: light.kitchen_spots
+                    name: Spots
+                    tap_action:
+                      action: toggle
+
+          - break
+
+          - type: vertical-stack
+            cards:
+              - type: entities
+                title: Kitchen Sensors
+                show_header_toggle: false
+                entities:
+                  - binary_sensor.kitchen_sensor
+                  - sensor.kitchen_luminance
+                  - sensor.kitchen_relative_humidity
+                  - sensor.kitchen_temperature
+                  - sensor.kitchen_noise_level
+                  - sensor.kitchen_noise_level_stats_mean
+                  - sensor.kitchen_wifi_signal
+
+          - break
+
+          - type: vertical-stack
+            cards:
+              - type: entities
+                title: Kitchen Media
+                show_header_toggle: true
+                entities:
+                  - switch.kitchen_tv_switch
+
+              - type: conditional
+                card:
+                  type: custom:mini-media-player
+                  artwork: cover
+                  power_color: true
+                  hide_volume: true
+                  show_progress: true
+                  entity: media_player.kitchen_chromecast
+                conditions:
+                  - entity: media_player.kitchen_chromecast
+                    state_not: 'off'
+
+              - type: custom:mini-media-player
+                artwork: cover
+                power_color: true
+                hide_volume: true
+                show_progress: true
+                entity: media_player.kitchen_mini
   # /Kitchen
 
   - title: Office
@@ -844,152 +937,167 @@ views:
     panel: true
     icon: 'mdi:desktop-tower'
     cards:
-      - type: vertical-stack
+      - type: custom:layout-card
         cards:
           - type: 'custom:compact-custom-header'
             clock: options
             clock_format: 24
+            notification: true, false
+            voice: true, false
             user_agent: Android, Nexus, KFFOWI
             user_agent_views:
               - 2,3,4,5,6,7,8,9   # Default view.
-              - '12' # Phone view
+              - 2,3,4,5,6,7,8,9,12 # Phone view
               - '10' # Hallway tablet view
               - '11' # Bathroom tablet view
-          
-          - type: horizontal-stack
+
+          - type: vertical-stack
             cards:
-              - type: vertical-stack
-                cards:
-                  - type: glance
-                    columns: 3
-                    show_state: false
-                    entities:
-                      - entity: light.light_profile_bright
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_default
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_dimmed
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_ambient
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_night
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_off
-                        tap_action:
-                          action: toggle
-                  
-                  - type: entities
-                    title: Light Profile - Office
-                    show_header_toggle: false
-                    entities:
-                      - entity: binary_sensor.office_activity
-                      - entity: input_select.office_room_state
-                      - entity: input_boolean.office_activity_override
-                      - entity: input_select.office_light_profile
-                      - entity: input_boolean.office_separate_light_profile
-                  
-                  - type: glance
-                    entities:
-                      - entity: light.office_desk_spots
-                        name: Desk Spots
-                        tap_action:
-                          action: toggle
-                      - entity: light.office_desk_shelf
-                        name: Desk Shelf
-                        tap_action:
-                          action: toggle
-                      - entity: light.office_strip
-                        tap_action:
-                          action: toggle
-                      - entity: light.screen_shelf
-                        tap_action:
-                          action: toggle
-                      - entity: light.office_shelves
-                        name: Bookcase
-                        tap_action:
-                          action: toggle
-                      - entity: light.office_shelf_bar
-                        name: Desk Bar
-                        tap_action:
-                          action: toggle
-                      - entity: light.hobby_desk
-                        tap_action:
-                          action: toggle
-                      - entity: light.hobby_desk_lamp
-                        tap_action:
-                          action: toggle
-                      - entity: light.office_spots
-                        name: Spots
-                        tap_action:
-                          action: toggle
-                    title: Office Lights
-                    show_state: false
-              
-              - type: vertical-stack
-                cards:
-                  - type: entities
-                    title: Office Sensors
-                    show_header_toggle: false
-                    entities:
-                      - binary_sensor.office_sensor
-                      - sensor.office_luminance
-                      - sensor.office_relative_humidity
-                      - sensor.office_temperature
-                      - sensor.office_noise_level
-                      - sensor.office_noise_level_stats_mean
-                      - sensor.office_wifi_signal
-              
-              - type: vertical-stack
-                cards:
-                  - type: entities
-                    title: PC
-                    show_header_toggle: true
-                    entities:
-                      - switch.pc
-                      - sensor.steam_76561197970641649
-                      - sensor.steam_game
-                    
-                  - type: entities
-                    title: Office Media
-                    show_header_toggle: true
-                    entities:
-                      - switch.office_speaker_switch
-                    
-                  - type: conditional
-                    card:
-                      type: custom:mini-media-player
-                      artwork: cover
-                      power_color: true
-                      hide_volume: true
-                      show_progress: true
-                      entity: media_player.office_speakers
-                    conditions:
-                      - entity: media_player.office_speakers
-                        state_not: 'off'
+              - type: glance
+                columns: 3
+                show_state: false
+                entities:
+                  - entity: light.office_light_profile_bright
+                    tap_action:
+                      action: toggle
+                  - entity: light.office_light_profile_default
+                    tap_action:
+                      action: toggle
+                  - entity: light.office_light_profile_dimmed
+                    tap_action:
+                      action: toggle
+                  - entity: light.office_light_profile_ambient
+                    tap_action:
+                      action: toggle
+                  - entity: light.office_light_profile_night
+                    tap_action:
+                      action: toggle
+                  - entity: light.office_light_profile_off
+                    tap_action:
+                      action: toggle
+                  - entity: binary_sensor.office_activity
+                    name: Activity
+                  - entity: light.office_activity_override
+                    name: Activity Override
+                    tap_action:
+                      action: toggle
+                  - entity: light.office_separate_light_profile
+                    name: Separate
+                    tap_action:
+                      action: toggle
 
-                  - type: conditional
-                    card:
-                      type: custom:mini-media-player
-                      artwork: cover
-                      power_color: true
-                      hide_volume: true
-                      show_progress: true
-                      entity: media_player.office_soundbar
-                    conditions:
-                      - entity: media_player.office_soundbar
-                        state_not: 'off'
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.office_activity_override
+                    state: 'on'
+                card:
+                  type: entities
+                  show_title: false
+                  show_header_toggle: false
+                  entities:
+                    - entity: input_select.office_room_state
 
-                  - type: custom:mini-media-player
-                    artwork: cover
-                    power_color: true
-                    hide_volume: true
-                    show_progress: true
-                    entity: media_player.office_mini
+              - type: glance
+                entities:
+                  - entity: light.office_desk_spots
+                    name: Desk Spots
+                    tap_action:
+                      action: toggle
+                  - entity: light.office_desk_shelf
+                    name: Desk Shelf
+                    tap_action:
+                      action: toggle
+                  - entity: light.office_strip
+                    tap_action:
+                      action: toggle
+                  - entity: light.screen_shelf
+                    tap_action:
+                      action: toggle
+                  - entity: light.office_shelves
+                    name: Bookcase
+                    tap_action:
+                      action: toggle
+                  - entity: light.office_shelf_bar
+                    name: Desk Bar
+                    tap_action:
+                      action: toggle
+                  - entity: light.hobby_desk
+                    tap_action:
+                      action: toggle
+                  - entity: light.hobby_desk_lamp
+                    tap_action:
+                      action: toggle
+                  - entity: light.office_spots
+                    name: Spots
+                    tap_action:
+                      action: toggle
+                title: Office Lights
+                show_state: false
+
+          - break
+
+          - type: vertical-stack
+            cards:
+              - type: entities
+                title: Office Sensors
+                show_header_toggle: false
+                entities:
+                  - binary_sensor.office_sensor
+                  - sensor.office_luminance
+                  - sensor.office_relative_humidity
+                  - sensor.office_temperature
+                  - sensor.office_noise_level
+                  - sensor.office_noise_level_stats_mean
+                  - sensor.office_wifi_signal
+
+          - break
+
+          - type: vertical-stack
+            cards:
+              - type: entities
+                title: PC
+                show_header_toggle: true
+                entities:
+                  - switch.pc
+                  - sensor.steam_76561197970641649
+                  - sensor.steam_game
+
+              - type: entities
+                title: Office Media
+                show_header_toggle: true
+                entities:
+                  - switch.office_speaker_switch
+
+              - type: conditional
+                card:
+                  type: custom:mini-media-player
+                  artwork: cover
+                  power_color: true
+                  hide_volume: true
+                  show_progress: true
+                  entity: media_player.office_speakers
+                conditions:
+                  - entity: media_player.office_speakers
+                    state_not: 'off'
+
+              - type: conditional
+                card:
+                  type: custom:mini-media-player
+                  artwork: cover
+                  power_color: true
+                  hide_volume: true
+                  show_progress: true
+                  entity: media_player.office_soundbar
+                conditions:
+                  - entity: media_player.office_soundbar
+                    state_not: 'off'
+
+              - type: custom:mini-media-player
+                artwork: cover
+                power_color: true
+                hide_volume: true
+                show_progress: true
+                entity: media_player.office_mini
   # /Office
 
   - title: Storage Room
@@ -997,162 +1105,178 @@ views:
     icon: 'mdi:wrench'
     panel: true
     cards:
-      - type: vertical-stack
+      - type: custom:layout-card
         cards:
           - type: 'custom:compact-custom-header'
             clock: options
             clock_format: 24
+            notification: true, false
+            voice: true, false
             user_agent: Android, Nexus, KFFOWI
             user_agent_views:
               - 2,3,4,5,6,7,8,9   # Default view.
-              - '12' # Phone view
+              - 2,3,4,5,6,7,8,9,12 # Phone view
               - '10' # Hallway tablet view
               - '11' # Bathroom tablet view
-          
-          - type: horizontal-stack
-            cards:
-              - type: vertical-stack
-                cards:
-                  - type: glance
-                    columns: 3
-                    show_state: false
-                    entities:
-                      - entity: light.light_profile_bright
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_default
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_dimmed
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_ambient
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_night
-                        tap_action:
-                          action: toggle
-                      - entity: light.light_profile_off
-                        tap_action:
-                          action: toggle
-                  
-                  - type: entities
-                    entities:
-                      - entity: binary_sensor.storage_room_activity
-                      - entity: input_boolean.storage_room_activity_override
-                      - entity: input_select.storage_room_room_state
-                    show_header_toggle: false
-                    title: Light Profile - Storage Room
-                  
-                  - type: entities
-                    title: Storage Room Lights
-                    show_header_toggle: true
-                    entities:
-                      - light.storage_room
-                    
-                  - type: entities
-                    entities:
-                      - entity: switch.vacuum_charger
 
-                  - type: entities
-                    title: Batteries
-                    show_header_toggle: false
-                    entities:
-                      - sensor.tradfri_remote_control
-                      - sensor.tradfri_onoff_switch
-                      - sensor.party_button_battery
-                      - sensor.bedroom_dimmer
-                      - sensor.office_dimmer
-                    
-              - type: vertical-stack
-                cards:
-                  - type: entities
-                    title: Storage Room Sensors
-                    show_header_toggle: false
-                    entities:
-                      - binary_sensor.storage_room_motion
-                      - binary_sensor.storage_room_door
-                    
-                  - type: history-graph
-                    title: Power Usage
-                    show_header_toggle: false
-                    entities:
-                      - sensor.energy_meter_watt
-                    
-                  - type: entities
-                    title: Energy Meter
-                    show_header_toggle: false
-                    entities:
-                      - sensor.energy_meter_kwh
-                      - sensor.energy_meter_watt
-                      - sensor.energy_meter_watt_mean
-                      - sensor.energy_meter_watt_change
-                    
-                  - type: entities
-                    title: System Monitor
-                    show_header_toggle: false
-                    entities:
-                      - entity: sensor.processor_use
-                      - entity: sensor.memory_free
-                      - entity: sensor.swap_use
-                      - entity: sensor.disk_free_
-                      - entity: sensor.load_1m
-                      - entity: sensor.load_5m
-                      - entity: sensor.load_15m
-                      - entity: sensor.last_boot
-                      - entity: sensor.ha_installed_version
-                      - entity: sensor.ha_current_version
-                      - entity: sensor.ha_last_restart
-                    
-              - type: vertical-stack
-                cards:
-                  - type: history-graph
-                    title: Internet Speed
-                    hours_to_show: 12
-                    entities:
-                      - sensor.speedtest_upload
-                      - sensor.speedtest_download
-                    
-                  - type: history-graph
-                    title: Bandwidth Usage
-                    hours_to_show: 12
-                    entities:
-                      - entity: sensor.r6400_gateway_kbytesec_received
-                        name: Received
-                      - entity: sensor.r6400_gateway_kbytesec_sent
-                        name: Sent
-                    
-                  - type: entities
-                    title: Internet Status
-                    show_header_toggle: false
-                    entities:
-                      - sensor.speedtest_ping
-                      - sensor.external_ip
-                      - sensor.speedtest_upload
-                      - sensor.speedtest_download
-                    
-                  - type: entities
-                    title: Router Status
-                    show_header_toggle: false
-                    entities:
-                      - entity: sensor.r6400_gateway_bytes_received
-                        name: Bytes Received
-                      - entity: sensor.r6400_gateway_bytes_sent
-                        name: Bytes Sent
-                      - entity: sensor.r6400_gateway_kbytesec_received
-                        name: kbyte/sec Received
-                      - entity: sensor.r6400_gateway_kbytesec_sent
-                        name: kbyte/sec Sent
-                      - entity: sensor.r6400_gateway_packets_received
-                        name: Packets Received
-                      - entity: sensor.r6400_gateway_packets_sent
-                        name: Packets Sent
-                      - entity: sensor.r6400_gateway_packetssec_received
-                        name: Packets/sec Received
-                      - entity: sensor.r6400_gateway_packetssec_sent
-                        name: Packets/sec Sent
+          - type: vertical-stack
+            cards:
+              - type: glance
+                columns: 3
+                show_state: false
+                entities:
+                  - entity: light.storage_room_light_profile_bright
+                    tap_action:
+                      action: toggle
+                  - entity: light.storage_room_light_profile_default
+                    tap_action:
+                      action: toggle
+                  - entity: light.storage_room_light_profile_dimmed
+                    tap_action:
+                      action: toggle
+                  - entity: light.storage_room_light_profile_ambient
+                    tap_action:
+                      action: toggle
+                  - entity: light.storage_room_light_profile_night
+                    tap_action:
+                      action: toggle
+                  - entity: light.storage_room_light_profile_off
+                    tap_action:
+                      action: toggle
+                  - entity: binary_sensor.storage_room_activity
+                    name: Activity
+                  - entity: light.storage_room_activity_override
+                    name: Activity Override
+                    tap_action:
+                      action: toggle
+                  - entity: light.storage_room_separate_light_profile
+                    name: Separate
+                    tap_action:
+                      action: toggle
+
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.storage_room_activity_override
+                    state: 'on'
+                card:
+                  type: entities
+                  show_title: false
+                  show_header_toggle: false
+                  entities:
+                    - entity: input_select.storage_room_room_state
+
+              - type: entities
+                title: Storage Room Lights
+                show_header_toggle: true
+                entities:
+                  - light.storage_room
+
+              - type: entities
+                entities:
+                  - entity: switch.vacuum_charger
+
+              - type: entities
+                title: Batteries
+                show_header_toggle: false
+                entities:
+                  - sensor.tradfri_remote_control
+                  - sensor.party_button_battery
+                  - sensor.office_dimmer_battery
+                  - sensor.bedroom_dimmer_battery
+
+          - break
+
+          - type: vertical-stack
+            cards:
+              - type: entities
+                title: Storage Room Sensors
+                show_header_toggle: false
+                entities:
+                  - binary_sensor.storage_room_motion
+                  - binary_sensor.storage_room_door
+
+              - type: history-graph
+                title: Power Usage
+                show_header_toggle: false
+                entities:
+                  - sensor.energy_meter_watt
+
+              - type: entities
+                title: Energy Meter
+                show_header_toggle: false
+                entities:
+                  - sensor.energy_meter_kwh
+                  - sensor.energy_meter_watt
+                  - sensor.energy_meter_watt_mean
+                  - sensor.energy_meter_watt_change
+
+              - type: entities
+                title: System Monitor
+                show_header_toggle: false
+                entities:
+                  - entity: sensor.processor_use
+                  - entity: sensor.memory_free
+                  - entity: sensor.swap_use
+                  - entity: sensor.disk_free
+                  - entity: sensor.load_1m
+                  - entity: sensor.load_5m
+                  - entity: sensor.load_15m
+                  - entity: sensor.last_boot
+                  - entity: sensor.ha_installed_version
+                  - entity: sensor.ha_current_version
+                  - entity: sensor.ha_last_restart
+
+          - break
+
+          - type: vertical-stack
+            cards:
+              - type: history-graph
+                title: Internet Speed
+                hours_to_show: 12
+                entities:
+                  - sensor.speedtest_upload
+                  - sensor.speedtest_download
+
+              - type: history-graph
+                title: Bandwidth Usage
+                hours_to_show: 12
+                entities:
+                  - entity: sensor.r6400_gateway_kbytesec_received
+                    name: Received
+                  - entity: sensor.r6400_gateway_kbytesec_sent
+                    name: Sent
+
+              - type: entities
+                title: Internet Status
+                show_header_toggle: false
+                entities:
+                  - sensor.speedtest_ping
+                  - sensor.external_ip
+                  - sensor.speedtest_upload
+                  - sensor.speedtest_download
+
+              - type: entities
+                title: Router Status
+                show_header_toggle: false
+                entities:
+                  - entity: sensor.r6400_gateway_bytes_received
+                    name: Bytes Received
+                  - entity: sensor.r6400_gateway_bytes_sent
+                    name: Bytes Sent
+                  - entity: sensor.r6400_gateway_kbytesec_received
+                    name: kbyte/sec Received
+                  - entity: sensor.r6400_gateway_kbytesec_sent
+                    name: kbyte/sec Sent
+                  - entity: sensor.r6400_gateway_packets_received
+                    name: Packets Received
+                  - entity: sensor.r6400_gateway_packets_sent
+                    name: Packets Sent
+                  - entity: sensor.r6400_gateway_packetssec_received
+                    name: Packets/sec Received
+                  - entity: sensor.r6400_gateway_packetssec_sent
+                    name: Packets/sec Sent
   # /Storage
-          
+
   - title: hallway_tablet
     path: hallway-tablet
     icon: 'mdi:tablet-android'
@@ -1163,32 +1287,34 @@ views:
           - type: 'custom:compact-custom-header'
             clock: options
             clock_format: 24
+            notification: true, false
+            voice: true, false
             user_agent: Android, Nexus, KFFOWI
             user_agent_views:
               - 2,3,4,5,6,7,8,9   # Default view.
-              - '12' # Phone view
+              - 2,3,4,5,6,7,8,9,12 # Phone view
               - '10' # Hallway tablet view
               - '11' # Bathroom tablet view
             header: 'true, false, false, false'
-          
+
           - type: horizontal-stack
             cards:
-              - type: 'custom:useful-markdown-card'
-                content: >-
-                  <center>
-                    <font size=12>
-                      [[sensor.date.state]]
-                    </font>
-                  </center>
-              
-              - type: 'custom:useful-markdown-card'
-                content: >-
-                  <center>
-                    <font size=12>
-                      [[sensor.time.state]]
-                    </font>
-                  </center>
-          
+              - type: custom:card-modder
+                style:
+                  padding: 0px
+                card:
+                  type: custom:bignumber-card
+                  scale: 64px
+                  entity: sensor.time
+
+              - type: custom:card-modder
+                style:
+                  padding: 0px
+                card:
+                  type: custom:bignumber-card
+                  scale: 64px
+                  entity: sensor.date_text
+
           - type: glance
             columns: 7
             show_state: false
@@ -1214,27 +1340,35 @@ views:
                   action: toggle
               - entity: input_select.theme
                 icon: mdi:palette
-            
+
           - type: horizontal-stack
             cards:
-              - type: glance
-                columns: 3
-                entities:
-                  - entity: sensor.livingroom_temperature
-                    name: Stue
-                  - entity: sensor.office_temperature
-                    name: Kontor
-                  - entity: sensor.bedroom_temperature
-                    name: Soveværelse
-                  - entity: sensor.livingroom_relative_humidity
-                    name: ''
-                  - entity: sensor.office_relative_humidity
-                    name: ''
-                  - entity: sensor.bedroom_relative_humidity
-                    name: ''
-              
               - type: vertical-stack
                 cards:
+                  - type: horizontal-stack
+                    cards:
+                      - type: glance
+                        columns: 1
+                        title: Stue
+                        show_name: false
+                        entities:
+                          - entity: sensor.livingroom_temperature
+                          - entity: sensor.livingroom_relative_humidity
+                      - type: glance
+                        columns: 1
+                        title: Kontor
+                        show_name: false
+                        entities:
+                          - entity: sensor.office_temperature
+                          - entity: sensor.office_relative_humidity
+                      - type: glance
+                        columns: 1
+                        title: Sovev.
+                        show_name: false
+                        entities:
+                          - entity: sensor.bedroom_temperature
+                          - entity: sensor.bedroom_relative_humidity
+
                   - type: custom:bignumber-card
                     title: Strømforbrug
                     entity: sensor.energy_meter_watt
@@ -1248,24 +1382,225 @@ views:
                         style: 'yellow'
                       - value: 1000
                         style: 'red'
-                  
+
+                  - type: conditional
+                    conditions:
+                      - entity: input_boolean.guests
+                        state: 'off'
+                    card:
+                      type: custom:calendar-card
+                      title: ""
+                      numberOfDays: 8
+                      entities:
+                        - calendar.holidays_in_denmark
+                        - calendar.martin_darkfoxdk_eberhardt_tripit
+                        - calendar.martin_eberhardt
+                        - calendar.todoist
+
                   - type: glance
                     entities:
-                      - entity: binary_sensor.apartment_lock
-                        name: Hoveddør
                       - entity: input_boolean.guests
                         name: Gæster
                         tap_action:
                           action: toggle
-            
+
+              - type: vertical-stack
+                cards:
+                  - type: weather-forecast
+                    entity: weather.dark_sky
+
+                  - type: conditional
+                    conditions:
+                      - entity: binary_sensor.playlist_playing
+                        state: 'on'
+                    card:
+                      type: glance
+                      columns: 3
+                      show_name: false
+                      show_state: false
+                      entities:
+                        - entity: script.playlist_previous
+                          icon: mdi:skip-previous-circle
+                          tap_action:
+                            action: toggle
+                        - entity: script.playlist_end
+                          icon: mdi:stop-circle
+                          tap_action:
+                            action: toggle
+                        - entity: script.playlist_next
+                          icon: mdi:skip-next-circle
+                          tap_action:
+                            action: toggle
+
+                  - type: conditional
+                    card:
+                      type: custom:mini-media-player
+                      artwork: cover
+                      power_color: true
+                      hide_volume: true
+                      show_progress: true
+                      entity: media_player.all_speakers
+                    conditions:
+                      - entity: media_player.all_speakers
+                        state_not: 'off'
+
+                  - type: conditional
+                    card:
+                      type: custom:mini-media-player
+                      artwork: cover
+                      power_color: true
+                      hide_volume: true
+                      show_progress: true
+                      entity: media_player.east_side_speakers
+                    conditions:
+                      - entity: media_player.east_side_speakers
+                        state_not: 'off'
+
+                  - type: conditional
+                    card:
+                      type: custom:mini-media-player
+                      artwork: cover
+                      power_color: true
+                      hide_volume: true
+                      show_progress: true
+                      entity: media_player.west_side_speakers
+                    conditions:
+                      - entity: media_player.west_side_speakers
+                        state_not: 'off'
+
+                  - type: horizontal-stack
+                    cards:
+                      - type: glance
+                        entities:
+                          - entity: binary_sensor.apartment_lock
+                            name: Hoveddør
+
+                      - type: custom:card-modder
+                        style:
+                          --paper-card-background-color: '#7DB362'
+                          --paper-item-icon-color: white
+                          color: white
+                          font-size: 62pt
+                          line-height: 13px
+                          padding: 25px 0px 0px 0px
+                        card:
+                          type: 'custom:useful-markdown-card'
+                          content: >-
+                            <center>
+                              [[sensor.s_train_b_next.state]]
+                              <font size=4>min</font>
+                            </center>
+
+                            <center>
+                              <font size=4>
+                                [[sensor.s_train_b_status.state]]
+                              </font>
+                            </center>
+
+                  - type: conditional
+                    conditions:
+                      - entity: binary_sensor.s_train_message_present
+                        state: 'on'
+                    card:
+                      type: custom:card-modder
+                      style:
+                        padding: 0px
+                      card:
+                        type: 'custom:useful-markdown-card'
+                        content: >-
+                          <font size=4>
+                            [[sensor.s_train_message.state]]
+                          </font>
+
+  # /Hallway Tablet
+
+  - title: bathroom_tablet
+    path: bathroom-tablet
+    icon: 'mdi:tablet'
+    panel: true
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: 'custom:compact-custom-header'
+            clock: options
+            clock_format: 24
+            notification: true, false
+            voice: true, false
+            user_agent: Android, Nexus, KFFOWI
+            user_agent_views:
+              - 2,3,4,5,6,7,8,9   # Default view.
+              - 2,3,4,5,6,7,8,9,12 # Phone view
+              - '10' # Hallway tablet view
+              - '11' # Bathroom tablet view
+            header: 'true, false, false, false'
+
           - type: horizontal-stack
             cards:
               - type: vertical-stack
                 cards:
+                  - type: custom:card-modder
+                    style:
+                      padding: 0px
+                    card:
+                      type: custom:bignumber-card
+                      scale: 100px
+                      entity: sensor.time
+
+
+                  - type: horizontal-stack
+                    cards:
+                      - type: glance
+                        entities:
+                          - entity: binary_sensor.apartment_lock
+                            name: Hoveddør
+
+                      - type: custom:card-modder
+                        style:
+                          --paper-card-background-color: '#7DB362'
+                          --paper-item-icon-color: white
+                          color: white
+                          font-size: 62pt
+                          line-height: 13px
+                          padding: 25px 0px 0px 0px
+                        card:
+                          type: 'custom:useful-markdown-card'
+                          content: >-
+                            <center>
+                              [[sensor.s_train_b_next.state]]
+                              <font size=4>min</font>
+                            </center>
+
+                            <center>
+                              <font size=4>
+                                [[sensor.s_train_b_status.state]]
+                              </font>
+                            </center>
+
+                  - type: conditional
+                    conditions:
+                      - entity: binary_sensor.s_train_message_present
+                        state: 'on'
+                    card:
+                      type: custom:card-modder
+                      style:
+                        padding: 0px
+                      card:
+                        type: 'custom:useful-markdown-card'
+                        content: >-
+                          <font size=4>
+                            [[sensor.s_train_message.state]]
+                          </font>
+
+              - type: vertical-stack
+                cards:
+                  - type: weather-forecast
+                    entity: weather.dark_sky
+
                   - type: glance
                     columns: 3
                     show_name: false
                     show_state: false
+                    title: ''
                     entities:
                       - entity: script.playlist_previous
                         icon: mdi:skip-previous-circle
@@ -1279,50 +1614,7 @@ views:
                         icon: mdi:skip-next-circle
                         tap_action:
                           action: toggle
-                  
-                  - type: conditional
-                    conditions:
-                      - entity: input_boolean.guests
-                        state: 'off'
-                    card:
-                      type: custom:calendar-card
-                      title: ""
-                      numberOfDays: 8
-                      entities:
-                        - calendar.holidays_in_denmark
-                        - calendar.martin_darkfoxdk_eberhardt_tripit
-                        - calendar.martin_eberhardt
-                        - calendar.todoist
-                
-              - type: vertical-stack
-                cards:
-                  - type: weather-forecast
-                    entity: weather.dark_sky
-                    
-                  - type: custom:card-modder
-                    style:
-                      --paper-card-background-color: '#7DB362'
-                      --paper-item-icon-color: white
-                      color: white
-                    card:
-                      content: >-
-                        <center>
-                          <font size=4>Næste Tog: </font>
-                          <font size=10>
-                            [[sensor.s_train_b_next.state]]
-                          </font>
-                          <font size=4>min</font>
-                        </center>
 
-                        <center>
-                          <font size=4>
-                            [[sensor.s_train_b_status.state]]
-                          </font>
-                        </center>
-
-                        [[sensor.s_train_message.state]]
-                      type: 'custom:useful-markdown-card'
-                  
                   - type: conditional
                     card:
                       type: custom:mini-media-player
@@ -1334,7 +1626,7 @@ views:
                     conditions:
                       - entity: media_player.all_speakers
                         state_not: 'off'
-                    
+
                   - type: conditional
                     card:
                       type: custom:mini-media-player
@@ -1346,7 +1638,7 @@ views:
                     conditions:
                       - entity: media_player.east_side_speakers
                         state_not: 'off'
-                    
+
                   - type: conditional
                     card:
                       type: custom:mini-media-player
@@ -1358,159 +1650,44 @@ views:
                     conditions:
                       - entity: media_player.west_side_speakers
                         state_not: 'off'
-  # /Hallway Tablet        
 
-  - title: bathroom_tablet
-    path: bathroom-tablet
-    icon: 'mdi:tablet'
-    panel: true
-    cards:
-      - type: vertical-stack
-        cards:
-          - type: 'custom:compact-custom-header'
-            clock: options
-            clock_format: 24
-            user_agent: Android, Nexus, KFFOWI
-            user_agent_views:
-              - 2,3,4,5,6,7,8,9   # Default view.
-              - '12' # Phone view
-              - '10' # Hallway tablet view
-              - '11' # Bathroom tablet view
-            header: 'true, false, false, false'
-          
-          - type: horizontal-stack
-            cards:
-              - type: vertical-stack
-                cards:
-                  - type: custom:card-modder
-                    style:
-                      padding: 0px
-                    card:
-                      type: custom:bignumber-card
-                      scale: 100px
-                      entity: sensor.time
-                  
-                  - type: conditional
-                    conditions:
-                      - entity: input_boolean.guests
-                        state: 'off'
-                    card:
-                      type: custom:calendar-card
-                      title: ""
-                      numberOfDays: 8
-                      entities:
-                        - calendar.holidays_in_denmark
-                        - calendar.martin_darkfoxdk_eberhardt_tripit
-                        - calendar.martin_eberhardt
-                        - calendar.todoist
-              
-              - type: vertical-stack
-                cards:
-                  - type: custom:card-modder
-                    style:
-                      --paper-card-background-color: '#7DB362'
-                      --paper-item-icon-color: white
-                      color: white
-                    card:
-                      type: 'custom:useful-markdown-card'
-                      content: >-
-                        <center>
-                          <font size=4>Næste Tog: </font>
-                          <font size=10>
-                            [[sensor.s_train_b_next.state]]
-                          </font>
-                          <font size=4>min</font>
-                        </center>
-
-                        <center>
-                          <font size=4>
-                            [[sensor.s_train_b_status.state]]
-                          </font>
-                        </center>
-
-                        [[sensor.s_train_message.state]]
-                  
-                  - type: weather-forecast
-                    entity: weather.dark_sky
-                    
-                  - type: conditional
-                    card:
-                      type: custom:mini-media-player
-                      artwork: cover
-                      power_color: true
-                      hide_volume: true
-                      show_progress: true
-                      entity: media_player.all_speakers
-                    conditions:
-                      - entity: media_player.all_speakers
-                        state_not: 'off'
-                    
-                  - type: conditional
-                    card:
-                      type: custom:mini-media-player
-                      artwork: cover
-                      power_color: true
-                      hide_volume: true
-                      show_progress: true
-                      entity: media_player.east_side_speakers
-                    conditions:
-                      - entity: media_player.east_side_speakers
-                        state_not: 'off'
-                    
-                  - type: conditional
-                    card:
-                      type: custom:mini-media-player
-                      artwork: cover
-                      power_color: true
-                      hide_volume: true
-                      show_progress: true
-                      entity: media_player.west_side_speakers
-                    conditions:
-                      - entity: media_player.west_side_speakers
-                        state_not: 'off'
-                    
               - type: horizontal-stack
                 cards:
                   - type: vertical-stack
                     cards:
                       - type: glance
                         columns: 1
+                        title: Sovev.
+                        show_name: false
                         entities:
-                          - entity: sensor.toilet_temperature
-                            name: Badev.
-                          - entity: sensor.toilet_relative_humidity
-                            name: ''
                           - entity: sensor.bedroom_temperature
-                            name: Sovev.
                           - entity: sensor.bedroom_relative_humidity
-                            name: ''
-                      
                       - type: glance
                         columns: 1
+                        title: Stue
+                        show_name: false
                         entities:
-                          - entity: binary_sensor.apartment_lock
-                            name: Hoveddør
-                  
+                          - entity: sensor.livingroom_temperature
+                          - entity: sensor.livingroom_relative_humidity
+
                   - type: vertical-stack
                     cards:
                       - type: glance
                         columns: 1
+                        title: Badev.
                         show_name: false
-                        show_state: false
-                        title: Playlist
                         entities:
-                          - entity: script.playlist_previous
-                            icon: mdi:skip-previous-circle
-                            tap_action:
-                              action: toggle
-                          - entity: script.playlist_end
-                            icon: mdi:stop-circle
-                            tap_action:
-                              action: toggle
-                          - entity: script.playlist_next
-                            icon: mdi:skip-next-circle
-                            tap_action:
-                              action: toggle
+                          - entity: sensor.toilet_temperature
+                          - entity: sensor.toilet_relative_humidity
+
+                      - type: glance
+                        columns: 1
+                        title: Kontor
+                        show_name: false
+                        entities:
+                          - entity: sensor.office_temperature
+                          - entity: sensor.office_relative_humidity
+
                   - type: vertical-stack
                     cards:
                       - type: glance
@@ -1573,14 +1750,15 @@ views:
           - type: 'custom:compact-custom-header'
             clock: options
             clock_format: 24
-            header: true, false
+            notification: true, false
+            voice: true, false
             user_agent: Android, Nexus, KFFOWI
             user_agent_views:
               - 2,3,4,5,6,7,8,9   # Default view.
-              - '12' # Phone view
+              - 2,3,4,5,6,7,8,9,12 # Phone view
               - '10' # Hallway tablet view
               - '11' # Bathroom tablet view
-          
+
           - type: glance
             columns: 3
             show_state: false
@@ -1603,44 +1781,12 @@ views:
               - entity: light.light_profile_off
                 tap_action:
                   action: toggle
-          
+
           - type: entities
             entities:
               - entity: input_select.theme
             show_header_toggle: false
             title: ''
-
-          - type: glance
-            title: Activity Override
-            entities:
-              - entity: input_boolean.hallway_activity_override
-                name: Gang
-                tap_action:
-                  action: toggle
-              - entity: input_boolean.living_room_activity_override
-                name: Stue
-                tap_action:
-                  action: toggle
-              - entity: input_boolean.bedroom_activity_override
-                name: Soveværelse
-                tap_action:
-                  action: toggle
-              - entity: input_boolean.bathroom_activity_override
-                name: Badeværelse
-                tap_action:
-                  action: toggle
-              - entity: input_boolean.kitchen_activity_override
-                name: Køkken
-                tap_action:
-                  action: toggle
-              - entity: input_boolean.office_activity_override
-                name: Kontor
-                tap_action:
-                  action: toggle
-              - entity: input_boolean.storage_room_activity_override
-                name: Skab
-                tap_action:
-                  action: toggle
 
           - type: entities
             title: Sleep as Android
