@@ -36,12 +36,7 @@ script:
           entity_id: "{{ device_entity_id }}"
           message: >
             {{ states("sensor.tts_greeting") }}. Klokken er {{ states("sensor.time") }}.
-            Vejrudsigt: {{ states("sensor.dmi_city_weather") }}.
-            {{ states("sensor.dark_sky_temperature") | round | int }} grader,
-            {{- '' }} med {{ states("sensor.dark_sky_wind_speed_name") }}.
-            {% if states('sensor.dark_sky_precip_probability')|int > 25 -%}
-              {{ states("sensor.dark_sky_precip_probability")|round|int }}% risiko for op til {{ states("sensor.dark_sky_precip_intensity") | round | int }} mm {{ states("sensor.dark_sky_precip_dk") }}.
-            {%- endif %}
+            Vejrudsigt: {{ states("sensor.dmi_city_weather") }}. {{ state_attr('sensor.dmi_city_weather', 'report') }}.
             {% if is_state('binary_sensor.workday_sensor', 'on') and now().hour < 12 -%}
               S-Tog Linje B:
               {% if is_state('sensor.s_train_b_status', 'Til tiden') -%}

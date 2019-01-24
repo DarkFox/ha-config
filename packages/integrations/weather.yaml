@@ -1,215 +1,88 @@
-homeassistant:
-  customize:
-    sun.sun:
-      friendly_name: Sol
-    sensor.dmi_city_weather:
-      friendly_name: DMI Byvejr
-    sensor.dark_sky_temperature:
-      friendly_name: Temperatur
-    sensor.dark_sky_apparent_temperature:
-      friendly_name: Føles Som
-    sensor.dark_sky_daily_high_temperature:
-      friendly_name: Højeste Temperatur
-    sensor.dark_sky_daily_low_temperature:
-      friendly_name: Laveste Temperatur
-    sensor.dark_sky_wind_speed:
-      friendly_name: Vindhastighed
-    sensor.dark_sky_wind_bearing_name:
-      friendly_name: Vindretning
-    sensor.dark_sky_humidity:
-      friendly_name: Luftfugtighed
-    sensor.dark_sky_pressure:
-      friendly_name: Lufttryk
-    sensor.dark_sky_precip_intensity:
-      friendly_name: Nedbørsmængde
-    sensor.dark_sky_precip_dk:
-      friendly_name: Nedbørstype
-    sensor.dark_sky_precip_probability:
-      friendly_name: Sandsynlighed for Nedbør
-    sensor.dark_sky_daily_max_precip_intensity:
-      friendly_name: Maks Nedbørsmængde
-    sensor.dark_sky_cloud_coverage:
-      friendly_name: Skydække
-    sensor.dark_sky_visibility:
-      friendly_name: Sigtbarhed
-    sensor.dark_sky_uv_index:
-      friendly_name: UV Indeks
-    sensor.dark_sky_ozone:
-      friendly_name: Ozontal
-
-group:
-  weather:
-    name: Weather
-    entities:
-      - sun.sun
-      - sensor.dmi_city_weather
-      - sensor.dark_sky_temperature
-      - sensor.dark_sky_apparent_temperature
-      - sensor.dark_sky_daytime_high_temperature
-      - sensor.dark_sky_daytime_low_temperature
-      - sensor.dark_sky_overnight_high_temperature
-      - sensor.dark_sky_overnight_low_temperature
-      - sensor.dark_sky_wind_speed_name
-      - sensor.dark_sky_wind_bearing_name
-      - sensor.dark_sky_humidity
-      - sensor.dark_sky_pressure
-      - sensor.dark_sky_precip_intensity
-      - sensor.dark_sky_precip_dk
-      - sensor.dark_sky_precip_probability
-      - sensor.dark_sky_daily_max_precip_intensity
-      - sensor.dark_sky_cloud_coverage
-      - sensor.dark_sky_visibility
-      - sensor.dark_sky_uv_index
-      - sensor.dark_sky_ozone
-
-  dark_sky:
-    entities:
-      - sensor.dark_sky_apparent_temperature
-      - sensor.dark_sky_apparent_temperature_text
-      - sensor.dark_sky_cloud_coverage
-      - sensor.dark_sky_daily_max_precip_intensity
-      - sensor.dark_sky_daily_summary
-      - sensor.dark_sky_dew_point
-      - sensor.dark_sky_hourly_summary
-      - sensor.dark_sky_humidity
-      - sensor.dark_sky_icon
-      - sensor.dark_sky_minutely_summary
-      - sensor.dark_sky_daytime_high_apparent_temperature
-      - sensor.dark_sky_daytime_low_apparent_temperature
-      - sensor.dark_sky_overnight_high_apparent_temperature
-      - sensor.dark_sky_overnight_low_apparent_temperature
-      - sensor.dark_sky_daytime_high_temperature
-      - sensor.dark_sky_daytime_low_temperature
-      - sensor.dark_sky_overnight_high_temperature
-      - sensor.dark_sky_overnight_low_temperature
-      - sensor.dark_sky_ozone
-      - sensor.dark_sky_precip
-      - sensor.dark_sky_precip_and_probability
-      - sensor.dark_sky_precip_dk
-      - sensor.dark_sky_precip_intensity
-      - sensor.dark_sky_precip_probability
-      - sensor.dark_sky_pressure
-      - sensor.dark_sky_summary
-      - sensor.dark_sky_temperature
-      - sensor.dark_sky_uv_index
-      - sensor.dark_sky_visibility
-      - sensor.dark_sky_wind_bearing
-      - sensor.dark_sky_wind_bearing_name
-      - sensor.dark_sky_wind_speed
-      - sensor.dark_sky_wind_speed_name
-
-
 weather:
   - platform: darksky
     api_key: !secret darksky_api_key
 
 sensor:
-  - platform: darksky
-    api_key: !secret darksky_api_key
-    language: da
-    update_interval: '00:05'
-    monitored_conditions:
-      - icon
-      - summary
-      - precip_type
-      - precip_intensity
-      - precip_probability
-      - temperature
-      - temperature_high
-      - temperature_low
-      - apparent_temperature
-      - apparent_temperature_high
-      - apparent_temperature_low
-      - dew_point
-      - wind_speed
-      - wind_bearing
-      - cloud_cover
-      - humidity
-      - pressure
-      - visibility
-      - ozone
-      - minutely_summary
-      - hourly_summary
-      - daily_summary
-      - uv_index
+  # - platform: darksky
+  #   api_key: !secret darksky_api_key
+  #   language: da
+  #   update_interval: '00:05'
+  #   monitored_conditions:
+  #     - icon
+  #     - summary
+  #     - precip_type
+  #     - precip_intensity
+  #     - precip_probability
+  #     - temperature
+  #     - temperature_high
+  #     - temperature_low
+  #     - apparent_temperature
+  #     - apparent_temperature_high
+  #     - apparent_temperature_low
+  #     - dew_point
+  #     - wind_speed
+  #     - wind_bearing
+  #     - cloud_cover
+  #     - humidity
+  #     - pressure
+  #     - visibility
+  #     - ozone
+  #     - minutely_summary
+  #     - hourly_summary
+  #     - daily_summary
+  #     - uv_index
 
   - platform: template
     sensors:
-      dark_sky_high_temperature:
-        entity_id:
-          - sensor.dark_sky_daytime_high_temperature
-          - sensor.dark_sky_overnight_high_temperature
-        value_template: "{{ states.sensor.dark_sky_daytime_high_temperature.state or states.sensor.dark_sky_overnight_high_temperature.state }}"
-        unit_of_measurement: "°"
-      dark_sky_low_temperature:
-        entity_id:
-          - sensor.dark_sky_daytime_low_temperature
-          - sensor.dark_sky_overnight_low_temperature
-        value_template: "{{ states.sensor.dark_sky_daytime_low_temperature.state or states.sensor.dark_sky_overnight_low_temperature.state }}"
-        unit_of_measurement: "°"
+      # dark_sky_precip_and_probability:
+      #   entity_id:
+      #     - sensor.dark_sky_precip_dk
+      #     - sensor.dark_sky_precip_probability
+      #   value_template: "{{ states.sensor.dark_sky_precip_dk.state }}, {{ states.sensor.dark_sky_precip_probability.state | int }}%"
 
-      dark_sky_precip_dk:
-        entity_id: sensor.dark_sky_precip
-        value_template: >-
-          {%- if is_state("sensor.dark_sky_precip", "rain") -%}
-            Regn
-          {%- elif is_state("sensor.dark_sky_precip", "snow") -%}
-            Sne
-          {%- elif is_state("sensor.dark_sky_precip", "sleet") -%}
-            Slud
-          {%- else -%}
-            Ingen
-          {%- endif -%}
-
-      dark_sky_precip_and_probability:
-        entity_id:
-          - sensor.dark_sky_precip_dk
-          - sensor.dark_sky_precip_probability
-        value_template: "{{ states.sensor.dark_sky_precip_dk.state }}, {{ states.sensor.dark_sky_precip_probability.state | int }}%"
-
-      dark_sky_apparent_temperature_text:
-        entity_id: sensor.dark_sky_apparent_temperature
-        value_template: "Føles som {{ states.sensor.dark_sky_apparent_temperature.state | replace('.', ',') }} ˚C"
+      # dark_sky_apparent_temperature_text:
+      #   entity_id: sensor.dark_sky_apparent_temperature
+      #   value_template: "Føles som {{ states.sensor.dark_sky_apparent_temperature.state | replace('.', ',') }} ˚C"
 
       dark_sky_wind_bearing_name:
         friendly_name: Vindretning
-        entity_id: sensor.dark_sky_wind_bearing
+        entity_id: weather.dark_sky
         value_template: >-
-          {% if states.sensor.dark_sky_wind_bearing.state | float<=11 %}Nord
-          {% elif states.sensor.dark_sky_wind_bearing.state | float>348 %}Nord
-          {% elif states.sensor.dark_sky_wind_bearing.state | float<=34 | float>11 %}Nord Nordøst
-          {% elif states.sensor.dark_sky_wind_bearing.state | float<=56 | float>34 %}Nordøst
-          {% elif states.sensor.dark_sky_wind_bearing.state | float<=79 | float>56 %}Øst Nordøst
-          {% elif states.sensor.dark_sky_wind_bearing.state | float<=101 | float>79 %}Øst
-          {% elif states.sensor.dark_sky_wind_bearing.state | float<=124 | float>101 %}Øst Sydøst
-          {% elif states.sensor.dark_sky_wind_bearing.state | float<=146 | float>124 %}Sydøst
-          {% elif states.sensor.dark_sky_wind_bearing.state | float<=169 | float>146 %}Syd Sydøst
-          {% elif states.sensor.dark_sky_wind_bearing.state | float<=191 | float>169 %}Syd
-          {% elif states.sensor.dark_sky_wind_bearing.state | float<=214 | float>191 %}Syd Sydvest
-          {% elif states.sensor.dark_sky_wind_bearing.state | float<=236 | float>214 %}Sydvest
-          {% elif states.sensor.dark_sky_wind_bearing.state | float<=259 | float>236 %}Vest Sydvest
-          {% elif states.sensor.dark_sky_wind_bearing.state | float<=281 | float>259 %}Vest
-          {% elif states.sensor.dark_sky_wind_bearing.state | float<=304 | float>281 %}Vest Nordvest
-          {% elif states.sensor.dark_sky_wind_bearing.state | float<=326 | float>304 %}Vest Nordvest
-          {% elif states.sensor.dark_sky_wind_bearing.state | float<=348 | float>326 %}Nord Nordvest
+          {% if state_attr('weather.dark_sky', 'wind_bearing') | float<=11 %}Nord
+          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float>348 %}Nord
+          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=34 | float>11 %}Nord Nordøst
+          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=56 | float>34 %}Nordøst
+          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=79 | float>56 %}Øst Nordøst
+          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=101 | float>79 %}Øst
+          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=124 | float>101 %}Øst Sydøst
+          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=146 | float>124 %}Sydøst
+          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=169 | float>146 %}Syd Sydøst
+          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=191 | float>169 %}Syd
+          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=214 | float>191 %}Syd Sydvest
+          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=236 | float>214 %}Sydvest
+          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=259 | float>236 %}Vest Sydvest
+          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=281 | float>259 %}Vest
+          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=304 | float>281 %}Vest Nordvest
+          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=326 | float>304 %}Vest Nordvest
+          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=348 | float>326 %}Nord Nordvest
           {%- endif %}
-          ({{ states.sensor.dark_sky_wind_bearing.state }}°)
+          ({{ state_attr('weather.dark_sky', 'wind_bearing') }}°)
 
       dark_sky_wind_speed_name:
         friendly_name: Vindhastighed
-        entity_id: sensor.dark_sky_wind_speed
+        entity_id: weather.dark_sky
         value_template: >-
-          {% if states.sensor.dark_sky_wind_speed.state | float<=0.3 %}Stille
-          {% elif states.sensor.dark_sky_wind_speed.state | float<=1.5 | float>0.3 %}Næsten stille
-          {% elif states.sensor.dark_sky_wind_speed.state | float<=3.4 | float>1.6 %}Svag vind
-          {% elif states.sensor.dark_sky_wind_speed.state | float<=5.5 | float>3.4 %}Let vind
-          {% elif states.sensor.dark_sky_wind_speed.state | float<=8.0 | float>5.5 %}Jævn vind
-          {% elif states.sensor.dark_sky_wind_speed.state | float<=10.8 | float>8.0 %}Frisk vind
-          {% elif states.sensor.dark_sky_wind_speed.state | float<=13.9 | float>10.8 %}Hård vind
-          {% elif states.sensor.dark_sky_wind_speed.state | float<=17.2 | float>13.9 %}Stiv kuling
-          {% elif states.sensor.dark_sky_wind_speed.state | float<=20.8 | float>17.2 %}Hård kuling
-          {% elif states.sensor.dark_sky_wind_speed.state | float<=24.5 | float>20.8 %}Stormende kuling
-          {% elif states.sensor.dark_sky_wind_speed.state | float<=28.5 | float>24.5 %}Storm
-          {% elif states.sensor.dark_sky_wind_speed.state | float<=32.6 | float>28.5 %}Stærk storm
-          {% elif states.sensor.dark_sky_wind_speed.state | float>32.6 %}Orkan
+          {% if state_attr('weather.dark_sky', 'wind_speed') | float<=0.3 %}Stille
+          {% elif state_attr('weather.dark_sky', 'wind_speed') | float<=1.5 | float>0.3 %}Næsten stille
+          {% elif state_attr('weather.dark_sky', 'wind_speed') | float<=3.4 | float>1.6 %}Svag vind
+          {% elif state_attr('weather.dark_sky', 'wind_speed') | float<=5.5 | float>3.4 %}Let vind
+          {% elif state_attr('weather.dark_sky', 'wind_speed') | float<=8.0 | float>5.5 %}Jævn vind
+          {% elif state_attr('weather.dark_sky', 'wind_speed') | float<=10.8 | float>8.0 %}Frisk vind
+          {% elif state_attr('weather.dark_sky', 'wind_speed') | float<=13.9 | float>10.8 %}Hård vind
+          {% elif state_attr('weather.dark_sky', 'wind_speed') | float<=17.2 | float>13.9 %}Stiv kuling
+          {% elif state_attr('weather.dark_sky', 'wind_speed') | float<=20.8 | float>17.2 %}Hård kuling
+          {% elif state_attr('weather.dark_sky', 'wind_speed') | float<=24.5 | float>20.8 %}Stormende kuling
+          {% elif state_attr('weather.dark_sky', 'wind_speed') | float<=28.5 | float>24.5 %}Storm
+          {% elif state_attr('weather.dark_sky', 'wind_speed') | float<=32.6 | float>28.5 %}Stærk storm
+          {% elif state_attr('weather.dark_sky', 'wind_speed') | float>32.6 %}Orkan
           {%- endif %}
