@@ -69,7 +69,7 @@ light:
             option: Bright
         turn_off:
           event: light_profile_off_null
-          
+
       light_profile_default:
         friendly_name: Normal
         icon_template: "mdi:brightness-5"
@@ -81,7 +81,7 @@ light:
             option: Default
         turn_off:
           event: light_profile_off_null
-          
+
       light_profile_dimmed:
         friendly_name: Dæmpet
         icon_template: "mdi:brightness-6"
@@ -93,7 +93,7 @@ light:
             option: Dimmed
         turn_off:
           event: light_profile_off_null
-          
+
       light_profile_ambient:
         friendly_name: Baggrund
         icon_template: "mdi:brightness-4"
@@ -105,7 +105,7 @@ light:
             option: Ambient
         turn_off:
           event: light_profile_off_null
-          
+
       light_profile_night:
         friendly_name: Nat
         icon_template: "mdi:brightness-3"
@@ -117,7 +117,7 @@ light:
             option: Night
         turn_off:
           event: light_profile_off_null
-          
+
       light_profile_off:
         friendly_name: 'Slukket'
         icon_template: "mdi:power"
@@ -298,7 +298,7 @@ scene:
     entities:
       input_select.light_profile:
         option: 'Bright'
- 
+
   - name: Default
     entities:
       input_select.light_profile:
@@ -543,7 +543,7 @@ automation:
           entity_id: "input_select.{{ trigger.entity_id.replace('input_boolean.', '').replace('_activity_override', '') }}_room_state"
           option: 'active'
 
-  - alias: Room separate light profile off resync
+  - alias: Room Separate Light Profile
     initial_state: true
     trigger:
       platform: state
@@ -587,18 +587,41 @@ automation:
   - alias: Room State Inactive Trigger
     initial_state: true
     trigger:
-      platform: state
-      entity_id:
-        - binary_sensor.bathroom_activity
-        - binary_sensor.bedroom_activity
-        - binary_sensor.hallway_activity
-        - binary_sensor.kitchen_activity
-        - binary_sensor.living_room_activity
-        - binary_sensor.office_activity
-        - binary_sensor.storage_room_activity
-      to: 'off'
-      for:
-        minutes: 2
+      - platform: state
+        entity_id: binary_sensor.bathroom_activity
+        to: 'off'
+        for:
+          minutes: 3
+      - platform: state
+        entity_id: binary_sensor.bedroom_activity
+        to: 'off'
+        for:
+          minutes: 3
+      - platform: state
+        entity_id: binary_sensor.hallway_activity
+        to: 'off'
+        for:
+          minutes: 3
+      - platform: state
+        entity_id: binary_sensor.kitchen_activity
+        to: 'off'
+        for:
+          minutes: 3
+      - platform: state
+        entity_id: binary_sensor.living_room_activity
+        to: 'off'
+        for:
+          minutes: 3
+      - platform: state
+        entity_id: binary_sensor.office_activity
+        to: 'off'
+        for:
+          minutes: 3
+      - platform: state
+        entity_id: binary_sensor.storage_room_activity
+        to: 'off'
+        for:
+          minutes: 3
     condition:
       condition: template
       value_template: "{{ 'True' if is_state('input_boolean.' + trigger.entity_id.replace('binary_sensor.', '').replace('_activity', '') + '_activity_override', 'off') }}"
@@ -611,18 +634,41 @@ automation:
   - alias: Room State Off Trigger
     initial_state: true
     trigger:
-      platform: state
-      entity_id:
-        - binary_sensor.bathroom_activity
-        - binary_sensor.bedroom_activity
-        - binary_sensor.hallway_activity
-        - binary_sensor.kitchen_activity
-        - binary_sensor.living_room_activity
-        - binary_sensor.office_activity
-        - binary_sensor.storage_room_activity
-      to: 'off'
-      for:
-        minutes: 5
+      - platform: state
+        entity_id: binary_sensor.bathroom_activity
+        to: 'off'
+        for:
+          minutes: 5
+      - platform: state
+        entity_id: binary_sensor.bedroom_activity
+        to: 'off'
+        for:
+          minutes: 5
+      - platform: state
+        entity_id: binary_sensor.hallway_activity
+        to: 'off'
+        for:
+          minutes: 5
+      - platform: state
+        entity_id: binary_sensor.kitchen_activity
+        to: 'off'
+        for:
+          minutes: 5
+      - platform: state
+        entity_id: binary_sensor.living_room_activity
+        to: 'off'
+        for:
+          minutes: 5
+      - platform: state
+        entity_id: binary_sensor.office_activity
+        to: 'off'
+        for:
+          minutes: 5
+      - platform: state
+        entity_id: binary_sensor.storage_room_activity
+        to: 'off'
+        for:
+          minutes: 5
     condition:
       condition: template
       value_template: "{{ 'True' if is_state('input_boolean.' + trigger.entity_id.replace('binary_sensor.', '').replace('_activity', '') + '_activity_override', 'off') }}"
@@ -645,7 +691,7 @@ automation:
         data_template:
           entity_id: "input_select.{{ trigger.event.data.room }}_light_profile"
           option: "{{ states('input_select.light_profile') }}"
-  
+
   - alias: activate_room_light_profile
     trigger:
       platform: event
