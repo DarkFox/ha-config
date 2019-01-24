@@ -49,7 +49,8 @@ sensor:
     resource: http://www.dsb.dk/trafikinformation/s-tog-overblik/
     name: s_train_message
     select: 'div.FooterFreeText'
-    value_template: "{{ value | regex_replace(find='Se mere (.+)', replace='', ignorecase=True) | trim }}"
+    value_template: >-
+      {{ value | regex_replace(find='\..*(Rejseplanen|Rejseplan|DSB App).*', replace='.', ignorecase=True) | trim }}
     scan_interval: 120
 
   - platform: scrape
@@ -66,3 +67,10 @@ sensor:
     value_template: "{{ value | trim | replace('.', ':') | int }}"
     scan_interval: 30
     unit_of_measurement: 'min'
+
+binary_sensor:
+  - platform: template
+    sensors:
+      s_train_message_present:
+        entity_id: sensor.s_train_message
+        value_template: "{{ not is_state('sensor.s_train_message', '') }}"
