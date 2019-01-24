@@ -317,9 +317,11 @@ script:
 
 input_boolean:
   living_room_activity_override:
+    icon: mdi:checkbox-multiple-marked
     name: Livingroom Activity Override
   living_room_separate_light_profile:
     name: Living Room Separate Light Profile
+    icon: mdi:heart-broken
 
 input_select:
   living_room_room_state:
@@ -347,35 +349,106 @@ input_select:
       - Night
       - 'Off'
 
+light:
+  - platform: template
+    lights:
+      living_room_activity_override:
+        friendly_name: Living Room Activity Override
+        icon_template: mdi:checkbox-multiple-marked
+        value_template: "{{ is_state('input_boolean.living_room_activity_override', 'on') }}"
+        turn_on:
+          service: input_boolean.turn_on
+          data:
+            entity_id: input_boolean.living_room_activity_override
+        turn_off:
+          service: input_boolean.turn_off
+          data:
+            entity_id: input_boolean.living_room_activity_override
 
-group:
-  light_profile_living_room:
-    entities:
-      - binary_sensor.living_room_activity
-      - input_boolean.living_room_activity_override
-      - input_select.light_profile
+      living_room_separate_light_profile:
+        friendly_name: Living Room Separate Light Profile
+        icon_template: mdi:heart-broken
+        value_template: "{{ is_state('input_boolean.living_room_separate_light_profile', 'on') }}"
+        turn_on:
+          service: input_boolean.turn_on
+          data:
+            entity_id: input_boolean.living_room_separate_light_profile
+        turn_off:
+          service: input_boolean.turn_off
+          data:
+            entity_id: input_boolean.living_room_separate_light_profile
 
-  light_profile_scenes_living_room:
-    name: Livingroom Scenes
-    entities:
-      - script.light_profile_living_room_bright
-      - script.light_profile_living_room_default
-      - script.light_profile_living_room_dimmed
-      - script.light_profile_living_room_ambient
-      - script.light_profile_living_room_night
-      - script.light_profile_living_room_off
+      living_room_light_profile_bright:
+        friendly_name: Lyst
+        icon_template: "mdi:brightness-7"
+        value_template: "{{ is_state('input_select.living_room_light_profile', 'Bright') }}"
+        turn_on:
+          service: input_select.select_option
+          data:
+            entity_id: input_select.living_room_light_profile
+            option: Bright
+        turn_off:
+          event: living_room_light_profile_off_null
 
-  light_profile_automations_living_room:
-    entities:
-      - automation.light_profile_change_active_living_room
-      - automation.light_profile_change_inactive_living_room
-      - automation.light_profile_change_off_living_room
+      living_room_light_profile_default:
+        friendly_name: Normal
+        icon_template: "mdi:brightness-5"
+        value_template: "{{ is_state('input_select.living_room_light_profile', 'Default') }}"
+        turn_on:
+          service: input_select.select_option
+          data:
+            entity_id: input_select.living_room_light_profile
+            option: Default
+        turn_off:
+          event: living_room_light_profile_off_null
 
-  motion_triggers_living_room:
-    entities:
-      - automation.room_state_active_trigger_living_room
-      - automation.room_state_inactive_trigger_living_room
-      - automation.room_state_off_trigger_living_room
+      living_room_light_profile_dimmed:
+        friendly_name: Dæmpet
+        icon_template: "mdi:brightness-6"
+        value_template: "{{ is_state('input_select.living_room_light_profile', 'Dimmed') }}"
+        turn_on:
+          service: input_select.select_option
+          data:
+            entity_id: input_select.living_room_light_profile
+            option: Dimmed
+        turn_off:
+          event: living_room_light_profile_off_null
+
+      living_room_light_profile_ambient:
+        friendly_name: Baggrund
+        icon_template: "mdi:brightness-4"
+        value_template: "{{ is_state('input_select.living_room_light_profile', 'Ambient') }}"
+        turn_on:
+          service: input_select.select_option
+          data:
+            entity_id: input_select.living_room_light_profile
+            option: Ambient
+        turn_off:
+          event: living_room_light_profile_off_null
+
+      living_room_light_profile_night:
+        friendly_name: Nat
+        icon_template: "mdi:brightness-3"
+        value_template: "{{ is_state('input_select.living_room_light_profile', 'Night') }}"
+        turn_on:
+          service: input_select.select_option
+          data:
+            entity_id: input_select.living_room_light_profile
+            option: Night
+        turn_off:
+          event: living_room_light_profile_off_null
+
+      living_room_light_profile_off:
+        friendly_name: 'Slukket'
+        icon_template: "mdi:power"
+        value_template: "{{ is_state('input_select.living_room_light_profile', 'Off') }}"
+        turn_on:
+          service: input_select.select_option
+          data:
+            entity_id: input_select.living_room_light_profile
+            option: 'Off'
+        turn_off:
+          event: living_room_light_profile_off_null
 
 binary_sensor:
   - platform: template
@@ -385,11 +458,13 @@ binary_sensor:
         entity_id:
           - binary_sensor.living_room_sensor
           - input_boolean.living_room_activity_override
+          - input_select.living_room_state
           - media_player.living_room_chromecast
           - input_select.latest_motion
         value_template: >
-          {% if is_state('binary_sensor.living_room_sensor', 'on')
-          or is_state('input_boolean.living_room_activity_override', 'on')
+          {%- if is_state('input_boolean.living_room_activity_override', 'on') -%}
+            {{ 'true' if is_state('input_select.living_room_room_state', 'active') else 'false' }}
+          {%- elif is_state('binary_sensor.living_room_sensor', 'on')
           or is_state('media_player.living_room_chromecast', 'playing')
           or is_state('input_select.latest_motion', 'Livingroom') -%}
             true
