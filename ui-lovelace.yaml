@@ -1,13 +1,13 @@
 resources:
   - url: '/local/lib/moment.js'
     type: js
-  - url: /local/custom-lovelace/card-tools/card-tools.js?v=0.0.1
+  - url: /local/custom-lovelace/card-tools/card-tools.js?v=0.3.0
     type: js
-  - url: /local/custom-lovelace/card-modder/card-modder.js?v=0.0.1
+  - url: /local/custom-lovelace/card-modder/card-modder.js?v=0.0.2
     type: js
-  - url: /local/custom-lovelace/compact-custom-header/compact-custom-header.js?v=0.0.4
+  - url: /local/custom-lovelace/compact-custom-header/compact-custom-header.js?v=0.2.9
     type: js
-  - url: /local/custom-lovelace/lovelace-layout-card/layout-card.js?v=0.0.1
+  - url: /local/custom-lovelace/lovelace-layout-card/layout-card.js?v=0.0.2
     type: js
   - url: /local/custom-lovelace/useful-markdown-card/useful-markdown-card.js?v=0.0.1
     type: js
@@ -37,10 +37,10 @@ views:
             voice: true, false
             user_agent: Android, Nexus, KFFOWI
             user_agent_views:
-              - 2,3,4,5,6,7,8,9   # Default view.
-              - 2,3,4,5,6,7,8,9,12 # Phone view
-              - '10' # Hallway tablet view
-              - '11' # Bathroom tablet view
+              - 1,2,3,4,5,6,7,8   # Default view.
+              - 1,2,3,4,5,6,7,8,11 # Phone view
+              - '9' # Hallway tablet view
+              - '10' # Bathroom tablet view
 
           - type: markdown
             content: "Loading..."
@@ -59,10 +59,10 @@ views:
             voice: true, false
             user_agent: Android, Nexus, KFFOWI
             user_agent_views:
-              - 2,3,4,5,6,7,8,9   # Default view.
-              - 2,3,4,5,6,7,8,9,12 # Phone view
-              - '10' # Hallway tablet view
-              - '11' # Bathroom tablet view
+              - 1,2,3,4,5,6,7,8   # Default view.
+              - 1,2,3,4,5,6,7,8,11 # Phone view
+              - '9' # Hallway tablet view
+              - '10' # Bathroom tablet view
 
           - type: vertical-stack
             cards:
@@ -118,11 +118,10 @@ views:
 
           - type: vertical-stack
             cards:
-              - type: gauge
+              - type: sensor
                 entity: sensor.energy_meter_watt
                 name: Strømforbrug
-                max: 3000
-                min: 0
+                graph: line
 
               - type: history-graph
                 title: Temperatures
@@ -228,106 +227,6 @@ views:
                   - sensor.party_button_battery
   # /Home
 
-  - title: Hallway
-    path: hallway
-    icon: 'mdi:arrow-all'
-    panel: true
-    cards:
-      - type: custom:layout-card
-        cards:
-          - type: 'custom:compact-custom-header'
-            clock: options
-            clock_format: 24
-            notification: true, false
-            voice: true, false
-            user_agent: Android, Nexus, KFFOWI
-            user_agent_views:
-              - 2,3,4,5,6,7,8,9   # Default view.
-              - 2,3,4,5,6,7,8,9,12 # Phone view
-              - '10' # Hallway tablet view
-              - '11' # Bathroom tablet view
-
-          - type: vertical-stack
-            cards:
-              - type: glance
-                columns: 3
-                show_state: false
-                entities:
-                  - entity: light.hallway_light_profile_bright
-                    tap_action:
-                      action: toggle
-                  - entity: light.hallway_light_profile_default
-                    tap_action:
-                      action: toggle
-                  - entity: light.hallway_light_profile_dimmed
-                    tap_action:
-                      action: toggle
-                  - entity: light.hallway_light_profile_ambient
-                    tap_action:
-                      action: toggle
-                  - entity: light.hallway_light_profile_night
-                    tap_action:
-                      action: toggle
-                  - entity: light.hallway_light_profile_off
-                    tap_action:
-                      action: toggle
-                  - entity: binary_sensor.hallway_activity
-                    name: Activity
-                  - entity: light.hallway_activity_override
-                    name: Activity Override
-                    tap_action:
-                      action: toggle
-                  - entity: light.hallway_separate_light_profile
-                    name: Separate
-                    tap_action:
-                      action: toggle
-
-              - type: conditional
-                conditions:
-                  - entity: input_boolean.hallway_activity_override
-                    state: 'on'
-                card:
-                  type: entities
-                  show_title: false
-                  show_header_toggle: false
-                  entities:
-                    - entity: input_select.hallway_room_state
-
-              - type: glance
-                title: Hallway Lights
-                columns: 4
-                show_state: false
-                entities:
-                  - entity: light.hallway
-                    tap_action:
-                      action: toggle
-
-          - break
-
-          - type: vertical-stack
-            cards:
-              - type: entities
-                title: Hallway Sensors
-                show_header_toggle: false
-                entities:
-                  - binary_sensor.hallway_sensor
-                  - binary_sensor.apartment_door
-                  - binary_sensor.apartment_lock
-                  - sensor.hallway_luminance
-                  - sensor.hallway_relative_humidity
-                  - sensor.hallway_temperature
-
-          - break
-
-          - type: vertical-stack
-            cards:
-              - type: entities
-                entities:
-                  - entity: light.hallway_tablet
-                show_header_toggle: false
-                title: Hallway Tablet
-  # /Hallway
-
   - path: living-room
     title: Living Room
     icon: 'mdi:sofa'
@@ -342,10 +241,10 @@ views:
             voice: true, false
             user_agent: Android, Nexus, KFFOWI
             user_agent_views:
-              - 2,3,4,5,6,7,8,9   # Default view.
-              - 2,3,4,5,6,7,8,9,12 # Phone view
-              - '10' # Hallway tablet view
-              - '11' # Bathroom tablet view
+              - 1,2,3,4,5,6,7,8   # Default view.
+              - 1,2,3,4,5,6,7,8,11 # Phone view
+              - '9' # Hallway tablet view
+              - '10' # Bathroom tablet view
 
           - type: vertical-stack
             cards:
@@ -535,10 +434,10 @@ views:
             voice: true, false
             user_agent: Android, Nexus, KFFOWI
             user_agent_views:
-              - 2,3,4,5,6,7,8,9   # Default view.
-              - 2,3,4,5,6,7,8,9,12 # Phone view
-              - '10' # Hallway tablet view
-              - '11' # Bathroom tablet view
+              - 1,2,3,4,5,6,7,8   # Default view.
+              - 1,2,3,4,5,6,7,8,11 # Phone view
+              - '9' # Hallway tablet view
+              - '10' # Bathroom tablet view
 
           - type: vertical-stack
             cards:
@@ -699,250 +598,6 @@ views:
                 entity: media_player.bedroom_mini
   # /Bedroom
 
-  - title: Bathroom
-    path: bathroom
-    icon: 'mdi:water-pump'
-    panel: true
-    cards:
-      - type: custom:layout-card
-        cards:
-          - type: 'custom:compact-custom-header'
-            clock: options
-            clock_format: 24
-            notification: true, false
-            voice: true, false
-            user_agent: Android, Nexus, KFFOWI
-            user_agent_views:
-              - 2,3,4,5,6,7,8,9   # Default view.
-              - 2,3,4,5,6,7,8,9,12 # Phone view
-              - '10' # Hallway tablet view
-              - '11' # Bathroom tablet view
-
-          - type: vertical-stack
-            cards:
-              - type: glance
-                columns: 3
-                show_state: false
-                entities:
-                  - entity: light.bathroom_light_profile_bright
-                    tap_action:
-                      action: toggle
-                  - entity: light.bathroom_light_profile_default
-                    tap_action:
-                      action: toggle
-                  - entity: light.bathroom_light_profile_dimmed
-                    tap_action:
-                      action: toggle
-                  - entity: light.bathroom_light_profile_ambient
-                    tap_action:
-                      action: toggle
-                  - entity: light.bathroom_light_profile_night
-                    tap_action:
-                      action: toggle
-                  - entity: light.bathroom_light_profile_off
-                    tap_action:
-                      action: toggle
-                  - entity: binary_sensor.bathroom_activity
-                    name: Activity
-                  - entity: light.bathroom_activity_override
-                    name: Activity Override
-                    tap_action:
-                      action: toggle
-                  - entity: light.bathroom_separate_light_profile
-                    name: Separate
-                    tap_action:
-                      action: toggle
-
-              - type: conditional
-                conditions:
-                  - entity: input_boolean.bathroom_activity_override
-                    state: 'on'
-                card:
-                  type: entities
-                  show_title: false
-                  show_header_toggle: false
-                  entities:
-                    - entity: input_select.bathroom_room_state
-
-              - type: entities
-                title: Bathroom Lights
-                columns: 4
-                show_header_toggle: true
-                entities:
-                  - light.bathroom
-
-          - break
-
-          - type: vertical-stack
-            cards:
-              - type: entities
-                title: Bathroom Sensors
-                show_header_toggle: false
-                entities:
-                  - binary_sensor.toilet_sensor
-                  - binary_sensor.bathroom_window
-                  - sensor.toilet_luminance
-                  - sensor.toilet_relative_humidity
-                  - sensor.toilet_temperature
-                  - sensor.toilet_mold_indicator
-                  - sensor.toilet_relative_humidity_change
-                  - sensor.bathroom_wifi_signal
-
-          - break
-
-          - type: vertical-stack
-            cards:
-              - type: entities
-                title: Bathroom Tablet
-                show_header_toggle: false
-                entities:
-                  - entity: light.bathroom_tablet
-
-              - type: custom:mini-media-player
-                artwork: cover
-                power_color: true
-                hide_volume: true
-                show_progress: true
-                entity: media_player.bathroom_speaker
-  # /Bathroom
-
-  - title: Kitchen
-    path: kitchen
-    icon: 'mdi:food-fork-drink'
-    panel: true
-    cards:
-      - type: custom:layout-card
-        cards:
-          - type: 'custom:compact-custom-header'
-            clock: options
-            clock_format: 24
-            notification: true, false
-            voice: true, false
-            user_agent: Android, Nexus, KFFOWI
-            user_agent_views:
-              - 2,3,4,5,6,7,8,9   # Default view.
-              - 2,3,4,5,6,7,8,9,12 # Phone view
-              - '10' # Hallway tablet view
-              - '11' # Bathroom tablet view
-
-          - type: vertical-stack
-            cards:
-              - type: glance
-                columns: 3
-                show_state: false
-                entities:
-                  - entity: light.kitchen_light_profile_bright
-                    tap_action:
-                      action: toggle
-                  - entity: light.kitchen_light_profile_default
-                    tap_action:
-                      action: toggle
-                  - entity: light.kitchen_light_profile_dimmed
-                    tap_action:
-                      action: toggle
-                  - entity: light.kitchen_light_profile_ambient
-                    tap_action:
-                      action: toggle
-                  - entity: light.kitchen_light_profile_night
-                    tap_action:
-                      action: toggle
-                  - entity: light.kitchen_light_profile_off
-                    tap_action:
-                      action: toggle
-                  - entity: binary_sensor.kitchen_activity
-                    name: Activity
-                  - entity: light.kitchen_activity_override
-                    name: Activity Override
-                    tap_action:
-                      action: toggle
-                  - entity: light.kitchen_separate_light_profile
-                    name: Separate
-                    tap_action:
-                      action: toggle
-
-              - type: conditional
-                conditions:
-                  - entity: input_boolean.kitchen_activity_override
-                    state: 'on'
-                card:
-                  type: entities
-                  show_title: false
-                  show_header_toggle: false
-                  entities:
-                    - entity: input_select.kitchen_room_state
-
-              - type: glance
-                title: Kitchen Lights
-                columns: 4
-                show_state: false
-                entities:
-                  - entity: light.kitchen
-                    name: Loftlampe
-                    tap_action:
-                      action: toggle
-                  - entity: light.kitchen_sink
-                    name: Vask
-                    tap_action:
-                      action: toggle
-                  - entity: light.kitchen_stove
-                    name: Ovn
-                    tap_action:
-                      action: toggle
-                  - entity: light.kitchen_cabinets
-                    name: Underskabe
-                    tap_action:
-                      action: toggle
-                  - entity: light.kitchen_spots
-                    name: Spots
-                    tap_action:
-                      action: toggle
-
-          - break
-
-          - type: vertical-stack
-            cards:
-              - type: entities
-                title: Kitchen Sensors
-                show_header_toggle: false
-                entities:
-                  - binary_sensor.kitchen_sensor
-                  - sensor.kitchen_luminance
-                  - sensor.kitchen_relative_humidity
-                  - sensor.kitchen_temperature
-                  - sensor.kitchen_noise_level
-                  - sensor.kitchen_noise_level_stats_mean
-                  - sensor.kitchen_wifi_signal
-
-          - break
-
-          - type: vertical-stack
-            cards:
-              - type: entities
-                title: Kitchen Media
-                show_header_toggle: true
-                entities:
-                  - switch.kitchen_tv_switch
-
-              - type: conditional
-                card:
-                  type: custom:mini-media-player
-                  artwork: cover
-                  power_color: true
-                  hide_volume: true
-                  show_progress: true
-                  entity: media_player.kitchen_chromecast
-                conditions:
-                  - entity: media_player.kitchen_chromecast
-                    state_not: 'off'
-
-              - type: custom:mini-media-player
-                artwork: cover
-                power_color: true
-                hide_volume: true
-                show_progress: true
-                entity: media_player.kitchen_mini
-  # /Kitchen
-
   - title: Office
     path: office
     panel: true
@@ -957,10 +612,10 @@ views:
             voice: true, false
             user_agent: Android, Nexus, KFFOWI
             user_agent_views:
-              - 2,3,4,5,6,7,8,9   # Default view.
-              - 2,3,4,5,6,7,8,9,12 # Phone view
-              - '10' # Hallway tablet view
-              - '11' # Bathroom tablet view
+              - 1,2,3,4,5,6,7,8   # Default view.
+              - 1,2,3,4,5,6,7,8,11 # Phone view
+              - '9' # Hallway tablet view
+              - '10' # Bathroom tablet view
 
           - type: vertical-stack
             cards:
@@ -1112,6 +767,350 @@ views:
                 entity: media_player.office_mini
   # /Office
 
+  - title: Hallway
+    path: hallway
+    icon: 'mdi:arrow-all'
+    panel: true
+    cards:
+      - type: custom:layout-card
+        cards:
+          - type: 'custom:compact-custom-header'
+            clock: options
+            clock_format: 24
+            notification: true, false
+            voice: true, false
+            user_agent: Android, Nexus, KFFOWI
+            user_agent_views:
+              - 1,2,3,4,5,6,7,8   # Default view.
+              - 1,2,3,4,5,6,7,8,11 # Phone view
+              - '9' # Hallway tablet view
+              - '10' # Bathroom tablet view
+
+          - type: vertical-stack
+            cards:
+              - type: glance
+                columns: 3
+                show_state: false
+                entities:
+                  - entity: light.hallway_light_profile_bright
+                    tap_action:
+                      action: toggle
+                  - entity: light.hallway_light_profile_default
+                    tap_action:
+                      action: toggle
+                  - entity: light.hallway_light_profile_dimmed
+                    tap_action:
+                      action: toggle
+                  - entity: light.hallway_light_profile_ambient
+                    tap_action:
+                      action: toggle
+                  - entity: light.hallway_light_profile_night
+                    tap_action:
+                      action: toggle
+                  - entity: light.hallway_light_profile_off
+                    tap_action:
+                      action: toggle
+                  - entity: binary_sensor.hallway_activity
+                    name: Activity
+                  - entity: light.hallway_activity_override
+                    name: Activity Override
+                    tap_action:
+                      action: toggle
+                  - entity: light.hallway_separate_light_profile
+                    name: Separate
+                    tap_action:
+                      action: toggle
+
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.hallway_activity_override
+                    state: 'on'
+                card:
+                  type: entities
+                  show_title: false
+                  show_header_toggle: false
+                  entities:
+                    - entity: input_select.hallway_room_state
+
+              - type: glance
+                title: Hallway Lights
+                columns: 4
+                show_state: false
+                entities:
+                  - entity: light.hallway
+                    tap_action:
+                      action: toggle
+
+          - break
+
+          - type: vertical-stack
+            cards:
+              - type: entities
+                title: Hallway Sensors
+                show_header_toggle: false
+                entities:
+                  - binary_sensor.hallway_sensor
+                  - binary_sensor.apartment_door
+                  - binary_sensor.apartment_lock
+                  - sensor.hallway_luminance
+                  - sensor.hallway_relative_humidity
+                  - sensor.hallway_temperature
+
+          - break
+
+          - type: vertical-stack
+            cards:
+              - type: entities
+                entities:
+                  - entity: light.hallway_tablet
+                show_header_toggle: false
+                title: Hallway Tablet
+  # /Hallway
+
+  - title: Bathroom
+    path: bathroom
+    icon: 'mdi:water-pump'
+    panel: true
+    cards:
+      - type: custom:layout-card
+        cards:
+          - type: 'custom:compact-custom-header'
+            clock: options
+            clock_format: 24
+            notification: true, false
+            voice: true, false
+            user_agent: Android, Nexus, KFFOWI
+            user_agent_views:
+              - 1,2,3,4,5,6,7,8   # Default view.
+              - 1,2,3,4,5,6,7,8,11 # Phone view
+              - '9' # Hallway tablet view
+              - '10' # Bathroom tablet view
+
+          - type: vertical-stack
+            cards:
+              - type: glance
+                columns: 3
+                show_state: false
+                entities:
+                  - entity: light.bathroom_light_profile_bright
+                    tap_action:
+                      action: toggle
+                  - entity: light.bathroom_light_profile_default
+                    tap_action:
+                      action: toggle
+                  - entity: light.bathroom_light_profile_dimmed
+                    tap_action:
+                      action: toggle
+                  - entity: light.bathroom_light_profile_ambient
+                    tap_action:
+                      action: toggle
+                  - entity: light.bathroom_light_profile_night
+                    tap_action:
+                      action: toggle
+                  - entity: light.bathroom_light_profile_off
+                    tap_action:
+                      action: toggle
+                  - entity: binary_sensor.bathroom_activity
+                    name: Activity
+                  - entity: light.bathroom_activity_override
+                    name: Activity Override
+                    tap_action:
+                      action: toggle
+                  - entity: light.bathroom_separate_light_profile
+                    name: Separate
+                    tap_action:
+                      action: toggle
+
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.bathroom_activity_override
+                    state: 'on'
+                card:
+                  type: entities
+                  show_title: false
+                  show_header_toggle: false
+                  entities:
+                    - entity: input_select.bathroom_room_state
+
+              - type: entities
+                title: Bathroom Lights
+                columns: 4
+                show_header_toggle: true
+                entities:
+                  - light.bathroom
+
+          - break
+
+          - type: vertical-stack
+            cards:
+              - type: entities
+                title: Bathroom Sensors
+                show_header_toggle: false
+                entities:
+                  - binary_sensor.toilet_sensor
+                  - binary_sensor.bathroom_window
+                  - sensor.toilet_luminance
+                  - sensor.toilet_relative_humidity
+                  - sensor.toilet_temperature
+                  - sensor.toilet_mold_indicator
+                  - sensor.toilet_relative_humidity_change
+                  - sensor.bathroom_wifi_signal
+
+          - break
+
+          - type: vertical-stack
+            cards:
+              - type: entities
+                title: Bathroom Tablet
+                show_header_toggle: false
+                entities:
+                  - entity: light.bathroom_tablet
+
+              - type: custom:mini-media-player
+                artwork: cover
+                power_color: true
+                hide_volume: true
+                show_progress: true
+                entity: media_player.bathroom_speaker
+  # /Bathroom
+
+  - title: Kitchen
+    path: kitchen
+    icon: 'mdi:food-fork-drink'
+    panel: true
+    cards:
+      - type: custom:layout-card
+        cards:
+          - type: 'custom:compact-custom-header'
+            clock: options
+            clock_format: 24
+            notification: true, false
+            voice: true, false
+            user_agent: Android, Nexus, KFFOWI
+            user_agent_views:
+              - 1,2,3,4,5,6,7,8   # Default view.
+              - 1,2,3,4,5,6,7,8,11 # Phone view
+              - '9' # Hallway tablet view
+              - '10' # Bathroom tablet view
+
+          - type: vertical-stack
+            cards:
+              - type: glance
+                columns: 3
+                show_state: false
+                entities:
+                  - entity: light.kitchen_light_profile_bright
+                    tap_action:
+                      action: toggle
+                  - entity: light.kitchen_light_profile_default
+                    tap_action:
+                      action: toggle
+                  - entity: light.kitchen_light_profile_dimmed
+                    tap_action:
+                      action: toggle
+                  - entity: light.kitchen_light_profile_ambient
+                    tap_action:
+                      action: toggle
+                  - entity: light.kitchen_light_profile_night
+                    tap_action:
+                      action: toggle
+                  - entity: light.kitchen_light_profile_off
+                    tap_action:
+                      action: toggle
+                  - entity: binary_sensor.kitchen_activity
+                    name: Activity
+                  - entity: light.kitchen_activity_override
+                    name: Activity Override
+                    tap_action:
+                      action: toggle
+                  - entity: light.kitchen_separate_light_profile
+                    name: Separate
+                    tap_action:
+                      action: toggle
+
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.kitchen_activity_override
+                    state: 'on'
+                card:
+                  type: entities
+                  show_title: false
+                  show_header_toggle: false
+                  entities:
+                    - entity: input_select.kitchen_room_state
+
+              - type: glance
+                title: Kitchen Lights
+                columns: 4
+                show_state: false
+                entities:
+                  - entity: light.kitchen
+                    name: Loftlampe
+                    tap_action:
+                      action: toggle
+                  - entity: light.kitchen_sink
+                    name: Vask
+                    tap_action:
+                      action: toggle
+                  - entity: light.kitchen_stove
+                    name: Ovn
+                    tap_action:
+                      action: toggle
+                  - entity: light.kitchen_cabinets
+                    name: Underskabe
+                    tap_action:
+                      action: toggle
+                  - entity: light.kitchen_spots
+                    name: Spots
+                    tap_action:
+                      action: toggle
+
+          - break
+
+          - type: vertical-stack
+            cards:
+              - type: entities
+                title: Kitchen Sensors
+                show_header_toggle: false
+                entities:
+                  - binary_sensor.kitchen_sensor
+                  - sensor.kitchen_luminance
+                  - sensor.kitchen_relative_humidity
+                  - sensor.kitchen_temperature
+                  - sensor.kitchen_noise_level
+                  - sensor.kitchen_noise_level_stats_mean
+                  - sensor.kitchen_wifi_signal
+
+          - break
+
+          - type: vertical-stack
+            cards:
+              - type: entities
+                title: Kitchen Media
+                show_header_toggle: true
+                entities:
+                  - switch.kitchen_tv_switch
+
+              - type: conditional
+                card:
+                  type: custom:mini-media-player
+                  artwork: cover
+                  power_color: true
+                  hide_volume: true
+                  show_progress: true
+                  entity: media_player.kitchen_chromecast
+                conditions:
+                  - entity: media_player.kitchen_chromecast
+                    state_not: 'off'
+
+              - type: custom:mini-media-player
+                artwork: cover
+                power_color: true
+                hide_volume: true
+                show_progress: true
+                entity: media_player.kitchen_mini
+  # /Kitchen
+
   - title: Storage Room
     path: storage-room
     icon: 'mdi:wrench'
@@ -1126,10 +1125,10 @@ views:
             voice: true, false
             user_agent: Android, Nexus, KFFOWI
             user_agent_views:
-              - 2,3,4,5,6,7,8,9   # Default view.
-              - 2,3,4,5,6,7,8,9,12 # Phone view
-              - '10' # Hallway tablet view
-              - '11' # Bathroom tablet view
+              - 1,2,3,4,5,6,7,8   # Default view.
+              - 1,2,3,4,5,6,7,8,11 # Phone view
+              - '9' # Hallway tablet view
+              - '10' # Bathroom tablet view
 
           - type: vertical-stack
             cards:
@@ -1304,10 +1303,10 @@ views:
             voice: true, false
             user_agent: Android, Nexus, KFFOWI
             user_agent_views:
-              - 2,3,4,5,6,7,8,9   # Default view.
-              - 2,3,4,5,6,7,8,9,12 # Phone view
-              - '10' # Hallway tablet view
-              - '11' # Bathroom tablet view
+              - 1,2,3,4,5,6,7,8   # Default view.
+              - 1,2,3,4,5,6,7,8,11 # Phone view
+              - '9' # Hallway tablet view
+              - '10' # Bathroom tablet view
             header: 'true, false, false, false'
 
           - type: horizontal-stack
@@ -1588,10 +1587,10 @@ views:
             voice: true, false
             user_agent: Android, Nexus, KFFOWI
             user_agent_views:
-              - 2,3,4,5,6,7,8,9   # Default view.
-              - 2,3,4,5,6,7,8,9,12 # Phone view
-              - '10' # Hallway tablet view
-              - '11' # Bathroom tablet view
+              - 1,2,3,4,5,6,7,8   # Default view.
+              - 1,2,3,4,5,6,7,8,11 # Phone view
+              - '9' # Hallway tablet view
+              - '10' # Bathroom tablet view
             header: 'true, false, false, false'
 
           - type: horizontal-stack
@@ -1827,10 +1826,10 @@ views:
             voice: true, false
             user_agent: Android, Nexus, KFFOWI
             user_agent_views:
-              - 2,3,4,5,6,7,8,9   # Default view.
-              - 2,3,4,5,6,7,8,9,12 # Phone view
-              - '10' # Hallway tablet view
-              - '11' # Bathroom tablet view
+              - 1,2,3,4,5,6,7,8   # Default view.
+              - 1,2,3,4,5,6,7,8,11 # Phone view
+              - '9' # Hallway tablet view
+              - '10' # Bathroom tablet view
 
           - type: glance
             columns: 3
