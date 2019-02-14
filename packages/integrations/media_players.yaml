@@ -3,8 +3,105 @@ homeassistant:
     binary_sensor.projector_power:
       hidden: true
 
+cast:
+  media_player:
+    - host: 192.168.42.40
+    - host: 192.168.42.41
+    - host: 192.168.42.42
+    - host: 192.168.42.43
+    - host: 192.168.42.45
+    - host: 192.168.42.50
+    - host: 192.168.42.51
+    - host: 192.168.42.52
+    - host: 192.168.42.60
+    - host: 192.168.42.61
+    - host: 192.168.42.62
+    - host: 192.168.42.63
+
+media_player:
+  # - platform: universal
+  #   name: projector
+  #   children:
+  #     - binary_sensor.projector_power
+  #     - media_player.projector_chromecast
+  #   commands:
+  #     turn_on:
+  #       service: switch.turn_on
+  #       data:
+  #         entity_id: switch.projector_power
+  #     turn_off:
+  #       service: script.projector_off
+  #     volume_up:
+  #       service: switch.turn_on
+  #       data:
+  #         entity_id: switch.projector_vol_up
+  #     volume_down:
+  #       service: switch.turn_on
+  #       data:
+  #         entity_id: switch.projector_vol_dn
+  #     volume_mute:
+  #       service: switch.turn_on
+  #       data:
+  #         entity_id: switch.projector_mute
+  #   attributes:
+  #     state: binary_sensor.projector_power
+
+  - platform: webostv
+    name: Bedroom TV
+    host: 192.168.42.44
+    mac: !secret LGwebOSTV_MAC
+    filename: webostv.conf
+    icon: mdi:television
+    turn_on_action:
+      service: wake_on_lan.send_magic_packet
+      data:
+        mac: !secret LGwebOSTV_MAC
+        broadcast_address: "192.168.42.255"
+
 binary_sensor:
   - platform: mqtt
     name: projector_power
     state_topic: "projector/available"
     device_class: light
+
+
+automation:
+  # Notify when group becomes unavailable
+  - alias: 'Cast Group Unavailable'
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id:
+        - media_player.all_speakers
+        - media_player.minis
+        - media_player.east_side_speakers
+        - media_player.office_speakers
+        - media_player.west_side_speakers
+      to: 'unavailable'
+      for:
+        minutes: 10
+    action:
+      service: notify.pushbullet
+      data_template:
+        message: >
+          Lost connection to {{ state_attr(trigger.entity_id, "friendly_name") }}
+        target:
+            - !secret pushbullet_channel
+
+  # - alias: 'Cast Group Available'
+  #   initial_state: true
+  #   trigger:
+  #     platform: state
+  #     entity_id:
+  #       - media_player.all_speakers
+  #       - media_player.minis
+  #       - media_player.east_side_speakers
+  #       - media_player.office_speakers
+  #       - media_player.west_side_speakers
+  #     from: 'unavailable'
+  #   action:
+  #     service: notify.phone
+  #     data_template:
+  #       message: >
+  #         Reconnected to {{ state_attr(trigger.entity_id, "friendly_name") }}
+  #       title: "Home Assistant"
