@@ -3,13 +3,15 @@ script:
     sequence:
       # White temp lights
       - service: light.turn_on
-        data:
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 255
           color_temp: 250
           entity_id:
             - light.bathroom
       - service: light.turn_on
-        data:
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
           entity_id: light.bathroom_tablet
           brightness: 255
 
@@ -17,13 +19,15 @@ script:
     sequence:
       # White temp lights
       - service: light.turn_on
-        data:
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 255
           color_temp: 250
           entity_id:
             - light.bathroom
       - service: light.turn_on
-        data:
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
           entity_id: light.bathroom_tablet
           brightness: 255
 
@@ -31,13 +35,15 @@ script:
     sequence:
       # White temp lights
       - service: light.turn_on
-        data:
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 127
           color_temp: 370
           entity_id:
             - light.bathroom
       - service: light.turn_on
-        data:
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
           entity_id: light.bathroom_tablet
           brightness: 127
 
@@ -45,13 +51,15 @@ script:
     sequence:
       # White temp lights
       - service: light.turn_on
-        data:
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 72
           color_temp: 370
           entity_id:
             - light.bathroom
       - service: light.turn_on
-        data:
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
           entity_id: light.bathroom_tablet
           brightness: 64
 
@@ -59,13 +67,15 @@ script:
     sequence:
       # White temp lights
       - service: light.turn_on
-        data:
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 24
           color_temp: 455
           entity_id:
             - light.bathroom
       - service: light.turn_on
-        data:
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
           entity_id: light.bathroom_tablet
           brightness: 24
 
@@ -73,7 +83,8 @@ script:
     sequence:
       # Primary RGB lights
       - service: light.turn_off
-        data:
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
           entity_id:
             - light.bathroom
             - light.bathroom_tablet
@@ -234,27 +245,3 @@ binary_sensor:
           {% else -%}
             false
           {% endif -%}
-
-automation:
-  # Room State Actions #
-  - alias: fire_tablet_on
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: input_select.bathroom_room_state
-      to: 'active'
-    action:
-      service: switch.turn_on
-      data:
-        entity_id: switch.fire_tablet
-
-  - alias: fire_tablet_off
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: input_select.bathroom_room_state
-      to: 'inactive'
-    action:
-      service: switch.turn_off
-      data:
-        entity_id: switch.fire_tablet

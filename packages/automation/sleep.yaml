@@ -337,6 +337,10 @@ automation:
       entity_id: input_select.sleep_state
       to: 'bedtime'
     action:
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.scene_transition_time"
+          value: 300
       - service: input_select.select_option
         data_template:
           option: 'Ambient'
@@ -346,10 +350,19 @@ automation:
             {% else %}
               input_select.light_profile
             {% endif %}
-      - delay: 00:30:00
+      - delay: 00:00:2
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.scene_transition_time"
+          value: 2
+      - delay: 00:25:00
       - condition: state
         entity_id: input_select.sleep_state
         state: 'bedtime'
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.scene_transition_time"
+          value: 300
       - service: input_select.select_option
         data_template:
           option: 'Night'
@@ -359,6 +372,11 @@ automation:
             {% else %}
               input_select.light_profile
             {% endif %}
+      - delay: 00:00:2
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.scene_transition_time"
+          value: 2
 
   - alias: in_bed_action
     initial_state: true
@@ -367,6 +385,10 @@ automation:
       entity_id: input_select.sleep_state
       to: 'in bed'
     action:
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.scene_transition_time"
+          value: 120
       - service: input_select.select_option
         data_template:
           option: 'Night'
@@ -376,13 +398,11 @@ automation:
             {% else %}
               input_select.light_profile
             {% endif %}
-      - delay:
-          seconds: 3
-      - service: light.turn_on
+      - delay: 00:00:2
+      - service: input_number.set_value
         data:
-          brightness: 32
-          color_temp: 500
-          entity_id: light.bedside
+          entity_id: "input_number.scene_transition_time"
+          value: 2
 
   - alias: sleeping_action
     initial_state: true
@@ -391,9 +411,11 @@ automation:
       entity_id: input_select.sleep_state
       to: 'sleeping'
       from: 'in bed'
-      for:
-        seconds: 10
     action:
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.scene_transition_time"
+          value: 30
       - service: input_select.select_option
         data_template:
           option: 'Off'
@@ -403,6 +425,11 @@ automation:
             {% else %}
               input_select.light_profile
             {% endif %}
+      - delay: 00:00:2
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.scene_transition_time"
+          value: 2
 
   - alias: sleep_paused_action
     initial_state: true
@@ -452,6 +479,10 @@ automation:
       entity_id: input_select.sleep_state
       to: 'alarm'
     action:
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.scene_transition_time"
+          value: 300
       - service: input_select.select_option
         data_template:
           option: 'Ambient'
@@ -479,6 +510,10 @@ automation:
         data_template:
           entity_id: 'media_player.bedroom_speaker'
           volume_level: 0.30
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.scene_transition_time"
+          value: 2
 
   - alias: snoozing_action
     initial_state: true
@@ -488,6 +523,10 @@ automation:
       to: 'snoozing'
       from: 'alarm'
     action:
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.scene_transition_time"
+          value: 600
       - service: input_select.select_option
         data_template:
           option: 'Ambient'
@@ -497,6 +536,11 @@ automation:
             {% else %}
               input_select.light_profile
             {% endif %}
+      - delay: 00:00:2
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.scene_transition_time"
+          value: 2
 
   - alias: waking_action
     initial_state: true
@@ -505,9 +549,13 @@ automation:
       entity_id: input_select.sleep_state
       to: 'waking'
     action:
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.scene_transition_time"
+          value: 120
       - service: input_select.select_option
         data_template:
-          option: 'Ambient'
+          option: 'Dimmed'
           entity_id: >
             {% if is_state('input_boolean.guests', 'on') %}
               input_select.bedroom_light_profile
@@ -533,6 +581,10 @@ automation:
         data_template:
           entity_id: 'media_player.bedroom_speaker'
           volume_level: 0.40
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.scene_transition_time"
+          value: 2
 
   - alias: awake_activity
     initial_state: true
@@ -542,6 +594,15 @@ automation:
       to: 'awake'
       from: 'waking'
     action:
+      - service: input_boolean.turn_on
+        data:
+          entity_id:
+            - input_boolean.hallway_activity_override
+            - input_boolean.bathroom_activity_override
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.scene_transition_time"
+          value: 240
       - service: input_select.select_option
         data_template:
           option: 'Default'
@@ -564,7 +625,7 @@ automation:
         data_template:
           entity_id: input_select.playlist
           options:
-            - "==SCRIPT==morning_briefing"
+            #- "==SCRIPT==morning_briefing"
             - "{{ states.sensor.podcast_bbc_minute.state }}"
             - "{{ states.sensor.podcast_daily_tech_news_show.state }}"
             - "{{ states.sensor.podcast_24syv_nyheder.state }}"
@@ -576,3 +637,12 @@ automation:
         data_template:
           entity_id: 'media_player.east_side_speakers'
           volume_level: 0.5
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.scene_transition_time"
+          value: 2
+      - service: input_boolean.turn_off
+        data:
+          entity_id:
+            - input_boolean.hallway_activity_override
+            - input_boolean.bathroom_activity_override

@@ -6,6 +6,14 @@ homeassistant:
     script.brighten_light_profile:
       icon: mdi:brightness-high
 
+input_number:
+  scene_transition_time:
+    name: Scene Transition Time
+    initial: 0.5
+    min: 0.0
+    max: 1800
+    step: 0.1
+
 input_select:
   light_profile:
     name: Light Profile
@@ -46,7 +54,6 @@ input_select:
       - Purple
       - Orange
       - Spring Blossom
-    initial: Portal
 
 light:
   - platform: mqtt
@@ -168,7 +175,7 @@ sensor:
           {% elif is_state('input_select.theme', 'Purple') -%}
             277,100
           {% elif is_state('input_select.theme', 'Orange') -%}
-            12,100
+            4,100
           {% elif is_state('input_select.theme', 'Spring Blossom') -%}
             327,9
           {% endif -%}
@@ -208,7 +215,7 @@ sensor:
           {% elif is_state('input_select.theme', 'Purple') -%}
             265,100
           {% elif is_state('input_select.theme', 'Orange') -%}
-            15,100
+            24,100
           {% elif is_state('input_select.theme', 'Spring Blossom') -%}
             327,9
           {% endif -%}
@@ -248,7 +255,7 @@ sensor:
           {% elif is_state('input_select.theme', 'Purple') -%}
             266,100
           {% elif is_state('input_select.theme', 'Orange') -%}
-            6,100
+            3,100
           {% elif is_state('input_select.theme', 'Spring Blossom') -%}
             339,58
           {% endif -%}
@@ -288,7 +295,7 @@ sensor:
           {% elif is_state('input_select.theme', 'Purple') -%}
             269,94
           {% elif is_state('input_select.theme', 'Orange') -%}
-            26,100
+            16,100
           {% elif is_state('input_select.theme', 'Spring Blossom') -%}
             339,58
           {% endif -%}
@@ -371,6 +378,16 @@ script:
         option: 'Off'
 
 automation:
+  - alias: Reset Scene Transition Time
+    trigger:
+      platform: template
+      value_template: "{% if as_timestamp(states.sensor.date_time.last_updated) - as_timestamp(states.input_number.scene_transition_time.last_updated) > 60 %}true{% endif %}"
+    action:
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.scene_transition_time"
+          value: 0.5
+
   - alias: Apartment light level initializer
     initial_state: true
     trigger:
@@ -438,11 +455,7 @@ automation:
     trigger:
       - platform: state
         entity_id:
-          - input_select.theme
           - input_select.light_profile
-          - input_boolean.party_mode
-      - platform: event
-        event_type: refresh_light_profile
     action:
       - event: sync_room_light_profile
         event_data:
@@ -463,6 +476,38 @@ automation:
         event_data:
           room: office
       - event: sync_room_light_profile
+        event_data:
+          room: storage_room
+
+  - alias: refresh_all_light_profiles
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id:
+          - input_select.theme
+          - input_boolean.party_mode
+      - platform: event
+        event_type: refresh_light_profile
+    action:
+      - event: activate_room_profile
+        event_data:
+          room: bathroom
+      - event: activate_room_profile
+        event_data:
+          room: bedroom
+      - event: activate_room_profile
+        event_data:
+          room: hallway
+      - event: activate_room_profile
+        event_data:
+          room: kitchen
+      - event: activate_room_profile
+        event_data:
+          room: living_room
+      - event: activate_room_profile
+        event_data:
+          room: office
+      - event: activate_room_profile
         event_data:
           room: storage_room
 
@@ -699,11 +744,15 @@ automation:
     action:
       - service: script.turn_on
         data_template:
+          variables:
+            transition_time: "{{ states.input_number.scene_transition_time.state | float }}"
           entity_id: >
-            {%- if is_state('input_boolean.party_mode', 'on') -%}
-              script.light_profile_{{ trigger.event.data.room }}_party
-            {%- elif is_state('input_select.' + trigger.event.data.room + '_room_state', 'active') -%}
-              script.light_profile_{{ trigger.event.data.room }}_{{ states('input_select.' + trigger.event.data.room + '_light_profile') | lower }}
+            {%- if is_state('input_select.' + trigger.event.data.room + '_room_state', 'active') -%}
+              {%- if is_state('input_boolean.party_mode', 'on') -%}
+                script.light_profile_{{ trigger.event.data.room }}_party
+              {%- else -%}
+                script.light_profile_{{ trigger.event.data.room }}_{{ states('input_select.' + trigger.event.data.room + '_light_profile') | lower }}
+              {%- endif -%}
             {%- elif is_state('input_select.' + trigger.event.data.room + '_room_state', 'active') -%}
               script.light_profile_{{ trigger.event.data.room }}_{{ states('input_select.' + trigger.event.data.room + '_inactive_light_profile') | lower }}
             {%- else %}
