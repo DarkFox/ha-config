@@ -3,35 +3,45 @@ weather:
     api_key: !secret darksky_api_key
     mode: daily
 
+automation:
+  - alias: update_dmi_sensor
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: sensor.dmi_weather_raw
+      # - platform: state
+      #   entity_id: input_boolean.home_assistant_started
+      #   to: 'on'
+    action:
+      - service: mqtt.publish
+        data_template:
+          topic: "dmi_weather/state"
+          retain: True
+          payload: >-
+            {{ states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text | regex_findall_index("<overskriftkoebenhavnognordsjaelland.+><text>(.*?)<\/text><\/overskriftkoebenhavnognordsjaelland>", 0) }}
+      - service: mqtt.publish
+        data_template:
+          topic: "dmi_weather/attributes"
+          retain: True
+          payload: >-
+            {
+              "date": "{{ states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text | regex_findall_index("<dato.+><text>(.*?)<\/text><\/dato>", 0) }}",
+              "validity": "{{ states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text | regex_findall_index("<reggyld.+><text>(.*?)<\/text><\/reggyld>", 0) }}",
+              "content": "{{ states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text | regex_findall_index("<koebenhavnognordsjaelland.+><text>(.*?)<\/text><\/koebenhavnognordsjaelland>", 0) }}"
+            }
+
 sensor:
-  # - platform: darksky
-  #   api_key: !secret darksky_api_key
-  #   language: da
-  #   update_interval: '00:05'
-  #   monitored_conditions:
-  #     - icon
-  #     - summary
-  #     - precip_type
-  #     - precip_intensity
-  #     - precip_probability
-  #     - temperature
-  #     - temperature_high
-  #     - temperature_low
-  #     - apparent_temperature
-  #     - apparent_temperature_high
-  #     - apparent_temperature_low
-  #     - dew_point
-  #     - wind_speed
-  #     - wind_bearing
-  #     - cloud_cover
-  #     - humidity
-  #     - pressure
-  #     - visibility
-  #     - ozone
-  #     - minutely_summary
-  #     - hourly_summary
-  #     - daily_summary
-  #     - uv_index
+  - platform: rest
+    name: dmi_weather_raw
+    resource: !secret dmi_weather_url
+    value_template: "{{ value_json.regiondata[0].products[0].timestamp }}"
+    json_attributes:
+      - regiondata
+
+  - platform: mqtt
+    name: "DMI Vejr"
+    state_topic: "dmi_weather/state"
+    json_attributes_topic: "dmi_weather/attributes"
 
   - platform: template
     sensors:

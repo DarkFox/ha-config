@@ -31,18 +31,19 @@ script:
       - service: homeassistant.update_entity
         data:
           entity_id: sensor.tts_greeting
-      - service: tts.amazon_polly_say
+      - service: tts.google_say
         data_template:
           entity_id: "{{ device_entity_id }}"
           message: >
             {{ states("sensor.tts_greeting") }}. Klokken er {{ states("sensor.time") }}.
-            Vejrudsigt: {{ states("sensor.dmi_city_weather") }}. {{ state_attr('sensor.dmi_city_weather', 'report') }}.
+            Vejrudsigt: {{ states("sensor.dmi_vejr") }}. {{ state_attr('sensor.dmi_vejr', 'content') }}
             {% if is_state('binary_sensor.workday_sensor', 'on') and now().hour < 12 -%}
               S-Tog Linje B:
-              {% if is_state('sensor.s_train_b_status', 'Til tiden') -%}
-                Kører normalt.
-              {% else -%}
-                 {{ states('sensor.s_train_b_status') }}. {{ states('sensor.s_train_message') }}.
+              {%- if is_state('sensor.s_train_b_status', 'Til tiden') -%}
+                {{ ' ' }}Kører normalt.
+              {%- else -%}
+                 {{ ' ' }}{{ states('sensor.s_train_b_status') }}.
+                 {{ states('sensor.s_train_message') }}.
                  Estimeret rejsetid: {{ states('sensor.travel_time_to_work_public_transit') }} minutter.
               {%- endif -%}
             {%- endif -%}
