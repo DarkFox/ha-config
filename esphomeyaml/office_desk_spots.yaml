@@ -1,0 +1,90 @@
+substitutions:
+  devicename: office_desk_spot
+  upper_devicename: Office Desk Spot
+
+esphomeyaml:
+  name: ${devicename}s
+  platform: ESP8266
+  board: huzzah
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret api_pass
+
+ota:
+  password: !secret ota_pass
+
+text_sensor:
+  - platform: version
+    name: "${upper_devicename}s Esphomelib Version"
+
+status_led:
+  pin:
+    number: GPIO5
+    inverted: true
+
+  #   pin: GPIO05
+  #   id: status_red_pwm
+
+  #   pin: GPIO01
+  #   id: status_green_pwm
+
+output: !include shared/h801_pwm.yaml
+
+light:
+  - platform: monochromatic
+    id: ${devicename}_1
+    name: ${upper_devicename} 1
+    output: red_pwm
+    default_transition_length: 250ms
+    effects:
+      - flicker:
+          alpha: 99%
+          intensity: 1.5%
+
+  - platform: monochromatic
+    id: ${devicename}_2
+    name: ${upper_devicename} 2
+    output: green_pwm
+    default_transition_length: 250ms
+    effects:
+      - flicker:
+          alpha: 99%
+          intensity: 1.5%
+
+  - platform: monochromatic
+    id: ${devicename}_3
+    name: ${upper_devicename} 3
+    output: blue_pwm
+    default_transition_length: 250ms
+    effects:
+      - flicker:
+          alpha: 99%
+          intensity: 1.5%
+
+  - platform: monochromatic
+    id: ${devicename}_4
+    name: ${upper_devicename} 4
+    output: w1_pwm
+    default_transition_length: 250ms
+    effects:
+      - flicker:
+          alpha: 99%
+          intensity: 1.5%
+
+  - platform: monochromatic
+    id: ${devicename}_5
+    name: ${upper_devicename} 5
+    output: w2_pwm
+    default_transition_length: 250ms
+    effects:
+      - flicker:
+          alpha: 99%
+          intensity: 1.5%

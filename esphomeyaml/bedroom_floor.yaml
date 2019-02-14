@@ -1,0 +1,52 @@
+substitutions:
+  devicename: bedroom_floor
+  upper_devicename: Bedroom Floor
+
+esphomeyaml:
+  name: $devicename
+  platform: ESP8266
+  board: huzzah
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret api_pass
+
+ota:
+  password: !secret ota_pass
+
+text_sensor:
+  - platform: version
+    name: "${upper_devicename} Esphomelib Version"
+
+status_led:
+  pin:
+    number: GPIO5
+    inverted: true
+
+  #   pin: GPIO05
+  #   id: status_red_pwm
+
+  #   pin: GPIO01
+  #   id: status_green_pwm
+
+output: !include shared/h801_pwm.yaml
+
+light:
+  - platform: rgb
+    id: $devicename
+    name: $upper_devicename
+    red: red_pwm
+    green: green_pwm
+    blue: blue_pwm
+    default_transition_length: 250ms
+    effects:
+      - flicker:
+          alpha: 99%
+          intensity: 1.5%
