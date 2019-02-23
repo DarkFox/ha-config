@@ -31,12 +31,12 @@ script:
       - service: homeassistant.update_entity
         data:
           entity_id: sensor.tts_greeting
-      - service: tts.google_say
+      - service: tts.amazon_polly_say
         data_template:
           entity_id: "{{ device_entity_id }}"
           message: >
             {{ states("sensor.tts_greeting") }}. Klokken er {{ states("sensor.time") }}.
-            Vejrudsigt: {{ states("sensor.dmi_vejr") }}. {{ state_attr('sensor.dmi_vejr', 'content') }}
+            Vejrudsigt: {{ states("sensor.dmi_vejr") }}.
             {% if is_state('binary_sensor.workday_sensor', 'on') and now().hour < 12 -%}
               S-Tog Linje B:
               {%- if is_state('sensor.s_train_b_status', 'Til tiden') -%}
@@ -337,10 +337,15 @@ automation:
       entity_id: input_select.sleep_state
       to: 'bedtime'
     action:
+      - service: switch.turn_off
+        data:
+          entity_id: switch.radiator
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
-          value: 300
+          value: 300.0
+      - delay:
+          seconds: 1
       - service: input_select.select_option
         data_template:
           option: 'Ambient'
@@ -350,33 +355,11 @@ automation:
             {% else %}
               input_select.light_profile
             {% endif %}
-      - delay: 00:00:2
-      - service: input_number.set_value
+      - delay:
+          seconds: 2
+      - service: automation.trigger
         data:
-          entity_id: "input_number.scene_transition_time"
-          value: 2
-      - delay: 00:25:00
-      - condition: state
-        entity_id: input_select.sleep_state
-        state: 'bedtime'
-      - service: input_number.set_value
-        data:
-          entity_id: "input_number.scene_transition_time"
-          value: 300
-      - service: input_select.select_option
-        data_template:
-          option: 'Night'
-          entity_id: >
-            {% if is_state('input_boolean.guests', 'on') %}
-              input_select.bedroom_light_profile
-            {% else %}
-              input_select.light_profile
-            {% endif %}
-      - delay: 00:00:2
-      - service: input_number.set_value
-        data:
-          entity_id: "input_number.scene_transition_time"
-          value: 2
+          entity_id: "automation.reset_scene_transition_time"
 
   - alias: in_bed_action
     initial_state: true
@@ -388,7 +371,9 @@ automation:
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
-          value: 120
+          value: 120.0
+      - delay:
+          seconds: 1
       - service: input_select.select_option
         data_template:
           option: 'Night'
@@ -398,11 +383,11 @@ automation:
             {% else %}
               input_select.light_profile
             {% endif %}
-      - delay: 00:00:2
-      - service: input_number.set_value
+      - delay:
+          seconds: 2
+      - service: automation.trigger
         data:
-          entity_id: "input_number.scene_transition_time"
-          value: 2
+          entity_id: "automation.reset_scene_transition_time"
 
   - alias: sleeping_action
     initial_state: true
@@ -415,7 +400,9 @@ automation:
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
-          value: 30
+          value: 10.0
+      - delay:
+          seconds: 1
       - service: input_select.select_option
         data_template:
           option: 'Off'
@@ -425,11 +412,11 @@ automation:
             {% else %}
               input_select.light_profile
             {% endif %}
-      - delay: 00:00:2
-      - service: input_number.set_value
+      - delay:
+          seconds: 2
+      - service: automation.trigger
         data:
-          entity_id: "input_number.scene_transition_time"
-          value: 2
+          entity_id: "automation.reset_scene_transition_time"
 
   - alias: sleep_paused_action
     initial_state: true
@@ -479,10 +466,23 @@ automation:
       entity_id: input_select.sleep_state
       to: 'alarm'
     action:
+      - service: input_select.select_option
+        data_template:
+          option: 'Night'
+          entity_id: >
+            {% if is_state('input_boolean.guests', 'on') %}
+              input_select.bedroom_light_profile
+            {% else %}
+              input_select.light_profile
+            {% endif %}
+      - delay:
+          seconds: 10
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
-          value: 300
+          value: 600.0
+      - delay:
+          seconds: 1
       - service: input_select.select_option
         data_template:
           option: 'Ambient'
@@ -502,7 +502,7 @@ automation:
           options:
             - "==SCRIPT==morning_briefing"
             - "{{ states.sensor.podcast_bbc_minute.state }}"
-            - "http://ice1.somafm.com/poptron-128-aac"
+            - "http://ice1.somafm.com/groovesalad-128-aac"
             - "==END=="
       - delay:
           seconds: 2
@@ -510,10 +510,9 @@ automation:
         data_template:
           entity_id: 'media_player.bedroom_speaker'
           volume_level: 0.30
-      - service: input_number.set_value
+      - service: automation.trigger
         data:
-          entity_id: "input_number.scene_transition_time"
-          value: 2
+          entity_id: "automation.reset_scene_transition_time"
 
   - alias: snoozing_action
     initial_state: true
@@ -526,7 +525,9 @@ automation:
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
-          value: 600
+          value: 120.0
+      - delay:
+          seconds: 1
       - service: input_select.select_option
         data_template:
           option: 'Ambient'
@@ -536,11 +537,10 @@ automation:
             {% else %}
               input_select.light_profile
             {% endif %}
-      - delay: 00:00:2
-      - service: input_number.set_value
+      - delay: 00:00:02
+      - service: automation.trigger
         data:
-          entity_id: "input_number.scene_transition_time"
-          value: 2
+          entity_id: "automation.reset_scene_transition_time"
 
   - alias: waking_action
     initial_state: true
@@ -552,7 +552,9 @@ automation:
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
-          value: 120
+          value: 120.0
+      - delay:
+          seconds: 1
       - service: input_select.select_option
         data_template:
           option: 'Dimmed'
@@ -573,7 +575,7 @@ automation:
             - "==SCRIPT==morning_briefing"
             - "{{ states.sensor.podcast_bbc_minute.state }}"
             - "{{ states.sensor.podcast_24syv_nyheder.state }}"
-            - "http://ice1.somafm.com/poptron-128-aac"
+            - "http://ice1.somafm.com/groovesalad-128-aac"
             - "==END=="
       - delay:
           seconds: 2
@@ -581,10 +583,9 @@ automation:
         data_template:
           entity_id: 'media_player.bedroom_speaker'
           volume_level: 0.40
-      - service: input_number.set_value
+      - service: automation.trigger
         data:
-          entity_id: "input_number.scene_transition_time"
-          value: 2
+          entity_id: "automation.reset_scene_transition_time"
 
   - alias: awake_activity
     initial_state: true
@@ -599,10 +600,14 @@ automation:
           entity_id:
             - input_boolean.hallway_activity_override
             - input_boolean.bathroom_activity_override
+      - delay:
+          seconds: 1
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
-          value: 240
+          value: 240.0
+      - delay:
+          seconds: 1
       - service: input_select.select_option
         data_template:
           option: 'Default'
@@ -625,11 +630,11 @@ automation:
         data_template:
           entity_id: input_select.playlist
           options:
-            #- "==SCRIPT==morning_briefing"
+            - "==SCRIPT==morning_briefing"
             - "{{ states.sensor.podcast_bbc_minute.state }}"
             - "{{ states.sensor.podcast_daily_tech_news_show.state }}"
             - "{{ states.sensor.podcast_24syv_nyheder.state }}"
-            - "http://ice1.somafm.com/poptron-128-aac"
+            - "http://ice1.somafm.com/groovesalad-128-aac"
             - "==END=="
       - delay:
           seconds: 2
@@ -637,10 +642,9 @@ automation:
         data_template:
           entity_id: 'media_player.east_side_speakers'
           volume_level: 0.5
-      - service: input_number.set_value
+      - service: automation.trigger
         data:
-          entity_id: "input_number.scene_transition_time"
-          value: 2
+          entity_id: "automation.reset_scene_transition_time"
       - service: input_boolean.turn_off
         data:
           entity_id:
