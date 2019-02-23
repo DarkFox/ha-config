@@ -21,6 +21,10 @@ group:
       - sensor.s_train_b_next
 
 sensor:
+  - platform: dsb_trafikinfo
+    name: DSB Trafikinfo
+    sender: S-tog
+
   - platform: google_travel_time
     name: Martin to Home
     api_key: !secret google_directions_secret
@@ -51,22 +55,30 @@ sensor:
     select: 'div.FooterFreeText'
     value_template: >-
       {{ value | regex_replace(find='\..*(Rejseplanen|Rejseplan|DSB App).*', replace='.', ignorecase=True) | trim }}
-    scan_interval: 120
+    scan_interval: 300
 
   - platform: scrape
     resource: http://www.dsb.dk/trafikinformation/s-tog-overblik/
     name: s_train_b_status
     select: 'table.RepeaterTable tr:nth-of-type(2) td.TDItemLabel div b'
     value_template: "{{ value | trim }}"
-    scan_interval: 120
+    scan_interval: 300
 
-  - platform: scrape
-    resource: "http://www.dsb.dk/Rejseplan/bin/stboard.exe/mn?L=vs_dsbticker&amp;ml=m&amp;&input=Br%F8ndby%F8ster%20st!&dirInput=N%F8rreport%20St.&boardType=dep&selectDate=today&productsFilter=00001000000&additionalTime=&start=yes&disableEquivs=yes&ignoreMasts=1&outputMode=tickerDataOnly&maxJourneys=5%27"
+  # - platform: scrape
+  #   resource: "http://www.dsb.dk/Rejseplan/bin/stboard.exe/mn?L=vs_dsbticker&amp;ml=m&amp;&input=Br%F8ndby%F8ster%20st!&dirInput=N%F8rreport%20St.&boardType=dep&selectDate=today&productsFilter=00001000000&additionalTime=&start=yes&disableEquivs=yes&ignoreMasts=1&outputMode=tickerDataOnly&maxJourneys=5%27"
+  #   name: s_train_b_next
+  #   select: '.hfsWidget_resultTableRow_time div:nth-of-type(1)'
+  #   value_template: "{{ value | trim | replace('.', ':') | int }}"
+  #   scan_interval: 30
+  #   unit_of_measurement: 'min'
+
+  - platform: rejseplanen
     name: s_train_b_next
-    select: '.hfsWidget_resultTableRow_time div:nth-of-type(1)'
-    value_template: "{{ value | trim | replace('.', ':') | int }}"
-    scan_interval: 30
-    unit_of_measurement: 'min'
+    stop_id: '008600679'
+    departure_type: S
+    route: B
+    direction:
+      - Farum St.
 
 binary_sensor:
   - platform: template
