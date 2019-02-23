@@ -13,16 +13,6 @@ homeassistant:
     binary_sensor.workday_sensor:
       friendly_name: Weekday
 
-    # Speed Test Sensor
-    sensor.speedtest_ping:
-      friendly_name: Ping Speed
-
-    sensor.speedtest_upload:
-      friendly_name: Upload Speed
-
-    sensor.speedtest_download:
-      friendly_name: Download Speed
-
     # System Info Sensor
     sensor.cpu_speed:
       friendly_name: CPU Speed
@@ -75,13 +65,6 @@ group:
       - sensor.ha_current_version
       - sensor.ha_last_restart
 
-  Internet Speed:
-    entities:
-      - sensor.speedtest_ping
-      - sensor.speedtest_upload
-      - sensor.speedtest_download
-      - sensor.external_ip
-
   date_time:
     name: 'Time and Date'
     entities:
@@ -101,7 +84,6 @@ group:
       - automation.notify_of_new_external_ip
       - automation.startup_notification
       - automation.update_available_notification
-      - automation.speedtest
 
 input_boolean:
   home_assistant_started:
@@ -138,13 +120,6 @@ sensor:
         entity_id: sensor.date
         value_template: >-
           {{ now().strftime('%-d. %b') }}
-
-  - platform: speedtest
-    manual: true
-    monitored_conditions:
-      - ping
-      - download
-      - upload
 
   - platform: systemmonitor
     resources:
@@ -196,18 +171,6 @@ automation:
     action:
       - service: script.restart_wallpanels
 
-  - alias: speedtest
-    initial_state: true
-    trigger:
-      platform: time_pattern
-      minutes: 44
-      seconds: 0
-    condition:
-      - condition: state
-        entity_id: sensor.steam_game
-        state: ''
-    action:
-      - service: sensor.update_speedtest
 
   - alias: Notify Of New External IP
     initial_state: true
