@@ -1,8 +1,8 @@
 substitutions:
-  devicename: living_room_bookcase
-  upper_devicename: Living Room Bookcase
+  devicename: display_cabinet_top
+  upper_devicename: Display Cabinet Top
 
-esphomeyaml:
+esphome:
   name: $devicename
   platform: ESP8266
   board: huzzah
@@ -40,33 +40,25 @@ output: !include shared/h801_pwm.yaml
 
 light:
   - platform: rgb
-    id: bar
-    name: Bar
+    id: ${devicename}
+    name: ${upper_devicename}
     red: red_pwm
     green: green_pwm
     blue: blue_pwm
+    gamma_correct: 1.8
     default_transition_length: 250ms
     effects:
+      - random:
+      - strobe:
       - flicker:
-          alpha: 99%
-          intensity: 1.5%
 
   - platform: monochromatic
-    id: cabinet_spots
-    name: Cabinet Spots
+    id: display_cabinet_front
+    name: Display Cabinet Front
     output: w1_pwm
+    gamma_correct: 1.8
     default_transition_length: 250ms
     effects:
+      - random:
+      - strobe:
       - flicker:
-          alpha: 99%
-          intensity: 1.5%
-
-  - platform: monochromatic
-    id: cabinet_shelves
-    name: Cabinet Shelves
-    output: w2_pwm
-    default_transition_length: 250ms
-    effects:
-      - flicker:
-          alpha: 99%
-          intensity: 1.5%
