@@ -10,13 +10,6 @@ script:
           entity_id:
             - light.kitchen
             - light.kitchen_spots
-      # Switchable Lights
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          entity_id:
-            - light.kitchen_sink
-            - light.kitchen_stove
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
@@ -25,6 +18,13 @@ script:
           hs_color: [0, 0]
           entity_id:
             - light.kitchen_cabinets
+      # Switchable Lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          entity_id:
+            - light.kitchen_sink
+            - light.kitchen_stove
 
 
   light_profile_kitchen_default:
@@ -44,13 +44,6 @@ script:
           color_temp: 400
           entity_id:
             - light.kitchen_spots
-      # Switchable Lights
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          entity_id:
-            - light.kitchen_sink
-            - light.kitchen_stove
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
@@ -59,6 +52,13 @@ script:
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           entity_id:
             - light.kitchen_cabinets
+      # Switchable Lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          entity_id:
+            - light.kitchen_sink
+            - light.kitchen_stove
 
 
   light_profile_kitchen_dimmed:
@@ -77,13 +77,6 @@ script:
           color_temp: 500
           entity_id:
             - light.kitchen_spots
-      # Switchable Lights
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          entity_id:
-            - light.kitchen_sink
-            - light.kitchen_stove
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
@@ -92,20 +85,21 @@ script:
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           entity_id:
             - light.kitchen_cabinets
-
-
-  light_profile_kitchen_ambient:
-    sequence:
-      # Off lights
+      # Switchable Lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          entity_id:
+            - light.kitchen_stove
       - service: light.turn_off
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           entity_id:
             - light.kitchen_sink
-            - light.kitchen_stove
-            - light.kitchen_spot_1
-            - light.kitchen_spot_2
-            - light.kitchen_spot_3
+
+
+  light_profile_kitchen_ambient:
+    sequence:
       # Primary RGB lights
       - service: light.turn_on
         data_template:
@@ -122,20 +116,25 @@ script:
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           entity_id:
             - light.kitchen_cabinets
-
-
-  light_profile_kitchen_night:
-    sequence:
       # Off lights
+      - service: light.turn_off
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          entity_id:
+            - light.kitchen_spot_1
+            - light.kitchen_spot_2
+            - light.kitchen_spot_3
+      # Switchable Lights
       - service: light.turn_off
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           entity_id:
             - light.kitchen_sink
             - light.kitchen_stove
-            - light.kitchen_spot_1
-            - light.kitchen_spot_2
-            - light.kitchen_spot_3
+
+
+  light_profile_kitchen_night:
+    sequence:
       # Primary RGB lights
       - service: light.turn_on
         data_template:
@@ -152,6 +151,21 @@ script:
           rgb_color: [255, 0, 0]
           entity_id:
             - light.kitchen_cabinets
+      # Off lights
+      - service: light.turn_off
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          entity_id:
+            - light.kitchen_spot_1
+            - light.kitchen_spot_2
+            - light.kitchen_spot_3
+      # Switchable Lights
+      - service: light.turn_off
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          entity_id:
+            - light.kitchen_sink
+            - light.kitchen_stove
 
 
   light_profile_kitchen_off:
