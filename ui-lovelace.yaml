@@ -2,17 +2,25 @@ resources:
   # Libs
   - url: /local/custom-lovelace/libraries/moment-with-locales.min.js
     type: js
-  - url: /local/custom-lovelace/card-tools/card-tools.js?v=0.3.0
+  - url: /local/custom-lovelace/card-tools/card-tools.js?v=0.4.0
     type: js
   # Mods
-  - url: /local/custom-lovelace/card-modder/card-modder.js?v=0.0.2
+  - url: /local/custom-lovelace/card-modder/card-modder.js?v=0.0.3
     type: js
   - url: /local/custom-lovelace/compact-custom-header/compact-custom-header.js?v=0.2.9
     type: js
-  - url: /local/custom-lovelace/lovelace-layout-card/layout-card.js?v=0.0.2
+  - url: /local/custom-lovelace/layout-card/layout-card.js?v=0.0.3
     type: js
   # Cards
-  - url: /local/custom-lovelace/vertical-stack-in-card/vertical-stack-in-card.js?v=0.0.9
+  # - url: /local/custom-lovelace/auto-entities/auto-entities.js?v=0.0.1
+  #   type: js
+  # - url: /local/custom-lovelace/fold-entity-row/fold-entity-row.js?v=0.0.1
+  #   type: js
+  - url: /local/custom-lovelace/list-card/list-card.js?v=0.0.1
+    type: js
+  - url: /local/custom-lovelace/flex-table-card/flex-table-card.js?v=0.0.2
+    type: js
+  - url: /local/custom-lovelace/vertical-stack-in-card/vertical-stack-in-card.js?v=0.0.10
     type: js
   - url: /local/custom-lovelace/bramkragten/swipe-card/swipe-card.js
     type: module
@@ -20,9 +28,9 @@ resources:
     type: js
   - url: /local/custom-lovelace/ciotlosm/bignumber-card/bignumber-card.js?=v0.0.1
     type: js
-  - url: /local/custom-lovelace/calendar-card/calendar-card.js?v=1.3.1il
-    type: module
-  - url: /local/custom-lovelace/bramkragten/weather-card/weather-card.js?v=0.0.6
+  - url: /local/custom-lovelace/calendar-card/calendar-card.js?v=2.0.1
+    type: js
+  - url: /local/custom-lovelace/bramkragten/weather-card/weather-card.js?v=0.0.7
     type: module
 
 node_anchors:
@@ -32,13 +40,14 @@ node_anchors:
     clock_format: 24
     notification: true, false
     voice: true, false
-    user_agent: Android, Nexus, KFFOWI, iPad
+    user_agent: Android, Nexus, KFFOWI, iPad, Lenovo
     user_agent_views:
       - 1,2,3,4,5,6,7,8,9   # Default view.
       - 1,2,3,4,5,6,7,8,9,12 # Phone view
       - '10' # Hallway tablet view
       - '11' # Bathroom tablet view
       - '13' # Office tablet view
+      - '11' # Bathroom tablet view
 
   s_train_status: &s_train_status
     type: custom:card-modder
@@ -64,10 +73,37 @@ node_anchors:
           </font>
         </center>
 
+  dmi_weather: &dmi-weather
+    type: sensor
+    entity: sensor.dmi_vejr
+    name: Vejrudsigt
+    icon: mdi:cloud
+    # type: 'custom:useful-markdown-card'
+    # content: >-
+    #   <font size=4>
+    #     [[sensor.dmi_vejr.state]]
+    #   </font><br>
+    #   <font size=1>
+    #     [[sensor.dmi_vejr.attributes.validity]]
+    #   </font>
+    #   <br> [[sensor.dmi_vejr.attributes.content]]
+
   animated_weather: &animated-weather
     type: custom:weather-card
     entity: weather.dark_sky
     icons: "/local/custom-lovelace/bramkragten/weather-card/icons/animated/"
+
+  aftership: &aftership
+    type: custom:list-card
+    entity: sensor.aftership
+    columns:
+      - title: Title
+        field: title
+        add_link: link
+      - title: Status
+        field: status
+      - title: Location
+        field: location
 
   playlist_controls: &playlist-controls
     type: conditional
@@ -247,6 +283,7 @@ views:
                 show_header_toggle: false
                 entities:
                   - entity: input_select.theme
+                  - entity: input_number.scene_transition_time
 
               - type: entities
                 title: Presence
@@ -304,11 +341,14 @@ views:
                   - sensor.s_train_message
                   - sensor.s_train_b_next
 
+              - <<: *aftership
+
           - break
 
           - type: vertical-stack
             cards:
               - <<: *animated-weather
+              - <<: *dmi-weather
 
               - type: custom:calendar-card
                 title: ""
@@ -326,35 +366,14 @@ views:
                   - input_select.playlist
                   - input_select.playlist_player
 
-              - type: conditional
-                conditions:
-                  - entity: media_player.all_speakers
-                    state_not: 'off'
-                  - entity: media_player.all_speakers
-                    state_not: 'unavailable'
-                card:
-                  type: media-control
-                  entity: media_player.all_speakers
+              - type: media-control
+                entity: media_player.all_speakers
 
-              - type: conditional
-                conditions:
-                  - entity: media_player.east_side_speakers
-                    state_not: 'off'
-                  - entity: media_player.east_side_speakers
-                    state_not: 'unavailable'
-                card:
-                  type: media-control
-                  entity: media_player.east_side_speakers
+              - type: media-control
+                entity: media_player.east_side_speakers
 
-              - type: conditional
-                conditions:
-                  - entity: media_player.west_side_speakers
-                    state_not: 'off'
-                  - entity: media_player.west_side_speakers
-                    state_not: 'unavailable'
-                card:
-                  type: media-control
-                  entity: media_player.west_side_speakers
+              - type: media-control
+                entity: media_player.west_side_speakers
 
               - type: media-control
                 entity: media_player.minis
@@ -453,7 +472,7 @@ views:
                     name: Sofahjørne
                     tap_action:
                       action: toggle
-                  - entity: light.bar_desk
+                  - entity: light.bar
                     name: Bar
                     tap_action:
                       action: toggle
@@ -508,35 +527,14 @@ views:
               - type: media-control
                 entity: media_player.living_room_mini
 
-              - type: conditional
-                card:
-                  type: media-control
-                  entity: media_player.living_room_chromecast
-                conditions:
-                  - entity: media_player.living_room_chromecast
-                    state_not: 'off'
-                  - entity: media_player.living_room_chromecast
-                    state_not: 'unavailable'
+              - type: media-control
+                entity: media_player.living_room_chromecast
 
-              - type: conditional
-                card:
-                  type: media-control
-                  entity: media_player.living_room_soundbar
-                conditions:
-                  - entity: media_player.living_room_soundbar
-                    state_not: 'off'
-                  - entity: media_player.living_room_soundbar
-                    state_not: 'unavailable'
+              - type: media-control
+                entity: media_player.living_room_soundbar
 
-              - type: conditional
-                card:
-                  type: media-control
-                  entity: media_player.tv_soundbar_songpal
-                conditions:
-                  - entity: media_player.tv_soundbar_songpal
-                    state_not: 'off'
-                  - entity: media_player.tv_soundbar_songpal
-                    state_not: 'unavailable'
+              - type: media-control
+                entity: media_player.tv_soundbar_songpal
 
           - break
 
@@ -550,9 +548,6 @@ views:
                   - sensor.livingroom_luminance
                   - sensor.livingroom_relative_humidity
                   - sensor.livingroom_temperature
-                  - sensor.living_room_noise_level
-                  - sensor.living_room_noise_level_stats_mean
-                  - sensor.living_room_wifi_signal
 
   # /Livingroom
 
@@ -621,15 +616,15 @@ views:
                     name: Sengelampe
                     tap_action:
                       action: toggle
-                  - entity: light.bedroom_shelves
+                  - entity: light.bedroom_shelf_spots
                     name: Hylde Spots
                     tap_action:
                       action: toggle
-                  - entity: light.bedroom_cupboard_rgb
+                  - entity: light.bedroom_floor
                     name: Reol
                     tap_action:
                       action: toggle
-                  - entity: light.bed_shelf_rgb
+                  - entity: light.bed_table
                     name: Sidebord
                     tap_action:
                       action: toggle
@@ -658,35 +653,14 @@ views:
               - type: media-control
                 entity: media_player.bedroom_mini
 
-              - type: conditional
-                card:
-                  type: media-control
-                  entity: media_player.bedroom_tv
-                conditions:
-                  - entity: media_player.bedroom_tv
-                    state_not: 'off'
-                  - entity: media_player.bedroom_tv
-                    state_not: 'unavailable'
+              - type: media-control
+                entity: media_player.bedroom_tv
 
-              - type: conditional
-                card:
-                  type: media-control
-                  entity: media_player.bedroom_chromecast
-                conditions:
-                  - entity: media_player.bedroom_chromecast
-                    state_not: 'off'
-                  - entity: media_player.bedroom_chromecast
-                    state_not: 'unavailable'
+              - type: media-control
+                entity: media_player.bedroom_chromecast
 
-              - type: conditional
-                card:
-                  type: media-control
-                  entity: media_player.bedroom_speaker
-                conditions:
-                  - entity: media_player.bedroom_speaker
-                    state_not: 'off'
-                  - entity: media_player.bedroom_speaker
-                    state_not: 'unavailable'
+              - type: media-control
+                entity: media_player.bedroom_speaker
 
           - break
 
@@ -709,9 +683,6 @@ views:
                   - sensor.bedroom_luminance
                   - sensor.bedroom_relative_humidity
                   - sensor.bedroom_temperature
-                  - sensor.bedroom_noise_level
-                  - sensor.bedroom_noise_level_stats_mean
-                  - sensor.bedroom_wifi_signal
 
   # /Bedroom
 
@@ -776,7 +747,7 @@ views:
                     name: Desk Spots
                     tap_action:
                       action: toggle
-                  - entity: light.office_desk_shelf
+                  - entity: light.office_shelf
                     name: Desk Shelf
                     tap_action:
                       action: toggle
@@ -826,35 +797,14 @@ views:
               - type: media-control
                 entity: media_player.office_mini
 
-              - type: conditional
-                card:
-                  type: media-control
-                  entity: media_player.office_speakers
-                conditions:
-                  - entity: media_player.office_speakers
-                    state_not: 'off'
-                  - entity: media_player.office_speakers
-                    state_not: 'unavailable'
+              - type: media-control
+                entity: media_player.office_speakers
 
-              - type: conditional
-                card:
-                  type: media-control
-                  entity: media_player.desktop_pc_audio
-                conditions:
-                  - entity: media_player.desktop_pc_audio
-                    state_not: 'off'
-                  - entity: media_player.desktop_pc_audio
-                    state_not: 'unavailable'
+              - type: media-control
+                entity: media_player.desktop_pc_audio
 
-              - type: conditional
-                card:
-                  type: media-control
-                  entity: media_player.office_soundbar
-                conditions:
-                  - entity: media_player.office_soundbar
-                    state_not: 'off'
-                  - entity: media_player.office_soundbar
-                    state_not: 'unavailable'
+              - type: media-control
+                entity: media_player.office_soundbar
 
           - break
 
@@ -876,9 +826,6 @@ views:
                   - sensor.office_luminance
                   - sensor.office_relative_humidity
                   - sensor.office_temperature
-                  - sensor.office_noise_level
-                  - sensor.office_noise_level_stats_mean
-                  - sensor.office_wifi_signal
 
   # /Office
 
@@ -982,25 +929,11 @@ views:
               - type: media-control
                 entity: media_player.kitchen_mini
 
-              - type: conditional
-                card:
-                  type: media-control
-                  entity: media_player.kitchen_chromecast
-                conditions:
-                  - entity: media_player.kitchen_chromecast
-                    state_not: 'off'
-                  - entity: media_player.kitchen_chromecast
-                    state_not: 'unavailable'
+              - type: media-control
+                entity: media_player.kitchen_chromecast
 
-              - type: conditional
-                card:
-                  type: media-control
-                  entity: media_player.kitchen_speaker
-                conditions:
-                  - entity: media_player.kitchen_speaker
-                    state_not: 'off'
-                  - entity: media_player.kitchen_speaker
-                    state_not: 'unavailable'
+              - type: media-control
+                entity: media_player.kitchen_speaker
 
           - break
 
@@ -1014,9 +947,6 @@ views:
                   - sensor.kitchen_luminance
                   - sensor.kitchen_relative_humidity
                   - sensor.kitchen_temperature
-                  - sensor.kitchen_noise_level
-                  - sensor.kitchen_noise_level_stats_mean
-                  - sensor.kitchen_wifi_signal
 
   # /Kitchen
 
@@ -1110,7 +1040,6 @@ views:
                   - sensor.toilet_temperature
                   - sensor.toilet_mold_indicator
                   - sensor.toilet_relative_humidity_change
-                  - sensor.bathroom_wifi_signal
 
   # /Bathroom
 
@@ -1372,7 +1301,7 @@ views:
       - type: vertical-stack
         cards:
           - <<: *compact-custom-header
-            header: 'true, false, false, false, false'
+            header: 'true, true, false, false, false, false, false'
 
           - type: horizontal-stack
             cards:
@@ -1422,9 +1351,35 @@ views:
             cards:
               - type: vertical-stack
                 cards:
-                  - <<: *animated-weather
+                  # - <<: *animated-weather
+                  - type: weather-forecast
+                    entity: weather.dark_sky
+                  - <<: *dmi-weather
 
                   - <<: *air-states
+
+                  - type: conditional
+                    conditions:
+                      - entity: input_boolean.guests
+                        state: 'off'
+                    card:
+                      <<: *aftership
+
+              - type: vertical-stack
+                cards:
+                  - type: custom:bignumber-card
+                    title: Strømforbrug
+                    entity: sensor.energy_meter_watt
+                    max: 3000
+                    min: 0
+                    scale: 30px
+                    severity:
+                      - value: 300
+                        style: 'green'
+                      - value: 500
+                        style: 'yellow'
+                      - value: 1000
+                        style: 'red'
 
                   - type: horizontal-stack
                     cards:
@@ -1450,22 +1405,6 @@ views:
                             [[sensor.s_train_message.state]]
                           </font>
 
-                  - type: custom:bignumber-card
-                    title: Strømforbrug
-                    entity: sensor.energy_meter_watt
-                    max: 3000
-                    min: 0
-                    scale: 30px
-                    severity:
-                      - value: 300
-                        style: 'green'
-                      - value: 500
-                        style: 'yellow'
-                      - value: 1000
-                        style: 'red'
-
-              - type: vertical-stack
-                cards:
                   - <<: *playlist-controls
 
                   - type: conditional
@@ -1536,7 +1475,7 @@ views:
       - type: vertical-stack
         cards:
           - <<: *compact-custom-header
-            header: 'true, true, false, false, false'
+            header: 'true, true, false, false, false, false, false'
 
           - type: horizontal-stack
             cards:
@@ -1550,21 +1489,42 @@ views:
                       scale: 100px
                       entity: sensor.time
 
-                  # - type: custom:calendar-card
-                  #   title: ""
-                  #   numberOfDays: 8
-                  #   entities:
-                  #     - calendar.holidays_in_denmark
-                  #     - calendar.martin_darkfoxdk_eberhardt_tripit
-                  #     - calendar.martin_eberhardt
-                  #     - calendar.todoist
+                  - type: conditional
+                    conditions:
+                      - entity: input_boolean.guests
+                        state: 'off'
+                    card:
+                      type: custom:calendar-card
+                      title: ""
+                      numberOfDays: 8
+                      entities:
+                        - calendar.holidays_in_denmark
+                        - calendar.martin_darkfoxdk_eberhardt_tripit
+                        - calendar.martin_eberhardt
+                        - calendar.todoist
+
+                  - type: conditional
+                    conditions:
+                      - entity: input_boolean.guests
+                        state: 'off'
+                    card:
+                      <<: *aftership
 
               - type: vertical-stack
                 cards:
                   - type: weather-forecast
                     entity: weather.dark_sky
+                  - <<: *dmi-weather
 
                   - <<: *playlist-controls
+
+                  - type: conditional
+                    card:
+                      type: media-control
+                      entity: media_player.bathroom_speaker
+                    conditions:
+                      - entity: media_player.bathroom_speaker
+                        state_not: 'off'
 
                   - type: conditional
                     card:
@@ -1634,63 +1594,7 @@ views:
                       entities:
                         - entity: input_select.bathroom_room_state
 
-                  - type: custom:vertical-stack-in-card
-                    cards:
-                      - type: horizontal-stack
-                        cards:
-                          - type: vertical-stack
-                            cards:
-                              - type: custom:card-modder
-                                style:
-                                  padding: 0px 0px 0px 0px
-                                card:
-                                  type: sensor
-                                  name: Badeværelse
-                                  entity: sensor.toilet_temperature
-
-                              - type: custom:card-modder
-                                style:
-                                  padding: 0px 0px 0px 0px
-                                card:
-                                  type: sensor
-                                  name: " "
-                                  entity: sensor.toilet_relative_humidity
-
-                          - type: vertical-stack
-                            cards:
-                              - type: custom:card-modder
-                                style:
-                                  padding: 0px 0px 0px 0px
-                                card:
-                                  type: sensor
-                                  name: Stue
-                                  entity: sensor.livingroom_temperature
-
-                              - type: custom:card-modder
-                                style:
-                                  padding: 0px 0px 0px 0px
-                                card:
-                                  type: sensor
-                                  name: " "
-                                  entity: sensor.livingroom_relative_humidity
-
-                          - type: vertical-stack
-                            cards:
-                              - type: custom:card-modder
-                                style:
-                                  padding: 0px 0px 0px 0px
-                                card:
-                                  type: sensor
-                                  name: Kontor
-                                  entity: sensor.office_temperature
-
-                              - type: custom:card-modder
-                                style:
-                                  padding: 0px 0px 0px 0px
-                                card:
-                                  type: sensor
-                                  name: " "
-                                  entity: sensor.office_relative_humidity
+                  - <<: *air-states
 
                   - type: horizontal-stack
                     cards:
@@ -1792,7 +1696,7 @@ views:
       - type: vertical-stack
         cards:
           - <<: *compact-custom-header
-            header: 'true, true, false, false, false'
+            header: 'true, true, false, false, false, false, false'
 
           - type: horizontal-stack
             cards:
@@ -1818,6 +1722,7 @@ views:
               - type: vertical-stack
                 cards:
                   - <<: *animated-weather
+                  - <<: *dmi-weather
 
                   - <<: *playlist-controls
 
@@ -1854,7 +1759,7 @@ views:
                         name: Desk Spots
                         tap_action:
                           action: toggle
-                      - entity: light.office_desk_shelf
+                      - entity: light.office_shelf
                         name: Desk Shelf
                         tap_action:
                           action: toggle
