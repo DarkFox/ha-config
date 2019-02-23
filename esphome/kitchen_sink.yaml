@@ -1,0 +1,48 @@
+substitutions:
+  devicename: kitchen_sink
+  upper_devicename: Kitchen Sink
+
+esphome:
+  name: $devicename
+  platform: ESP8266
+  board: esp01_1m
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret api_pass
+
+ota:
+  password: !secret ota_pass
+
+status_led:
+  pin:
+    number: GPIO13
+    inverted: yes
+
+binary_sensor:
+  - platform: gpio
+    id: button
+    pin:
+      number: GPIO0
+      mode: INPUT_PULLUP
+      inverted: True
+    on_press:
+      - light.toggle: light
+
+output:
+  - platform: gpio
+    id: relay
+    pin: GPIO12
+
+light:
+  - platform: binary
+    id: light
+    name: $upper_devicename
+    output: relay
