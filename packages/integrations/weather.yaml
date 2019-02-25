@@ -3,33 +3,6 @@ weather:
     api_key: !secret darksky_api_key
     mode: daily
 
-automation:
-  - alias: update_dmi_sensor
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: sensor.dmi_weather_raw
-      # - platform: state
-      #   entity_id: input_boolean.home_assistant_started
-      #   to: 'on'
-    action:
-      - service: mqtt.publish
-        data_template:
-          topic: "dmi_weather/state"
-          retain: True
-          payload: >-
-            {{ states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text | regex_findall_index("<overskriftkoebenhavnognordsjaelland.+><text>(.*?)<\/text><\/overskriftkoebenhavnognordsjaelland>", 0) }}
-      - service: mqtt.publish
-        data_template:
-          topic: "dmi_weather/attributes"
-          retain: True
-          payload: >-
-            {
-              "date": "{{ states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text | regex_findall_index("<dato.+><text>(.*?)<\/text><\/dato>", 0) }}",
-              "validity": "{{ states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text | regex_findall_index("<reggyld.+><text>(.*?)<\/text><\/reggyld>", 0) }}",
-              "content": "{{ states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text | regex_findall_index("<koebenhavnognordsjaelland.+><text>(.*?)<\/text><\/koebenhavnognordsjaelland>", 0) }}"
-            }
-
 sensor:
   - platform: rest
     name: dmi_weather_raw
@@ -44,57 +17,122 @@ sensor:
     state_topic: "dmi_weather/state"
     json_attributes_topic: "dmi_weather/attributes"
 
-  - platform: template
-    sensors:
-      # dark_sky_precip_and_probability:
-      #   entity_id:
-      #     - sensor.dark_sky_precip_dk
-      #     - sensor.dark_sky_precip_probability
-      #   value_template: "{{ states.sensor.dark_sky_precip_dk.state }}, {{ states.sensor.dark_sky_precip_probability.state | int }}%"
+  - platform: rest
+    name: dmi_warnings_raw
+    resource: !secret dmi_warnings_url
+    scan_interval: 300
+    force_update: True
+    value_template: "{{ value_json.warnings[0].time or 0 }}"
+    json_attributes:
+      - locationWarnings
+      - actualWarnings
+      - fivedayWarnings
 
-      # dark_sky_apparent_temperature_text:
-      #   entity_id: sensor.dark_sky_apparent_temperature
-      #   value_template: "Føles som {{ states.sensor.dark_sky_apparent_temperature.state | replace('.', ',') }} ˚C"
+  - platform: mqtt
+    name: "DMI Aktuel Varsel"
+    state_topic: "dmi_current_warning/state"
+    json_attributes_topic: "dmi_current_warning/attributes"
 
-      dark_sky_wind_bearing_name:
-        friendly_name: Vindretning
-        entity_id: weather.dark_sky
-        value_template: >-
-          {% if state_attr('weather.dark_sky', 'wind_bearing') | float<=11 %}Nord
-          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float>348 %}Nord
-          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=34 | float>11 %}Nord Nordøst
-          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=56 | float>34 %}Nordøst
-          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=79 | float>56 %}Øst Nordøst
-          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=101 | float>79 %}Øst
-          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=124 | float>101 %}Øst Sydøst
-          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=146 | float>124 %}Sydøst
-          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=169 | float>146 %}Syd Sydøst
-          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=191 | float>169 %}Syd
-          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=214 | float>191 %}Syd Sydvest
-          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=236 | float>214 %}Sydvest
-          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=259 | float>236 %}Vest Sydvest
-          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=281 | float>259 %}Vest
-          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=304 | float>281 %}Vest Nordvest
-          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=326 | float>304 %}Vest Nordvest
-          {% elif state_attr('weather.dark_sky', 'wind_bearing') | float<=348 | float>326 %}Nord Nordvest
-          {%- endif %}
-          ({{ state_attr('weather.dark_sky', 'wind_bearing') }}°)
+  - platform: mqtt
+    name: "DMI Aktuelle Varsler"
+    state_topic: "dmi_current_warnings/state"
+    json_attributes_topic: "dmi_current_warnings/attributes"
 
-      dark_sky_wind_speed_name:
-        friendly_name: Vindhastighed
-        entity_id: weather.dark_sky
-        value_template: >-
-          {% if state_attr('weather.dark_sky', 'wind_speed') | float<=0.3 %}Stille
-          {% elif state_attr('weather.dark_sky', 'wind_speed') | float<=1.5 | float>0.3 %}Næsten stille
-          {% elif state_attr('weather.dark_sky', 'wind_speed') | float<=3.4 | float>1.6 %}Svag vind
-          {% elif state_attr('weather.dark_sky', 'wind_speed') | float<=5.5 | float>3.4 %}Let vind
-          {% elif state_attr('weather.dark_sky', 'wind_speed') | float<=8.0 | float>5.5 %}Jævn vind
-          {% elif state_attr('weather.dark_sky', 'wind_speed') | float<=10.8 | float>8.0 %}Frisk vind
-          {% elif state_attr('weather.dark_sky', 'wind_speed') | float<=13.9 | float>10.8 %}Hård vind
-          {% elif state_attr('weather.dark_sky', 'wind_speed') | float<=17.2 | float>13.9 %}Stiv kuling
-          {% elif state_attr('weather.dark_sky', 'wind_speed') | float<=20.8 | float>17.2 %}Hård kuling
-          {% elif state_attr('weather.dark_sky', 'wind_speed') | float<=24.5 | float>20.8 %}Stormende kuling
-          {% elif state_attr('weather.dark_sky', 'wind_speed') | float<=28.5 | float>24.5 %}Storm
-          {% elif state_attr('weather.dark_sky', 'wind_speed') | float<=32.6 | float>28.5 %}Stærk storm
-          {% elif state_attr('weather.dark_sky', 'wind_speed') | float>32.6 %}Orkan
-          {%- endif %}
+  - platform: mqtt
+    name: "DMI Kommende Varsler"
+    state_topic: "dmi_future_warnings/state"
+    json_attributes_topic: "dmi_future_warnings/attributes"
+
+  # https://www.dmi.dk/fileadmin/assets/Varselsikoner/tage-risiko.svg
+  # https://dmi.dk/Varsler/
+
+automation:
+  - alias: update_dmi_weather_sensor
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: sensor.dmi_weather_raw
+    action:
+      - service: mqtt.publish
+        data_template:
+          topic: "dmi_weather/state"
+          retain: True
+          payload: >-
+            {{ states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text | regex_findall_index("<overskriftkoebenhavnognordsjaelland.+><text>(.*?)<\/text><\/overskriftkoebenhavnognordsjaelland>", 0) }}
+      - service: mqtt.publish
+        data_template:
+          topic: "dmi_weather/attributes"
+          retain: True
+          payload: >-
+            {%- set text = states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text %}
+            {
+              "date": "{{ text | regex_findall_index("<dato.+><text>(.*?)<\/text><\/dato>", 0) }}",
+              "validity": "{{ text | regex_findall_index("<reggyld.+><text>(.*?)<\/text><\/reggyld>", 0) }}",
+              "content": "{{ text | regex_findall_index("<koebenhavnognordsjaelland.+><text>(.*?)<\/text><\/koebenhavnognordsjaelland>", 0) }}"
+            }
+
+  - alias: update_dmi_warning_sensor
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: sensor.dmi_warning_raw
+    action:
+      - service: downloader.download_file
+        data_template:
+          url: "https://www.dmi.dk/fileadmin/assets/Varselsikoner/{{ states.sensor.dmi_warnings_raw.attributes.actualWarnings[0].icon }}"
+          subdir: dmi_warning_icons
+      - service: mqtt.publish
+        data_template:
+          topic: "dmi_current_warning/state"
+          retain: True
+          payload: >-
+            {{ states.sensor.dmi_warnings_raw.attributes.actualWarnings[0].warningTitle }}
+      - service: mqtt.publish
+        data_template:
+          topic: "dmi_current_warning/attributes"
+          retain: True
+          payload: >-
+            {
+              "text": "{{ states.sensor.dmi_warnings_raw.attributes.actualWarnings[0].warningText }}",
+              "additional_text": "{{ states.sensor.dmi_warnings_raw.attributes.actualWarnings[0].additionalText }}",
+              "valid_from": "{{ states.sensor.dmi_warnings_raw.attributes.actualWarnings[0].validFromText }}",
+              "valid_to": "{{ states.sensor.dmi_warnings_raw.attributes.actualWarnings[0].validToText }}",
+              "issued_at": "{{ states.sensor.dmi_warnings_raw.attributes.actualWarnings[0].issuedAtText }}",
+              "category": "{{ states.sensor.dmi_warnings_raw.attributes.actualWarnings[0].formattedCategory }}",
+              "valid_from_timestamp": "{{ states.sensor.dmi_warnings_raw.attributes.actualWarnings[0].validFrom }}",
+              "valid_to_timestamp": "{{ states.sensor.dmi_warnings_raw.attributes.actualWarnings[0].validTo }}",
+              "entity_picture": "/local/downloads/dmi_warning_icons/{{ states.sensor.dmi_warnings_raw.attributes.actualWarnings[0].icon }}"
+            }
+
+      - service: mqtt.publish
+        data_template:
+          topic: "dmi_current_warnings/state"
+          retain: True
+          payload: >-
+            {{ states.sensor.dmi_warnings_raw.attributes.actualWarnings | length }}
+      - service: mqtt.publish
+        data_template:
+          topic: "dmi_current_warnings/attributes"
+          retain: True
+          payload: >-
+            {
+            {% for warning in states.sensor.dmi_warnings_raw.attributes.actualWarnings %}
+              "{{ warning.issuedAtText }} {{warning.warningTitle}}": {{ warning | string | replace("'", '"') }}{%- if not loop.last %},{%- endif %}
+            {% endfor %}
+            }
+      - service: mqtt.publish
+        data_template:
+          topic: "dmi_future_warnings/state"
+          retain: True
+          payload: >-
+            {{ states.sensor.dmi_warnings_raw.attributes.fivedayWarnings | length }}
+      - service: mqtt.publish
+        data_template:
+          topic: "dmi_future_warnings/attributes"
+          retain: True
+          payload: >-
+            {
+            {% for warning in states.sensor.dmi_warnings_raw.attributes.fivedayWarnings %}
+              "{{ warning.issuedAtText }} {{warning.warningTitle}}": {{ warning | string | replace("'", '"') }}{%- if not loop.last %},{%- endif %}
+            {% endfor %}
+            }

@@ -16,7 +16,7 @@ resources:
   #   type: js
   # - url: /local/custom-lovelace/fold-entity-row/fold-entity-row.js?v=0.0.1
   #   type: js
-  - url: /local/custom-lovelace/list-card/list-card.js?v=0.0.1
+  - url: /local/custom-lovelace/list-card/list-card.js?v=0.0.2
     type: js
   - url: /local/custom-lovelace/flex-table-card/flex-table-card.js?v=0.0.2
     type: js
@@ -29,6 +29,8 @@ resources:
   - url: /local/custom-lovelace/ciotlosm/bignumber-card/bignumber-card.js?=v0.0.1
     type: js
   - url: /local/custom-lovelace/calendar-card/calendar-card.js?v=2.0.1
+    type: js
+  - url: /local/custom-lovelace/popup-card/popup-card.js?v=0
     type: js
   - url: /local/custom-lovelace/bramkragten/weather-card/weather-card.js?v=0.0.7
     type: module
@@ -74,19 +76,59 @@ node_anchors:
         </center>
 
   dmi_weather: &dmi-weather
-    type: sensor
-    entity: sensor.dmi_vejr
-    name: Vejrudsigt
-    icon: mdi:cloud
-    # type: 'custom:useful-markdown-card'
-    # content: >-
-    #   <font size=4>
-    #     [[sensor.dmi_vejr.state]]
-    #   </font><br>
-    #   <font size=1>
-    #     [[sensor.dmi_vejr.attributes.validity]]
-    #   </font>
-    #   <br> [[sensor.dmi_vejr.attributes.content]]
+    - type: vertical-stack
+      cards:
+        - type: sensor
+          entity: sensor.dmi_vejr
+          name: Vejrudsigt
+          icon: mdi:cloud
+
+        - type: custom:popup-card
+          entity: sensor.dmi_aktuelle_varsler
+          title: Alle Varsler
+          card:
+            type: custom:list-card
+            entity: sensor.dmi_aktuelle_varsler
+            columns:
+              - title: Varsel
+                field: warningText
+              - title: "/!\\"
+                field: formattedCategory
+              - title: Til
+                field: validToText
+                style:
+                  - white-space: nowrap
+
+        - type: custom:popup-card
+          entity: sensor.dmi_kommende_varsler
+          title: Kommende Varsler
+          card:
+            type: custom:list-card
+            entity: sensor.dmi_kommende_varsler
+            columns:
+              - title: Varsel
+                field: warningText
+              - title: "/!\\"
+                field: formattedCategory
+              - title: Periode
+                field: peiod
+                style:
+                  - white-space: nowrap
+
+        - type: conditional
+          conditions:
+            - entity: sensor.dmi_aktuelle_varsler
+              state_not: "0"
+          card:
+            type: glance
+            show_name: false
+            entities:
+              - entity: sensor.dmi_aktuel_varsel
+              - entity: sensor.dmi_aktuelle_varsler
+                icon: mdi:cloud-alert
+              - entity: sensor.dmi_kommende_varsler
+                icon: mdi:progress-clock
+
 
   animated_weather: &animated-weather
     type: custom:weather-card
@@ -295,6 +337,7 @@ views:
                   - binary_sensor.martin_presence_extended
                   - binary_sensor.activity_last10
                   - binary_sensor.activity_last30
+                  - sensor.phone_area
 
               - type: entities
                 title: Activity Tracker
@@ -352,6 +395,7 @@ views:
           - type: vertical-stack
             cards:
               - <<: *animated-weather
+
               - <<: *dmi-weather
 
               - type: custom:calendar-card
