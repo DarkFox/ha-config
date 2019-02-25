@@ -53,6 +53,21 @@ binary_sensor:
         value_template: "{{ (not is_state('sensor.dmi_aktuelle_varsler', '0') or  not is_state('sensor.dmi_kommende_varsler', '0')) }}"
 
 automation:
+  - alias: severe_weather_warning
+    initial_state: true
+    trigger:
+      platform: template
+      value_template: "{{ (state_attr('sensor.dmi_aktuel_varsel', 'category') | int) > 1 }}"
+    action:
+      - service: notify.phone
+        data_template:
+          title: "Vejr Varsel: {{ states('sensor.dmi_aktuel_varsel') }}"
+          message: "Kategori {{ state_attr('sensor.dmi_aktuel_varsel', 'category') }} varsel: {{ state_attr('sensor.dmi_aktuel_varsel', 'text') }}"
+          data:
+            icon: "https://goo.gl/xeetdy"
+            vibration: "0,500,500,500,500,500,500,500,500,500,500"
+
+
   - alias: update_dmi_weather_sensor
     initial_state: true
     trigger:
@@ -116,6 +131,7 @@ automation:
           retain: True
           payload: >-
             {{ states.sensor.dmi_warnings_raw.attributes.actualWarnings | length }}
+
       - service: mqtt.publish
         data_template:
           topic: "dmi_current_warnings/attributes"
@@ -126,12 +142,14 @@ automation:
               "{{ warning.issuedAtText }} {{warning.warningTitle}}": {{ warning | string | replace("'", '"') }}{%- if not loop.last %},{%- endif %}
             {% endfor %}
             }
+
       - service: mqtt.publish
         data_template:
           topic: "dmi_future_warnings/state"
           retain: True
           payload: >-
             {{ states.sensor.dmi_warnings_raw.attributes.fivedayWarnings | length }}
+
       - service: mqtt.publish
         data_template:
           topic: "dmi_future_warnings/attributes"
