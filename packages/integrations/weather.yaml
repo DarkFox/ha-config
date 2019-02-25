@@ -46,6 +46,12 @@ sensor:
   # https://www.dmi.dk/fileadmin/assets/Varselsikoner/tage-risiko.svg
   # https://dmi.dk/Varsler/
 
+binary_sensor:
+  - platform: template
+    sensors:
+      show_weather_warnings:
+        value_template: "{{ (not is_state('sensor.dmi_aktuelle_varsler', '0') or  not is_state('sensor.dmi_kommende_varsler', '0')) }}"
+
 automation:
   - alias: update_dmi_weather_sensor
     initial_state: true
