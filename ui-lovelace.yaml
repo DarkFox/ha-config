@@ -24,7 +24,7 @@ resources:
     type: js
   - url: /local/custom-lovelace/bramkragten/swipe-card/swipe-card.js
     type: module
-  - url: /local/custom-lovelace/useful-markdown-card/useful-markdown-card.js?v=0.0.1
+  - url: /local/custom-lovelace/useful-markdown-card/useful-markdown-card.js?v=0.1.0
     type: js
   - url: /local/custom-lovelace/ciotlosm/bignumber-card/bignumber-card.js?=v0.0.1
     type: js
@@ -55,23 +55,20 @@ node_anchors:
     type: custom:card-modder
     style:
       --paper-card-background-color: '#7DB362'
-      --paper-item-icon-color: white
-      color: white
-      font-size: 44pt
-      line-height: 13px
-      padding: 20px 0px 0px 0px
-      min-height: 105px
+      --primary-text-color: white
+      --paper-font-body1_-_font-size: 44pt
+      --paper-font-body1_-_line-height: 23px
     card:
       type: 'custom:useful-markdown-card'
-      content: >-
+      content: |
         <center>
-          [[sensor.s_train_b_next.state]]
+          [[ sensor.s_train_b_next.state ]]
           <font size=4>min</font>
         </center>
 
         <center>
           <font size=4>
-            [[sensor.s_train_b_status.state]]
+            [[ sensor.s_train_b_status.state ]]
           </font>
         </center>
 
@@ -1406,13 +1403,6 @@ views:
 
                   - <<: *air-states
 
-                  - type: conditional
-                    conditions:
-                      - entity: input_boolean.guests
-                        state: 'off'
-                    card:
-                      <<: *aftership
-
               - type: vertical-stack
                 cards:
                   - type: custom:bignumber-card
@@ -1450,7 +1440,7 @@ views:
                         type: 'custom:useful-markdown-card'
                         content: >-
                           <font size=4>
-                            [[sensor.s_train_message.state]]
+                            [[ sensor.s_train_message.state ]]
                           </font>
 
                   - <<: *playlist-controls
@@ -1496,10 +1486,9 @@ views:
                   - type: conditional
                     conditions:
                       - entity: input_boolean.guests
-                        state: 'on'
+                        state: 'off'
                     card:
-                      type: markdown
-                      content: !secret ui_wifi_content
+                      <<: *aftership
 
                   - type: conditional
                     conditions:
@@ -1512,6 +1501,14 @@ views:
                           name: Gæster
                           tap_action:
                             action: toggle
+
+                  - type: conditional
+                    conditions:
+                      - entity: input_boolean.guests
+                        state: 'on'
+                    card:
+                      type: markdown
+                      content: !secret ui_wifi_content
 
   # /Hallway Tablet
 
@@ -1664,7 +1661,7 @@ views:
                         type: 'custom:useful-markdown-card'
                         content: >-
                           <font size=4>
-                            [[sensor.s_train_message.state]]
+                            [[ sensor.s_train_message.state ]]
                           </font>
 
   # /Bathroom Tablet
