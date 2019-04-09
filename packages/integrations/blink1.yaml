@@ -1,0 +1,47 @@
+light:
+  - platform: mqtt
+    name: Blink1
+    effect_list:
+      - none
+      - flash red
+      - flash green
+      - flash blue
+      - flash white
+      - flash yellow
+      - flash purple
+      - dancefloor
+    command_topic: "virtual/blink1/set"
+    brightness_command_topic: "virtual/blink1/brightness"
+    rgb_command_topic: "virtual/blink1/rgb"
+    effect_command_topic: "virtual/blink1/effect"
+
+automation:
+  - alias: blink1
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: light.blink1
+    action:
+      - service: rest_command.blink1_stopeffect
+      - service: rest_command.blink1_update
+
+rest_command:
+  blink1_stopeffect:
+    url: http://192.168.32.100:8934/blink1/pattern/stop
+  blink1_update:
+    url: >
+      http://192.168.32.100:8934/blink1
+      {%- if is_state('light.blink1', 'on') -%}
+        {%- if is_state_attr('light.blink1', 'effect', 'none') or is_state_attr('light.blink1', 'effect', '') -%}
+          {%- set brightness = state_attr('light.blink1', 'brightness') -%}
+          {%- set rgb = state_attr('light.blink1', 'rgb_color') -%}
+          {%- set red = (rgb[0] * brightness / 255)|int -%}
+          {%- set green = (rgb[1] * brightness / 255)|int -%}
+          {%- set blue = (rgb[2] * brightness / 255)|int -%}
+          /fadeToRGB?rgb=%23{{ '%02x%02x%02x' | format(red, green, blue)}}
+        {%- else -%}
+          /pattern/play?pname={{ state_attr('light.blink1', 'effect') | replace(' ', '%20') }}
+        {%- endif -%}
+      {%- else -%}
+        /pattern/play?pname=off
+      {%- endif -%}
