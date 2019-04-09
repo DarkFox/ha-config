@@ -8,7 +8,7 @@ script:
           brightness: 255
           color_temp: 256
           entity_id:
-            - light.storage_room
+            - light.klaedeskab
 
   light_profile_storage_room_default:
     sequence:
@@ -19,7 +19,7 @@ script:
           brightness: 255
           color_temp: 330
           entity_id:
-            - light.storage_room
+            - light.klaedeskab
 
   light_profile_storage_room_dimmed:
     sequence:
@@ -30,7 +30,7 @@ script:
           brightness: 127
           color_temp: 330
           entity_id:
-            - light.storage_room
+            - light.klaedeskab
 
   light_profile_storage_room_ambient:
     sequence:
@@ -41,7 +41,7 @@ script:
           brightness: 72
           color_temp: 330
           entity_id:
-            - light.storage_room
+            - light.klaedeskab
 
   light_profile_storage_room_night:
     sequence:
@@ -49,10 +49,10 @@ script:
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 1
+          brightness: 2
           color_temp: 500
           entity_id:
-            - light.storage_room
+            - light.klaedeskab
 
   light_profile_storage_room_off:
     sequence:
@@ -61,7 +61,7 @@ script:
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           entity_id:
-            - light.storage_room
+            - light.klaedeskab
 
 input_boolean:
   storage_room_activity_override:
@@ -206,7 +206,7 @@ binary_sensor:
         entity_id:
           - binary_sensor.bedroom_activity
           - binary_sensor.storage_room_door
-          - binary_sensor.storage_room_motion
+          - binary_sensor.skab_bevaegelse
           - input_boolean.storage_room_activity_override
           - input_select.storage_room_state
         value_template: >
@@ -215,7 +215,7 @@ binary_sensor:
           {%- elif  is_state('binary_sensor.bedroom_activity', 'on')
           and (
             is_state('binary_sensor.storage_room_door', 'on')
-            or is_state('binary_sensor.storage_room_motion', 'on')
+            or is_state('binary_sensor.skab_bevaegelse', 'on')
           ) -%}
             true
           {% else -%}

@@ -1,6 +1,19 @@
 script:
   light_profile_office_bright:
     sequence:
+      # IKEA lights
+      - service: light.turn_on
+        data_template:
+          transition: 0
+          color_temp: 370
+          entity_id:
+            - light.kontor_spots
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 255
+          entity_id:
+            - light.kontor_spots
       # White temp lights
       - service: light.turn_on
         data_template:
@@ -8,17 +21,17 @@ script:
           brightness: 255
           color_temp: 370
           entity_id:
-            - light.office_spots
-            - light.office_strip
+            - light.kontor_loftlys
       # Dimmable Lights
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 255
+          effect: 'None'
           entity_id:
             - light.office_desk_spots
             - light.office_shelves
-            - light.hobby_desk
+            - light.hobbybord_lampe
       # Primary RGB lights
       - service: light.turn_on
         data_template:
@@ -32,23 +45,29 @@ script:
 
   light_profile_office_default:
     sequence:
-      # White temp lights
+      # IKEA lights
+      - service: light.turn_on
+        data_template:
+          transition: 0
+          color_temp: 370
+          entity_id:
+            - light.kontor_spots
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 150
-          color_temp: 370
           entity_id:
-            - light.office_spots
+            - light.kontor_spots
       # Dimmable Lights
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 255
+          effect: 'None'
           entity_id:
             - light.office_desk_spots
             - light.office_shelves
-            - light.hobby_desk
+            - light.hobbybord_lampe
       # Primary RGB lights
       - service: light.turn_on
         data_template:
@@ -56,7 +75,7 @@ script:
           brightness: 255
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           entity_id:
-            - light.office_strip
+            - light.kontor_loftlys
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
@@ -81,15 +100,16 @@ script:
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           entity_id:
-            - light.office_spots
+            - light.kontor_spots
       # Dimmable Lights
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 127
+          effect: 'None'
           entity_id:
             - light.office_shelves
-            - light.hobby_desk
+            - light.hobbybord_lampe
             - light.office_desk_spots
       # Primary RGB lights
       - service: light.turn_on
@@ -98,7 +118,7 @@ script:
           brightness: 127
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           entity_id:
-            - light.office_strip
+            - light.kontor_loftlys
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
@@ -123,13 +143,14 @@ script:
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           entity_id:
-            - light.office_spots
-            - light.hobby_desk
+            - light.kontor_spots
+            - light.hobbybord_lampe
       # Dimmable Lights
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 24
+          effect: 'None'
           entity_id:
             - light.office_shelves
             - light.office_desk_spots
@@ -140,7 +161,7 @@ script:
           brightness: 42
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           entity_id:
-            - light.office_strip
+            - light.kontor_loftlys
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
@@ -165,9 +186,9 @@ script:
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           entity_id:
-            - light.office_spots
+            - light.kontor_spots
             - light.office_desk_spots
-            - light.hobby_desk
+            - light.hobbybord_lampe
             - light.office_shelves
       # Primary RGB lights
       - service: light.turn_on
@@ -185,7 +206,7 @@ script:
           rgb_color: [255, 0, 0]
           entity_id:
             - light.office_shelf_bar
-            - light.office_strip
+            - light.kontor_loftlys
             - light.screen_shelf
 
   light_profile_office_off:
@@ -204,14 +225,14 @@ script:
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           entity_id:
-            - light.office_spots
+            - light.kontor_spots
             - light.office_desk_spots
-            - light.hobby_desk
+            - light.hobbybord_lampe
       # Dimmable Lights
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 1
+          brightness: 2
           entity_id:
             - light.office_shelves
       - service: light.turn_on
@@ -227,7 +248,7 @@ script:
           transition: "{{ (transition_time or 0.5) | float }}"
           effect: "colorloop"
           entity_id:
-            - light.office_strip
+            - light.kontor_loftlys
 
 input_boolean:
   office_activity_override:
@@ -371,11 +392,11 @@ binary_sensor:
         friendly_name: 'Hobby Desk Activity'
         entity_id:
           - binary_sensor.home_assistant_loaded
-          - light.hobby_desk_lamp
+          - light.hobbybord_lampe
         value_template: >
           {% if is_state('binary_sensor.home_assistant_loaded', 'off') -%}
             false
-          {% elif not is_state('light.hobby_desk_lamp', 'unavailable') -%}
+          {% elif not is_state('light.hobbybord_lampe', 'unavailable') -%}
             true
           {% else -%}
             false
@@ -415,7 +436,7 @@ automation:
       condition: and
       conditions:
         - condition: state
-          entity_id: light.hobby_desk_lamp
+          entity_id: light.hobbybord_lampe
           state: 'on'
         - condition: state
           entity_id: binary_sensor.home_assistant_loaded
@@ -423,11 +444,11 @@ automation:
     action:
       - service_template: "light.turn_on"
         data:
-          entity_id: light.hobby_desk_lamp
+          entity_id: light.hobbybord_lampe
           brightness: 254
       - service_template: "light.turn_on"
         data:
-          entity_id: light.hobby_desk_lamp
+          entity_id: light.hobbybord_lampe
           brightness: 255
 
   - alias: hobby desk pinger off
@@ -440,7 +461,7 @@ automation:
       condition: and
       conditions:
         - condition: state
-          entity_id: light.hobby_desk_lamp
+          entity_id: light.hobbybord_lampe
           state: 'off'
         - condition: state
           entity_id: binary_sensor.home_assistant_loaded
@@ -448,8 +469,8 @@ automation:
     action:
       - service_template: "light.turn_on"
         data:
-          entity_id: light.hobby_desk_lamp
-          brightness: 1
+          entity_id: light.hobbybord_lampe
+          brightness: 2
       - service_template: "light.turn_off"
         data:
-          entity_id: light.hobby_desk_lamp
+          entity_id: light.hobbybord_lampe

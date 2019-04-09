@@ -65,7 +65,7 @@ automation:
     action:
       service: switch.turn_on
       data:
-        entity_id: switch.bedroom_speaker_switch
+        entity_id: switch.sovevaerelse_hojttaler_afbryder
 
   - alias: Bedroom Speaker inactive trigger
     initial_state: true
@@ -76,7 +76,7 @@ automation:
     action:
       service: switch.turn_off
       data:
-        entity_id: switch.bedroom_speaker_switch
+        entity_id: switch.sovevaerelse_hojttaler_afbryder
 
 
   # Kitchen #
@@ -133,7 +133,7 @@ automation:
     action:
       service: switch.turn_off
       data:
-        entity_id: switch.kitchen_tv_switch
+        entity_id: switch.kokken_tv_afbryder
 
   - alias: Kitchen TV inactive trigger
     initial_state: true
@@ -147,30 +147,29 @@ automation:
     action:
       service: switch.turn_off
       data:
-        entity_id: switch.kitchen_tv_switch
+        entity_id: switch.kokken_tv_afbryder
 
   # Office #
   - alias: Office Speaker active trigger
     initial_state: true
     trigger:
-      platform: state
-      entity_id: input_select.office_room_state
-      to: 'active'
+      platform: template
+      value_template: "{% if (is_state('input_select.office_room_state', 'active') or is_state('input_boolean.desktop_pc_status', 'on')) %}true{% else %}false{% endif %}"
     action:
       service: switch.turn_on
       data:
-        entity_id: switch.office_speaker_switch
+        entity_id:
+          - switch.kontor_hojttaler_afbryder
 
   - alias: Office Speaker inactive trigger
     initial_state: true
     trigger:
-      platform: state
-      entity_id: input_select.office_room_state
-      to: 'off'
+      platform: template
+      value_template: "{% if (is_state('input_select.office_room_state', 'off') and is_state('input_boolean.desktop_pc_status', 'off')) %}true{% else %}false{% endif %}"
     action:
       service: switch.turn_off
       data:
-        entity_id: switch.office_speaker_switch
+        entity_id: switch.kontor_hojttaler_afbryder
 
   # - alias: Projector Soundbar inactive trigger
   # initial_state: true
@@ -208,7 +207,7 @@ automation:
     action:
       service: media_player.volume_mute
       data:
-        entity_id: media_player.tv_soundbar_songpal
+        entity_id: media_player.stue_soundbar_songpal
         is_volume_muted: false
 
   - alias: Livingroom inactive trigger
@@ -223,14 +222,14 @@ automation:
           entity_id: switch.living_room_tv_power
       - service: media_player.volume_mute
         data:
-          entity_id: media_player.tv_soundbar_songpal
+          entity_id: media_player.stue_soundbar_songpal
           is_volume_muted: true
 
   - alias: Livingroom Speaker play inactive
     initial_state: true
     trigger:
       platform: state
-      entity_id: media_player.living_room_soundbar
+      entity_id: media_player.stue_soundbar
       to: 'playing'
     condition:
       condition: state
@@ -241,7 +240,7 @@ automation:
           seconds: 5
       - service: media_player.volume_mute
         data:
-          entity_id: media_player.tv_soundbar_songpal
+          entity_id: media_player.stue_soundbar_songpal
           is_volume_muted: true
 
   # Turn off soundbar if unused for 1 minute.
@@ -249,7 +248,7 @@ automation:
   # initial_state: true#
   # trigger:
   #     - platform: state
-  #       entity_id: media_player.living_room_soundbar
+  #       entity_id: media_player.stue_soundbar
   #       to: 'off'
   #       for:
   #         minutes: 1
@@ -265,7 +264,7 @@ automation:
   #         entity_id: input_boolean.home_assistant_started
   #         state: 'on'
   #       - condition: state
-  #         entity_id: media_player.living_room_soundbar
+  #         entity_id: media_player.stue_soundbar
   #         state: 'off'
   #       - condition: state
   #         entity_id: device_tracker.ping_tv
@@ -273,7 +272,7 @@ automation:
   #   action:
   #     - service: media_player.turn_off
   #       data:
-  #         entity_id: media_player.tv_soundbar_songpal
+  #         entity_id: media_player.stue_soundbar_songpal
 
 
   # Home #
