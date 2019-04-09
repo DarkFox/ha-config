@@ -1,0 +1,40 @@
+substitutions:
+  devicename: kontor_reol
+  upper_devicename: Kontor Reol
+
+esphome:
+  name: $devicename
+  platform: ESP8266
+  board: esp12e
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret api_pass
+
+ota:
+  password: !secret ota_pass
+
+status_led:
+  pin:
+    number: GPIO2
+    inverted: true
+
+output: !include shared/mini_led_pwm.yaml
+
+light:
+  - platform: monochromatic
+    id: $devicename
+    name: $upper_devicename
+    output: light_pwm
+    gamma_correct: 1.8
+    default_transition_length: 250ms
+    effects:
+      - strobe:
+      - flicker:
