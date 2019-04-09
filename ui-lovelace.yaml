@@ -2,18 +2,22 @@ resources:
   # Libs
   - url: /local/custom-lovelace/libraries/moment-with-locales.min.js
     type: js
-  - url: /local/custom-lovelace/card-tools/card-tools.js?v=0.4.0
+  - url: /local/custom-lovelace/card-tools/card-tools.js?v=0.4.1
     type: js
   # Mods
   - url: /local/custom-lovelace/card-modder/card-modder.js?v=0.0.3
     type: js
-  - url: /local/custom-lovelace/compact-custom-header/compact-custom-header.js?v=0.2.9
-    type: js
+  - url: /local/custom-lovelace/compact-custom-header/compact-custom-header.js?v=1.0.2b8
+    type: module
   - url: /local/custom-lovelace/layout-card/layout-card.js?v=0.0.3
     type: js
+  - url: /local/custom-lovelace/browser-commander/browser-commander.js?v=0.0.1
+    type: module
   # Cards
-  # - url: /local/custom-lovelace/auto-entities/auto-entities.js?v=0.0.1
-  #   type: js
+  - url: /local/custom-lovelace/config-template-card/dist/config-template-card.js?v=0.0.1
+    type: module
+  - url: /local/custom-lovelace/auto-entities/auto-entities.js?v=0.1.1
+    type: js
   # - url: /local/custom-lovelace/fold-entity-row/fold-entity-row.js?v=0.0.1
   #   type: js
   - url: /local/custom-lovelace/list-card/list-card.js?v=0.0.2
@@ -34,23 +38,12 @@ resources:
     type: js
   - url: /local/custom-lovelace/bramkragten/weather-card/weather-card.js?v=0.0.7
     type: module
+  - url: /local/custom-lovelace/mini-media-player/mini-media-player-bundle.js?v=1.0.3
+    type: module
+  - url: /local/custom-lovelace/button-card/button-card.js?v=0.0.1
+    type: module
 
 node_anchors:
-  compact-custom-header: &compact-custom-header
-    type: 'custom:compact-custom-header'
-    clock: options
-    clock_format: 24
-    notification: true, false
-    voice: true, false
-    user_agent: Android, Nexus, KFFOWI, iPad, Lenovo
-    user_agent_views:
-      - 1,2,3,4,5,6,7,8,9   # Default view.
-      - 1,2,3,4,5,6,7,8,9,12 # Phone view
-      - '10' # Hallway tablet view
-      - '11' # Bathroom tablet view
-      - '13' # Office tablet view
-      - '11' # Bathroom tablet view
-
   s_train_status: &s_train_status
     type: custom:card-modder
     style:
@@ -71,6 +64,17 @@ node_anchors:
             [[ sensor.s_train_b_status.state ]]
           </font>
         </center>
+
+  calendar: &calendar
+    type: custom:calendar-card
+    title: ""
+    numberOfDays: 8
+    entities:
+      - calendar.holidays_in_denmark
+      - calendar.martin_darkfoxdk_eberhardt_tripit
+      - calendar.martin_eberhardt
+      - calendar.todoist
+      - calendar.trustpilot
 
   dmi_weather: &dmi-weather
     - type: vertical-stack
@@ -278,7 +282,53 @@ views:
     cards:
       - type: vertical-stack
         cards:
-          - <<: *compact-custom-header
+          - type: 'custom:compact-custom-header'
+            main_config: true
+            options: clock
+            clock_format: 24
+            clock_date: true
+            notification: overflow
+            voice: hide
+            show_tabs: 1,2,3,4,5,6,7,8,9,14
+            exceptions:
+              - conditions:
+                  user_agent: Nexus
+                config:
+                  header: false
+                  notifications: hide
+                  voice: hide
+                  show_tabs: '10'
+              - conditions:
+                  user_agent: KFFOWI
+                config:
+                  header: false
+                  notifications: hide
+                  voice: hide
+                  show_tabs: '11'
+              - conditions:
+                  user_agent: iPad
+                config:
+                  show_tabs: 1,2,3,4,5,6,7,8,9,13
+              - conditions:
+                  user_agent: Lenovo
+                config:
+                  header: false
+                  notifications: hide
+                  voice: hide
+                  show_tabs: '11'
+              - conditions:
+                  user_agent: Android
+                config:
+                  notifications: hide
+                  voice: hide
+                  show_tabs: 1,2,3,4,5,6,7,8,9,12
+              - conditions:
+                  user_agent: "Raspbian Chromium"
+                config:
+                  header: false
+                  notifications: hide
+                  voice: hide
+                  show_tabs: '14'
 
           - type: markdown
             content: "Loading..."
@@ -290,32 +340,44 @@ views:
     cards:
       - type: custom:layout-card
         cards:
-          - <<: *compact-custom-header
+          - type: custom:compact-custom-header
 
           - type: vertical-stack
             cards:
-              - type: glance
-                columns: 3
-                show_state: false
-                entities:
-                  - entity: light.light_profile_bright
-                    tap_action:
-                      action: toggle
-                  - entity: light.light_profile_default
-                    tap_action:
-                      action: toggle
-                  - entity: light.light_profile_dimmed
-                    tap_action:
-                      action: toggle
-                  - entity: light.light_profile_ambient
-                    tap_action:
-                      action: toggle
-                  - entity: light.light_profile_night
-                    tap_action:
-                      action: toggle
-                  - entity: light.light_profile_off
-                    tap_action:
-                      action: toggle
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    name: Lyst
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.light_profile_bright
+                  - type: custom:button-card
+                    name: Normal
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.light_profile_default
+                  - type: custom:button-card
+                    name: Dæmpet
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.light_profile_dimmed
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    name: Baggrund
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.light_profile_ambient
+                  - type: custom:button-card
+                    name: Nat
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.light_profile_night
+                  - type: custom:button-card
+                    name: Slukket
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.light_profile_off
 
               - type: entities
                 title: ''
@@ -334,7 +396,10 @@ views:
                   - binary_sensor.martin_presence_extended
                   - binary_sensor.activity_last10
                   - binary_sensor.activity_last30
-                  - sensor.phone_area
+                  # - sensor.phone_area
+                  # - sensor.black_itag_area
+                  # - sensor.green_itag_area
+                  # - sensor.white_itag_area
 
               - type: entities
                 title: Activity Tracker
@@ -395,14 +460,7 @@ views:
 
               - <<: *dmi-weather
 
-              - type: custom:calendar-card
-                title: ""
-                numberOfDays: 8
-                entities:
-                  - calendar.holidays_in_denmark
-                  - calendar.martin_darkfoxdk_eberhardt_tripit
-                  - calendar.martin_eberhardt
-                  - calendar.todoist
+              - <<: *calendar
 
               - type: entities
                 title: Playlist
@@ -439,43 +497,65 @@ views:
     cards:
       - type: custom:layout-card
         cards:
-          - <<: *compact-custom-header
+          - type: custom:compact-custom-header
 
           - type: vertical-stack
             cards:
-              - type: glance
-                columns: 3
-                show_state: false
-                entities:
-                  - entity: light.living_room_light_profile_bright
-                    tap_action:
-                      action: toggle
-                  - entity: light.living_room_light_profile_default
-                    tap_action:
-                      action: toggle
-                  - entity: light.living_room_light_profile_dimmed
-                    tap_action:
-                      action: toggle
-                  - entity: light.living_room_light_profile_ambient
-                    tap_action:
-                      action: toggle
-                  - entity: light.living_room_light_profile_night
-                    tap_action:
-                      action: toggle
-                  - entity: light.living_room_light_profile_off
-                    tap_action:
-                      action: toggle
-                  - entity: binary_sensor.living_room_activity
-                    name: Activity
-                  - entity: light.living_room_activity_override
-                    name: Activity Override
-                    tap_action:
-                      action: toggle
-                  - entity: light.living_room_separate_light_profile
-                    name: Separate
-                    tap_action:
-                      action: toggle
-
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    name: Lyst
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.living_room_light_profile_bright
+                  - type: custom:button-card
+                    name: Normal
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.living_room_light_profile_default
+                  - type: custom:button-card
+                    name: Dæmpet
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.living_room_light_profile_dimmed
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    name: Baggrund
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.living_room_light_profile_ambient
+                  - type: custom:button-card
+                    name: Nat
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.living_room_light_profile_night
+                  - type: custom:button-card
+                    name: Slukket
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.living_room_light_profile_off
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    name: Aktivitet
+                    entity: binary_sensor.living_room_activity
+                    icon: mdi:circle
+                    color: rgb(255,152,0)
+                    action: more_info
+                    state:
+                      - value: 'off'
+                        icon: mdi:circle-outline
+                  - type: custom:button-card
+                    name: Overstyring
+                    entity: light.living_room_activity_override
+                    icon: attribute
+                    color: rgb(255,152,0)
+                  - type: custom:button-card
+                    name: Separat
+                    entity: light.living_room_separate_light_profile
+                    icon: attribute
+                    color: rgb(255,152,0)
               - type: conditional
                 conditions:
                   - entity: input_boolean.living_room_activity_override
@@ -493,11 +573,11 @@ views:
                     name: Under Sofabord
                     tap_action:
                       action: toggle
-                  - entity: light.sofa_lamp
+                  - entity: light.sofalampe
                     name: Sofabord
                     tap_action:
                       action: toggle
-                  - entity: light.dining_table
+                  - entity: light.spisebord
                     name: Spisebord
                     tap_action:
                       action: toggle
@@ -529,7 +609,7 @@ views:
                     name: Reol Spots
                     tap_action:
                       action: toggle
-                  - entity: light.display_cabinet_front
+                  - entity: light.vitrineskab
                     name: Vitrineskab Front
                     tap_action:
                       action: toggle
@@ -545,11 +625,11 @@ views:
                     name: Globe
                     tap_action:
                       action: toggle
-                  - entity: light.candles
+                  - entity: light.lysestager
                     name: Lysestager
                     tap_action:
                       action: toggle
-                  - entity: light.livingroom_spots
+                  - entity: light.stue_spots
                     name: Spots
                     tap_action:
                       action: toggle
@@ -573,13 +653,13 @@ views:
                 entity: media_player.living_room_mini
 
               - type: media-control
-                entity: media_player.living_room_chromecast
+                entity: media_player.stue_chromecast
 
               - type: media-control
-                entity: media_player.living_room_soundbar
+                entity: media_player.stue_soundbar
 
               - type: media-control
-                entity: media_player.tv_soundbar_songpal
+                entity: media_player.stue_soundbar_songpal
 
           - break
 
@@ -603,43 +683,65 @@ views:
     cards:
       - type: custom:layout-card
         cards:
-          - <<: *compact-custom-header
+          - type: custom:compact-custom-header
 
           - type: vertical-stack
             cards:
-              - type: glance
-                columns: 3
-                show_state: false
-                entities:
-                  - entity: light.bedroom_light_profile_bright
-                    tap_action:
-                      action: toggle
-                  - entity: light.bedroom_light_profile_default
-                    tap_action:
-                      action: toggle
-                  - entity: light.bedroom_light_profile_dimmed
-                    tap_action:
-                      action: toggle
-                  - entity: light.bedroom_light_profile_ambient
-                    tap_action:
-                      action: toggle
-                  - entity: light.bedroom_light_profile_night
-                    tap_action:
-                      action: toggle
-                  - entity: light.bedroom_light_profile_off
-                    tap_action:
-                      action: toggle
-                  - entity: binary_sensor.bedroom_activity
-                    name: Activity
-                  - entity: light.bedroom_activity_override
-                    name: Activity Override
-                    tap_action:
-                      action: toggle
-                  - entity: light.bedroom_separate_light_profile
-                    name: Separate
-                    tap_action:
-                      action: toggle
-
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    name: Lyst
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.bedroom_light_profile_bright
+                  - type: custom:button-card
+                    name: Normal
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.bedroom_light_profile_default
+                  - type: custom:button-card
+                    name: Dæmpet
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.bedroom_light_profile_dimmed
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    name: Baggrund
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.bedroom_light_profile_ambient
+                  - type: custom:button-card
+                    name: Nat
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.bedroom_light_profile_night
+                  - type: custom:button-card
+                    name: Slukket
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.bedroom_light_profile_off
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    name: Aktivitet
+                    entity: binary_sensor.bedroom_activity
+                    icon: mdi:circle
+                    color: rgb(255,152,0)
+                    action: more_info
+                    state:
+                      - value: 'off'
+                        icon: mdi:circle-outline
+                  - type: custom:button-card
+                    name: Overstyring
+                    entity: light.bedroom_activity_override
+                    icon: attribute
+                    color: rgb(255,152,0)
+                  - type: custom:button-card
+                    name: Separat
+                    entity: light.bedroom_separate_light_profile
+                    icon: attribute
+                    color: rgb(255,152,0)
               - type: conditional
                 conditions:
                   - entity: input_boolean.bedroom_activity_override
@@ -657,7 +759,7 @@ views:
                     name: Hylde Lampe
                     tap_action:
                       action: toggle
-                  - entity: light.bedside
+                  - entity: light.sengelampe
                     name: Sengelampe
                     tap_action:
                       action: toggle
@@ -673,11 +775,11 @@ views:
                     name: Sidebord
                     tap_action:
                       action: toggle
-                  - entity: light.bedroom_ps
+                  - entity: light.projektor
                     name: Projektør
                     tap_action:
                       action: toggle
-                  - entity: light.cloud
+                  - entity: light.sky
                     name: Sky
                     tap_action:
                       action: toggle
@@ -693,7 +795,7 @@ views:
                 title: Bedroom Media
                 show_header_toggle: true
                 entities:
-                  - switch.bedroom_speaker_switch
+                  - switch.sovevaerelse_hojttaler_afbryder
 
               - type: media-control
                 entity: media_player.bedroom_mini
@@ -738,43 +840,65 @@ views:
     cards:
       - type: custom:layout-card
         cards:
-          - <<: *compact-custom-header
+          - type: custom:compact-custom-header
 
           - type: vertical-stack
             cards:
-              - type: glance
-                columns: 3
-                show_state: false
-                entities:
-                  - entity: light.office_light_profile_bright
-                    tap_action:
-                      action: toggle
-                  - entity: light.office_light_profile_default
-                    tap_action:
-                      action: toggle
-                  - entity: light.office_light_profile_dimmed
-                    tap_action:
-                      action: toggle
-                  - entity: light.office_light_profile_ambient
-                    tap_action:
-                      action: toggle
-                  - entity: light.office_light_profile_night
-                    tap_action:
-                      action: toggle
-                  - entity: light.office_light_profile_off
-                    tap_action:
-                      action: toggle
-                  - entity: binary_sensor.office_activity
-                    name: Activity
-                  - entity: light.office_activity_override
-                    name: Activity Override
-                    tap_action:
-                      action: toggle
-                  - entity: light.office_separate_light_profile
-                    name: Separate
-                    tap_action:
-                      action: toggle
-
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    name: Lyst
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.office_light_profile_bright
+                  - type: custom:button-card
+                    name: Normal
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.office_light_profile_default
+                  - type: custom:button-card
+                    name: Dæmpet
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.office_light_profile_dimmed
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    name: Baggrund
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.office_light_profile_ambient
+                  - type: custom:button-card
+                    name: Nat
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.office_light_profile_night
+                  - type: custom:button-card
+                    name: Slukket
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.office_light_profile_off
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    name: Aktivitet
+                    entity: binary_sensor.office_activity
+                    icon: mdi:circle
+                    color: rgb(255,152,0)
+                    action: more_info
+                    state:
+                      - value: 'off'
+                        icon: mdi:circle-outline
+                  - type: custom:button-card
+                    name: Overstyring
+                    entity: light.office_activity_override
+                    icon: attribute
+                    color: rgb(255,152,0)
+                  - type: custom:button-card
+                    name: Separat
+                    entity: light.office_separate_light_profile
+                    icon: attribute
+                    color: rgb(255,152,0)
               - type: conditional
                 conditions:
                   - entity: input_boolean.office_activity_override
@@ -796,7 +920,7 @@ views:
                     name: Desk Shelf
                     tap_action:
                       action: toggle
-                  - entity: light.office_strip
+                  - entity: light.kontor_loftlys
                     tap_action:
                       action: toggle
                   - entity: light.screen_shelf
@@ -810,14 +934,14 @@ views:
                     name: Desk Bar
                     tap_action:
                       action: toggle
-                  - entity: light.hobby_desk
+                  - entity: light.hobbybord_lampe
                     tap_action:
                       action: toggle
-                  - entity: light.hobby_desk_lamp
-                    tap_action:
-                      action: toggle
-                  - entity: light.office_spots
+                  - entity: light.kontor_spots
                     name: Spots
+                    tap_action:
+                      action: toggle
+                  - entity: light.blink1
                     tap_action:
                       action: toggle
                 title: Office Lights
@@ -831,7 +955,10 @@ views:
               - type: glance
                 title: Kontor Afbrydere
                 entities:
-                  - entity: switch.office_speaker_switch
+                  - entity: switch.desktop_pc
+                    tap_action:
+                      action: toggle
+                  - entity: switch.kontor_hojttaler_afbryder
                     name: Højttalere
                     tap_action:
                       action: toggle
@@ -881,43 +1008,65 @@ views:
     cards:
       - type: custom:layout-card
         cards:
-          - <<: *compact-custom-header
+          - type: custom:compact-custom-header
 
           - type: vertical-stack
             cards:
-              - type: glance
-                columns: 3
-                show_state: false
-                entities:
-                  - entity: light.kitchen_light_profile_bright
-                    tap_action:
-                      action: toggle
-                  - entity: light.kitchen_light_profile_default
-                    tap_action:
-                      action: toggle
-                  - entity: light.kitchen_light_profile_dimmed
-                    tap_action:
-                      action: toggle
-                  - entity: light.kitchen_light_profile_ambient
-                    tap_action:
-                      action: toggle
-                  - entity: light.kitchen_light_profile_night
-                    tap_action:
-                      action: toggle
-                  - entity: light.kitchen_light_profile_off
-                    tap_action:
-                      action: toggle
-                  - entity: binary_sensor.kitchen_activity
-                    name: Activity
-                  - entity: light.kitchen_activity_override
-                    name: Activity Override
-                    tap_action:
-                      action: toggle
-                  - entity: light.kitchen_separate_light_profile
-                    name: Separate
-                    tap_action:
-                      action: toggle
-
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    name: Lyst
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.kitchen_light_profile_bright
+                  - type: custom:button-card
+                    name: Normal
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.kitchen_light_profile_default
+                  - type: custom:button-card
+                    name: Dæmpet
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.kitchen_light_profile_dimmed
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    name: Baggrund
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.kitchen_light_profile_ambient
+                  - type: custom:button-card
+                    name: Nat
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.kitchen_light_profile_night
+                  - type: custom:button-card
+                    name: Slukket
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.kitchen_light_profile_off
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    name: Aktivitet
+                    entity: binary_sensor.kitchen_activity
+                    icon: mdi:circle
+                    color: rgb(255,152,0)
+                    action: more_info
+                    state:
+                      - value: 'off'
+                        icon: mdi:circle-outline
+                  - type: custom:button-card
+                    name: Overstyring
+                    entity: light.kitchen_activity_override
+                    icon: attribute
+                    color: rgb(255,152,0)
+                  - type: custom:button-card
+                    name: Separat
+                    entity: light.kitchen_separate_light_profile
+                    icon: attribute
+                    color: rgb(255,152,0)
               - type: conditional
                 conditions:
                   - entity: input_boolean.kitchen_activity_override
@@ -934,7 +1083,7 @@ views:
                 columns: 4
                 show_state: false
                 entities:
-                  - entity: light.kitchen
+                  - entity: light.kokken_loftlys
                     name: Loftlampe
                     tap_action:
                       action: toggle
@@ -950,7 +1099,7 @@ views:
                     name: Underskabe
                     tap_action:
                       action: toggle
-                  - entity: light.kitchen_spots
+                  - entity: light.kokken_spots
                     name: Spots
                     tap_action:
                       action: toggle
@@ -963,7 +1112,7 @@ views:
                 title: Køkken Afbrydere
                 show_header_toggle: true
                 entities:
-                  - entity: switch.kitchen_tv_switch
+                  - entity: switch.kokken_tv_afbryder
                     name: TV
                     tap_action:
                       action: toggle
@@ -1002,43 +1151,65 @@ views:
     cards:
       - type: custom:layout-card
         cards:
-          - <<: *compact-custom-header
+          - type: custom:compact-custom-header
 
           - type: vertical-stack
             cards:
-              - type: glance
-                columns: 3
-                show_state: false
-                entities:
-                  - entity: light.bathroom_light_profile_bright
-                    tap_action:
-                      action: toggle
-                  - entity: light.bathroom_light_profile_default
-                    tap_action:
-                      action: toggle
-                  - entity: light.bathroom_light_profile_dimmed
-                    tap_action:
-                      action: toggle
-                  - entity: light.bathroom_light_profile_ambient
-                    tap_action:
-                      action: toggle
-                  - entity: light.bathroom_light_profile_night
-                    tap_action:
-                      action: toggle
-                  - entity: light.bathroom_light_profile_off
-                    tap_action:
-                      action: toggle
-                  - entity: binary_sensor.bathroom_activity
-                    name: Activity
-                  - entity: light.bathroom_activity_override
-                    name: Activity Override
-                    tap_action:
-                      action: toggle
-                  - entity: light.bathroom_separate_light_profile
-                    name: Separate
-                    tap_action:
-                      action: toggle
-
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    name: Lyst
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.bathroom_light_profile_bright
+                  - type: custom:button-card
+                    name: Normal
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.bathroom_light_profile_default
+                  - type: custom:button-card
+                    name: Dæmpet
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.bathroom_light_profile_dimmed
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    name: Baggrund
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.bathroom_light_profile_ambient
+                  - type: custom:button-card
+                    name: Nat
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.bathroom_light_profile_night
+                  - type: custom:button-card
+                    name: Slukket
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.bathroom_light_profile_off
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    name: Aktivitet
+                    entity: binary_sensor.bathroom_activity
+                    icon: mdi:circle
+                    color: rgb(255,152,0)
+                    action: more_info
+                    state:
+                      - value: 'off'
+                        icon: mdi:circle-outline
+                  - type: custom:button-card
+                    name: Overstyring
+                    entity: light.bathroom_activity_override
+                    icon: attribute
+                    color: rgb(255,152,0)
+                  - type: custom:button-card
+                    name: Separat
+                    entity: light.bathroom_separate_light_profile
+                    icon: attribute
+                    color: rgb(255,152,0)
               - type: conditional
                 conditions:
                   - entity: input_boolean.bathroom_activity_override
@@ -1055,7 +1226,7 @@ views:
                 columns: 4
                 show_header_toggle: true
                 entities:
-                  - light.bathroom
+                  - light.badevaerelse
 
           - break
 
@@ -1079,7 +1250,7 @@ views:
                 show_header_toggle: false
                 entities:
                   - binary_sensor.toilet_sensor
-                  - binary_sensor.bathroom_window
+                  - binary_sensor.badevaerelse_vindue
                   - sensor.toilet_luminance
                   - sensor.toilet_relative_humidity
                   - sensor.toilet_temperature
@@ -1095,43 +1266,65 @@ views:
     cards:
       - type: custom:layout-card
         cards:
-          - <<: *compact-custom-header
+          - type: custom:compact-custom-header
 
           - type: vertical-stack
             cards:
-              - type: glance
-                columns: 3
-                show_state: false
-                entities:
-                  - entity: light.hallway_light_profile_bright
-                    tap_action:
-                      action: toggle
-                  - entity: light.hallway_light_profile_default
-                    tap_action:
-                      action: toggle
-                  - entity: light.hallway_light_profile_dimmed
-                    tap_action:
-                      action: toggle
-                  - entity: light.hallway_light_profile_ambient
-                    tap_action:
-                      action: toggle
-                  - entity: light.hallway_light_profile_night
-                    tap_action:
-                      action: toggle
-                  - entity: light.hallway_light_profile_off
-                    tap_action:
-                      action: toggle
-                  - entity: binary_sensor.hallway_activity
-                    name: Activity
-                  - entity: light.hallway_activity_override
-                    name: Activity Override
-                    tap_action:
-                      action: toggle
-                  - entity: light.hallway_separate_light_profile
-                    name: Separate
-                    tap_action:
-                      action: toggle
-
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    name: Lyst
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.hallway_light_profile_bright
+                  - type: custom:button-card
+                    name: Normal
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.hallway_light_profile_default
+                  - type: custom:button-card
+                    name: Dæmpet
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.hallway_light_profile_dimmed
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    name: Baggrund
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.hallway_light_profile_ambient
+                  - type: custom:button-card
+                    name: Nat
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.hallway_light_profile_night
+                  - type: custom:button-card
+                    name: Slukket
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.hallway_light_profile_off
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    name: Aktivitet
+                    entity: binary_sensor.hallway_activity
+                    icon: mdi:circle
+                    color: rgb(255,152,0)
+                    action: more_info
+                    state:
+                      - value: 'off'
+                        icon: mdi:circle-outline
+                  - type: custom:button-card
+                    name: Overstyring
+                    entity: light.hallway_activity_override
+                    icon: attribute
+                    color: rgb(255,152,0)
+                  - type: custom:button-card
+                    name: Separat
+                    entity: light.hallway_separate_light_profile
+                    icon: attribute
+                    color: rgb(255,152,0)
               - type: conditional
                 conditions:
                   - entity: input_boolean.hallway_activity_override
@@ -1148,7 +1341,7 @@ views:
                 columns: 4
                 show_state: false
                 entities:
-                  - entity: light.hallway
+                  - entity: light.gang_loftlys
                     tap_action:
                       action: toggle
 
@@ -1186,43 +1379,65 @@ views:
     cards:
       - type: custom:layout-card
         cards:
-          - <<: *compact-custom-header
+          - type: custom:compact-custom-header
 
           - type: vertical-stack
             cards:
-              - type: glance
-                columns: 3
-                show_state: false
-                entities:
-                  - entity: light.storage_room_light_profile_bright
-                    tap_action:
-                      action: toggle
-                  - entity: light.storage_room_light_profile_default
-                    tap_action:
-                      action: toggle
-                  - entity: light.storage_room_light_profile_dimmed
-                    tap_action:
-                      action: toggle
-                  - entity: light.storage_room_light_profile_ambient
-                    tap_action:
-                      action: toggle
-                  - entity: light.storage_room_light_profile_night
-                    tap_action:
-                      action: toggle
-                  - entity: light.storage_room_light_profile_off
-                    tap_action:
-                      action: toggle
-                  - entity: binary_sensor.storage_room_activity
-                    name: Activity
-                  - entity: light.storage_room_activity_override
-                    name: Activity Override
-                    tap_action:
-                      action: toggle
-                  - entity: light.storage_room_separate_light_profile
-                    name: Separate
-                    tap_action:
-                      action: toggle
-
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    name: Lyst
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.storage_room_light_profile_bright
+                  - type: custom:button-card
+                    name: Normal
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.storage_room_light_profile_default
+                  - type: custom:button-card
+                    name: Dæmpet
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.storage_room_light_profile_dimmed
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    name: Baggrund
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.storage_room_light_profile_ambient
+                  - type: custom:button-card
+                    name: Nat
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.storage_room_light_profile_night
+                  - type: custom:button-card
+                    name: Slukket
+                    icon: attribute
+                    color: rgb(255,152,0)
+                    entity: light.storage_room_light_profile_off
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    name: Aktivitet
+                    entity: binary_sensor.storage_room_activity
+                    icon: mdi:circle
+                    color: rgb(255,152,0)
+                    action: more_info
+                    state:
+                      - value: 'off'
+                        icon: mdi:circle-outline
+                  - type: custom:button-card
+                    name: Overstyring
+                    entity: light.storage_room_activity_override
+                    icon: attribute
+                    color: rgb(255,152,0)
+                  - type: custom:button-card
+                    name: Separat
+                    entity: light.storage_room_separate_light_profile
+                    icon: attribute
+                    color: rgb(255,152,0)
               - type: conditional
                 conditions:
                   - entity: input_boolean.storage_room_activity_override
@@ -1238,7 +1453,7 @@ views:
                 columns: 4
                 show_state: false
                 entities:
-                  - entity: light.storage_room
+                  - entity: light.klaedeskab
                     tap_action:
                       action: toggle
 
@@ -1263,7 +1478,7 @@ views:
     cards:
       - type: custom:layout-card
         cards:
-          - <<: *compact-custom-header
+          - type: custom:compact-custom-header
 
           - type: vertical-stack
             cards:
@@ -1282,14 +1497,15 @@ views:
                   - sensor.energy_meter_watt_mean
                   - sensor.energy_meter_watt_change
 
-              - type: entities
-                title: Batteries
-                show_header_toggle: false
-                entities:
-                  - sensor.tradfri_remote_control
-                  - sensor.party_button_battery
-                  - sensor.office_dimmer_battery
-                  - sensor.bedroom_dimmer_battery
+              - type: custom:auto-entities
+                card:
+                  type: entities
+                  title: Batteries
+                filter:
+                  include:
+                    - entity_id: "*_battery*"
+                      options:
+                        secondary_info: last-changed
 
           - break
 
@@ -1325,17 +1541,19 @@ views:
                 title: Internet Speed
                 hours_to_show: 12
                 entities:
-                  - sensor.speedtest_upload
-                  - sensor.speedtest_download
+                  - sensor.unifi_speedtest_upload
+                  - sensor.unifi_speedtest_download
 
               - type: entities
                 title: Internet Status
                 show_header_toggle: false
                 entities:
-                  - sensor.speedtest_ping
-                  - sensor.external_ip
-                  - sensor.speedtest_upload
-                  - sensor.speedtest_download
+                  - sensor.unifi_gateway_alerts
+                  - sensor.unifi_gateway_www
+                  - sensor.unifi_wan_ip
+                  - sensor.unifi_speedtest_ping
+                  - sensor.unifi_speedtest_upload
+                  - sensor.unifi_speedtest_download
   # /Tech room
 
   - title: Gang Tablet
@@ -1345,7 +1563,7 @@ views:
     cards:
       - type: vertical-stack
         cards:
-          - <<: *compact-custom-header
+          - type: custom:compact-custom-header
             header: 'true, true, false, false, false, false, false'
 
           - type: horizontal-stack
@@ -1366,31 +1584,38 @@ views:
                   scale: 64px
                   entity: sensor.date_text
 
-          - type: glance
-            columns: 7
-            show_state: false
-            show_name: false
-            entities:
-              - entity: light.light_profile_bright
-                tap_action:
-                  action: toggle
-              - entity: light.light_profile_default
-                tap_action:
-                  action: toggle
-              - entity: light.light_profile_dimmed
-                tap_action:
-                  action: toggle
-              - entity: light.light_profile_ambient
-                tap_action:
-                  action: toggle
-              - entity: light.light_profile_night
-                tap_action:
-                  action: toggle
-              - entity: light.light_profile_off
-                tap_action:
-                  action: toggle
-              - entity: input_select.theme
-                icon: mdi:palette
+          - type: horizontal-stack
+            cards:
+              - type: custom:button-card
+                name: Lyst
+                icon: attribute
+                color: rgb(255,152,0)
+                entity: light.light_profile_bright
+              - type: custom:button-card
+                name: Normal
+                icon: attribute
+                color: rgb(255,152,0)
+                entity: light.light_profile_default
+              - type: custom:button-card
+                name: Dæmpet
+                icon: attribute
+                color: rgb(255,152,0)
+                entity: light.light_profile_dimmed
+              - type: custom:button-card
+                name: Baggr.
+                icon: attribute
+                color: rgb(255,152,0)
+                entity: light.light_profile_ambient
+              - type: custom:button-card
+                name: Nat
+                icon: attribute
+                color: rgb(255,152,0)
+                entity: light.light_profile_night
+              - type: custom:button-card
+                name: Slukket
+                icon: attribute
+                color: rgb(255,152,0)
+                entity: light.light_profile_off
 
           - type: horizontal-stack
             cards:
@@ -1474,14 +1699,7 @@ views:
                       - entity: input_boolean.guests
                         state: 'off'
                     card:
-                      type: custom:calendar-card
-                      title: ""
-                      numberOfDays: 8
-                      entities:
-                        - calendar.holidays_in_denmark
-                        - calendar.martin_darkfoxdk_eberhardt_tripit
-                        - calendar.martin_eberhardt
-                        - calendar.todoist
+                      <<: *calendar
 
                   - type: conditional
                     conditions:
@@ -1519,7 +1737,7 @@ views:
     cards:
       - type: vertical-stack
         cards:
-          - <<: *compact-custom-header
+          - type: custom:compact-custom-header
             header: 'true, true, false, false, false, false, false'
 
           - type: horizontal-stack
@@ -1539,14 +1757,7 @@ views:
                       - entity: input_boolean.guests
                         state: 'off'
                     card:
-                      type: custom:calendar-card
-                      title: ""
-                      numberOfDays: 8
-                      entities:
-                        - calendar.holidays_in_denmark
-                        - calendar.martin_darkfoxdk_eberhardt_tripit
-                        - calendar.martin_eberhardt
-                        - calendar.todoist
+                      <<: *calendar
 
                   - type: conditional
                     conditions:
@@ -1597,47 +1808,40 @@ views:
 
               - type: vertical-stack
                 cards:
-                  - type: glance
-                    columns: 4
-                    show_state: false
-                    entities:
-                      - entity: light.bathroom_light_profile_bright
-                        tap_action:
-                          action: toggle
-                      - entity: light.bathroom_light_profile_default
-                        tap_action:
-                          action: toggle
-                      - entity: light.bathroom_light_profile_dimmed
-                        tap_action:
-                          action: toggle
-                      - entity: light.bathroom_activity_override
-                        name: Overstyring
-                        tap_action:
-                          action: toggle
-                      - entity: light.bathroom_light_profile_ambient
-                        tap_action:
-                          action: toggle
-                      - entity: light.bathroom_light_profile_night
-                        tap_action:
-                          action: toggle
-                      - entity: light.bathroom_light_profile_off
-                        tap_action:
-                          action: toggle
-                      - entity: light.bathroom_separate_light_profile
-                        name: Separat
-                        tap_action:
-                          action: toggle
-
-                  - type: conditional
-                    conditions:
-                      - entity: input_boolean.bathroom_activity_override
-                        state: 'on'
-                    card:
-                      type: entities
-                      show_title: false
-                      show_header_toggle: false
-                      entities:
-                        - entity: input_select.bathroom_room_state
+                  - type: horizontal-stack
+                    cards:
+                      - type: custom:button-card
+                        name: Lyst
+                        icon: attribute
+                        color: rgb(255,152,0)
+                        entity: light.bathroom_light_profile_bright
+                      - type: custom:button-card
+                        name: Normal
+                        icon: attribute
+                        color: rgb(255,152,0)
+                        entity: light.bathroom_light_profile_default
+                      - type: custom:button-card
+                        name: Dæmpet
+                        icon: attribute
+                        color: rgb(255,152,0)
+                        entity: light.bathroom_light_profile_dimmed
+                  - type: horizontal-stack
+                    cards:
+                      - type: custom:button-card
+                        name: Baggrund
+                        icon: attribute
+                        color: rgb(255,152,0)
+                        entity: light.bathroom_light_profile_ambient
+                      - type: custom:button-card
+                        name: Nat
+                        icon: attribute
+                        color: rgb(255,152,0)
+                        entity: light.bathroom_light_profile_night
+                      - type: custom:button-card
+                        name: Slukket
+                        icon: attribute
+                        color: rgb(255,152,0)
+                        entity: light.bathroom_light_profile_off
 
                   - <<: *air-states
 
@@ -1664,6 +1868,39 @@ views:
                             [[ sensor.s_train_message.state ]]
                           </font>
 
+
+                  - type: horizontal-stack
+                    cards:
+                      - type: custom:button-card
+                        name: Aktivitet
+                        entity: binary_sensor.bathroom_activity
+                        icon: mdi:circle
+                        color: rgb(255,152,0)
+                        action: more_info
+                        state:
+                          - value: 'off'
+                            icon: mdi:circle-outline
+                      - type: custom:button-card
+                        name: Overstyr
+                        entity: light.bathroom_activity_override
+                        icon: attribute
+                        color: rgb(255,152,0)
+                      - type: custom:button-card
+                        name: Separat
+                        entity: light.bathroom_separate_light_profile
+                        icon: attribute
+                        color: rgb(255,152,0)
+                  - type: conditional
+                    conditions:
+                      - entity: input_boolean.bathroom_activity_override
+                        state: 'on'
+                    card:
+                      type: entities
+                      show_title: false
+                      show_header_toggle: false
+                      entities:
+                        - entity: input_select.bathroom_room_state
+
   # /Bathroom Tablet
 
   - path: phone
@@ -1673,30 +1910,42 @@ views:
     cards:
       - type: vertical-stack
         cards:
-          - <<: *compact-custom-header
+          - type: custom:compact-custom-header
 
-          - type: glance
-            columns: 3
-            show_state: false
-            entities:
-              - entity: light.light_profile_bright
-                tap_action:
-                  action: toggle
-              - entity: light.light_profile_default
-                tap_action:
-                  action: toggle
-              - entity: light.light_profile_dimmed
-                tap_action:
-                  action: toggle
-              - entity: light.light_profile_ambient
-                tap_action:
-                  action: toggle
-              - entity: light.light_profile_night
-                tap_action:
-                  action: toggle
-              - entity: light.light_profile_off
-                tap_action:
-                  action: toggle
+          - type: horizontal-stack
+            cards:
+              - type: custom:button-card
+                name: Lyst
+                icon: attribute
+                color: rgb(255,152,0)
+                entity: light.bathroom_light_profile_bright
+              - type: custom:button-card
+                name: Normal
+                icon: attribute
+                color: rgb(255,152,0)
+                entity: light.bathroom_light_profile_default
+              - type: custom:button-card
+                name: Dæmpet
+                icon: attribute
+                color: rgb(255,152,0)
+                entity: light.bathroom_light_profile_dimmed
+          - type: horizontal-stack
+            cards:
+              - type: custom:button-card
+                name: Baggrund
+                icon: attribute
+                color: rgb(255,152,0)
+                entity: light.bathroom_light_profile_ambient
+              - type: custom:button-card
+                name: Nat
+                icon: attribute
+                color: rgb(255,152,0)
+                entity: light.bathroom_light_profile_night
+              - type: custom:button-card
+                name: Slukket
+                icon: attribute
+                color: rgb(255,152,0)
+                entity: light.bathroom_light_profile_off
 
           - type: entities
             entities:
@@ -1740,7 +1989,7 @@ views:
     cards:
       - type: vertical-stack
         cards:
-          - <<: *compact-custom-header
+          - type: custom:compact-custom-header
             header: 'true, true, false, false, false, false, false'
 
           - type: horizontal-stack
@@ -1755,14 +2004,7 @@ views:
                       scale: 100px
                       entity: sensor.time
 
-                  - type: custom:calendar-card
-                    title: ""
-                    numberOfDays: 8
-                    entities:
-                      - calendar.holidays_in_denmark
-                      - calendar.martin_darkfoxdk_eberhardt_tripit
-                      - calendar.martin_eberhardt
-                      - calendar.todoist
+                  - <<: *calendar
 
               - type: vertical-stack
                 cards:
@@ -1808,7 +2050,7 @@ views:
                         name: Desk Shelf
                         tap_action:
                           action: toggle
-                      - entity: light.office_strip
+                      - entity: light.kontor_loftlys
                         tap_action:
                           action: toggle
                       - entity: light.screen_shelf
@@ -1822,13 +2064,13 @@ views:
                         name: Desk Bar
                         tap_action:
                           action: toggle
-                      - entity: light.hobby_desk
+                      - entity: light.hobbybord_lampe
                         tap_action:
                           action: toggle
-                      - entity: light.hobby_desk_lamp
+                      - entity: light.hobbybord_lampe
                         tap_action:
                           action: toggle
-                      - entity: light.office_spots
+                      - entity: light.kontor_spots
                         name: Spots
                         tap_action:
                           action: toggle
@@ -1894,3 +2136,305 @@ views:
                         style: 'red'
 
   # /Office Tablet
+
+  - title: Badeværelse Spejl
+    path: bathroom-mirror
+    icon: 'mdi:cellphone-screenshot'
+    panel: true
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: picture-elements
+            image: /local/blank1680x1050.png?v=1
+            elements:
+              ############
+              # TOP LEFT #
+              ############
+              - type: custom:card-modder
+                style:
+                  transform: none
+                  top: 0px
+                  left: 0px
+                  padding: 0
+                  width: 360px
+                card:
+                  type: custom:bignumber-card
+                  scale: 100px
+                  entity: sensor.time
+
+              - type: custom:hui-vertical-stack-card
+                style:
+                  transform: none
+                  top: 120px
+                  left: 0px
+                  padding: 0
+                  width: 360px
+                cards:
+                  - type: custom:card-modder
+                    style:
+                      padding: 0px
+                    card:
+                      type: custom:bignumber-card
+                      scale: 32px
+                      entity: sensor.date_text
+
+                  - type: conditional
+                    conditions:
+                      - entity: input_boolean.guests
+                        state: 'off'
+                    card:
+                      <<: *calendar
+
+                  - type: custom:list-card
+                    entity: sensor.aftership
+                    columns:
+                      - title: Title
+                        field: title
+                        add_link: link
+                      - title: Status
+                        field: status
+                      - title: Location
+                        field: location
+
+
+              ################
+              # BOTTOM LEFT #
+              ################
+              - type: custom:hui-vertical-stack-card
+                style:
+                  transform: none
+                  bottom: -12px
+                  left: 56px
+                  width: 304px
+                  padding: 0
+                cards:
+                  - type: custom:config-template-card
+                    entities:
+                      - sensor.s_train_b_next_fmt
+                      - sensor.s_train_b_status
+                    card:
+                      type: custom:hui-markdown-card
+                      content: "${ '<font size=6>' + states['sensor.s_train_b_next_fmt'].state + ' min</font><br>' + states['sensor.s_train_b_status'].state}"
+
+              - type: image
+                style:
+                  transform: none
+                  bottom: 0px
+                  left: 8px
+                  width: 64px
+                  padding: 0
+                image: /local/b.png
+
+              - type: custom:hui-vertical-stack-card
+                style:
+                  transform: none
+                  bottom: 68px
+                  left: -8px
+                  width: 360px
+                  padding: 0
+                cards:
+                  - type: conditional
+                    conditions:
+                      - entity: binary_sensor.s_train_message_present
+                        state: 'on'
+                    card:
+                      type: custom:card-modder
+                      style:
+                        padding: 0
+                      card:
+                        type: 'custom:useful-markdown-card'
+                        content: >-
+                          <font size=5>
+                            Driftsbesked:
+                          </font>
+                          <br>
+                          <font size=4>
+                            [[ sensor.s_train_message.state ]]
+                          </font>
+
+
+              #############
+              # TOP RIGHT #
+              #############
+              - type: custom:weather-card
+                style:
+                  transform: none
+                  top: 0px
+                  right: 0px
+                  width: 360px
+                  padding: 0
+                entity: weather.dark_sky
+                icons: "/local/custom-lovelace/bramkragten/weather-card/icons/animated/"
+
+
+              ###############
+              # BOTTOM RIGHT #
+              ###############
+
+              - type: custom:hui-vertical-stack-card
+                style:
+                  transform: none
+                  bottom: 0px
+                  right: 0px
+                  width: 360px
+                  padding: 0
+                cards:
+                  - type: conditional
+                    card:
+                      type: custom:mini-media-player
+                      info: scroll
+                      artwork: full-cover
+                      hide:
+                        mute: true
+                        icon: true
+                        icon_state: false
+                        power: true
+                        source: true
+                        controls: true
+                        volume: true
+                        power_state: false
+                      entity: media_player.bathroom_speaker
+                    conditions:
+                      - entity: media_player.bathroom_speaker
+                        state_not: 'off'
+
+                  - type: conditional
+                    card:
+                      type: custom:mini-media-player
+                      info: scroll
+                      artwork: full-cover
+                      hide:
+                        mute: true
+                        icon: true
+                        icon_state: false
+                        power: true
+                        source: true
+                        controls: true
+                        volume: true
+                        power_state: false
+                      entity: media_player.all_speakers
+                    conditions:
+                      - entity: media_player.all_speakers
+                        state_not: 'off'
+
+                  - type: conditional
+                    card:
+                      type: custom:mini-media-player
+                      info: scroll
+                      artwork: full-cover
+                      hide:
+                        mute: true
+                        icon: true
+                        icon_state: false
+                        power: true
+                        source: true
+                        controls: true
+                        volume: true
+                        power_state: false
+                      entity: media_player.east_side_speakers
+                    conditions:
+                      - entity: media_player.east_side_speakers
+                        state_not: 'off'
+
+                  - type: conditional
+                    card:
+                      type: custom:mini-media-player
+                      info: scroll
+                      artwork: full-cover
+                      hide:
+                        mute: true
+                        icon: true
+                        icon_state: false
+                        power: true
+                        source: true
+                        controls: true
+                        volume: true
+                        power_state: false
+                      entity: media_player.west_side_speakers
+                    conditions:
+                      - entity: media_player.west_side_speakers
+                        state_not: 'off'
+
+                  - type: custom:vertical-stack-in-card
+                    cards:
+                      - type: horizontal-stack
+                        cards:
+                          - type: vertical-stack
+                            cards:
+                              - type: custom:card-modder
+                                style:
+                                  padding: 0px 0px 0px 0px
+                                card:
+                                  type: sensor
+                                  name: " "
+                                  icon: mdi:toilet
+                                  entity: sensor.toilet_temperature
+
+                              - type: custom:card-modder
+                                style:
+                                  padding: 0px 0px 0px 0px
+                                card:
+                                  type: sensor
+                                  name: " "
+                                  entity: sensor.toilet_relative_humidity
+
+                          - type: vertical-stack
+                            cards:
+                              - type: custom:card-modder
+                                style:
+                                  padding: 0px 0px 0px 0px
+                                card:
+                                  type: sensor
+                                  name: " "
+                                  icon: mdi:hotel
+                                  entity: sensor.bedroom_temperature
+
+                              - type: custom:card-modder
+                                style:
+                                  padding: 0px 0px 0px 0px
+                                card:
+                                  type: sensor
+                                  name: " "
+                                  entity: sensor.bedroom_relative_humidity
+
+                          - type: vertical-stack
+                            cards:
+                              - type: custom:card-modder
+                                style:
+                                  padding: 0px 0px 0px 0px
+                                card:
+                                  type: sensor
+                                  name: " "
+                                  icon: mdi:sofa
+                                  entity: sensor.livingroom_temperature
+
+                              - type: custom:card-modder
+                                style:
+                                  padding: 0px 0px 0px 0px
+                                card:
+                                  type: sensor
+                                  name: " "
+                                  entity: sensor.livingroom_relative_humidity
+
+                          - type: vertical-stack
+                            cards:
+                              - type: custom:card-modder
+                                style:
+                                  padding: 0px 0px 0px 0px
+                                card:
+                                  type: sensor
+                                  name: " "
+                                  icon: mdi:desktop-tower-monitor
+                                  entity: sensor.office_temperature
+
+                              - type: custom:card-modder
+                                style:
+                                  padding: 0px 0px 0px 0px
+                                card:
+                                  type: sensor
+                                  name: " "
+                                  entity: sensor.office_relative_humidity
+
+
+          - type: custom:compact-custom-header
+            header: 'true, true, false, false, false, false, false, false'
