@@ -4,6 +4,14 @@ weather:
     mode: daily
 
 sensor:
+  - platform: template
+    sensors:
+      outside_temperature:
+        friendly_name: "Outside Temperature"
+        value_template: "{{ state_attr('weather.dark_sky', 'temperature') }}"
+        device_class: temperature
+        unit_of_measurement: "°C"
+
   - platform: rest
     name: dmi_weather_raw
     resource: !secret dmi_weather_url
@@ -73,6 +81,9 @@ automation:
     trigger:
       - platform: state
         entity_id: sensor.dmi_weather_raw
+      - platform: state
+        entity_id: binary_sensor.home_assistant_loaded
+        to: 'on'
     action:
       - service: mqtt.publish
         data_template:
@@ -97,6 +108,9 @@ automation:
     trigger:
       - platform: state
         entity_id: sensor.dmi_warning_raw
+      - platform: state
+        entity_id: binary_sensor.home_assistant_loaded
+        to: 'on'
     action:
       - service: downloader.download_file
         data_template:
