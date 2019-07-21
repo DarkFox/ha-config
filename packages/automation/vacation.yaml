@@ -1,5 +1,216 @@
+# entities used:
+#   - light.kontor_spot_1
+#   - light.stue_spot_2
+#   - light.kokken_loftlys
+#   - light.badevaerelse
+
 input_boolean:
   vacation_mode:
-    name: Vacation Mode
-    initial: off
+    name: Ferie Tilstand
+    icon: mdi:airplane-takeoff
+  vacation_mode_lights_active:
+    name: Vacation Mode Lights Active
 
+binary_sensor:
+  - platform: random
+    name: vacation_mode_random_boolean
+
+sensor:
+  - platform: random
+    name: vacation_mode_random_minutes
+    maximum: 55
+
+automation:
+  - alias: Vacation Mode Off
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_boolean.vacation_mode
+        to: 'off'
+    action:
+      - service: input_boolean.turn_off
+        data:
+          entity_id: input_boolean.vacation_mode_lights_active
+      - delay:
+          seconds: 2
+      - event: refresh_light_profile
+
+  - alias: Vacation Lights On
+    initial_state: true
+    trigger:
+      platform: time_pattern
+      minutes: /5
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: input_boolean.vacation_mode
+          state: 'on'
+        - condition: or
+          conditions:
+            - condition: time
+              after: '17:00:00'
+              before: '01:00:00'
+              weekday:
+                - mon
+                - tue
+                - wed
+                - thu
+                - fri
+            - condition: time
+              after: '10:00:00'
+              before: '01:00:00'
+              weekday:
+                - sat
+                - sun
+        - condition: or
+          conditions:
+            - condition: template
+              value_template: '{{ states.sun.sun.attributes.elevation < 4 }}'
+            - condition: numeric_state
+              entity_id: sensor.kitchen_luminance
+              below: 10
+    action:
+      - service: input_boolean.turn_on
+        data:
+          entity_id: input_boolean.vacation_mode_lights_active
+
+  - alias: Vacation Lights Off
+    initial_state: true
+    trigger:
+      - platform: time
+        at: '01:01:00'
+    condition:
+      condition: state
+      entity_id: input_boolean.vacation_mode_lights_active
+      state: 'on'
+    action:
+      - service: input_boolean.turn_off
+        data:
+          entity_id: input_boolean.vacation_mode_lights_active
+
+  - alias: Vacation Office on
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_boolean.vacation_mode_lights_active
+      to: 'on'
+    action:
+      - condition: state
+        entity_id: binary_sensor.vacation_mode_random_boolean
+        state: 'on'
+      - delay:
+          hours: 1
+          minutes: "{{ states('sensor.vacation_mode_random_minutes') }}"
+      - service: light.turn_on
+        data:
+          entity_id: light.kontor_spot_1
+          brightness: 255
+
+  - alias: Vacation Living Room on
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_boolean.vacation_mode_lights_active
+      to: 'on'
+    action:
+      - delay:
+          minutes: "{{ states('sensor.vacation_mode_random_minutes') }}"
+      - service: light.turn_on
+        data:
+          entity_id: light.stue_spot_2
+          brightness: 255
+  
+  - alias: Vacation Kitchen on
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_boolean.vacation_mode_lights_active
+      to: 'on'
+    action:
+      - delay:
+          minutes: "{{ states('sensor.vacation_mode_random_minutes') }}"
+      - service: light.turn_on
+        data:
+          entity_id: light.kokken_loftlys
+          brightness: 255
+  
+  - alias: Vacation Bathroom on
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_boolean.vacation_mode_lights_active
+        to: 'on'
+      - platform: event
+        event_type: vacation_bathroom_loop
+    condition:
+      condition: state
+      entity_id: input_boolean.vacation_mode_lights_active
+      state: 'on'
+    action:
+      - delay:
+          minutes: "{{ states('sensor.vacation_mode_random_minutes') }}"
+      - service: light.turn_on
+        data:
+          entity_id: light.badevaerelse
+          brightness: 255
+      - delay:
+          minutes: "{{ (states('sensor.vacation_mode_random_minutes')/2) | int }}"
+      - service: light.turn_off
+        data:
+          entity_id: light.badevaerelse
+      - delay:
+          hours: 2
+      - event: vacation_bathroom_loop
+
+  - alias: Vacation Office Off
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_boolean.vacation_mode_lights_active
+      to: 'off'
+    action:
+      - delay:
+          minutes: "{% if is_state('input_boolean.vacation_mode_lights_active', 'on') %}{{ states('sensor.vacation_mode_random_minutes') }}{% else %}0{% endif %}"
+      - service: light.turn_off
+        data:
+          entity_id: light.kontor_spot_1
+
+  - alias: Vacation Living Room Off
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_boolean.vacation_mode_lights_active
+      to: 'off'
+    action:
+      - delay:
+          minutes: "{% if is_state('input_boolean.vacation_mode_lights_active', 'on') %}{{ states('sensor.vacation_mode_random_minutes') }}{% else %}0{% endif %}"
+      - service: light.turn_off
+        data:
+          entity_id: light.stue_spot_2
+  
+  - alias: Vacation Kitchen Off
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_boolean.vacation_mode_lights_active
+      to: 'off'
+    action:
+      - delay:
+          minutes: "{% if is_state('input_boolean.vacation_mode_lights_active', 'on') %}{{ states('sensor.vacation_mode_random_minutes') }}{% else %}0{% endif %}"
+      - service: light.turn_off
+        data:
+          entity_id: light.kokken_loftlys
+  
+  - alias: Vacation Bathroom Off
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_boolean.vacation_mode_lights_active
+      to: 'off'
+    action:
+      - delay:
+          minutes: "{% if is_state('input_boolean.vacation_mode_lights_active', 'on') %}{{ states('sensor.vacation_mode_random_minutes') }}{% else %}0{% endif %}"
+      - service: light.turn_off
+        data:
+          entity_id: light.badevaerelse
