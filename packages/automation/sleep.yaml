@@ -31,7 +31,7 @@ script:
       - service: homeassistant.update_entity
         data:
           entity_id: sensor.tts_greeting
-      - service: tts.amazon_polly_say
+      - service: tts.google_cloud_say
         data_template:
           entity_id: "{{ device_entity_id }}"
           message: >
@@ -44,7 +44,6 @@ script:
               {%- else -%}
                  {{ ' ' }}{{ states('sensor.s_train_b_status') }}.
                  {{ states('sensor.s_train_message') }}.
-                 Estimeret rejsetid: {{ states('sensor.travel_time_to_work_public_transit') }} minutter.
               {%- endif -%}
             {%- endif -%}
 
@@ -79,19 +78,19 @@ automation:
     initial_state: true
     trigger:
       - platform: state
-        entity_id: binary_sensor.bed_motion
+        entity_id: binary_sensor.seng_bevaegelse
         to: 'on'
       - platform: state
         entity_id: input_select.sleep_state
         to: 'bedtime'
       - platform: state
-        entity_id: binary_sensor.bedroom_floor_motion
+        entity_id: binary_sensor.sovevaerelse_gulv_bevaegelse
         to: 'off'
     condition:
       condition: and
       conditions:
         - condition: state
-          entity_id: binary_sensor.bed_motion
+          entity_id: binary_sensor.seng_bevaegelse
           state: 'on'
         - condition: state
           entity_id: input_select.sleep_state
@@ -100,7 +99,7 @@ automation:
           entity_id: binary_sensor.martin_presence_delayed
           state: 'on'
         - condition: state
-          entity_id: binary_sensor.bedroom_floor_motion
+          entity_id: binary_sensor.sovevaerelse_gulv_bevaegelse
           state: 'off'
     action:
       service: input_select.select_option
@@ -175,7 +174,7 @@ automation:
         entity_id: sensor.sleep_tracker
         to: 'paused'
       - platform: state
-        entity_id: binary_sensor.bedroom_floor_motion
+        entity_id: binary_sensor.sovevaerelse_gulv_bevaegelse
         to: 'on'
       - platform: state
         entity_id: binary_sensor.hallway_sensor
@@ -199,19 +198,19 @@ automation:
     initial_state: true
     trigger:
       - platform: state
-        entity_id: binary_sensor.bed_motion
+        entity_id: binary_sensor.seng_bevaegelse
         to: 'on'
       - platform: state
         entity_id: input_select.sleep_state
         to: 'paused'
       - platform: state
-        entity_id: binary_sensor.bedroom_floor_motion
+        entity_id: binary_sensor.sovevaerelse_gulv_bevaegelse
         to: 'off'
     condition:
       condition: and
       conditions:
         - condition: state
-          entity_id: binary_sensor.bed_motion
+          entity_id: binary_sensor.seng_bevaegelse
           state: 'on'
         - condition: state
           entity_id: input_select.sleep_state
@@ -220,7 +219,7 @@ automation:
           entity_id: input_select.latest_motion
           state: 'Bedroom'
         - condition: state
-          entity_id: binary_sensor.bedroom_floor_motion
+          entity_id: binary_sensor.sovevaerelse_gulv_bevaegelse
           state: 'off'
     action:
       service: input_select.select_option
@@ -306,7 +305,7 @@ automation:
         entity_id: binary_sensor.hallway_sensor
         to: 'on'
       - platform: state
-        entity_id: binary_sensor.bedroom_floor_motion
+        entity_id: binary_sensor.sovevaerelse_gulv_bevaegelse
         to: 'on'
     condition:
       condition: or
@@ -495,21 +494,21 @@ automation:
       - service: input_select.select_option
         data:
           entity_id: input_select.playlist_player
-          option: 'media_player.bedroom_speaker'
+          option: 'media_player.sovevaerelse_soundbar'
       - service: input_select.set_options
         data_template:
           entity_id: input_select.playlist
           options:
             - "==SCRIPT==morning_briefing"
-            - "{{ states.sensor.podcast_bbc_minute.state }}"
-            - "http://ice1.somafm.com/groovesalad-128-aac"
+            - "{{ states('sensor.podcast_bbc_minute') }}"
+            - "http://live-icy.gss.dr.dk:8000/A/A05H.mp3"
             - "==END=="
       - delay:
           seconds: 2
       - service: media_player.volume_set
         data_template:
-          entity_id: 'media_player.bedroom_speaker'
-          volume_level: 0.30
+          entity_id: 'media_player.sovevaerelse_soundbar'
+          volume_level: 0.25
       - service: automation.trigger
         data:
           entity_id: "automation.reset_scene_transition_time"
@@ -567,22 +566,22 @@ automation:
       - service: input_select.select_option
         data:
           entity_id: input_select.playlist_player
-          option: 'media_player.bedroom_speaker'
+          option: 'media_player.sovevaerelse_soundbar'
       - service: input_select.set_options
         data_template:
           entity_id: input_select.playlist
           options:
             - "==SCRIPT==morning_briefing"
-            - "{{ states.sensor.podcast_bbc_minute.state }}"
-            - "{{ states.sensor.podcast_24syv_nyheder.state }}"
-            - "http://ice1.somafm.com/groovesalad-128-aac"
+            - "{{ states('sensor.podcast_bbc_minute') }}"
+            - "{{ states('sensor.podcast_24syv_nyheder') }}"
+            - "http://live-icy.gss.dr.dk:8000/A/A05H.mp3"
             - "==END=="
       - delay:
           seconds: 2
       - service: media_player.volume_set
         data_template:
-          entity_id: 'media_player.bedroom_speaker'
-          volume_level: 0.40
+          entity_id: 'media_player.sovevaerelse_soundbar'
+          volume_level: 0.25
       - service: automation.trigger
         data:
           entity_id: "automation.reset_scene_transition_time"
@@ -623,7 +622,7 @@ automation:
       - service: input_select.select_option
         data:
           entity_id: input_select.playlist_player
-          option: 'media_player.east_side_speakers'
+          option: 'media_player.ost_hojttalere'
       - delay:
           seconds: 1
       - service: input_select.set_options
@@ -631,17 +630,21 @@ automation:
           entity_id: input_select.playlist
           options:
             - "==SCRIPT==morning_briefing"
-            - "{{ states.sensor.podcast_bbc_minute.state }}"
-            - "{{ states.sensor.podcast_daily_tech_news_show.state }}"
-            - "{{ states.sensor.podcast_24syv_nyheder.state }}"
-            - "http://ice1.somafm.com/groovesalad-128-aac"
+            - "{{ states('sensor.podcast_bbc_minute') }}"
+            - "{{ states('sensor.podcast_daily_tech_news_show') }}"
+            - "{{ states('sensor.podcast_24syv_nyheder') }}"
+            - "http://live-icy.gss.dr.dk:8000/A/A05H.mp3"
             - "==END=="
       - delay:
           seconds: 2
       - service: media_player.volume_set
         data_template:
-          entity_id: 'media_player.east_side_speakers'
-          volume_level: 0.5
+          entity_id: 'media_player.sovevaerelse_soundbar'
+          volume_level: 0.3
+      - service: media_player.volume_set
+        data_template:
+          entity_id: 'media_player.ost_hojttalere'
+          volume_level: 0.4
       - service: automation.trigger
         data:
           entity_id: "automation.reset_scene_transition_time"
