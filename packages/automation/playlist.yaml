@@ -1,9 +1,7 @@
-group:
-  playlist:
-    name: Playlist
-    entities:
-      - input_select.playlist
-      - input_select.playlist_player
+homeassistant:
+  customize:
+    sensor.playlist_player:
+      icon: mdi:cast
 
 input_select:
   playlist:
@@ -11,29 +9,27 @@ input_select:
     initial: ''
     options:
       - ''
+
   playlist_player:
-    name: Playlist Player
-    initial: None
+    name: Destination
     options:
       - None
-      - media_player.all_speakers
-      - media_player.bedroom_speaker
-      - media_player.east_side_speakers
-      - media_player.kitchen_chromecast
-      - media_player.kitchen_speaker
-      - media_player.bathroom_speaker
-      - media_player.office_soundbar
-      - media_player.office_speakers
-      - media_player.projector_chromecast
+      - media_player.alle_hojttalere
+      - media_player.ost_hojttalere
+      - media_player.vest_hojttalere
+      - media_player.minis
+      - media_player.kokken_chromecast
+      - media_player.kokken_hojttaler_cc
+      - media_player.kokken_mini
+      - media_player.badevaerelse_mini
+      - media_player.kontor_hojttaler
+      - media_player.kontor_mini
       - media_player.stue_chromecast
       - media_player.stue_soundbar
-      - media_player.west_side_speakers
-      - media_player.morning_group
-      - media_player.bedroom_mini
-      - media_player.kitchen_mini
-      - media_player.living_room_mini
-      - media_player.office_mini
-      - media_player.minis
+      - media_player.stue_mini
+      - media_player.sovevaerelse_chromecast
+      - media_player.sovevaerelse_soundbar
+      - media_player.sovevaerelse_mini
 
 binary_sensor:
   - platform: template
@@ -42,7 +38,169 @@ binary_sensor:
         entity_id: input_select.playlist
         value_template: "{{ not is_state('input_select.playlist', '') }}"
 
+sensor:
+  - platform: template
+    sensors:
+      playlist_player:
+        friendly_name: Afspiller
+        entity_id: input_select.playlist_player
+        value_template: "{{ state_attr(states('input_select.playlist_player'), 'friendly_name') }}"
+
+
 script:
+  weather_report:
+    alias: Weather Report
+    sequence:
+      - service: tts.google_cloud_say
+        data_template:
+          entity_id: "{{ device_entity_id }}"
+          message: >
+            Vejrudsigt: {{ states("sensor.dmi_vejr") }}.
+            {{ state_attr("sensor.dmi_vejr", "content") }}
+            
+  
+  briefing:
+    alias: Briefing
+    sequence:
+      - service: homeassistant.update_entity
+        data:
+          entity_id: sensor.tts_greeting
+      - service: tts.google_cloud_say
+        data_template:
+          entity_id: "{{ device_entity_id }}"
+          message: >
+            {{ states("sensor.tts_greeting") }}. Klokken er {{ states("sensor.time") }}.
+            Vejrudsigt: {{ states("sensor.dmi_vejr") }}.
+            {% if is_state('binary_sensor.workday_sensor', 'on') and now().hour < 12 -%}
+              S-Tog Linje B:
+              {%- if is_state('sensor.s_train_b_status', 'Til tiden') -%}
+                {{ ' ' }}Kører normalt.
+              {%- else -%}
+                 {{ ' ' }}{{ states('sensor.s_train_b_status') }}.
+                 {{ states('sensor.s_train_message') }}.
+              {%- endif -%}
+            {%- endif -%}
+
+  playlist_play_radio_soft:
+    alias: Radio Soft
+    sequence:
+      service:  input_select.set_options
+      data:
+        entity_id: input_select.playlist
+        options:
+          - http://live-bauerdk.sharp-stream.com/soft_live.mp3
+          - "==END=="
+
+  playlist_play_nova_fm:
+    alias: Nova FM
+    sequence:
+      service:  input_select.set_options
+      data:
+        entity_id: input_select.playlist
+        options:
+          - http://195.184.101.204/nova128
+          - "==END=="
+
+  playlist_play_dr_p3:
+    alias: DR P3
+    sequence:
+      service:  input_select.set_options
+      data:
+        entity_id: input_select.playlist
+        options:
+          - http://live-icy.gss.dr.dk:8000/A/A05H.mp3
+          - "==END=="
+
+  playlist_play_dr_p6_beat:
+    alias: DR P6 Beat
+    sequence:
+      service:  input_select.set_options
+      data:
+        entity_id: input_select.playlist
+        options:
+          - http://live-icy.gss.dr.dk:8000/A/A29H.mp3
+          - "==END=="
+
+  playlist_play_radio_24syv:
+    alias: Radio 24Syv
+    sequence:
+      service:  input_select.set_options
+      data:
+        entity_id: input_select.playlist
+        options:
+          - http://live.taleradio.dk/Web
+          - "==END=="
+
+  playlist_play_my_rock:
+    alias: MyRock
+    sequence:
+      service:  input_select.set_options
+      data:
+        entity_id: input_select.playlist
+        options:
+          - http://live-bauerdk.sharp-stream.com/myrock.mp3
+          - "==END=="
+
+  playlist_play_groove_salad:
+    alias: Groove Salad
+    sequence:
+      service:  input_select.set_options
+      data:
+        entity_id: input_select.playlist
+        options:
+          - http://ice1.somafm.com/groovesalad-128-aac
+          - "==END=="
+
+  playlist_play_bbc_minute:
+    alias: BBC Minute
+    sequence:
+      service:  input_select.set_options
+      data_template:
+        entity_id: input_select.playlist
+        options:
+          - "{{ states.sensor.podcast_bbc_minute.state }}"
+          - "==END=="
+
+  playlist_play_24syv_nyheder:
+    alias: 24syv Nyheder
+    sequence:
+      service:  input_select.set_options
+      data_template:
+        entity_id: input_select.playlist
+        options:
+          - "{{ states.sensor.podcast_24syv_nyheder.state }}"
+          - "==END=="
+
+  playlist_play_daily_tech_news_show:
+    alias: Daily Tech News Show
+    sequence:
+      service:  input_select.set_options
+      data_template:
+        entity_id: input_select.playlist
+        options:
+          - "{{ states.sensor.podcast_daily_tech_news_show.state }}"
+          - "==END=="
+
+  playlist_play_briefing:
+    alias: Status
+    sequence:
+      service:  input_select.set_options
+      data:
+        entity_id: input_select.playlist
+        options:
+          - ==SCRIPT==briefing
+          - "==END=="
+
+  playlist_play_weather_report:
+    alias: Status
+    sequence:
+      service:  input_select.set_options
+      data:
+        entity_id: input_select.playlist
+        options:
+          - ==SCRIPT==weather_report
+          - "==END=="
+
   playlist_delay_10:
     alias: 10 second playlist delay
     sequence:
@@ -162,28 +320,26 @@ automation:
     trigger:
       platform: state
       entity_id:
-        - media_player.all_speakers
-        - media_player.bedroom_speaker
-        - media_player.east_side_speakers
-        - media_player.kitchen_chromecast
-        - media_player.kitchen_speaker
-        - media_player.bathroom_speaker
-        - media_player.office_soundbar
-        - media_player.office_speakers
-        - media_player.projector_chromecast
+        - media_player.alle_hojttalere
+        - media_player.ost_hojttalere
+        - media_player.vest_hojttalere
+        - media_player.minis
+        - media_player.kokken_chromecast
+        - media_player.kokken_hojttaler_cc
+        - media_player.kokken_mini
+        - media_player.badevaerelse_mini
+        - media_player.kontor_hojttaler
+        - media_player.kontor_mini
         - media_player.stue_chromecast
         - media_player.stue_soundbar
-        - media_player.west_side_speakers
-        - media_player.morning_group
-        - media_player.bedroom_mini
-        - media_player.kitchen_mini
-        - media_player.living_room_mini
-        - media_player.office_mini
-        - media_player.minis
+        - media_player.stue_mini
+        - media_player.sovevaerelse_chromecast
+        - media_player.sovevaerelse_soundbar
+        - media_player.sovevaerelse_mini
       from: 'playing'
       to: 'idle'
       for:
-        seconds: 2
+        seconds: 5
     condition:
       condition: and
       conditions:
@@ -210,10 +366,6 @@ automation:
       - service: media_player.turn_off
         data_template:
           entity_id: "{{ states.input_select.playlist_player.state }}"
-      - service: input_select.select_option
-        data:
-          entity_id: input_select.playlist_player
-          option: 'None'
       - service: input_select.set_options
         data:
           entity_id: input_select.playlist
