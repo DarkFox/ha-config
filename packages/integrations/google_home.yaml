@@ -1,195 +1,211 @@
-googlehome:
-  devices:
-    - host: 192.168.42.30 # Office
-      track_alarms: true
-      track_devices: false
-    - host: 192.168.42.31 # Kitchen
-      track_alarms: true
-      track_devices: false
-    - host: 192.168.42.32 # Bedroom
-      track_alarms: true
-      track_devices: false
-    - host: 192.168.42.33 # Living Room
-      track_alarms: true
-      track_devices: false
+# googlehome:
+#   devices:
+#     - host: 192.168.42.30 # Office
+#       track_alarms: true
+#       track_devices: false
+#     - host: 192.168.42.31 # Kitchen
+#       track_alarms: true
+#       track_devices: false
+#     - host: 192.168.42.32 # Bedroom
+#       track_alarms: true
+#       track_devices: false
+#     - host: 192.168.42.33 # Badeværelse
+#       track_alarms: true
+#       track_devices: false
+#     - host: 192.168.42.34 # Stue
+#       track_alarms: true
+#       track_devices: false
 
-sensor:
-  - platform: rest
-    resource: http://192.168.42.34:8008/setup/eureka_info
-    name: Bathroom Wifi Signal
-    value_template: "{{ value_json.signal_level }}"
-    unit_of_measurement: dBm
-    force_update: true
-    scan_interval: 30
+# sensor:
+#   - platform: rest
+#     resource: http://192.168.42.33:8008/setup/eureka_info
+#     name: Badeværelse Wifi Signal
+#     value_template: "{{ value_json.signal_level }}"
+#     unit_of_measurement: dBm
+#     force_update: true
+#     scan_interval: 30
 
-  - platform: rest
-    resource: http://192.168.42.33:8008/setup/eureka_info
-    name: Living Room Wifi Signal
-    value_template: "{{ value_json.signal_level }}"
-    unit_of_measurement: dBm
-    force_update: true
-    scan_interval: 30
+#   - platform: rest
+#     resource: http://192.168.42.34:8008/setup/eureka_info
+#     name: Stue Wifi Signal
+#     value_template: "{{ value_json.signal_level }}"
+#     unit_of_measurement: dBm
+#     force_update: true
+#     scan_interval: 30
 
-  - platform: rest
-    resource: http://192.168.42.30:8008/setup/eureka_info
-    name: Office Wifi Signal
-    value_template: "{{ value_json.signal_level }}"
-    unit_of_measurement: dBm
-    force_update: true
-    scan_interval: 30
+#   - platform: rest
+#     resource: http://192.168.42.30:8008/setup/eureka_info
+#     name: Office Wifi Signal
+#     value_template: "{{ value_json.signal_level }}"
+#     unit_of_measurement: dBm
+#     force_update: true
+#     scan_interval: 30
 
-  - platform: rest
-    resource: http://192.168.42.32:8008/setup/eureka_info
-    name: Bedroom Wifi Signal
-    value_template: "{{ value_json.signal_level }}"
-    unit_of_measurement: dBm
-    force_update: true
-    scan_interval: 30
+#   - platform: rest
+#     resource: http://192.168.42.32:8008/setup/eureka_info
+#     name: Bedroom Wifi Signal
+#     value_template: "{{ value_json.signal_level }}"
+#     unit_of_measurement: dBm
+#     force_update: true
+#     scan_interval: 30
 
-  - platform: rest
-    resource: http://192.168.42.31:8008/setup/eureka_info
-    name: Kitchen Wifi Signal
-    value_template: "{{ value_json.signal_level }}"
-    unit_of_measurement: dBm
-    force_update: true
-    scan_interval: 30
+#   - platform: rest
+#     resource: http://192.168.42.31:8008/setup/eureka_info
+#     name: Kitchen Wifi Signal
+#     value_template: "{{ value_json.signal_level }}"
+#     unit_of_measurement: dBm
+#     force_update: true
+#     scan_interval: 30
 
 
-input_boolean:
-  bedroom_mini_timer_ringing:
-    name: "Soveværelse timer ringer"
-    initial: off
-  kitchen_mini_timer_ringing:
-    name: "Køkken timer ringer"
-    initial: off
-  living_room_mini_timer_ringing:
-    name: "Stue timer ringer"
-    initial: off
-  office_mini_timer_ringing:
-    name: "Kontor timer ringer"
-    initial: off
-  bedroom_mini_alarm_ringing:
-    name: "Soveværelse alarm ringer"
-    initial: off
-  kitchen_mini_alarm_ringing:
-    name: "Køkken alarm ringer"
-    initial: off
-  living_room_mini_alarm_ringing:
-    name: "Stue alarm ringer"
-    initial: off
-  office_mini_alarm_ringing:
-    name: "Kontor alarm ringer"
-    initial: off
+# input_boolean:
+#   badevaerelse_mini_timer_ringing:
+#     name: "Badeværelse timer ringer"
+#     initial: off
+#   badevaerelse_mini_alarm_ringing:
+#     name: "Badeværelse alarm ringer"
+#     initial: off
 
-automation:
-  - alias: Google Home timer or alarm set
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id:
-        - sensor.bedroom_mini_timer
-        - sensor.kitchen_mini_timer
-        - sensor.living_room_mini_timer
-        - sensor.office_mini_timer
-        - sensor.bedroom_mini_alarm
-        - sensor.kitchen_mini_alarm
-        - sensor.living_room_mini_alarm
-        - sensor.office_mini_alarm
-    condition:
-      condition: template
-      value_template: "{{ trigger.to_state.state != 'unavailable' }}"
-    action:
-      - wait_template: "{{ ((as_timestamp(trigger.to_state.state) | int) < (as_timestamp(now()) | int)) }}"
-      # Check timer or alarm wasn't cancelled in the meantime
-      - condition: template
-        value_template: "{{ not is_state(trigger.entity_id, 'unavailable') }}"
-      - service: input_boolean.turn_on
-        data_template:
-          entity_id: "{{ trigger.entity_id.replace('sensor.', 'input_boolean.') }}_ringing"
-      - event: google_home_ringing
-        event_data_template:
-          entity_id: "{{ trigger.entity_id }}"
-      - wait_template: "{{ is_state(trigger.entity_id, 'unavailable') }}"
-      - service: input_boolean.turn_off
-        data_template:
-          entity_id: "{{ trigger.entity_id.replace('sensor.', 'input_boolean.') }}_ringing"
-      - event: google_home_stopped
-        event_data_template:
-          entity_id: "{{ trigger.entity_id }}"
+#   sovevaerelse_mini_timer_ringing:
+#     name: "Soveværelse timer ringer"
+#     initial: off
+#   sovevaerelse_mini_alarm_ringing:
+#     name: "Soveværelse alarm ringer"
+#     initial: off
 
-  - alias: google_home_ringing_office
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: google_home_ringing
-    condition:
-      condition: or
-      conditions:
-        - condition: state
-          entity_id: input_select.office_room_state
-          state: 'active'
-        - condition: state
-          entity_id: input_select.office_room_state
-          state: 'inactive'
-    action:
-      - event: google_home_ringing_office
-      - condition: template
-        value_template: "{{ trigger.event.data.entity_id not in ['input_boolean.office_mini_alarm_ringing', 'input_boolean.office_mini_timer_ringing'] }}"
-      - service: tts.google_say
-        data_template:
-          entity_id:
-            - media_player.office_mini
-            - media_player.desktop_pc_audio
-          message: "{{ state_attr(trigger.event.data.entity_id, 'friendly_name') }}"
-      - service: light.turn_on
-        data:
-          entity_id: light.blink1
-          effect: "flash green"
+#   kokken_mini_timer_ringing:
+#     name: "Køkken timer ringer"
+#     initial: off
+#   kokken_mini_alarm_ringing:
+#     name: "Køkken alarm ringer"
+#     initial: off
 
-  - alias: google_home_ringing_pc_off
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: google_home_ringing_office
-    condition:
-      condition: or
-      conditions:
-        - condition: state
-          entity_id: input_boolean.desktop_pc_status
-          state: 'off'
-    action:
-      - service: light.turn_on
-        data:
-          entity_id: light.office_desk_spot_4
-          effect: "Strobe"
+#   stue_mini_timer_ringing:
+#     name: "Stue timer ringer"
+#     initial: off
+#   stue_mini_alarm_ringing:
+#     name: "Stue alarm ringer"
+#     initial: off
 
-  - alias: google_home_stopped_global
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: google_home_stopped
-    action:
-      - event: refresh_light_profile
+#   kontor_mini_timer_ringing:
+#     name: "Kontor timer ringer"
+#     initial: off
+#   kontor_mini_alarm_ringing:
+#     name: "Kontor alarm ringer"
+#     initial: off
 
-  - alias: google_home_stopped_office
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: google_home_stopped
-    condition:
-      condition: or
-      conditions:
-        - condition: state
-          entity_id: input_select.office_room_state
-          state: 'active'
-        - condition: state
-          entity_id: input_select.office_room_state
-          state: 'inactive'
-    action:
-      - service: light.turn_on
-        data:
-          entity_id: light.blink1
-          effect: "none"
-      - service: light.turn_off
-        data:
-          entity_id: light.blink1
+
+# automation:
+#   - alias: Google Home timer or alarm set
+#     initial_state: true
+#     trigger:
+#       platform: state
+#       entity_id:
+#         - sensor.badevaerelse_mini_alarm
+#         - sensor.badevaerelse_mini_timer
+#         - sensor.sovevaerelse_mini_alarm
+#         - sensor.sovevaerelse_mini_timer
+#         - sensor.kokken_mini_alarm
+#         - sensor.kokken_mini_timer
+#         - sensor.stue_mini_alarm
+#         - sensor.stue_mini_timer
+#         - sensor.kontor_mini_alarm
+#         - sensor.kontor_mini_timer
+#     condition:
+#       condition: template
+#       value_template: "{{ trigger.to_state.state != 'unavailable' }}"
+#     action:
+#       - wait_template: "{{ ((as_timestamp(trigger.to_state.state) | int) < (as_timestamp(now()) | int)) }}"
+#       # Check timer or alarm wasn't cancelled in the meantime
+#       - condition: template
+#         value_template: "{{ not is_state(trigger.entity_id, 'unavailable') }}"
+#       - service: input_boolean.turn_on
+#         data_template:
+#           entity_id: "{{ trigger.entity_id.replace('sensor.', 'input_boolean.') }}_ringing"
+#       - event: google_home_ringing
+#         event_data_template:
+#           entity_id: "{{ trigger.entity_id }}"
+#       - wait_template: "{{ is_state(trigger.entity_id, 'unavailable') }}"
+#       - service: input_boolean.turn_off
+#         data_template:
+#           entity_id: "{{ trigger.entity_id.replace('sensor.', 'input_boolean.') }}_ringing"
+#       - event: google_home_stopped
+#         event_data_template:
+#           entity_id: "{{ trigger.entity_id }}"
+
+#   - alias: google_home_ringing_office
+#     initial_state: true
+#     trigger:
+#       - platform: event
+#         event_type: google_home_ringing
+#     condition:
+#       condition: or
+#       conditions:
+#         - condition: state
+#           entity_id: input_select.office_room_state
+#           state: 'active'
+#         - condition: state
+#           entity_id: input_select.office_room_state
+#           state: 'inactive'
+#     action:
+#       - event: google_home_ringing_office
+#       - condition: template
+#         value_template: "{{ trigger.event.data.entity_id not in ['input_boolean.kontor_mini_alarm_ringing', 'input_boolean.kontor_mini_timer_ringing'] }}"
+#       - service: tts.google_cloud_say
+#         data_template:
+#           entity_id:
+#             - media_player.kontor_mini
+#             - media_player.desktop_pc_audio
+#           message: "{{ state_attr(trigger.event.data.entity_id, 'friendly_name') }}"
+#       - service: light.turn_on
+#         data:
+#           entity_id: light.blink1
+#           effect: "flash green"
+
+#   - alias: google_home_ringing_pc_off
+#     initial_state: true
+#     trigger:
+#       - platform: event
+#         event_type: google_home_ringing_office
+#     condition:
+#       condition: or
+#       conditions:
+#         - condition: state
+#           entity_id: input_boolean.desktop_pc_status
+#           state: 'off'
+#     action:
+#       - service: light.turn_on
+#         data:
+#           entity_id: light.office_desk_spot_4
+#           effect: "Strobe"
+
+#   - alias: google_home_stopped_global
+#     initial_state: true
+#     trigger:
+#       - platform: event
+#         event_type: google_home_stopped
+#     action:
+#       - event: refresh_light_profile
+
+#   - alias: google_home_stopped_office
+#     initial_state: true
+#     trigger:
+#       - platform: event
+#         event_type: google_home_stopped
+#     condition:
+#       condition: or
+#       conditions:
+#         - condition: state
+#           entity_id: input_select.office_room_state
+#           state: 'active'
+#         - condition: state
+#           entity_id: input_select.office_room_state
+#           state: 'inactive'
+#     action:
+#       - service: light.turn_on
+#         data:
+#           entity_id: light.blink1
+#           effect: "none"
+#       - service: light.turn_off
+#         data:
+#           entity_id: light.blink1
