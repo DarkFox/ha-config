@@ -39,6 +39,22 @@ automation:
         entity_id: input_number.bathroom_tablet_brightness
         value: "{{ trigger.json.state }}"
 
+sensor:
+  - platform: mqtt
+    name: "Bathroom Tablet Battery"
+    device_class: battery
+    state_topic: "wallpanel/lenovo-tablet/sensor/battery"
+    unit_of_measurement: "%"
+    value_template: "{{ value_json.value }}"
+    json_attributes_topic: "wallpanel/lenovo-tablet/sensor/battery"
+  - platform: mqtt
+    name: "Hallway Tablet Battery"
+    device_class: battery
+    state_topic: "wallpanel/hallway-tablet/sensor/battery"
+    unit_of_measurement: "%"
+    value_template: "{{ value_json.value }}"
+    json_attributes_topic: "wallpanel/hallway-tablet/sensor/battery"
+
 input_boolean:
   hallway_tablet_screen:
     name: hallway_tablet_screen
@@ -63,37 +79,37 @@ light:
         level_template: "{{ states('input_number.hallway_tablet_brightness')|int }}"
         value_template: "{{ states('input_boolean.hallway_tablet_screen') }}"
         turn_on:
-          service: joaoapps_join.nexus_send_tasker
-          data:
-            command: "screen=:=on"
+          - service: joaoapps_join.nexus_send_tasker
+            data:
+              command: "screen=:=on"
         turn_off:
-          service: joaoapps_join.nexus_send_tasker
-          data:
-            command: "screen=:=off"
+          - service: joaoapps_join.nexus_send_tasker
+            data:
+              command: "screen=:=off"
         set_level:
           - service: joaoapps_join.nexus_send_tasker
             data:
               command: "screen=:=on"
           - service: joaoapps_join.nexus_send_tasker
             data_template:
-              command: "brightness=:={{ brightness / 255 * 100 |int }}"
+              command: "brightness=:={{ brightness / 255 * 100 | int }}"
 
       bathroom_tablet:
         friendly_name: "Bathroom Tablet"
         level_template: "{{ states('input_number.bathroom_tablet_brightness')|int }}"
         value_template: "{{ states('input_boolean.bathroom_tablet_screen') }}"
         turn_on:
-          service: joaoapps_join.lenovo_tablet_send_tasker
-          data:
-            command: "screen=:=on"
+          - service: joaoapps_join.lenovo_tablet_send_tasker
+            data:
+              command: "screen=:=on"
         turn_off:
-          service: joaoapps_join.lenovo_tablet_send_tasker
-          data:
-            command: "screen=:=off"
+          - service: joaoapps_join.lenovo_tablet_send_tasker
+            data:
+              command: "screen=:=off"
         set_level:
           - service: joaoapps_join.lenovo_tablet_send_tasker
             data:
               command: "screen=:=on"
           - service: joaoapps_join.lenovo_tablet_send_tasker
             data_template:
-              command: "brightness=:={{brightness}}"
+              command: "brightness=:={{ brightness }}"
