@@ -1,23 +1,6 @@
 script:
   light_profile_living_room_bright:
     sequence:
-      # IKEA lights
-      - service: light.turn_on
-        data_template:
-          transition: 0
-          color_temp: 370
-          entity_id:
-            - light.stue_spot_1
-            - light.stue_spot_2
-            - light.stue_spot_3
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 255
-          entity_id:
-            - light.stue_spot_1
-            - light.stue_spot_2
-            - light.stue_spot_3
       # White temp lights
       - service: light.turn_on
         data_template:
@@ -27,8 +10,7 @@ script:
           entity_id:
             - light.sofalampe
             - light.spisebord
-            - light.lysestage_1
-            - light.lysestage_2
+            - light.projektor
       # Dimmable Lights
       - service: light.turn_on
         data_template:
@@ -60,26 +42,23 @@ script:
             - light.sofa_table
             - light.display_cabinet_top
             - light.display_cabinet_bottom
-
-  light_profile_living_room_default:
-    sequence:
       # IKEA lights
       - service: light.turn_on
         data_template:
-          transition: 0
-          color_temp: 370
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 255
           entity_id:
-            - light.stue_spot_1
-            - light.stue_spot_2
-            - light.stue_spot_3
+            - light.stue_spots
+      - delay:
+          milliseconds: "{{ ((((transition_time or 0.5) | float) + 2.0) * 1000) | int }}"
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 72
+          color_temp: 370
           entity_id:
-            - light.stue_spot_1
-            - light.stue_spot_2
-            - light.stue_spot_3
+            - light.stue_spots
+
+  light_profile_living_room_default:
+    sequence:
       # White temp lights
       - service: light.turn_on
         data_template:
@@ -120,8 +99,7 @@ script:
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           entity_id:
             - light.globe
-            - light.lysestage_1
-            - light.lysestage_2
+            - light.projektor
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
@@ -135,6 +113,20 @@ script:
             - light.windowsill
             - light.sofa_table
             - light.display_cabinet_bottom
+      # IKEA lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 72
+          entity_id:
+            - light.stue_spots
+      - delay:
+          milliseconds: "{{ ((((transition_time or 0.5) | float) + 2.0) * 1000) | int }}"
+      - service: light.turn_on
+        data_template:
+          color_temp: 370
+          entity_id:
+            - light.stue_spots
 
   light_profile_living_room_dimmed:
     sequence:
@@ -143,9 +135,7 @@ script:
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           entity_id:
-            - light.stue_spot_1
-            - light.stue_spot_2
-            - light.stue_spot_3
+            - light.stue_spots
       # White temp lights
       - service: light.turn_on
         data_template:
@@ -193,8 +183,7 @@ script:
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           entity_id:
             - light.globe
-            - light.lysestage_1
-            - light.lysestage_2
+            - light.projektor
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
@@ -216,9 +205,7 @@ script:
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           entity_id:
-            - light.stue_spot_1
-            - light.stue_spot_2
-            - light.stue_spot_3
+            - light.stue_spots
             - light.cabinet_spots
             - light.display_cabinet_front_1
             - light.display_cabinet_front_2
@@ -249,21 +236,26 @@ script:
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 48
+          brightness: 72
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           entity_id:
-            - light.globe
+            - light.projektor
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 32
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           entity_id:
-            - light.spisebord
             - light.sofalampe
-            - light.lysestage_1
-            - light.lysestage_2
+            - light.globe
       # Secondary RGB lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 32
+          hs_color: [ "{{ states.sensor.theme_secondary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color_hue.state.split(',')[1]|int }}"]
+          entity_id:
+            - light.spisebord
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
@@ -290,11 +282,8 @@ script:
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           entity_id:
-            - light.lysestage_1
-            - light.lysestage_2
-            - light.stue_spot_1
-            - light.stue_spot_2
-            - light.stue_spot_3
+            - light.projektor
+            - light.stue_spots
             - light.sofalampe
             - light.cabinet_spots
             - light.cabinet_shelves
@@ -332,9 +321,7 @@ script:
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           entity_id:
-            - light.stue_spot_1
-            - light.stue_spot_2
-            - light.stue_spot_3
+            - light.stue_spots
             - light.cabinet_spots
       # Dimmable Lights
       - service: light.turn_on
@@ -352,8 +339,7 @@ script:
             - light.tv_shelf
             - light.sofa_corner
             - light.windowsill
-            - light.lysestage_2
-            - light.lysestage_1
+            - light.projektor
             - light.bar
             - light.tv_backlight
             - light.display_cabinet_top
@@ -509,7 +495,7 @@ binary_sensor:
         friendly_name: 'Livingroom Activity'
         entity_id:
           - binary_sensor.livingroom_sensor
-          - binary_sensor.sofagruppe_aktivitet
+          - binary_sensor.sofagruppe_bevaegelse
           - input_boolean.living_room_activity_override
           - input_select.living_room_state
           - media_player.stue_chromecast
@@ -518,7 +504,7 @@ binary_sensor:
           {%- if is_state('input_boolean.living_room_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.living_room_room_state', 'active') else 'false' }}
           {%- elif is_state('binary_sensor.livingroom_sensor', 'on')
-          or is_state('binary_sensor.sofagruppe_aktivitet', 'on')
+          or is_state('binary_sensor.sofagruppe_bevaegelse', 'on')
           or is_state('media_player.stue_chromecast', 'playing')
           or is_state('media_player.stue_chromecast', 'paused')
           or is_state('input_select.latest_motion', 'Living Room') -%}
@@ -526,3 +512,14 @@ binary_sensor:
           {% else -%}
             false
           {% endif -%}
+
+group:
+  living_room_activity_entities:
+    name: Living Room Activity Entities
+    entities:
+      - input_boolean.living_room_activity_override
+      - input_select.living_room_state
+      - input_select.latest_motion
+      - binary_sensor.livingroom_sensor
+      - binary_sensor.sofagruppe_bevaegelse
+      - media_player.stue_chromecast

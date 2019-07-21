@@ -1,19 +1,6 @@
 script:
   light_profile_office_bright:
     sequence:
-      # IKEA lights
-      - service: light.turn_on
-        data_template:
-          transition: 0
-          color_temp: 370
-          entity_id:
-            - light.kontor_spots
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 255
-          entity_id:
-            - light.kontor_spots
       # White temp lights
       - service: light.turn_on
         data_template:
@@ -30,8 +17,8 @@ script:
           effect: 'None'
           entity_id:
             - light.office_desk_spots
-            - light.office_shelves
-            - light.hobbybord_lampe
+            - light.hobbybord_hylder
+            - light.hobbybord
       # Primary RGB lights
       - service: light.turn_on
         data_template:
@@ -40,67 +27,76 @@ script:
           hs_color: [0, 0]
           entity_id:
             - light.office_shelf
-            - light.screen_shelf
             - light.office_shelf_bar
-
-  light_profile_office_default:
-    sequence:
+            - light.lysestager
       # IKEA lights
       - service: light.turn_on
         data_template:
-          transition: 0
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 255
+          entity_id:
+            - light.kontor_spots
+      - delay:
+          milliseconds: "{{ ((((transition_time or 0.5) | float) + 2.0) * 1000) | int }}"
+      - service: light.turn_on
+        data_template:
           color_temp: 370
           entity_id:
             - light.kontor_spots
+
+  light_profile_office_default:
+    sequence:
+      # Dimmable Lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 255
+          effect: 'None'
+          entity_id:
+            - light.office_desk_spots
+            - light.hobbybord_hylder
+            - light.hobbybord
+      # Primary RGB lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 255
+          hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
+          entity_id:
+            - light.kontor_loftlys
+            - light.lysestager
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 255
+          hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
+          entity_id:
+            - light.office_shelf
+      # Secondary RGB lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 255
+          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
+          entity_id:
+            - light.office_shelf_bar
+      # IKEA lights
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 150
           entity_id:
             - light.kontor_spots
-      # Dimmable Lights
+      - delay:
+          milliseconds: "{{ ((((transition_time or 0.5) | float) + 2.0) * 1000) | int }}"
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 255
-          effect: 'None'
+          color_temp: 370
           entity_id:
-            - light.office_desk_spots
-            - light.office_shelves
-            - light.hobbybord_lampe
-      # Primary RGB lights
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 255
-          hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
-          entity_id:
-            - light.kontor_loftlys
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 255
-          hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
-          entity_id:
-            - light.office_shelf
-      # Secondary RGB lights
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 255
-          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-          entity_id:
-            - light.screen_shelf
-            - light.office_shelf_bar
+            - light.kontor_spots
 
   light_profile_office_dimmed:
     sequence:
-      # Off Lights
-      - service: light.turn_off
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          entity_id:
-            - light.kontor_spots
       # Dimmable Lights
       - service: light.turn_on
         data_template:
@@ -108,9 +104,14 @@ script:
           brightness: 127
           effect: 'None'
           entity_id:
-            - light.office_shelves
-            - light.hobbybord_lampe
             - light.office_desk_spots
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 64
+          entity_id:
+            - light.hobbybord_hylder
+            - light.hobbybord
       # Primary RGB lights
       - service: light.turn_on
         data_template:
@@ -119,6 +120,7 @@ script:
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           entity_id:
             - light.kontor_loftlys
+            - light.lysestager
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
@@ -133,8 +135,21 @@ script:
           brightness: 127
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           entity_id:
-            - light.screen_shelf
             - light.office_shelf_bar
+      # IKEA lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 1
+          entity_id:
+            - light.kontor_spots
+      - delay:
+          milliseconds: "{{ ((((transition_time or 0.5) | float) + 2.0) * 1000) | int }}"
+      - service: light.turn_on
+        data_template:
+          color_temp: 500
+          entity_id:
+            - light.kontor_spots
 
   light_profile_office_ambient:
     sequence:
@@ -144,7 +159,7 @@ script:
           transition: "{{ (transition_time or 0.5) | float }}"
           entity_id:
             - light.kontor_spots
-            - light.hobbybord_lampe
+            - light.hobbybord_hylder
       # Dimmable Lights
       - service: light.turn_on
         data_template:
@@ -152,8 +167,13 @@ script:
           brightness: 24
           effect: 'None'
           entity_id:
-            - light.office_shelves
             - light.office_desk_spots
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 1
+          entity_id:
+            - light.hobbybord
       # Primary RGB lights
       - service: light.turn_on
         data_template:
@@ -162,6 +182,7 @@ script:
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           entity_id:
             - light.kontor_loftlys
+            - light.lysestager
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
@@ -176,7 +197,6 @@ script:
           brightness: 127
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           entity_id:
-            - light.screen_shelf
             - light.office_shelf_bar
 
   light_profile_office_night:
@@ -188,8 +208,8 @@ script:
           entity_id:
             - light.kontor_spots
             - light.office_desk_spots
-            - light.hobbybord_lampe
-            - light.office_shelves
+            - light.hobbybord_hylder
+            - light.hobbybord
       # Primary RGB lights
       - service: light.turn_on
         data_template:
@@ -198,6 +218,7 @@ script:
           rgb_color: [255, 0, 0]
           entity_id:
             - light.office_shelf
+            - light.lysestager
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
@@ -207,7 +228,6 @@ script:
           entity_id:
             - light.office_shelf_bar
             - light.kontor_loftlys
-            - light.screen_shelf
 
   light_profile_office_off:
     sequence:
@@ -227,6 +247,7 @@ script:
           entity_id:
             - light.kontor_spots
             - light.office_desk_spots
+            - light.hobbybord_hylder
             - light.hobbybord_lampe
       # Dimmable Lights
       - service: light.turn_on
@@ -234,14 +255,13 @@ script:
           transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 2
           entity_id:
-            - light.office_shelves
+            - light.hobbybord
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           effect: "rainbow"
           entity_id:
             - light.office_shelf
-            - light.screen_shelf
             - light.office_shelf_bar
       - service: light.turn_on
         data_template:
@@ -249,6 +269,7 @@ script:
           effect: "colorloop"
           entity_id:
             - light.kontor_loftlys
+            - light.lysestager
 
 input_boolean:
   office_activity_override:
@@ -388,89 +409,37 @@ light:
 binary_sensor:
   - platform: template
     sensors:
-      hobby_desk_activity:
-        friendly_name: 'Hobby Desk Activity'
-        entity_id:
-          - binary_sensor.home_assistant_loaded
-          - light.hobbybord_lampe
-        value_template: >
-          {% if is_state('binary_sensor.home_assistant_loaded', 'off') -%}
-            false
-          {% elif not is_state('light.hobbybord_lampe', 'unavailable') -%}
-            true
-          {% else -%}
-            false
-          {% endif -%}
-
       office_activity:
         friendly_name: 'Office Activity'
         entity_id:
           - binary_sensor.office_sensor
-          - input_boolean.office_pc_motion
+          - binary_sensor.pc_hobby_bevaegelse
           - input_boolean.office_activity_override
           - input_select.office_room_state
-          - switch.pc
-          - media_player.projector_chromecast
+          - binary_sensor.martin_pc_activity
           - input_select.latest_motion
+          - binary_sensor.working_from_home
         value_template: >
           {%- if is_state('input_boolean.office_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.office_room_state', 'active') else 'false' }}
           {%- elif is_state('binary_sensor.office_sensor', 'on')
-          or is_state('input_boolean.office_pc_motion', 'on')
-          or is_state('switch.pc', 'on')
-          or is_state('media_player.projector_chromecast', 'playing')
-          or is_state('input_select.latest_motion', 'Office') -%}
+          or is_state('binary_sensor.pc_hobby_bevaegelse', 'on')
+          or is_state('binary_sensor.martin_pc_activity', 'on')
+          or is_state('input_select.latest_motion', 'Office')
+          or is_state('binary_sensor.working_from_home', 'on') -%}
             true
           {%- else -%}
             false
           {%- endif -%}
 
-automation:
-  - alias: hobby desk pinger on
-    initial_state: true
-    trigger:
-      platform: time_pattern
-      minutes: '/5'
-      seconds: 0
-    condition:
-      condition: and
-      conditions:
-        - condition: state
-          entity_id: light.hobbybord_lampe
-          state: 'on'
-        - condition: state
-          entity_id: binary_sensor.home_assistant_loaded
-          state: 'on'
-    action:
-      - service_template: "light.turn_on"
-        data:
-          entity_id: light.hobbybord_lampe
-          brightness: 254
-      - service_template: "light.turn_on"
-        data:
-          entity_id: light.hobbybord_lampe
-          brightness: 255
-
-  - alias: hobby desk pinger off
-    initial_state: true
-    trigger:
-      platform: time_pattern
-      minutes: '/5'
-      seconds: 0
-    condition:
-      condition: and
-      conditions:
-        - condition: state
-          entity_id: light.hobbybord_lampe
-          state: 'off'
-        - condition: state
-          entity_id: binary_sensor.home_assistant_loaded
-          state: 'on'
-    action:
-      - service_template: "light.turn_on"
-        data:
-          entity_id: light.hobbybord_lampe
-          brightness: 2
-      - service_template: "light.turn_off"
-        data:
-          entity_id: light.hobbybord_lampe
+group:
+  office_activity_entities:
+    name: Office Activity Entities
+    entities:
+      - input_boolean.office_activity_override
+      - input_select.office_room_state
+      - input_select.latest_motion
+      - binary_sensor.office_sensor
+      - binary_sensor.pc_hobby_bevaegelse
+      - binary_sensor.martin_pc_activity
+      - binary_sensor.working_from_home

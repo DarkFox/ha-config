@@ -10,8 +10,7 @@ script:
           entity_id:
             - light.gang_loftlys
       - service: light.turn_on
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+        data:
           entity_id: light.hallway_tablet
           brightness: 255
 
@@ -26,8 +25,7 @@ script:
           entity_id:
             - light.gang_loftlys
       - service: light.turn_on
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+        data:
           entity_id: light.hallway_tablet
           brightness: 172
 
@@ -43,7 +41,6 @@ script:
             - light.gang_loftlys
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
           entity_id: light.hallway_tablet
           brightness: 127
 
@@ -58,8 +55,7 @@ script:
           entity_id:
             - light.gang_loftlys
       - service: light.turn_on
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+        data:
           entity_id: light.hallway_tablet
           brightness: 72
 
@@ -74,19 +70,20 @@ script:
           entity_id:
             - light.gang_loftlys
       - service: light.turn_on
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+        data:
           entity_id: light.hallway_tablet
           brightness: 0
 
   light_profile_hallway_off:
     sequence:
-      # Primary RGB lights
       - service: light.turn_off
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           entity_id:
             - light.gang_loftlys
+      - service: light.turn_off
+        data:
+          entity_id:
             - light.hallway_tablet
 
   light_profile_hallway_party:
@@ -99,8 +96,7 @@ script:
           entity_id:
             - light.gang_loftlys
       - service: light.turn_on
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+        data:
           entity_id: light.hallway_tablet
           brightness: 25
 
@@ -249,14 +245,27 @@ binary_sensor:
           - input_boolean.hallway_activity_override
           - input_select.hallway_room_state
           - binary_sensor.apartment_door
+          - binary_sensor.apartment_lock
           - binary_sensor.bathroom_activity
         value_template: >
           {%- if is_state('input_boolean.hallway_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.hallway_room_state', 'active') else 'false' }}
           {%- elif is_state('binary_sensor.hallway_sensor', 'on')
           or is_state('binary_sensor.apartment_door', 'on')
+          or is_state('binary_sensor.apartment_lock', 'on')
           or is_state('binary_sensor.bathroom_activity', 'on') -%}
             true
           {% else -%}
             false
           {% endif -%}
+
+group:
+  hallway_activity_entities:
+    name: Hallway Activity Entities
+    entities:
+      - input_boolean.hallway_activity_override
+      - input_select.hallway_room_state
+      - binary_sensor.bathroom_activity
+      - binary_sensor.hallway_sensor
+      - binary_sensor.apartment_door
+      - binary_sensor.apartment_lock

@@ -1,19 +1,6 @@
 script:
   light_profile_kitchen_bright:
     sequence:
-      # IKEA lights
-      - service: light.turn_on
-        data_template:
-          transition: 0
-          color_temp: 250
-          entity_id:
-            - light.kokken_spots
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 255
-          entity_id:
-            - light.kokken_spots
       # White temp lights
       - service: light.turn_on
         data_template:
@@ -36,23 +23,24 @@ script:
           entity_id:
             - light.kitchen_sink
             - light.kitchen_stove
+      # IKEA lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 255
+          entity_id:
+            - light.kokken_spots
+      - delay:
+          milliseconds: "{{ ((((transition_time or 0.5) | float) + 2.0) * 1000) | int }}"
+      - service: light.turn_on
+        data_template:
+          color_temp: 250
+          entity_id:
+            - light.kokken_spots
 
 
   light_profile_kitchen_default:
     sequence:
-      # IKEA lights
-      - service: light.turn_on
-        data_template:
-          transition: 0
-          color_temp: 400
-          entity_id:
-            - light.kokken_spots
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 200
-          entity_id:
-            - light.kokken_spots
       # White temp lights
       - service: light.turn_on
         data_template:
@@ -75,6 +63,20 @@ script:
           entity_id:
             - light.kitchen_sink
             - light.kitchen_stove
+      # IKEA lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 200
+          entity_id:
+            - light.kokken_spots
+      - delay:
+          milliseconds: "{{ ((((transition_time or 0.5) | float) + 2.0) * 1000) | int }}"
+      - service: light.turn_on
+        data_template:
+          color_temp: 400
+          entity_id:
+            - light.kokken_spots
 
 
   light_profile_kitchen_dimmed:
@@ -85,19 +87,6 @@ script:
           transition: "{{ (transition_time or 0.5) | float }}"
           entity_id:
             - light.kokken_loftlys
-      # IKEA lights
-      - service: light.turn_on
-        data_template:
-          transition: 0
-          color_temp: 500
-          entity_id:
-            - light.kokken_spots
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 50
-          entity_id:
-            - light.kokken_spots
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
@@ -115,6 +104,20 @@ script:
         data:
           entity_id:
             - light.kitchen_sink
+      # IKEA lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 50
+          entity_id:
+            - light.kokken_spots
+      - delay:
+          milliseconds: "{{ ((((transition_time or 0.5) | float) + 2.0) * 1000) | int }}"
+      - service: light.turn_on
+        data_template:
+          color_temp: 500
+          entity_id:
+            - light.kokken_spots
 
 
   light_profile_kitchen_ambient:
@@ -210,35 +213,6 @@ script:
           entity_id:
             - light.kitchen_sink
             - light.kitchen_stove
-
-group:
-  light_profile_kitchen:
-    entities:
-      - binary_sensor.kitchen_activity
-      - input_boolean.kitchen_activity_override
-      - input_select.light_profile
-
-  light_profile_scenes_kitchen:
-    name: Kitchen Scenes
-    entities:
-      - script.light_profile_kitchen_bright
-      - script.light_profile_kitchen_dimmed
-      - script.light_profile_kitchen_ambient
-      - script.light_profile_kitchen_night
-      - script.light_profile_kitchen_off
-
-  light_profile_automations_kitchen:
-    entities:
-      - group.motion_triggers_kitchen
-      - automation.light_profile_change_active_kitchen
-      - automation.light_profile_change_inactive_kitchen
-      - automation.light_profile_change_off_kitchen
-
-  motion_triggers_kitchen:
-    entities:
-      - automation.room_state_active_trigger_kitchen
-      - automation.room_state_inactive_trigger_kitchen
-      - automation.room_state_off_trigger_kitchen
 
 input_boolean:
   kitchen_activity_override:
@@ -394,3 +368,12 @@ binary_sensor:
           {% else -%}
             false
           {% endif -%}
+
+group:
+  kitchen_activity_entities:
+    name: Kitchen Activity Entities
+    entities:
+      - input_boolean.kitchen_activity_override
+      - input_select.kitchen_room_state
+      - input_select.latest_motion
+      - binary_sensor.kitchen_sensor
