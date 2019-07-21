@@ -1,0 +1,182 @@
+binary_sensor:
+  - platform: mqtt
+    name: "Martin PC - Connected"
+    state_topic: "iotlink/workgroup/martin-pc/lwt"
+    value_template: "{{ value }}"
+    payload_on: "ON"
+    payload_off: "OFF"
+    device_class: "connectivity"
+    qos: 1
+ 
+  - platform: template
+    sensors:
+      martin_pc_activity:
+        friendly_name: 'Desktop PC Activity'
+        entity_id:
+          - binary_sensor.martin_pc_connected
+          - sensor.martin_pc_idle_time
+          - sensor.steam_game
+        value_template: >
+          {% if is_state('binary_sensor.martin_pc_connected', 'off') -%}
+            false
+          {% elif states('sensor.martin_pc_idle_time')|int > 30
+            and is_state('sensor.steam_game', '') -%}
+            false
+          {% else -%}
+            true
+          {% endif -%}
+
+sensor:
+  - platform: mqtt
+    name: "Martin PC - Current User"
+    state_topic: "iotlink/workgroup/martin-pc/windows-monitor/stats/current-user"
+    unit_of_measurement: ''
+    icon: mdi:account
+    value_template: "{{ value }}"
+    availability_topic: "iotlink/workgroup/martin-pc/lwt"
+    payload_available: "ON"
+    payload_not_available: "OFF"
+    qos: 1
+
+  - platform: mqtt
+    name: "Martin PC - Idle Time"
+    state_topic: "iotlink/workgroup/martin-pc/windows-monitor/stats/idle-time"
+    unit_of_measurement: 'seconds'
+    icon: mdi:timer
+    value_template: "{{ value }}"
+    availability_topic: "iotlink/workgroup/martin-pc/lwt"
+    payload_available: "ON"
+    payload_not_available: "OFF"
+    qos: 1
+
+  - platform: mqtt
+    name: "Martin PC - CPU Usage"
+    state_topic: "iotlink/workgroup/martin-pc/windows-monitor/stats/cpu"
+    unit_of_measurement: '%'
+    icon: mdi:speedometer
+    value_template: "{{ value }}"
+    availability_topic: "iotlink/workgroup/martin-pc/lwt"
+    payload_available: "ON"
+    payload_not_available: "OFF"
+    qos: 1
+
+switch:
+  - platform: template
+    switches:
+      martin_pc:
+        friendly_name: "Martin PC"
+        value_template: "{{ is_state('binary_sensor.martin_pc_connected', 'on') }}"
+        turn_on:
+          service: script.martin_pc_wake
+        turn_off:
+          service: script.martin_pc_shutdown
+        icon_template: >-
+          {% if is_state('switch.martin_pc', 'on') %}
+            mdi:desktop-mac-dashboard
+          {% else %}
+            mdi:desktop-mac
+          {% endif %}
+
+script:
+  martin_pc_wake:
+    alias: "Martin PC - Wake"
+    sequence:
+      - service: wake_on_lan.send_magic_packet
+        data:
+          mac: !secret desktop_pc_mac_address
+
+  martin_pc_shutdown:
+    alias: "Martin PC - Shutdown"
+    sequence:
+      - service: mqtt.publish
+        data:
+          topic: "iotlink/workgroup/martin-pc/commands/shutdown"
+          payload: ""
+
+  martin_pc_suspend:
+    alias: "Martin PC - Suspend"
+    sequence:
+      - service: mqtt.publish
+        data:
+          topic: "iotlink/workgroup/martin-pc/commands/suspend"
+          payload: ""
+
+  martin_pc_hibernate:
+    alias: "Martin PC - Hibernate"
+    sequence:
+      - service: mqtt.publish
+        data:
+          topic: "iotlink/workgroup/martin-pc/commands/hibernate"
+          payload: ""
+
+  martin_pc_reboot:
+    alias: "Martin PC - Reboot"
+    sequence:
+      - service: mqtt.publish
+        data:
+          topic: "iotlink/workgroup/martin-pc/commands/reboot"
+          payload: ""
+
+  martin_pc_lock:
+    alias: "Martin PC - Lock"
+    sequence:
+      - service: mqtt.publish
+        data:
+          topic: "iotlink/workgroup/martin-pc/commands/lock"
+          payload: ""
+
+  martin_pc_logoff:
+    alias: "Martin PC - Logoff"
+    sequence:
+      - service: mqtt.publish
+        data:
+          topic: "iotlink/workgroup/martin-pc/commands/logoff"
+          payload: ""
+
+  martin_pc_vol_mute:
+    alias: "Martin PC - Toggle Mute"
+    sequence:
+      - service: mqtt.publish
+        data:
+          topic: "iotlink/workgroup/martin-pc/commands/volume/mute"
+          payload: ""
+
+  martin_pc_vol_max:
+    alias: "Martin PC - Vol Max"
+    sequence:
+      - service: mqtt.publish
+        data:
+          topic: "iotlink/workgroup/martin-pc/commands/volume/set"
+          payload: "100"
+
+  martin_pc_displays_on:
+    alias: "Martin PC - Displays ON"
+    sequence:
+      - service: mqtt.publish
+        data:
+          topic: "iotlink/workgroup/martin-pc/commands/displays/on"
+          payload: ""
+
+  martin_pc_displays_off:
+    alias: "Martin PC - Displays OFF"
+    sequence:
+      - service: mqtt.publish
+        data:
+          topic: "iotlink/workgroup/martin-pc/commands/displays/off"
+          payload: ""
+
+  martin_pc_refresh:
+    alias: "Martin PC - Refresh"
+    sequence:
+      - service: mqtt.publish
+        data:
+          topic: "iotlink/workgroup/martin-pc/refresh"
+          payload: ""
+
+  martin_pc_notify:
+    alias: "Martin PC - Notify"
+    sequence:
+      - service: mqtt.publish
+        data:
+          topic: "iotlink/workgroup/martin-pc/commands/notify"
+          payload: '{ "title": "My Notification Title", "message": "This is an example of notification using IOT Link", "launchParams": "toast://open/https://iotlink.gitlab.io" }'
