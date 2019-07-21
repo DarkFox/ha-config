@@ -1,4 +1,48 @@
+input_number:
+  tradfri_dimmer:
+    name: Trådfri Dimmer
+    min: 0
+    max: 100
+    step: 10
+
 automation:
+  # Trådfri Dimmer, ID: tradfri_wireless_dimmer #
+  - alias: tradfri_dimmer_cw
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: tradfri_wireless_dimmer
+          event: 1002
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: tradfri_wireless_dimmer
+          event: 2002
+    action:
+      service: input_number.increment
+      data_template:
+        entity_id: input_number.tradfri_dimmer
+
+  - alias: tradfri_dimmer_ccw
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: tradfri_wireless_dimmer
+          event: 3002
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: tradfri_wireless_dimmer
+          event: 4002
+    action:
+      service: input_number.decrement
+      data_template:
+        entity_id: input_number.tradfri_dimmer
+
    # Office Hue Dimmer, ID: kontor_fjernbetjening #
   - alias: office_dimmer_on
     initial_state: true
@@ -78,9 +122,9 @@ automation:
       - service: input_boolean.toggle
         data:
           entity_id: input_boolean.office_activity_override
-      - service: tts.google_say
+      - service: tts.google_cloud_say
         data_template:
-          entity_id: media_player.office_mini
+          entity_id: media_player.kontor_mini
           message: "Kontor overstyring {{'tilkoblet' if states('input_boolean.office_activity_override') == 'on' else 'frakoblet'}}"
 
   - alias: office_override_room_state_up
@@ -139,9 +183,9 @@ automation:
       - service: input_boolean.toggle
         data:
           entity_id: input_boolean.office_separate_light_profile
-      - service: tts.google_say
+      - service: tts.google_cloud_say
         data_template:
-          entity_id: media_player.office_mini
+          entity_id: media_player.kontor_mini
           message: "Kontor separat lysstyring {{'tilkoblet' if states('input_boolean.office_separate_light_profile') == 'on' else 'frakoblet'}}"
 
   # Bedroom Hue Dimmer, ID: sovevaerelse_fjernbetjening #
@@ -481,9 +525,9 @@ automation:
       - service: input_boolean.toggle
         data:
           entity_id: input_boolean.kitchen_activity_override
-      - service: tts.google_say
+      - service: tts.google_cloud_say
         data_template:
-          entity_id: media_player.kitchen_mini
+          entity_id: media_player.kokken_mini
           message: "Køkken overstyring {{'tilkoblet' if states('input_boolean.kitchen_activity_override') == 'on' else 'frakoblet'}}"
 
   - alias: kokken_dimmer_hold_down
@@ -498,9 +542,9 @@ automation:
       - service: input_boolean.toggle
         data:
           entity_id: input_boolean.kitchen_separate_light_profile
-      - service: tts.google_say
+      - service: tts.google_cloud_say
         data_template:
-          entity_id: media_player.kitchen_mini
+          entity_id: media_player.kokken_mini
           message: "Køkken separat lysstyring {{'tilkoblet' if states('input_boolean.kitchen_separate_light_profile') == 'on' else 'frakoblet'}}"
 
   - alias: kokken_dimmer_hold_left
@@ -514,7 +558,7 @@ automation:
     action:
       service: switch.toggle
       data:
-        entity_id: switch.elkedel
+        entity_id: switch.kokken_tv_afbryder
 
   - alias: kokken_dimmer_hold_right
     initial_state: true
@@ -527,5 +571,5 @@ automation:
     action:
       service: switch.toggle
       data:
-        entity_id: switch.kokken_tv_afbryder
+        entity_id: switch.elkedel
 
