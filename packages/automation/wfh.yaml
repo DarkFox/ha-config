@@ -1,0 +1,20 @@
+binary_sensor:
+  - platform: tod
+    name: Work Hours
+    after: '07:00'
+    before: '18:00'
+
+  - platform: template
+    sensors:
+      working_from_home:
+        entity_id:
+          - binary_sensor.work_hours
+          - binary_sensor.workday_sensor
+          - binary_sensor.martin_presence_delayed
+          - device_tracker.mte_mac
+        value_template: >-
+          {{ True if (is_state('binary_sensor.workday_sensor', 'on')
+          and is_state('binary_sensor.work_hours', 'on')
+          and is_state('binary_sensor.martin_presence_delayed', 'on')
+          and is_state('device_tracker.mte_mac', 'home')) else False }} 
+          
