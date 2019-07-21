@@ -1,0 +1,119 @@
+automation:
+  - alias: stue_chromecast_off_with_tv
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: media_player.living_room_tv
+        to: 'off'
+    action:
+      - service: media_player.turn_off
+        data:
+          entity_id: media_player.stue_chromecast
+
+  - alias: living_room_soundbar_night_mode
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: media_player.stue_soundbar_songpal
+        to: 'on'
+      - platform: time
+        at: '23:00:00'
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: media_player.stue_soundbar_songpal
+          state: 'on'
+        - condition: time
+          after: '22:59:59'
+          before: '08:59:58'
+          weekday:
+            - sun
+            - mon
+            - tue
+            - wed
+            - thu
+    action:
+      - service: media_player.songpal_set_sound_setting
+        data:
+          entity_id: media_player.stue_soundbar_songpal
+          name: "nightMode"
+          value: "on"
+      - condition: numeric_state
+        entity_id: sensor.temperature
+        above: 0.2
+      - service: media_player.volume_set
+        data:
+          entity_id: media_player.stue_soundbar_songpal
+          volume_level: 0.18
+
+  - alias: living_room_soundbar_day_mode
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: media_player.stue_soundbar_songpal
+        to: 'on'
+      - platform: time
+        at: '09:00:00'
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: media_player.stue_soundbar_songpal
+          state: 'on'
+        - condition: time
+          after: '08:59:59'
+          before: '22:59:58'
+    action:
+      - service: media_player.songpal_set_sound_setting
+        data:
+          entity_id: media_player.stue_soundbar_songpal
+          name: "nightMode"
+          value: "off"
+
+  - alias: livingroom_media_active_trigger
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.livingroom_room_state
+        to: 'active'
+      - platform: state
+        entity_id: media_player.stue_soundbar_songpal
+        to: 'on'
+    condition:
+      - condition: state
+        entity_id: input_select.livingroom_room_state
+        state: 'active'
+      - condition: state
+        entity_id: media_player.stue_soundbar_songpal
+        state: 'on'
+    action:
+      service: media_player.volume_mute
+      data:
+        entity_id: media_player.stue_soundbar_songpal
+        is_volume_muted: false
+
+  - alias: livingroom_media_inactive_trigger
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.livingroom_room_state
+        to: 'off'
+      - platform: state
+        entity_id: media_player.stue_soundbar_songpal
+        to: 'on'
+    condition:
+      - condition: state
+        entity_id: input_select.livingroom_room_state
+        state: 'off'
+      - condition: state
+        entity_id: media_player.stue_soundbar_songpal
+        state: 'on'
+    action:
+      - service: switch.turn_off
+        data:
+          entity_id: switch.living_room_tv_power
+      - service: media_player.volume_mute
+        data:
+          entity_id: media_player.stue_soundbar_songpal
+          is_volume_muted: true

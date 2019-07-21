@@ -1,0 +1,107 @@
+automation:
+  # Whole Apartment #
+  - alias: Away
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: binary_sensor.martin_presence_delayed
+      to: 'off'
+    action:
+      - service: script.playlist_end
+      - service: switch.turn_off
+        data:
+          entity_id:
+            - switch.living_room_tv_power
+            - switch.tv_soundbar_soundpal
+            - switch.radiator
+
+  # Bathroom #
+  - alias: Bathroom Speaker active trigger
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_select.bathroom_room_state
+      to: 'active'
+    action:
+      service: media_player.volume_mute
+      data:
+        entity_id: media_player.badevaerelse_mini
+        is_volume_muted: false
+
+  - alias: Bathroom Speaker inactive trigger
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_select.bathroom_room_state
+      to: 'off'
+    action:
+      service: media_player.volume_mute
+      data:
+        entity_id: media_player.badevaerelse_mini
+        is_volume_muted: true
+
+  - alias: Bathroom Speaker play inactive
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: media_player.badevaerelse_mini
+      to: 'playing'
+    condition:
+      condition: state
+      entity_id: input_select.bathroom_room_state
+      state: 'off'
+    action:
+      - delay:
+          seconds: 1
+      - service: media_player.volume_mute
+        data:
+          entity_id: media_player.badevaerelse_mini
+          is_volume_muted: true
+
+  # Office #
+  - alias: Office Speaker/PC Accessories active trigger
+    initial_state: true
+    trigger:
+      platform: template
+      value_template: "{% if (is_state('input_select.office_room_state', 'active') or is_state('switch.martin_pc', 'on')) %}true{% else %}false{% endif %}"
+    action:
+      service: switch.turn_on
+      data:
+        entity_id:
+          - switch.pc_tilbehor_afbryder
+
+  - alias: Office Speaker/PC Accessories inactive trigger
+    initial_state: true
+    trigger:
+      platform: template
+      value_template: "{% if (is_state('input_select.office_room_state', 'off') and is_state('switch.martin_pc', 'off')) %}true{% else %}false{% endif %}"
+    action:
+      service: switch.turn_off
+      data:
+        entity_id: switch.pc_tilbehor_afbryder
+
+  # - alias: Projector Soundbar inactive trigger
+  # initial_state: true
+  # trigger:
+  #     platform: state
+  #     entity_id: input_select.office_room_state
+  #     to: 'off'
+  #   action:
+  #     service: switch.turn_off
+  #     data:
+  #       entity_id: switch.projector_soundbar_power
+
+  # - alias: Office space heater turn on
+  #   initial_state: true
+  #   trigger:
+  #     platform: state
+  #     entity_id: input_select.office_room_state
+  #     to: 'active'
+  #   condition:
+  #     condition: numeric_state
+  #     entity_id: 'sensor.office_temperature'
+  #     below: '21'
+  #   action:
+  #     service: switch.turn_on
+  #     data:
+  #       entity_id: switch.radiator
