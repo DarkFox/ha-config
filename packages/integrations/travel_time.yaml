@@ -15,12 +15,31 @@ group:
     name: Travel Time
     entities:
       - sensor.travel_time_to_work_driving
-      - sensor.travel_time_to_work_public_transit
       - sensor.s_train_b_status
       - sensor.s_train_message
-      - sensor.s_train_b_next
+      - sensor.s_tog_brondbyoster_til_kbh
 
 sensor:
+  - platform: custom_rejseplanen
+    name: S-Tog Brøndbyøster til KBH
+    stop_id: '008600679'
+    route: B
+    departure_type: S
+    direction:
+      - Farum St.
+      - Valby St.
+      - København H
+      - Nørreport St.
+      - Østerport St.
+
+  - platform: custom_rejseplanen
+    name: S-Tog Nørreport til Brøndbyøster
+    stop_id: '008600646'
+    route: B
+    departure_type: S
+    direction:
+      - Høje Taastrup St.
+
   - platform: dsb_trafikinfo
     name: DSB Trafikinfo
     sender: S-tog
@@ -32,22 +51,6 @@ sensor:
     destination: zone.home
     options:
       mode: driving
-
-  - platform: google_travel_time
-    name: Travel time to work (Driving)
-    api_key: !secret google_directions_secret
-    origin: zone.home
-    destination: !secret work_address
-    options:
-      mode: driving
-
-  - platform: google_travel_time
-    name: Travel time to work (Public Transit)
-    api_key: !secret google_directions_secret
-    origin: zone.home
-    destination: !secret work_address
-    options:
-      mode: transit
 
   - platform: scrape
     resource: http://www.dsb.dk/trafikinformation/s-tog-overblik/
@@ -64,22 +67,25 @@ sensor:
     value_template: "{{ value | trim }}"
     scan_interval: 300
 
-  - platform: scrape
-    resource: "http://www.dsb.dk/Rejseplan/bin/stboard.exe/mn?L=vs_dsbticker&amp;ml=m&amp;&input=Br%F8ndby%F8ster%20st!&dirInput=N%F8rreport%20St.&boardType=dep&selectDate=today&productsFilter=00001000000&additionalTime=&start=yes&disableEquivs=yes&ignoreMasts=1&outputMode=tickerDataOnly&maxJourneys=5%27"
-    name: s_train_b_next
-    select: '.hfsWidget_resultTableRow_time div:nth-of-type(1)'
-    value_template: "{{ value | trim | replace('.', ':') | int }}"
-    scan_interval: 30
-    unit_of_measurement: 'min'
-
   - platform: template
     sensors:
       s_train_b_next_fmt:
+        friendly_name: "Næste afgang"
         value_template: >
-          {% set ct = states('sensor.s_train_b_next') | int %}
-          {% if ct == 0 %}
-            Unavailable
-          {% elif ct > 60 %}
+          {% set ct = states('sensor.s_tog_brondbyoster_til_kbh') | int %}
+          {% if ct > 60 %}
+            {{ ct // 60 }}:{{ '{:0>2d}'.format(ct%60) }}
+          {% else %}
+            {{ ct }}
+          {% endif %}
+
+  - platform: template
+    sensors:
+      s_train_b_later_fmt:
+        friendly_name: "Efterfølgende afgang"
+        value_template: >
+          {% set ct = state_attr('sensor.s_tog_brondbyoster_til_kbh', 'next_departures')[0]['due_in'] | int %}
+          {% if ct > 60 %}
             {{ ct // 60 }}:{{ '{:0>2d}'.format(ct%60) }}
           {% else %}
             {{ ct }}
