@@ -1,0 +1,41 @@
+input_number:
+  postkasse:
+    name: Postkasse
+    min: 0
+    max: 100
+
+sensor:
+  - platform: template
+    sensors:
+      postkasse:
+        friendly_name: "Postkasse"
+        entity_id: input_number.postkasse
+        value_template: "{{ states('input_number.postkasse') | int }}"
+        icon_template: "{{ 'mdi:mailbox' if is_state('sensor.postkasse', '0') else 'mdi:mailbox-up' }}"
+
+automation:
+  - id: new_snail_mail
+    alias: new_snail_mail
+    trigger:
+        - platform: state
+          entity_id: binary_sensor.postkasse
+          to: 'on'
+    action:
+      - service: input_number.increment
+        data:
+          entity_id: input_number.postkasse
+      - service: notify.phone
+        data_template:
+          title: "Home Assistant"
+          message: "Der er post! Antal siden nulstillet: {{ states('input_number.postkasse') }}"
+          data:
+            icon: https://goo.gl/xeetdy
+
+script:
+  reset_snail_mail:
+    alias: reset_snail_mail
+    sequence:
+      - service: input_number.set_value
+        data:
+          entity_id: input_number.postkasse
+          value: 0
