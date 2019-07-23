@@ -27,8 +27,13 @@ script:
           hs_color: [0, 0]
           entity_id:
             - light.office_shelf
-            - light.office_shelf_bar
             - light.lysestager
+      - service: light.turn_on
+        data_template:
+          brightness: 255
+          hs_color: [0, 0]
+          entity_id:
+            - light.skrivebord_bar
       # IKEA lights
       - service: light.turn_on
         data_template:
@@ -75,11 +80,10 @@ script:
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 255
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           entity_id:
-            - light.office_shelf_bar
+            - light.skrivebord_bar
       # IKEA lights
       - service: light.turn_on
         data_template:
@@ -131,11 +135,10 @@ script:
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 127
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           entity_id:
-            - light.office_shelf_bar
+            - light.skrivebord_bar
       # IKEA lights
       - service: light.turn_on
         data_template:
@@ -193,11 +196,10 @@ script:
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 127
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           entity_id:
-            - light.office_shelf_bar
+            - light.skrivebord_bar
 
   light_profile_office_night:
     sequence:
@@ -222,11 +224,16 @@ script:
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
+          brightness: 24
+          rgb_color: [255, 0, 0]
+          entity_id:
+            - light.skrivebord_bar
+      - service: light.turn_on
+        data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 24
           rgb_color: [255, 0, 0]
           entity_id:
-            - light.office_shelf_bar
             - light.kontor_loftlys
 
   light_profile_office_off:
@@ -252,20 +259,17 @@ script:
       # Dimmable Lights
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 2
           entity_id:
             - light.hobbybord
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
           effect: "rainbow"
           entity_id:
             - light.office_shelf
-            - light.office_shelf_bar
+            - light.skrivebord_bar
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
           effect: "colorloop"
           entity_id:
             - light.kontor_loftlys
