@@ -68,7 +68,8 @@ script:
   light_profile_bedroom_dimmed:
     sequence:
       - service: light.turn_off
-        data:
+        data_template:
+          transition: "{{ transition_time or 0.5 | float }}"
           entity_id:
             - light.bedroom_shelf_strip
       # Dimmable Lights
@@ -115,7 +116,8 @@ script:
     sequence:
       # Off Lights
       - service: light.turn_off
-        data:
+        data_template:
+          transition: "{{ transition_time or 0.5 | float }}"
           entity_id:
             - light.bedroom_shelf_strip
       # Primary RGB lights
@@ -152,16 +154,19 @@ script:
 
   light_profile_bedroom_night:
     sequence:
+      - event: sengelampe_nat
+        event_data_template:
+          state: "{{ states('binary_sensor.reading_light') }}"
       # Off Lights
       - service: light.turn_off
-        data:
+        data_template:
+          transition: "{{ transition_time or 0.5 | float }}"
           entity_id:
             - light.sky
             - light.bedroom_shelf_strip
             - light.bedroom_shelf_spots
             - light.bedroom_floor
             - light.bed_table
-            - light.sengelampe
       - service: light.turn_on
         data_template:
           transition: "{{ transition_time or 0.5 | float }}"
@@ -183,21 +188,6 @@ script:
           rgb_color: [255,0,0]
           entity_id:
             - light.bed_table
-      - condition: or
-        conditions:
-          - condition: state
-            entity_id: input_select.sleep_state
-            state: 'bedtime'
-          - condition: state
-            entity_id: input_select.sleep_state
-            state: 'in bed'
-      - service: light.turn_on
-        data_template:
-          transition: 0
-          brightness: 16
-          hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
-          entity_id:
-            - light.sengelampe
 
   light_profile_bedroom_off:
     sequence:
@@ -237,6 +227,37 @@ script:
         data:
           effect: "colorloop"
           brightness: 32
+          entity_id:
+            - light.sengelampe
+
+automation:
+  - alias: sengelampe_nat_on
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: sengelampe_nat
+        event_data:
+          state: 'on'
+    action:
+      - service: light.turn_on
+        data_template:
+          transition: "{{ transition_time or 0.5 | float }}"
+          brightness: 2
+          hs_color: [30,85]
+          entity_id:
+            - light.sengelampe
+
+  - alias: sengelampe_nat_off
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: sengelampe_nat
+        event_data:
+          state: 'off'
+    action:
+      - service: light.turn_off
+        data_template:
+          transition: "{{ transition_time or 0.5 | float }}"
           entity_id:
             - light.sengelampe
 
@@ -378,6 +399,10 @@ light:
 binary_sensor:
   - platform: template
     sensors:
+      reading_light:
+        entity_id: input_select.sleep_state
+        value_template: "{{ is_state('input_select.sleep_state', 'bedtime') or is_state('input_select.sleep_state', 'in bed') }}"
+
       bedroom_activity:
         friendly_name: 'Bedroom Activity'
         entity_id:
