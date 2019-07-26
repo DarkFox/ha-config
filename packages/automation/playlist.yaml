@@ -14,22 +14,26 @@ input_select:
     name: Destination
     options:
       - None
+      # Chromecast Groups
       - media_player.alle_hojttalere
       - media_player.ost_hojttalere
       - media_player.vest_hojttalere
       - media_player.minis
+      # Chromecast video
       - media_player.kokken_chromecast
+      - media_player.sovevaerelse_chromecast
+      - media_player.stue_chromecast
+      # Chromecast audio/speakers
       - media_player.kokken_hojttaler_cc
+      - media_player.kontor_hojttaler
+      - media_player.stue_soundbar
+      - media_player.sovevaerelse_soundbar
+      # Google Assistant/Home
+      - media_player.sovevaerelse_mini
       - media_player.kokken_mini
       - media_player.badevaerelse_mini
-      - media_player.kontor_hojttaler
       - media_player.kontor_mini
-      - media_player.stue_chromecast
-      - media_player.stue_soundbar
       - media_player.stue_mini
-      - media_player.sovevaerelse_chromecast
-      - media_player.sovevaerelse_soundbar
-      - media_player.sovevaerelse_mini
 
 binary_sensor:
   - platform: template
@@ -318,31 +322,37 @@ automation:
   - alias: playlist_auto_next
     initial_state: true
     trigger:
-      platform: state
-      entity_id:
-        - media_player.alle_hojttalere
-        - media_player.ost_hojttalere
-        - media_player.vest_hojttalere
-        - media_player.minis
-        - media_player.kokken_chromecast
-        - media_player.kokken_hojttaler_cc
-        - media_player.kokken_mini
-        - media_player.badevaerelse_mini
-        - media_player.kontor_hojttaler
-        - media_player.kontor_mini
-        - media_player.stue_chromecast
-        - media_player.stue_soundbar
-        - media_player.stue_mini
-        - media_player.sovevaerelse_chromecast
-        - media_player.sovevaerelse_soundbar
-        - media_player.sovevaerelse_mini
-      from: 'playing'
-      to: 'idle'
-      for:
-        seconds: 5
+      - platform: state
+        entity_id:
+          # Chromecast Groups
+          - media_player.alle_hojttalere
+          - media_player.ost_hojttalere
+          - media_player.vest_hojttalere
+          - media_player.minis
+          # Chromecast video
+          - media_player.kokken_chromecast
+          - media_player.sovevaerelse_chromecast
+          - media_player.stue_chromecast
+          # Chromecast audio/speakers
+          - media_player.kokken_hojttaler_cc
+          - media_player.kontor_hojttaler
+          - media_player.stue_soundbar
+          - media_player.sovevaerelse_soundbar
+          # Google Assistant/Home
+          - media_player.sovevaerelse_mini
+          - media_player.kokken_mini
+          - media_player.badevaerelse_mini
+          - media_player.kontor_mini
+          - media_player.stue_mini
+        from: 'playing'
+        to: 'idle'
+        for:
+          seconds: 1
     condition:
       condition: and
       conditions:
+        - condition: template
+          value_template: "{{ is_state('input_select.playlist_player', trigger.entity_id) }}"
         - condition: template
           value_template: "{{ is_state(states.input_select.playlist_player.state, 'idle') }}"
         - condition: template
@@ -363,11 +373,14 @@ automation:
       entity_id: input_select.playlist
       to: '==END=='
     action:
-      - service: media_player.turn_off
-        data_template:
-          entity_id: "{{ states.input_select.playlist_player.state }}"
       - service: input_select.set_options
         data:
           entity_id: input_select.playlist
           options:
             - ''
+      - service: media_player.media_stop
+        data_template:
+          entity_id: "{{ states.input_select.playlist_player.state }}"
+      - service: media_player.turn_off
+        data_template:
+          entity_id: "{{ states.input_select.playlist_player.state }}"
