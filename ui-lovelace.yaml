@@ -54,7 +54,7 @@ resources:
     type: js
   - url: /local/custom-lovelace/popup-card/popup-card.js?v=random123
     type: js
-  - url: /local/custom-lovelace/rejseplanen-card/rejseplanen-card.js?v=0.14
+  - url: /local/custom-lovelace/rejseplanen-card/rejseplanen-card.js?v=0.15
     type: js
 
 decluttering_templates:
@@ -611,6 +611,12 @@ popup_cards:
               color_type: blank-card
             - type: "custom:button-card"
               color_type: blank-card
+              
+        - type: entities
+          title:
+          show_header_toggle: false
+          entities:
+            - entity: input_select.playlist
 
   sensor.dmi_aktuelle_varsler:
     title: Alle Varsler
@@ -741,9 +747,11 @@ node_anchors:
               action: more-info
           
           - type: "custom:button-card"
-            name: Playliste
             icon: mdi:music
             entity: binary_sensor.playlist_playing
+            show_label: true
+            show_name: false
+            label_template: "return states['input_select.playlist'].state || 'Playliste'"
             tap_action:
               action: more-info
 
@@ -752,30 +760,32 @@ node_anchors:
           - entity: binary_sensor.playlist_playing
             state: 'on'
         card:
-          type: glance
-          columns: 3
-          show_name: false
-          show_state: false
-          entities:
-            - entity: script.playlist_previous
-              icon: mdi:skip-previous-circle
-              tap_action:
-                action: toggle
-            - entity: script.playlist_end
-              icon: mdi:stop-circle
-              tap_action:
-                action: toggle
-            - entity: script.playlist_next
-              icon: mdi:skip-next-circle
-              tap_action:
-                action: toggle
+          type: vertical-stack
+          cards:
+            - type: glance
+              columns: 3
+              show_name: false
+              show_state: false
+              entities:
+                - entity: script.playlist_previous
+                  icon: mdi:skip-previous-circle
+                  tap_action:
+                    action: toggle
+                - entity: script.playlist_end
+                  icon: mdi:stop-circle
+                  tap_action:
+                    action: toggle
+                - entity: script.playlist_next
+                  icon: mdi:skip-next-circle
+                  tap_action:
+                    action: toggle
 
   mailbox_button: &mailbox-button
     type: "custom:button-card"
     size: 50px
     show_label: true
     show_name: false
-    label_template: "return 'Ny post: ' + states['sensor.postkasse'].state"
+    label_template: "return states['sensor.postkasse'].state > 0 ? 'Ny post: ' + states['sensor.postkasse'].state : 'Postkasse'"
     entity: binary_sensor.ny_post
     tap_action:
       action: call-service
@@ -1727,7 +1737,6 @@ views:
                 show_header_toggle: false
                 entities:
                   - binary_sensor.skab_bevaegelse
-                  - binary_sensor.storage_room_door
 
           - break
   # /Walk in closet
