@@ -38,6 +38,7 @@ class RejseplanenCard extends HTMLElement {
           color: #fff;
           background-color: #888;
           margin-right:0.7em;
+          border-radius: 2px;
         }
 
         span.type-S.route-A {
@@ -54,6 +55,10 @@ class RejseplanenCard extends HTMLElement {
 
         span.type-S.route-C {
           background-color: #E59535;
+        }
+
+        span.type-S.route-E {
+          background-color: #7670B3;
         }
 
         span.type-S.route-F {
