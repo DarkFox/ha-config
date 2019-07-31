@@ -1,0 +1,45 @@
+title: Transport
+path: transport
+icon: mdi:train-car
+panel: true
+cards:
+  - type: custom:layout-card
+    column_width: 300
+    cards:
+      - type: vertical-stack
+        cards:
+          - !include /config/lovelace/cards/s_train_status.yaml
+          
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.s_train_message_present
+                state: 'on'
+            card:
+              type: custom:card-modder
+              style:
+                padding: 0px
+              card:
+                type: 'markdown'
+                content: >-
+                  <font size=4>
+                    [[ sensor.s_train_message.state ]]
+                  </font>
+        
+          - type: entities
+            title: ''
+            show_header_toggle: false
+            entities:
+              - proximity.home
+              - sensor.home_dir_of_travel
+
+      - break
+
+      - type: vertical-stack
+        cards:
+          - type: custom:rejseplanen-card
+            entity: sensor.s_tog_brondbyoster_til_kbh
+            
+          - type: custom:rejseplanen-card
+            entity: sensor.s_tog_norreport_til_brondbyoster
+          - type: custom:rejseplanen-card
+            entity: sensor.next_departure

@@ -1,0 +1,284 @@
+title: Badeværelse Spejl
+path: bathroom-mirror
+icon: 'mdi:cellphone-screenshot'
+panel: true
+cards:
+  - type: vertical-stack
+    cards:
+      - type: picture-elements
+        image: /local/blank1680x1050.png?v=1
+        elements:
+          ############
+          # TOP LEFT #
+          ############
+          - type: custom:card-modder
+            style:
+              transform: none
+              top: 0px
+              left: 0px
+              padding: 0
+              width: 360px
+            card:
+              type: custom:bignumber-card
+              scale: 100px
+              entity: sensor.time
+
+          - type: custom:hui-vertical-stack-card
+            style:
+              transform: none
+              top: 120px
+              left: 0px
+              padding: 0
+              width: 360px
+            cards:
+              - type: custom:card-modder
+                style:
+                  padding: 0px
+                card:
+                  type: custom:bignumber-card
+                  scale: 32px
+                  entity: sensor.date_text
+
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.guests
+                    state: 'off'
+                card: !include ../cards/calendar.yaml
+
+          ################
+          # BOTTOM LEFT #
+          ################
+          - type: custom:hui-vertical-stack-card
+            style:
+              transform: none
+              bottom: -12px
+              left: 56px
+              width: 304px
+              padding: 0
+            cards:
+              - type: custom:config-template-card
+                entities:
+                  - sensor.s_train_b_next_fmt
+                  - sensor.s_train_b_status
+                card:
+                  type: custom:hui-markdown-card
+                  content: "${ '<font size=6>' + states['sensor.s_train_b_next_fmt'].state + ' min</font><br>' + states['sensor.s_train_b_status'].state}"
+
+          - type: image
+            style:
+              transform: none
+              bottom: 0px
+              left: 8px
+              width: 64px
+              padding: 0
+            image: /local/b.png
+
+          - type: custom:hui-vertical-stack-card
+            style:
+              transform: none
+              bottom: 68px
+              left: -8px
+              width: 360px
+              padding: 0
+            cards:
+              - type: conditional
+                conditions:
+                  - entity: binary_sensor.s_train_message_present
+                    state: 'on'
+                card:
+                  type: custom:card-modder
+                  style:
+                    padding: 0
+                  card:
+                    type: 'markdown'
+                    content: >-
+                      <font size=5>
+                        Driftsbesked:
+                      </font>
+                      <br>
+                      <font size=4>
+                        [[ sensor.s_train_message.state ]]
+                      </font>
+
+
+          #############
+          # TOP RIGHT #
+          #############
+          - type: custom:weather-card
+            style:
+              transform: none
+              top: 0px
+              right: 0px
+              width: 360px
+              padding: 0
+            entity: weather.dark_sky
+            icons: "/local/custom-lovelace/bramkragten/weather-card/icons/animated/"
+
+
+          ###############
+          # BOTTOM RIGHT #
+          ###############
+
+          - type: custom:hui-vertical-stack-card
+            style:
+              transform: none
+              bottom: 0px
+              right: 0px
+              width: 360px
+              padding: 0
+            cards:
+              - type: conditional
+                card:
+                  type: custom:mini-media-player
+                  info: scroll
+                  artwork: full-cover
+                  hide:
+                    mute: true
+                    icon: true
+                    icon_state: false
+                    power: true
+                    source: true
+                    controls: true
+                    volume: true
+                    power_state: false
+                  entity: media_player.badevaerelse_mini
+                conditions:
+                  - entity: media_player.badevaerelse_mini
+                    state_not: 'off'
+
+              - type: conditional
+                card:
+                  type: custom:mini-media-player
+                  info: scroll
+                  artwork: full-cover
+                  hide:
+                    mute: true
+                    icon: true
+                    icon_state: false
+                    power: true
+                    source: true
+                    controls: true
+                    volume: true
+                    power_state: false
+                  entity: media_player.alle_hojttalere
+                conditions:
+                  - entity: media_player.alle_hojttalere
+                    state_not: 'off'
+
+              - type: conditional
+                card:
+                  type: custom:mini-media-player
+                  info: scroll
+                  artwork: full-cover
+                  hide:
+                    mute: true
+                    icon: true
+                    icon_state: false
+                    power: true
+                    source: true
+                    controls: true
+                    volume: true
+                    power_state: false
+                  entity: media_player.ost_hojttalere
+                conditions:
+                  - entity: media_player.ost_hojttalere
+                    state_not: 'off'
+
+              - type: conditional
+                card:
+                  type: custom:mini-media-player
+                  info: scroll
+                  artwork: full-cover
+                  hide:
+                    mute: true
+                    icon: true
+                    icon_state: false
+                    power: true
+                    source: true
+                    controls: true
+                    volume: true
+                    power_state: false
+                  entity: media_player.vest_hojttalere
+                conditions:
+                  - entity: media_player.vest_hojttalere
+                    state_not: 'off'
+
+              - type: custom:vertical-stack-in-card
+                cards:
+                  - type: horizontal-stack
+                    cards:
+                      - type: vertical-stack
+                        cards:
+                          - type: custom:card-modder
+                            style:
+                              padding: 0px 0px 0px 0px
+                            card:
+                              type: sensor
+                              name: " "
+                              icon: mdi:toilet
+                              entity: sensor.toilet_temperature
+
+                          - type: custom:card-modder
+                            style:
+                              padding: 0px 0px 0px 0px
+                            card:
+                              type: sensor
+                              name: " "
+                              entity: sensor.toilet_relative_humidity
+
+                      - type: vertical-stack
+                        cards:
+                          - type: custom:card-modder
+                            style:
+                              padding: 0px 0px 0px 0px
+                            card:
+                              type: sensor
+                              name: " "
+                              icon: mdi:hotel
+                              entity: sensor.bedroom_temperature
+
+                          - type: custom:card-modder
+                            style:
+                              padding: 0px 0px 0px 0px
+                            card:
+                              type: sensor
+                              name: " "
+                              entity: sensor.bedroom_relative_humidity
+
+                      - type: vertical-stack
+                        cards:
+                          - type: custom:card-modder
+                            style:
+                              padding: 0px 0px 0px 0px
+                            card:
+                              type: sensor
+                              name: " "
+                              icon: mdi:sofa
+                              entity: sensor.livingroom_temperature
+
+                          - type: custom:card-modder
+                            style:
+                              padding: 0px 0px 0px 0px
+                            card:
+                              type: sensor
+                              name: " "
+                              entity: sensor.livingroom_relative_humidity
+
+                      - type: vertical-stack
+                        cards:
+                          - type: custom:card-modder
+                            style:
+                              padding: 0px 0px 0px 0px
+                            card:
+                              type: sensor
+                              name: " "
+                              icon: mdi:desktop-tower-monitor
+                              entity: sensor.office_temperature
+
+                          - type: custom:card-modder
+                            style:
+                              padding: 0px 0px 0px 0px
+                            card:
+                              type: sensor
+                              name: " "
+                              entity: sensor.office_relative_humidity

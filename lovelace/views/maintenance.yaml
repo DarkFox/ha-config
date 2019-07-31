@@ -1,0 +1,96 @@
+title: Maintenance
+path: maintenance
+icon: 'mdi:wrench'
+panel: true
+cards:
+  - type: custom:layout-card
+    column_width: 300
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: history-graph
+            title: Power Usage
+            show_header_toggle: false
+            entities:
+              - sensor.energy_meter_watt
+
+          - type: entities
+            title: Energy Meter
+            show_header_toggle: false
+            entities:
+              - sensor.energy_meter_kwh
+              - sensor.energy_meter_watt
+              - sensor.energy_meter_watt_mean
+              - sensor.energy_meter_watt_change
+
+          - type: custom:auto-entities
+            card:
+              type: entities
+              title: Batteries
+            filter:
+              include:
+                - entity_id: "*_battery*"
+                  options:
+                    secondary_info: last-changed
+
+      - break
+
+      - type: vertical-stack
+        cards:
+          - type: glance
+            entities:
+              - entity: switch.stovsuger_lader
+                tap_action:
+                  action: toggle
+
+          - type: entities
+            title: System Monitor
+            show_header_toggle: false
+            entities:
+              - entity: sensor.processor_use
+              - entity: sensor.memory_free
+              - entity: sensor.swap_use
+              - entity: sensor.disk_free
+              - entity: sensor.load_1m
+              - entity: sensor.load_5m
+              - entity: sensor.load_15m
+              - entity: sensor.last_boot
+              - entity: sensor.ha_installed_version
+              - entity: sensor.ha_current_version
+              - entity: sensor.ha_last_restart
+
+      - break
+
+      - type: vertical-stack
+        cards:
+          - type: custom:mini-graph-card
+            points_per_hour: 4
+            hours_to_show: 12
+            hour24: true
+            more-info: false
+            line_width: 2
+            height: 180
+            show:
+              state: false
+              name: false
+              icon: false
+              points: false
+              labels: true
+            entities:
+              - entity: sensor.unifi_speedtest_download
+                name: Download
+                show_fill: false
+              - entity: sensor.unifi_speedtest_upload
+                name: Upload
+                show_fill: false
+
+          - type: entities
+            title: Internet Status
+            show_header_toggle: false
+            entities:
+              - sensor.unifi_gateway_alerts
+              - sensor.unifi_gateway_www
+              - sensor.unifi_wan_ip
+              - sensor.unifi_speedtest_ping
+              - sensor.unifi_speedtest_upload
+              - sensor.unifi_speedtest_download

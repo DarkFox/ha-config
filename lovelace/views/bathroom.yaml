@@ -1,0 +1,55 @@
+title: Badeværelse
+path: bathroom
+icon: 'mdi:toilet'
+panel: true
+cards:
+  - type: custom:layout-card
+    column_width: 300
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: custom:decluttering-card
+            template: room_state_and_light_profile
+            variables:
+              - room: bathroom
+
+          - type: glance
+            title: ""
+            columns: 4
+            show_state: false
+            entities:
+              - entity: light.bathroom_tablet
+                name: Tablet
+                tap_action:
+                  action: toggle
+              - entity: light.badevaerelse
+                tap_action:
+                  action: toggle
+
+      - break
+
+      - type: vertical-stack
+        cards:
+          - type: custom:decluttering-card
+            template: room_climate
+            variables:
+              - room: toilet
+
+          - type: entities
+            title: Bathroom Sensors
+            show_header_toggle: false
+            entities:
+              - binary_sensor.toilet_sensor
+              - binary_sensor.badevaerelse_vindue
+              - sensor.toilet_mold_indicator
+              - sensor.toilet_relative_humidity_change
+
+      - break
+
+      - type: vertical-stack
+        cards:
+          - !include ../cards/playlist_controls.yaml
+
+          - type: custom:mini-media-player
+            artwork: cover
+            entity: media_player.badevaerelse_mini

@@ -1,0 +1,142 @@
+title: Gang Tablet
+path: hallway-tablet
+icon: 'mdi:tablet-android'
+panel: true
+cards:
+  - type: vertical-stack
+    cards:
+      - type: horizontal-stack
+        cards:
+          - type: custom:card-modder
+            style:
+              padding: 0px
+            card:
+              type: custom:bignumber-card
+              scale: 64px
+              entity: sensor.time
+
+          - type: custom:card-modder
+            style:
+              padding: 0px
+            card:
+              type: custom:bignumber-card
+              scale: 64px
+              entity: sensor.date_text
+
+      - type: horizontal-stack
+        cards:
+          - type: "custom:button-card"
+            size: 50px
+            name: Lyst
+            color: rgb(255,152,0)
+            entity: light.light_profile_bright
+          - type: "custom:button-card"
+            size: 50px
+            name: Normal
+            color: rgb(255,152,0)
+            entity: light.light_profile_default
+          - type: "custom:button-card"
+            size: 50px
+            name: Dæmpet
+            color: rgb(255,152,0)
+            entity: light.light_profile_dimmed
+          - type: "custom:button-card"
+            size: 50px
+            name: Baggr.
+            color: rgb(255,152,0)
+            entity: light.light_profile_ambient
+          - type: "custom:button-card"
+            size: 50px
+            name: Nat
+            color: rgb(255,152,0)
+            entity: light.light_profile_night
+          - type: "custom:button-card"
+            size: 50px
+            name: Slukket
+            color: rgb(255,152,0)
+            entity: light.light_profile_off
+
+      - type: horizontal-stack
+        cards:
+          - type: vertical-stack
+            cards:
+              - !include ../cards/s_train_status.yaml
+
+              - !include ../cards/temp_graph.yaml
+
+              - !include ../cards/simple_weather.yaml
+
+              - !include ../cards/dmi_weather.yaml
+              
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.guests
+                    state: 'off'
+                card:
+                  type: glance
+                  entities:
+                    - entity: input_boolean.vacation_mode
+                    - entity: input_boolean.guests
+
+          - type: vertical-stack
+            cards:
+              # - type: custom:bignumber-card
+              #   title: Strømforbrug
+              #   entity: sensor.energy_meter_watt
+              #   max: 3000
+              #   min: 0
+              #   scale: 30px
+              #   severity:
+              #     - value: 300
+              #       style: 'green'
+              #     - value: 500
+              #       style: 'yellow'
+              #     - value: 1000
+              #       style: 'red'
+              - type: horizontal-stack
+                cards:
+                  - !include ../cards/mailbox_button.yaml
+                  - !include ../cards/hoveddor_laas.yaml
+
+              - !include ../cards/playlist_controls.yaml
+
+              - type: conditional
+                card:
+                  type: custom:mini-media-player
+                  artwork: cover
+                  entity: media_player.alle_hojttalere
+                conditions:
+                  - entity: media_player.alle_hojttalere
+                    state_not: 'off'
+
+              - type: conditional
+                card:
+                  type: custom:mini-media-player
+                  artwork: cover
+                  entity: media_player.ost_hojttalere
+                conditions:
+                  - entity: media_player.ost_hojttalere
+                    state_not: 'off'
+
+              - type: conditional
+                card:
+                  type: custom:mini-media-player
+                  artwork: cover
+                  entity: media_player.vest_hojttalere
+                conditions:
+                  - entity: media_player.vest_hojttalere
+                    state_not: 'off'
+
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.guests
+                    state: 'off'
+                card: !include ../cards/calendar.yaml
+
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.guests
+                    state: 'on'
+                card:
+                  type: markdown
+                  content: !secret ui_wifi_content

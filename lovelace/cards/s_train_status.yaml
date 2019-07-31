@@ -1,0 +1,69 @@
+type: horizontal-stack
+cards:
+  - type: "custom:button-card"
+    show_label: true
+    show_name: true
+    show_icon: false
+    name: "[[[return states['sensor.s_train_b_next_fmt'].state + ' min']]]"
+    label: "[[[return states['sensor.s_train_b_later_fmt'].state + ' min']]]"
+    entity: sensor.s_train_b_next_fmt
+    tap_action:
+      action: call-service
+      service: browser_mod.command
+      service_data:
+        command: popup
+        title: S-Tog Brøndbyøster til KBH
+        card:
+          type: custom:rejseplanen-card
+          title: ' '
+          entity: sensor.s_tog_brondbyoster_til_kbh
+        deviceID:
+          - this
+    styles:
+      card:
+        - padding-top: 16px
+        - height: 81px
+        - background-color: '#7DB362'
+        - color: white
+      name:
+        - font-size: 24pt
+      label:
+        - font-size: 16pt
+
+  - type: "custom:button-card"
+    show_label: true
+    show_name: false
+    show_icon: true
+    label: "[[[ return states['sensor.s_train_b_status'].state ]]]"
+    icon: >
+      [[[
+        if (states['sensor.s_train_b_status'].state == 'Til tiden')
+          return "mdi:checkbox-marked-circle";
+        else
+          return "mdi:clock-alert";
+      ]]]
+    entity: sensor.s_train_b_status
+    tap_action:
+      action: call-service
+      service: browser_mod.command
+      service_data:
+        command: popup
+        title: S-Tog Driftsbesked
+        card:
+          type: markdown
+          content: "[[ sensor.s_train_message.state ]]"
+        deviceID:
+          - this
+    styles:
+      card:
+        - height: 81px
+      icon:
+        - color: >
+            [[[
+              if (states['sensor.s_train_b_status'].state != 'Til tiden')
+                return "#FF0000";
+              else if (states['sensor.s_train_message'].state != '')
+                return '#FFB300';
+              else
+                return "#7DB362";
+            ]]]

@@ -1,0 +1,85 @@
+title: Badeværelse Tablet
+path: bathroom-tablet
+icon: 'mdi:tablet'
+panel: true
+cards:
+  - type: vertical-stack
+    cards:
+      - type: horizontal-stack
+        cards:
+          - type: vertical-stack
+            cards:
+              - type: custom:card-modder
+                style:
+                  padding: 0px
+                card:
+                  type: custom:bignumber-card
+                  scale: 80px
+                  entity: sensor.time
+
+              - !include ../cards/s_train_status.yaml
+
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.guests
+                    state: 'off'
+                card: !include ../cards/calendar.yaml
+
+          - type: vertical-stack
+            cards:
+              - !include ../cards/temp_graph.yaml
+              - !include ../cards/simple_weather.yaml
+              - !include ../cards/dmi_weather.yaml
+
+          - type: vertical-stack
+            cards:
+              - type: custom:decluttering-card
+                template: room_light_profile
+                variables:
+                  - room: bathroom
+
+              - !include ../cards/playlist_controls.yaml
+
+              - type: conditional
+                card:
+                  type: custom:mini-media-player
+                  artwork: cover
+                  entity: media_player.badevaerelse_mini
+                conditions:
+                  - entity: media_player.badevaerelse_mini
+                    state_not: 'off'
+
+              - type: horizontal-stack
+                cards:
+                  - type: "custom:button-card"
+                    size: 50px
+                    name: Aktivitet
+                    entity: binary_sensor.bathroom_activity
+                    icon: mdi:circle
+                    color: rgb(255,152,0)
+                    tap_action:
+                      action: more-info
+                      entity: group.bathroom_activity_entities
+                    state:
+                      - value: 'off'
+                        icon: mdi:circle-outline
+                  - type: "custom:button-card"
+                    size: 50px
+                    name: Overstyr
+                    entity: light.bathroom_activity_override
+                    color: rgb(255,152,0)
+                  - type: "custom:button-card"
+                    size: 50px
+                    name: Separat
+                    entity: light.bathroom_separate_light_profile
+                    color: rgb(255,152,0)
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.bathroom_activity_override
+                    state: 'on'
+                card:
+                  type: entities
+                  show_title: false
+                  show_header_toggle: false
+                  entities:
+                    - entity: input_select.bathroom_room_state
