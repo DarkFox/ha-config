@@ -17,7 +17,7 @@ automation:
       service: input_number.set_value
       data_template:
         entity_id: input_number.hallway_tablet_brightness
-        value: "{{ trigger.json.state / 100 * 255 | int }}"
+        value: "{{ trigger.json.state }}"
 
   - alias: bathroom_tablet_screen_webhook
     initial_state: True
@@ -71,6 +71,14 @@ input_number:
     min: 0
     max: 255
 
+rest_command:
+  hallway_tablet_command:
+    url: "http://192.168.42.20:1817/?message={{ command }}"
+    method: GET
+  bathroom_tablet_command:
+    url: "http://192.168.42.21:1817/?message={{ command }}"
+    method: GET
+
 light:
   - platform: template
     lights:
@@ -79,37 +87,37 @@ light:
         level_template: "{{ states('input_number.hallway_tablet_brightness')|int }}"
         value_template: "{{ states('input_boolean.hallway_tablet_screen') }}"
         turn_on:
-          - service: joaoapps_join.nexus_send_tasker
+          - service: rest_command.hallway_tablet_command
             data:
               command: "screen=:=on"
         turn_off:
-          - service: joaoapps_join.nexus_send_tasker
+          - service: rest_command.hallway_tablet_command
             data:
               command: "screen=:=off"
         set_level:
-          - service: joaoapps_join.nexus_send_tasker
+          - service: rest_command.hallway_tablet_command
             data:
               command: "screen=:=on"
-          - service: joaoapps_join.nexus_send_tasker
+          - service: rest_command.hallway_tablet_command
             data_template:
-              command: "brightness=:={{ brightness / 255 * 100 | int }}"
+              command: "brightness=:={{ brightness }}"
 
       bathroom_tablet:
         friendly_name: "Bathroom Tablet"
         level_template: "{{ states('input_number.bathroom_tablet_brightness')|int }}"
         value_template: "{{ states('input_boolean.bathroom_tablet_screen') }}"
         turn_on:
-          - service: joaoapps_join.lenovo_tablet_send_tasker
+          - service: rest_command.bathroom_tablet_command
             data:
               command: "screen=:=on"
         turn_off:
-          - service: joaoapps_join.lenovo_tablet_send_tasker
+          - service: rest_command.bathroom_tablet_command
             data:
               command: "screen=:=off"
         set_level:
-          - service: joaoapps_join.lenovo_tablet_send_tasker
+          - service: rest_command.bathroom_tablet_command
             data:
               command: "screen=:=on"
-          - service: joaoapps_join.lenovo_tablet_send_tasker
+          - service: rest_command.bathroom_tablet_command
             data_template:
               command: "brightness=:={{ brightness }}"
