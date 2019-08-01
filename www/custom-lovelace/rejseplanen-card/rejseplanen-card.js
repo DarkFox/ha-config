@@ -2,17 +2,21 @@ class RejseplanenCard extends HTMLElement {
   set hass(hass) {
     const entityId = this.config.entity
     const state = hass.states[entityId]
-    const name = state.attributes['friendly_name']
+    const name = this.config.title || state.attributes['friendly_name']
 
     if (!this.content) {
       const card = document.createElement('ha-card')
-      card.header = name
+      if (name == ' ') {
+        card.header = ''
+      } else {
+        card.header = name
+      }
       this.content = document.createElement('div')
       const style = document.createElement('style')
       style.textContent = `
         table {
           width: 100%;
-          padding: 6px 14px;
+          padding: 6px 10px;
         }
         tr:nth-child(even) {
           background: var(--table-row-background-color);
@@ -145,20 +149,20 @@ class RejseplanenCard extends HTMLElement {
     var tablehtml = `
     <table>
     `
-    const next = {
-      'route': state.attributes['route'],
-      'type': state.attributes['type'],
-      'due_in': state.attributes['due_in'],
-      'direction': state.attributes['direction']
-    }
 
-    const journeys = [next].concat(state.attributes['next_departures']);
-    
-    for (const journey of journeys) {
-      if (journey === undefined || journey['type'] == 'n/a') {
-        continue;
+    var journeys = [];
+    if (state.state != 'unknown') {
+      const next = {
+        'route': state.attributes['route'],
+        'type': state.attributes['type'],
+        'due_in': state.attributes['due_in'],
+        'direction': state.attributes['direction']
       }
 
+      journeys = [next].concat(state.attributes['next_departures']);
+    }
+    
+    for (const journey of journeys) {
       const direction = journey['direction']
       const routename = journey['route']
       const type = journey['type']
