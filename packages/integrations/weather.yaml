@@ -28,6 +28,8 @@ sensor:
   - platform: rest
     name: dmi_weather_raw
     resource: !secret dmi_weather_url
+    headers:
+      User-Agent: !secret user_agent
     scan_interval: 300
     value_template: "{{ value_json.regiondata[0].products[0].timestamp }}"
     json_attributes:
@@ -41,6 +43,8 @@ sensor:
   - platform: rest
     name: dmi_warnings_raw
     resource: !secret dmi_warnings_url
+    headers:
+      User-Agent: !secret user_agent
     scan_interval: 300
     force_update: True
     value_template: "{{ 0 if value_json.warnings|length < 1 else value_json.warnings[0].time }}"
@@ -58,6 +62,8 @@ sensor:
   - platform: rest
     name: dmi_warnings_specific_raw
     resource: !secret dmi_warnings_url
+    headers:
+      User-Agent: !secret user_agent
     scan_interval: 31536000
     force_update: True
     value_template: "{{ 0 if value_json.warnings|length < 1 else value_json.warnings[0].time }}"
@@ -85,7 +91,12 @@ binary_sensor:
   - platform: template
     sensors:
       show_weather_warnings:
-        value_template: "{{ (not is_state('sensor.dmi_aktuelle_varsler', '0') or not is_state('sensor.dmi_kommende_varsler', '0')) }}"
+        value_template: "{{ not is_state('sensor.dmi_aktuelle_varsler', '0') }}"
+  - platform: template
+    sensors:
+      show_coming_weather_warnings:
+        value_template: "{{ not is_state('sensor.dmi_kommende_varsler', '0') }}"
+
 
 automation:
   - alias: severe_weather_warning
@@ -155,7 +166,35 @@ automation:
         to: 'on'
     action:
       - delay:
-          seconds: 30
+          seconds: 10
+
+      - service: mqtt.publish
+        data_template:
+          topic: "dmi_current_warning/state"
+          retain: True
+          payload: >-
+            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].warningTitle }}
+      
+      - service: mqtt.publish
+        data_template:
+          topic: "dmi_current_warning/attributes"
+          retain: True
+          payload: >-
+            {% if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 %}
+              {}
+            {% else %}
+              {
+                "text": "{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].warningText }}",
+                "additional_text": "{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].additionalText }}",
+                "valid_from": "{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].validFromText }}",
+                "valid_to": "{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].validToText }}",
+                "issued_at": "{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].issuedAtText }}",
+                "category": "{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].formattedCategory }}",
+                "valid_from_timestamp": "{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].validFrom }}",
+                "valid_to_timestamp": "{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].validTo }}",
+                "entity_picture": "/local/downloads/dmi_warning_icons/{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].icon }}"
+              }
+            {% endif %}
 
       - service: mqtt.publish
         data_template:
@@ -200,36 +239,9 @@ automation:
               {% endfor %}
               }
             {% endif %}
-      
-      - service: mqtt.publish
-        data_template:
-          topic: "dmi_current_warning/state"
-          retain: True
-          payload: >-
-            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].warningTitle }}
-      
-      - service: mqtt.publish
-        data_template:
-          topic: "dmi_current_warning/attributes"
-          retain: True
-          payload: >-
-            {% if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 %}
-              {}
-            {% else %}
-              {
-                "text": "{{ states.sensor.dmi_warnings_raw.attributes.actualWarnings[0].warningText }}",
-                "additional_text": "{{ states.sensor.dmi_warnings_raw.attributes.actualWarnings[0].additionalText }}",
-                "valid_from": "{{ states.sensor.dmi_warnings_raw.attributes.actualWarnings[0].validFromText }}",
-                "valid_to": "{{ states.sensor.dmi_warnings_raw.attributes.actualWarnings[0].validToText }}",
-                "issued_at": "{{ states.sensor.dmi_warnings_raw.attributes.actualWarnings[0].issuedAtText }}",
-                "category": "{{ states.sensor.dmi_warnings_raw.attributes.actualWarnings[0].formattedCategory }}",
-                "valid_from_timestamp": "{{ states.sensor.dmi_warnings_raw.attributes.actualWarnings[0].validFrom }}",
-                "valid_to_timestamp": "{{ states.sensor.dmi_warnings_raw.attributes.actualWarnings[0].validTo }}",
-                "entity_picture": "/local/downloads/dmi_warning_icons/{{ states.sensor.dmi_warnings_raw.attributes.actualWarnings[0].icon }}"
-              }
-            {% endif %}
 
       - service: downloader.download_file
         data_template:
-          url: "https://www.dmi.dk/fileadmin/assets/Varselsikoner/{{ states.sensor.dmi_warnings_raw.attributes.actualWarnings[0].icon }}"
+          url: "https://www.dmi.dk/fileadmin/assets/Varselsikoner/{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].icon }}"
           subdir: dmi_warning_icons
+          overwrite: true
