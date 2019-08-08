@@ -23,24 +23,6 @@ binary_sensor:
         value_template: >-
           {{ not is_state('sensor.postkasse', '0') }}
 
-automation:
-  - id: new_snail_mail
-    alias: new_snail_mail
-    trigger:
-        - platform: state
-          entity_id: binary_sensor.postkasse
-          to: 'on'
-    action:
-      - service: input_number.increment
-        data:
-          entity_id: input_number.postkasse
-      - service: notify.phone
-        data_template:
-          title: "Home Assistant"
-          message: "Der er post! Antal siden nulstillet: {{ states('sensor.postkasse') }}"
-          data:
-            icon: https://goo.gl/xeetdy
-
 script:
   reset_snail_mail:
     alias: reset_snail_mail
@@ -49,3 +31,36 @@ script:
         data:
           entity_id: input_number.postkasse
           value: 0.0
+
+automation:
+  - id: new_snail_mail
+    alias: new_snail_mail
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.postkasse
+        to: 'on'
+    action:
+      - service: input_number.increment
+        data:
+          entity_id: input_number.postkasse
+      - service: notify.telegram_darkfox
+        data_template:
+          message: "Der er post! Antal siden nulstillet: {{ states('sensor.postkasse') }}"
+          data:
+            inline_keyboard:
+              - "Nulstil:/reset_snail_mail"
+  
+  - alias: 'Telegram bot reset snali mail'
+    hide_entity: true
+    trigger:
+      platform: event
+      event_type: telegram_callback
+      event_data:
+        data: '/reset_snail_mail'
+    action:
+      - service: script.turn_on
+        entity_id: script.reset_snail_mail
+      - service: telegram_bot.answer_callback_query
+        data_template:
+          callback_query_id: '{{ trigger.event.data.id }}'
+          message: 'OK, postkasse nulstillet!'
