@@ -21,9 +21,15 @@ sensor:
         unit_of_measurement: "°"
       outside_temperature:
         friendly_name: "Outside Temperature"
-        value_template: "{{ state_attr('weather.dark_sky', 'temperature') }}"
+        value_template: "{{ states('sensor.udenfor_temp') }}"
         device_class: temperature
         unit_of_measurement: "°C"
+      outside_sealevel_pressure:
+        friendly_name: "Udenfor Lufttryk (Havniveau)"
+        # Calculated as 0.125 per meter above sea level
+        value_template: "{{ states('sensor.udenfor_pressure') | float + 6 }}"
+        device_class: pressure
+        unit_of_measurement: "hPa"
 
   - platform: thermal_comfort
     sensors:
