@@ -191,22 +191,19 @@ script:
 
   light_profile_bedroom_off:
     sequence:
+      - event: bed_table_night_light
+        event_data_template:
+          state: "{{ states('binary_sensor.night_light') }}"
       # Off Lights
       - service: light.turn_off
-        data:
+        data_template:
+          transition: "{{ transition_time or 0.5 | float }}"
           entity_id:
-            - group.bedroom_lights
-      - condition: state
-        entity_id: input_select.sleep_state
-        state: 'sleeping'
-      - delay:
-          seconds: 1
-      - service: light.turn_on
-        data:
-          brightness: 48
-          rgb_color: [255,0,0]
-          entity_id:
-            - light.bed_table
+            - light.sky
+            - light.sengelampe
+            - light.bedroom_shelf_strip
+            - light.bedroom_shelf_spots
+            - light.bedroom_floor
 
   light_profile_bedroom_party:
     sequence:
@@ -260,6 +257,37 @@ automation:
           transition: "{{ transition_time or 0.5 | float }}"
           entity_id:
             - light.sengelampe
+
+  - alias: bed_table_night_light_on
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: bed_table_night_light
+        event_data:
+          state: 'on'
+    action:
+      - service: light.turn_on
+        data_template:
+          transition: "{{ transition_time or 0.5 | float }}"
+          brightness: 48
+          hs_color: [255,0,0]
+          entity_id:
+            - light.bed_table
+
+  - alias: bed_table_night_light_off
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: bed_table_night_light
+        event_data:
+          state: 'off'
+    action:
+      - service: light.turn_off
+        data_template:
+          transition: "{{ transition_time or 0.5 | float }}"
+          entity_id:
+            - light.bed_table
+
 
 input_boolean:
   bedroom_activity_override:
@@ -402,6 +430,10 @@ binary_sensor:
       reading_light:
         entity_id: input_select.sleep_state
         value_template: "{{ is_state('input_select.sleep_state', 'bedtime') or is_state('input_select.sleep_state', 'in bed') }}"
+      
+      night_light:
+        entity_id: input_select.sleep_state
+        value_template: "{{ is_state('input_select.sleep_state', 'sleeping') }}"
 
       bedroom_activity:
         friendly_name: 'Bedroom Activity'
