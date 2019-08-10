@@ -1,0 +1,46 @@
+type: vertical-stack
+cards:
+  - type: conditional
+    conditions:
+      - entity: binary_sensor.show_weather_warnings
+        state: "on"
+    card:
+      type: custom:button-card
+      show_name: false
+      show_icon: false
+      show_state: true
+      show_entity_picture: true
+      layout: icon_state
+      entity: sensor.dmi_aktuel_varsel
+      styles:
+        state:
+          - font-size: 16pt
+          - white-space: normal
+      tap_action:
+        action: call-service
+        service: browser_mod.command
+        service_data:
+          command: popup
+          deviceID:
+            - this
+          title: Alle Varsler
+          card: !include dmi_aktuelle_varsler.yaml
+  
+  - type: conditional
+    conditions:
+      - entity: binary_sensor.show_coming_weather_warnings
+        state: "on"
+    card:
+      type: custom:button-card
+      show_icon: false
+      layout: name_state
+      entity: sensor.dmi_kommende_varsler
+      tap_action:
+        action: call-service
+        service: browser_mod.command
+        service_data:
+          command: popup
+          deviceID:
+            - this
+          title: Kommende Varsler
+          card: !include dmi_kommende_varsler.yaml
