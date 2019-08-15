@@ -516,6 +516,23 @@ binary_sensor:
             false
           {% endif -%}
 
+      living_room_activity_predicted:
+        friendly_name: 'Living Room Activity Predicted'
+        entity_id:
+          - binary_sensor.moved_from_kitchen_to_hallway
+          - binary_sensor.moved_from_bathroom_to_hallway
+        value_template: >
+          {%- if is_state('input_boolean.living_room_activity_override', 'on') 
+          or is_state('input_boolean.living_room_separate_light_profile', 'on')
+          or is_state('input_select.living_room_room_state', 'active')  -%}
+            false
+          {%- elif is_state('binary_sensor.moved_from_kitchen_to_hallway', 'on')
+          or is_state('binary_sensor.moved_from_bathroom_to_hallway', 'on')-%}
+            true
+          {% else -%}
+            false
+          {% endif -%}
+
 group:
   living_room_activity_entities:
     name: Living Room Activity Entities

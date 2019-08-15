@@ -255,6 +255,23 @@ binary_sensor:
             false
           {% endif -%}
 
+      bathroom_activity_predicted:
+        friendly_name: 'Bathroom Activity Predicted'
+        entity_id:
+          - binary_sensor.moved_from_living_room_to_hallway
+          - binary_sensor.moved_from_bedroom_to_hallway
+        value_template: >
+          {%- if is_state('input_boolean.bathroom_activity_override', 'on') 
+          or is_state('input_boolean.bathroom_separate_light_profile', 'on')
+          or is_state('input_select.bathroom_room_state', 'active')  -%}
+            false
+          {%- elif is_state('binary_sensor.moved_from_living_room_to_hallway', 'on')
+          or is_state('binary_sensor.moved_from_bedroom_to_hallway', 'on')-%}
+            true
+          {% else -%}
+            false
+          {% endif -%}
+
 group:
   bathroom_activity_entities:
     name: Bathroom Activity Entities

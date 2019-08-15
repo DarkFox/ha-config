@@ -442,6 +442,21 @@ binary_sensor:
             false
           {%- endif -%}
 
+      office_activity_predicted:
+        friendly_name: 'Office Activity Predicted'
+        entity_id:
+          - binary_sensor.moved_from_to_hallway_to_living_room
+        value_template: >
+          {%- if is_state('input_boolean.office_activity_override', 'on') 
+          or is_state('input_boolean.office_separate_light_profile', 'on')
+          or is_state('input_select.office_room_state', 'active')  -%}
+            false
+          {%- elif is_state('binary_sensor.moved_from_to_hallway_to_living_room', 'on') -%}
+            true
+          {% else -%}
+            false
+          {% endif -%}
+
 group:
   office_activity_entities:
     name: Office Activity Entities

@@ -630,6 +630,57 @@ automation:
         entity_id: "input_select.{{ trigger.entity_id.replace('binary_sensor.', '').replace('_activity', '') }}_room_state"
         option: 'active'
 
+  
+  - alias: Room State Predictive Trigger
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id:
+        - binary_sensor.bathroom_activity_predicted
+        - binary_sensor.bedroom_activity_predicted
+        - binary_sensor.hallway_activity_predicted
+        - binary_sensor.kitchen_activity_predicted
+        - binary_sensor.living_room_activity_predicted
+        - binary_sensor.office_activity_predicted
+        - binary_sensor.storage_room_activity_predicted
+      to: 'on'
+    condition:
+      condition: state
+      entity_id: binary_sensor.home_assistant_loaded
+      state: 'on'
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: "input_select.{{ trigger.entity_id.replace('binary_sensor.', '').replace('_activity_predicted', '') }}_room_state"
+        option: 'inactive'
+
+  - alias: Room State Predictive Trigger Off
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id:
+        - binary_sensor.bathroom_activity_predicted
+        - binary_sensor.bedroom_activity_predicted
+        - binary_sensor.hallway_activity_predicted
+        - binary_sensor.kitchen_activity_predicted
+        - binary_sensor.living_room_activity_predicted
+        - binary_sensor.office_activity_predicted
+        - binary_sensor.storage_room_activity_predicted
+      to: 'off'
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.home_assistant_loaded
+          state: 'on'
+        - condition: template
+          value_template: "{{ is_state('input_select.' ~ trigger.entity_id.replace('binary_sensor.', '').replace('_activity_predicted', '') ~ '_room_state', 'inactive') }}"
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: "input_select.{{ trigger.entity_id.replace('binary_sensor.', '').replace('_activity_predicted', '') }}_room_state"
+        option: 'off'
+
   - alias: Room State Inactive Trigger
     initial_state: true
     trigger:
@@ -716,8 +767,12 @@ automation:
         for:
           minutes: 5
     condition:
-      condition: template
-      value_template: "{{ 'True' if is_state('input_boolean.' + trigger.entity_id.replace('binary_sensor.', '').replace('_activity', '') + '_activity_override', 'off') }}"
+      condition: and
+      conditions:
+        - condition: template
+          value_template: "{{ 'True' if is_state('input_boolean.' + trigger.entity_id.replace('binary_sensor.', '').replace('_activity', '') + '_activity_override', 'off') else 'False' }}"
+        - condition: template
+          value_template: "{{ 'True' if is_state('binary_sensor.' + trigger.entity_id.replace('binary_sensor.', '').replace('_activity', '') + '_activity_predicted', 'off') else 'False' }}"
     action:
       service: input_select.select_option
       data_template:
@@ -729,11 +784,15 @@ automation:
     trigger:
       platform: event
       event_type: sync_room_light_profile
-    action:
-      - condition: and
+    condition:
+      condition: and
         conditions:
-          condition: template
+        - condition: template
           value_template: "{{ 'True' if is_state('input_boolean.' + trigger.event.data.room + '_separate_light_profile', 'off') }}"
+        # # Don't sync if room state was changed less than a second ago (to avoid loop)
+        # - condition: template
+        #   value_template: "{{ as_timestamp(states.input_select[trigger.event.data.room ~ '_light_profile'].last_changed) + 1 < as_timestamp(now()) }}"
+    action:
       - service: input_select.select_option
         data_template:
           entity_id: "input_select.{{ trigger.event.data.room }}_light_profile"
@@ -756,7 +815,7 @@ automation:
               {%- else -%}
                 script.light_profile_{{ trigger.event.data.room }}_{{ states('input_select.' + trigger.event.data.room + '_light_profile') | lower }}
               {%- endif -%}
-            {%- elif is_state('input_select.' + trigger.event.data.room + '_room_state', 'active') -%}
+            {%- elif is_state('input_select.' + trigger.event.data.room + '_room_state', 'inactive') -%}
               script.light_profile_{{ trigger.event.data.room }}_{{ states('input_select.' + trigger.event.data.room + '_inactive_light_profile') | lower }}
             {%- else %}
               script.light_profile_{{ trigger.event.data.room }}_off
