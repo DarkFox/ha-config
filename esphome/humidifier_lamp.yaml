@@ -1,0 +1,126 @@
+substitutions:
+  devicename: humidifier_lamp
+  upper_devicename: Luftfugter Lampe
+
+esphome:
+  name: $devicename  
+  platform: ESP32
+  board: lolin_d32
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret api_pass
+
+ota:
+  password: !secret ota_pass
+
+status_led:
+  pin:
+    number: GPIO2
+    inverted: false
+
+output:
+  - platform: ledc
+    pin: GPIO18
+    id: red_pwm
+    channel: 1
+
+  - platform: ledc
+    pin: GPIO19
+    id: green_pwm
+    channel: 2
+
+  - platform: ledc
+    pin: GPIO23
+    id: blue_pwm
+    channel: 3
+
+  - platform: ledc
+    pin: GPIO26
+    id: humidifier_pwm
+    channel: 4
+    frequency: 112000
+
+switch:
+  - platform: template
+    id: humidifier
+    name: "Luftfugter"
+    icon: mdi:water
+    optimistic: true
+    assumed_state: true
+    turn_on_action:
+      - switch.turn_off: humidifier_interval
+      - output.set_level:
+          id: humidifier_pwm
+          level: 50%
+      - script.execute: humidifier_sleep
+    turn_off_action:
+      - output.turn_off: humidifier_pwm
+      - script.stop: humidifier_sleep
+
+  - platform: template
+    id: humidifier_interval
+    name: "Luftfugter Interval"
+    icon: mdi:water-outline
+    optimistic: true
+    assumed_state: true
+    turn_on_action:
+      - switch.turn_off: humidifier
+      - script.execute: humidifier_interval_sleep
+      - while:
+          condition:
+            script.is_running: humidifier_interval_sleep
+          then:
+            - output.set_level:
+                id: humidifier_pwm
+                level: 50%
+            - delay: 3s
+            - output.turn_off: humidifier_pwm
+            - delay: 3s
+    turn_off_action:
+      - output.turn_off: humidifier_pwm
+      - script.stop: humidifier_interval_sleep
+
+script:
+  - id: humidifier_sleep
+    then:
+      - delay: 5h
+      - switch.turn_off: humidifier
+
+  - id: humidifier_interval_sleep
+    then:
+      - delay: 10h
+      - switch.turn_off: humidifier_interval
+
+light: !include shared/esp32_rgb.yaml
+
+globals:
+  - id: button_color
+    type: int
+    restore_value: no
+    initial_value: '0'
+
+binary_sensor:
+  - platform: gpio
+    id: button
+    pin:
+      number: GPIO25
+      mode: INPUT_PULLUP
+      inverted: True
+    on_click:
+      # Hold to toggle humidifier
+      - min_length: 500ms
+        max_length: 2s
+        then:
+          - switch.toggle: humidifier
+      # Click to change colour
+      - then:
+          - light.toggle:
+              id: $devicename
