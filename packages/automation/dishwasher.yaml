@@ -1,0 +1,283 @@
+input_number:
+  dishwasher_tabs:
+    name: Opvasketabs
+    icon: mdi:crop-square
+    min: 0
+    max: 100
+    step: 1
+    mode: box
+  dishwasher_runs:
+    name: Opvaskemaskine Kørsler
+    icon: mdi:dishwasher
+    min: 0
+    max: 100
+    step: 1
+    mode: box
+
+input_select:
+  dishwasher_state:
+    name: Opvaskemaskine Status
+    options:
+      - Ukendt
+      - Slukket
+      - Tændt
+      - Startet
+      - Skyller
+      - Varmer
+      - Vasker
+      - Tørrer
+      - Dræner
+      - Færdig
+      - Fejl
+
+automation:
+  - id: dishwasher_finished_notification
+    alias: Opvaskemaskine Færdig Notifikation
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_select.dishwasher_state
+      to: 'Færdig'
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: Opvaskemaskinen er færdig.
+
+  - id: dishwasher_tabs_low_notification
+    alias: Opvaskemaskinetabsbeholdning Lav Notifikation
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_number.dishwasher_tabs
+    condition:
+      condition: numeric_state
+      entity_id: input_number.dishwasher_tabs
+      below: 6
+    action:
+      - service: notify.telegram_darkfox
+        data_template:
+          message: "Der er {{ 'kun ' ~ states('input_number.dishwasher_tabs')|int if states('input_number.dishwasher_tabs')|int > 0 else 'ingen' }} vasketabs tilbage!"
+
+
+  ## Stats keeping ##
+  - id: dishwasher_run
+    alias: Opvaskemaskine Kørsel
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_select.dishwasher_state
+      to: 'Startet'
+    action:
+      - service: input_number.increment
+        data:
+          entity_id: input_number.dishwasher_runs
+      - service: input_number.decrement
+        data:
+          entity_id: input_number.dishwasher_tabs
+
+  ## STATE MACHINE ##
+  - id: dishwasher_idle
+    alias: Opvaskemaskine Tændt
+    initial_state: true
+    trigger:
+      platform: numeric_state
+      entity_id: sensor.opvaskemaskine_forbrug
+      above: 0.1
+      below: 5
+    condition:
+      condition: or
+      conditions:
+        - condition: state
+          entity_id: input_select.dishwasher_state
+          state: 'Ukendt'
+        - condition: state
+          entity_id: input_select.dishwasher_state
+          state: 'Slukket'
+        - condition: state
+          entity_id: input_select.dishwasher_state
+          state: 'Færdig'
+    action:
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.dishwasher_state
+          option: 'Tændt'
+
+  - id: dishwasher_started
+    alias: Opvaskemaskine Startet
+    initial_state: true
+    trigger:
+      platform: numeric_state
+      entity_id: sensor.opvaskemaskine_forbrug
+      above: 6
+      below: 50
+    condition:
+      condition: or
+      conditions:
+        - condition: state
+          entity_id: input_select.dishwasher_state
+          state: 'Ukendt'
+        - condition: state
+          entity_id: input_select.dishwasher_state
+          state: 'Slukket'
+        - condition: state
+          entity_id: input_select.dishwasher_state
+          state: 'Tændt'
+        - condition: state
+          entity_id: input_select.dishwasher_state
+          state: 'Færdig'
+    action:
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.dishwasher_state
+          option: 'Startet'
+
+  - id: dishwasher_rinsing
+    alias: Opvaskemaskine Skyller
+    initial_state: true
+    trigger:
+      platform: numeric_state
+      entity_id: sensor.opvaskemaskine_forbrug
+      above: 50
+      below: 100
+    condition:
+      condition: state
+      entity_id: input_select.dishwasher_state
+      state: 'Startet'
+    action:
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.dishwasher_state
+          option: 'Skyller'
+
+  - id: dishwasher_heating
+    alias: Opvaskemaskine Varmer
+    initial_state: true
+    trigger:
+      platform: numeric_state
+      entity_id: sensor.opvaskemaskine_forbrug
+      above: 900
+    condition:
+      condition: or
+      conditions:
+        - condition: state
+          entity_id: input_select.dishwasher_state
+          state: 'Skyller'
+        - condition: state
+          entity_id: input_select.dishwasher_state
+          state: 'Vasker'
+    action:
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.dishwasher_state
+          option: 'Varmer'
+
+  - id: dishwasher_washing
+    alias: Opvaskemaskine Vasker
+    initial_state: true
+    trigger:
+      platform: numeric_state
+      entity_id: sensor.opvaskemaskine_forbrug
+      above: 50
+      below: 100
+    condition:
+      condition: state
+      entity_id: input_select.dishwasher_state
+      state: 'Varmer'
+    action:
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.dishwasher_state
+          option: 'Vasker'
+
+  - id: dishwasher_drying
+    alias: Opvaskemaskine Tørrer
+    initial_state: true
+    trigger:
+      platform: numeric_state
+      entity_id: sensor.opvaskemaskine_forbrug
+      below: 1
+    condition:
+      condition: or
+      conditions:
+        - condition: state
+          entity_id: input_select.dishwasher_state
+          state: 'Vasker'
+        - condition: state
+          entity_id: input_select.dishwasher_state
+          state: 'Varmer'
+        - condition: state
+          entity_id: input_select.dishwasher_state
+          state: 'Dræner'
+    action:
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.dishwasher_state
+          option: 'Tørrer'
+
+  - id: dishwasher_draining
+    alias: Opvaskemaskine Dræner
+    initial_state: true
+    trigger:
+      platform: numeric_state
+      entity_id: sensor.opvaskemaskine_forbrug
+      above: 15
+      below: 50
+    condition:
+      condition: state
+      entity_id: input_select.dishwasher_state
+      state: 'Tørrer'
+    action:
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.dishwasher_state
+          option: 'Dræner'
+
+  - id: dishwasher_done
+    alias: Opvaskemaskine Færdig
+    initial_state: true
+    trigger:
+      platform: numeric_state
+      entity_id: sensor.opvaskemaskine_forbrug
+      above: 8
+      below: 14
+      for:
+        seconds: 10
+    condition:
+      condition: or
+      conditions:
+        - condition: state
+          entity_id: input_select.dishwasher_state
+          state: 'Tørrer'
+        - condition: state
+          entity_id: input_select.dishwasher_state
+          state: 'Dræner'
+    action:
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.dishwasher_state
+          option: 'Færdig'
+
+  - id: dishwasher_off
+    alias: Opvaskemaskine Slukket
+    initial_state: true
+    trigger:
+      platform: numeric_state
+      entity_id: sensor.opvaskemaskine_forbrug
+      below: 0.1
+    condition:
+      condition: or
+      conditions:
+        - condition: state
+          entity_id: input_select.dishwasher_state
+          state: 'Ukendt'
+        - condition: state
+          entity_id: input_select.dishwasher_state
+          state: 'Tændt'
+        - condition: state
+          entity_id: input_select.dishwasher_state
+          state: 'Færdig'
+    action:
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.dishwasher_state
+          option: 'Slukket'
