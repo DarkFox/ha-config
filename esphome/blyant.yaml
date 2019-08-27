@@ -1,0 +1,85 @@
+substitutions:
+  devicename: blyant
+  upper_devicename: Blyant
+
+esphome:
+  name: $devicename
+  platform: ESP8266
+  board: d1_mini
+  on_boot:
+    priority: 599
+    then:
+      - light.turn_on:
+          id: $devicename
+          transition_length: 0.5s
+          brightness: 1.0
+          red: 1.0
+          green: 0.4
+          blue: 0.0
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret api_pass
+
+ota:
+  password: !secret ota_pass
+
+status_led:
+  pin:
+    number: GPIO2
+    inverted: true
+
+output:
+  - platform: esp8266_pwm
+    frequency: 200 Hz
+    pin: GPIO15
+    id: green_pwm
+
+  - platform: esp8266_pwm
+    frequency: 200 Hz
+    pin: GPIO13
+    id: blue_pwm
+
+  - platform: esp8266_pwm
+    frequency: 200 Hz
+    pin: GPIO12
+    id: red_pwm
+
+light: !include shared/rgb.yaml
+
+globals:
+- id: button_color
+  type: int
+  restore_value: no
+  initial_value: '0'
+
+binary_sensor:
+  - platform: gpio
+    id: button
+    pin:
+      number: GPIO0
+      mode: INPUT_PULLUP
+      inverted: True
+    on_click:
+      # Hold to toggle
+      - min_length: 500ms
+        max_length: 2s
+        then:
+          - light.toggle:
+              id: $devicename
+      # Click to change colour
+      - then:
+          - light.turn_on:
+              id: $devicename
+              transition_length: 0.5s
+              brightness: 1.0
+              red: 1.0
+              green: 0.4
+              blue: 0.0
