@@ -58,6 +58,49 @@ automation:
           entity_id: media_player.badevaerelse_mini
           is_volume_muted: true
 
+  # Hallway #
+  - alias: Hallway Speaker active trigger
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_select.hallway_room_state
+      to: 'active'
+    action:
+      service: media_player.volume_mute
+      data:
+        entity_id: media_player.gang_mini
+        is_volume_muted: false
+
+  - alias: Hallway Speaker inactive trigger
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_select.hallway_room_state
+      to: 'off'
+    action:
+      service: media_player.volume_mute
+      data:
+        entity_id: media_player.gang_mini
+        is_volume_muted: true
+
+  - alias: Hallway Speaker play inactive
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: media_player.gang_mini
+      to: 'playing'
+    condition:
+      condition: state
+      entity_id: input_select.hallway_room_state
+      state: 'off'
+    action:
+      - delay:
+          seconds: 1
+      - service: media_player.volume_mute
+        data:
+          entity_id: media_player.gang_mini
+          is_volume_muted: true
+
   # Office #
   - alias: Office Speaker/PC Accessories active trigger
     initial_state: true
