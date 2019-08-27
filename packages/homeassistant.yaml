@@ -72,13 +72,6 @@ group:
       - sensor.date
       - binary_sensor.workday_sensor
 
-  # Travel Time:
-  #   entities:
-  #     - sensor.home2work
-  #     - sensor.work2home
-  #     - sensor.suresh2home
-  #     - sensor.suresh2work
-
   Home Assistant Automations:
     entities:
       - automation.notify_of_new_external_ip
@@ -149,29 +142,7 @@ sensor:
         value_template: '{{ as_timestamp(states.automation.startup_notification.attributes.last_triggered) | timestamp_custom("%b %d %X") }}'
         friendly_name: HA Last Restart
 
-script:
-  restart_wallpanels:
-    sequence:
-      - service: mqtt.publish
-        data:
-          topic: wallpanel/hallwaytablet/command
-          payload: '{"wake": true, "clearCache": true, "reload": true}'
-      - service: mqtt.publish
-        data:
-          topic: wallpanel/firetablet/command
-          payload: '{"wake": true, "clearCache": true, "reload": true}'
-
 automation:
-  - alias: After Loaded
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: binary_sensor.home_assistant_loaded
-      to: 'on'
-    action:
-      - service: script.restart_wallpanels
-
-
   - alias: Notify Of New External IP
     initial_state: true
     trigger:
@@ -195,7 +166,7 @@ automation:
       platform: state
       entity_id: updater.updater
     action:
-      - service: notify.mac
+      - service: notify.phone
         data:
           message: "New HASS update is available. Please update!"
 
@@ -213,13 +184,16 @@ automation:
       platform: homeassistant
       event: start
     action:
-      - service: script.restart_wallpanels
-      - service: notify.mac
+      - service: notify.phone
         data:
           message: "Home Assistant has successfully rebooted!"
+
+  - alias: Set home_assistant_started on startup 
+    initial_state: true
+    trigger:
+      platform: homeassistant
+      event: start
+    action:
       - service: input_boolean.turn_on
         data:
           entity_id: input_boolean.home_assistant_started
-      - delay:
-         seconds: 2
-      - event: refresh_light_profile
