@@ -28,6 +28,8 @@ script:
             - light.bedroom_shelf_spots
             - light.bedroom_floor
             - light.bed_table
+            - light.blyant
+            - light.luftfugter_lampe
 
   light_profile_bedroom_default:
     sequence:
@@ -61,6 +63,7 @@ script:
           hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
           entity_id:
             - light.bedroom_shelf_spots
+            - light.luftfugter_lampe
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
@@ -70,6 +73,7 @@ script:
           entity_id:
             - light.bedroom_floor
             - light.bed_table
+            - light.blyant
 
   light_profile_bedroom_dimmed:
     sequence:
@@ -104,6 +108,13 @@ script:
       - service: light.turn_on
         data_template:
           transition: "{{ transition_time or 0.5 | float }}"
+          brightness: 172
+          hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
+          entity_id:
+            - light.luftfugter_lampe
+      - service: light.turn_on
+        data_template:
+          transition: "{{ transition_time or 0.5 | float }}"
           brightness: 86
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           entity_id:
@@ -117,6 +128,13 @@ script:
           entity_id:
             - light.bedroom_floor
             - light.bed_table
+      - service: light.turn_on
+        data_template:
+          transition: "{{ transition_time or 0.5 | float }}"
+          brightness: 86
+          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
+          entity_id:
+            - light.blyant
 
   light_profile_bedroom_ambient:
     sequence:
@@ -138,12 +156,26 @@ script:
       - service: light.turn_on
         data_template:
           transition: "{{ transition_time or 0.5 | float }}"
+          brightness: 128
+          hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
+          entity_id:
+              - light.luftfugter_lampe
+      - service: light.turn_on
+        data_template:
+          transition: "{{ transition_time or 0.5 | float }}"
           brightness: 2
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           entity_id:
             - light.sengelampe
             - light.sky
       # Secondary RGB lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ transition_time or 0.5 | float }}"
+          brightness: 32
+          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
+          entity_id:
+            - light.blyant
       - service: light.turn_on
         data_template:
           transition: "{{ transition_time or 0.5 | float }}"
@@ -164,6 +196,7 @@ script:
       - event: sengelampe_nat
         event_data_template:
           state: "{{ states('binary_sensor.reading_light') }}"
+          transition_time: "{{ transition_time or 0.5 | float }}"
       # Off Lights
       - service: light.turn_off
         data_template:
@@ -172,9 +205,13 @@ script:
             - light.sky
             - light.sovevaerelse_reol_spots
             - light.bedroom_shelf_strip
-            - light.bedroom_shelf_spots
-            - light.bedroom_floor
-            - light.bed_table
+      - service: light.turn_on
+        data_template:
+          transition: "{{ transition_time or 0.5 | float }}"
+          brightness: 16
+          rgb_color: [255,0,0]
+          entity_id:
+            - light.blyant
       - service: light.turn_on
         data_template:
           transition: "{{ transition_time or 0.5 | float }}"
@@ -182,6 +219,7 @@ script:
           rgb_color: [255,0,0]
           entity_id:
             - light.bedroom_shelf_spots
+            - light.blyant
       - service: light.turn_on
         data_template:
           transition: "{{ transition_time or 0.5 | float }}"
@@ -196,12 +234,14 @@ script:
           rgb_color: [255,0,0]
           entity_id:
             - light.bed_table
+            - light.luftfugter_lampe
 
   light_profile_bedroom_off:
     sequence:
       - event: bed_table_night_light
         event_data_template:
           state: "{{ states('binary_sensor.night_light') }}"
+          transition_time: "{{ transition_time or 0.5 | float }}"
       # Off Lights
       - service: light.turn_off
         data_template:
@@ -212,6 +252,9 @@ script:
             - light.bedroom_shelf_strip
             - light.bedroom_shelf_spots
             - light.bedroom_floor
+            - light.sovevaerelse_reol_spots
+            - light.blyant
+            - light.luftfugter_lampe
 
   light_profile_bedroom_party:
     sequence:
@@ -228,6 +271,8 @@ script:
             - light.bedroom_shelf_spots
             - light.bedroom_floor
             - light.bed_table
+            - light.blyant
+            - light.luftfugter_lampe
       - service: light.turn_on
         data:
           effect: "colorloop"
@@ -277,7 +322,7 @@ automation:
       - service: light.turn_on
         data_template:
           transition: "{{ transition_time or 0.5 | float }}"
-          brightness: 48
+          brightness: 24
           hs_color: [255,0,0]
           entity_id:
             - light.bed_table
@@ -295,7 +340,6 @@ automation:
           transition: "{{ transition_time or 0.5 | float }}"
           entity_id:
             - light.bed_table
-
 
 input_boolean:
   bedroom_activity_override:
