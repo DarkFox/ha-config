@@ -34,6 +34,11 @@ sensor:
         friendly_name: "Sol Elevation %"
         value_template: "{{ 0.0 if states('sensor.sun_elevation') | float < 0 else (states('sensor.sun_elevation') | float * 100 / 58.0) | round(2) }}"
         unit_of_measurement: "%"
+      sun_pct:
+        # Amount of sun, minus cloud cover. Totally imaginary number, really :P
+        friendly_name: "Sol%"
+        value_template: "{{ states('sensor.sun_elevation_pct')|float * (1-(states('sensor.dark_sky_cloud_coverage')|float/100))  }}"
+        unit_of_measurement: "%"
       sun_azimuth:
         friendly_name: "Sol Retning"
         value_template: "{{ state_attr('sun.sun', 'azimuth') }}"
