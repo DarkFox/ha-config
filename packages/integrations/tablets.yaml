@@ -1,4 +1,14 @@
 automation:
+  - alias: Restart wallpanels on startup
+    initial_state: true
+    trigger:
+      platform: homeassistant
+      event: start
+    action:
+      - delay:
+          seconds: 5
+      - service: script.restart_wallpanels
+
   - alias: hallway_tablet_screen_webhook
     initial_state: True
     trigger:
@@ -38,6 +48,18 @@ automation:
       data_template:
         entity_id: input_number.bathroom_tablet_brightness
         value: "{{ trigger.json.state }}"
+
+script:
+  restart_wallpanels:
+    sequence:
+      - service: mqtt.publish
+        data:
+          topic: wallpanel/hallway-tablet/command
+          payload: '{"wake": true, "clearCache": true, "reload": true}'
+      - service: mqtt.publish
+        data:
+          topic: wallpanel/bathroom-tablet/command
+          payload: '{"wake": true, "clearCache": true, "reload": true}'
 
 sensor:
   - platform: mqtt
