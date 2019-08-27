@@ -13,51 +13,36 @@ cards:
             variables:
               - room: kitchen
 
-          - type: glance
-            columns: 4
-            show_state: false
-            entities:
-              - entity: switch.kokken_tv_afbryder
+          - !include ../cards/lights/rooms/kitchen.yaml
+
+          - type: horizontal-stack
+            cards:
+              - type: "custom:button-card"
+                entity: switch.kokken_tv_afbryder
                 name: TV
-                tap_action:
-                  action: toggle
-              - entity: switch.elkedel
+                color: auto
                 tap_action:
                   action: toggle
 
-          - type: glance
-            columns: 4
-            show_state: false
-            entities:
-              - entity: light.kokken_loftlys
-                name: Loftlampe
+              - type: "custom:button-card"
+                entity: switch.elkedel
+                name: Elkedel
+                color: auto
                 tap_action:
                   action: toggle
-              - entity: light.kitchen_sink
-                name: Vask
-                tap_action:
-                  action: toggle
-              - entity: light.kitchen_stove
-                name: Ovn
-                tap_action:
-                  action: toggle
-              - entity: light.kitchen_cabinets
-                name: Underskabe
-                tap_action:
-                  action: toggle
-              - entity: light.kokken_spots
-                name: Spots
-                tap_action:
-                  action: toggle
+
+              - type: "custom:button-card"
+                color_type: blank-card
 
       - break
 
       - type: vertical-stack
         cards:
           - type: custom:decluttering-card
-            template: room_climate
+            template: room_climate_with_thermostat
             variables:
               - room: kitchen
+              - rum: kokken
 
           - type: entities
             title: Kitchen Sensors
@@ -65,6 +50,17 @@ cards:
             entities:
               - binary_sensor.kitchen_sensor
 
+          - type: custom:mini-graph-card
+            name: "Opvaskemaskine"
+            points_per_hour: 2
+            hours_to_show: 12
+            hour24: true
+            line_width: 8
+            font_size: 75
+            entities:
+              - entity: sensor.opvaskemaskine_forbrug
+                show_indicator: false
+                show_legend: false
       - break
 
       - type: vertical-stack

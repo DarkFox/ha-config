@@ -13,64 +13,27 @@ cards:
             variables:
               - room: bedroom
 
-          - type: glance
-            columns: 4
-            show_state: false
-            entities:
-              - entity: switch.blaeser
+          - !include ../cards/lights/rooms/bedroom.yaml
+
+          - type: horizontal-stack
+            cards:
+              - type: "custom:button-card"
+                entity: switch.blaeser
                 name: Blæser
                 tap_action:
                   action: toggle
-          
-          - type: glance
-            columns: 4
-            show_state: false
-            entities:
-              - entity: light.bedroom_shelf_strip
-                name: Hylde Lampe
-                tap_action:
-                  action: toggle
-              - entity: light.sengelampe
-                name: Sengelampe
-                tap_action:
-                  action: toggle
-              - entity: light.bedroom_shelf_spots
-                name: Hylde Spots
-                tap_action:
-                  action: toggle
-              - entity: light.bedroom_floor
-                name: Reol
-                tap_action:
-                  action: toggle
-              - entity: light.bed_table
-                name: Sidebord
-                tap_action:
-                  action: toggle
-              - entity: light.sky
-                name: Sky
-                tap_action:
-                  action: toggle
-              - entity: light.sovevaerelse_reol_spots
-                name: Reol Spots
+
+              - type: "custom:button-card"
+                entity: switch.luftfugter
+                name: Luftfugter
                 tap_action:
                   action: toggle
 
-      - break
-
-      - type: vertical-stack
-        cards:
-          - type: custom:decluttering-card
-            template: room_climate
-            variables:
-              - room: bedroom
-
-          - type: entities
-            title: Bedroom Sensors
-            show_header_toggle: false
-            entities:
-              - binary_sensor.bedroom_sensor
-              - binary_sensor.sovevaerelse_gulv_bevaegelse
-              - binary_sensor.seng_bevaegelse
+              - type: "custom:button-card"
+                entity: switch.luftfugter_interval
+                name: Luftfugter Interval
+                tap_action:
+                  action: toggle
 
           - type: entities
             title: Sleep as Android
@@ -80,6 +43,24 @@ cards:
               - sensor.sleep_tracker
               - sensor.phone_alarm
               - counter.snooze_counter
+
+      - break
+
+      - type: vertical-stack
+        cards:
+          - type: custom:decluttering-card
+            template: room_climate_with_thermostat
+            variables:
+              - room: bedroom
+              - rum: sovevaerelse
+
+          - type: entities
+            title: Bedroom Sensors
+            show_header_toggle: false
+            entities:
+              - binary_sensor.bedroom_sensor
+              - binary_sensor.sovevaerelse_gulv_bevaegelse
+              - binary_sensor.seng_bevaegelse
 
       - break
 
