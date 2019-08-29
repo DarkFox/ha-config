@@ -19,8 +19,7 @@ input_select:
     name: Opvaskemaskine Status
     options:
       - Ukendt
-      - Slukket
-      - Tændt
+      - Inaktiv
       - Startet
       - Skyller
       - Varmer
@@ -31,6 +30,18 @@ input_select:
       - Fejl
 
 automation:
+  - id: dishwasher_started_notification
+    alias: Opvaskemaskine Startet Notifikation
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_select.dishwasher_state
+      to: 'Startet'
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: Opvaskemaskinen er startet.
+
   - id: dishwasher_finished_notification
     alias: Opvaskemaskine Færdig Notifikation
     initial_state: true
@@ -76,32 +87,6 @@ automation:
           entity_id: input_number.dishwasher_tabs
 
   ## STATE MACHINE ##
-  - id: dishwasher_idle
-    alias: Opvaskemaskine Tændt
-    initial_state: true
-    trigger:
-      platform: numeric_state
-      entity_id: sensor.opvaskemaskine_forbrug
-      above: 0.1
-      below: 5
-    condition:
-      condition: or
-      conditions:
-        - condition: state
-          entity_id: input_select.dishwasher_state
-          state: 'Ukendt'
-        - condition: state
-          entity_id: input_select.dishwasher_state
-          state: 'Slukket'
-        - condition: state
-          entity_id: input_select.dishwasher_state
-          state: 'Færdig'
-    action:
-      - service: input_select.select_option
-        data_template:
-          entity_id: input_select.dishwasher_state
-          option: 'Tændt'
-
   - id: dishwasher_started
     alias: Opvaskemaskine Startet
     initial_state: true
@@ -118,10 +103,7 @@ automation:
           state: 'Ukendt'
         - condition: state
           entity_id: input_select.dishwasher_state
-          state: 'Slukket'
-        - condition: state
-          entity_id: input_select.dishwasher_state
-          state: 'Tændt'
+          state: 'Inaktiv'
         - condition: state
           entity_id: input_select.dishwasher_state
           state: 'Færdig'
@@ -256,28 +238,3 @@ automation:
         data_template:
           entity_id: input_select.dishwasher_state
           option: 'Færdig'
-
-  - id: dishwasher_off
-    alias: Opvaskemaskine Slukket
-    initial_state: true
-    trigger:
-      platform: numeric_state
-      entity_id: sensor.opvaskemaskine_forbrug
-      below: 0.1
-    condition:
-      condition: or
-      conditions:
-        - condition: state
-          entity_id: input_select.dishwasher_state
-          state: 'Ukendt'
-        - condition: state
-          entity_id: input_select.dishwasher_state
-          state: 'Tændt'
-        - condition: state
-          entity_id: input_select.dishwasher_state
-          state: 'Færdig'
-    action:
-      - service: input_select.select_option
-        data_template:
-          entity_id: input_select.dishwasher_state
-          option: 'Slukket'
