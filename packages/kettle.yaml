@@ -1,0 +1,51 @@
+sensor:
+  - platform: template
+    sensors:
+      kettle_state:
+        friendly_name: 'Elkedel Status'
+        value_template: >-
+          {% if is_state('binary_sensor.kettle_brewing', 'on') %}
+            Brygger
+          {% elif is_state('switch.elkedel', 'on') %}
+            Tændt
+          {% else %}
+            Slukket
+          {% endif %}
+
+binary_sensor:
+  - platform: template
+    sensors:
+      kettle_brewing:
+        friendly_name: "Elkedel Brygger"
+        value_template: >-
+          {{ states('sensor.elkedel_forbrug')|float > 500 }}
+
+automation:
+  - id: kettle_brewing_notification
+    alias: Elkedel Brygger Notifikation
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: binary_sensor.kettle_brewing
+      from: 'off'
+      to: 'on'
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: Elkedel brygger
+
+  - id: kettle_done_notification
+    alias: Elkedel Færdig Notifikation
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: binary_sensor.kettle_brewing
+      from: 'on'
+      to: 'off'
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: Te tid!
+      - service: switch.turn_off
+        data:
+          entity_id: switch.elkedel
