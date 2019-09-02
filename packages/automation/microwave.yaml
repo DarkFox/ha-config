@@ -1,0 +1,62 @@
+binary_sensor:
+  - platform: template
+    sensors:
+      microwave_running:
+        value_template: "{{ states('sensor.mikroovn_forbrug')|float > 30 }}"
+
+automation:
+  - alias: Mikroovn startet
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.microwave_running
+        to: 'on'
+    action:
+      - service: automation.turn_off
+        data:
+          entity_id: automation.sluk_mikroovn_hvis_ikke_startet_efter_dor_lukket
+
+  - alias: Mikroovn Færdig 
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: sensor.microwave_state
+      from: 'Kører'
+      to: 'Tændt'
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: Mikroovnen er færdig.
+
+  - alias: Tænd mikroovn når dør åbnes
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.mikroovn_dor
+        to: 'on'
+    action:
+      - service: switch.turn_on
+        data:
+          entity_id: switch.mikroovn
+      - service: automation.turn_on
+        data:
+          entity_id: automation.sluk_mikroovn_hvis_ikke_startet_efter_dor_lukket
+
+  - alias: Sluk mikroovn hvis ikke startet efter dør lukket
+    initial_state: false
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.mikroovn_dor
+        to: 'off'
+        for:
+          minutes: 1
+    condition:
+      - condition: state
+        entity_id: binary_sensor.microwave_running
+        state: 'off'
+    action:
+      - service: switch.turn_off
+        data:
+          entity_id: switch.mikroovn
+      - service: automation.turn_off
+        data:
+          entity_id: automation.sluk_mikroovn_hvis_ikke_startet_efter_dor_lukket
