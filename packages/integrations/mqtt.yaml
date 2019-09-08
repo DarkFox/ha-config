@@ -1,20 +1,5 @@
-mqtt:
-  broker: !secret mqtt_host
-  discovery: true
-  username: homeassistant
-  password: !secret mosquitto_password
-
 homeassistant:
   customize:
-    sensor.energy_meter_kwh:
-      friendly_name: "Energy Meter (kWh)"
-      icon: mdi:flash
-    sensor.energy_meter_watt:
-      friendly_name: "Energy Meter (Watt)"
-      icon: mdi:speedometer
-    sensor.energy_meter_watt_mean:
-      friendly_name: "Energy Meter (Watt) Stats"
-      icon: mdi:speedometer
     sensor.party_button_battery:
       friendly_name: Party Button Battery
       icon: mdi:battery
@@ -22,37 +7,13 @@ homeassistant:
       friendly_name: Party Button
       icon: mdi:nuke
 
-group:
-  energy_meter:
-    name: 'Energy Meter'
-    entities:
-      - sensor.energy_meter_kwh
-      - sensor.energy_meter_watt
-      - sensor.energy_meter_watt_mean
-      - sensor.energy_meter_watt_change
+mqtt:
+  broker: !secret mqtt_host
+  discovery: false
+  username: homeassistant
+  password: !secret mosquitto_password
 
 sensor:
-  - platform: mqtt
-    name: energy_meter_kwh
-    state_topic: "meter/1/reading"
-    unit_of_measurement: "kWh"
-    value_template: '{{ value_json.kwhr }}'
-  - platform: mqtt
-    name: energy_meter_watt
-    state_topic: "meter/1/reading"
-    unit_of_measurement: "W"
-    value_template: '{{ value_json.power | int }}'
-  - platform: statistics
-    name: energy_meter_watt
-    entity_id: sensor.energy_meter_watt
-  - platform: template
-    sensors:
-      energy_meter_watt_change:
-        friendly_name: 'Energy Watt Change'
-        unit_of_measurement: "W"
-        entity_id: sensor.energy_meter_watt_mean
-        value_template: '{{ states.sensor.energy_meter_watt_mean.attributes.change | float }}'
-
   - platform: mqtt
     name: party_button_battery
     state_topic: '00C16B3E/partybutton/battery'
