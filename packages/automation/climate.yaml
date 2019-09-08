@@ -1,0 +1,49 @@
+automation:
+  - alias: Turn off heating when away
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.martin_presence_delayed
+        from: 'on'
+        to: 'off'
+    action:
+      - service: homeassistant.turn_off
+        data_template:
+          entity_id: group.thermostats
+
+  - alias: Turn on heating when back
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.martin_presence_delayed
+        from: 'off'
+        to: 'on'
+    action:
+      - service: homeassistant.turn_on
+        data_template:
+          entity_id: group.thermostats
+
+
+  - alias: turn_off_bathroom_heating_with_window_open
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.badevaerelse_vindue
+        from: 'off'
+        to: 'on'
+    action:
+      - service: climate.turn_off
+        data:
+          entity_id: climate.badevaerelse
+
+  - alias: turn_on_bathroom_heating_with_window_closed
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.badevaerelse_vindue
+        from: 'on'
+        to: 'off'
+    action:
+      - service: climate.turn_on
+        data:
+          entity_id: climate.badevaerelse
