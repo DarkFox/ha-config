@@ -1,0 +1,40 @@
+substitutions:
+  devicename: pc_skaerme
+  upper_devicename: PC Skærme
+
+esphome:
+  name: $devicename
+  platform: ESP8266
+  board: d1_mini
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret api_pass
+
+ota:
+  password: !secret ota_pass
+
+
+status_led:
+  pin:
+    number: D0
+    inverted: true
+
+light:
+  - platform: fastled_clockless
+    id: $devicename
+    name: $upper_devicename
+    chipset: WS2812b
+    pin: D5
+    num_leds: 48
+    rgb_order: GRB
+    default_transition_length: 250ms
+    effects:
+      !include shared/effects.yaml
