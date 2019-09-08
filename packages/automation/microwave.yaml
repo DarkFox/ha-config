@@ -6,6 +6,7 @@ binary_sensor:
 
 automation:
   - alias: Mikroovn startet
+    initial_state: true
     trigger:
       - platform: state
         entity_id: binary_sensor.microwave_running
@@ -15,13 +16,13 @@ automation:
         data:
           entity_id: automation.sluk_mikroovn_hvis_ikke_startet_efter_dor_lukket
 
-  - alias: Mikroovn Færdig 
+  - alias: Mikroovn Færdig
     initial_state: true
     trigger:
       platform: state
-      entity_id: sensor.microwave_state
-      from: 'Kører'
-      to: 'Tændt'
+      entity_id: binary_sensor.microwave_running
+      from: 'on'
+      to: 'off'
     action:
       - service: notify.telegram_darkfox
         data:
