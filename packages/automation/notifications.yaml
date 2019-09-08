@@ -6,13 +6,13 @@ automation:
       entity_id: binary_sensor.opvaskemaskine_laek
       to: 'on'
     action:
-      - service: notify.phone
+      - service: switch.turn_off
         data:
-          title: "Home Assistant"
+          entity_id: switch.opvaskemaskine
+      - service: notify.telegram_darkfox
+        data:
           message: "Vand under opvaskemaskinen!"
-          data:
-            icon: https://goo.gl/xeetdy
-            vibration: 0,500,100,500,100,500
+
 
   - alias: Bathroom Window Warning
     initial_state: true
@@ -25,12 +25,9 @@ automation:
       entity_id: binary_sensor.badevaerelse_vindue
       state: 'on'
     action:
-      - service: notify.phone
+      - service: notify.telegram_darkfox
         data:
-          title: "Home Assistant"
           message: "The bathroom window is open, remember to close it before leaving!"
-          data:
-            icon: https://goo.gl/xeetdy
 
   - alias: Bathroom Aired Out
     initial_state: true
@@ -43,12 +40,9 @@ automation:
       entity_id: binary_sensor.badevaerelse_vindue
       state: 'on'
     action:
-      - service: notify.phone
+      - service: notify.telegram_darkfox
         data:
-          title: "Home Assistant"
           message: "Bathroom sufficiently aired out, you can close the window now."
-          data:
-            icon: https://goo.gl/xeetdy
 
   - alias: Apartment Door Lock Notification
     initial_state: true
@@ -59,10 +53,6 @@ automation:
       for:
         minutes: 3
     action:
-      - service: notify.phone
+      - service: notify.telegram_darkfox
         data_template:
-          title: Home Assistant
           message: "Apartment door is not locked!"
-          data:
-            icon: https://goo.gl/xeetdy
-            vibration: 0,500,100,500,100,500
