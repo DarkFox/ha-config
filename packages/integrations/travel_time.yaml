@@ -59,6 +59,7 @@ sensor:
     destination: zone.home
     options:
       mode: driving
+      language: da
 
   - platform: scrape
     resource: http://www.dsb.dk/trafikinformation/s-tog-overblik/
@@ -66,14 +67,14 @@ sensor:
     select: 'div.FooterFreeText'
     value_template: >-
       {{ value | trim  | reverse | regex_replace(find='.*(ppA BSD|nalpesjeR|nenalpesjeR).*?\.', replace='.', ignorecase=True) | reverse}}
-    scan_interval: 300
+    scan_interval: 600
 
   - platform: scrape
     resource: http://www.dsb.dk/trafikinformation/s-tog-overblik/
     name: s_train_b_status
     select: 'table.RepeaterTable tr:nth-of-type(2) td.TDItemLabel div b'
     value_template: "{{ value | trim }}"
-    scan_interval: 300
+    scan_interval: 600
 
   - platform: template
     sensors:
@@ -92,12 +93,16 @@ sensor:
       s_train_b_later_fmt:
         friendly_name: "Efterfølgende afgang"
         value_template: >
-          {% set ct = state_attr('sensor.s_tog_brondbyoster_til_kbh', 'next_departures')[0]['due_in'] | int %}
-          {% if ct > 60 %}
-            {{ ct // 60 }}:{{ '{:0>2d}'.format(ct%60) }}
+          {% if state_attr('sensor.s_tog_brondbyoster_til_kbh', 'next_departures') %}
+            {% set ct = state_attr('sensor.s_tog_brondbyoster_til_kbh', 'next_departures')[0]['due_in'] | int %}
+            {% if ct > 60 %}
+              {{ ct // 60 }}:{{ '{:0>2d}'.format(ct%60) }}
+            {% else %}
+              {{ ct }}
+            {% endif %}
           {% else %}
-            {{ ct }}
-          {% endif %}
+            -
+          {% endif%}
 
 binary_sensor:
   - platform: template
