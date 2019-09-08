@@ -35,7 +35,7 @@ automation:
       service: input_datetime.set_datetime
       entity_id: input_datetime.visited_parents
       data_template:
-        time: "{{states.sensor.time.state}}"
+        time: "{{states.sensor.time.state}}:00"
         date: "{{states.sensor.date.state}}"
 
   - alias: visit_parents_reminder
@@ -50,17 +50,10 @@ automation:
           value_template: '{{ now().weekday() == 0 }}'
         - condition: template
           value_template: >
-            {%-
-              set visited_time = as_timestamp(states('input_datetime.visited_parents'))
-            -%}
-            {%-
-              set current_time = as_timestamp(now())
-            -%}
+            {%- set visited_time = as_timestamp(states('input_datetime.visited_parents')) -%}
+            {%- set current_time = as_timestamp(now()) -%}
             {{ (((current_time - visited_time)/60/60/24) | int) > 30 }}
     action:
-      service: notify.phone
+      service: notify.telegram_darkfox
       data:
         message: "Det er ved at være lang tid siden du har besøgt Mor og Far."
-        title: "Home Assistant"
-        data:
-          icon: "https://goo.gl/xeetdy"
