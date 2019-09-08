@@ -32,24 +32,19 @@ binary_sensor:
     prior: 0.5
     probability_threshold: 0.8
     observations:
-      - entity_id: 'device_tracker.ping_galaxy_s8'
-        prob_given_true: 0.9
-        prob_given_false: 0.1
-        platform: 'state'
-        to_state: 'home'
       - entity_id: 'device_tracker.google_maps_102040676821115196041'
         prob_given_true: 0.9
-        prob_given_false: 0.2
+        prob_given_false: -0.5
         platform: 'state'
         to_state: 'home'
       - entity_id: 'binary_sensor.activity_last30'
         prob_given_true: 0.7
-        prob_given_false: 0.5
+        prob_given_false: 0.3
         platform: 'state'
         to_state: 'on'
       - entity_id: 'binary_sensor.activity_last10'
         prob_given_true: 0.8
-        prob_given_false: 0.2
+        prob_given_false: 0.5
         platform: 'state'
         to_state: 'on'
       - entity_id: 'input_select.latest_motion'
@@ -57,8 +52,19 @@ binary_sensor:
         prob_given_false: 0.3
         platform: 'state'
         to_state: 'Bedroom'
-      - entity_id: 'sensor.sleep_tracker'
-        prob_given_true: 0.5
-        prob_given_false: 0.4
-        platform: 'state'
-        to_state: 'tracking'
+
+automation:
+  - alias: presence notification
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.martin_presence
+        from: 'on'
+        to: 'off'
+      - platform: state
+        entity_id: binary_sensor.martin_presence
+        from: 'off'
+        to: 'on'
+    action:
+      - service: notify.telegram_darkfox
+        data_template:
+          message: "Presence: {{ states('binary_sensor.martin_presence') }}"
