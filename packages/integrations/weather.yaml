@@ -45,13 +45,13 @@ sensor:
         unit_of_measurement: "°"
       outside_temperature:
         friendly_name: "Outside Temperature"
-        value_template: "{{ states('sensor.udenfor_temp') }}"
+        value_template: "{{ states('sensor.udenfor_temperature') }}"
         device_class: temperature
         unit_of_measurement: "°C"
-      outside_sealevel_pressure:
-        friendly_name: "Udenfor Lufttryk (Havniveau)"
+      sealevel_pressure:
+        friendly_name: "Lufttryk (Havniveau)"
         # Calculated as 0.125 per meter above sea level
-        value_template: "{{ states('sensor.udenfor_pressure') | float + 6 }}"
+        value_template: "{{ states('sensor.lufttryk') | float + 6 }}"
         device_class: pressure
         unit_of_measurement: "hPa"
 
@@ -59,9 +59,9 @@ sensor:
     sensors:
       udenfor:
         friendly_name: Udenfor
-        temperature_sensor: sensor.udenfor_temp
+        temperature_sensor: sensor.udenfor_temperature
         humidity_sensor: sensor.udenfor_humidity
-        pressure_sensor: sensor.udenfor_pressure
+        pressure_sensor: sensor.lufttryk
 
   - platform: rest
     name: dmi_weather_raw
@@ -143,14 +143,10 @@ automation:
       platform: template
       value_template: "{{ (state_attr('sensor.dmi_aktuel_varsel', 'category') | int) > 1 }}"
     action:
-      - service: notify.phone
+      - service: notify.telegram_darkfox
         data_template:
           title: "Vejr Varsel: {{ states('sensor.dmi_aktuel_varsel') }}"
           message: "Kategori {{ state_attr('sensor.dmi_aktuel_varsel', 'category') }} varsel: {{ state_attr('sensor.dmi_aktuel_varsel', 'text') }}"
-          data:
-            icon: "https://goo.gl/xeetdy"
-            vibration: "0,500,500,500,500,500,500,500,500,500,500"
-
 
   - alias: update_dmi_weather_sensor
     initial_state: true

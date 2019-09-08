@@ -94,13 +94,13 @@ homeassistant:
 sensor:
   - platform: min_max
     type: min
-    name: Udenfor Temp
+    name: Udenfor Temperature
     entity_ids:
-      - sensor.udenfor_vest_temp
-      - sensor.udenfor_ost_temp
+      - sensor.udenfor_vest_temperature
+      - sensor.udenfor_ost_temperature
   - platform: min_max
     type: mean
-    name: Udenfor Pressure
+    name: Lufttryk
     entity_ids:
       - sensor.udenfor_vest_pressure
       - sensor.udenfor_ost_pressure
@@ -117,76 +117,81 @@ sensor:
         friendly_name: Bedroom
         temperature_sensor: sensor.sovevaerelse_temperatur
         humidity_sensor: sensor.bedroom_relative_humidity
-        pressure_sensor: sensor.udenfor_pressure
+        pressure_sensor: sensor.lufttryk
 
       toilet:
         friendly_name: Toilet
         temperature_sensor: sensor.badevaerelse_temperatur
         humidity_sensor: sensor.toilet_relative_humidity
-        pressure_sensor: sensor.udenfor_pressure
+        pressure_sensor: sensor.lufttryk
 
       kitchen:
         friendly_name: Kitchen
         temperature_sensor: sensor.kokken_temperatur
         humidity_sensor: sensor.kitchen_relative_humidity
-        pressure_sensor: sensor.udenfor_pressure
+        pressure_sensor: sensor.lufttryk
 
       livingroom:
         friendly_name: Living Room
         temperature_sensor: sensor.stue_temperatur
         humidity_sensor: sensor.livingroom_relative_humidity
-        pressure_sensor: sensor.udenfor_pressure
+        pressure_sensor: sensor.lufttryk
 
       office:
         friendly_name: Office
         temperature_sensor: sensor.kontor_temperatur
         humidity_sensor: sensor.office_relative_humidity
-        pressure_sensor: sensor.udenfor_pressure
+        pressure_sensor: sensor.lufttryk
 
       hallway:
         friendly_name: Hallway
         temperature_sensor: sensor.hallway_temperature
         humidity_sensor: sensor.hallway_relative_humidity
-        pressure_sensor: sensor.udenfor_pressure
+        pressure_sensor: sensor.lufttryk
 
+      hallway:
+        friendly_name: Hallway
+        temperature_sensor: sensor.klaedeskab_temperature
+        humidity_sensor: sensor.klaedeskab_humidity
+        pressure_sensor: sensor.lufttryk
 
   - platform: mold_indicator
     name: Toilet Mold Indicator
     indoor_temp_sensor: sensor.toilet_temperature
     indoor_humidity_sensor: sensor.toilet_relative_humidity
-    outdoor_temp_sensor: sensor.udenfor_temp
+    outdoor_temp_sensor: sensor.udenfor_temperature
     calibration_factor: 1.44
 
   - platform: statistics
-    name: bedroom_temperature
+    name: sovevaerelse_temperatur
     entity_id: sensor.sovevaerelse_temperatur
   - platform: statistics
     name: bedroom_relative_humidity
     entity_id: sensor.bedroom_relative_humidity
 
   - platform: statistics
-    name: toilet_temperature
+    name: badevaerelse_temperatur
     entity_id: sensor.badevaerelse_temperatur
   - platform: statistics
     name: toilet_relative_humidity
     entity_id: sensor.toilet_relative_humidity
 
   - platform: statistics
-    name: kitchen_temperature
+    name: kokken_temperatur
     entity_id: sensor.kokken_temperatur
   - platform: statistics
     name: kitchen_relative_humidity
     entity_id: sensor.kitchen_relative_humidity
 
   - platform: statistics
-    name: livingroom_temperature
+    name: stue_temperatur
     entity_id: sensor.stue_temperatur
   - platform: statistics
     name: livingroom_relative_humidity
     entity_id: sensor.livingroom_relative_humidity
 
   - platform: statistics
-    name: office_temperature
+    name: kontor_temperatur
     entity_id: sensor.kontor_temperatur
   - platform: statistics
     name: office_relative_humidity
@@ -200,14 +205,21 @@ sensor:
     entity_id: sensor.hallway_relative_humidity
 
   - platform: statistics
-    name: udenfor_temp
-    entity_id: sensor.udenfor_temp
+    name: klaedeskab_temperature
+    entity_id: sensor.klaedeskab_temperature
+  - platform: statistics
+    name: klaedeskab_humidity
+    entity_id: sensor.klaedeskab_humidity
+
+  - platform: statistics
+    name: udenfor_temperature
+    entity_id: sensor.udenfor_temperature
   - platform: statistics
     name: udenfor_humidity
     entity_id: sensor.udenfor_humidity
   - platform: statistics
-    name: udenfor_pressure
-    entity_id: sensor.udenfor_pressure
+    name: Lufttryk
+    entity_id: sensor.lufttryk
 
   - platform: template
     sensors:
@@ -216,3 +228,16 @@ sensor:
         friendly_name: 'Toilet Humidity Change'
         entity_id: sensor.toilet_relative_humidity_mean
         value_template: '{{ states.sensor.toilet_relative_humidity_mean.attributes.change | float }}'
+      
+      hoveddor_temp:
+        friendly_name: "Hoveddør Temperatur"
+        value_template: "{{ state_attr('binary_sensor.hoveddor', 'temperature') }}"
+      hoveddor_laas_temp:
+        friendly_name: "Hoveddør Lås Temperatur"
+        value_template: "{{ state_attr('binary_sensor.hoveddor_laas', 'temperature') }}"
+      opvaskemaskine_dor_temp:
+        friendly_name: "Opvaskemaskine Dør Temperatur"
+        value_template: "{{ state_attr('binary_sensor.opvaskemaskine_dor', 'temperature') }}"
+      opvaskemaskine_laek_temp:
+        friendly_name: "Opvaskemaskine Læk Temperatur"
+        value_template: "{{ state_attr('binary_sensor.opvaskemaskine_laek', 'temperature') }}"
