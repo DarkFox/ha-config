@@ -156,7 +156,7 @@ automation:
       - condition: template
         value_template: "{% if trigger.to_state.state == 'unknown' %} false {% else %} true {% endif %}"
     action:
-      - service: notify.phone
+      - service: notify.telegram_darkfox
         data:
           message: "Your External IP changed from {{ trigger.from_state.state }} to {{ trigger.to_state.state }}"
 
@@ -165,8 +165,12 @@ automation:
     trigger:
       platform: state
       entity_id: updater.updater
+    condition:
+      condition: state
+      entity_id: sun.sun
+      state: 'above_horizon'
     action:
-      - service: notify.phone
+      - service: notify.telegram_darkfox
         data:
           message: "New HASS update is available. Please update!"
 
@@ -184,7 +188,7 @@ automation:
       platform: homeassistant
       event: start
     action:
-      - service: notify.phone
+      - service: notify.telegram_darkfox
         data:
           message: "Home Assistant has successfully rebooted!"
 
