@@ -76,6 +76,7 @@ script:
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 255
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           entity_id:
@@ -126,6 +127,7 @@ script:
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 127
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           entity_id:
@@ -183,6 +185,7 @@ script:
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 127
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           entity_id:
@@ -212,17 +215,12 @@ script:
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
-          brightness: 24
-          rgb_color: [255, 0, 0]
-          entity_id:
-            - light.skrivebord_bar
-      - service: light.turn_on
-        data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 24
           rgb_color: [255, 0, 0]
           entity_id:
             - light.kontor_loftlys
+            - light.skrivebord_bar
 
   light_profile_office_off:
     sequence:
@@ -408,7 +406,6 @@ binary_sensor:
           - binary_sensor.pc_hobby_bevaegelse
           - input_boolean.office_activity_override
           - input_select.office_room_state
-          - binary_sensor.martin_pc_activity
           - input_select.latest_motion
           - binary_sensor.working_from_home
         value_template: >
@@ -416,7 +413,6 @@ binary_sensor:
             {{ 'true' if is_state('input_select.office_room_state', 'active') else 'false' }}
           {%- elif is_state('binary_sensor.office_sensor', 'on')
           or is_state('binary_sensor.pc_hobby_bevaegelse', 'on')
-          or is_state('binary_sensor.martin_pc_activity', 'on')
           or is_state('input_select.latest_motion', 'Office')
           or is_state('binary_sensor.working_from_home', 'on') -%}
             true
@@ -448,5 +444,4 @@ group:
       - input_select.latest_motion
       - binary_sensor.office_sensor
       - binary_sensor.pc_hobby_bevaegelse
-      - binary_sensor.martin_pc_activity
       - binary_sensor.working_from_home
