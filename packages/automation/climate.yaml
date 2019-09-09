@@ -1,4 +1,77 @@
+script:
+  thermostat_night_mode:
+    alias: "Termostater Nattilstand"
+    sequence:
+      - service: climate.set_temperature
+        data:
+          entity_id: group.thermostats
+          temperature: 19
+      - service: climate.set_temperature
+        data:
+          entity_id: climate.badevaerelse
+          temperature: 21
+
+  thermostat_day_mode:
+    alias: "Termostater Dagtilstand"
+    sequence:
+      - service: climate.set_temperature
+        data:
+          entity_id: group.thermostats
+          temperature: 21
+      - service: climate.set_temperature
+        data:
+          entity_id: climate.badevaerelse
+          temperature: 23
+
 automation:
+  - alias: Turn down heating at night on work night
+    trigger:
+      - platform: time
+        at: "21:00:00"
+    condition:
+      condition: state
+      entity_id: binary_sensor.workday_tomorrow
+      state: 'on'
+    action:
+      - service: script.turn_on
+        entity_id: script.thermostat_night_mode
+
+  - alias: Turn down heating at night on non work night
+    trigger:
+      - platform: time
+        at: "23:00:00"
+    condition:
+      condition: state
+      entity_id: binary_sensor.workday_tomorrow
+      state: 'off'
+    action:
+      - service: script.turn_on
+        entity_id: script.thermostat_night_mode
+
+  - alias: Turn up heating in the morning on workday
+    trigger:
+      - platform: time
+        at: "7:00:00"
+    condition:
+      condition: state
+      entity_id: binary_sensor.workday_sensor
+      state: 'on'
+    action:
+      - service: script.turn_on
+        entity_id: script.thermostat_day_mode
+
+  - alias: Turn up heating in the morning on non workday
+    trigger:
+      - platform: time
+        at: "8:30:00"
+    condition:
+      condition: state
+      entity_id: binary_sensor.workday_sensor
+      state: 'off'
+    action:
+      - service: script.turn_on
+        entity_id: script.thermostat_day_mode
+
   - alias: Turn off heating when away
     initial_state: true
     trigger:
@@ -22,7 +95,6 @@ automation:
       - service: homeassistant.turn_on
         data_template:
           entity_id: group.thermostats
-
 
   - alias: turn_off_bathroom_heating_with_window_open
     initial_state: true
