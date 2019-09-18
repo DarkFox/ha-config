@@ -1,15 +1,57 @@
-group:
-  martin_presence:
-    entities:
-      - binary_sensor.martin_presence
-      - binary_sensor.martin_presence_delayed
-      - binary_sensor.martin_presence_extended
-      - binary_sensor.activity_last10
-      - binary_sensor.activity_last30
+input_select:
+  martin_status:
+    name: Martin Status
+    options:
+      - Snart hjemme
+      - Hjemme
+      - Lige ankommet
+      - Lige gået
+      - Væk
+      - Udvidet væk
+
+proximity:
+  martin_to_home:
+    ignored_zones:
+      - graested
+      - foraeldre
+      - work
+    devices:
+      - device_tracker.google_maps_102040676821115196041
+    unit_of_measurement: m
+    tolerance: 100
+
+sensor:
+  - platform: template
+    sensors:
+      martin_to_home_dir_of_travel:
+        friendly_name: "Direction of Travel to Home"
+        value_template: "{{ state_attr('proximity.martin_to_home', 'dir_of_travel') }}"
+      martin_to_home_distance_change:
+        friendly_name: "Distance change to Home"
+        value_template: "{{ state_attr('sensor.proximity_martin_to_home_stats', 'change') }}"
+        unit_of_measurement: "m"
+
+  - platform: statistics
+    name: proximity_martin_to_home_stats
+    entity_id: proximity.martin_to_home
+    max_age:
+      minutes: 5
 
 binary_sensor:
   - platform: template
     sensors:
+      martin_home_soon:
+        friendly_name: "Martin Snart hjemme"
+        value_template: >
+          {{
+            states('proximity.martin_to_home')|float < 400
+            or
+            (
+              states('sensor.martin_to_home_distance_change')|float * 4
+            ) + states('proximity.martin_to_home')|float < 0
+          }}
+
+
       martin_presence_delayed:
         friendly_name: 'Martin Presence - Delayed'
         device_class: presence
@@ -54,6 +96,8 @@ binary_sensor:
         to_state: 'Bedroom'
 
 automation:
+    
+  ## Notifications ##
   - alias: presence notification
     trigger:
       - platform: state
@@ -68,3 +112,19 @@ automation:
       - service: notify.telegram_darkfox
         data_template:
           message: "Presence: {{ states('binary_sensor.martin_presence') }}"
+
+  - alias: home soon notification
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.martin_home_soon
+        from: 'on'
+        to: 'off'
+      - platform: state
+        entity_id: binary_sensor.martin_home_soon
+        from: 'off'
+        to: 'on'
+    action:
+      - service: notify.telegram_darkfox
+        data_template:
+          message: "Home Soon: {{ states('binary_sensor.martin_home_soon') }}"
+
