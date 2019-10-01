@@ -1,12 +1,3 @@
-group:
-  sleep_as_android:
-    name: 'Sleep as Android'
-    entities:
-      - sensor.sleep_tracker
-      - sensor.phone_alarm
-      - counter.snooze_counter
-      - input_select.sleep_state
-
 input_select:
   sleep_state:
     options:
@@ -15,6 +6,7 @@ input_select:
       - in bed
       - sleeping
       - paused
+      - smart wake
       - alarm
       - snoozing
       - waking
@@ -48,7 +40,54 @@ script:
             {%- endif -%}
 
 automation:
+  ###########################
+  # SLEEP AS ANDROID EVENTS #
+  ###########################
 
+  ## Possible Sleep as Android events
+  # - sleep_tracking_started
+  # - sleep_tracking_stopped
+  # - sleep_tracking_paused
+  # - sleep_tracking_resumed
+  # - alarm_snooze_clicked
+  # - alarm_snooze_cancelled
+  #     Only from Tasker!
+  # - time_to_bed_alarm_alert
+  #     fires when you get a bedtime notification
+  # - alarm_alert_start
+  # - alarm_alert_dismiss
+  #     fires when you dismiss alarm (after you solve CAPTCHA, if it’s set)
+  # - rem
+  #     fires when we estimate the start of REM phase
+  # - antisnoring
+  #     fires when we detect snoring
+  # - smart_period
+  #     fires 45 minutes before the smart wakeup period starts
+  # - lullaby
+  #     Only from Tasker!
+  
+  # - alias: Sleep as Android IFTTT event
+  #   initial_state: true
+  #   trigger:
+  #     platform: event
+  #     event_type: ifttt_webhook_received
+  #     event_data:
+  #       source: sleep_as_android
+  #   action:
+  #     - event: sleep_as_android
+  #       event_data_template:
+  #         value: '{{ trigger.event.data.event }}'
+  
+  - alias: Sleep as Android webhook event
+    initial_state: True
+    trigger:
+      platform: webhook
+      webhook_id: !secret sleep_as_android_webhook
+    action:
+      - event: sleep_as_android
+        event_data_template:
+          value: '{{ trigger.json.event }}'
+  
   #######################
   # SLEEP STATE MACHINE #
   #######################
@@ -56,9 +95,10 @@ automation:
   - alias: sleep_state_bedtime
     initial_state: true
     trigger:
-      platform: state
-      entity_id: sensor.phone_alarm
-      to: 'bedtime'
+      platform: event
+      event_type: sleep_as_android
+      event_data:
+        value: time_to_bed_alarm_alert
     condition:
       condition: and
       conditions:
@@ -110,9 +150,14 @@ automation:
   - alias: sleep_state_sleeping
     initial_state: true
     trigger:
-      platform: state
-      entity_id: sensor.sleep_tracker
-      to: 'tracking'
+      - platform: event
+        event_type: sleep_as_android
+        event_data:
+          value: sleep_tracking_started
+      - platform: event
+        event_type: sleep_as_android
+        event_data:
+          value: sleep_tracking_resumed
     condition:
       condition: and
       conditions:
@@ -137,13 +182,13 @@ automation:
           entity_id: input_select.martin_activity
           option: Sleeping
 
-
   - alias: sleep_state_sleeping_cancelled
     initial_state: true
     trigger:
-      platform: state
-      entity_id: sensor.sleep_tracker
-      to: 'stopped'
+      platform: event
+      event_type: sleep_as_android
+      event_data:
+        value: sleep_tracking_stopped
     condition:
       condition: and
       conditions:
@@ -152,7 +197,7 @@ automation:
           state: 'on'
         - condition: time
           after: "20:00:00"
-          before: "05:00:00"
+          before: "04:00:00"
         - condition: or
           conditions:
             - condition: state
@@ -170,9 +215,10 @@ automation:
   - alias: sleep_state_paused
     initial_state: true
     trigger:
-      - platform: state
-        entity_id: sensor.sleep_tracker
-        to: 'paused'
+      - platform: event
+        event_type: sleep_as_android
+        event_data:
+          value: sleep_tracking_paused
       - platform: state
         entity_id: binary_sensor.sovevaerelse_gulv_bevaegelse
         to: 'on'
@@ -201,9 +247,6 @@ automation:
         entity_id: binary_sensor.seng_bevaegelse
         to: 'on'
       - platform: state
-        entity_id: input_select.sleep_state
-        to: 'paused'
-      - platform: state
         entity_id: binary_sensor.sovevaerelse_gulv_bevaegelse
         to: 'off'
     condition:
@@ -227,12 +270,13 @@ automation:
         entity_id: input_select.sleep_state
         option: sleeping
 
-  - alias: sleep_state_alarm
+  - alias: sleep_state_smart_wake
     initial_state: true
     trigger:
-      platform: state
-      entity_id: sensor.phone_alarm
-      to: 'ringing'
+      platform: event
+      event_type: sleep_as_android
+      event_data:
+        value: smart_period
     condition:
       condition: and
       conditions:
@@ -254,14 +298,48 @@ automation:
       - service: input_select.select_option
         data:
           entity_id: input_select.sleep_state
+          option: smart wake
+
+  - alias: sleep_state_alarm
+    initial_state: true
+    trigger:
+      platform: event
+      event_type: sleep_as_android
+      event_data:
+        value: alarm_alert_start
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.martin_presence_delayed
+          state: 'on'
+        - condition: or
+          conditions:
+            - condition: state
+              entity_id: input_select.sleep_state
+              state: in bed
+            - condition: state
+              entity_id: input_select.sleep_state
+              state: sleeping
+            - condition: state
+              entity_id: input_select.sleep_state
+              state: paused
+            - condition: state
+              entity_id: input_select.sleep_state
+              state: smart wake
+    action:
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.sleep_state
           option: alarm
 
   - alias: sleep_state_snoozing
     initial_state: true
     trigger:
-      platform: state
-      entity_id: sensor.phone_alarm
-      to: 'snooze'
+      platform: event
+      event_type: sleep_as_android
+      event_data:
+        value: alarm_snooze_clicked
     condition:
       condition: and
       conditions:
@@ -272,6 +350,9 @@ automation:
           entity_id: input_select.sleep_state
           state: alarm
     action:
+      - service: counter.increment
+        data:
+          entity_id: counter.snooze_counter
       - service: input_select.select_option
         data:
           entity_id: input_select.sleep_state
@@ -280,9 +361,10 @@ automation:
   - alias: sleep_state_waking
     initial_state: true
     trigger:
-      platform: state
-      entity_id: sensor.phone_alarm
-      to: 'dismissed'
+      platform: event
+      event_type: sleep_as_android
+      event_data:
+        value: alarm_alert_dismiss
     condition:
       condition: or
       conditions:
@@ -297,6 +379,9 @@ automation:
         data:
           entity_id: input_select.sleep_state
           option: waking
+      - service: counter.reset
+        data:
+          entity_id: counter.snooze_counter
 
   - alias: sleep_state_awake
     initial_state: true
@@ -455,13 +540,19 @@ automation:
               input_select.light_profile
             {% endif %}
 
-  - alias: alarm_action
+  - alias: smart_wake_action
     initial_state: true
     trigger:
       platform: state
       entity_id: input_select.sleep_state
-      to: 'alarm'
+      to: 'smart wake'
     action:
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.scene_transition_time"
+          value: 600.0
+      - delay:
+          seconds: 1
       - service: input_select.select_option
         data_template:
           option: 'Night'
@@ -472,11 +563,22 @@ automation:
               input_select.light_profile
             {% endif %}
       - delay:
-          seconds: 10
+          seconds: 2
+      - service: automation.trigger
+        data:
+          entity_id: "automation.reset_scene_transition_time"
+
+  - alias: alarm_action
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_select.sleep_state
+      to: 'alarm'
+    action:
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
-          value: 600.0
+          value: 300.0
       - delay:
           seconds: 1
       - service: input_select.select_option
@@ -509,14 +611,22 @@ automation:
       - service: automation.trigger
         data:
           entity_id: "automation.reset_scene_transition_time"
+      - delay:
+          minutes: 2
+      - service: cover.set_cover_position
+        data:
+          entity_id: cover.sovevaerelse_rullegardin
+          position: 5
 
   - alias: snoozing_action
     initial_state: true
     trigger:
-      platform: state
-      entity_id: input_select.sleep_state
-      to: 'snoozing'
-      from: 'alarm'
+      - platform: state
+        entity_id: counter.snooze_counter
+    condition:
+      condition: numeric_state
+      entity_id: 'counter.snooze_counter'
+      above: 3
     action:
       - service: input_number.set_value
         data:
@@ -526,17 +636,40 @@ automation:
           seconds: 1
       - service: input_select.select_option
         data_template:
-          option: 'Ambient'
+          option: 'Dimmed'
           entity_id: >
             {% if is_state('input_boolean.guests', 'on') %}
               input_select.bedroom_light_profile
             {% else %}
               input_select.light_profile
             {% endif %}
-      - delay: 00:00:02
+      - delay:
+          seconds: 2
+      - service: media_player.volume_set
+        data_template:
+          entity_id: 'media_player.sovevaerelse_soundbar'
+          volume_level: 0.30
       - service: automation.trigger
         data:
           entity_id: "automation.reset_scene_transition_time"
+      - delay:
+          minutes: 2
+      - service: cover.set_cover_position
+        data:
+          entity_id: cover.sovevaerelse_rullegardin
+          position: 7
+      - delay:
+          minutes: 2
+      - service: cover.set_cover_position
+        data:
+          entity_id: cover.sovevaerelse_rullegardin
+          position: 10
+      - delay:
+          minutes: 2
+      - service: cover.set_cover_position
+        data:
+          entity_id: cover.sovevaerelse_rullegardin
+          position: 15
 
   - alias: waking_action
     initial_state: true
@@ -582,6 +715,10 @@ automation:
       - service: automation.trigger
         data:
           entity_id: "automation.reset_scene_transition_time"
+      - service: cover.set_cover_position
+        data:
+          entity_id: cover.sovevaerelse_rullegardin
+          position: 25
 
   - alias: awake_activity
     initial_state: true
@@ -591,6 +728,10 @@ automation:
       to: 'awake'
       from: 'waking'
     action:
+      - service: cover.set_cover_position
+        data:
+          entity_id: cover.sovevaerelse_rullegardin
+          position: 0
       - service: input_boolean.turn_on
         data:
           entity_id:
@@ -636,12 +777,8 @@ automation:
           seconds: 2
       - service: media_player.volume_set
         data_template:
-          entity_id: 'media_player.sovevaerelse_soundbar'
-          volume_level: 0.3
-      - service: media_player.volume_set
-        data_template:
           entity_id: 'media_player.ost_hojttalere'
-          volume_level: 0.4
+          volume_level: 0.3
       - service: automation.trigger
         data:
           entity_id: "automation.reset_scene_transition_time"
