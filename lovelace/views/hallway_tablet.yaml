@@ -5,7 +5,7 @@ panel: true
 cards:
   - type: vertical-stack
     cards:
-      - !include ../cards/media_players/conditional_groups.yaml
+      # - !include ../cards/media_players/conditional_groups.yaml
 
       - type: horizontal-stack
         cards:
@@ -24,7 +24,31 @@ cards:
                   }
                 entities:
                   - entity: input_select.theme
-          
+
+              - !include ../cards/media_players/playlist_controls.yaml
+
+              - !include ../cards/thermostats.yaml
+
+              - type: horizontal-stack
+                cards:
+                  - !include ../cards/mailbox_button.yaml
+                  - !include ../cards/hoveddor_laas.yaml
+
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.guests
+                    state: 'off'
+                card: !include ../cards/mode_toggles.yaml
+
+          - type: vertical-stack
+            cards:
+
+              - !include ../cards/weather/simple_weather.yaml
+
+              - !include ../cards/weather/dmi_weather_warnings.yaml
+
+              - !include ../cards/weather/dmi_weather.yaml
+              
               - !include ../cards/s_train_status.yaml
             
               - type: conditional
@@ -40,27 +64,3 @@ cards:
                 card:
                   type: markdown
                   content: !secret ui_wifi_content
-
-          - type: vertical-stack
-            cards:
-
-              - type: horizontal-stack
-                cards:
-                  - !include ../cards/mailbox_button.yaml
-                  - !include ../cards/hoveddor_laas.yaml
-
-              - !include ../cards/media_players/playlist_controls.yaml
-
-              - !include ../cards/weather/temp_graph.yaml
-
-              - !include ../cards/weather/simple_weather.yaml
-
-              - !include ../cards/weather/dmi_weather_warnings.yaml
-
-              - !include ../cards/weather/dmi_weather.yaml
-              
-              - type: conditional
-                conditions:
-                  - entity: input_boolean.guests
-                    state: 'off'
-                card: !include ../cards/mode_toggles.yaml

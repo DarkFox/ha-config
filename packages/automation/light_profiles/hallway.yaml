@@ -72,7 +72,7 @@ script:
       - service: light.turn_on
         data:
           entity_id: light.hallway_tablet
-          brightness: 0
+          brightness: 1
 
   light_profile_hallway_off:
     sequence:
@@ -138,7 +138,7 @@ light:
   - platform: template
     lights:
       hallway_activity_override:
-        friendly_name: Hallway Activity Override
+        friendly_name: Light Hallway Activity Override
         icon_template: mdi:checkbox-multiple-marked
         value_template: "{{ is_state('input_boolean.hallway_activity_override', 'on') }}"
         turn_on:
@@ -151,7 +151,7 @@ light:
             entity_id: input_boolean.hallway_activity_override
 
       hallway_separate_light_profile:
-        friendly_name: Hallway Separate Light Profile
+        friendly_name: Light Hallway Separate Light Profile
         icon_template: mdi:heart-broken
         value_template: "{{ is_state('input_boolean.hallway_separate_light_profile', 'on') }}"
         turn_on:
@@ -263,6 +263,7 @@ binary_sensor:
           - binary_sensor.moved_from_office_to_living_room
           - binary_sensor.moved_from_bed
           - binary_sensor.bathroom_activity
+          - binary_sensor.bathroom_door_activity
         value_template: >
           {%- if is_state('input_boolean.hallway_activity_override', 'on') 
           or is_state('input_boolean.hallway_separate_light_profile', 'on')
@@ -270,7 +271,8 @@ binary_sensor:
             false
           {%- elif is_state('binary_sensor.moved_from_office_to_living_room', 'on')
           or is_state('binary_sensor.moved_from_bed', 'on')
-          or is_state('binary_sensor.bathroom_activity', 'on') -%}
+          or is_state('binary_sensor.bathroom_activity', 'on')
+          or is_state('binary_sensor.bathroom_door_activity', 'on') -%}
             true
           {% else -%}
             false

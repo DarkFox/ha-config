@@ -1,3 +1,33 @@
+input_boolean:
+  living_room_soundbar_night_mode_state:
+    icon: mdi:weather-night
+
+switch:
+  - platform: template
+    switches:
+      living_room_soundbar_night_mode:
+        friendly_name: "Stue Soundbar Nat Tilstand"
+        icon_template: mdi:weather-night
+        value_template: "{{ is_state('input_boolean.living_room_soundbar_night_mode_state', 'on') }}"
+        turn_on:
+          - service: media_player.songpal_set_sound_setting
+            data:
+              entity_id: media_player.stue_soundbar_songpal
+              name: "nightMode"
+              value: "on"
+          - service: input_boolean.turn_on
+            data:
+              entity_id: input_boolean.living_room_soundbar_night_mode_state
+        turn_off:
+          - service: media_player.songpal_set_sound_setting
+            data:
+              entity_id: media_player.stue_soundbar_songpal
+              name: "nightMode"
+              value: "off"
+          - service: input_boolean.turn_off
+            data:
+              entity_id: input_boolean.living_room_soundbar_night_mode_state
+
 automation:
   - alias: stue_chromecast_off_with_tv
     initial_state: true
@@ -39,9 +69,11 @@ automation:
           entity_id: media_player.stue_soundbar_songpal
           name: "nightMode"
           value: "on"
-      - condition: numeric_state
-        entity_id: sensor.temperature
-        above: 0.2
+      - service: input_boolean.turn_on
+        data:
+          entity_id: input_boolean.living_room_soundbar_night_mode_state
+      - condition: template
+        value_template: "{{ state_attr('media_player.stue_soundbar_songpal', 'volume_level')|float > 0.18 }}"
       - service: media_player.volume_set
         data:
           entity_id: media_player.stue_soundbar_songpal
@@ -70,6 +102,9 @@ automation:
           entity_id: media_player.stue_soundbar_songpal
           name: "nightMode"
           value: "off"
+      - service: input_boolean.turn_off
+        data:
+          entity_id: input_boolean.living_room_soundbar_night_mode_state
 
   - alias: livingroom_media_active_trigger
     initial_state: true

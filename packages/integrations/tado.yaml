@@ -11,6 +11,22 @@ homeassistant:
     sensor.badevaerelse_temperatur:
       icon: mdi:thermometer
 
+script:
+  increase_temperature:
+    alias: Increase Temperature
+    sequence:
+      - service: climate.set_temperature
+        data_template:
+          entity_id: "{{ entity }}"
+          temperature: "{{ state_attr(entity, 'temperature')|float + 1.0 }}"
+  decrease_temperature:
+    alias: Decrease Temperature
+    sequence:
+      - service: climate.set_temperature
+        data_template:
+          entity_id: "{{ entity }}"
+          temperature: "{{ state_attr(entity, 'temperature')|float - 1.0 }}"
+
 sensor:
   - platform: template
     sensors:
@@ -113,6 +129,22 @@ sensor:
         unit_of_measurement: "°C"
         entity_id: climate.badevaerelse
         value_template: "{{ state_attr('climate.badevaerelse', 'temperature') }}"
+
+      stue_thermostat_heating:
+        friendly_name: "Stue Termostat Varmer"
+        value_template: "{{ '1' if is_state('sensor.stue_thermostat_current_action', 'heating') else '0' }}"
+      kontor_thermostat_heating:
+        friendly_name: "Kontor Termostat Varmer"
+        value_template: "{{ '1' if is_state('sensor.kontor_thermostat_current_action', 'heating') else '0' }}"
+      sovevaerelse_thermostat_heating:
+        friendly_name: "Soveværelse Termostat Varmer"
+        value_template: "{{ '1' if is_state('sensor.sovevaerelse_thermostat_current_action', 'heating') else '0' }}"
+      kokken_thermostat_heating:
+        friendly_name: "Køkken Termostat Varmer"
+        value_template: "{{ '1' if is_state('sensor.kokken_thermostat_current_action', 'heating') else '0' }}"
+      badevaerelse_thermostat_heating:
+        friendly_name: "Badeværelse Termostat Varmer"
+        value_template: "{{ '1' if is_state('sensor.badevaerelse_thermostat_current_action', 'heating') else '0' }}"
 
   - platform: min_max
     type: mean

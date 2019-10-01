@@ -1,0 +1,54 @@
+input_boolean:
+  show_climate_sensors:
+    name: Vis Klimasensorer
+    icon: mdi:home-thermometer
+  show_thermostats:
+    name: Vis Termostater
+    icon: mdi:thermostat
+
+
+automation:
+  - alias: switch_climate_sensors_thermostats
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_boolean.show_climate_sensors
+        to: 'on'
+      - platform: state
+        entity_id: input_boolean.show_thermostats
+        to: 'on'
+    action:
+      - service: input_boolean.turn_off
+        data_template:
+          entity_id: >
+            {% if (trigger.entity_id == 'input_boolean.show_climate_sensors') -%}
+              input_boolean.show_thermostats
+            {% else -%}
+              input_boolean.show_climate_sensors
+            {% endif -%}
+
+  - alias: close_climate_sensors
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_boolean.show_climate_sensors
+        to: 'on'
+        for:
+          seconds: 30
+    action:
+      - service: input_boolean.toggle
+        data:
+          entity_id: input_boolean.show_climate_sensors
+
+  - alias: close_thermostats
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_boolean.show_thermostats
+        to: 'on'
+        for:
+          seconds: 30
+    action:
+      - service: input_boolean.toggle
+        data:
+          entity_id: input_boolean.show_thermostats

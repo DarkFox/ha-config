@@ -1,0 +1,84 @@
+- random:
+- strobe:
+- flicker:
+
+- lambda:
+    name: 4 Color Rotation
+    update_interval: 1s
+    lambda: |-
+      static int state = 0;
+      auto call = id($devicename).turn_on();
+      // Transtion of 1000ms = 1s
+      call.set_transition_length(1000);
+      if (state == 0) {
+        call.set_rgb(1.0, 1.0, 1.0);
+      } else if (state == 1) {
+        call.set_rgb(1.0, 0.0, 1.0);
+      } else if (state == 2) {
+        call.set_rgb(0.0, 0.0, 1.0);
+      } else {
+        call.set_rgb(1.0, 0.0, 0.0);
+      }
+      call.perform();
+      state += 1;
+      if (state == 4)
+        state = 0;
+
+- strobe:
+    name: 3 Color Strobe
+    colors:
+      - state: True
+        brightness: 100%
+        red:  100%
+        green: 0%
+        blue: 0%
+        duration: 500ms
+      - state: True
+        brightness: 100%
+        red: 0%
+        green: 0%
+        blue: 100%
+        duration: 500ms
+      - state: True
+        brightness: 100%
+        red: 0%
+        green: 100%
+        blue: 0%
+        duration: 500ms
+
+- strobe:
+    name: Lightning
+    colors:
+      - state: True
+        brightness: 100%
+        red:  90%
+        green: 90%
+        blue: 100%
+        duration: 50ms
+      - state: False
+        duration: 50ms 
+      - state: True
+        brightness: 100%
+        red:  90%
+        green: 90%
+        blue: 100%
+        duration: 160ms
+      - state: False
+        duration: 50ms              
+      - state: True
+        brightness: 100%
+        red:  90%
+        green: 90%
+        blue: 100%
+        duration: 50ms
+      - state: False
+        duration: 3000ms 
+
+
+- addressable_rainbow:
+- addressable_color_wipe:
+- addressable_scan:
+- addressable_twinkle:
+- addressable_random_twinkle:
+- addressable_fireworks:
+- addressable_flicker:

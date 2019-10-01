@@ -35,6 +35,8 @@ script:
           entity_id:
             - light.office_shelf
             - light.skrivebord_bar
+            - light.pc_skaerme
+            - light.blink1
       # IKEA lights
       - service: light.turn_on
         data_template:
@@ -73,6 +75,13 @@ script:
           entity_id:
             - light.kontor_loftlys
             - light.lysestager
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 255
+          hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
+          entity_id:
+            - light.office_shelf
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
@@ -81,7 +90,8 @@ script:
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           entity_id:
             - light.skrivebord_bar
-            - light.office_shelf
+            - light.pc_skaerme
+            - light.blink1
       # IKEA lights
       - service: light.turn_on
         data_template:
@@ -119,20 +129,34 @@ script:
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 127
+          brightness: 172
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           entity_id:
             - light.kontor_loftlys
-            - light.lysestager
-      # Secondary RGB lights
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 127
+          hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
+          entity_id:
+            - light.lysestager
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 127
+          hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
+          entity_id:
+            - light.office_shelf
+      # Secondary RGB lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 172
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           entity_id:
             - light.skrivebord_bar
-            - light.office_shelf
+            - light.pc_skaerme
+            - light.blink1
       # IKEA lights
       - service: light.turn_on
         data_template:
@@ -177,11 +201,24 @@ script:
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 42
+          brightness: 86
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           entity_id:
             - light.kontor_loftlys
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 42
+          hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
+          entity_id:
             - light.lysestager
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 96
+          hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
+          entity_id:
+            - light.office_shelf
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
@@ -190,7 +227,8 @@ script:
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           entity_id:
             - light.skrivebord_bar
-            - light.office_shelf
+            - light.pc_skaerme
+            - light.blink1
 
   light_profile_office_night:
     sequence:
@@ -203,24 +241,30 @@ script:
             - light.office_desk_spots
             - light.hobbybord_hylder
             - light.hobbybord
-      # Primary RGB lights
+            - light.blink1
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 16
           rgb_color: [255, 0, 0]
           entity_id:
-            - light.office_shelf
             - light.lysestager
-      # Secondary RGB lights
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           brightness: 24
           rgb_color: [255, 0, 0]
           entity_id:
+            - light.office_shelf
             - light.kontor_loftlys
             - light.skrivebord_bar
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 64
+          rgb_color: [255, 0, 0]
+          entity_id:
+            - light.pc_skaerme
 
   light_profile_office_off:
     sequence:
@@ -299,7 +343,7 @@ light:
   - platform: template
     lights:
       office_activity_override:
-        friendly_name: Office Activity Override
+        friendly_name: Light Office Activity Override
         icon_template: mdi:checkbox-multiple-marked
         value_template: "{{ is_state('input_boolean.office_activity_override', 'on') }}"
         turn_on:
@@ -312,7 +356,7 @@ light:
             entity_id: input_boolean.office_activity_override
 
       office_separate_light_profile:
-        friendly_name: Office Separate Light Profile
+        friendly_name: Light Office Separate Light Profile
         icon_template: mdi:heart-broken
         value_template: "{{ is_state('input_boolean.office_separate_light_profile', 'on') }}"
         turn_on:

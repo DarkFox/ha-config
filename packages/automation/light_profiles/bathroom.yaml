@@ -9,6 +9,14 @@ script:
           color_temp: 153
           entity_id:
             - light.badevaerelse
+      # Secondary RGB lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ transition_time or 0.5 | float }}"
+          brightness: 255
+          hs_color: [15, 24]
+          entity_id:
+            - light.badevaerelse_hylde
       - service: light.turn_on
         data_template:
           entity_id: light.bathroom_tablet
@@ -24,6 +32,14 @@ script:
           color_temp: 250
           entity_id:
             - light.badevaerelse
+      # Secondary RGB lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ transition_time or 0.5 | float }}"
+          brightness: 255
+          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
+          entity_id:
+            - light.badevaerelse_hylde
       - service: light.turn_on
         data_template:
           entity_id: light.bathroom_tablet
@@ -39,6 +55,14 @@ script:
           color_temp: 370
           entity_id:
             - light.badevaerelse
+      # Secondary RGB lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ transition_time or 0.5 | float }}"
+          brightness: 172
+          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
+          entity_id:
+            - light.badevaerelse_hylde
       - service: light.turn_on
         data_template:
           entity_id: light.bathroom_tablet
@@ -54,6 +78,14 @@ script:
           color_temp: 370
           entity_id:
             - light.badevaerelse
+      # Secondary RGB lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ transition_time or 0.5 | float }}"
+          brightness: 127
+          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
+          entity_id:
+            - light.badevaerelse_hylde
       - service: light.turn_on
         data_template:
           entity_id: light.bathroom_tablet
@@ -64,10 +96,18 @@ script:
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 24
-          color_temp: 500
+          brightness: 2
+          rgb_color: [255,0,0]
           entity_id:
             - light.badevaerelse
+      # Secondary RGB lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ transition_time or 0.5 | float }}"
+          brightness: 96
+          rgb_color: [255,0,0]
+          entity_id:
+            - light.badevaerelse_hylde
       - service: light.turn_on
         data_template:
           entity_id: light.bathroom_tablet
@@ -90,12 +130,11 @@ script:
 
   light_profile_bathroom_off:
     sequence:
-      # Primary RGB lights
       - service: light.turn_off
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
           entity_id:
-            - light.badevaerelse
+            - light.badevaerelse_lys
             - light.bathroom_tablet
 
 input_boolean:
@@ -136,7 +175,7 @@ light:
   - platform: template
     lights:
       bathroom_activity_override:
-        friendly_name: Bathroom Activity Override
+        friendly_name: Light Bathroom Activity Override
         icon_template: mdi:checkbox-multiple-marked
         value_template: "{{ is_state('input_boolean.bathroom_activity_override', 'on') }}"
         turn_on:
@@ -149,7 +188,7 @@ light:
             entity_id: input_boolean.bathroom_activity_override
 
       bathroom_separate_light_profile:
-        friendly_name: Bathroom Separate Light Profile
+        friendly_name: Light Bathroom Separate Light Profile
         icon_template: mdi:heart-broken
         value_template: "{{ is_state('input_boolean.bathroom_separate_light_profile', 'on') }}"
         turn_on:
@@ -244,10 +283,12 @@ binary_sensor:
           - input_select.bathroom_room_state
           - input_select.latest_motion
           - input_select.martin_activity
+          - binary_sensor.bathroom_door_activity
         value_template: >
           {%- if is_state('input_boolean.bathroom_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.bathroom_room_state', 'active') else 'false' }}
           {%- elif is_state('binary_sensor.toilet_sensor', 'on')
+          or is_state('binary_sensor.bathroom_door_activity', 'on')
           or is_state('input_select.latest_motion', 'Bathroom')
           or is_state('input_select.martin_activity', 'Showering')  -%}
             true
