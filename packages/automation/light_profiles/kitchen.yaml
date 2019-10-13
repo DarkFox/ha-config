@@ -9,6 +9,14 @@ script:
           color_temp: 250
           entity_id:
             - light.kokken_loftlys
+      # Secondary lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ transition_time or 0.5 | float }}"
+          brightness: 255
+          hs_color: [15, 43]
+          entity_id:
+            - light.kokken_gulv
       # Switchable Lights
       - service: light.turn_on
         data:
@@ -43,6 +51,14 @@ script:
           color_temp: 300
           entity_id:
             - light.kokken_loftlys
+      # Secondary lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ transition_time or 0.5 | float }}"
+          brightness: 255
+          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
+          entity_id:
+            - light.kokken_gulv
       # Switchable Lights
       - service: light.turn_on
         data:
@@ -69,12 +85,22 @@ script:
 
   light_profile_kitchen_dimmed:
     sequence:
-      # Off lights
-      - service: light.turn_off
+      # Primary RGB lights
+      - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 48
+          hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           entity_id:
             - light.kokken_loftlys
+      # Secondary lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ transition_time or 0.5 | float }}"
+          brightness: 127
+          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
+          entity_id:
+            - light.kokken_gulv
       # Switchable Lights
       - service: light.turn_on
         data:
@@ -112,6 +138,14 @@ script:
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           entity_id:
             - light.kokken_loftlys
+      # Secondary lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ transition_time or 0.5 | float }}"
+          brightness: 48
+          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
+          entity_id:
+            - light.kokken_gulv
       # Off lights
       - service: light.turn_off
         data_template:
@@ -136,6 +170,14 @@ script:
           rgb_color: [255, 0, 0]
           entity_id:
             - light.kokken_loftlys
+      # Secondary lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ transition_time or 0.5 | float }}"
+          brightness: 24
+          rgb_color: [255, 0, 0]
+          entity_id:
+            - light.kokken_gulv
       # Off lights
       - service: light.turn_off
         data_template:
@@ -167,6 +209,7 @@ script:
           effect: "colorloop"
           entity_id:
             - light.kokken_loftlys
+            - light.kokken_gulv
       # Off lights
       - service: light.turn_off
         data:
