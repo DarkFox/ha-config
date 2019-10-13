@@ -3,13 +3,9 @@ binary_sensor:
     sensors:
       thermostats_night_mode:
         friendly_name: "Termostater Nattilstand"
-        entity_id: sensor.time
+        entity_id: input_select.sleep_state
         value_template: >
-          {% if now().hour >= 21 and is_state('binary_sensor.workday_tomorrow', 'on') -%}
-            True
-          {% elif now().hour >= 23 and is_state('binary_sensor.workday_tomorrow', 'off') -%}
-            True
-          {% elif now().hour <= 7 -%}
+          {% if is_state('input_boolean.bedtime', 'on') -%}
             True
           {% else %}
             False
@@ -19,89 +15,75 @@ binary_sensor:
         friendly_name: "Termostater Tændt"
         entity_id: 
           - binary_sensor.martin_presence_delayed
+          - binary_sensor.martin_home_soon
         value_template: >
-          {% if is_state('binary_sensor.martin_presence_delayed', 'on') or is_state('binary_sensor.martin_home_soon', 'on') -%}
-            True
-          {% else %}
-            False
-          {% endif %}
+          {{ (is_state('binary_sensor.martin_presence_delayed', 'on') or is_state('binary_sensor.martin_home_soon', 'on')) }}
 
 automation:
-  - alias: Thermostat Night Mode
+  - alias: Thermostat Temperature Change
     trigger:
-      - platform: event
-        event_type: sleep_as_android
-        event_data:
-          value: time_to_bed_alarm_alert
-    #   - platform: state
-    #     entity_id: binary_sensor.thermostats_night_mode
-    #     to: 'on'
-    #   - platform: state
-    #     entity_id: binary_sensor.home_assistant_loaded
-    #     to: 'on'
-    # condition:
-    #   condition: state
-    #   entity_id: binary_sensor.thermostats_night_mode
-    #   state: 'on'
+      - platform: state
+        entity_id:
+          - binary_sensor.thermostats_night_mode
+          - binary_sensor.martin_pc
+          - device_tracker.sony_stue_tv
+      - platform: state
+        entity_id: binary_sensor.home_assistant_loaded
+        to: 'on'
     action:
       - service: climate.set_temperature
-        data:
+        data_template:
           entity_id: climate.badevaerelse
-          temperature: 21
+          temperature: |
+            {% if is_state('binary_sensor.thermostats_night_mode', 'off') %}
+              23
+            {% else %}
+              21
+            {% endif %}
       - service: climate.set_temperature
-        data:
+        data_template:
           entity_id: climate.kontor
-          temperature: 15
+          temperature:  |
+            {% if is_state('binary_sensor.thermostats_night_mode', 'off') %}
+              {% if is_state('binary_sensor.martin_pc', 'on') %}
+                24
+              {% else %}
+                21
+              {% endif %}
+            {% else %}
+              18
+            {% endif %}
       - service: climate.set_temperature
-        data:
+        data_template:
           entity_id: climate.stue
-          temperature: 15
+          temperature:  |
+            {% if is_state('binary_sensor.thermostats_night_mode', 'off') %}
+              {% if is_state('device_tracker.sony_stue_tv', 'home') %}
+                24
+              {% else %}
+                21
+              {% endif %}
+            {% else %}
+              18
+            {% endif %}
       - service: climate.set_temperature
-        data:
+        data_template:
           entity_id: climate.kokken
-          temperature: 19
+          temperature:  |
+            {% if is_state('binary_sensor.thermostats_night_mode', 'off') %}
+              21
+            {% else %}
+              18
+            {% endif %}
       - service: climate.set_temperature
-        data:
+        data_template:
           entity_id: climate.sovevaerelse
-          temperature: 19
-
-  - alias: Thermostat Day Mode
-    trigger:
-      - platform: event
-        event_type: sleep_as_android
-        event_data:
-          value: smart_period
-    #   - platform: state
-    #     entity_id: binary_sensor.thermostats_night_mode
-    #     to: 'off'
-    #   - platform: state
-    #     entity_id: binary_sensor.home_assistant_loaded
-    #     to: 'on'
-    # condition:
-    #   condition: state
-    #   entity_id: binary_sensor.thermostats_night_mode
-    #   state: 'off'
-    action:
-      - service: climate.set_temperature
-        data:
-          entity_id: climate.badevaerelse
-          temperature: 23
-      - service: climate.set_temperature
-        data:
-          entity_id: climate.kontor
-          temperature: 21
-      - service: climate.set_temperature
-        data:
-          entity_id: climate.stue
-          temperature: 21
-      - service: climate.set_temperature
-        data:
-          entity_id: climate.kokken
-          temperature: 21
-      - service: climate.set_temperature
-        data:
-          entity_id: climate.sovevaerelse
-          temperature: 21
+          temperature:  |
+            {% if is_state('binary_sensor.thermostats_night_mode', 'off') %}
+              21
+            {% else %}
+              22
+            {% endif %}
 
   - alias: Turn off heating when away
     initial_state: true
@@ -110,6 +92,18 @@ automation:
         entity_id: binary_sensor.thermostats_on
         from: 'on'
         to: 'off'
+      - platform: state
+        entity_id:
+          - climate.badevaerelse
+          - climate.kokken
+          - climate.sovevaerelse
+          - climate.kontor
+          - climate.stue
+        from: 'unavailable'
+    condition:
+      condition: state
+      entity_id: binary_sensor.thermostats_on
+      state: 'off'
     action:
       - service: homeassistant.turn_off
         data_template:
@@ -122,6 +116,18 @@ automation:
         entity_id: binary_sensor.thermostats_on
         from: 'off'
         to: 'on'
+      - platform: state
+        entity_id:
+          - climate.badevaerelse
+          - climate.kokken
+          - climate.sovevaerelse
+          - climate.kontor
+          - climate.stue
+        from: 'unavailable'
+    condition:
+      condition: state
+      entity_id: binary_sensor.thermostats_on
+      state: 'on'
     action:
       - service: homeassistant.turn_on
         data_template:

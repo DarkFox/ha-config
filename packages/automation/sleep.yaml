@@ -1,3 +1,8 @@
+input_boolean:
+  bedtime:
+    name: Sengetid
+    icon: mdi:hotel
+
 input_select:
   sleep_state:
     options:
@@ -92,18 +97,59 @@ automation:
   # SLEEP STATE MACHINE #
   #######################
 
-  - alias: sleep_state_bedtime
+  - alias: bedtime_on
     initial_state: true
     trigger:
       platform: event
       event_type: sleep_as_android
       event_data:
         value: time_to_bed_alarm_alert
+    action:
+      service: input_boolean.turn_on
+      data:
+        entity_id: input_boolean.bedtime
+
+  - alias: bedtime_off
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: sleep_as_android
+        event_data:
+          value: smart_period
+      - platform: event
+        event_type: sleep_as_android
+        event_data:
+          value: alarm_alert_start
+      - platform: event
+        event_type: sleep_as_android
+        event_data:
+          value: alarm_snooze_clicked
+      - platform: event
+        event_type: sleep_as_android
+        event_data:
+          value: alarm_alert_dismiss
+    action:
+      service: input_boolean.turn_off
+      data:
+        entity_id: input_boolean.bedtime
+
+  - alias: sleep_state_bedtime
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.martin_presence_delayed
+        to: 'on'
+      - platform: state
+        entity_id: input_boolean.bedtime
+        to: 'on'
     condition:
       condition: and
       conditions:
         - condition: state
           entity_id: binary_sensor.martin_presence_delayed
+          state: 'on'
+        - condition: state
+          entity_id: input_boolean.bedtime
           state: 'on'
         - condition: state
           entity_id: input_select.sleep_state
