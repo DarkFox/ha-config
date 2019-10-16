@@ -92,6 +92,10 @@ automation:
       - event: sleep_as_android
         event_data_template:
           value: '{{ trigger.json.event }}'
+      - service: persistent_notification.create
+        data_template:
+          message: "Event: {{ trigger.json.event }}"
+          title: "Sleep As Android Event"
   
   #######################
   # SLEEP STATE MACHINE #
@@ -712,10 +716,6 @@ automation:
           position: 10
       - delay:
           minutes: 2
-      - service: cover.set_cover_position
-        data:
-          entity_id: cover.sovevaerelse_rullegardin
-          position: 15
 
   - alias: waking_action
     initial_state: true
@@ -764,7 +764,7 @@ automation:
       - service: cover.set_cover_position
         data:
           entity_id: cover.sovevaerelse_rullegardin
-          position: 25
+          position: 10
 
   - alias: awake_activity
     initial_state: true
