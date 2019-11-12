@@ -18,6 +18,7 @@ script:
           effect: 'None'
           entity_id:
             - light.office_desk_spots
+            - light.office_door_spots
             - light.hobbybord_hylder
             - light.hobbybord
       # Primary RGB lights
@@ -54,10 +55,17 @@ script:
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 255
+          brightness: 200
           effect: 'None'
           entity_id:
             - light.office_desk_spots
+            - light.office_door_spots
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 255
+          effect: 'None'
+          entity_id:
             - light.hobbybord_hylder
             - light.hobbybord
       # Primary RGB lights
@@ -96,14 +104,14 @@ script:
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 127
+          brightness: 172
           entity_id:
             - light.kontor_spots
       - delay:
           milliseconds: "{{ ((((transition_time or 0.5) | float) + 2.0) * 1000) | int }}"
       - service: light.turn_on
         data_template:
-          brightness: 127
+          brightness: 172
           color_temp: 390
           entity_id:
             - light.kontor_spots
@@ -118,6 +126,7 @@ script:
           effect: 'None'
           entity_id:
             - light.office_desk_spots
+            - light.office_door_spots
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
@@ -158,19 +167,9 @@ script:
             - light.pc_skaerme
             - light.blink1
       # IKEA lights
-      - service: light.turn_on
+      - service: light.turn_off
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 1
-          entity_id:
-            - light.kontor_spots
-      - delay:
-          milliseconds: "{{ ((((transition_time or 0.5) | float) + 2.0) * 1000) | int }}"
-      - service: light.turn_on
-        data_template:
-          transition: 0
-          brightness: 1
-          color_temp: 500
+          transition: "{{ (transition_time or 0.5) | float }}" 
           entity_id:
             - light.kontor_spots
 
@@ -187,10 +186,11 @@ script:
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 24
+          brightness: 16
           effect: 'None'
           entity_id:
             - light.office_desk_spots
+            - light.office_door_spots
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
@@ -239,6 +239,7 @@ script:
           entity_id:
             - light.kontor_spots
             - light.office_desk_spots
+            - light.office_door_spots
             - light.hobbybord_hylder
             - light.hobbybord
             - light.blink1
@@ -284,6 +285,7 @@ script:
           entity_id:
             - light.kontor_spots
             - light.office_desk_spots
+            - light.office_door_spots
             - light.hobbybord_hylder
             - light.hobbybord_lampe
       # Dimmable Lights
@@ -451,14 +453,12 @@ binary_sensor:
           - input_boolean.office_activity_override
           - input_select.office_room_state
           - input_select.latest_motion
-          - binary_sensor.working_from_home
         value_template: >
           {%- if is_state('input_boolean.office_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.office_room_state', 'active') else 'false' }}
           {%- elif is_state('binary_sensor.office_sensor', 'on')
           or is_state('binary_sensor.pc_hobby_bevaegelse', 'on')
-          or is_state('input_select.latest_motion', 'Office')
-          or is_state('binary_sensor.working_from_home', 'on') -%}
+          or is_state('input_select.latest_motion', 'Office') -%}
             true
           {%- else -%}
             false
