@@ -3,13 +3,9 @@ binary_sensor:
     sensors:
       thermostats_night_mode:
         friendly_name: "Termostater Nattilstand"
-        entity_id: input_select.sleep_state
+        entity_id: input_boolean.bedtime
         value_template: >
-          {% if is_state('input_boolean.bedtime', 'on') -%}
-            True
-          {% else %}
-            False
-          {% endif %}
+          {{ is_state('input_boolean.bedtime', 'on') }}
 
       thermostats_on:
         friendly_name: "Termostater Tændt"
@@ -35,18 +31,17 @@ automation:
         data_template:
           entity_id: climate.badevaerelse
           temperature: |
-            {% if is_state('binary_sensor.thermostats_night_mode', 'off') %}
-              23
-            {% else %}
-              21
-            {% endif %}
+            22
       - service: climate.set_temperature
         data_template:
-          entity_id: climate.kontor
-          temperature:  |
+          entity_id: 
+            - climate.kontor
+            - binary_sensor.martin_pc
+            - binary_sensor.working_from_home
+          temperature: |
             {% if is_state('binary_sensor.thermostats_night_mode', 'off') %}
-              {% if is_state('binary_sensor.martin_pc', 'on') %}
-                24
+              {% if is_state('binary_sensor.martin_pc', 'on') or is_state('binary_sensor.working_from_home', 'on') %}
+                23
               {% else %}
                 21
               {% endif %}
@@ -56,10 +51,10 @@ automation:
       - service: climate.set_temperature
         data_template:
           entity_id: climate.stue
-          temperature:  |
+          temperature: |
             {% if is_state('binary_sensor.thermostats_night_mode', 'off') %}
               {% if is_state('device_tracker.sony_stue_tv', 'home') %}
-                24
+                23
               {% else %}
                 21
               {% endif %}
@@ -69,7 +64,7 @@ automation:
       - service: climate.set_temperature
         data_template:
           entity_id: climate.kokken
-          temperature:  |
+          temperature: |
             {% if is_state('binary_sensor.thermostats_night_mode', 'off') %}
               21
             {% else %}
@@ -78,11 +73,11 @@ automation:
       - service: climate.set_temperature
         data_template:
           entity_id: climate.sovevaerelse
-          temperature:  |
+          temperature: |
             {% if is_state('binary_sensor.thermostats_night_mode', 'off') %}
               21
             {% else %}
-              22
+              23
             {% endif %}
 
   - alias: Turn off heating when away
