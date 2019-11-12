@@ -54,6 +54,43 @@ sensor:
         value_template: "{{ states('sensor.lufttryk') | float + 6 }}"
         device_class: pressure
         unit_of_measurement: "hPa"
+      
+      dmi_vejr:
+        friendly_name: "DMI Vejr"
+        value_template: >-
+          {{ states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text | regex_findall_index("<overskriftkoebenhavnognordsjaelland.+><text>(.*?)<\/text><\/overskriftkoebenhavnognordsjaelland>", 0) }}
+        attribute_templates:
+          date: >-
+            {{ states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text | regex_findall_index("<dato.+><text>(.*?)<\/text><\/dato>", 0) }}
+          validity: >-
+            {{ states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text | regex_findall_index("<reggyld.+><text>(.*?)<\/text><\/reggyld>", 0) }}
+          content: >-
+            {{ states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text | regex_findall_index("<koebenhavnognordsjaelland.+><text>(.*?)<\/text><\/koebenhavnognordsjaelland>", 0) }}
+
+      dmi_aktuel_varsel:
+        friendly_name: "DMI Aktuel Varsel"
+        value_template: >-
+          {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].warningTitle }}
+        attribute_templates:
+          text: >-
+            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].warningText }}
+          additional_text: >-
+            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].additionalText }}
+          valid_from: >-
+            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].validFromText }}
+          valid_to: >-
+            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].validToText }}
+          issued_at: >-
+            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].issuedAtText }}
+          category: >-
+            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].formattedCategory }}
+          valid_from_timestamp: >-
+            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].validFrom }}
+          valid_to_timestamp: >-
+            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].validTo }}
+          entity_picture: >-
+            /local/downloads/dmi_warning_icons/{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].icon }}
+
 
   - platform: thermal_comfort
     sensors:
@@ -72,11 +109,6 @@ sensor:
     value_template: "{{ value_json.regiondata[0].products[0].timestamp }}"
     json_attributes:
       - regiondata
-
-  - platform: mqtt
-    name: "DMI Vejr"
-    state_topic: "dmi_weather/state"
-    json_attributes_topic: "dmi_weather/attributes"
 
   - platform: rest
     name: dmi_warnings_raw
@@ -111,11 +143,6 @@ sensor:
       - fivedayWarnings
 
   - platform: mqtt
-    name: "DMI Aktuel Varsel"
-    state_topic: "dmi_current_warning/state"
-    json_attributes_topic: "dmi_current_warning/attributes"
-
-  - platform: mqtt
     name: "DMI Aktuelle Varsler"
     state_topic: "dmi_current_warnings/state"
     json_attributes_topic: "dmi_current_warnings/attributes"
@@ -135,7 +162,6 @@ binary_sensor:
       show_coming_weather_warnings:
         value_template: "{{ not is_state('sensor.dmi_kommende_varsler', '0') }}"
 
-
 automation:
   - alias: severe_weather_warning
     initial_state: true
@@ -147,33 +173,6 @@ automation:
         data_template:
           title: "Vejr Varsel: {{ states('sensor.dmi_aktuel_varsel') }}"
           message: "Kategori {{ state_attr('sensor.dmi_aktuel_varsel', 'category') }} varsel: {{ state_attr('sensor.dmi_aktuel_varsel', 'text') }}"
-
-  - alias: update_dmi_weather_sensor
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: sensor.dmi_weather_raw
-      - platform: state
-        entity_id: binary_sensor.home_assistant_loaded
-        to: 'on'
-    action:
-      - service: mqtt.publish
-        data_template:
-          topic: "dmi_weather/state"
-          retain: True
-          payload: >-
-            {{ states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text | regex_findall_index("<overskriftkoebenhavnognordsjaelland.+><text>(.*?)<\/text><\/overskriftkoebenhavnognordsjaelland>", 0) }}
-      - service: mqtt.publish
-        data_template:
-          topic: "dmi_weather/attributes"
-          retain: True
-          payload: >-
-            {%- set text = states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text %}
-            {
-              "date": "{{ text | regex_findall_index("<dato.+><text>(.*?)<\/text><\/dato>", 0) }}",
-              "validity": "{{ text | regex_findall_index("<reggyld.+><text>(.*?)<\/text><\/reggyld>", 0) }}",
-              "content": "{{ text | regex_findall_index("<koebenhavnognordsjaelland.+><text>(.*?)<\/text><\/koebenhavnognordsjaelland>", 0) }}"
-            }
 
   - alias: update_dmi_warning_specific_sensor
     trigger:
@@ -201,34 +200,6 @@ automation:
     action:
       - delay:
           seconds: 10
-
-      - service: mqtt.publish
-        data_template:
-          topic: "dmi_current_warning/state"
-          retain: True
-          payload: >-
-            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].warningTitle }}
-      
-      - service: mqtt.publish
-        data_template:
-          topic: "dmi_current_warning/attributes"
-          retain: True
-          payload: >-
-            {% if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 %}
-              {}
-            {% else %}
-              {
-                "text": "{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].warningText }}",
-                "additional_text": "{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].additionalText }}",
-                "valid_from": "{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].validFromText }}",
-                "valid_to": "{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].validToText }}",
-                "issued_at": "{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].issuedAtText }}",
-                "category": "{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].formattedCategory }}",
-                "valid_from_timestamp": "{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].validFrom }}",
-                "valid_to_timestamp": "{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].validTo }}",
-                "entity_picture": "/local/downloads/dmi_warning_icons/{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].icon }}"
-              }
-            {% endif %}
 
       - service: mqtt.publish
         data_template:
