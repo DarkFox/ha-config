@@ -2,3 +2,17 @@ vacuum:
   - platform: xiaomi_miio
     host: 192.168.42.180
     token: !secret xiaomi_token
+
+sensor:
+  - platform: mqtt
+    state_topic: "valetudo/rockrobo/state"
+    json_attributes_topic: "valetudo/rockrobo/map_data"
+    name: valetudo_map
+    value_template: 'OK'
+
+binary_sensor:
+  - platform: template
+    sensors:
+      valetudo_map_alive:
+        entity_id: sensor.valetudo_map
+        value_template: "{{ (state_attr('sensor.valetudo_map', 'robot') != None) }}"
