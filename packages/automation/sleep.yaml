@@ -94,7 +94,7 @@ automation:
           value: '{{ trigger.json.event }}'
       - service: persistent_notification.create
         data_template:
-          message: "Event: {{ trigger.json.event }}"
+          message: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}: {{ trigger.json.event }}"
           title: "Sleep As Android Event"
   
   #######################
@@ -104,10 +104,13 @@ automation:
   - alias: bedtime_on
     initial_state: true
     trigger:
-      platform: event
-      event_type: sleep_as_android
-      event_data:
-        value: time_to_bed_alarm_alert
+      - platform: event
+        event_type: sleep_as_android
+        event_data:
+          value: time_to_bed_alarm_alert
+      - platform: state
+        entity_id: input_select.sleep_state
+        to: 'in bed'
     action:
       service: input_boolean.turn_on
       data:
@@ -132,6 +135,27 @@ automation:
         event_type: sleep_as_android
         event_data:
           value: alarm_alert_dismiss
+    action:
+      service: input_boolean.turn_off
+      data:
+        entity_id: input_boolean.bedtime
+
+  - alias: bedtime_off_tracking_stopped_workaround
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: sleep_as_android
+        event_data:
+          value: sleep_tracking_stopped
+    condition:
+      condition: or
+      conditions:
+        - condition: state
+          entity_id: input_select.sleep_state
+          state: alarm
+        - condition: state
+          entity_id: input_select.sleep_state
+          state: snoozing
     action:
       service: input_boolean.turn_off
       data:
@@ -411,10 +435,14 @@ automation:
   - alias: sleep_state_waking
     initial_state: true
     trigger:
-      platform: event
-      event_type: sleep_as_android
-      event_data:
-        value: alarm_alert_dismiss
+      - platform: event
+        event_type: sleep_as_android
+        event_data:
+          value: alarm_alert_dismiss
+      - platform: event
+        event_type: sleep_as_android
+        event_data:
+          value: sleep_tracking_stopped
     condition:
       condition: or
       conditions:
