@@ -1,8 +1,8 @@
 # entities used:
-#   - light.kontor_spot_1
-#   - light.stue_spot_2
-#   - light.kokken_loftlys
-#   - light.badevaerelse
+# Office: light.office_desk_spots
+# Living Room: light.sofalampe
+# Kitchen: light.kokken_loftlampe
+# Bathroom: light.badevaerelse
 
 input_boolean:
   vacation_mode:
@@ -50,7 +50,7 @@ automation:
           conditions:
             - condition: time
               after: '17:00:00'
-              before: '01:00:00'
+              before: '23:00:00'
               weekday:
                 - mon
                 - tue
@@ -59,7 +59,7 @@ automation:
                 - fri
             - condition: time
               after: '10:00:00'
-              before: '01:00:00'
+              before: '23:00:00'
               weekday:
                 - sat
                 - sun
@@ -79,7 +79,7 @@ automation:
     initial_state: true
     trigger:
       - platform: time
-        at: '01:01:00'
+        at: '23:00:00'
     condition:
       condition: state
       entity_id: input_boolean.vacation_mode_lights_active
@@ -104,8 +104,8 @@ automation:
           minutes: "{{ states('sensor.vacation_mode_random_minutes') }}"
       - service: light.turn_on
         data:
-          entity_id: light.kontor_spot_1
-          brightness: 255
+          entity_id: light.office_desk_spots
+          brightness: 200
 
   - alias: Vacation Living Room on
     initial_state: true
@@ -118,22 +118,34 @@ automation:
           minutes: "{{ states('sensor.vacation_mode_random_minutes') }}"
       - service: light.turn_on
         data:
-          entity_id: light.stue_spot_2
-          brightness: 255
+          entity_id: light.sofalampe
+          brightness: 200
+          color_temp: 300
   
   - alias: Vacation Kitchen on
     initial_state: true
     trigger:
-      platform: state
-      entity_id: input_boolean.vacation_mode_lights_active
-      to: 'on'
+      - platform: state
+        entity_id: input_boolean.vacation_mode_lights_active
+        to: 'on'
+      - platform: event
+        event_type: vacation_kitchen_loop
     action:
       - delay:
           minutes: "{{ states('sensor.vacation_mode_random_minutes') }}"
       - service: light.turn_on
         data:
-          entity_id: light.kokken_loftlys
-          brightness: 255
+          entity_id: light.kokken_loftlampe
+          color_temp: 300
+          brightness: 200
+      - delay:
+          minutes: "{{ (states('sensor.vacation_mode_random_minutes')) | int }}"
+      - service: light.turn_off
+        data:
+          entity_id: light.kokken_loftlampe
+      - delay:
+          hours: 2
+      - event: vacation_kitchen_loop
   
   - alias: Vacation Bathroom on
     initial_state: true
@@ -153,7 +165,8 @@ automation:
       - service: light.turn_on
         data:
           entity_id: light.badevaerelse
-          brightness: 255
+          brightness: 200
+          color_temp: 300
       - delay:
           minutes: "{{ (states('sensor.vacation_mode_random_minutes')/2) | int }}"
       - service: light.turn_off
@@ -174,7 +187,7 @@ automation:
           minutes: "{% if is_state('input_boolean.vacation_mode_lights_active', 'on') %}{{ states('sensor.vacation_mode_random_minutes') }}{% else %}0{% endif %}"
       - service: light.turn_off
         data:
-          entity_id: light.kontor_spot_1
+          entity_id: light.office_desk_spots
 
   - alias: Vacation Living Room Off
     initial_state: true
@@ -187,7 +200,7 @@ automation:
           minutes: "{% if is_state('input_boolean.vacation_mode_lights_active', 'on') %}{{ states('sensor.vacation_mode_random_minutes') }}{% else %}0{% endif %}"
       - service: light.turn_off
         data:
-          entity_id: light.stue_spot_2
+          entity_id: light.sofalampe
   
   - alias: Vacation Kitchen Off
     initial_state: true
@@ -200,7 +213,7 @@ automation:
           minutes: "{% if is_state('input_boolean.vacation_mode_lights_active', 'on') %}{{ states('sensor.vacation_mode_random_minutes') }}{% else %}0{% endif %}"
       - service: light.turn_off
         data:
-          entity_id: light.kokken_loftlys
+          entity_id: light.kokken_loftlampe
   
   - alias: Vacation Bathroom Off
     initial_state: true
