@@ -4,7 +4,6 @@ icon: 'mdi:home'
 panel: true
 cards:
   - type: custom:layout-card
-    column_width: 300
     cards:
       - type: vertical-stack
         cards:
@@ -15,15 +14,11 @@ cards:
             show_header_toggle: false
             entities:
               - entity: input_select.theme
+              - entity: input_select.latest_motion
+          
+          - !include ../cards/mode_toggles.yaml
 
           - !include ../cards/thermostats.yaml
-
-          - type: horizontal-stack
-            cards:
-              - !include ../cards/mailbox_button.yaml
-              - !include ../cards/vacuum_button.yaml
-            
-          - !include ../cards/mode_toggles.yaml
 
       - break
 
@@ -31,10 +26,31 @@ cards:
         cards:
           - !include ../cards/weather/weather.yaml
 
+          - type: horizontal-stack
+            cards:
+              - !include ../cards/mailbox_button.yaml
+              - !include ../cards/vacuum_button.yaml
+
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.valetudo_map_alive
+                state: 'on'
+            card:
+              type: "custom:valetudo-map-card"
+              entity: sensor.valetudo_map
+              map_scale: 2
+              # rotate: 270
+              crop:
+                top: 180
+                bottom: 90
+                left: 180
+                right: 0
+
       - break
 
       - type: vertical-stack
         cards:
           - !include ../cards/media_players/playlist_controls.yaml
+          # - !include ../cards/media_players/conditional_groups.yaml
 
           - !include ../cards/calendar.yaml
