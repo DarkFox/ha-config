@@ -11,6 +11,50 @@ homeassistant:
     sensor.badevaerelse_temperatur:
       icon: mdi:thermometer
 
+binary_sensor:
+  - platform: template
+    sensors:
+      tado_hub_crashed:
+        friendly_name: 'Tadu Hub Crashed'
+        entity_id:
+          - climate.badevaerelse
+          - climate.kokken
+          - climate.sovevaerelse
+          - climate.kontor
+          - climate.stue
+          - device_tracker.tado
+        value_template: >
+          {{
+            is_state('device_tracker.tado', 'not_home')
+            or is_state('climate.badevaerelse', 'unavailable')
+            or is_state('climate.kokken', 'unavailable')
+            or is_state('climate.sovevaerelse', 'unavailable')
+            or is_state('climate.kontor', 'unavailable')
+            or is_state('climate.stue', 'unavailable')
+          }}
+
+automation:
+  - alias: Restart Tado stick if it or the thermostats go offline
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.tado_hub_crashed
+        to: 'on'
+        for:
+          minutes: 2
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Mistet forbindelsen til Tado stick, genstarter."
+      - service: switch.turn_off
+        data:
+          entity_id: switch.tado
+      - delay:
+          seconds: 10
+      - service: switch.turn_on
+        data:
+          entity_id: switch.tado
+
 script:
   increase_temperature:
     alias: Increase Temperature
