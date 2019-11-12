@@ -41,11 +41,6 @@ input_select:
       - Living Room
       - Office
 
-  previous_motion:
-    name: Previous Motion
-    options:
-      - Unknown
-
 binary_sensor:
   - platform: template
     sensors:
@@ -80,6 +75,10 @@ automation:
       platform: state
       entity_id: binary_sensor.kitchen_sensor
       to: 'on'
+    condition:
+      condition: state
+      entity_id: binary_sensor.martin_presence
+      state: 'on'
     action:
       service: input_select.select_option
       data:
@@ -90,8 +89,14 @@ automation:
     initial_state: true
     trigger:
       platform: state
-      entity_id: binary_sensor.toilet_sensor
+      entity_id: 
+        - binary_sensor.toilet_sensor
+        - binary_sensor.bruseniche_bevaegelse
       to: 'on'
+    condition:
+      condition: state
+      entity_id: binary_sensor.martin_presence
+      state: 'on'
     action:
       service: input_select.select_option
       data:
@@ -104,6 +109,10 @@ automation:
       platform: state
       entity_id: binary_sensor.bedroom_sensor
       to: 'on'
+    condition:
+      condition: state
+      entity_id: binary_sensor.martin_presence
+      state: 'on'
     action:
       service: input_select.select_option
       data:
@@ -119,6 +128,10 @@ automation:
         - binary_sensor.hoveddor
         - binary_sensor.hoveddor_laas
       to: 'on'
+    condition:
+      condition: state
+      entity_id: binary_sensor.martin_presence
+      state: 'on'
     action:
       service: input_select.select_option
       data:
@@ -133,6 +146,10 @@ automation:
         - binary_sensor.livingroom_sensor
         - binary_sensor.sofagruppe_bevaegelse
       to: 'on'
+    condition:
+      condition: state
+      entity_id: binary_sensor.martin_presence
+      state: 'on'
     action:
       service: input_select.select_option
       data:
@@ -147,6 +164,10 @@ automation:
         - binary_sensor.office_sensor
         - binary_sensor.pc_hobby_bevaegelse
       to: 'on'
+    condition:
+      condition: state
+      entity_id: binary_sensor.martin_presence
+      state: 'on'
     action:
       service: input_select.select_option
       data:
@@ -176,17 +197,6 @@ automation:
       data:
         entity_id: input_select.latest_motion
         option: 'Away'
-
-  - alias: update_previous_motion
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: input_select.latest_motion
-    action:
-      service: input_select.set_options
-      data_template:
-        entity_id: input_select.previous_motion
-        options: "{{ trigger.from_state.state }}"
 
   #####################
   # Activity Triggers #
@@ -237,9 +247,14 @@ automation:
   - alias: shower_activity
     initial_state: true
     trigger:
-      platform: numeric_state
-      entity_id: sensor.toilet_relative_humidity_change
-      above: 5
+      - platform: numeric_state
+        entity_id: sensor.toilet_relative_humidity_change
+        above: 5
+      - platform: state
+        entity_id: binary_sensor.bruseniche_bevaegelse
+        to: 'on'
+        for:
+          minutes: 2
     condition:
       condition: and
       conditions:
