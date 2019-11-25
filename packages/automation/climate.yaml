@@ -16,28 +16,58 @@ binary_sensor:
           {{ (is_state('binary_sensor.martin_presence_delayed', 'on') or is_state('binary_sensor.martin_home_soon', 'on')) }}
 
 automation:
-  - alias: Thermostat Temperature Change
+  - alias: Termostat Badeværelse
     trigger:
       - platform: state
         entity_id:
+          - binary_sensor.thermostats_on
           - binary_sensor.thermostats_night_mode
-          - binary_sensor.martin_pc
-          - device_tracker.sony_stue_tv
+          - binary_sensor.badevaerelse_vindue
+          - binary_sensor.bathroom_activity
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
         to: 'on'
     action:
+      - service_template: |
+          {%- if is_state('binary_sensor.thermostats_on', 'on') and is_state('binary_sensor.badevaerelse_vindue', 'off') -%}
+            climate.turn_on
+          {%- else -%}
+            climate.turn_off
+          {%- endif -%}
+        data:
+          entity_id: climate.badevaerelse
       - service: climate.set_temperature
         data_template:
           entity_id: climate.badevaerelse
           temperature: |
-            22
+            {% if is_state('binary_sensor.bathroom_activity', 'on') %}
+              23
+            {% else %}
+              {% if is_state('binary_sensor.thermostats_night_mode', 'on') %}
+                19
+              {% else %}
+                21
+              {% endif %}
+            {% endif %}
+
+  - alias: Termostat Kontor
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.thermostats_on
+          - binary_sensor.thermostats_night_mode
+          - binary_sensor.martin_pc
+          - binary_sensor.working_from_home
+      - platform: state
+        entity_id: binary_sensor.home_assistant_loaded
+        to: 'on'
+    action:
+      - service_template: "climate.turn_{{ 'on' if is_state('binary_sensor.thermostats_on', 'on') else 'off' }}"
+        data:
+          entity_id: climate.kontor
       - service: climate.set_temperature
         data_template:
-          entity_id: 
-            - climate.kontor
-            - binary_sensor.martin_pc
-            - binary_sensor.working_from_home
+          entity_id: climate.kontor
           temperature: |
             {% if is_state('binary_sensor.thermostats_night_mode', 'off') %}
               {% if is_state('binary_sensor.martin_pc', 'on') or is_state('binary_sensor.working_from_home', 'on') %}
@@ -48,6 +78,21 @@ automation:
             {% else %}
               18
             {% endif %}
+
+  - alias: Termostat Stue
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.thermostats_on
+          - binary_sensor.thermostats_night_mode
+          - device_tracker.sony_stue_tv
+      - platform: state
+        entity_id: binary_sensor.home_assistant_loaded
+        to: 'on'
+    action:
+      - service_template: "climate.turn_{{ 'on' if is_state('binary_sensor.thermostats_on', 'on') else 'off' }}"
+        data:
+          entity_id: climate.stue
       - service: climate.set_temperature
         data_template:
           entity_id: climate.stue
@@ -61,6 +106,20 @@ automation:
             {% else %}
               18
             {% endif %}
+
+  - alias: Termostat Køkken
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.thermostats_on
+          - binary_sensor.thermostats_night_mode
+      - platform: state
+        entity_id: binary_sensor.home_assistant_loaded
+        to: 'on'
+    action:
+      - service_template: "climate.turn_{{ 'on' if is_state('binary_sensor.thermostats_on', 'on') else 'off' }}"
+        data:
+          entity_id: climate.kokken
       - service: climate.set_temperature
         data_template:
           entity_id: climate.kokken
@@ -70,6 +129,21 @@ automation:
             {% else %}
               18
             {% endif %}
+
+
+  - alias: Termostat Soveværelse
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.thermostats_on
+          - binary_sensor.thermostats_night_mode
+      - platform: state
+        entity_id: binary_sensor.home_assistant_loaded
+        to: 'on'
+    action:
+      - service_template: "climate.turn_{{ 'on' if is_state('binary_sensor.thermostats_on', 'on') else 'off' }}"
+        data:
+          entity_id: climate.sovevaerelse
       - service: climate.set_temperature
         data_template:
           entity_id: climate.sovevaerelse
@@ -79,75 +153,3 @@ automation:
             {% else %}
               23
             {% endif %}
-
-  - alias: Turn off heating when away
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.thermostats_on
-        from: 'on'
-        to: 'off'
-      - platform: state
-        entity_id:
-          - climate.badevaerelse
-          - climate.kokken
-          - climate.sovevaerelse
-          - climate.kontor
-          - climate.stue
-        from: 'unavailable'
-    condition:
-      condition: state
-      entity_id: binary_sensor.thermostats_on
-      state: 'off'
-    action:
-      - service: homeassistant.turn_off
-        data_template:
-          entity_id: group.thermostats
-
-  - alias: Turn on heating when back
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.thermostats_on
-        from: 'off'
-        to: 'on'
-      - platform: state
-        entity_id:
-          - climate.badevaerelse
-          - climate.kokken
-          - climate.sovevaerelse
-          - climate.kontor
-          - climate.stue
-        from: 'unavailable'
-    condition:
-      condition: state
-      entity_id: binary_sensor.thermostats_on
-      state: 'on'
-    action:
-      - service: homeassistant.turn_on
-        data_template:
-          entity_id: group.thermostats
-
-  - alias: turn_off_bathroom_heating_with_window_open
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.badevaerelse_vindue
-        from: 'off'
-        to: 'on'
-    action:
-      - service: climate.turn_off
-        data:
-          entity_id: climate.badevaerelse
-
-  - alias: turn_on_bathroom_heating_with_window_closed
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.badevaerelse_vindue
-        from: 'on'
-        to: 'off'
-    action:
-      - service: climate.turn_on
-        data:
-          entity_id: climate.badevaerelse
