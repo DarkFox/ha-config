@@ -359,6 +359,7 @@ binary_sensor:
         friendly_name: 'Kitchen Activity'
         entity_id:
           - binary_sensor.kitchen_sensor
+          - binary_sensor.kokken_bevaegelse
           - input_boolean.kitchen_activity_override
           - input_select.kitchen_room_state
           - input_select.latest_motion
@@ -366,6 +367,7 @@ binary_sensor:
           {%- if is_state('input_boolean.kitchen_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.kitchen_room_state', 'active') else 'false' }}
           {%- elif is_state('binary_sensor.kitchen_sensor', 'on')
+          or is_state('binary_sensor.kokken_bevaegelse', 'on')
           or is_state('input_select.latest_motion', 'Kitchen') -%}
             true
           {% else -%}
@@ -397,3 +399,4 @@ group:
       - input_select.kitchen_room_state
       - input_select.latest_motion
       - binary_sensor.kitchen_sensor
+      - binary_sensor.kokken_bevaegelse
