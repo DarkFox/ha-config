@@ -29,7 +29,7 @@ automation:
         to: 'on'
     action:
       - service_template: |
-          {%- if is_state('binary_sensor.thermostats_on', 'on') and is_state('binary_sensor.badevaerelse_vindue', 'off') -%}
+          {%- if is_state('binary_sensor.badevaerelse_vindue', 'off') -%}
             climate.turn_on
           {%- else -%}
             climate.turn_off
@@ -40,14 +40,18 @@ automation:
         data_template:
           entity_id: climate.badevaerelse
           temperature: |
-            {% if is_state('binary_sensor.bathroom_activity', 'on') %}
-              23
-            {% else %}
-              {% if is_state('binary_sensor.thermostats_night_mode', 'on') %}
-                19
+            {% if is_state('binary_sensor.thermostats_on', 'on') %}
+              {% if is_state('binary_sensor.bathroom_activity', 'on') %}
+                23
               {% else %}
-                21
+                {% if is_state('binary_sensor.thermostats_night_mode', 'on') %}
+                  19
+                {% else %}
+                  21
+                {% endif %}
               {% endif %}
+            {% else %}
+              15
             {% endif %}
 
   - alias: Termostat Kontor
@@ -62,21 +66,25 @@ automation:
         entity_id: binary_sensor.home_assistant_loaded
         to: 'on'
     action:
-      - service_template: "climate.turn_{{ 'on' if is_state('binary_sensor.thermostats_on', 'on') else 'off' }}"
+      - service: climate.turn_on
         data:
           entity_id: climate.kontor
       - service: climate.set_temperature
         data_template:
           entity_id: climate.kontor
           temperature: |
-            {% if is_state('binary_sensor.thermostats_night_mode', 'off') %}
-              {% if is_state('binary_sensor.martin_pc', 'on') or is_state('binary_sensor.working_from_home', 'on') %}
-                23
+            {% if is_state('binary_sensor.thermostats_on', 'on') %}
+              {% if is_state('binary_sensor.thermostats_night_mode', 'off') %}
+                {% if is_state('binary_sensor.martin_pc', 'on') or is_state('binary_sensor.working_from_home', 'on') %}
+                  23
+                {% else %}
+                  21
+                {% endif %}
               {% else %}
-                21
+                18
               {% endif %}
             {% else %}
-              18
+              15
             {% endif %}
 
   - alias: Termostat Stue
@@ -90,21 +98,25 @@ automation:
         entity_id: binary_sensor.home_assistant_loaded
         to: 'on'
     action:
-      - service_template: "climate.turn_{{ 'on' if is_state('binary_sensor.thermostats_on', 'on') else 'off' }}"
+      - service: climate.turn_on
         data:
           entity_id: climate.stue
       - service: climate.set_temperature
         data_template:
           entity_id: climate.stue
           temperature: |
-            {% if is_state('binary_sensor.thermostats_night_mode', 'off') %}
-              {% if is_state('device_tracker.sony_stue_tv', 'home') %}
-                23
+            {% if is_state('binary_sensor.thermostats_on', 'on') %}
+              {% if is_state('binary_sensor.thermostats_night_mode', 'off') %}
+                {% if is_state('device_tracker.sony_stue_tv', 'home') %}
+                  23
+                {% else %}
+                  21
+                {% endif %}
               {% else %}
-                21
+                18
               {% endif %}
             {% else %}
-              18
+              15
             {% endif %}
 
   - alias: Termostat Køkken
@@ -117,19 +129,22 @@ automation:
         entity_id: binary_sensor.home_assistant_loaded
         to: 'on'
     action:
-      - service_template: "climate.turn_{{ 'on' if is_state('binary_sensor.thermostats_on', 'on') else 'off' }}"
+      - service: climate.turn_on
         data:
           entity_id: climate.kokken
       - service: climate.set_temperature
         data_template:
           entity_id: climate.kokken
           temperature: |
-            {% if is_state('binary_sensor.thermostats_night_mode', 'off') %}
-              21
+            {% if is_state('binary_sensor.thermostats_on', 'on') %}
+              {% if is_state('binary_sensor.thermostats_night_mode', 'off') %}
+                21
+              {% else %}
+                18
+              {% endif %}
             {% else %}
-              18
+              15
             {% endif %}
-
 
   - alias: Termostat Soveværelse
     trigger:
@@ -141,15 +156,19 @@ automation:
         entity_id: binary_sensor.home_assistant_loaded
         to: 'on'
     action:
-      - service_template: "climate.turn_{{ 'on' if is_state('binary_sensor.thermostats_on', 'on') else 'off' }}"
+      - service: climate.turn_on
         data:
           entity_id: climate.sovevaerelse
       - service: climate.set_temperature
         data_template:
           entity_id: climate.sovevaerelse
           temperature: |
-            {% if is_state('binary_sensor.thermostats_night_mode', 'off') %}
-              21
+            {% if is_state('binary_sensor.thermostats_on', 'on') %}
+              {% if is_state('binary_sensor.thermostats_night_mode', 'off') %}
+                21
+              {% else %}
+                23
+              {% endif %}
             {% else %}
-              23
+              15
             {% endif %}
