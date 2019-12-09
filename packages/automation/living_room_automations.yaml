@@ -1,0 +1,28 @@
+automation:
+  - alias: Barskab åbnet
+    trigger:
+        - platform: state
+          entity_id: binary_sensor.barskab
+          to: 'on'
+    action:
+      - service: scene.create
+        data_template:
+          scene_id: barskab_aabnet_restore
+          entities: 
+            light.cabinet_shelves:
+              state: "{{ states('light.cabinet_shelves') }}"
+              brightness: "{{ state_attr('light.cabinet_shelves', 'brightness') }}"
+      - service: light.turn_on
+        data:
+          entity_id: light.cabinet_shelves
+          brightness: 255
+
+  - alias: Barskab lukket
+    trigger:
+        - platform: state
+          entity_id: binary_sensor.barskab
+          to: 'off'
+    action:
+      - service: scene.turn_on
+        data:
+          entity_id: scene.barskab_aabnet_restore
