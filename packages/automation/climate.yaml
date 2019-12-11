@@ -40,16 +40,21 @@ automation:
         data_template:
           entity_id: climate.badevaerelse
           temperature: |
-            {% if is_state('binary_sensor.thermostats_on', 'on') %}
-              {% if is_state('binary_sensor.bathroom_activity', 'on') %}
+            {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
+            {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
+            {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
+            {%- set active = is_state('binary_sensor.bathroom_activity', 'on') -%}
+
+            {% if on %}
+              {% if night %}
+                19
+              {% elif active %}
                 23
               {% else %}
-                {% if is_state('binary_sensor.thermostats_night_mode', 'on') %}
-                  19
-                {% else %}
-                  21
-                {% endif %}
+                21
               {% endif %}
+            {% elif extended %}
+              18
             {% else %}
               15
             {% endif %}
@@ -73,16 +78,21 @@ automation:
         data_template:
           entity_id: climate.kontor
           temperature: |
-            {% if is_state('binary_sensor.thermostats_on', 'on') %}
-              {% if is_state('binary_sensor.thermostats_night_mode', 'off') %}
-                {% if is_state('binary_sensor.martin_pc', 'on') or is_state('binary_sensor.working_from_home', 'on') %}
-                  23
-                {% else %}
-                  21
-                {% endif %}
+            {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
+            {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
+            {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
+            {%- set active = is_state('binary_sensor.martin_pc', 'on') or is_state('binary_sensor.working_from_home', 'on') -%}
+
+            {% if on %}
+              {% if night %}
+                19
+              {% elif active %}
+                23
               {% else %}
-                18
+                21
               {% endif %}
+            {% elif extended %}
+              18
             {% else %}
               15
             {% endif %}
@@ -105,16 +115,21 @@ automation:
         data_template:
           entity_id: climate.stue
           temperature: |
-            {% if is_state('binary_sensor.thermostats_on', 'on') %}
-              {% if is_state('binary_sensor.thermostats_night_mode', 'off') %}
-                {% if is_state('device_tracker.sony_stue_tv', 'home') %}
-                  23
-                {% else %}
-                  21
-                {% endif %}
+            {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
+            {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
+            {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
+            {%- set active = is_state('device_tracker.sony_stue_tv', 'home') -%}
+
+            {% if on %}
+              {% if night %}
+                19
+              {% elif active %}
+                23
               {% else %}
-                18
+                21
               {% endif %}
+            {% elif extended %}
+              18
             {% else %}
               15
             {% endif %}
@@ -136,12 +151,18 @@ automation:
         data_template:
           entity_id: climate.kokken
           temperature: |
-            {% if is_state('binary_sensor.thermostats_on', 'on') %}
-              {% if is_state('binary_sensor.thermostats_night_mode', 'off') %}
-                21
+            {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
+            {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
+            {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
+
+            {% if on %}
+              {% if night %}
+                19
               {% else %}
-                18
+                21
               {% endif %}
+            {% elif extended %}
+              18
             {% else %}
               15
             {% endif %}
@@ -163,12 +184,18 @@ automation:
         data_template:
           entity_id: climate.sovevaerelse
           temperature: |
-            {% if is_state('binary_sensor.thermostats_on', 'on') %}
-              {% if is_state('binary_sensor.thermostats_night_mode', 'off') %}
-                21
+            {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
+            {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
+            {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
+
+            {% if on %}
+              {% if night %}
+                22
               {% else %}
-                23
+                21
               {% endif %}
+            {% elif extended %}
+              18
             {% else %}
               15
             {% endif %}
