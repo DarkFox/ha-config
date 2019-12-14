@@ -39,8 +39,8 @@ script:
               {%- if is_state('sensor.s_train_b_status', 'Til tiden') -%}
                 {{ ' ' }}Kører normalt.
               {%- else -%}
-                 {{ ' ' }}{{ states('sensor.s_train_b_status') }}.
-                 {{ states('sensor.s_train_message') }}.
+                {{ ' ' }}{{ states('sensor.s_train_b_status') }}.
+                {{ states('sensor.s_train_message') }}.
               {%- endif -%}
             {%- endif -%}
 
@@ -92,9 +92,9 @@ automation:
       - event: sleep_as_android
         event_data_template:
           value: '{{ trigger.json.event }}'
-      - service: persistent_notification.create
+      - service: script.debug_notification
         data_template:
-          message: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}: {{ trigger.json.event }}"
+          message: "{{ trigger.json.event }}"
           title: "Sleep As Android Event"
   
   #######################
