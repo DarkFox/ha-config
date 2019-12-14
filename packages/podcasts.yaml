@@ -1,9 +1,11 @@
 homeassistant:
   customize:
     sensor.podcast_bbc_minute:
-      friendly_name: Latest BBC Minute Episode
+      friendly_name: Seneste BBC Minute
     sensor.podcast_daily_tech_news_show:
-      friendly_name: Latest Daily Tech News Show Episode
+      friendly_name: Seneste Daily Tech News Show
+    sensor.podcast_radioavisen:
+      friendly_name: Seneste Radioavisen
 
 group:
   podcasts:
@@ -11,6 +13,7 @@ group:
     entities:
       - sensor.podcast_bbc_minute
       - sensor.podcast_daily_tech_news_show
+      - sensor.podcast_radioavisen
 
 sensor:
   - platform: scrape
@@ -26,3 +29,10 @@ sensor:
     select: 'enclosure:nth-of-type(1)'
     attribute: url
     scan_interval: 1800
+
+  - platform: scrape
+    resource: https://www.dr.dk/mu/feed/radioavisen.xml?format=podcast
+    name: podcast_radioavisen
+    select: 'enclosure:nth-of-type(1)'
+    attribute: url
+    scan_interval: 900

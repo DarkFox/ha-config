@@ -80,8 +80,8 @@ script:
               {%- if is_state('sensor.s_train_b_status', 'Til tiden') -%}
                 {{ ' ' }}Kører normalt.
               {%- else -%}
-                 {{ ' ' }}{{ states('sensor.s_train_b_status') }}.
-                 {{ states('sensor.s_train_message') }}.
+                {{ ' ' }}{{ states('sensor.s_train_b_status') }}.
+                {{ states('sensor.s_train_message') }}.
               {%- endif -%}
             {%- endif -%}
 
@@ -163,6 +163,16 @@ script:
         entity_id: input_select.playlist
         options:
           - "{{ states.sensor.podcast_daily_tech_news_show.state }}"
+          - "==END=="
+
+  playlist_play_radioavisen:
+    alias: Radioavisen
+    sequence:
+      service:  input_select.set_options
+      data_template:
+        entity_id: input_select.playlist
+        options:
+          - "{{ states.sensor.podcast_radioavisen.state }}"
           - "==END=="
 
   playlist_play_briefing:
