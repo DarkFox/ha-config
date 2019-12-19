@@ -9,6 +9,26 @@ automation:
           seconds: 5
       - service: script.restart_wallpanels
 
+  - alias: kitchen_tablet_screen_webhook
+    initial_state: True
+    trigger:
+      platform: webhook
+      webhook_id: !secret kitchen_tablet_screen_webhook
+    action:
+      service_template: "input_boolean.turn_{{ trigger.json.state }}"
+      data:
+        entity_id: input_boolean.kitchen_tablet_screen
+  - alias: kitchen_tablet_brightness_webhook
+    initial_state: True
+    trigger:
+      platform: webhook
+      webhook_id: !secret kitchen_tablet_brightness_webhook
+    action:
+      service: input_number.set_value
+      data_template:
+        entity_id: input_number.kitchen_tablet_brightness
+        value: "{{ trigger.json.state }}"
+
   - alias: hallway_tablet_screen_webhook
     initial_state: True
     trigger:
@@ -61,29 +81,19 @@ script:
           topic: wallpanel/bathroom-tablet/command
           payload: '{"wake": true, "clearCache": true, "reload": true}'
 
-sensor:
-  - platform: mqtt
-    name: "Hallway Tablet Battery"
-    device_class: battery
-    state_topic: "wallpanel/hallway-tablet/sensor/battery"
-    unit_of_measurement: "%"
-    value_template: "{{ value_json.value }}"
-    json_attributes_topic: "wallpanel/hallway-tablet/sensor/battery"
-  - platform: mqtt
-    name: "Bathroom Tablet Battery"
-    device_class: battery
-    state_topic: "wallpanel/bathroom-tablet/sensor/battery"
-    unit_of_measurement: "%"
-    value_template: "{{ value_json.value }}"
-    json_attributes_topic: "wallpanel/bathroom-tablet/sensor/battery"
-
 input_boolean:
+  kitchen_tablet_screen:
+    name: kitchen_tablet_screen
   hallway_tablet_screen:
     name: hallway_tablet_screen
   bathroom_tablet_screen:
     name: bathroom_tablet_screen
 
 input_number:
+  kitchen_tablet_brightness:
+    name: kitchen_tablet_brightness
+    min: 0
+    max: 255
   hallway_tablet_brightness:
     name: hallway_tablet_brightness
     min: 0
@@ -94,6 +104,9 @@ input_number:
     max: 255
 
 rest_command:
+  kitchen_tablet_command:
+    url: "http://192.168.42.20:1817/?message={{ command }}"
+    method: GET
   hallway_tablet_command:
     url: "http://192.168.42.22:1817/?message={{ command }}"
     method: GET
@@ -102,6 +115,28 @@ rest_command:
     method: GET
 
 light:
+  - platform: template
+    lights:
+      kitchen_tablet:
+        friendly_name: "kitchen Tablet"
+        level_template: "{{ states('input_number.kitchen_tablet_brightness')|int }}"
+        value_template: "{{ states('input_boolean.kitchen_tablet_screen') }}"
+        turn_on:
+          - service: rest_command.kitchen_tablet_command
+            data:
+              command: "screen=:=on"
+        turn_off:
+          - service: rest_command.kitchen_tablet_command
+            data:
+              command: "screen=:=off"
+        set_level:
+          - service: rest_command.kitchen_tablet_command
+            data:
+              command: "screen=:=on"
+          - service: rest_command.kitchen_tablet_command
+            data_template:
+              command: "brightness=:={{ brightness }}"
+
   - platform: template
     lights:
       hallway_tablet:
