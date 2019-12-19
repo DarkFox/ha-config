@@ -1,0 +1,123 @@
+card:
+  type: vertical-stack
+  cards:
+    - type: custom:button-card
+      entity: "[[entity]]"
+      layout: icon_state
+      show_state: true
+      show_name: false
+      tap_action:
+        action: call-service
+        service: >-
+          [[[
+            if (states['input_boolean.timer_'+('[[entity]]'.replace('timer.', '')) + '_finished'].state == 'on') 
+              return 'input_boolean.turn_off';
+            else
+              return states['[[entity]]'].state == 'active' ? 'timer.pause' : 'timer.start'
+          ]]]
+        service_data:
+          entity_id: >-
+            [[[
+              if (states['input_boolean.timer_'+('[[entity]]'.replace('timer.', '')) + '_finished'].state == 'on') 
+                return 'input_boolean.timer_' + ('[[entity]]'.replace('timer.', '')) + '_finished';
+              else
+                return '[[entity]]';
+            ]]]
+      hold_action:
+        action: call-service
+        service: timer.cancel
+        service_data:
+          entity_id: "[[entity]]"
+      styles:
+        state:
+          - font-size: 50pt
+        card:
+          - background-color: >-
+              [[[
+                if (states['input_boolean.timer_'+('[[entity]]'.replace('timer.', '')) + '_finished'].state == 'on') {
+                  return "#8EFA00";
+                } else {
+                  switch(states['[[entity]]'].state) {
+                    case 'active':
+                      return "#FF2600";
+                      break;
+                    case 'paused':
+                      return "#FFD500";
+                      break;
+                    case 'idle':
+                      return "var(--paper-card-background-color)"
+                      break;
+                    default:
+                      return "var(--paper-card-background-color)"
+                  }
+                }
+              ]]]
+
+    - type: horizontal-stack
+      cards:
+        - type: custom:button-card
+          name: +10s
+          show_icon: false
+          styles:
+            card:
+              - font-size: 20pt
+              - font-weight: 600
+          tap_action:
+            action: call-service
+            service: timer.start
+            service_data:
+              entity_id: "[[entity]]"
+              duration: >
+                [[[
+                    if (states['[[entity]]'].state !== 'idle') {
+                      var sections = states['[[entity]]'].attributes.duration.split(':');
+                      sections[2] = parseInt(sections[2]) + 10;
+                      return sections.join(':');
+                    } else {
+                      return '00:00:10';
+                    }
+                ]]]
+        - type: custom:button-card
+          name: +1m
+          show_icon: false
+          styles:
+            card:
+              - font-size: 20pt
+              - font-weight: 600
+          tap_action:
+            action: call-service
+            service: timer.start
+            service_data:
+              entity_id: "[[entity]]"
+              duration: >
+                [[[
+                    if (states['[[entity]]'].state !== 'idle') {
+                      var sections = states['[[entity]]'].attributes.duration.split(':');
+                      sections[1] = parseInt(sections[1]) + 1;
+                      return sections.join(':');
+                    } else {
+                      return '00:01:00';
+                    }
+                ]]]
+        - type: custom:button-card
+          name: +10m
+          show_icon: false
+          styles:
+            card:
+              - font-size: 20pt
+              - font-weight: 600
+          tap_action:
+            action: call-service
+            service: timer.start
+            service_data:
+              entity_id: "[[entity]]"
+              duration: >
+                [[[
+                    if (states['[[entity]]'].state !== 'idle') {
+                      var sections = states['[[entity]]'].attributes.duration.split(':');
+                      sections[1] = parseInt(sections[1]) + 10;
+                      return sections.join(':');
+                    } else {
+                      return '00:10:00';
+                    }
+                ]]]

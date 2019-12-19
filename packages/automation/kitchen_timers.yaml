@@ -1,0 +1,88 @@
+timer:
+  kitchen_1:
+    name: Køkken Ur 1
+    icon: mdi:stove
+  kitchen_2:
+    name: Køkken Ur 2
+    icon: mdi:pot
+  kitchen_3:
+    name: Køkken Ur 3
+    icon: mdi:dice-3
+
+input_boolean:
+  timer_kitchen_1_finished:
+    name: Køkken Ur 1 Færdig
+    icon: mdi:stove
+  timer_kitchen_2_finished:
+    name: Køkken Ur 2 Færdig
+    icon: mdi:pot
+  timer_kitchen_3_finished:
+    name: Køkken Ur 3 Færdig
+    icon: mdi:dice-3
+
+binary_sensor:
+  - platform: template
+    sensors:
+      kitchen_timer_finished:
+        friendly_name: "Køkken Ur Færdig"
+        value_template: >-
+          {{
+            is_state('input_boolean.timer_kitchen_1_finished', 'on')
+            or is_state('input_boolean.timer_kitchen_2_finished', 'on')
+            or is_state('input_boolean.timer_kitchen_3_finished', 'on')
+          }}
+
+automation:
+  - alias: kitchen_timer_finished_event
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.kitchen_1
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.kitchen_2
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.kitchen_3
+    action:
+      - service: input_boolean.turn_on
+        data_template:
+          entity_id: "input_boolean.timer_{{ trigger.event.data.entity_id | replace('timer.', '') }}_finished"
+
+  - alias: kitchen_timer_finished
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.kitchen_timer_finished
+        to: 'on'
+    action:
+      - service: scene.create
+        data:
+          scene_id: before_timer
+          snapshot_entities:
+            - light.display_cabinet_front_4
+            - light.office_door_spots
+            - light.kokken_spot_2
+            - light.blyant
+      - service: light.turn_on
+        data:
+          brightness: 255
+          effect: 'Strobe'
+          entity_id:
+            - light.display_cabinet_front_4
+            - light.office_door_spots
+            - light.kokken_spot_2
+            - light.blyant
+
+  - alias: kitchen_timer_dismissed
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.kitchen_timer_finished
+        to: 'off'
+    action:
+      - service: scene.turn_on
+        data:
+          entity_id: scene.before_timer
