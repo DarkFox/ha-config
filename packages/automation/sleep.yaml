@@ -417,19 +417,16 @@ automation:
       event_type: sleep_as_android
       event_data:
         value: alarm_snooze_clicked
-    condition:
-      condition: and
-      conditions:
-        - condition: state
-          entity_id: binary_sensor.martin_presence_delayed
-          state: 'on'
-        - condition: state
-          entity_id: input_select.sleep_state
-          state: alarm
     action:
       - service: counter.increment
         data:
           entity_id: counter.snooze_counter
+      - condition: state
+        entity_id: binary_sensor.martin_presence_delayed
+        state: 'on'
+      - condition: state
+        entity_id: input_select.sleep_state
+        state: alarm
       - service: input_select.select_option
         data:
           entity_id: input_select.sleep_state
