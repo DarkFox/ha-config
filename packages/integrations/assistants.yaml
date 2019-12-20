@@ -1,11 +1,43 @@
 script:
-  assistant_command:
+  assistant_broadcast_if_home:
     sequence:
-      - service: joaoapps_join.xperia_send_tasker
+      - condition: state
+        entity_id: binary_sensor.martin_presence_delayed
+        state: 'on'
+      - service: rest_command.assistant_broadcast
         data_template:
-          command: >-
-            homecmd=:={{ command }}
+          message: "{{ message }}"
 
+rest_command:
+  assistant_broadcast:
+    url: !secret assistant_relay_url
+    method: POST
+    content_type: 'application/json'
+    payload: '{"command":"{{ message }}", "user":"Home Assistant", "broadcast":true}'
+    
+  assistant_converse:
+    url: !secret assistant_relay_url
+    method: POST
+    content_type: 'application/json'
+    payload: '{"command":"{{ message }}", "user":"Home Assistant", "converse":true}'
+
+  assistant_relay:
+    url: !secret assistant_relay_url
+    method: POST
+    content_type: 'application/json'
+    payload: '{"command":"{{ command }}", "user":"Home Assistant"}'
+
+sensor:
+  - platform: rest
+    name: Assistant Relay Response
+    resource: !secret assistant_relay_responses_url
+    method: POST
+    headers:
+      Content-Type: application/json
+    payload: '{}'
+    value_template: '{{ value_json.responses[0].response }}'
+    json_attributes:
+      - responses
 
 # Enables Home Assistant Cloud
 cloud:
