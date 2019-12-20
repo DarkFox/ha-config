@@ -52,6 +52,9 @@ automation:
       - service: input_boolean.turn_on
         data_template:
           entity_id: "input_boolean.timer_{{ trigger.event.data.entity_id | replace('timer.', '') }}_finished"
+      - service: notify.telegram_darkfox
+        data_template:
+          message: "{{ state_attr(trigger.event.data.entity_id, 'friendly_name') }} ringer!"
 
   - alias: kitchen_timer_finished
     trigger:
