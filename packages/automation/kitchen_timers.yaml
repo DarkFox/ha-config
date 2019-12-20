@@ -54,7 +54,10 @@ automation:
           entity_id: "input_boolean.timer_{{ trigger.event.data.entity_id | replace('timer.', '') }}_finished"
       - service: notify.telegram_darkfox
         data_template:
-          message: "{{ state_attr(trigger.event.data.entity_id, 'friendly_name') }} ringer!"
+          message: "{{ state_attr(trigger.event.data.entity_id, 'friendly_name') }} er færdig!"
+      - service: script.assistant_broadcast_if_home
+        data_template:
+          message: "{{ state_attr(trigger.event.data.entity_id, 'friendly_name') }} er færdig!"
 
   - alias: kitchen_timer_finished
     trigger:
