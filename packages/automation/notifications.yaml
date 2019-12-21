@@ -31,24 +31,46 @@ automation:
       - service: notify.telegram_darkfox
         data:
           message: "Vinduet på badeværelset er åbent, husk at lukke det før du tager afsted!"
+
+  - alias: Bathroom Needs Airing Out
+    initial_state: true
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.toilet_mold_indicator
+        above: 70
+        for:
+          minutes: 2
+      - platform: state
+        entity_id: binary_sensor.bruseniche_bevaegelse
+        to: 'off'
+    condition:
+      - condition: numeric_state
+        entity_id: sensor.toilet_mold_indicator
+        above: 70
+      - condition: state
+        entity_id: binary_sensor.badevaerelse_vindue
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.bruseniche_bevaegelse
+        state: 'off'
+    action:
       - service: script.assistant_broadcast_if_home
         data:
-          message: "Vinduet på badeværelset er åbent, husk at lukke det før du tager afsted!"
+          message: "Høj luftfugtighed på badeværelset! Åbn vinduet."
 
   - alias: Bathroom Aired Out
     initial_state: true
     trigger:
-      platform: numeric_state
-      entity_id: sensor.toilet_mold_indicator
-      below: 66
+      - platform: numeric_state
+        entity_id: sensor.toilet_mold_indicator
+        below: 65
+        for:
+          minutes: 2
     condition:
-      condition: state
-      entity_id: binary_sensor.badevaerelse_vindue
-      state: 'on'
+      - condition: state
+        entity_id: binary_sensor.badevaerelse_vindue
+        state: 'on'
     action:
-      - service: notify.telegram_darkfox
-        data:
-          message: "Badeværelset er udluftet tilstrækkeligt, du kan nu lukke vinduet."
       - service: script.assistant_broadcast_if_home
         data:
           message: "Badeværelset er udluftet tilstrækkeligt, du kan nu lukke vinduet."
