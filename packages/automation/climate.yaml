@@ -24,6 +24,7 @@ automation:
           - binary_sensor.thermostats_night_mode
           - binary_sensor.badevaerelse_vindue
           - binary_sensor.bathroom_activity
+          - sensor.toilet_mold_indicator
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
         to: 'on'
@@ -44,20 +45,29 @@ automation:
             {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
             {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
             {%- set active = is_state('binary_sensor.bathroom_activity', 'on') -%}
-
-            {% if on %}
-              {% if active %}
-                23
-              {% elif night %}
-                19
-              {% else %}
-                21
-              {% endif %}
-            {% elif extended %}
-              18
-            {% else %}
-              15
-            {% endif %}
+            
+            {%- set critical_temp = state_attr('sensor.toilet_mold_indicator','estimated_critical_temp')|float|round(0, "ceil") -%}
+            {%- set target_temp = 15 -%}
+            
+            {%- if on -%}
+              {%- if active -%}
+                {%- set target_temp = 23 -%}
+              {%- elif night -%}
+                {%- set target_temp = 19 -%}
+              {%- else -%}
+                {%- set target_temp = 21 -%}
+              {%- endif -%}
+            {%- elif extended -%}
+              {%- set target_temp = 18 -%}
+            {%- else -%}
+              {%- set target_temp = 15 -%}
+            {%- endif -%}
+            
+            {%- if target_temp < (critical_temp+2) -%}
+              {{ critical_temp+2 }}
+            {%- else -%}
+              {{ target_temp }}
+            {%- endif -%}
 
   - alias: Termostat Kontor
     trigger:
