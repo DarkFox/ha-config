@@ -57,6 +57,30 @@ automation:
           entity_id: media_player.badevaerelse_mini
           is_volume_muted: true
 
+  - alias: Bathroom Speaker play louder for shower
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: binary_sensor.toilet_sensor
+      to: 'off'
+    condition:
+      - condition: state
+        entity_id: media_player.badevaerelse_mini
+        state: 'playing'
+      - condition: state
+        entity_id: input_select.bathroom_room_state
+        state: 'active'
+      - condition: state
+        entity_id: binary_sensor.bruseniche_bevaegelse
+        state: 'on'
+      - condition: template
+        value_template: "{{ state_attr('media_player.badevaerelse_mini', 'volume_level')|float < 0.60 }}"
+    action:
+      - service: media_player.volume_set
+        data:
+          entity_id: media_player.badevaerelse_mini
+          volume_level: 0.60
+
   # Hallway #
   - alias: Hallway Speaker active trigger
     initial_state: true
@@ -107,8 +131,8 @@ automation:
       platform: template
       value_template: >-
         {{ is_state('input_select.office_room_state', 'active')
-           or is_state('binary_sensor.martin_pc', 'on')
-           or is_state('binary_sensor.working_from_home', 'on') }}
+          or is_state('binary_sensor.martin_pc', 'on')
+          or is_state('binary_sensor.working_from_home', 'on') }}
     action:
       service: switch.turn_on
       data:
