@@ -17,6 +17,45 @@ cards:
 
           - type: vertical-stack
             cards:
+              - type: horizontal-stack
+                cards:
+                  - type: "custom:button-card"
+                    entity: switch.mikroovn
+                    name: Mikroovn
+                    color: auto
+                    tap_action:
+                      action: toggle
+                    hold_action:
+                      action: more-info
+
+                  - type: "custom:button-card"
+                    entity: sensor.kettle_state
+                    icon: mdi:kettle
+                    state:
+                      - value: "Slukket"
+                        name: "Elkedel"
+                        color: "var(--paper-item-icon-color)"
+                      - value: "Tændt"
+                        name: "Elkedel: Tændt"
+                        color: "var(--paper-item-icon-active-color)"
+                      - value: "Brygger"
+                        name: "Elkedel: Brygger"
+                        color: "#FF0000"
+                    tap_action:
+                      action: call-service
+                      service: switch.toggle
+                      service_data:
+                        entity_id: switch.elkedel
+
+                  - type: "custom:button-card"
+                    entity: switch.vinskab
+                    name: Vinskab
+                    color: auto
+                    tap_action:
+                      action: toggle
+                    hold_action:
+                      action: more-info
+
               - type: custom:decluttering-card
                 template: timer
                 variables:
@@ -33,9 +72,9 @@ cards:
           - type: vertical-stack
             cards:
               - type: custom:decluttering-card
-                template: room_light_profile
+                template: room_state_and_light_profile
                 variables:
                   - room: kitchen
 
-              - !include ../cards/thermostats.yaml
+              - !include ../cards/compact_thermostats.yaml
 
