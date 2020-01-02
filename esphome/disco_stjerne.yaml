@@ -1,0 +1,59 @@
+substitutions:
+  devicename: disco_stjerne
+  upper_devicename: Disco Stjerne
+
+esphome:
+  name: $devicename
+  platform: ESP8266
+  board: d1_mini
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+
+  # Enable fallback hotspot in case wifi connection fails
+  ap:
+    ssid: "Disco Stjerne Hotspot"
+    password: !secret ap_pass
+
+web_server:
+  port: 80
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret api_pass
+
+ota:
+  password: !secret ota_pass
+
+output:
+  - platform: esp8266_pwm
+    pin: D4
+    frequency: 1000 Hz
+    id: disco_stjerne_motor_fwd
+  
+  - platform: esp8266_pwm
+    pin: D3
+    frequency: 1000 Hz
+    id: disco_stjerne_motor_bck
+
+light:
+  - platform: monochromatic
+    output: disco_stjerne_motor_fwd
+    name: "Disco Lys Motor Fwd"
+
+  - platform: monochromatic
+    output: disco_stjerne_motor_bck
+    name: "Disco Lys Motor Bck"
+
+  - platform: fastled_clockless
+    chipset: NEOPIXEL
+    pin: D2
+    num_leds: 16
+    id: $devicename
+    name: $upper_devicename
+    default_transition_length: 250ms
+    effects: !include shared/addressable_effects.yaml
