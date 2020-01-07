@@ -56,13 +56,14 @@ cards:
               width: 304px
               padding: 0
             cards:
-              - type: custom:config-template-card
-                entities:
-                  - sensor.s_train_b_next_fmt
-                  - sensor.s_train_b_status
-                card:
-                  type: custom:hui-markdown-card
-                  content: "${ '<font size=6>' + states['sensor.s_train_b_next_fmt'].state + ' min</font><br>' + states['sensor.s_train_b_status'].state}"
+              - type: custom:html-template-card
+                ignore_line_breaks: true
+                content: |
+                  <font size=6>
+                    {{ states('sensor.s_train_b_next_fmt') }} min
+                  </font>
+                  <br>
+                  {{ states('sensor.s_train_b_status') }}
 
           - type: image
             style:
@@ -86,19 +87,20 @@ cards:
                   - entity: binary_sensor.s_train_message_present
                     state: 'on'
                 card:
-                  type: custom:card-modder
-                  style:
-                    padding: 0
-                  card:
-                    type: 'markdown'
-                    content: >-
-                      <font size=5>
-                        Driftsbesked:
-                      </font>
-                      <br>
-                      <font size=4>
-                        [[ sensor.s_train_message.state ]]
-                      </font>
+                  type: custom:html-template-card
+                  style: >
+                    ha-card {
+                      padding: 0;
+                    }
+                  ignore_line_breaks: true
+                  content: >-
+                    <font size=5>
+                      Driftsbesked:
+                    </font>
+                    <br>
+                    <font size=4>
+                      {{ states('sensor.s_train_message') }}
+                    </font>
 
 
           #############

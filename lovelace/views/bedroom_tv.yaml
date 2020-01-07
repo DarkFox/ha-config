@@ -1,0 +1,53 @@
+title: Soveværelse TV
+path: bedroom-tv
+icon: mdi:television
+panel: true
+cards:
+  - type: vertical-stack
+    cards:
+      - type: horizontal-stack
+        cards:
+          - type: vertical-stack
+            cards:
+              - !include ../cards/clock.yaml
+              - !include ../cards/date.yaml
+
+              - !include ../cards/s_train_status.yaml
+                
+              - type: conditional
+                conditions:
+                  - entity: binary_sensor.s_train_message_present
+                    state: 'on'
+                card:
+                  type: custom:html-template-card
+                  ignore_line_breaks: true
+                  style: |
+                    ha-card {
+                      padding: 0px;
+                    }
+                  content: >-
+                    <font size=4>
+                      {{ states('sensor.s_train_message') }}
+                    </font>
+
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.guests
+                    state: 'off'
+                card: !include ../cards/calendar.yaml
+
+          - type: vertical-stack
+            cards:
+              # - !include ../cards/compact_thermostats.yaml
+
+              - type: horizontal-stack
+                cards:
+                  - type: entities
+                    title: Sleep as Android
+                    show_header_toggle: false
+                    entities:
+                      - input_select.sleep_state
+                      - counter.snooze_counter
+
+                  - !include ../cards/hoveddor_laas.yaml
+              - !include ../cards/weather/weather.yaml
