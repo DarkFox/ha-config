@@ -8,6 +8,9 @@ automation:
       - platform: state
         entity_id: media_player.sovevaerelse_chromecast
         to: idle
+      - platform: state
+        entity_id: input_boolean.bedroom_tv_lovelace
+        to: 'on'
     action:
       - event: bedroom_tv_on
         event_data:
@@ -58,24 +61,27 @@ automation:
     condition:
       - condition: template
         value_template: "{{ (state_attr('media_player.bedroom_tv', 'source') == 'Chromecast') }}"
+      - condition: state
+        entity_id: input_boolean.bedroom_tv_lovelace
+        state: 'off'
     action:
       - service: media_player.turn_off
         data:
           entity_id: media_player.bedroom_tv
 
-  - alias: bedroom_soundbar_off_with_tv
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: media_player.bedroom_tv
-        to: 'off'
-    condition:
-      - condition: template
-        value_template: "{{ (state_attr('media_player.sovevaerelse_soundbar_songpal', 'source') == 'TV') }}"
-    action:
-      - service: media_player.turn_off
-        data_template:
-          entity_id: media_player.sovevaerelse_soundbar_songpal
+  # - alias: bedroom_soundbar_off_with_tv
+  #   initial_state: true
+  #   trigger:
+  #     - platform: state
+  #       entity_id: media_player.bedroom_tv
+  #       to: 'off'
+  #   condition:
+  #     - condition: template
+  #       value_template: "{{ (state_attr('media_player.sovevaerelse_soundbar_songpal', 'source') == 'TV') }}"
+  #   action:
+  #     - service: media_player.turn_off
+  #       data_template:
+  #         entity_id: media_player.sovevaerelse_soundbar_songpal
 
   - alias: sovevaerelse_chromecast_off_with_tv
     initial_state: true
@@ -122,7 +128,7 @@ automation:
       - service: media_player.volume_set
         data:
           entity_id: media_player.sovevaerelse_soundbar_songpal
-          volume_level: 0.20
+          volume_level: 0.22
 
   - alias: bedroom_soundbar_day_mode
     initial_state: true

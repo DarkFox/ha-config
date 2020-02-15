@@ -1,19 +1,32 @@
-# Livingroom TV: 192.168.33.12
-# Kitchen TV: 192.168.33.11
+input_boolean: 
+  bedroom_tv_lovelace:
 
 script:
-  bedroom_tv_dashboard:
+  start_bedroom_tv_dashboard:
     sequence:
-      - event: DASHCAST
-        event_data:
-          receiver: "192.168.33.14"
-          url: "http://192.168.33.2:5050/Bedroom-TV"
+      - service: media_player.turn_on
+        data:
+          entity_id: media_player.bedroom_tv
+      - wait_template: "{{ is_state('media_player.bedroom_tv', 'on') }}"
+        timeout: '00:00:30'
+        continue_on_timeout: true
+      - service: media_player.select_source
+        data_template:
+          entity_id: media_player.bedroom_tv
+          source: "Chromecast"
+      - service: cast.show_lovelace_view
+        data:
+          entity_id: media_player.sovevaerelse_chromecast
+          view_path: bedroom-tv
+      - service: input_boolean.turn_on
+        data:
+          entity_id: input_boolean.bedroom_tv_lovelace
 
-  kitchen_tv_dashboard:
-    sequence:
-      - service: switch.turn_on
-        entity_id: switch.kokken_tv_afbryder
-      - event: DASHCAST
-        event_data:
-          receiver: "192.168.33.11"
-          url: "http://192.168.33.2:5050/Kitchen-TV"
+  # kitchen_tv_dashboard:
+  #   sequence:
+  #     - service: switch.turn_on
+  #       entity_id: switch.kokken_tv_afbryder
+  #     - event: DASHCAST
+  #       event_data:
+  #         receiver: "192.168.33.11"
+  #         url: "http://192.168.33.2:5050/Kitchen-TV"

@@ -1,3 +1,43 @@
+script:
+  notify_everywhere:
+    alias: Send notification everywhere
+    sequence:
+      - service: notify.telegram_darkfox
+        data_template:
+          message: "{{ message }}"
+      - service: script.popup_notification
+        data_template:
+          message: "{{ message }}"
+      - service: script.assistant_broadcast_if_home
+        data_template:
+          message: "{{ message }}"
+
+  popup_notification:
+    alias: Popup Notification using Browser Mod
+    sequence:
+      - service: browser_mod.popup
+        data_template:
+          auto_close: true
+          large: true
+          style:
+            border-radius: 20px
+            --ha-card-border-radius: 20px
+            padding: 20px
+          card:
+            type: custom:html-card
+            style: >
+              ha-card {
+                background-color: inherit;
+                font-size: 32pt;
+                line-height: 32pt;
+                font-weight: bold;
+                text-align: center;
+              }
+            content: "{{ message }}"
+      - delay:
+          seconds: 30
+      - service: browser_mod.close_popup
+
 automation:
   - alias: Dishwasher leak warning
     initial_state: true
@@ -9,13 +49,9 @@ automation:
       - service: switch.turn_off
         data:
           entity_id: switch.opvaskemaskine
-      - service: notify.telegram_darkfox
+      - service: script.notify_everywhere
         data:
           message: "Vand under opvaskemaskinen!"
-      - service: script.assistant_broadcast_if_home
-        data:
-          message: "Vand under opvaskemaskinen!"
-
 
   - alias: Bathroom Window Warning
     initial_state: true
@@ -45,7 +81,7 @@ automation:
         entity_id: binary_sensor.badevaerelse_vindue
         state: 'on'
     action:
-      - service: script.assistant_broadcast_if_home
+      - service: script.notify_everywhere
         data:
           message: "Badeværelset er udluftet tilstrækkeligt, du kan nu lukke vinduet."
 
@@ -58,9 +94,6 @@ automation:
       for:
         minutes: 3
     action:
-      - service: notify.telegram_darkfox
+      - service: script.notify_everywhere
         data_template:
-          message: "Hoveddøren er ikke låst!"
-      - service: script.assistant_broadcast_if_home
-        data:
           message: "Hoveddøren er ikke låst!"

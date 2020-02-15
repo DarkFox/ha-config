@@ -11,37 +11,26 @@ input_boolean:
     initial: off
     icon: mdi:cake-variant
 
-automation:
-  # Refresh party button state, when button is turned on.
-  - alias: party_button_available
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: switch.party_button
-      from: 'unavailable'
-    action:
-      service_template: switch.turn_{{ states.input_boolean.party_mode.state }}
-      data:
-        entity_id: switch.party_button
+sensor:
+  - platform: template
+    sensors:
+      party_mode:
+        friendly_name: "Party Mode"
+        value_template: >-
+          {%- if is_state('binary_sensor.party_button_switch', 'unavailable') -%}
+            -1.0
+          {%- else -%}
+            {{ '0.0' if is_state('input_boolean.party_mode', 'off') else '1.0' }}
+          {%- endif -%}
 
-  - alias: party_button_on
+automation:
+  - alias: party_button_pressed
     initial_state: true
     trigger:
       platform: state
-      entity_id: switch.party_button
+      entity_id: binary_sensor.party_button_switch
       to: 'on'
     action:
-      service: input_boolean.turn_on
-      data:
-        entity_id: input_boolean.party_mode
-
-  - alias: party_button_off
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: switch.party_button
-      to: 'off'
-    action:
-      service: input_boolean.turn_off
+      service: input_boolean.toggle
       data:
         entity_id: input_boolean.party_mode

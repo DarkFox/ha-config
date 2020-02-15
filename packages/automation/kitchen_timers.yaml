@@ -1,3 +1,34 @@
+script:
+  timer_add_time:
+    alias: Add time to a timer
+    sequence:
+      - service: timer.pause
+        data_template:
+          entity_id: "{{ entity_id }}"
+      - service: script.start_timer_with_duration
+        data_template:
+          entity_id: "{{ entity_id }}"
+          duration: >
+            {% set hours = hours or "0" %}
+            {% set minutes = minutes or "0" %}
+            {% set seconds = seconds or "0" %}
+            {% if (states(entity_id) != 'idle') %}
+              {% set sections = state_attr(entity_id, 'remaining').split(':') %}
+              {{ (sections[0]|int + hours|int)|string + ":" + (sections[1]|int + minutes|int)|string + ":" + (sections[2]|int + seconds|int)|string }}
+            {% else %}
+              {{ hours }}:{{ minutes }}:{{ seconds }}
+            {% endif %}
+  start_timer_with_duration:
+    alias: Start or restart a timer with a new time
+    sequence:
+      - service: timer.cancel
+        data_template:
+          entity_id: "{{ entity_id }}"
+      - service: timer.start
+        data_template:
+          entity_id: "{{ entity_id }}"
+          duration: "{{ duration }}"
+
 timer:
   kitchen_1:
     name: Ovn Ur
@@ -52,10 +83,7 @@ automation:
       - service: input_boolean.turn_on
         data_template:
           entity_id: "input_boolean.timer_{{ trigger.event.data.entity_id | replace('timer.', '') }}_finished"
-      - service: notify.telegram_darkfox
-        data_template:
-          message: "{{ state_attr(trigger.event.data.entity_id, 'friendly_name') }} er færdig!"
-      - service: script.assistant_broadcast_if_home
+      - service: script.notify_everywhere
         data_template:
           message: "{{ state_attr(trigger.event.data.entity_id, 'friendly_name') }} er færdig!"
 

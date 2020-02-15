@@ -15,6 +15,7 @@ script:
           transition: "{{ transition_time or 0.5 | float }}"
           brightness: 255
           hs_color: [15, 24]
+          effect: 'None'
           entity_id:
             - light.badevaerelse_hylde
       - service: light.turn_on
@@ -38,6 +39,7 @@ script:
           transition: "{{ transition_time or 0.5 | float }}"
           brightness: 255
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
+          effect: 'None'
           entity_id:
             - light.badevaerelse_hylde
       - service: light.turn_on
@@ -61,6 +63,7 @@ script:
           transition: "{{ transition_time or 0.5 | float }}"
           brightness: 172
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
+          effect: 'None'
           entity_id:
             - light.badevaerelse_hylde
       - service: light.turn_on
@@ -84,6 +87,7 @@ script:
           transition: "{{ transition_time or 0.5 | float }}"
           brightness: 127
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
+          effect: 'None'
           entity_id:
             - light.badevaerelse_hylde
       - service: light.turn_on
@@ -106,6 +110,7 @@ script:
           transition: "{{ transition_time or 0.5 | float }}"
           brightness: 96
           rgb_color: [255,0,0]
+          effect: 'None'
           entity_id:
             - light.badevaerelse_hylde
       - service: light.turn_on
@@ -127,6 +132,28 @@ script:
           color_temp: 370
           entity_id:
             - light.badevaerelse
+
+  light_profile_bathroom_party:
+    sequence:
+      # White temp lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 127
+          color_temp: 370
+          entity_id:
+            - light.badevaerelse
+      # Secondary RGB lights
+      - service: light.turn_on
+        data_template:
+          brightness: 127
+          effect: 'rainbow'
+          entity_id:
+            - light.badevaerelse_hylde
+      - service: light.turn_on
+        data_template:
+          entity_id: light.bathroom_tablet
+          brightness: 64
 
   light_profile_bathroom_off:
     sequence:

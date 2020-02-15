@@ -112,7 +112,11 @@ sensor:
       date_text:
         entity_id: sensor.date
         value_template: >-
-          {{ now().strftime('%-d. %b') }}
+          {% set weekday_names = ["Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag", "Søndag"] %}
+          {% set month_names = ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"] %}
+          {% set weekday_name = weekday_names[now().weekday()] %}
+          {% set month_name = month_names[now().month - 1] %}
+          {{ weekday_name }}, {{ now().day }}. {{ month_name }}
 
   - platform: systemmonitor
     resources:

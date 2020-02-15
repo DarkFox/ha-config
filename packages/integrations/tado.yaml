@@ -35,6 +35,7 @@ binary_sensor:
 
 automation:
   - alias: Restart Tado stick if it or the thermostats go offline
+    # Attempts to restart twice.
     initial_state: true
     trigger:
       - platform: state
@@ -42,6 +43,11 @@ automation:
         to: 'on'
         for:
           minutes: 2
+      - platform: state
+        entity_id: binary_sensor.tado_hub_crashed
+        to: 'on'
+        for:
+          minutes: 15
     action:
       - service: notify.telegram_darkfox
         data:
@@ -54,6 +60,12 @@ automation:
       - service: switch.turn_on
         data:
           entity_id: switch.tado_poe
+      - wait_template: "{{ is_state('binary_sensor.tado_hub_crashed', 'off') }}"
+        timeout: '00:05:00'
+        continue_on_timeout: false
+      - service: notify.telegram_darkfox
+        data:
+          message: "Forbindelse til Tado genoprettet."
 
 script:
   increase_temperature:

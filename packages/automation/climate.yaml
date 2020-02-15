@@ -183,6 +183,7 @@ automation:
         entity_id:
           - binary_sensor.thermostats_on
           - binary_sensor.thermostats_night_mode
+          - input_select.sleep_state
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
         to: 'on'
@@ -197,9 +198,12 @@ automation:
             {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
             {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
             {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
+            {%- set sleeping = is_state('input_select.sleep_state', 'sleeping') -%}
 
             {% if on %}
-              {% if night %}
+              {% if sleeping %}
+                19
+              {% elif night %}
                 22
               {% else %}
                 21

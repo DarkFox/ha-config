@@ -673,6 +673,13 @@ automation:
             {% else %}
               input_select.light_profile
             {% endif %}
+      
+      - delay:
+          seconds: 2
+      - service: automation.trigger
+        data:
+          entity_id: "automation.reset_scene_transition_time"
+
       - service: input_select.select_option
         data:
           entity_id: input_select.playlist_player
@@ -692,23 +699,44 @@ automation:
         data_template:
           entity_id: 'media_player.sovevaerelse_soundbar'
           volume_level: 0.25
-      - service: automation.trigger
-        data:
-          entity_id: "automation.reset_scene_transition_time"
-      - delay:
-          minutes: 2
+
+  - alias: alarm_action_2_minutes
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_select.sleep_state
+      to: 'alarm'
+      for:
+        minutes: 2
+    action:
       - service: cover.set_cover_position
         data:
           entity_id: cover.sovevaerelse_rullegardin
           position: 7
-      - delay:
-          minutes: 2
+
+  - alias: alarm_action_4_minutes
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_select.sleep_state
+      to: 'alarm'
+      for:
+        minutes: 5
+    action:
       - service: cover.set_cover_position
         data:
           entity_id: cover.sovevaerelse_rullegardin
           position: 10
-      - delay:
-          minutes: 2
+
+  - alias: alarm_action_6_minutes
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_select.sleep_state
+      to: 'alarm'
+      for:
+        minutes: 10
+    action:
       - service: cover.set_cover_position
         data:
           entity_id: cover.sovevaerelse_rullegardin
@@ -830,6 +858,17 @@ automation:
       - service: joaoapps_join.phone_send_tasker
         data:
           command: "sleep_tracking_stop"
+      
+      - service: media_player.turn_off
+        data:
+          entity_id: media_player.sovevaerelse_chromecast
+      - service: media_player.turn_off
+        data:
+          entity_id: media_player.bedroom_tv
+      - service: input_boolean.turn_off
+        data:
+          entity_id: input_boolean.bedroom_tv_lovelace
+
       - service: input_select.select_option
         data:
           entity_id: input_select.playlist_player
