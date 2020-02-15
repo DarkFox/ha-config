@@ -1,12 +1,10 @@
 title: Gang Tablet
 path: hallway-tablet
-icon: 'mdi:tablet-android'
+icon: "mdi:tablet-android"
 panel: true
 cards:
   - type: vertical-stack
     cards:
-      # - !include ../cards/media_players/conditional_groups.yaml
-
       - type: horizontal-stack
         cards:
           - type: vertical-stack
@@ -14,9 +12,9 @@ cards:
               - !include ../cards/clock.yaml
 
               - !include ../cards/light_profile_buttons.yaml
-          
+
               - type: entities
-                title: ''
+                title: ""
                 show_header_toggle: false
                 style: >
                   .card-content {
@@ -26,45 +24,58 @@ cards:
                   - entity: input_select.theme
 
               - !include ../cards/media_players/playlist_controls.yaml
+              - !include ../cards/media_players/conditional_groups.yaml
+
+              - type: horizontal-stack
+                cards:
+                  - type: custom:decluttering-card
+                    template: app_shortcut
+                    variables:
+                      - app: Spotify
+                      - icon: mdi:spotify
+                      - device: hallway_tablet
+
+                  - type: custom:decluttering-card
+                    template: app_shortcut
+                    variables:
+                      - app: Pocket Casts
+                      - icon: mdi:podcast
+                      - device: hallway_tablet
 
               - !include ../cards/thermostats.yaml
 
               - type: horizontal-stack
                 cards:
-                  # - !include ../cards/mailbox_button.yaml
-                  - type: custom:button-card
-                    color_type: blank-card
+                  - !include ../cards/bathroom_occupied_small.yaml
+
                   - !include ../cards/hoveddor_laas.yaml
 
               - type: conditional
                 conditions:
                   - entity: input_boolean.guests
-                    state: 'off'
+                    state: "off"
                 card: !include ../cards/mode_toggles.yaml
-
           - type: vertical-stack
             cards:
               - !include ../cards/s_train_status.yaml
-            
+
               - !include ../cards/weather/weather.yaml
+
+              - !include ../cards/conditional_timers.yaml
+
+              - !include ../cards/low_battery.yaml
 
               - type: conditional
                 conditions:
                   - entity: input_boolean.guests
-                    state: 'off'
+                    state: "off"
                 card: !include ../cards/calendar.yaml
 
               - type: conditional
                 conditions:
                   - entity: input_boolean.guests
-                    state: 'on'
-                card: !include ../cards/bathroom_occupied.yaml
-
-              - type: conditional
-                conditions:
-                  - entity: input_boolean.guests
-                    state: 'on'
+                    state: "on"
                 card:
-                  type: custom:html-template-card
+                  type: custom:html-card
                   title: WiFi
                   content: !secret ui_wifi_content
