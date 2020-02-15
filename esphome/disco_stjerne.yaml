@@ -30,25 +30,44 @@ ota:
   password: !secret ota_pass
 
 output:
-  - platform: esp8266_pwm
-    pin: D4
-    frequency: 1000 Hz
-    id: disco_stjerne_motor_fwd
+  - platform: gpio
+    pin: D5
+    id: motor_enable
+
+  - platform: gpio
+    pin: D6
+    id: motor_fwd
   
-  - platform: esp8266_pwm
-    pin: D3
-    frequency: 1000 Hz
-    id: disco_stjerne_motor_bck
+  - platform: gpio
+    pin: D7
+    id: motor_bck
+
+switch:
+  - platform: output
+    name: "Disco Stjerne Motor"
+    output: motor_enable
+
+  - platform: template
+    id: motor_direction
+    name: "Disco Stjerne Retning"
+    assumed_state: true
+    optimistic: true
+    lambda: |-
+      if (id(motor_direction).state) {
+        return true;
+      } else {
+        return false;
+      }
+    turn_on_action:
+      - output.turn_off: motor_bck
+      # - delay: 20ms
+      - output.turn_on: motor_fwd
+    turn_off_action:
+      - output.turn_off: motor_fwd
+      # - delay: 20ms
+      - output.turn_on: motor_bck
 
 light:
-  - platform: monochromatic
-    output: disco_stjerne_motor_fwd
-    name: "Disco Lys Motor Fwd"
-
-  - platform: monochromatic
-    output: disco_stjerne_motor_bck
-    name: "Disco Lys Motor Bck"
-
   - platform: fastled_clockless
     chipset: NEOPIXEL
     pin: D2
@@ -56,4 +75,210 @@ light:
     id: $devicename
     name: $upper_devicename
     default_transition_length: 250ms
-    effects: !include shared/addressable_effects.yaml
+    effects:
+      - random:
+      - strobe:
+      - strobe:
+          name: "Fast Strobe"
+          colors:
+            - state: True
+              brightness: 100%
+              red:  100%
+              green: 100%
+              blue: 100%
+              duration: 30ms
+            - state: False
+              duration: 50ms
+      - flicker:
+      - flicker:
+          name: Strong Flicker
+          alpha: 50%
+          intensity: 20%
+
+      - lambda:
+          name: 4 Color Rotation
+          update_interval: 1s
+          lambda: |-
+            static int state = 0;
+            auto call = id($devicename).turn_on();
+            // Transtion of 1000ms = 1s
+            call.set_transition_length(1000);
+            if (state == 0) {
+              call.set_rgb(1.0, 1.0, 1.0);
+            } else if (state == 1) {
+              call.set_rgb(1.0, 0.0, 1.0);
+            } else if (state == 2) {
+              call.set_rgb(0.0, 0.0, 1.0);
+            } else {
+              call.set_rgb(1.0, 0.0, 0.0);
+            }
+            call.perform();
+            state += 1;
+            if (state == 4)
+              state = 0;
+
+      - strobe:
+          name: 3 Color Strobe
+          colors:
+            - state: True
+              brightness: 100%
+              red:  100%
+              green: 0%
+              blue: 0%
+              duration: 500ms
+            - state: True
+              brightness: 100%
+              red: 0%
+              green: 0%
+              blue: 100%
+              duration: 500ms
+            - state: True
+              brightness: 100%
+              red: 0%
+              green: 100%
+              blue: 0%
+              duration: 500ms
+
+      - strobe:
+          name: Lightning
+          colors:
+            - state: True
+              brightness: 100%
+              red:  90%
+              green: 90%
+              blue: 100%
+              duration: 50ms
+            - state: False
+              duration: 50ms 
+            - state: True
+              brightness: 100%
+              red:  90%
+              green: 90%
+              blue: 100%
+              duration: 160ms
+            - state: False
+              duration: 50ms              
+            - state: True
+              brightness: 100%
+              red:  90%
+              green: 90%
+              blue: 100%
+              duration: 50ms
+            - state: False
+              duration: 3000ms 
+
+
+      - addressable_rainbow:
+          width: 1
+      - addressable_rainbow:
+          name: Double Rainbow
+          width: 2
+      - addressable_color_wipe:
+          add_led_interval: 50ms
+      - addressable_color_wipe:
+          name: Full Wipe
+          add_led_interval: 50ms
+          colors:
+            - red: 100%
+              green: 0%
+              blue: 0%
+              num_leds: 13
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 3
+            - red: 0%
+              green: 100%
+              blue: 0%
+              num_leds: 13
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 3
+            - red: 0%
+              green: 0%
+              blue: 100%
+              num_leds: 13
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 3
+      - addressable_color_wipe:
+          name: RGB Rotate
+          add_led_interval: 50ms
+          colors:
+            - red: 100%
+              green: 0%
+              blue: 0%
+              num_leds: 2
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 3
+            - red: 0%
+              green: 100%
+              blue: 0%
+              num_leds: 2
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 3
+            - red: 0%
+              green: 0%
+              blue: 100%
+              num_leds: 2
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 3
+      - addressable_color_wipe:
+          name: Red Rotate
+          add_led_interval: 50ms
+          colors:
+            - red: 100%
+              green: 0%
+              blue: 0%
+              num_leds: 10
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 6
+      - addressable_color_wipe:
+          name: Green Rotate
+          add_led_interval: 50ms
+          colors:
+            - red: 0%
+              green: 100%
+              blue: 0%
+              num_leds: 10
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 6
+      - addressable_color_wipe:
+          name: Blue Rotate
+          add_led_interval: 50ms
+          colors:
+            - red: 0%
+              green: 0%
+              blue: 100%
+              num_leds: 10
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 6
+          reverse: False
+      - addressable_scan:
+      - addressable_scan:
+          name: Fast Scan
+          move_interval: 20ms
+          scan_width: 1
+      - addressable_scan:
+          name: Bounce
+          move_interval: 40ms
+          scan_width: 4
+      - addressable_twinkle:
+      - addressable_random_twinkle:
+      - addressable_fireworks:
+      - addressable_flicker:
+

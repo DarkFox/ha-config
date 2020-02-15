@@ -1,0 +1,87 @@
+substitutions:
+  devicename: party_button
+  upper_devicename: Party Button
+
+esphome:
+  name: $devicename
+  platform: ESP8266
+  board: esp12e
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret api_pass
+
+ota:
+  password: !secret ota_pass
+
+status_led:
+  pin:
+    number: GPIO14
+    inverted: true
+
+sensor:
+  - platform: adc
+    pin: VCC
+    name: "Party Button Battery"
+
+  - platform: homeassistant
+    id: party_mode
+    entity_id: sensor.party_mode
+    name: "Party Button Party Mode"
+    internal: true
+    on_value_range:
+      - above: 0.9
+        below: 1.1
+        then:
+          - light.turn_on:
+              id: button_led
+              effect: 'Alert'
+      - below: 0.1
+        above: -0.9
+        then:
+          - light.turn_on:
+              id: button_led
+              effect: 'None'
+
+binary_sensor:
+  - platform: gpio
+    pin: GPIO5
+    id: button_sw
+    name: "Party Button Switch"
+    device_class: power
+    filters:
+      - delayed_on: 10ms
+
+output:
+  - platform: esp8266_pwm
+    pin: GPIO12
+    id: button_pwm
+
+light:
+  - platform: monochromatic
+    id: button_led
+    name: "Party Button LED"
+    output: button_pwm
+    restore_mode: ALWAYS_OFF
+    internal: true
+    effects:
+      - automation:
+          name: Alert
+          sequence:
+            - light.turn_on:
+                id: button_led
+                brightness: 100%
+                transition_length: 1500ms
+            - delay: 1500ms
+            - light.turn_on:
+                id: button_led
+                brightness: 16%
+                transition_length: 1500ms
+            - delay: 1500ms
