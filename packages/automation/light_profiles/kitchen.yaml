@@ -5,7 +5,6 @@ script:
         data:
           entity_id: light.kitchen_tablet
           brightness: 255
-      # White temp lights
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
@@ -14,8 +13,8 @@ script:
           effect: 'None'
           entity_id:
             - light.kokken_loftlampe
+            - light.kokken_vaeg
             - light.lysestager
-      # Secondary lights
       - service: light.turn_on
         data_template:
           transition: "{{ transition_time or 0.5 | float }}"
@@ -24,28 +23,12 @@ script:
           effect: 'None'
           entity_id:
             - light.kokken_gulv
-      # Switchable Lights
+            - light.kokken_hylde
       - service: light.turn_on
         data:
           entity_id:
             - light.kitchen_sink
             - light.kitchen_stove
-      # IKEA lights
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 255
-          entity_id:
-            - light.kokken_spots
-      - delay:
-          milliseconds: "{{ ((((transition_time or 0.5) | float) + 2.0) * 1000) | int }}"
-      - service: light.turn_on
-        data_template:
-          transition: 0
-          brightness: 255
-          color_temp: 250
-          entity_id:
-            - light.kokken_spots
 
 
   light_profile_kitchen_default:
@@ -54,25 +37,30 @@ script:
         data:
           entity_id: light.kitchen_tablet
           brightness: 172
-      # White temp lights
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 255
-          color_temp: 300
+          brightness: 200
+          color_temp: 400
           effect: 'None'
           entity_id:
             - light.kokken_loftlampe
-      # Primary Lights
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 255
+          brightness: 200
+          color_temp: 450
+          effect: 'None'
+          entity_id:
+            - light.kokken_vaeg
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 150
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           effect: 'None'
           entity_id:
             - light.lysestager
-      # Secondary lights
       - service: light.turn_on
         data_template:
           transition: "{{ transition_time or 0.5 | float }}"
@@ -81,27 +69,12 @@ script:
           effect: 'None'
           entity_id:
             - light.kokken_gulv
-      # Switchable Lights
+            - light.kokken_hylde
       - service: light.turn_on
         data:
           entity_id:
             - light.kitchen_sink
             - light.kitchen_stove
-      # IKEA lights
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 127
-          entity_id:
-            - light.kokken_spots
-      - delay:
-          milliseconds: "{{ ((((transition_time or 0.5) | float) + 2.0) * 1000) | int }}"
-      - service: light.turn_on
-        data_template:
-          brightness: 127
-          color_temp: 400
-          entity_id:
-            - light.kokken_spots
 
 
   light_profile_kitchen_dimmed:
@@ -122,12 +95,19 @@ script:
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 127
+          brightness: 96
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           effect: 'None'
           entity_id:
+            - light.kokken_vaeg
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 72
+          hs_color: [ "{{ states.sensor.theme_secondary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color_hue.state.split(',')[1]|int }}"]
+          effect: 'None'
+          entity_id:
             - light.lysestager
-      # Secondary lights
       - service: light.turn_on
         data_template:
           transition: "{{ transition_time or 0.5 | float }}"
@@ -136,7 +116,7 @@ script:
           effect: 'None'
           entity_id:
             - light.kokken_gulv
-      # Switchable Lights
+            - light.kokken_hylde
       - service: light.turn_on
         data:
           entity_id:
@@ -145,21 +125,6 @@ script:
         data:
           entity_id:
             - light.kitchen_sink
-      # IKEA lights
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 32
-          entity_id:
-            - light.kokken_spots
-      - delay:
-          milliseconds: "{{ ((((transition_time or 0.5) | float) + 2.0) * 1000) | int }}"
-      - service: light.turn_on
-        data_template:
-          brightness: 32
-          color_temp: 500
-          entity_id:
-            - light.kokken_spots
 
 
   light_profile_kitchen_ambient:
@@ -168,7 +133,6 @@ script:
         data:
           entity_id: light.kitchen_tablet
           brightness: 72
-      # Primary RGB lights
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
@@ -180,12 +144,19 @@ script:
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 42
+          brightness: 76
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           effect: 'None'
           entity_id:
+            - light.kokken_vaeg
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (transition_time or 0.5) | float }}"
+          brightness: 48
+          hs_color: [ "{{ states.sensor.theme_secondary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color_hue.state.split(',')[1]|int }}"]
+          effect: 'None'
+          entity_id:
             - light.lysestager
-      # Secondary lights
       - service: light.turn_on
         data_template:
           transition: "{{ transition_time or 0.5 | float }}"
@@ -194,13 +165,7 @@ script:
           effect: 'None'
           entity_id:
             - light.kokken_gulv
-      # Off lights
-      - service: light.turn_off
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          entity_id:
-            - light.kokken_spots
-      # Switchable Lights
+            - light.kokken_hylde
       - service: light.turn_off
         data:
           entity_id:
@@ -214,7 +179,6 @@ script:
         data:
           entity_id: light.kitchen_tablet
           brightness: 1
-      # Primary RGB lights
       - service: light.turn_on
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
@@ -223,8 +187,6 @@ script:
           effect: 'None'
           entity_id:
             - light.kokken_loftlampe
-            - light.lysestage_1
-      # Secondary lights
       - service: light.turn_on
         data_template:
           transition: "{{ transition_time or 0.5 | float }}"
@@ -233,19 +195,14 @@ script:
           effect: 'None'
           entity_id:
             - light.kokken_gulv
-      # Off lights
-      - service: light.turn_off
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          entity_id:
-            - light.kokken_spots
-      # Switchable Lights
+            - light.kokken_hylde
+            - light.kokken_vaeg
       - service: light.turn_off
         data:
           entity_id:
             - light.kitchen_sink
             - light.kitchen_stove
-            - light.lysestage_2
+            - light.lysestager
 
 
   light_profile_kitchen_off:
@@ -254,7 +211,6 @@ script:
         data:
           entity_id:
             - light.kitchen_tablet
-      # Off lights
       - service: light.turn_off
         data_template:
           transition: "{{ (transition_time or 0.5) | float }}"
@@ -270,15 +226,18 @@ script:
       - service: light.turn_on
         data_template:
           effect: "colorloop"
+          brightness: 127
           entity_id:
             - light.kokken_loftlampe
+            - light.kokken_vaeg
             - light.lysestager
       - service: light.turn_on
         data_template:
           effect: "Rainbow"
+          brightness: 127
           entity_id:
             - light.kokken_gulv
-      # Off lights
+            - light.kokken_hylde
       - service: light.turn_off
         data:
           entity_id:
@@ -431,11 +390,14 @@ binary_sensor:
           - input_boolean.kitchen_activity_override
           - input_select.kitchen_room_state
           - input_select.latest_motion
+          - media_player.kokken_chromecast
         value_template: >
           {%- if is_state('input_boolean.kitchen_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.kitchen_room_state', 'active') else 'false' }}
           {%- elif is_state('binary_sensor.kitchen_sensor', 'on')
           or is_state('binary_sensor.kokken_bevaegelse', 'on')
+          or is_state('media_player.kokken_chromecast', 'playing')
+          or is_state('media_player.kokken_chromecast', 'paused')
           or is_state('input_select.latest_motion', 'Kitchen') -%}
             true
           {% else -%}
