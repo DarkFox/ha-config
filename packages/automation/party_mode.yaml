@@ -3,6 +3,7 @@ group:
     name: Party Mode
     entities:
       - input_boolean.party_mode
+      - input_boolean.party_lights
       - switch.party_button
       - sensor.party_button_battery
 
@@ -10,6 +11,10 @@ input_boolean:
   party_mode:
     initial: off
     icon: mdi:cake-variant
+  party_alert:
+    initial: off
+  party_lights:
+    initial: off
 
 sensor:
   - platform: template
@@ -34,3 +39,108 @@ automation:
       service: input_boolean.toggle
       data:
         entity_id: input_boolean.party_mode
+
+  - alias: party_mode_on
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_boolean.party_mode
+      to: 'on'
+    action:
+      - service: input_boolean.turn_on
+        data:
+          entity_id: input_boolean.party_alert
+      - service: light.turn_off
+        data:
+          entity_id:
+            - light.stue_hvidt_lys
+            - light.sovevaerelse_hvidt_lys
+            - light.kontor_hvidt_lys
+            - light.kontor_hvidt_lys
+      - event: party_alert_loop
+      - service: rest_command.hallway_tablet_command
+        data:
+          command: Okay Google, Spil Daily Mix 1 fra Spotify på alle Højttalere=:=say
+      - service: "rest_command.hallway_tablet_command"
+        data:
+          command: "Spotify=:=open_app"
+      - wait_template: "{{ is_state('media_player.alle_hojttalere', 'playing') }}"
+        timeout: '00:00:30'
+      - service: input_boolean.turn_off
+        data:
+          entity_id: input_boolean.party_alert
+      - condition: state
+        entity_id: 'input_boolean.party_mode'
+        state: 'on'
+      - service: input_boolean.turn_on
+        data:
+          entity_id: input_boolean.party_lights
+
+  - alias: party_mode_off
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_boolean.party_mode
+      to: 'off'
+    action:
+      - service: input_boolean.turn_off
+        data:
+          entity_id: input_boolean.party_lights
+      - service:  media_player.media_stop
+        data:
+          entity_id: media_player.alle_hojttalere
+
+  - alias: party_alert_loop
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: party_alert_loop
+    condition:
+      - condition: state
+        entity_id: 'input_boolean.party_mode'
+        state: 'on'
+      - condition: state
+        entity_id: 'input_boolean.party_alert'
+        state: 'on'
+    action:
+      - service: light.turn_on
+        data:
+          brightness: 0
+          rgb_color: [255,0,0]
+          transition: 1
+          entity_id:
+            - light.stue_farvet_lys
+            - light.sovevaerelse_farvet_lys
+            - light.kontor_farvet_lys
+            - light.kontor_farvet_lys
+            - light.gang_lys
+            - light.badevaerelse_lys
+      - delay:
+          seconds: 1.5
+      - condition: state
+        entity_id: 'input_boolean.party_mode'
+        state: 'on'
+      - condition: state
+        entity_id: 'input_boolean.party_alert'
+        state: 'on'
+      - service: light.turn_on
+        data:
+          brightness: 127
+          rgb_color: [255,0,0]
+          transition: 1
+          entity_id:
+            - light.stue_farvet_lys
+            - light.sovevaerelse_farvet_lys
+            - light.kontor_farvet_lys
+            - light.kontor_farvet_lys
+            - light.gang_lys
+            - light.badevaerelse_lys
+      - delay:
+          seconds: 1.5
+      - condition: state
+        entity_id: 'input_boolean.party_mode'
+        state: 'on'
+      - condition: state
+        entity_id: 'input_boolean.party_alert'
+        state: 'on'
+      - event: party_alert_loop
