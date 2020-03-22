@@ -12,7 +12,7 @@ input_select:
 
   playlist_player:
     name: Destination
-    options:
+    options: &destinations
       - None
       # Chromecast Groups
       - media_player.alle_hojttalere
@@ -23,11 +23,13 @@ input_select:
       - media_player.kokken_chromecast
       - media_player.sovevaerelse_chromecast
       - media_player.stue_chromecast
+      - media_player.kontor_chromecast
       # Chromecast audio/speakers
       - media_player.kokken_hojttaler
-      - media_player.kontor_hojttaler
       - media_player.stue_soundbar
       - media_player.sovevaerelse_soundbar
+      - media_player.pc_line_in
+      - media_player.home_assistant_lyd_ind
       # Google Assistant/Home
       - media_player.sovevaerelse_mini
       - media_player.kokken_mini
@@ -50,10 +52,42 @@ sensor:
         entity_id: input_select.playlist_player
         value_template: "{{ state_attr(states('input_select.playlist_player'), 'friendly_name') }}"
 
+group:
+  playlists:
+    name: Playlister
+    entities:
+      - group.playlists_podcasts
+      - group.playlists_audio_streams
+      - group.playlists_video_streams
+
+  playlists_podcasts:
+    name: Podcasts
+    entities:
+      - script.playlist_play_bbc_minute
+      - script.playlist_play_daily_tech_news_show
+      - script.playlist_play_radioavisen
+      - script.playlist_play_briefing
+      - script.playlist_play_weather_report
+
+  playlists_audio_streams:
+    name: Radio
+    entities:
+      - script.playlist_play_radio_soft
+      - script.playlist_play_nova_fm
+      - script.playlist_play_dr_p3
+      - script.playlist_play_dr_p6_beat
+      - script.playlist_play_my_rock
+      - script.playlist_play_groove_salad
+  
+  playlists_video_streams:
+    name: TV
+    entities:
+      - script.playlist_play_dr1
+      - script.playlist_play_dr2
 
 script:
   weather_report:
-    alias: Weather Report
+    alias: Vejrudsigt
     sequence:
       - service: tts.google_cloud_say
         data_template:
@@ -64,7 +98,7 @@ script:
             
   
   briefing:
-    alias: Briefing
+    alias: Rapport
     sequence:
       - service: homeassistant.update_entity
         data:
@@ -143,6 +177,26 @@ script:
         entity_id: input_select.playlist
         options:
           - http://ice1.somafm.com/groovesalad-128-aac
+          - "==END=="
+
+  playlist_play_dr1:
+    alias: DR1
+    sequence:
+      service:  input_select.set_options
+      data:
+        entity_id: input_select.playlist
+        options:
+          - https://dr01-lh.akamaihd.net/i/live/dr01_0@147054/master.m3u8
+          - "==END=="
+
+  playlist_play_dr2:
+    alias: DR2
+    sequence:
+      service:  input_select.set_options
+      data:
+        entity_id: input_select.playlist
+        options:
+          - https://dr02-lh.akamaihd.net/i/live/dr02_0@147055/master.m3u8
           - "==END=="
 
   playlist_play_bbc_minute:
@@ -229,6 +283,16 @@ script:
           option: "==END=="
 
 automation:
+  - alias: close_popup_on_playlist_select
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id:
+          - input_select.playlist
+          - input_select.playlist_player
+    action:
+    - service: browser_mod.close_popup
+
   - alias: playlist_start
     initial_state: true
     trigger:
@@ -323,11 +387,13 @@ automation:
           - media_player.kokken_chromecast
           - media_player.sovevaerelse_chromecast
           - media_player.stue_chromecast
+          - media_player.kontor_chromecast
           # Chromecast audio/speakers
           - media_player.kokken_hojttaler
-          - media_player.kontor_hojttaler
           - media_player.stue_soundbar
           - media_player.sovevaerelse_soundbar
+          - media_player.pc_line_in
+          - media_player.home_assistant_lyd_ind
           # Google Assistant/Home
           - media_player.sovevaerelse_mini
           - media_player.kokken_mini
