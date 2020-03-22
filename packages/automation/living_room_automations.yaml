@@ -8,14 +8,19 @@ automation:
       - service: scene.create
         data_template:
           scene_id: barskab_aabnet_restore
-          entities: 
+          entities:
             light.cabinet_shelves:
               state: "{{ states('light.cabinet_shelves') }}"
               brightness: "{{ state_attr('light.cabinet_shelves', 'brightness') }}"
+            light.cabinet_spots:
+              state: "{{ states('light.cabinet_spots') }}"
+              brightness: "{{ state_attr('light.cabinet_spots', 'brightness') }}"
       - service: light.turn_on
         data:
-          entity_id: light.cabinet_shelves
           brightness: 255
+          entity_id:
+            - light.cabinet_shelves
+            - light.cabinet_spots
 
   - alias: Barskab lukket
     trigger:
