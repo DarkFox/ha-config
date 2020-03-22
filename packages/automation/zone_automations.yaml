@@ -21,23 +21,3 @@ automation:
       data_template:
         time: "{{states.sensor.time.state}}:00"
         date: "{{states.sensor.date.state}}"
-
-  - alias: visit_parents_reminder
-    initial_state: true
-    trigger:
-      platform: time
-      at: '18:00:00'
-    condition:
-      condition: and
-      conditions:
-        - condition: template
-          value_template: '{{ now().weekday() == 0 }}'
-        - condition: template
-          value_template: >
-            {%- set visited_time = as_timestamp(states('input_datetime.visited_parents')) -%}
-            {%- set current_time = as_timestamp(now()) -%}
-            {{ (((current_time - visited_time)/60/60/24) | int) > 30 }}
-    action:
-      service: notify.telegram_darkfox
-      data:
-        message: "Det er ved at være lang tid siden du har besøgt Mor og Far."
