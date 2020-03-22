@@ -11,14 +11,6 @@ wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_pass
 
-  # Enable fallback hotspot in case wifi connection fails
-  ap:
-    ssid: "Disco Stjerne Hotspot"
-    password: !secret ap_pass
-
-web_server:
-  port: 80
-
 # Enable logging
 logger:
 
@@ -30,51 +22,45 @@ ota:
   password: !secret ota_pass
 
 output:
-  - platform: gpio
+  - platform: esp8266_pwm
     pin: D5
     id: motor_enable
+    min_power: 0.90
 
+switch:
   - platform: gpio
     pin: D6
     id: motor_fwd
-  
+    name: "Disco Stjerne Frem"
+    restore_mode: ALWAYS_OFF
+    interlock: [motor_bck]
+
   - platform: gpio
     pin: D7
     id: motor_bck
-
-switch:
-  - platform: output
-    name: "Disco Stjerne Motor"
-    output: motor_enable
-
-  - platform: template
-    id: motor_direction
-    name: "Disco Stjerne Retning"
-    assumed_state: true
-    optimistic: true
-    lambda: |-
-      if (id(motor_direction).state) {
-        return true;
-      } else {
-        return false;
-      }
-    turn_on_action:
-      - output.turn_off: motor_bck
-      # - delay: 20ms
-      - output.turn_on: motor_fwd
-    turn_off_action:
-      - output.turn_off: motor_fwd
-      # - delay: 20ms
-      - output.turn_on: motor_bck
+    name: "Disco Stjerne Tilbage"
+    restore_mode: ALWAYS_OFF
+    interlock: [motor_fwd]
 
 light:
+  - platform: monochromatic
+    output: motor_enable
+    restore_mode: ALWAYS_ON
+    name: "Disco Stjerne Hastighed"
+    effects:
+      - strobe:
+      - flicker:
+          alpha: 30%
+          intensity: 90%
+
   - platform: fastled_clockless
-    chipset: NEOPIXEL
+    chipset: PL9823
     pin: D2
-    num_leds: 16
+    num_leds: 6
+    rgb_order: RGB
     id: $devicename
     name: $upper_devicename
-    default_transition_length: 250ms
+    default_transition_length: 500ms
     effects:
       - random:
       - strobe:
@@ -173,110 +159,161 @@ light:
       - addressable_rainbow:
           name: Double Rainbow
           width: 2
+      - addressable_rainbow:
+          name: Rainbow Scan
+          width: 6
       - addressable_color_wipe:
-          add_led_interval: 50ms
+          add_led_interval: 200ms
       - addressable_color_wipe:
           name: Full Wipe
-          add_led_interval: 50ms
+          add_led_interval: 200ms
           colors:
             - red: 100%
               green: 0%
               blue: 0%
-              num_leds: 13
+              num_leds: 4
             - red: 0%
               green: 0%
               blue: 0%
-              num_leds: 3
+              num_leds: 2
             - red: 0%
               green: 100%
               blue: 0%
-              num_leds: 13
+              num_leds: 4
             - red: 0%
               green: 0%
               blue: 0%
-              num_leds: 3
+              num_leds: 2
             - red: 0%
               green: 0%
               blue: 100%
-              num_leds: 13
+              num_leds: 4
             - red: 0%
               green: 0%
               blue: 0%
-              num_leds: 3
+              num_leds: 2
       - addressable_color_wipe:
           name: RGB Rotate
-          add_led_interval: 50ms
+          add_led_interval: 200ms
           colors:
             - red: 100%
               green: 0%
               blue: 0%
-              num_leds: 2
+              num_leds: 1
             - red: 0%
               green: 0%
               blue: 0%
-              num_leds: 3
+              num_leds: 1
             - red: 0%
               green: 100%
               blue: 0%
-              num_leds: 2
+              num_leds: 1
             - red: 0%
               green: 0%
               blue: 0%
-              num_leds: 3
+              num_leds: 1
             - red: 0%
               green: 0%
               blue: 100%
-              num_leds: 2
+              num_leds: 1
             - red: 0%
               green: 0%
               blue: 0%
-              num_leds: 3
+              num_leds: 1
       - addressable_color_wipe:
           name: Red Rotate
-          add_led_interval: 50ms
+          add_led_interval: 200ms
           colors:
             - red: 100%
               green: 0%
               blue: 0%
-              num_leds: 10
+              num_leds: 1
             - red: 0%
               green: 0%
               blue: 0%
-              num_leds: 6
+              num_leds: 1
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 1
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 1
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 1
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 1
       - addressable_color_wipe:
           name: Green Rotate
-          add_led_interval: 50ms
+          add_led_interval: 200ms
           colors:
             - red: 0%
               green: 100%
               blue: 0%
-              num_leds: 10
+              num_leds: 1
             - red: 0%
               green: 0%
               blue: 0%
-              num_leds: 6
+              num_leds: 1
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 1
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 1
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 1
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 1
       - addressable_color_wipe:
           name: Blue Rotate
-          add_led_interval: 50ms
+          add_led_interval: 200ms
           colors:
             - red: 0%
               green: 0%
               blue: 100%
-              num_leds: 10
+              num_leds: 1
             - red: 0%
               green: 0%
               blue: 0%
-              num_leds: 6
+              num_leds: 1
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 1
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 1
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 1
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 1
           reverse: False
       - addressable_scan:
       - addressable_scan:
           name: Fast Scan
-          move_interval: 20ms
+          move_interval: 50ms
           scan_width: 1
       - addressable_scan:
           name: Bounce
-          move_interval: 40ms
-          scan_width: 4
+          move_interval: 300ms
+          scan_width: 2
       - addressable_twinkle:
       - addressable_random_twinkle:
       - addressable_fireworks:
