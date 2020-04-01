@@ -57,6 +57,29 @@ automation:
         entity_id: media_player.kokken_hojttaler_songpal
         is_volume_muted: true
 
+  - alias: kitchen_tv_chromecast_idle
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.kitchen_room_state
+        to: 'active'
+    condition:
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: input_select.kitchen_light_profile
+            state: Bright
+          - condition: state
+            entity_id: input_select.kitchen_light_profile
+            state: Default
+          - condition: state
+            entity_id: input_select.kitchen_light_profile
+            state: Dimmed
+    action:
+      - service: switch.turn_on
+        data:
+          entity_id: switch.kokken_tv_afbryder
+
   - alias: kitchen_tv_chromecast_on
     initial_state: true
     trigger:
@@ -89,18 +112,18 @@ automation:
           entity_id: media_player.kokken_hojttaler_songpal
           source: Audio in
 
-  - alias: kitchen_tv_chromecast_off
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: media_player.kokken_chromecast
-      to: 'off'
-      for:
-        seconds: 30
-    action:
-      service: switch.turn_off
-      data:
-        entity_id: switch.kokken_tv_afbryder
+  # - alias: kitchen_tv_chromecast_off
+  #   initial_state: true
+  #   trigger:
+  #     platform: state
+  #     entity_id: media_player.kokken_chromecast
+  #     to: 'off'
+  #     for:
+  #       seconds: 30
+  #   action:
+  #     service: switch.turn_off
+  #     data:
+  #       entity_id: switch.kokken_tv_afbryder
 
   - alias: Kitchen TV inactive trigger
     initial_state: true
