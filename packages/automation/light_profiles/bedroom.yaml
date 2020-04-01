@@ -1,10 +1,101 @@
-script:
-  light_profile_bedroom_bright:
-    sequence:
+sensor:
+  - platform: template
+    sensors:
+      bedroom_light_profile:
+        friendly_name: Bedroom Light Profile
+        entity_id:
+          - binary_sensor.bedroom_activity_predicted
+          - input_select.bedroom_room_state
+          - input_select.bedroom_light_profile
+          - input_select.bedroom_inactive_light_profile
+          - input_boolean.bedroom_separate_light_profile
+          - input_select.light_profile
+          - input_boolean.party_lights
+        value_template: >
+          {%- if is_state('input_select.bedroom_room_state', 'active') -%}
+            {%- if is_state('input_boolean.party_lights', 'off') -%}
+              {%- if is_state('input_boolean.bedroom_separate_light_profile', 'off') -%}
+                {{ states('input_select.light_profile') }}
+              {%- else -%}
+                {{ states('input_select.bedroom_light_profile') }}
+              {%- endif -%}
+            {%- else -%}
+              Party
+            {%- endif -%}
+          {%-
+            elif is_state('input_select.bedroom_room_state', 'inactive')
+            or is_state('binary_sensor.bedroom_activity_predicted', 'on')
+          -%}
+            {%- if is_state('input_boolean.bedroom_separate_light_profile', 'off') -%}
+              {{ states('input_select.inactive_light_profile') }}
+            {%- else -%}
+              {{ states('input_select.bedroom_inactive_light_profile') }}
+            {%- endif -%}
+          {%- else %}
+            Off
+          {%- endif -%}
+
+binary_sensor:
+  - platform: template
+    sensors:
+      reading_light:
+        entity_id: input_select.sleep_state
+        value_template: "{{ is_state('input_select.sleep_state', 'bedtime') or is_state('input_select.sleep_state', 'in bed') }}"
+      
+      night_light:
+        entity_id: input_select.sleep_state
+        value_template: "{{ is_state('input_select.sleep_state', 'sleeping') }}"
+
+      bedroom_activity:
+        friendly_name: 'Bedroom Activity'
+        entity_id:
+          - binary_sensor.bedroom_sensor
+          - binary_sensor.seng_bevaegelse
+          - binary_sensor.sovevaerelse_gulv_bevaegelse
+          - input_boolean.bedroom_activity_override
+          - input_select.bedroom_room_state
+          - input_select.latest_motion
+          - input_select.martin_activity
+          - media_player.sovevaerelse_chromecast
+          - media_player.bedroom_tv
+        value_template: >
+          {%- if is_state('input_boolean.bedroom_activity_override', 'on') -%}
+            {{ 'true' if is_state('input_select.bedroom_room_state', 'active') else 'false' }}
+          {%- elif is_state('binary_sensor.bedroom_sensor', 'on')
+          or is_state('binary_sensor.seng_bevaegelse', 'on')
+          or is_state('binary_sensor.sovevaerelse_gulv_bevaegelse', 'on')
+          or is_state('input_select.latest_motion', 'Bedroom')
+          or is_state('input_select.martin_activity', 'Sleeping')
+          or is_state('input_select.martin_activity', 'Waking')
+          or is_state('media_player.sovevaerelse_chromecast', 'playing')
+          or is_state('media_player.bedroom_tv', 'on') -%}
+            true
+          {% else -%}
+            false
+          {% endif -%}
+
+      bedroom_activity_predicted:
+        friendly_name: 'Bedroom Activity Predicted'
+        value_template: "false"
+
+automation:
+  - alias: activate_light_profile_bedroom_bright
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: &room_light_profile sensor.bedroom_light_profile
+        to: 'Bright'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Bright'
+    action:
       # White temp lights
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           color_temp: 370
           effect: 'None'
@@ -14,7 +105,7 @@ script:
       # Dimmable Lights
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           effect: 'None'
           entity_id:
@@ -23,7 +114,7 @@ script:
       # Primary RGB lights
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           hs_color: [29, 15]
           effect: 'None'
@@ -33,13 +124,26 @@ script:
             - light.bed_table
             - light.blyant
             - light.luftfugter_lampe
+            - light.sovevaerelse_tv_hylde
 
-  light_profile_bedroom_default:
-    sequence:
+
+  - alias: activate_light_profile_bedroom_default
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Default'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Default'
+    action:
       # White temp lights
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           color_temp: 370
           effect: 'None'
@@ -47,7 +151,7 @@ script:
             - light.sky
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 200
           color_temp: 370
           effect: 'None'
@@ -55,7 +159,7 @@ script:
             - light.sengelampe
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 200
           effect: 'None'
           entity_id:
@@ -64,7 +168,7 @@ script:
       # Primary RGB lights
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
           effect: 'None'
@@ -74,7 +178,7 @@ script:
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           effect: 'None'
@@ -82,18 +186,30 @@ script:
             - light.bedroom_floor
             - light.bed_table
             - light.blyant
+            - light.sovevaerelse_tv_hylde
 
-  light_profile_bedroom_dimmed:
-    sequence:
+  - alias: activate_light_profile_bedroom_dimmed
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Dimmed'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Dimmed'
+    action:
       - service: light.turn_off
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entity_id:
             - light.bedroom_shelf_strip
       # Dimmable Lights
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 127
           color_temp: 460
           effect: 'None'
@@ -101,7 +217,7 @@ script:
             - light.sengelampe
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 32
           effect: 'None'
           entity_id:
@@ -110,7 +226,7 @@ script:
       # Primary RGB lights
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 86
           hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
           effect: 'None'
@@ -118,7 +234,7 @@ script:
             - light.bedroom_shelf_spots
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 172
           hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
           effect: 'None'
@@ -126,7 +242,7 @@ script:
             - light.luftfugter_lampe
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 86
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           effect: 'None'
@@ -135,35 +251,48 @@ script:
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 127
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           effect: 'None'
           entity_id:
             - light.bedroom_floor
             - light.bed_table
+            - light.sovevaerelse_tv_hylde
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 86
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           effect: 'None'
           entity_id:
             - light.blyant
 
-  light_profile_bedroom_ambient:
-    sequence:
+
+  - alias: activate_light_profile_bedroom_ambient
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Ambient'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Ambient'
+    action:
       # Off Lights
       - service: light.turn_off
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entity_id:
             - light.bedroom_shelf_strip
             - light.sovevaerelse_reol_spots
       # Primary RGB lights
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 64
           hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
           effect: 'None'
@@ -171,7 +300,7 @@ script:
               - light.bedroom_shelf_spots
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 128
           hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
           effect: 'None'
@@ -179,7 +308,7 @@ script:
               - light.luftfugter_lampe
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 2
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           effect: 'None'
@@ -189,7 +318,7 @@ script:
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 32
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           effect: 'None'
@@ -197,31 +326,43 @@ script:
             - light.blyant
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 64
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           effect: 'None'
           entity_id:
             - light.bedroom_floor
+            - light.sovevaerelse_tv_hylde
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 127
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           effect: 'None'
           entity_id:
             - light.bed_table
 
-  light_profile_bedroom_night:
-    sequence:
+  - alias: activate_light_profile_bedroom_night
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Night'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Night'
+    action:
       - event: sengelampe_nat
         event_data_template:
           state: "{{ states('binary_sensor.reading_light') }}"
-          transition_time: "{{ transition_time or 0.5 | float }}"
+          transition_time: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
       # Off Lights
       - service: light.turn_off
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entity_id:
             - light.sky
             - light.sovevaerelse_reol_spots
@@ -229,7 +370,7 @@ script:
             - light.luftfugter_lampe
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 16
           rgb_color: [255,0,0]
           effect: 'None'
@@ -237,7 +378,7 @@ script:
             - light.blyant
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 24
           rgb_color: [255,0,0]
           effect: 'None'
@@ -245,31 +386,85 @@ script:
             - light.bedroom_shelf_spots
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 64
           rgb_color: [255,0,0]
           effect: 'None'
           entity_id:
             - light.bedroom_floor
+            - light.sovevaerelse_tv_hylde
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 127
           rgb_color: [255,0,0]
           effect: 'None'
           entity_id:
             - light.bed_table
 
-  light_profile_bedroom_off:
-    sequence:
-      - event: bed_table_night_light
-        event_data_template:
-          state: "{{ states('binary_sensor.night_light') }}"
-          transition_time: "{{ transition_time or 0.5 | float }}"
+  - alias: sengelampe_nat_on
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Night'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Night'
+      - condition: state
+        entity_id: binary_sensor.reading_light
+        state: 'on'
+    action:
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          brightness: 2
+          hs_color: [20,100]
+          entity_id:
+            - light.sengelampe
+
+  - alias: sengelampe_nat_off
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Night'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Night'
+      - condition: state
+        entity_id: binary_sensor.reading_light
+        state: 'off'
+    action:
+      - service: light.turn_off
+        data_template:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          entity_id:
+            - light.sengelampe
+
+  - alias: activate_light_profile_bedroom_off
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Off'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Off'
+    action:
       # Off Lights
       - service: light.turn_off
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entity_id:
             - light.sky
             - light.sengelampe
@@ -278,10 +473,68 @@ script:
             - light.bedroom_floor
             - light.sovevaerelse_reol_spots
             - light.blyant
+            - light.sovevaerelse_tv_hylde
             - light.luftfugter_lampe
 
-  light_profile_bedroom_party:
-    sequence:
+  - alias: bed_table_night_light_on
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Off'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Off'
+      - condition: state
+        entity_id: binary_sensor.night_light
+        state: 'on'
+    action:
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          brightness: 24
+          rgb_color: [255,0,0]
+          entity_id:
+            - light.bed_table
+
+  - alias: bed_table_night_light_off
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Off'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Off'
+      - condition: state
+        entity_id: binary_sensor.night_light
+        state: 'off'
+    action:
+      - service: light.turn_off
+        data_template:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          entity_id:
+            - light.bed_table
+
+  - alias: activate_light_profile_bedroom_party
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Party'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Party'
+    action:
       # Off Lights
       - service: light.turn_off
         data:
@@ -298,73 +551,13 @@ script:
             - light.bed_table
             - light.blyant
             - light.luftfugter_lampe
+            - light.sovevaerelse_tv_hylde
       - service: light.turn_on
         data:
           effect: "colorloop"
           brightness: 32
           entity_id:
             - light.sengelampe
-
-automation:
-  - alias: sengelampe_nat_on
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: sengelampe_nat
-        event_data:
-          state: 'on'
-    action:
-      - service: light.turn_on
-        data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
-          brightness: 2
-          hs_color: [20,100]
-          entity_id:
-            - light.sengelampe
-
-  - alias: sengelampe_nat_off
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: sengelampe_nat
-        event_data:
-          state: 'off'
-    action:
-      - service: light.turn_off
-        data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
-          entity_id:
-            - light.sengelampe
-
-  - alias: bed_table_night_light_on
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: bed_table_night_light
-        event_data:
-          state: 'on'
-    action:
-      - service: light.turn_on
-        data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
-          brightness: 24
-          rgb_color: [255,0,0]
-          entity_id:
-            - light.bed_table
-
-  - alias: bed_table_night_light_off
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: bed_table_night_light
-        event_data:
-          state: 'off'
-    action:
-      - service: light.turn_off
-        data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
-          entity_id:
-            - light.bed_table
 
 input_boolean:
   bedroom_activity_override:
@@ -500,49 +693,6 @@ light:
             option: 'Off'
         turn_off:
           event: bedroom_light_profile_off_null
-
-binary_sensor:
-  - platform: template
-    sensors:
-      reading_light:
-        entity_id: input_select.sleep_state
-        value_template: "{{ is_state('input_select.sleep_state', 'bedtime') or is_state('input_select.sleep_state', 'in bed') }}"
-      
-      night_light:
-        entity_id: input_select.sleep_state
-        value_template: "{{ is_state('input_select.sleep_state', 'sleeping') }}"
-
-      bedroom_activity:
-        friendly_name: 'Bedroom Activity'
-        entity_id:
-          - binary_sensor.bedroom_sensor
-          - binary_sensor.seng_bevaegelse
-          - binary_sensor.sovevaerelse_gulv_bevaegelse
-          - input_boolean.bedroom_activity_override
-          - input_select.bedroom_room_state
-          - input_select.latest_motion
-          - input_select.martin_activity
-          - media_player.sovevaerelse_chromecast
-          - media_player.bedroom_tv
-        value_template: >
-          {%- if is_state('input_boolean.bedroom_activity_override', 'on') -%}
-            {{ 'true' if is_state('input_select.bedroom_room_state', 'active') else 'false' }}
-          {%- elif is_state('binary_sensor.bedroom_sensor', 'on')
-          or is_state('binary_sensor.seng_bevaegelse', 'on')
-          or is_state('binary_sensor.sovevaerelse_gulv_bevaegelse', 'on')
-          or is_state('input_select.latest_motion', 'Bedroom')
-          or is_state('input_select.martin_activity', 'Sleeping')
-          or is_state('input_select.martin_activity', 'Waking')
-          or is_state('media_player.sovevaerelse_chromecast', 'playing')
-          or is_state('media_player.bedroom_tv', 'on') -%}
-            true
-          {% else -%}
-            false
-          {% endif -%}
-
-      bedroom_activity_predicted:
-        friendly_name: 'Bedroom Activity Predicted'
-        value_template: "false"
 
 group:
   bedroom_activity_entities:

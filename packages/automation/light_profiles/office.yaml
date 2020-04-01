@@ -1,10 +1,91 @@
-script:
-  light_profile_office_bright:
-    sequence:
+sensor:
+  - platform: template
+    sensors:
+      office_light_profile:
+        friendly_name: Office Light Profile
+        entity_id:
+          - binary_sensor.office_activity_predicted
+          - input_select.office_room_state
+          - input_select.office_light_profile
+          - input_select.office_inactive_light_profile
+          - input_boolean.office_separate_light_profile
+          - input_select.light_profile
+          - input_boolean.party_lights
+        value_template: >
+          {%- if is_state('input_select.office_room_state', 'active') -%}
+            {%- if is_state('input_boolean.party_lights', 'off') -%}
+              {%- if is_state('input_boolean.office_separate_light_profile', 'off') -%}
+                {{ states('input_select.light_profile') }}
+              {%- else -%}
+                {{ states('input_select.office_light_profile') }}
+              {%- endif -%}
+            {%- else -%}
+              Party
+            {%- endif -%}
+          {%-
+            elif is_state('input_select.office_room_state', 'inactive')
+            or is_state('binary_sensor.office_activity_predicted', 'on')
+          -%}
+            {%- if is_state('input_boolean.office_separate_light_profile', 'off') -%}
+              {{ states('input_select.inactive_light_profile') }}
+            {%- else -%}
+              {{ states('input_select.office_inactive_light_profile') }}
+            {%- endif -%}
+          {%- else %}
+            Off
+          {%- endif -%}
+
+binary_sensor:
+  - platform: template
+    sensors:
+      office_activity:
+        friendly_name: 'Office Activity'
+        entity_id:
+          - binary_sensor.office_sensor
+          - binary_sensor.pc_hobby_bevaegelse
+          - input_boolean.office_activity_override
+          - input_select.office_room_state
+          - input_select.latest_motion
+        value_template: >
+          {%- if is_state('input_boolean.office_activity_override', 'on') -%}
+            {{ 'true' if is_state('input_select.office_room_state', 'active') else 'false' }}
+          {%- elif is_state('binary_sensor.office_sensor', 'on')
+          or is_state('binary_sensor.pc_hobby_bevaegelse', 'on')
+          or is_state('input_select.latest_motion', 'Office') -%}
+            true
+          {%- else -%}
+            false
+          {%- endif -%}
+
+      office_activity_predicted:
+        friendly_name: 'Office Activity Predicted'
+        entity_id:
+          - binary_sensor.moved_from_to_hallway_to_living_room
+        value_template: >
+          {%- if is_state('binary_sensor.moved_from_to_hallway_to_living_room', 'on') -%}
+            true
+          {% else -%}
+            false
+          {% endif -%}
+
+automation:
+  - alias: activate_light_profile_office_bright
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: &room_light_profile sensor.office_light_profile
+        to: 'Bright'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Bright'
+    action:
       # White temp lights
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           color_temp: 370
           effect: 'None'
@@ -13,7 +94,7 @@ script:
       # Dimmable Lights
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           effect: 'None'
           entity_id:
@@ -24,24 +105,31 @@ script:
       # Primary RGB lights
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           hs_color: [15, 43]
           effect: 'None'
           entity_id:
             - light.office_shelf
             - light.skrivebord_bar
-            - light.pc_skaerme
             - light.blink1
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          brightness: 255
+          hs_color: [15, 43]
+          effect: 'Solid'
+          entity_id:
+            - light.pc_skaerme
       # IKEA lights
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           entity_id:
             - light.kontor_spots
       - delay:
-          milliseconds: "{{ ((((transition_time or 0.5) | float) + 2.0) * 1000) | int }}"
+          milliseconds: "{{ ((((states('input_number.scene_transition_time') or 0.5) | float) + 2.0) * 1000) | int }}"
       - service: light.turn_on
         data_template:
           transition: 0
@@ -50,12 +138,23 @@ script:
           entity_id:
             - light.kontor_spots
 
-  light_profile_office_default:
-    sequence:
+  - alias: activate_light_profile_office_default
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Default'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Default'
+    action:
       # Dimmable Lights
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 200
           effect: 'None'
           entity_id:
@@ -63,7 +162,7 @@ script:
             - light.office_door_spots
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           effect: 'None'
           entity_id:
@@ -72,7 +171,7 @@ script:
       # Primary RGB lights
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           effect: 'None'
@@ -80,7 +179,7 @@ script:
             - light.kontor_loftlys
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
           effect: 'None'
@@ -89,23 +188,29 @@ script:
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           effect: 'None'
           entity_id:
             - light.skrivebord_bar
+            - light.blink1- service: light.turn_on
+        data_template:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          brightness: 127
+          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
+          effect: 'Solid'
+          entity_id:
             - light.pc_skaerme
-            - light.blink1
       # IKEA lights
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 172
           entity_id:
             - light.kontor_spots
       - delay:
-          milliseconds: "{{ ((((transition_time or 0.5) | float) + 2.0) * 1000) | int }}"
+          milliseconds: "{{ ((((states('input_number.scene_transition_time') or 0.5) | float) + 2.0) * 1000) | int }}"
       - service: light.turn_on
         data_template:
           brightness: 172
@@ -113,12 +218,23 @@ script:
           entity_id:
             - light.kontor_spots
 
-  light_profile_office_dimmed:
-    sequence:
+  - alias: activate_light_profile_office_dimmed
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Dimmed'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Dimmed'
+    action:
       # Dimmable Lights
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 127
           effect: 'None'
           entity_id:
@@ -126,7 +242,7 @@ script:
             - light.office_door_spots
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 64
           entity_id:
             - light.hobbybord_hylder
@@ -134,7 +250,7 @@ script:
       # Primary RGB lights
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 172
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           effect: 'None'
@@ -142,7 +258,7 @@ script:
             - light.kontor_loftlys
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 127
           hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
           effect: 'None'
@@ -151,34 +267,52 @@ script:
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 172
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           effect: 'None'
           entity_id:
             - light.skrivebord_bar
-            - light.pc_skaerme
             - light.blink1
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          brightness: 72
+          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
+          effect: 'Solid'
+          entity_id:
+            - light.pc_skaerme
       # IKEA lights
       - service: light.turn_off
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}" 
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}" 
           entity_id:
             - light.kontor_spots
 
-  light_profile_office_ambient:
-    sequence:
+  - alias: activate_light_profile_office_ambient
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Ambient'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Ambient'
+    action:
       # Off Lights
       - service: light.turn_off
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entity_id:
             - light.kontor_spots
             - light.hobbybord_hylder
       # Dimmable Lights
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 16
           effect: 'None'
           entity_id:
@@ -186,14 +320,14 @@ script:
             - light.office_door_spots
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 1
           entity_id:
             - light.hobbybord
       # Primary RGB lights
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 86
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           effect: 'None'
@@ -201,7 +335,7 @@ script:
             - light.kontor_loftlys
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 96
           hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
           effect: 'None'
@@ -210,21 +344,39 @@ script:
       # Secondary RGB lights
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 127
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           effect: 'None'
           entity_id:
             - light.skrivebord_bar
-            - light.pc_skaerme
             - light.blink1
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          brightness: 32
+          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
+          effect: 'Solid'
+          entity_id:
+            - light.pc_skaerme
 
-  light_profile_office_night:
-    sequence:
+  - alias: activate_light_profile_office_night
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Night'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Night'
+    action:
       # Off Lights
       - service: light.turn_off
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entity_id:
             - light.kontor_spots
             - light.office_desk_spots
@@ -234,7 +386,7 @@ script:
             - light.blink1
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 24
           rgb_color: [255, 0, 0]
           effect: 'None'
@@ -244,28 +396,50 @@ script:
             - light.skrivebord_bar
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 64
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          brightness: 8
           rgb_color: [255, 0, 0]
-          effect: 'None'
+          effect: 'Solid'
           entity_id:
             - light.pc_skaerme
 
-  light_profile_office_off:
-    sequence:
+  - alias: activate_light_profile_office_off
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Off'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Off'
+    action:
       # Off Lights
       - service: light.turn_off
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entity_id:
             - group.office_lights
 
-  light_profile_office_party:
-    sequence:
+  - alias: activate_light_profile_office_party
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Party'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Party'
+    action:
       # Off Lights
       - service: light.turn_off
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entity_id:
             - light.kontor_spots
             - light.office_desk_spots
@@ -291,6 +465,12 @@ script:
           brightness: 127
           entity_id:
             - light.kontor_loftlys
+      - service: light.turn_on
+        data_template:
+          effect: "Ripple Rainbow"
+          brightness: 127
+          entity_id:
+            - light.pc_skaerme
 
 input_boolean:
   office_activity_override:
@@ -426,43 +606,6 @@ light:
             option: 'Off'
         turn_off:
           event: office_light_profile_off_null
-
-binary_sensor:
-  - platform: template
-    sensors:
-      office_activity:
-        friendly_name: 'Office Activity'
-        entity_id:
-          - binary_sensor.office_sensor
-          - binary_sensor.pc_hobby_bevaegelse
-          - input_boolean.office_activity_override
-          - input_select.office_room_state
-          - input_select.latest_motion
-        value_template: >
-          {%- if is_state('input_boolean.office_activity_override', 'on') -%}
-            {{ 'true' if is_state('input_select.office_room_state', 'active') else 'false' }}
-          {%- elif is_state('binary_sensor.office_sensor', 'on')
-          or is_state('binary_sensor.pc_hobby_bevaegelse', 'on')
-          or is_state('input_select.latest_motion', 'Office') -%}
-            true
-          {%- else -%}
-            false
-          {%- endif -%}
-
-      office_activity_predicted:
-        friendly_name: 'Office Activity Predicted'
-        entity_id:
-          - binary_sensor.moved_from_to_hallway_to_living_room
-        value_template: >
-          {%- if is_state('input_boolean.office_activity_override', 'on') 
-          or is_state('input_boolean.office_separate_light_profile', 'on')
-          or is_state('input_select.office_room_state', 'active')  -%}
-            false
-          {%- elif is_state('binary_sensor.moved_from_to_hallway_to_living_room', 'on') -%}
-            true
-          {% else -%}
-            false
-          {% endif -%}
 
 group:
   office_activity_entities:

@@ -1,108 +1,220 @@
-script:
-  light_profile_storage_room_bright:
-    sequence:
+sensor:
+  - platform: template
+    sensors:
+      storage_room_light_profile:
+        friendly_name: Storage Room Light Profile
+        entity_id:
+          - binary_sensor.storage_room_activity_predicted
+          - input_select.storage_room_room_state
+          - input_select.storage_room_light_profile
+          - input_select.storage_room_inactive_light_profile
+          - input_boolean.storage_room_separate_light_profile
+          - input_select.light_profile
+          - input_boolean.party_lights
+        # NOTE: Party mode left out
+        value_template: >
+          {%- if is_state('input_select.storage_room_room_state', 'active') -%}
+            {%- if is_state('input_boolean.storage_room_separate_light_profile', 'off') -%}
+              {{ states('input_select.light_profile') }}
+            {%- else -%}
+              {{ states('input_select.storage_room_light_profile') }}
+            {%- endif -%}
+          {%-
+            elif is_state('input_select.storage_room_room_state', 'inactive')
+            or is_state('binary_sensor.storage_room_activity_predicted', 'on')
+          -%}
+            {%- if is_state('input_boolean.storage_separate_light_profile', 'off') -%}
+              {{ states('input_select.inactive_light_profile') }}
+            {%- else -%}
+              {{ states('input_select.storage_inactive_light_profile') }}
+            {%- endif -%}
+          {%- else %}
+            Off
+          {%- endif -%}
+
+binary_sensor:
+  - platform: template
+    sensors:
+      storage_room_activity:
+        friendly_name: 'Storage Room Activity'
+        entity_id:
+          - binary_sensor.skab_bevaegelse
+          - input_boolean.storage_room_activity_override
+          - input_select.storage_room_state
+        value_template: >
+          {%- if is_state('input_boolean.storage_room_activity_override', 'on') -%}
+            {{ 'true' if is_state('input_select.storage_room_room_state', 'active') else 'false' }}
+          {%- elif is_state('binary_sensor.skab_bevaegelse', 'on') -%}
+            true
+          {% else -%}
+            false
+          {% endif -%}
+
+      storage_room_activity_predicted:
+        friendly_name: 'Storage Room Activity Predicted'
+        value_template: "false"
+
+automation:
+  - alias: activate_light_profile_storage_room_bright
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: &room_light_profile sensor.storage_room_light_profile
+        to: 'Bright'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Bright'
+    action:
       # White temp lights
       - service: light.turn_on
         data_template:
           transition: 0
           color_temp: 256
           entity_id:
-            - light.klaedeskab
+            - light.klaedeskab_spots
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           entity_id:
-            - light.klaedeskab
+            - light.klaedeskab_spots
 
-  light_profile_storage_room_default:
-    sequence:
+  - alias: activate_light_profile_storage_room_default
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Default'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Default'
+    action:
       # White temp lights
       - service: light.turn_on
         data_template:
           transition: 0
           color_temp: 330
           entity_id:
-            - light.klaedeskab
+            - light.klaedeskab_spots
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           entity_id:
-            - light.klaedeskab
+            - light.klaedeskab_spots
 
-  light_profile_storage_room_dimmed:
-    sequence:
+  - alias: activate_light_profile_storage_room_dimmed
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Dimmed'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Dimmed'
+    action:
       # White temp lights
       - service: light.turn_on
         data_template:
           transition: 0
           color_temp: 330
           entity_id:
-            - light.klaedeskab
+            - light.klaedeskab_spots
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 127
           entity_id:
-            - light.klaedeskab
+            - light.klaedeskab_spots
 
-  light_profile_storage_room_ambient:
-    sequence:
+  - alias: activate_light_profile_storage_room_ambient
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Ambient'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Ambient'
+    action:
       # White temp lights
       - service: light.turn_on
         data_template:
           transition: 0
           color_temp: 330
           entity_id:
-            - light.klaedeskab
+            - light.klaedeskab_spots
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 72
           entity_id:
-            - light.klaedeskab
+            - light.klaedeskab_spots
 
-  light_profile_storage_room_night:
-    sequence:
+  - alias: activate_light_profile_storage_room_night
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Night'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Night'
+    action:
+      - service: light.turn_off
+        data_template:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          entity_id:
+            - light.klaedeskab_spot_1
+            - light.klaedeskab_spot_2
       # White temp lights
       - service: light.turn_on
         data_template:
           transition: 0
           color_temp: 500
           entity_id:
-            - light.klaedeskab
+            - light.klaedeskab_spot_3
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 1
           entity_id:
-            - light.klaedeskab
+            - light.klaedeskab_spot_3
 
-  light_profile_storage_room_off:
-    sequence:
+  - alias: activate_light_profile_storage_room_off
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Off'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Off'
+    action:
       # Primary RGB lights
       - service: light.turn_off
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entity_id:
-            - light.klaedeskab
-
-  light_profile_storage_room_party:
-    sequence:
-      # White temp lights
-      - service: light.turn_on
-        data_template:
-          transition: 0
-          color_temp: 330
-          entity_id:
-            - light.klaedeskab
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 72
-          entity_id:
-            - light.klaedeskab
+            - light.klaedeskab_spots
 
 input_boolean:
   storage_room_activity_override:
@@ -238,28 +350,6 @@ light:
             option: 'Off'
         turn_off:
           event: storage_room_light_profile_off_null
-
-binary_sensor:
-  - platform: template
-    sensors:
-      storage_room_activity:
-        friendly_name: 'Storage Room Activity'
-        entity_id:
-          - binary_sensor.skab_bevaegelse
-          - input_boolean.storage_room_activity_override
-          - input_select.storage_room_state
-        value_template: >
-          {%- if is_state('input_boolean.storage_room_activity_override', 'on') -%}
-            {{ 'true' if is_state('input_select.storage_room_room_state', 'active') else 'false' }}
-          {%- elif is_state('binary_sensor.skab_bevaegelse', 'on') -%}
-            true
-          {% else -%}
-            false
-          {% endif -%}
-
-      storage_room_activity_predicted:
-        friendly_name: 'Storage Room Activity Predicted'
-        value_template: "false"
 
 group:
   storage_rooom_activity_entities:

@@ -1,12 +1,99 @@
-script:
-  light_profile_living_room_bright:
-    sequence:
-      - service: light.turn_on
-        data:
-          entity_id: light.living_room_tablet_browser
+sensor:
+  - platform: template
+    sensors:
+      living_room_light_profile:
+        friendly_name: Living Room Light Profile
+        entity_id:
+          - binary_sensor.living_room_activity_predicted
+          - input_select.living_room_room_state
+          - input_select.living_room_light_profile
+          - input_select.living_room_inactive_light_profile
+          - input_boolean.living_room_separate_light_profile
+          - input_select.light_profile
+          - input_boolean.party_lights
+        value_template: >
+          {%- if is_state('input_select.living_room_room_state', 'active') -%}
+            {%- if is_state('input_boolean.party_lights', 'off') -%}
+              {%- if is_state('input_boolean.living_room_separate_light_profile', 'off') -%}
+                {{ states('input_select.light_profile') }}
+              {%- else -%}
+                {{ states('input_select.living_room_light_profile') }}
+              {%- endif -%}
+            {%- else -%}
+              Party
+            {%- endif -%}
+          {%-
+            elif is_state('input_select.living_room_room_state', 'inactive')
+            or is_state('binary_sensor.living_room_activity_predicted', 'on')
+          -%}
+            {%- if is_state('input_boolean.living_room_separate_light_profile', 'off') -%}
+              {{ states('input_select.inactive_light_profile') }}
+            {%- else -%}
+              {{ states('input_select.living_room_inactive_light_profile') }}
+            {%- endif -%}
+          {%- else %}
+            Off
+          {%- endif -%}
+
+binary_sensor:
+  - platform: template
+    sensors:
+      living_room_activity:
+        friendly_name: 'Livingroom Activity'
+        entity_id:
+          - binary_sensor.livingroom_sensor
+          - binary_sensor.spisebord_bevaegelse
+          - binary_sensor.sofagruppe_bevaegelse
+          - input_boolean.living_room_activity_override
+          - input_select.living_room_state
+          - media_player.stue_chromecast
+          - input_select.latest_motion
+        value_template: >
+          {%- if is_state('input_boolean.living_room_activity_override', 'on') -%}
+            {{ 'true' if is_state('input_select.living_room_room_state', 'active') else 'false' }}
+          {%- elif is_state('binary_sensor.livingroom_sensor', 'on')
+          or is_state('binary_sensor.spisebord_bevaegelse', 'on')
+          or is_state('binary_sensor.sofagruppe_bevaegelse', 'on')
+          or is_state('media_player.stue_chromecast', 'playing')
+          or is_state('media_player.stue_chromecast', 'paused')
+          or is_state('input_select.latest_motion', 'Living Room') -%}
+            true
+          {% else -%}
+            false
+          {% endif -%}
+
+      living_room_activity_predicted:
+        friendly_name: 'Living Room Activity Predicted'
+        entity_id:
+          - binary_sensor.moved_from_kitchen_to_hallway
+          - binary_sensor.moved_from_bathroom_to_hallway
+        value_template: >
+          {%- 
+            if is_state('binary_sensor.moved_from_kitchen_to_hallway', 'on')
+            or is_state('binary_sensor.moved_from_bathroom_to_hallway', 'on')
+          -%}
+            true
+          {% else -%}
+            false
+          {% endif -%}
+
+automation:
+  - alias: activate_light_profile_living_room_bright
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: &room_light_profile sensor.living_room_light_profile
+        to: 'Bright'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Bright'
+    action:
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           color_temp: 370
           effect: 'None'
@@ -16,24 +103,27 @@ script:
             - light.sofahjorne
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           color_temp: 370
           effect: 'Solid'
           entity_id:
+            - light.stue_bar
             - light.vindueskarm
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           effect: 'None'
           entity_id:
             - light.vitrineskab
-            - light.cabinet_shelves
-            - light.cabinet_spots
+            - light.barskab_under
+            - light.barskab_over
+            - light.bar_hylde_spots
+            - light.bar_spots
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           hs_color: [0, 0]
           effect: 'None'
@@ -41,19 +131,18 @@ script:
             - light.globe
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           hs_color: [29, 15]
           effect: 'None'
           entity_id:
-            - light.bar
-            - light.display_cabinet_top
-            - light.display_cabinet_bottom
+            - light.vitrineskab_top
+            - light.vitrineskab_bund
             - light.tv_shelf
             - light.tv_backlight
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           color_temp: 370
           effect: 'None'
@@ -62,13 +151,13 @@ script:
             - light.sofa_laeselampe
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           entity_id:
             - light.stue_spot_1
             - light.stue_spot_2
       - delay:
-          milliseconds: "{{ ((((transition_time or 0.5) | float) + 2.0) * 1000) | int }}"
+          milliseconds: "{{ ((((states('input_number.scene_transition_time') or 0.5) | float) + 2.0) * 1000) | int }}"
       - service: light.turn_on
         data_template:
           transition: 0
@@ -77,15 +166,27 @@ script:
           entity_id:
             - light.stue_spot_1
             - light.stue_spot_2
-
-  light_profile_living_room_default:
-    sequence:
       - service: light.turn_on
         data:
           entity_id: light.living_room_tablet_browser
+
+
+  - alias: activate_light_profile_living_room_default
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Default'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Default'
+    action:
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 128
           color_temp: 430
           effect: 'None'
@@ -94,16 +195,18 @@ script:
             - light.spisebord
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 127
           effect: 'None'
           entity_id:
             - light.vitrineskab
-            - light.cabinet_shelves
-            - light.cabinet_spots
+            - light.barskab_under
+            - light.barskab_over
+            - light.bar_hylde_spots
+            - light.bar_spots
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 192
           hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
           effect: 'None'
@@ -111,15 +214,15 @@ script:
             - light.tv_backlight
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
           effect: 'None'
           entity_id:
-            - light.display_cabinet_top
+            - light.vitrineskab_top
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 192
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           effect: 'None'
@@ -127,7 +230,7 @@ script:
             - light.globe
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           hs_color: [ "{{ states.sensor.theme_secondary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color_hue.state.split(',')[1]|int }}" ]
           effect: 'None'
@@ -135,16 +238,15 @@ script:
             - light.sofahjorne
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           effect: 'None'
           entity_id:
-            - light.bar
-            - light.display_cabinet_bottom
+            - light.vitrineskab_bund
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 192
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           effect: 'None'
@@ -152,15 +254,16 @@ script:
             - light.tv_shelf
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 127
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           effect: 'Solid'
           entity_id:
             - light.vindueskarm
+            - light.stue_bar
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 96
           color_temp: 430
           effect: 'None'
@@ -169,13 +272,13 @@ script:
             - light.sofa_laeselampe
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 96
           entity_id:
             - light.stue_spot_1
             - light.stue_spot_2
       - delay:
-          milliseconds: "{{ ((((transition_time or 0.5) | float) + 2.0) * 1000) | int }}"
+          milliseconds: "{{ ((((states('input_number.scene_transition_time') or 0.5) | float) + 2.0) * 1000) | int }}"
       - service: light.turn_on
         data_template:
           brightness: 96
@@ -183,21 +286,33 @@ script:
           entity_id:
             - light.stue_spot_1
             - light.stue_spot_2
-
-  light_profile_living_room_dimmed:
-    sequence:
       - service: light.turn_on
         data:
           entity_id: light.living_room_tablet_browser
+
+
+  - alias: activate_light_profile_living_room_dimmed
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Dimmed'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Dimmed'
+    action:
       - service: light.turn_off
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entity_id:
             - light.stue_spot_1
             - light.stue_spot_2
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 76
           color_temp: 500
           effect: 'None'
@@ -212,37 +327,39 @@ script:
             - light.stue_spot_3
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 32
           entity_id:
-            - light.cabinet_shelves
-            - light.cabinet_spots
+            - light.barskab_under
+            - light.barskab_over
+            - light.bar_hylde_spots
+            - light.bar_spots
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 16
           entity_id:
             - light.display_cabinet_front_1
             - light.display_cabinet_front_4
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 42
           entity_id:
             - light.display_cabinet_front_2
             - light.display_cabinet_front_3
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 127
           hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
           effect: 'None'
           entity_id:
             - light.tv_backlight
-            - light.display_cabinet_top
+            - light.vitrineskab_top
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 127
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           effect: 'None'
@@ -251,7 +368,7 @@ script:
             - light.sofalampe
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 56
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}" ]
           effect: 'None'
@@ -259,7 +376,7 @@ script:
             - light.sofa_laeselampe
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 127
           hs_color: [ "{{ states.sensor.theme_secondary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color_hue.state.split(',')[1]|int }}" ]
           effect: 'None'
@@ -267,55 +384,69 @@ script:
             - light.sofahjorne
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 127
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           effect: 'None'
           entity_id:
-            - light.bar
             - light.tv_shelf
-            - light.display_cabinet_bottom
+            - light.vitrineskab_bund
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 64
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           effect: 'Solid'
           entity_id:
             - light.vindueskarm
-
-  light_profile_living_room_ambient:
-    sequence:
+            - light.stue_bar
       - service: light.turn_on
         data:
           entity_id: light.living_room_tablet_browser
+
+
+  - alias: activate_light_profile_living_room_ambient
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Ambient'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Ambient'
+    action:
       - service: light.turn_off
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entity_id:
             - light.stue_spots
-            - light.cabinet_spots
             - light.display_cabinet_front_1
             - light.display_cabinet_front_4
-            - light.cabinet_shelves
+            - light.barskab_under
+            - light.barskab_over
+            - light.bar_hylde_spots
+            - light.bar_spots
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 16
           entity_id:
             - light.display_cabinet_front_2
             - light.display_cabinet_front_3
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 64
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          brightness: 96
           hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
           effect: 'None'
           entity_id:
-            - light.display_cabinet_top
+            - light.vitrineskab_top
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 48
           hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
           effect: 'None'
@@ -323,7 +454,7 @@ script:
             - light.tv_backlight
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 32
           hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
           effect: 'None'
@@ -333,7 +464,7 @@ script:
             - light.sofa_laeselampe
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 32
           hs_color: [ "{{ states.sensor.theme_secondary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color_hue.state.split(',')[1]|int }}"]
           effect: 'None'
@@ -342,7 +473,7 @@ script:
             - light.sofahjorne
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 32
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           effect: 'None'
@@ -350,52 +481,65 @@ script:
             - light.tv_shelf
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 24
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          brightness: 8
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           effect: 'Solid'
           entity_id:
             - light.vindueskarm
+            - light.stue_bar
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 64
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          brightness: 96
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
           effect: 'None'
           entity_id:
-            - light.bar
-            - light.display_cabinet_bottom
-
-  light_profile_living_room_night:
-    sequence:
+            - light.vitrineskab_bund
       - service: light.turn_on
         data:
           entity_id: light.living_room_tablet_browser
+
+
+  - alias: activate_light_profile_living_room_night
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Night'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Night'
+    action:
       - service: light.turn_off
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entity_id:
             - light.stue_spots
-            - light.cabinet_spots
-            - light.cabinet_shelves
+            - light.barskab_under
+            - light.barskab_over
+            - light.bar_hylde_spots
+            - light.bar_spots
             - light.vitrineskab
             - light.spisebord
             - light.globe
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 48
           rgb_color: [255,0,0]
           effect: 'None'
           entity_id:
             - light.tv_shelf
-            - light.bar
-            - light.display_cabinet_top
-            - light.display_cabinet_bottom
+            - light.vitrineskab_top
+            - light.vitrineskab_bund
             - light.tv_backlight
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 2
           rgb_color: [255,0,0]
           effect: 'None'
@@ -405,25 +549,53 @@ script:
             - light.sofa_laeselampe
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          brightness: 2
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          brightness: 4
           rgb_color: [255,0,0]
           effect: 'Solid'
           entity_id:
             - light.vindueskarm
+            - light.stue_bar
+      - service: light.turn_on
+        data:
+          entity_id: light.living_room_tablet_browser
 
-  light_profile_living_room_off:
-    sequence:
+
+  - alias: activate_light_profile_living_room_off
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Off'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Off'
+    action:
+      - service: light.turn_off
+        data_template:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          entity_id: group.living_room_lights
       - service: light.turn_off
         data:
           entity_id: light.living_room_tablet_browser
-      - service: light.turn_off
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          entity_id: group.living_room_lights
 
-  light_profile_living_room_party:
-    sequence:
+
+  - alias: activate_light_profile_living_room_party
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Party'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Party'
+    action:
       - service: light.turn_on
         data:
           entity_id: light.living_room_tablet_browser
@@ -432,23 +604,24 @@ script:
           entity_id:
             - light.stue_spot_1
             - light.stue_spot_2
-            - light.cabinet_spots
+            - light.bar_hylde_spots
+            - light.bar_spots
       - service: light.turn_on
         data_template:
           brightness: 2
           entity_id:
             - light.vitrineskab
-            - light.cabinet_shelves
+            - light.barskab_under
+            - light.barskab_over
       - service: light.turn_on
         data_template:
           effect: "Rainbow"
           brightness: 127
           entity_id:
             - light.tv_shelf
-            - light.bar
             - light.tv_backlight
-            - light.display_cabinet_top
-            - light.display_cabinet_bottom
+            - light.vitrineskab_top
+            - light.vitrineskab_bund
       - service: light.turn_on
         data_template:
           effect: "colorloop"
@@ -462,10 +635,11 @@ script:
             - light.stue_spot_3
       - service: light.turn_on
         data:
-          effect: "Bpm"
+          effect: "Twinklefox"
           brightness: 127
           entity_id:
             - light.vindueskarm
+            - light.stue_bar
 
 input_boolean:
   living_room_activity_override:
@@ -601,50 +775,6 @@ light:
             option: 'Off'
         turn_off:
           event: living_room_light_profile_off_null
-
-binary_sensor:
-  - platform: template
-    sensors:
-      living_room_activity:
-        friendly_name: 'Livingroom Activity'
-        entity_id:
-          - binary_sensor.livingroom_sensor
-          - binary_sensor.spisebord_bevaegelse
-          - binary_sensor.sofagruppe_bevaegelse
-          - input_boolean.living_room_activity_override
-          - input_select.living_room_state
-          - media_player.stue_chromecast
-          - input_select.latest_motion
-        value_template: >
-          {%- if is_state('input_boolean.living_room_activity_override', 'on') -%}
-            {{ 'true' if is_state('input_select.living_room_room_state', 'active') else 'false' }}
-          {%- elif is_state('binary_sensor.livingroom_sensor', 'on')
-          or is_state('binary_sensor.spisebord_bevaegelse', 'on')
-          or is_state('binary_sensor.sofagruppe_bevaegelse', 'on')
-          or is_state('media_player.stue_chromecast', 'playing')
-          or is_state('media_player.stue_chromecast', 'paused')
-          or is_state('input_select.latest_motion', 'Living Room') -%}
-            true
-          {% else -%}
-            false
-          {% endif -%}
-
-      living_room_activity_predicted:
-        friendly_name: 'Living Room Activity Predicted'
-        entity_id:
-          - binary_sensor.moved_from_kitchen_to_hallway
-          - binary_sensor.moved_from_bathroom_to_hallway
-        value_template: >
-          {%- if is_state('input_boolean.living_room_activity_override', 'on') 
-          or is_state('input_boolean.living_room_separate_light_profile', 'on')
-          or is_state('input_select.living_room_room_state', 'active')  -%}
-            false
-          {%- elif is_state('binary_sensor.moved_from_kitchen_to_hallway', 'on')
-          or is_state('binary_sensor.moved_from_bathroom_to_hallway', 'on')-%}
-            true
-          {% else -%}
-            false
-          {% endif -%}
 
 group:
   living_room_activity_entities:

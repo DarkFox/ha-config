@@ -1,18 +1,105 @@
-script:
-  light_profile_bathroom_bright:
-    sequence:
-      # White temp lights
+sensor:
+  - platform: template
+    sensors:
+      bathroom_light_profile:
+        friendly_name: Bathroom Light Profile
+        entity_id:
+          - binary_sensor.bathroom_activity_predicted
+          - input_select.bathroom_room_state
+          - input_select.bathroom_light_profile
+          - input_select.bathroom_inactive_light_profile
+          - input_boolean.bathroom_separate_light_profile
+          - input_select.light_profile
+          - input_boolean.party_lights
+        value_template: >
+          {%- if is_state('input_select.bathroom_room_state', 'active') -%}
+            {%- if is_state('input_boolean.party_lights', 'off') -%}
+              {%- if is_state('input_boolean.bathroom_separate_light_profile', 'off') -%}
+                {{ states('input_select.light_profile') }}
+              {%- else -%}
+                {{ states('input_select.bathroom_light_profile') }}
+              {%- endif -%}
+            {%- else -%}
+              Party
+            {%- endif -%}
+          {%-
+            elif is_state('input_select.bathroom_room_state', 'inactive')
+            or is_state('binary_sensor.bathroom_activity_predicted', 'on')
+          -%}
+            {%- if is_state('input_boolean.bathroom_separate_light_profile', 'off') -%}
+              {{ states('input_select.inactive_light_profile') }}
+            {%- else -%}
+              {{ states('input_select.bathroom_inactive_light_profile') }}
+            {%- endif -%}
+          {%- else %}
+            Off
+          {%- endif -%}
+
+binary_sensor:
+  - platform: template
+    sensors:
+      bathroom_activity:
+        friendly_name: 'Bathroom Activity'
+        entity_id:
+          - binary_sensor.toilet_sensor
+          - binary_sensor.bruseniche_bevaegelse
+          - input_boolean.bathroom_activity_override
+          - input_select.bathroom_room_state
+          - input_select.latest_motion
+          - input_select.martin_activity
+          - binary_sensor.bathroom_door_activity
+        value_template: >
+          {%- if is_state('input_boolean.bathroom_activity_override', 'on') -%}
+            {{ 'true' if is_state('input_select.bathroom_room_state', 'active') else 'false' }}
+          {%- elif is_state('binary_sensor.toilet_sensor', 'on')
+          or is_state('binary_sensor.bruseniche_bevaegelse', 'on')
+          or is_state('binary_sensor.bathroom_door_activity', 'on')
+          or is_state('input_select.latest_motion', 'Bathroom')
+          or is_state('input_select.martin_activity', 'Showering')  -%}
+            true
+          {% else -%}
+            false
+          {% endif -%}
+
+      bathroom_activity_predicted:
+        friendly_name: 'Bathroom Activity Predicted'
+        entity_id:
+          - binary_sensor.moved_from_living_room_to_hallway
+          - binary_sensor.moved_from_bedroom_to_hallway
+        value_template: >
+          {%- 
+            if is_state('binary_sensor.moved_from_living_room_to_hallway', 'on')
+            or is_state('binary_sensor.moved_from_bedroom_to_hallway', 'on')
+          -%}
+            true
+          {% else -%}
+            false
+          {% endif -%}
+
+automation:
+  - alias: activate_light_profile_bathroom_bright
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: &room_light_profile sensor.bathroom_light_profile
+        to: 'Bright'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Bright'
+    action:
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           color_temp: 153
           entity_id:
             - light.badevaerelse
-      # Secondary RGB lights
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           hs_color: [15, 24]
           effect: 'None'
@@ -23,20 +110,29 @@ script:
           entity_id: light.bathroom_tablet
           brightness: 255
 
-  light_profile_bathroom_default:
-    sequence:
-      # White temp lights
+  - alias: activate_light_profile_bathroom_default
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Default'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Default'
+    action:
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           color_temp: 250
           entity_id:
             - light.badevaerelse
-      # Secondary RGB lights
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
           effect: 'None'
@@ -47,20 +143,29 @@ script:
           entity_id: light.bathroom_tablet
           brightness: 255
 
-  light_profile_bathroom_dimmed:
-    sequence:
-      # White temp lights
+  - alias: activate_light_profile_bathroom_dimmed
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Dimmed'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Dimmed'
+    action:
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 172
           color_temp: 370
           entity_id:
             - light.badevaerelse
-      # Secondary RGB lights
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 172
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
           effect: 'None'
@@ -71,20 +176,29 @@ script:
           entity_id: light.bathroom_tablet
           brightness: 127
 
-  light_profile_bathroom_ambient:
-    sequence:
-      # White temp lights
+  - alias: activate_light_profile_bathroom_ambient
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Ambient'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Ambient'
+    action:
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 127
           color_temp: 370
           entity_id:
             - light.badevaerelse
-      # Secondary RGB lights
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 127
           hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
           effect: 'None'
@@ -95,19 +209,29 @@ script:
           entity_id: light.bathroom_tablet
           brightness: 64
 
-  light_profile_bathroom_night:
-    sequence:
+  - alias: activate_light_profile_bathroom_night
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Night'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Night'
+    action:
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 2
           rgb_color: [255,0,0]
           entity_id:
             - light.badevaerelse
-      # Secondary RGB lights
       - service: light.turn_on
         data_template:
-          transition: "{{ transition_time or 0.5 | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 96
           rgb_color: [255,0,0]
           effect: 'None'
@@ -118,32 +242,69 @@ script:
           entity_id: light.bathroom_tablet
           brightness: 24
 
-      - delay:
+  - alias: activate_light_profile_bathroom_night_brighter
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Night'
+        for:
           minutes: 1
-          
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
       - condition: state
-        entity_id: binary_sensor.bathroom_activity
-        state: 'on'
-      
+        entity_id: *room_light_profile
+        state: 'Night'
+    action:
       - service: light.turn_on
         data_template:
-          transition: 60
+          transition: 90
           brightness: 127
           color_temp: 370
           entity_id:
             - light.badevaerelse
 
-  light_profile_bathroom_party:
-    sequence:
-      # White temp lights
+  - alias: activate_light_profile_bathroom_off
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Off'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Off'
+    action:
+      - service: light.turn_off
+        data_template:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          entity_id:
+            - light.badevaerelse_lys
+            - light.bathroom_tablet
+
+  - alias: activate_light_profile_bathroom_party
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+        to: 'Party'
+      - platform: event
+        event_type: refresh_light_profile
+    condition:
+      - condition: state
+        entity_id: *room_light_profile
+        state: 'Party'
+    action:
       - service: light.turn_on
         data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 127
           color_temp: 370
           entity_id:
             - light.badevaerelse
-      # Secondary RGB lights
       - service: light.turn_on
         data_template:
           brightness: 127
@@ -154,15 +315,6 @@ script:
         data_template:
           entity_id: light.bathroom_tablet
           brightness: 64
-
-  light_profile_bathroom_off:
-    sequence:
-      - service: light.turn_off
-        data_template:
-          transition: "{{ (transition_time or 0.5) | float }}"
-          entity_id:
-            - light.badevaerelse_lys
-            - light.bathroom_tablet
 
 input_boolean:
   bathroom_activity_override:
@@ -298,49 +450,6 @@ light:
             option: 'Off'
         turn_off:
           event: bathroom_light_profile_off_null
-
-binary_sensor:
-  - platform: template
-    sensors:
-      bathroom_activity:
-        friendly_name: 'Bathroom Activity'
-        entity_id:
-          - binary_sensor.toilet_sensor
-          - binary_sensor.bruseniche_bevaegelse
-          - input_boolean.bathroom_activity_override
-          - input_select.bathroom_room_state
-          - input_select.latest_motion
-          - input_select.martin_activity
-          - binary_sensor.bathroom_door_activity
-        value_template: >
-          {%- if is_state('input_boolean.bathroom_activity_override', 'on') -%}
-            {{ 'true' if is_state('input_select.bathroom_room_state', 'active') else 'false' }}
-          {%- elif is_state('binary_sensor.toilet_sensor', 'on')
-          or is_state('binary_sensor.bruseniche_bevaegelse', 'on')
-          or is_state('binary_sensor.bathroom_door_activity', 'on')
-          or is_state('input_select.latest_motion', 'Bathroom')
-          or is_state('input_select.martin_activity', 'Showering')  -%}
-            true
-          {% else -%}
-            false
-          {% endif -%}
-
-      bathroom_activity_predicted:
-        friendly_name: 'Bathroom Activity Predicted'
-        entity_id:
-          - binary_sensor.moved_from_living_room_to_hallway
-          - binary_sensor.moved_from_bedroom_to_hallway
-        value_template: >
-          {%- if is_state('input_boolean.bathroom_activity_override', 'on') 
-          or is_state('input_boolean.bathroom_separate_light_profile', 'on')
-          or is_state('input_select.bathroom_room_state', 'active')  -%}
-            false
-          {%- elif is_state('binary_sensor.moved_from_living_room_to_hallway', 'on')
-          or is_state('binary_sensor.moved_from_bedroom_to_hallway', 'on')-%}
-            true
-          {% else -%}
-            false
-          {% endif -%}
 
 group:
   bathroom_activity_entities:
