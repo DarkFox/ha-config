@@ -1,0 +1,60 @@
+esphome:
+  name: dortelefon
+  platform: ESP8266
+  board: heltec_wifi_kit_8
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret api_pass
+
+ota:
+  password: !secret ota_pass
+
+web_server:
+  port: 80
+
+binary_sensor:
+  - platform: gpio
+    pin: D6
+    name: "Dørtelefon Ringer"
+    id: dortelefon_ringer
+    device_class: sound
+
+switch:
+  - platform: gpio
+    id: relay
+    pin: D8
+    restore_mode: ALWAYS_OFF
+  - platform: template
+    name: "Døråbner"
+    id: dor_aabner
+    icon: mdi:phone
+    turn_on_action:
+    - switch.turn_on: relay
+    - delay: 500ms
+    - switch.turn_off: relay
+
+i2c:
+  sda: GPIO4
+  scl: GPIO5
+
+font:
+  - file: "Ubuntu-R.ttf"
+    id: ubuntu_20
+    size: 20
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x32"
+    reset_pin: GPIO16
+    address: 0x3C
+    rotation: 180°
+    lambda: |-
+      it.printf(0, 20, id(ubuntu_20), "State: %s", id(dortelefon_ringer).state ? "ON" : "OFF");
