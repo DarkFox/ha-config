@@ -19,7 +19,84 @@ binary_sensor:
         entity_id: input_boolean.bathroom_occupied
         value_template: "{{ is_state('input_boolean.bathroom_occupied', 'on') }}"
 
+input_number:
+  handwash_timer:
+    name: Håndvask Timer
+    icon: mdi:water-pump
+    min: 0
+    max: 20
+    step: 1
+
+script:
+  handwash_timer_start:
+    sequence:
+      - service: input_number.set_value
+        data:
+          entity_id: input_number.handwash_timer
+          value: 0
+      - event: handwash_timer_tick
+        event_data:
+          type: start
+
 automation:
+  - alias: handwash_timer_loop
+    trigger:
+      - platform: event
+        event_type: handwash_timer_tick
+    condition:
+      - condition: numeric_state
+        entity_id: input_number.handwash_timer
+        below: 20
+    action:
+      - delay:
+          seconds: 0.9
+      - service: input_number.increment
+        data:
+          entity_id: input_number.handwash_timer
+      - event: handwash_timer_tick
+        event_data:
+          type: tick
+
+  - alias: handwash_timer_light_progress
+    trigger:
+      - platform: state
+        entity_id: input_number.handwash_timer
+    condition:
+      - condition: numeric_state
+        entity_id: input_number.handwash_timer
+        below: 18
+    action:
+      - service: wled.effect
+        data_template:
+          entity_id: light.badevaerelse_skab
+          effect: Solid Pattern
+          intensity: 17
+          speed: "{{ 11 + (states('input_number.handwash_timer')|int) }}"
+
+  - alias: handwash_timer_light
+    trigger:
+      - platform: template
+        value_template: "{{ states('input_number.handwash_timer')|int == 18 }}"
+    action:
+      - service: wled.effect
+        data_template:
+          entity_id: light.badevaerelse_skab
+          effect: Blink
+          intensity: 127
+          speed: 196
+
+  - alias: handwash_timer_light
+    trigger:
+      - platform: template
+        value_template: "{{ states('input_number.handwash_timer')|int == 20 }}"
+    action:
+      - service: wled.effect
+        data_template:
+          entity_id: light.badevaerelse_skab
+          effect: Solid
+          intensity: 127
+          speed: 32
+
   - alias: bathroom_door_activity_on
     initial_state: true
     trigger:
