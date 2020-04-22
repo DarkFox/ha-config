@@ -91,6 +91,8 @@ automation:
           effect: 'None'
           entity_id:
             - light.kontor_loftlys
+            - light.skrivebord_uplight
+            - light.skrivebord_lampe
       # Dimmable Lights
       - service: light.turn_on
         data_template:
@@ -151,6 +153,13 @@ automation:
         entity_id: *room_light_profile
         state: 'Default'
     action:
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          brightness: 172
+          color_temp: 390
+          entity_id:
+            - light.skrivebord_lampe
       # Dimmable Lights
       - service: light.turn_on
         data_template:
@@ -177,6 +186,7 @@ automation:
           effect: 'None'
           entity_id:
             - light.kontor_loftlys
+            - light.skrivebord_uplight
       - service: light.turn_on
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
@@ -194,7 +204,8 @@ automation:
           effect: 'None'
           entity_id:
             - light.skrivebord_bar
-            - light.blink1- service: light.turn_on
+            - light.blink1
+      - service: light.turn_on
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 127
@@ -231,6 +242,15 @@ automation:
         entity_id: *room_light_profile
         state: 'Dimmed'
     action:
+      # White temp lights
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          brightness: 2
+          color_temp: 390
+          effect: 'None'
+          entity_id:
+            - light.skrivebord_lampe
       # Dimmable Lights
       - service: light.turn_on
         data_template:
@@ -256,6 +276,7 @@ automation:
           effect: 'None'
           entity_id:
             - light.kontor_loftlys
+            - light.skrivebord_uplight
       - service: light.turn_on
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
@@ -333,6 +354,7 @@ automation:
           effect: 'None'
           entity_id:
             - light.kontor_loftlys
+            - light.skrivebord_uplight
       - service: light.turn_on
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
@@ -351,6 +373,14 @@ automation:
           entity_id:
             - light.skrivebord_bar
             - light.blink1
+      - service: light.turn_on
+        data_template:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          brightness: 2
+          hs_color: [ "{{ states.sensor.theme_secondary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color_hue.state.split(',')[1]|int }}" ]
+          effect: 'None'
+          entity_id:
+            - light.skrivebord_lampe
       - service: light.turn_on
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
@@ -393,7 +423,9 @@ automation:
           entity_id:
             - light.office_shelf
             - light.kontor_loftlys
+            - light.skrivebord_uplight
             - light.skrivebord_bar
+            - light.skrivebord_lampe
       - service: light.turn_on
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
@@ -446,6 +478,7 @@ automation:
             - light.office_door_spots
             - light.hobbybord_hylder
             - light.hobbybord_lampe
+            - light.skrivebord_lampe
       # Dimmable Lights
       - service: light.turn_on
         data_template:
@@ -465,6 +498,7 @@ automation:
           brightness: 127
           entity_id:
             - light.kontor_loftlys
+            - light.skrivebord_uplight
       - service: light.turn_on
         data_template:
           effect: "Ripple Rainbow"
