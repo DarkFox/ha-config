@@ -1,0 +1,139 @@
+title: Power
+path: power
+icon: mdi:flash
+panel: true
+cards:
+  - type: custom:layout-card
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: horizontal-stack
+            cards:
+              - type: gauge
+                entity: sensor.energy_meter_active_power_plus
+                name: Elforbrug
+                max: 8000
+                severity:
+                  green: 100
+                  yellow: 1000
+                  red: 3000
+
+              - type: gauge
+                entity: sensor.energy_cost_hourly
+                name: Elomkostning Denne Time
+                max: 5
+                severity:
+                  green: 0.0
+                  yellow: 1
+                  red: 2
+
+              - type: gauge
+                entity: sensor.energy_cost_last_hour
+                name: Elomkostning Sidste Time
+                max: 5
+                severity:
+                  green: 0.0
+                  yellow: 1
+                  red: 2
+
+          - type: custom:mini-graph-card
+            name: Elforbrug Per Time
+            hours_to_show: 12
+            points_per_hour: 1
+            lower_bound: 0.0
+            group_by: hour
+            hour24: true
+            show:
+              graph: bar
+              labels: true
+            entities: 
+              - entity: sensor.energy_hourly
+                aggregate_func: max
+
+          - type: custom:mini-graph-card
+            name: Elforbrug Per Dag
+            hours_to_show: 168
+            points_per_hour: 0.04
+            lower_bound: 0.0
+            group_by: date
+            hour24: true
+            show:
+              graph: bar
+              labels: true
+            entities: 
+              - entity: sensor.energy_daily
+                aggregate_func: max
+
+          - type: entities
+            show_header_toggle: false
+            entities:
+              - sensor.energy_hourly
+              - sensor.energy_cost_hourly
+              - sensor.energy_last_hour
+              - sensor.energy_cost_last_hour
+              - sensor.energy_daily
+              - sensor.energy_cost_daily
+              - sensor.energy_last_day
+              - sensor.energy_cost_last_day
+              - sensor.energy_monthly
+              - sensor.energy_cost_monthly
+              - sensor.energy_last_month
+              - sensor.energy_cost_last_month
+              - sensor.energy_quarterly
+              - sensor.energy_cost_quarterly
+              - sensor.energy_last_quarter
+              - sensor.energy_cost_last_quarter
+
+      - type: vertical-stack
+        cards:
+          - type: entities
+            show_header_toggle: false
+            entities:
+              - sensor.energy_meter_active_power_plus
+              - sensor.energy_meter_active_power_minus
+              - sensor.energy_meter_active_power_plus_l1
+              - sensor.energy_meter_active_power_minus_l1
+              - sensor.energy_meter_active_power_plus_l2
+              - sensor.energy_meter_active_power_minus_l2
+              - sensor.energy_meter_active_power_plus_l3
+              - sensor.energy_meter_active_power_minus_l3
+              - sensor.energy_meter_reactive_power_plus
+              - sensor.energy_meter_reactive_power_minus
+
+          - type: entities
+            show_header_toggle: false
+            entities:
+              - sensor.energy_meter_voltage_l1
+              - sensor.energy_meter_voltage_l2
+              - sensor.energy_meter_voltage_l3
+
+          - type: entities
+            show_header_toggle: false
+            entities:
+              - sensor.energy_meter_power_factor_l1
+              - sensor.energy_meter_power_factor_l2
+              - sensor.energy_meter_power_factor_l3
+              - sensor.energy_meter_power_factor_total
+
+      - type: vertical-stack
+        cards:
+          - type: entities
+            show_header_toggle: false
+            entities:
+              - sensor.energy_meter_active_import
+              - sensor.energy_meter_active_import_l1
+              - sensor.energy_meter_active_import_l2
+              - sensor.energy_meter_active_import_l3
+              - sensor.energy_meter_reactive_import
+              - sensor.energy_meter_active_export
+              - sensor.energy_meter_active_export_l1
+              - sensor.energy_meter_active_export_l2
+              - sensor.energy_meter_active_export_l3
+              - sensor.energy_meter_reactive_export
+
+          - type: entities
+            show_header_toggle: false
+            entities:
+              - sensor.energy_meter_current_l1
+              - sensor.energy_meter_current_l2
+              - sensor.energy_meter_current_l3
