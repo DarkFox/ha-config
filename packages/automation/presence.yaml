@@ -11,11 +11,9 @@ input_select:
 
 proximity:
   martin_to_home:
-    ignored_zones:
-      - graested
-      - foraeldre
-      - work
+    zone: home
     devices:
+      - device_tracker.sm_g970f
       - device_tracker.google_maps_102040676821115196041
     unit_of_measurement: m
     tolerance: 100
@@ -34,6 +32,10 @@ sensor:
   - platform: derivative
     name: martin_to_home_distance_change_derivative
     source: sensor.martin_to_home_distance_change
+
+  - platform: derivative
+    name: martin_to_home_proximity_derivative
+    source: proximity.martin_to_home
 
   - platform: statistics
     name: proximity_martin_to_home_stats
@@ -56,14 +58,14 @@ binary_sensor:
           }}
 
       martin_presence:
-        friendly_name: 'Martin Presence'
+        friendly_name: "Martin Presence"
         device_class: presence
         entity_id:
           - device_tracker.google_maps_102040676821115196041
           - binary_sensor.activity_last10
           - binary_sensor.hoveddor_laas
           - input_select.latest_motion
-        value_template: >- 
+        value_template: >-
           {{ 
             is_state('device_tracker.google_maps_102040676821115196041', 'home')
             or (is_state('binary_sensor.activity_last10', 'on') and states('proximity.martin_to_home')|int < 2000 )
@@ -72,7 +74,7 @@ binary_sensor:
           }}
 
       martin_presence_delayed:
-        friendly_name: 'Martin Presence - Delayed'
+        friendly_name: "Martin Presence - Delayed"
         device_class: presence
         entity_id: binary_sensor.martin_presence
         value_template: >-
@@ -80,7 +82,7 @@ binary_sensor:
         delay_off:
           minutes: 10
       martin_presence_extended:
-        friendly_name: 'Martin Presence - Extended Away'
+        friendly_name: "Martin Presence - Extended Away"
         device_class: presence
         entity_id: binary_sensor.martin_presence
         value_template: >-
@@ -89,18 +91,17 @@ binary_sensor:
           hours: 24
 
 automation:
-    
   ## Notifications ##
   - alias: presence notification
     trigger:
       - platform: state
         entity_id: binary_sensor.martin_presence
-        from: 'on'
-        to: 'off'
+        from: "on"
+        to: "off"
       - platform: state
         entity_id: binary_sensor.martin_presence
-        from: 'off'
-        to: 'on'
+        from: "off"
+        to: "on"
     action:
       - service: script.debug_notification
         data_template:
@@ -111,12 +112,12 @@ automation:
     trigger:
       - platform: state
         entity_id: binary_sensor.martin_home_soon
-        from: 'on'
-        to: 'off'
+        from: "on"
+        to: "off"
       - platform: state
         entity_id: binary_sensor.martin_home_soon
-        from: 'off'
-        to: 'on'
+        from: "off"
+        to: "on"
     action:
       - service: script.debug_notification
         data_template:
