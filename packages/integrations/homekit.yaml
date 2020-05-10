@@ -1,0 +1,39 @@
+homekit:
+  filter:
+    include_entities:
+      - binary_sensor.wake_ipad
+
+input_boolean:
+  wake_ipad:
+    initial: false
+
+binary_sensor:
+  - platform: template
+    sensors:
+      wake_ipad:
+        value_template: "{{ is_state('input_boolean.wake_ipad', 'on') }}"
+
+automation:
+  - alias: Reset wake ipad
+    trigger:
+      - platform: state
+        entity_id: input_boolean.wake_ipad
+        to: 'on'
+    condition:
+      - condition: state
+        entity_id: input_select.living_room_room_state
+        state: 'active'
+    action:
+      - delay: 1s
+      - service: input_boolean.turn_off
+        data:
+          entity_id: input_boolean.wake_ipad
+      - delay:
+          minutes: 5
+          seconds: 1
+      - condition: state
+        entity_id: input_select.living_room_room_state
+        state: 'active'
+      - service: input_boolean.turn_on
+        data:
+          entity_id: input_boolean.wake_ipad
