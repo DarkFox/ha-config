@@ -1,9 +1,31 @@
+sensor:
+  - platform: template
+    sensors:
+      dishwasher_state:
+        friendly_name: 'Opvaskemaskine Status'
+        value_template: >-
+          {% set watts = states('sensor.opvaskemaskine_forbrug')|int %}
+          {% if is_state('sensor.opvaskemaskine_forbrug', 'unavailable') %}
+            unavailable
+          {% elif watts > 3 and watts < 55 %}
+            pumping
+          {% elif watts > 54 and watts < 80 %}
+            rinsing
+          {% elif watts > 79 %}
+            heating
+          {% elif is_state('switch.opvaskemaskine', 'off') %}
+            off
+          {% else %}
+            idle
+          {% endif %}
+
+
 input_number:
   dishwasher_tabs:
     name: Opvasketabs
     icon: mdi:crop-square
     min: 0
-    max: 100
+    max: 200
     step: 1
     mode: box
 
@@ -13,72 +35,73 @@ input_select:
     options:
       - Beskidt
       - Vasker
-      - Tørrer
       - Ren
+      - Tømt
 
 automation:
-  ## State Machine ##
+  - alias: Refresh lights on dishwasher state change
+    trigger:
+      - platform: state
+        entity_id: input_select.dishwasher_state
+    action:
+      - event: refresh_light_profile
+
+  # ## State Machine ##
   - id: dishwasher_started
     alias: Opvaskemaskine Startet
     initial_state: true
     trigger:
-      platform: numeric_state
-      entity_id: sensor.opvaskemaskine_forbrug
-      above: 6
-      below: 50
+      - platform: state
+        entity_id: sensor.dishwasher_state
+        from: 'idle'
+        to: 'pumping'
+      - platform: state
+        entity_id: sensor.dishwasher_state
+        from: 'idle'
+        to: 'rinsing'
+      - platform: state
+        entity_id: sensor.dishwasher_state
+        from: 'idle'
+        to: 'heating'
     condition:
       condition: or
       conditions:
         - condition: state
           entity_id: input_select.dishwasher_state
-          state: 'Beskidt'
+          state: 'Tømt'
         - condition: state
           entity_id: input_select.dishwasher_state
-          state: 'Tørrer'
+          state: 'Beskidt'
     action:
       - service: input_select.select_option
         data_template:
           entity_id: input_select.dishwasher_state
           option: 'Vasker'
-
-  - id: dishwasher_drying
-    alias: Opvaskemaskine Tørrer
-    initial_state: true
-    trigger:
-      platform: numeric_state
-      entity_id: sensor.opvaskemaskine_forbrug
-      below: 1
-    condition:
-      condition: state
-      entity_id: input_select.dishwasher_state
-      state: 'Vasker'
-    action:
-      - service: input_select.select_option
-        data_template:
-          entity_id: input_select.dishwasher_state
-          option: 'Tørrer'
+      - service: notify.telegram_darkfox
+        data:
+          message: Opvaskemaskinen er startet.
 
   - id: dishwasher_done
     alias: Opvaskemaskine Færdig
     initial_state: true
     trigger:
-      platform: numeric_state
-      entity_id: sensor.opvaskemaskine_forbrug
-      above: 8
-      below: 14
-      for:
-        seconds: 10
+      - platform: state
+        entity_id: sensor.dishwasher_state
+        to: 'idle'
+        for:
+          minutes: 30
     condition:
-      condition: or
-      conditions:
-        - condition: state
-          entity_id: input_select.dishwasher_state
-          state: 'Tørrer'
+      - condition: state
+        entity_id: input_select.dishwasher_state
+        state: 'Vasker'
     action:
       - service: input_select.select_option
         data_template:
           entity_id: input_select.dishwasher_state
           option: 'Ren'
+      - service: notify.telegram_darkfox
+        data:
+          message: Opvaskemaskinen er færdig.
 
   - id: dishwasher_emptied
     alias: Opvaskemaskine Tømt
@@ -86,60 +109,36 @@ automation:
     trigger:
       platform: state
       entity_id: binary_sensor.opvaskemaskine_dor
-      to: 'on'
+      to: 'off'
     condition:
-      condition: or
-      conditions:
-        - condition: state
+      - condition: state
+        entity_id: input_select.dishwasher_state
+        state: 'Ren'
+    action:
+      - service: input_select.select_option
+        data_template:
           entity_id: input_select.dishwasher_state
-          state: 'Ren'
+          option: 'Tømt'
+      - service: input_number.decrement
+        data:
+          entity_id: input_number.dishwasher_tabs
+
+  - id: dishwasher_dirty
+    alias: Opvaskemaskine Beskidt
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: binary_sensor.opvaskemaskine_dor
+      to: 'off'
+    condition:
+      - condition: state
+        entity_id: input_select.dishwasher_state
+        state: 'Tømt'
     action:
       - service: input_select.select_option
         data_template:
           entity_id: input_select.dishwasher_state
           option: 'Beskidt'
-
-  ## Stats keeping ##
-  - id: dishwasher_run
-    alias: Opvaskemaskine Kørsel
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: input_select.dishwasher_state
-      from: 'Ren'
-      to: 'Beskidt'
-    action:
-      - service: input_number.decrement
-        data:
-          entity_id: input_number.dishwasher_tabs
-
-  ## Notifications
-  - id: dishwasher_started_notification
-    alias: Opvaskemaskine Startet Notifikation
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: input_select.dishwasher_state
-      to: 'Vasker'
-      from: 'Beskidt'
-    action:
-      - service: notify.mobile_app_sm_g970f
-        data:
-          message: Opvaskemaskinen er startet.
-
-  - id: dishwasher_finished_notification
-    alias: Opvaskemaskine Færdig Notifikation
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: input_select.dishwasher_state
-      to: 'Ren'
-      for:
-        minutes: 5
-    action:
-      - service: notify.mobile_app_sm_g970f
-        data:
-          message: Opvaskemaskinen er færdig.
 
   - id: dishwasher_tabs_low_notification
     alias: Opvaskemaskinetabsbeholdning Lav Notifikation
@@ -152,6 +151,6 @@ automation:
       entity_id: input_number.dishwasher_tabs
       below: 6
     action:
-      - service: notify.mobile_app_sm_g970f
+      - service: notify.telegram_darkfox
         data_template:
           message: "Der er {{ 'kun ' ~ states('input_number.dishwasher_tabs')|int if states('input_number.dishwasher_tabs')|int > 0 else 'ingen' }} vasketabs tilbage!"
