@@ -34,6 +34,28 @@ sensor:
           {%- else %}
             Off
           {%- endif -%}
+      dishwasher_hue:
+        entity_id:
+          - input_select.dishwasher_state
+          - sensor.theme_secondary_color
+          - sensor.kitchen_light_profile
+        value_template: |
+          {%- set state = states('input_select.dishwasher_state') -%}
+          {%- if state == 'Beskidt' -%}
+            0
+          {%- elif state == 'Vasker' -%}
+            45
+          {%- elif state == 'Ren' -%}
+            125
+          {%- else -%}
+            {%- if is_state('sensor.kitchen_light_profile', 'Bright') -%}
+              29
+            {%- elif is_state('sensor.kitchen_light_profile', 'Night')  -%}
+              0
+            {%- else -%}
+              {{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}
+            {%- endif -%}
+          {%- endif -%}
 
 binary_sensor:
   - platform: template
@@ -89,34 +111,52 @@ automation:
         entity_id: *room_light_profile
         state: 'Bright'
     action:
-      - service: light.turn_on
+      - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 255
-          color_temp: 250
-          effect: 'None'
-          entity_id:
-            - light.kokken_loftlampe
-            - light.kokken_vaeg
-            - light.lysestager
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 255
-          hs_color: [29, 15]
-          effect: 'None'
-          entity_id:
-            - light.kokken_gulv
-            - light.kokken_hylde
-      - service: light.turn_on
-        data:
-          entity_id:
-            - light.kitchen_sink
-            - light.kitchen_stove
-      - service: light.turn_on
-        data:
-          entity_id: light.kitchen_tablet
-          brightness: 255
+          entities:
+            light.kokken_loftlampe:
+              state: on
+              brightness: 255
+              color_temp: 250
+              effect: 'None'
+            light.kokken_vaeg:
+              state: on
+              brightness: 255
+              color_temp: 250
+              effect: 'None'
+            light.lysestager:
+              state: on
+              brightness: 255
+              color_temp: 250
+              effect: 'None'
+            light.kokken_hylde:
+              state: on
+              brightness: 255
+              hs_color: [29, 15]
+              effect: 'None'
+            light.kitchen_sink:
+              state: on
+            light.kitchen_stove:
+              state: on
+            light.kitchen_tablet:
+              state: on
+              brightness: 255
+            light.kokken_gulv_1:
+              state: on
+              effect: 'Solid'
+              brightness: 255
+              hs_color: [29, 15]
+            light.kokken_gulv_2:
+              state: on
+              effect: 'Solid'
+              brightness: 255
+              hs_color: [29, 15]
+            light.kokken_gulv_vaskemaskine:
+              state: on
+              effect: 'Solid'
+              brightness: 255
+              hs_color: [ "{{ states.sensor.dishwasher_hue.state|int }}", "{{ ('15' if is_state('sensor.dishwasher_hue', '29') else '100')|int }}"]
 
   - alias: activate_light_profile_kitchen_default
     initial_state: true
@@ -131,48 +171,53 @@ automation:
         entity_id: *room_light_profile
         state: 'Default'
     action:
-      - service: light.turn_on
+      - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 200
-          color_temp: 400
-          effect: 'None'
-          entity_id:
-            - light.kokken_loftlampe
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 200
-          color_temp: 450
-          effect: 'None'
-          entity_id:
-            - light.kokken_vaeg
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 150
-          hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
-          effect: 'None'
-          entity_id:
-            - light.lysestager
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 255
-          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
-          effect: 'None'
-          entity_id:
-            - light.kokken_gulv
-            - light.kokken_hylde
-      - service: light.turn_on
-        data:
-          entity_id:
-            - light.kitchen_sink
-            - light.kitchen_stove
-      - service: light.turn_on
-        data:
-          entity_id: light.kitchen_tablet
-          brightness: 172
+          entities:
+            light.kokken_loftlampe:
+              state: on
+              brightness: 200
+              color_temp: 400
+              effect: 'None'
+            light.kokken_vaeg:
+              state: on
+              brightness: 200
+              color_temp: 450
+              effect: 'None'
+            light.lysestager:
+              state: on
+              brightness: 150
+              hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.kokken_hylde:
+              state: on
+              brightness: 255
+              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.kitchen_sink:
+              state: on
+            light.kitchen_stove:
+              state: on
+            light.kitchen_tablet:
+              state: on
+              brightness: 172
+            light.kokken_gulv_1:
+              state: on
+              effect: 'Solid'
+              brightness: 255
+              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
+            light.kokken_gulv_2:
+              state: on
+              effect: 'Solid'
+              brightness: 255
+              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
+            light.kokken_gulv_vaskemaskine:
+              state: on
+              effect: 'Solid'
+              brightness: 255
+              hs_color: [ "{{ states.sensor.dishwasher_hue.state|int }}", 100]
+
 
   - alias: activate_light_profile_kitchen_dimmed
     initial_state: true
@@ -187,44 +232,52 @@ automation:
         entity_id: *room_light_profile
         state: 'Dimmed'
     action:
-      - service: light.turn_on
+      - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 48
-          hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
-          effect: 'None'
-          entity_id:
-            - light.kokken_loftlampe
-            - light.lysestager
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 96
-          hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
-          effect: 'None'
-          entity_id:
-            - light.kokken_vaeg
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 127
-          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
-          effect: 'None'
-          entity_id:
-            - light.kokken_gulv
-            - light.kokken_hylde
-      - service: light.turn_on
-        data:
-          entity_id:
-            - light.kitchen_stove
-      - service: light.turn_off
-        data:
-          entity_id:
-            - light.kitchen_sink
-      - service: light.turn_on
-        data_template:
-          entity_id: light.kitchen_tablet
-          brightness: 127
+          entities:
+            light.kokken_loftlampe:
+              state: on
+              brightness: 48
+              hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.lysestager:
+              state: on
+              brightness: 48
+              hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.kokken_vaeg:
+              state: on
+              brightness: 96
+              hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.kokken_hylde:
+              state: on
+              brightness: 127
+              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.kitchen_stove:
+              state: on
+            light.kitchen_sink:
+              state: off
+            light.kitchen_tablet:
+              state: on
+              brightness: 127
+            light.kokken_gulv_1:
+              state: on
+              effect: 'Solid'
+              brightness: 127
+              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
+            light.kokken_gulv_2:
+              state: on
+              effect: 'Solid'
+              brightness: 127
+              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
+            light.kokken_gulv_vaskemaskine:
+              state: on
+              effect: 'Solid'
+              brightness: 127
+              hs_color: [ "{{ states.sensor.dishwasher_hue.state|int }}", 100]
 
   - alias: activate_light_profile_kitchen_ambient
     initial_state: true
@@ -239,48 +292,52 @@ automation:
         entity_id: *room_light_profile
         state: 'Ambient'
     action:
-      - service: light.turn_on
+      - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 48
-          hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
-          effect: 'None'
-          entity_id:
-            - light.kokken_loftlampe
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 18
-          hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
-          effect: 'None'
-          entity_id:
-            - light.lysestager
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 76
-          hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
-          effect: 'None'
-          entity_id:
-            - light.kokken_vaeg
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 48
-          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
-          effect: 'None'
-          entity_id:
-            - light.kokken_gulv
-            - light.kokken_hylde
-      - service: light.turn_off
-        data:
-          entity_id:
-            - light.kitchen_sink
-            - light.kitchen_stove
-      - service: light.turn_on
-        data:
-          entity_id: light.kitchen_tablet
-          brightness: 72
+          entities:
+            light.kokken_loftlampe:
+              state: on
+              brightness: 48
+              hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.lysestager:
+              state: on
+              brightness: 18
+              hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.kokken_vaeg:
+              state: on
+              brightness: 76
+              hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.kokken_hylde:
+              state: on
+              brightness: 48
+              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.kitchen_sink:
+              state: off
+            light.kitchen_stove:
+              state: off
+            light.kitchen_tablet:
+              state: on
+              brightness: 72
+            light.kokken_gulv_1:
+              state: on
+              effect: 'Solid'
+              brightness: 48
+              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
+            light.kokken_gulv_2:
+              state: on
+              effect: 'Solid'
+              brightness: 48
+              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}"]
+            light.kokken_gulv_vaskemaskine:
+              state: on
+              effect: 'Solid'
+              brightness: 48
+              hs_color: [ "{{ states.sensor.dishwasher_hue.state|int }}", 100]
 
   - alias: activate_light_profile_kitchen_night
     initial_state: true
@@ -295,34 +352,50 @@ automation:
         entity_id: *room_light_profile
         state: 'Night'
     action:
-      - service: light.turn_on
+      - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 2
-          rgb_color: [255, 0, 0]
-          effect: 'None'
-          entity_id:
-            - light.kokken_loftlampe
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 24
-          rgb_color: [255, 0, 0]
-          effect: 'None'
-          entity_id:
-            - light.kokken_gulv
-            - light.kokken_hylde
-            - light.kokken_vaeg
-      - service: light.turn_off
-        data:
-          entity_id:
-            - light.kitchen_sink
-            - light.kitchen_stove
-            - light.lysestager
-      - service: light.turn_on
-        data:
-          entity_id: light.kitchen_tablet
-          brightness: 1
+          entities:
+            light.kokken_loftlampe:
+              state: on
+              brightness: 2
+              rgb_color: [255, 0, 0]
+              effect: 'None'
+            light.kokken_hylde:
+              state: on
+              brightness: 24
+              rgb_color: [255, 0, 0]
+              effect: 'None'
+            light.kokken_vaeg:
+              state: on
+              brightness: 24
+              rgb_color: [255, 0, 0]
+              effect: 'None'
+            light.kitchen_sink:
+              state: off
+            light.kitchen_stove:
+              state: off
+            light.lysestager:
+              state: off
+            light.kitchen_tablet:
+              state: on
+              brightness: 1
+            light.kokken_gulv_1:
+              state: on
+              effect: 'Solid'
+              brightness: 24
+              hs_color: [0, 100]
+            light.kokken_gulv_2:
+              state: on
+              effect: 'Solid'
+              brightness: 24
+              hs_color: [0, 100]
+            light.kokken_gulv_vaskemaskine:
+              state: on
+              effect: 'Solid'
+              brightness: 24
+              hs_color: [ "{{ states.sensor.dishwasher_hue.state|int }}", 100]
+
 
   - alias: activate_light_profile_kitchen_off
     initial_state: true
@@ -337,15 +410,14 @@ automation:
         entity_id: *room_light_profile
         state: 'Off'
     action:
-      - service: light.turn_off
+      - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          entity_id:
-            - group.kitchen_lights
-      - service: light.turn_off
-        data:
-          entity_id:
-            - light.kitchen_tablet
+          entities:
+            group.kitchen_lights:
+              state: off
+            light.kitchen_tablet:
+              state: off
 
   - alias: activate_light_profile_kitchen_party
     initial_state: true
@@ -360,30 +432,37 @@ automation:
         entity_id: *room_light_profile
         state: 'Party'
     action:
-      - service: light.turn_on
-        data:
-          entity_id: light.kitchen_tablet
-          brightness: 25
-      - service: light.turn_on
+      - service: scene.apply
         data_template:
-          effect: "colorloop"
-          brightness: 127
-          entity_id:
-            - light.kokken_loftlampe
-            - light.kokken_vaeg
-            - light.lysestager
-      - service: light.turn_on
-        data_template:
-          effect: "Rainbow"
-          brightness: 127
-          entity_id:
-            - light.kokken_gulv
-            - light.kokken_hylde
-      - service: light.turn_off
-        data:
-          entity_id:
-            - light.kitchen_sink
-            - light.kitchen_stove
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          entities:
+            light.kitchen_tablet:
+              state: on
+              brightness: 25
+            light.kokken_loftlampe:
+              state: on
+              effect: "colorloop"
+              brightness: 127
+            light.kokken_vaeg:
+              state: on
+              effect: "colorloop"
+              brightness: 127
+            light.lysestager:
+              state: on
+              effect: "colorloop"
+              brightness: 127
+            light.kokken_gulv:
+              state: on
+              effect: "Rainbow"
+              brightness: 127
+            light.kokken_hylde:
+              state: on
+              effect: "Rainbow"
+              brightness: 127
+            light.kitchen_sink:
+              state: off
+            light.kitchen_stove:
+              state: off
 
 input_boolean:
   kitchen_activity_override:

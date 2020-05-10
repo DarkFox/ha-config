@@ -90,18 +90,28 @@ automation:
         entity_id: *room_light_profile
         state: 'Bright'
     action:
-      - service: light.turn_on
+      - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 255
-          color_temp: 300
-          entity_id:
-            - light.badevaerelse
-            - light.badevaerelse_skab
-      - service: light.turn_on
-        data_template:
-          entity_id: light.bathroom_tablet
-          brightness: 255
+          entities:
+            light.badevaerelse:
+              state: on
+              brightness: 255
+              color_temp: 300
+              effect: 'None'
+            light.badevaerelse_skab:
+              state: on
+              brightness: 255
+              color_temp: 300
+              effect: 'Solid'
+            light.badevaerelse_vask:
+              state: on
+              brightness: 255
+              color_temp: 300
+              effect: 'Solid'
+            light.bathroom_tablet:
+              state: on
+              brightness: 255
 
   - alias: activate_light_profile_bathroom_default
     initial_state: true
@@ -116,18 +126,28 @@ automation:
         entity_id: *room_light_profile
         state: 'Default'
     action:
-      - service: light.turn_on
+      - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 255
-          color_temp: 250
-          entity_id:
-            - light.badevaerelse
-            - light.badevaerelse_skab
-      - service: light.turn_on
-        data_template:
-          entity_id: light.bathroom_tablet
-          brightness: 255
+          entities:
+            light.badevaerelse:
+              state: on
+              brightness: 255
+              color_temp: 250
+              effect: 'None'
+            light.badevaerelse_skab:
+              state: on
+              brightness: 255
+              color_temp: 250
+              effect: 'Solid'
+            light.badevaerelse_vask:
+              state: on
+              brightness: 255
+              color_temp: 250
+              effect: 'Solid'
+            light.bathroom_tablet:
+              state: on
+              brightness: 255
 
   - alias: activate_light_profile_bathroom_dimmed
     initial_state: true
@@ -142,18 +162,28 @@ automation:
         entity_id: *room_light_profile
         state: 'Dimmed'
     action:
-      - service: light.turn_on
+      - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 172
-          color_temp: 370
-          entity_id:
-            - light.badevaerelse
-            - light.badevaerelse_skab
-      - service: light.turn_on
-        data_template:
-          entity_id: light.bathroom_tablet
-          brightness: 127
+          entities:
+            light.badevaerelse:
+              state: on
+              brightness: 172
+              color_temp: 370
+              effect: 'None'
+            light.badevaerelse_skab:
+              state: on
+              brightness: 172
+              color_temp: 370
+              effect: 'Solid'
+            light.badevaerelse_vask:
+              state: on
+              brightness: 172
+              color_temp: 370
+              effect: 'Solid'
+            light.bathroom_tablet:
+              state: on
+              brightness: 127
 
   - alias: activate_light_profile_bathroom_ambient
     initial_state: true
@@ -168,18 +198,28 @@ automation:
         entity_id: *room_light_profile
         state: 'Ambient'
     action:
-      - service: light.turn_on
+      - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 127
-          color_temp: 370
-          entity_id:
-            - light.badevaerelse
-            - light.badevaerelse_skab
-      - service: light.turn_on
-        data_template:
-          entity_id: light.bathroom_tablet
-          brightness: 64
+          entities:
+            light.badevaerelse:
+              state: on
+              brightness: 127
+              color_temp: 370
+              effect: 'None'
+            light.badevaerelse_skab:
+              state: on
+              brightness: 127
+              color_temp: 370
+              effect: 'Solid'
+            light.badevaerelse_vask:
+              state: on
+              brightness: 127
+              color_temp: 370
+              effect: 'Solid'
+            light.bathroom_tablet:
+              state: on
+              brightness: 64
 
   - alias: activate_light_profile_bathroom_night
     initial_state: true
@@ -194,24 +234,28 @@ automation:
         entity_id: *room_light_profile
         state: 'Night'
     action:
-      - service: light.turn_on
+      - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 2
-          rgb_color: [255,0,0]
-          entity_id:
-            - light.badevaerelse
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 8
-          rgb_color: [255,0,0]
-          entity_id:
-            - light.badevaerelse_skab
-      - service: light.turn_on
-        data_template:
-          entity_id: light.bathroom_tablet
-          brightness: 24
+          entities:
+            light.badevaerelse:
+              state: on
+              brightness: 2
+              rgb_color: [255,0,0]
+              effect: 'None'
+            light.badevaerelse_skab:
+              state: on
+              brightness: 8
+              rgb_color: [255,0,0]
+              effect: 'Solid'
+            light.badevaerelse_vask:
+              state: on
+              brightness: 8
+              rgb_color: [255,0,0]
+              effect: 'Solid'
+            light.bathroom_tablet:
+              state: on
+              brightness: 24
 
   - alias: activate_light_profile_bathroom_night_brighter
     initial_state: true
@@ -221,6 +265,7 @@ automation:
         to: 'Night'
         for:
           minutes: 1
+          seconds: 30
       - platform: event
         event_type: refresh_light_profile
     condition:
@@ -228,14 +273,25 @@ automation:
         entity_id: *room_light_profile
         state: 'Night'
     action:
-      - service: light.turn_on
+      - service: scene.apply
         data_template:
           transition: 90
-          brightness: 127
-          color_temp: 370
-          entity_id:
-            - light.badevaerelse
-            - light.badevaerelse_skab
+          entities:
+            light.badevaerelse:
+              state: on
+              brightness: 127
+              color_temp: 370
+              effect: 'None'
+            light.badevaerelse_skab:
+              state: on
+              brightness: 127
+              color_temp: 370
+              effect: 'Solid'
+            light.badevaerelse_vask:
+              state: on
+              brightness: 127
+              color_temp: 370
+              effect: 'Solid'
 
   - alias: activate_light_profile_bathroom_off
     initial_state: true
@@ -250,12 +306,14 @@ automation:
         entity_id: *room_light_profile
         state: 'Off'
     action:
-      - service: light.turn_off
+      - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          entity_id:
-            - light.badevaerelse_lys
-            - light.bathroom_tablet
+          entities:
+            light.badevaerelse_lys:
+              state: off
+            light.bathroom_tablet:
+              state: off
 
   - alias: activate_light_profile_bathroom_party
     initial_state: true
@@ -270,18 +328,28 @@ automation:
         entity_id: *room_light_profile
         state: 'Party'
     action:
-      - service: light.turn_on
+      - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 127
-          color_temp: 370
-          entity_id:
-            - light.badevaerelse
-            - light.badevaerelse_skab
-      - service: light.turn_on
-        data_template:
-          entity_id: light.bathroom_tablet
-          brightness: 64
+          entities:
+            light.badevaerelse:
+              state: on
+              brightness: 127
+              color_temp: 370
+              effect: 'None'
+            light.badevaerelse_skab:
+              state: on
+              brightness: 127
+              color_temp: 370
+              effect: 'Solid'
+            light.badevaerelse_vask:
+              state: on
+              brightness: 127
+              color_temp: 370
+              effect: 'Solid'
+            light.bathroom_tablet:
+              state: on
+              brightness: 64
 
 input_boolean:
   bathroom_activity_override:

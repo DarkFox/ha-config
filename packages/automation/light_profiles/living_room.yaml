@@ -91,81 +91,18 @@ automation:
         entity_id: *room_light_profile
         state: 'Bright'
     action:
-      - service: light.turn_on
+      - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 255
-          color_temp: 370
-          effect: 'None'
-          entity_id:
-            - light.sofalampe
-            - light.spisebord
-            - light.sofahjorne
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 255
-          color_temp: 370
-          effect: 'Solid'
-          entity_id:
-            - light.stue_bar
-            - light.vindueskarm
-            - light.vitrineskab_farve
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 255
-          effect: 'None'
-          entity_id:
-            - light.vitrineskab
-            - light.barskab_under
-            - light.barskab_over
-            - light.bar_hylde_spots
-            - light.bar_spots
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 255
-          hs_color: [0, 0]
-          effect: 'None'
-          entity_id:
-            - light.globe
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 255
-          hs_color: [29, 15]
-          effect: 'None'
-          entity_id:
-            # - light.vitrineskab_top
-            - light.tv_shelf
-            - light.tv_backlight
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 255
-          color_temp: 370
-          effect: 'None'
-          entity_id:
-            - light.sofa_laeselampe
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 255
-          entity_id:
-            - light.stue_spots
-      - delay:
-          milliseconds: "{{ ((((states('input_number.scene_transition_time') or 0.5) | float) + 2.0) * 1000) | int }}"
-      - service: light.turn_on
-        data_template:
-          transition: 0
-          brightness: 255
-          color_temp: 370
-          entity_id:
-            - light.stue_spots
+          entities:
+            group.living_room_lights:
+              state: on
+              brightness: 255
+              color_temp: 370
+              effect: 'None'
       - service: light.turn_on
         data:
-          entity_id: light.living_room_tablet_browser
+          entity_id: input_boolean.wake_ipad
 
 
   - alias: activate_light_profile_living_room_default
@@ -181,108 +118,91 @@ automation:
         entity_id: *room_light_profile
         state: 'Default'
     action:
-      - service: light.turn_on
+      - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 128
-          color_temp: 430
-          effect: 'None'
-          entity_id:
-            - light.sofalampe
-            - light.spisebord
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 127
-          effect: 'None'
-          entity_id:
-            - light.vitrineskab
-            - light.barskab_under
-            - light.barskab_over
-            - light.bar_hylde_spots
-            - light.bar_spots
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 192
-          hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
-          effect: 'None'
-          entity_id:
-            - light.tv_backlight
-      # - service: light.turn_on
-      #   data_template:
-      #     transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-      #     brightness: 255
-      #     hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
-      #     effect: 'None'
-      #     entity_id:
-      #       - light.vitrineskab_top
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 192
-          hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
-          effect: 'None'
-          entity_id:
-            - light.globe
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 255
-          hs_color: [ "{{ states.sensor.theme_secondary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color_hue.state.split(',')[1]|int }}" ]
-          effect: 'None'
-          entity_id:
-            - light.sofahjorne
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 255
-          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-          effect: 'Solid'
-          entity_id:
-            - light.vitrineskab_farve
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 192
-          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-          effect: 'None'
-          entity_id:
-            - light.tv_shelf
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 127
-          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-          effect: 'Solid'
-          entity_id:
-            - light.vindueskarm
-            - light.stue_bar
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 96
-          color_temp: 430
-          effect: 'None'
-          entity_id:
-            - light.sofa_laeselampe
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 96
-          entity_id:
-            - light.stue_spots
-      - delay:
-          milliseconds: "{{ ((((states('input_number.scene_transition_time') or 0.5) | float) + 2.0) * 1000) | int }}"
-      - service: light.turn_on
-        data_template:
-          brightness: 96
-          color_temp: 430
-          entity_id:
-            - light.stue_spots
-      - service: light.turn_on
-        data:
-          entity_id: light.living_room_tablet_browser
+          entities:
+            light.sofalampe:
+              state: on
+              brightness: 128
+              color_temp: 430
+              effect: 'None'
+            light.spisebord:
+              state: on
+              brightness: 128
+              color_temp: 430
+              effect: 'None'
+            light.vitrineskab:
+              state: on
+              brightness: 127
+              effect: 'None'
+            light.barskab_under:
+              state: on
+              brightness: 127
+              effect: 'None'
+            light.barskab_over:
+              state: on
+              brightness: 127
+              effect: 'None'
+            light.bar_hylde_spots:
+              state: on
+              brightness: 127
+              effect: 'None'
+            light.bar_spots:
+              state: on
+              brightness: 127
+              effect: 'None'
+            light.tv_backlight:
+              state: on
+              brightness: 192
+              hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.globe:
+              state: on
+              brightness: 192
+              hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.sofahjorne:
+              state: on
+              brightness: 255
+              hs_color: [ "{{ states.sensor.theme_secondary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color_hue.state.split(',')[1]|int }}" ]
+              effect: 'None'
+            light.vitrineskab_top:
+              state: on
+              brightness: 255
+              hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}" ]
+              effect: 'Solid'
+            light.vitrineskab_bund:
+              state: on
+              brightness: 255
+              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
+              effect: 'Solid'
+            light.tv_shelf:
+              state: on
+              brightness: 192
+              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
+              effect: 'None'
+            light.vindueskarm:
+              state: on
+              brightness: 127
+              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
+              effect: 'Solid'
+            light.stue_bar:
+              state: on
+              brightness: 127
+              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
+              effect: 'Solid'
+            light.sofa_laeselampe:
+              state: on
+              brightness: 96
+              color_temp: 430
+              effect: 'None'
+            light.stue_spots:
+              state: on
+              brightness: 96
+              color_temp: 430
+            input_boolean.wake_ipad:
+              state: on
 
 
   - alias: activate_light_profile_living_room_dimmed
@@ -298,112 +218,93 @@ automation:
         entity_id: *room_light_profile
         state: 'Dimmed'
     action:
-      - service: light.turn_off
+      - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          entity_id:
-            - light.stue_spot_1
-            - light.stue_spot_2
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 76
-          color_temp: 500
-          effect: 'None'
-          entity_id:
-            - light.spisebord
-      - service: light.turn_on
-        data_template:
-          brightness: 56
-          color_temp: 500
-          effect: 'None'
-          entity_id:
-            - light.stue_spot_3
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 32
-          entity_id:
-            - light.barskab_under
-            - light.barskab_over
-            - light.bar_hylde_spots
-            - light.bar_spots
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 16
-          entity_id:
-            - light.display_cabinet_front_1
-            - light.display_cabinet_front_4
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 42
-          entity_id:
-            - light.display_cabinet_front_2
-            - light.display_cabinet_front_3
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 127
-          hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
-          effect: 'None'
-          entity_id:
-            - light.tv_backlight
-            # - light.vitrineskab_top
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 127
-          hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
-          effect: 'None'
-          entity_id:
-            - light.globe
-            - light.sofalampe
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 56
-          hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}" ]
-          effect: 'None'
-          entity_id:
-            - light.sofa_laeselampe
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 127
-          hs_color: [ "{{ states.sensor.theme_secondary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color_hue.state.split(',')[1]|int }}" ]
-          effect: 'None'
-          entity_id:
-            - light.sofahjorne
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 127
-          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-          effect: 'None'
-          entity_id:
-            - light.tv_shelf
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 127
-          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-          effect: 'Solid'
-          entity_id:
-            - light.vitrineskab_farve
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 64
-          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-          effect: 'Solid'
-          entity_id:
-            - light.vindueskarm
-            - light.stue_bar
-      - service: light.turn_on
-        data:
-          entity_id: light.living_room_tablet_browser
+          entities:
+            light.stue_spots:
+              state: off
+            light.spisebord:
+              state: on
+              brightness: 76
+              color_temp: 500
+              effect: 'None'
+            light.barskab_under:
+              state: on
+              brightness: 32
+            light.barskab_over:
+              state: on
+              brightness: 32
+            light.bar_hylde_spots:
+              state: on
+              brightness: 32
+            light.bar_spots:
+              state: on
+              brightness: 32
+            light.display_cabinet_front_1:
+              state: on
+              brightness: 16
+            light.display_cabinet_front_4:
+              state: on
+              brightness: 16
+            light.display_cabinet_front_2:
+              state: on
+              brightness: 42
+            light.display_cabinet_front_3:
+              state: on
+              brightness: 42
+            light.tv_backlight:
+              state: on
+              brightness: 127
+              hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.globe:
+              state: on
+              brightness: 127
+              hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.sofalampe:
+              state: on
+              brightness: 127
+              hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.sofa_laeselampe:
+              state: on
+              brightness: 56
+              hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}" ]
+              effect: 'None'
+            light.sofahjorne:
+              state: on
+              brightness: 127
+              hs_color: [ "{{ states.sensor.theme_secondary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color_hue.state.split(',')[1]|int }}" ]
+              effect: 'None'
+            light.tv_shelf:
+              state: on
+              brightness: 127
+              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
+              effect: 'None'
+            light.vitrineskab_top:
+              state: on
+              brightness: 127
+              hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}" ]
+              effect: 'Solid'
+            light.vitrineskab_bund:
+              state: on
+              brightness: 127
+              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
+              effect: 'Solid'
+            light.vindueskarm:
+              state: on
+              brightness: 64
+              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
+              effect: 'Solid'
+            light.stue_bar:
+              state: on
+              brightness: 64
+              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
+              effect: 'Solid'
+            input_boolean.wake_ipad:
+              state: on
 
 
   - alias: activate_light_profile_living_room_ambient
@@ -419,87 +320,87 @@ automation:
         entity_id: *room_light_profile
         state: 'Ambient'
     action:
-      - service: light.turn_off
+      - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          entity_id:
-            - light.stue_spots
-            - light.display_cabinet_front_1
-            - light.display_cabinet_front_4
-            - light.barskab_under
-            - light.barskab_over
-            - light.bar_hylde_spots
-            - light.bar_spots
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 16
-          entity_id:
-            - light.display_cabinet_front_2
-            - light.display_cabinet_front_3
-      # - service: light.turn_on
-      #   data_template:
-      #     transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-      #     brightness: 96
-      #     hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
-      #     effect: 'None'
-      #     entity_id:
-      #       - light.vitrineskab_top
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 48
-          hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
-          effect: 'None'
-          entity_id:
-            - light.tv_backlight
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 32
-          hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
-          effect: 'None'
-          entity_id:
-            - light.sofalampe
-            - light.globe
-            - light.sofa_laeselampe
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 32
-          hs_color: [ "{{ states.sensor.theme_secondary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color_hue.state.split(',')[1]|int }}"]
-          effect: 'None'
-          entity_id:
-            - light.spisebord
-            - light.sofahjorne
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 32
-          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-          effect: 'None'
-          entity_id:
-            - light.tv_shelf
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 8
-          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-          effect: 'Solid'
-          entity_id:
-            - light.vindueskarm
-            - light.stue_bar
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 96
-          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-          effect: 'Solid'
-          entity_id:
-            - light.vitrineskab_farve
-      - service: light.turn_on
-        data:
-          entity_id: light.living_room_tablet_browser
+          entities:
+            light.stue_spots:
+              state: off
+            light.display_cabinet_front_1:
+              state: off
+            light.display_cabinet_front_4:
+              state: off
+            light.barskab_under:
+              state: off
+            light.barskab_over:
+              state: off
+            light.bar_hylde_spots:
+              state: off
+            light.bar_spots:
+              state: off
+            light.display_cabinet_front_2:
+              state: on
+              brightness: 16
+            light.display_cabinet_front_3:
+              state: on
+              brightness: 16
+            light.tv_backlight:
+              state: on
+              brightness: 48
+              hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.sofalampe:
+              state: on
+              brightness: 32
+              hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.globe:
+              state: on
+              brightness: 32
+              hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.sofa_laeselampe:
+              state: on
+              brightness: 32
+              hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.spisebord:
+              state: on
+              brightness: 32
+              hs_color: [ "{{ states.sensor.theme_secondary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color_hue.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.sofahjorne:
+              state: on
+              brightness: 32
+              hs_color: [ "{{ states.sensor.theme_secondary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color_hue.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.tv_shelf:
+              state: on
+              brightness: 32
+              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
+              effect: 'None'
+            light.vindueskarm:
+              state: on
+              brightness: 8
+              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
+              effect: 'Solid'
+            light.stue_bar:
+              state: on
+              brightness: 8
+              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
+              effect: 'Solid'
+            light.vitrineskab_top:
+              state: on
+              brightness: 96
+              hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}" ]
+              effect: 'Solid'
+            light.vitrineskab_bund:
+              state: on
+              brightness: 96
+              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
+              effect: 'Solid'
+            input_boolean.wake_ipad:
+              state: on
 
 
   - alias: activate_light_profile_living_room_night
@@ -515,58 +416,73 @@ automation:
         entity_id: *room_light_profile
         state: 'Night'
     action:
-      - service: light.turn_off
+      - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          entity_id:
-            - light.stue_spots
-            - light.barskab_under
-            - light.barskab_over
-            - light.bar_hylde_spots
-            - light.bar_spots
-            - light.vitrineskab
-            - light.spisebord
-            - light.globe
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 48
-          rgb_color: [255,0,0]
-          effect: 'None'
-          entity_id:
-            - light.tv_shelf
-            # - light.vitrineskab_top
-            - light.tv_backlight
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 48
-          rgb_color: [255,0,0]
-          effect: 'Solid'
-          entity_id:
-            - light.vitrineskab_farve
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 2
-          rgb_color: [255,0,0]
-          effect: 'None'
-          entity_id:
-            - light.sofalampe
-            - light.sofahjorne
-            - light.sofa_laeselampe
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 4
-          rgb_color: [255,0,0]
-          effect: 'Solid'
-          entity_id:
-            - light.vindueskarm
-            - light.stue_bar
-      - service: light.turn_on
-        data:
-          entity_id: light.living_room_tablet_browser
+          entities:
+            light.stue_spots:
+              state: off
+            light.barskab_under:
+              state: off
+            light.barskab_over:
+              state: off
+            light.bar_hylde_spots:
+              state: off
+            light.bar_spots:
+              state: off
+            light.vitrineskab:
+              state: off
+            light.spisebord:
+              state: off
+            light.globe:
+              state: off
+            light.tv_shelf:
+              state: on
+              brightness: 48
+              rgb_color: [255,0,0]
+              effect: 'None'
+            light.tv_backlight:
+              state: on
+              brightness: 48
+              rgb_color: [255,0,0]
+              effect: 'None'
+            light.vitrineskab_top:
+              state: on
+              brightness: 48
+              rgb_color: [255,0,0]
+              effect: 'Solid'
+            light.vitrineskab_bund:
+              state: on
+              brightness: 48
+              rgb_color: [255,0,0]
+              effect: 'Solid'
+            light.sofalampe:
+              state: on
+              brightness: 2
+              rgb_color: [255,0,0]
+              effect: 'None'
+            light.sofahjorne:
+              state: on
+              brightness: 2
+              rgb_color: [255,0,0]
+              effect: 'None'
+            light.sofa_laeselampe:
+              state: on
+              brightness: 2
+              rgb_color: [255,0,0]
+              effect: 'None'
+            light.vindueskarm:
+              state: on
+              brightness: 4
+              rgb_color: [255,0,0]
+              effect: 'Solid'
+            light.stue_bar:
+              state: on
+              brightness: 4
+              rgb_color: [255,0,0]
+              effect: 'Solid'
+            input_boolean.wake_ipad:
+              state: on
 
 
   - alias: activate_light_profile_living_room_off
@@ -588,7 +504,7 @@ automation:
           entity_id: group.living_room_lights
       - service: light.turn_off
         data:
-          entity_id: light.living_room_tablet_browser
+          entity_id: input_boolean.wake_ipad
 
 
   - alias: activate_light_profile_living_room_party
@@ -604,70 +520,87 @@ automation:
         entity_id: *room_light_profile
         state: 'Party'
     action:
-      - service: light.turn_on
-        data:
-          entity_id: light.living_room_tablet_browser
-      - service: light.turn_off
+      - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          entity_id:
-            - light.stue_spots
-            - light.display_cabinet_front_1
-            - light.display_cabinet_front_4
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 16
-          entity_id:
-            - light.display_cabinet_front_2
-            - light.display_cabinet_front_3
-            - light.barskab_under
-            - light.barskab_over
-            - light.bar_hylde_spots
-            - light.bar_spots
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 48
-          hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
-          effect: 'None'
-          entity_id:
-            - light.tv_backlight
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 32
-          hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
-          effect: 'None'
-          entity_id:
-            - light.sofalampe
-            - light.globe
-            - light.sofa_laeselampe
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 32
-          hs_color: [ "{{ states.sensor.theme_secondary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color_hue.state.split(',')[1]|int }}"]
-          effect: 'None'
-          entity_id:
-            - light.spisebord
-            - light.sofahjorne
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 32
-          hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-          effect: 'None'
-          entity_id:
-            - light.tv_shelf
-      - service: light.turn_on
-        data:
-          effect: "Twinklefox"
-          brightness: 255
-          entity_id:
-            - light.vindueskarm
-            - light.stue_bar
-            - light.vitrineskab_farve
+          entities:
+            light.stue_spots:
+              state: off
+            light.display_cabinet_front_1:
+              state: off
+            light.display_cabinet_front_4:
+              state: off
+            light.display_cabinet_front_2:
+              state: on
+              brightness: 16
+            light.display_cabinet_front_3:
+              state: on
+              brightness: 16
+            light.barskab_under:
+              state: on
+              brightness: 16
+            light.barskab_over:
+              state: on
+              brightness: 16
+            light.bar_hylde_spots:
+              state: on
+              brightness: 16
+            light.bar_spots:
+              state: on
+              brightness: 16
+            light.tv_backlight:
+              state: on
+              brightness: 48
+              hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.sofalampe:
+              state: on
+              brightness: 32
+              hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.globe:
+              state: on
+              brightness: 32
+              hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.sofa_laeselampe:
+              state: on
+              brightness: 32
+              hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.spisebord:
+              state: on
+              brightness: 32
+              hs_color: [ "{{ states.sensor.theme_secondary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color_hue.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.sofahjorne:
+              state: on
+              brightness: 32
+              hs_color: [ "{{ states.sensor.theme_secondary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color_hue.state.split(',')[1]|int }}"]
+              effect: 'None'
+            light.tv_shelf:
+              state: on
+              brightness: 32
+              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
+              effect: 'None'
+            light.vindueskarm:
+              state: on
+              effect: "Twinklefox"
+              brightness: 255
+            light.stue_bar:
+              state: on
+              effect: "Twinklefox"
+              brightness: 255
+            light.vitrineskab_top:
+              state: on
+              effect: "Twinklefox"
+              brightness: 255
+            light.vitrineskab_bund:
+              state: on
+              effect: "Twinklefox"
+              brightness: 255
+            input_boolean.wake_ipad:
+              state: on
 
 input_boolean:
   living_room_activity_override:
