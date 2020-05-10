@@ -1,0 +1,33 @@
+type: custom:button-card
+entity:  sensor.day_name
+show_state: true
+show_label: true
+show_name: false
+show_icon: false
+label: "[[[ if (states['calendar.helligdage_i_danmark'].state == 'on') return states['calendar.helligdage_i_danmark'].attributes['message'] ]]]"
+triggers_update:
+  - sensor.day_name
+  - binary_sensor.workday_sensor
+  - calendar.vacation
+  - calendar.helligdage_i_danmark
+styles:
+  grid:
+    - grid-template-areas: '"s" "l"'
+    - grid-template-rows: min-content min-content
+    - grid-template-columns: 1fr
+  state:
+    - font-size: 48pt
+    - text-shadow: "2px 2px 1px var(--secondary-text-color)"
+  label:
+    - font-size: 16pt
+    - text-shadow: "1px 1px 1px var(--secondary-text-color)"
+  card:
+    - padding: 0 0 8px 0
+    - color: "#FFFFFF"
+    - background-color: >
+        [[[
+          if (states['calendar.vacation'].state == 'on') return '#8EFA00';
+          if (states['binary_sensor.workday_sensor'].state == 'off') return '#8EFA00';
+          if (states['binary_sensor.workday_sensor'].state == 'on') return 'orange';
+          else return '#FF2600';
+        ]]]
