@@ -17,15 +17,16 @@ binary_sensor:
       tado_hub_crashed:
         friendly_name: 'Tadu Hub Crashed'
         entity_id:
+          - device_tracker.tado
           - climate.badevaerelse
           - climate.kokken
           - climate.sovevaerelse
           - climate.kontor
           - climate.stue
-          - device_tracker.tado
         value_template: >
           {{
             is_state('device_tracker.tado', 'not_home')
+            or state_attr('device_tracker.tado', 'ip').split('.')[0] == '169'
             or is_state('climate.badevaerelse', 'unavailable')
             or is_state('climate.kokken', 'unavailable')
             or is_state('climate.sovevaerelse', 'unavailable')
@@ -49,7 +50,7 @@ automation:
         for:
           minutes: 15
     action:
-      - service: notify.mobile_app_sm_g970f
+      - service: notify.telegram_darkfox
         data:
           message: "Mistet forbindelsen til Tado stick, genstarter."
       - service: switch.turn_off
@@ -63,7 +64,7 @@ automation:
       - wait_template: "{{ is_state('binary_sensor.tado_hub_crashed', 'off') }}"
         timeout: '00:05:00'
         continue_on_timeout: false
-      - service: notify.mobile_app_sm_g970f
+      - service: notify.telegram_darkfox
         data:
           message: "Forbindelse til Tado genoprettet."
 
