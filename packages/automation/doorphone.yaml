@@ -1,0 +1,52 @@
+automation:
+  - alias: Notify Door Phone Ringing
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.dortelefon_ringer
+        to: 'on'
+    action:
+      - service: script.notify_everywhere
+        data_template:
+          message: "Dørtelefonen Ringer!"
+      - service: scene.create
+        data:
+          scene_id: before_doorphone
+          snapshot_entities:
+            - light.display_cabinet_front_4
+            - light.office_desk_spots
+            - light.kokken_gulv
+            - light.blyant
+            - light.badevaerelse_skab
+            - light.skoskab
+      - service: light.turn_on
+        data:
+          brightness: 255
+          effect: 'Strobe'
+          entity_id:
+            - light.display_cabinet_front_4
+            - light.office_desk_spots
+            - light.kokken_gulv
+            - light.blyant
+            - light.badevaerelse_skab
+      - service: light.turn_on
+        data:
+          brightness: 255
+          effect: 'Strobe Mega'
+          entity_id:
+            - light.skoskab
+
+  - alias: Dismiss Door Phone
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.dortelefon_ringer
+        to: 'off'
+      - platform: state
+        entity_id: binary_sensor.dortelefon_aben
+        to: 'on'
+      - platform: state
+        entity_id: binary_sensor.hoveddor_laas
+        to: 'on'
+    action:
+      - service: scene.turn_on
+        data:
+          entity_id: scene.before_doorphone
