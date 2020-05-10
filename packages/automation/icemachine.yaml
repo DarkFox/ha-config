@@ -1,0 +1,70 @@
+sensor:
+  - platform: template
+    sensors:
+      icemachine_state:
+        friendly_name: 'Ismaskine Status'
+        value_template: >-
+          {% set watts = states('sensor.ismaskine_forbrug')|int %}
+          {% if is_state('sensor.ismaskine_forbrug', 'unavailable') %}
+            unavailable
+          {% elif watts > 2 and watts < 10 %}
+            startup
+          {% elif watts > 70 and watts < 100 %}
+            freezing
+          {% elif watts > 99 and watts < 200 %}
+            batch_done
+          {% elif watts > 200 %}
+            startup
+          {% elif is_state('switch.ismaskine', 'off') %}
+            off
+          {% else %}
+            idle
+          {% endif %}
+
+input_boolean:
+  ismaskine:
+
+automation:
+  - alias: Tænd ismaskine
+    trigger:
+      - platform: state
+        entity_id: input_boolean.ismaskine
+        to: 'on'
+    action:
+      - service: switch.turn_on
+        data:
+          entity_id: switch.ismaskine
+
+  - alias: Sluk ismaskine ved idle
+    trigger:
+      - platform: state
+        entity_id: sensor.icemachine_state
+        to: 'idle'
+        for:
+          seconds: 5
+      - platform: state
+        entity_id: input_boolean.ismaskine
+        to: 'off'
+    condition:
+      - condition: state
+        entity_id: sensor.icemachine_state
+        state: 'idle'
+      - condition: state
+        entity_id: input_boolean.ismaskine
+        state: 'off'
+    action:
+      - service: switch.turn_off
+        data:
+          entity_id: switch.ismaskine
+
+#   - alias: Ismaskine Fuld
+#     trigger:
+#       - platform: state
+#         entity_id: sensor.icemachine_state
+#         to: 'idle'
+#         for:
+#           seconds: 5
+#     action:
+#       - service: notify.telegram_darkfox
+#         data:
+#           message: "Isterningmaskinen er fuld."
