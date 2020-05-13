@@ -55,3 +55,20 @@ light:
     effects:
       - strobe:
       - flicker:
+      - lambda:
+          name: Fade
+          update_interval: 1s
+          lambda: |-
+            static bool state = false;
+            auto call = id(bedroom_shelf_strip).turn_on();
+            // Transtion of 1000ms = 1s
+            call.set_transition_length(1000);
+            if (state == false) {
+              call.set_brightness(1.0);
+              state = true;
+            } else {
+              call.set_brightness(0.01);
+              state = false;
+            }
+            call.perform();
+
