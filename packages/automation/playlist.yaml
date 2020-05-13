@@ -37,6 +37,11 @@ input_select:
       - media_player.kontor_mini
       - media_player.stue_mini
 
+  musicure_tracks:
+    name: MusiCure
+    options:
+      - '==NONE=='
+
 binary_sensor:
   - platform: template
     sensors:
@@ -45,8 +50,19 @@ binary_sensor:
         value_template: "{{ not is_state('input_select.playlist', '==NONE==') }}"
 
 sensor:
+  - platform: command_line
+    name: MusiCure Tracks
+    value_template: "{{ as_timestamp(now()) }}"
+    json_attributes:
+      - list
+    command: 'ls /config/www/{{ states("sensor.media_path") }}/MusiCure | /config/to_json_list.sh'
+
   - platform: template
     sensors:
+      media_path:
+        value_template: !secret media_path
+      base_url:
+        value_template: !secret base_url
       playlist_player:
         friendly_name: Afspiller
         entity_id: input_select.playlist_player
@@ -389,6 +405,54 @@ script:
           option: "==END=="
 
 automation:
+  - alias: Popuplate MusiCure Selector
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: sensor.musicure_tracks
+    action:
+      - service: input_select.set_options
+        data_template:
+          entity_id: input_select.musicure_tracks
+          options:
+            - "==NONE=="
+            - "{{ state_attr('sensor.musicure_tracks', 'list')[0] or '==END==' }}"
+            - "{{ state_attr('sensor.musicure_tracks', 'list')[1] or '==END==' }}"
+            - "{{ state_attr('sensor.musicure_tracks', 'list')[2] or '==END==' }}"
+            - "{{ state_attr('sensor.musicure_tracks', 'list')[3] or '==END==' }}"
+            - "{{ state_attr('sensor.musicure_tracks', 'list')[4] or '==END==' }}"
+            - "{{ state_attr('sensor.musicure_tracks', 'list')[5] or '==END==' }}"
+            - "{{ state_attr('sensor.musicure_tracks', 'list')[6] or '==END==' }}"
+            - "{{ state_attr('sensor.musicure_tracks', 'list')[7] or '==END==' }}"
+            - "{{ state_attr('sensor.musicure_tracks', 'list')[8] or '==END==' }}"
+            - "{{ state_attr('sensor.musicure_tracks', 'list')[9] or '==END==' }}"
+            - "{{ state_attr('sensor.musicure_tracks', 'list')[10] or '==END==' }}"
+            - "{{ state_attr('sensor.musicure_tracks', 'list')[11] or '==END==' }}"
+            - "{{ state_attr('sensor.musicure_tracks', 'list')[12] or '==END==' }}"
+            - "{{ state_attr('sensor.musicure_tracks', 'list')[13] or '==END==' }}"
+            - "{{ state_attr('sensor.musicure_tracks', 'list')[14] or '==END==' }}"
+            - "{{ state_attr('sensor.musicure_tracks', 'list')[15] or '==END==' }}"
+            - "{{ state_attr('sensor.musicure_tracks', 'list')[16] or '==END==' }}"
+            - "{{ state_attr('sensor.musicure_tracks', 'list')[17] or '==END==' }}"
+            - "{{ state_attr('sensor.musicure_tracks', 'list')[18] or '==END==' }}"
+            - "{{ state_attr('sensor.musicure_tracks', 'list')[19] or '==END==' }}"
+
+  - alias: musicure_play
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.musicure_tracks
+    condition:
+      - condition: template
+        value_template: "{{ not is_state('input_select.musicure_tracks', '==NONE==') }}"
+    action:
+      - service: input_select.set_options
+        data_template:
+          entity_id: input_select.playlist
+          options:
+            - "{{ states('sensor.base_url') }}/local/{{ states('sensor.media_path') }}/MusiCure/{{ states('input_select.musicure_tracks') }}"
+            - "==END=="
+
   - alias: close_popup_on_playlist_select
     initial_state: true
     trigger:
