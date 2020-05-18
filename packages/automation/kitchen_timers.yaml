@@ -51,6 +51,31 @@ input_boolean:
     name: Te Ur Færdig
     icon: mdi:tea
 
+sensor:
+  - platform: template
+    sensors:
+      timer_kitchen_1_state:
+        value_template: >-
+          {%- if is_state('input_boolean.timer_kitchen_1_finished', 'on') -%}
+            finished
+          {%- else -%}
+            {{ states('timer.kitchen_1') }}
+          {%- endif -%}
+      timer_kitchen_2_state:
+        value_template: >-
+          {%- if is_state('input_boolean.timer_kitchen_2_finished', 'on') -%}
+            finished
+          {%- else -%}
+            {{ states('timer.kitchen_2') }}
+          {%- endif -%}
+      timer_kitchen_3_state:
+        value_template: >-
+          {%- if is_state('input_boolean.timer_kitchen_3_finished', 'on') -%}
+            finished
+          {%- else -%}
+            {{ states('timer.kitchen_3') }}
+          {%- endif -%}
+
 binary_sensor:
   - platform: template
     sensors:
@@ -60,6 +85,25 @@ binary_sensor:
           {{
             is_state('input_boolean.timer_kitchen_1_finished', 'on')
             or is_state('input_boolean.timer_kitchen_2_finished', 'on')
+            or is_state('input_boolean.timer_kitchen_3_finished', 'on')
+          }}
+      kitchen_timer_1_active:
+        value_template: >-
+          {{
+            not is_state('timer.kitchen_1', 'idle')
+            or is_state('input_boolean.timer_kitchen_1_finished', 'on')
+          }}
+      kitchen_timer_2_active:
+        value_template: >-
+          {{
+            not is_state('timer.kitchen_2', 'idle')
+            or is_state('input_boolean.timer_kitchen_2_finished', 'on')
+          }}
+          }}
+      kitchen_timer_3_active:
+        value_template: >-
+          {{
+            not is_state('timer.kitchen_3', 'idle')
             or is_state('input_boolean.timer_kitchen_3_finished', 'on')
           }}
 
@@ -99,17 +143,17 @@ automation:
           snapshot_entities:
             - light.display_cabinet_front_4
             - light.office_desk_spots
-            - light.kokken_gulv
+            - light.kokken_gulv_1
             - light.blyant
             - light.badevaerelse_hylde
       - service: light.turn_on
         data:
           brightness: 255
-          effect: 'Strobe'
+          effect: 'Fade'
           entity_id:
             - light.display_cabinet_front_4
             - light.office_desk_spots
-            - light.kokken_gulv
+            - light.kokken_gulv_1
             - light.blyant
             - light.badevaerelse_hylde
 

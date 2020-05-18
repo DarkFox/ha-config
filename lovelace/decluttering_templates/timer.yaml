@@ -6,9 +6,7 @@ card:
       layout: icon_state
       show_state: true
       show_name: false
-      triggers_update:
-        - "[[entity]]"
-        - "[[[ return 'input_boolean.timer_' + ('[[entity]]'.replace('timer.', '')) + '_finished'; ]]]"
+      triggers_update: all
       tap_action:
         action: call-service
         service: >-
@@ -37,22 +35,21 @@ card:
         card:
           - background-color: >-
               [[[
-                if (states['input_boolean.timer_'+('[[entity]]'.replace('timer.', '')) + '_finished'].state == 'on') {
-                  return "#8EFA00";
-                } else {
-                  switch(states['[[entity]]'].state) {
-                    case 'active':
-                      return "#FF2600";
-                      break;
-                    case 'paused':
-                      return "#FFD500";
-                      break;
-                    case 'idle':
-                      return "var(--paper-card-background-color)"
-                      break;
-                    default:
-                      return "var(--paper-card-background-color)"
-                  }
+                switch(states['sensor.timer_'+('[[entity]]'.replace('timer.', '')) + '_state'].state) {
+                  case 'active':
+                    return "#FF2600";
+                    break;
+                  case 'paused':
+                    return "#FFD500";
+                    break;
+                  case 'finished':
+                    return "#8EFA00";
+                    break;
+                  case 'idle':
+                    return "var(--paper-card-background-color)"
+                    break;
+                  default:
+                    return "var(--paper-card-background-color)"
                 }
               ]]]
 
