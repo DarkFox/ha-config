@@ -3,9 +3,14 @@ binary_sensor:
     sensors:
       thermostats_night_mode:
         friendly_name: "Termostater Nattilstand"
-        entity_id: input_boolean.bedtime
+        entity_id: input_select.sleep_state
         value_template: >
-          {{ is_state('input_boolean.bedtime', 'on') }}
+          {{
+            is_state('input_select.sleep_state', 'bedtime')
+            or is_state('input_select.sleep_state', 'in bed')
+            or is_state('input_select.sleep_state', 'sleeping')
+            or is_state('input_select.sleep_state', 'paused')
+          }}
 
       thermostats_on:
         friendly_name: "Termostater Tændt"
