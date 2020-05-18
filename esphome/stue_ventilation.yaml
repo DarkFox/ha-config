@@ -1,0 +1,47 @@
+esphome:
+  name: stue_ventilation
+  platform: ESP8266
+  board: nodemcu
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+  use_address: 192.168.42.239
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret api_pass
+
+ota:
+  password: !secret ota_pass
+
+web_server:
+  port: 80
+
+status_led:
+  pin:
+    number: GPIO2
+    inverted: True
+
+# Example configuration entry
+output:
+  - platform: esp8266_pwm
+    pin: D2
+    frequency: 30000 Hz
+    id: fan_in
+  - platform: esp8266_pwm
+    pin: D3
+    frequency: 30000 Hz
+    id: fan_out
+
+fan:
+  - platform: speed
+    output: fan_in
+    name: "Stue Ventilation Ind"
+  - platform: speed
+    output: fan_out
+    name: "Stue Ventilation Ud"
+
