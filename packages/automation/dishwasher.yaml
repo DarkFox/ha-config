@@ -80,6 +80,15 @@ automation:
       - service: notify.telegram_darkfox
         data:
           message: Opvaskemaskinen er startet.
+      - service: input_number.decrement
+        data:
+          entity_id: input_number.dishwasher_tabs
+      - service: grocy.consume_product
+        data_template:
+          product_id: 78
+          amount: 1
+          transaction_type: CONSUME
+
 
   - id: dishwasher_done
     alias: Opvaskemaskine Færdig
@@ -119,9 +128,6 @@ automation:
         data_template:
           entity_id: input_select.dishwasher_state
           option: 'Tømt'
-      - service: input_number.decrement
-        data:
-          entity_id: input_number.dishwasher_tabs
 
   - id: dishwasher_dirty
     alias: Opvaskemaskine Beskidt

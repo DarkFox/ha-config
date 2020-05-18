@@ -1,0 +1,76 @@
+shell_command:
+  bbuddy_set_mode: '/usr/bin/curl -sS -X POST -H "BBUDDY-API-KEY: {{ api_key }}" -F "state={{ mode }}" {{ url }}/api/state/setmode'
+
+script:
+  # STATE_CONSUME = 0
+  # STATE_CONSUME_SPOILED = 1
+  # STATE_PURCHASE = 2
+  # STATE_OPEN = 3
+  # STATE_GETSTOCK = 4
+  # STATE_ADD_SL = 5
+  # STATE_CONSUME_ALL = 6
+  bbuddy_set_mode:
+    alias: "Barcode Buddy Set Mode"
+    sequence:
+      - service: shell_command.bbuddy_set_mode
+        data:
+          url: !secret bbuddy_url
+          api_key: !secret bbuddy_api_key
+          mode: "{{ mode }}"
+
+  bbuddy_consume:
+    alias: "Barcode Buddy Mode: Consume"
+    sequence:
+      - service: shell_command.bbuddy_set_mode
+        data:
+          url: !secret bbuddy_url
+          api_key: !secret bbuddy_api_key
+          mode: '0'
+  bbuddy_consume_spoiled:
+    alias: "Barcode Buddy Mode: Consume Spoiled"
+    sequence:
+      - service: shell_command.bbuddy_set_mode
+        data:
+          url: !secret bbuddy_url
+          api_key: !secret bbuddy_api_key
+          mode: '1'
+  bbuddy_purchase:
+    alias: "Barcode Buddy Mode: Purchase"
+    sequence:
+      - service: shell_command.bbuddy_set_mode
+        data:
+          url: !secret bbuddy_url
+          api_key: !secret bbuddy_api_key
+          mode: '2'
+  bbuddy_open:
+    alias: "Barcode Buddy Mode: Open"
+    sequence:
+      - service: shell_command.bbuddy_set_mode
+        data:
+          url: !secret bbuddy_url
+          api_key: !secret bbuddy_api_key
+          mode: '3'
+  bbuddy_getstock:
+    alias: "Barcode Buddy Mode: Get Stock"
+    sequence:
+      - service: shell_command.bbuddy_set_mode
+        data:
+          url: !secret bbuddy_url
+          api_key: !secret bbuddy_api_key
+          mode: '4'
+  bbuddy_add_sl:
+    alias: "Barcode Buddy Mode: Add To Shopping List"
+    sequence:
+      - service: shell_command.bbuddy_set_mode
+        data:
+          url: !secret bbuddy_url
+          api_key: !secret bbuddy_api_key
+          mode: '5'
+  bbuddy_consume_all:
+    alias: "Barcode Buddy Mode: Consume All"
+    sequence:
+      - service: shell_command.bbuddy_set_mode
+        data:
+          url: !secret bbuddy_url
+          api_key: !secret bbuddy_api_key
+          mode: '6'
