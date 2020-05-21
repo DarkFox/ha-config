@@ -1,0 +1,34 @@
+fan:
+  - platform: template
+    fans:
+      sovevaerelse_ventilation:
+        friendly_name: "Soveværelse Ventilation"
+        value_template: "{{ 'on' if (is_state('fan.sovevaerelse_ventilation_ind', 'on') or is_state('fan.sovevaerelse_ventilation_ud', 'on')) else 'off' }}"
+        speed_template: "{{ state_attr(('fan.sovevaerelse_ventilation_ind' if (state_attr('fan.sovevaerelse_ventilation', 'direction') == 'forward') else 'fan.sovevaerelse_ventilation_ind'), 'speed') }}"
+        direction_template: "{{ 'forward' if is_state('fan.sovevaerelse_ventilation_ind', 'on') else 'reverse' }}"
+        turn_on:
+          service: fan.turn_on
+          data_template:
+            entity_id: "{{ 'fan.sovevaerelse_ventilation_ind' if (state_attr('fan.sovevaerelse_ventilation', 'direction') == 'forward') else 'fan.sovevaerelse_ventilation_ud' }}"
+            speed: "{{ state_attr('fan.sovevaerelse_ventilation', 'speed') }}"
+        turn_off:
+          service: fan.turn_off
+          data:
+            entity_id:
+              - fan.sovevaerelse_ventilation_ind
+              - fan.sovevaerelse_ventilation_ud
+        set_speed:
+          service: fan.set_speed
+          data_template:
+            entity_id: "{{ 'fan.sovevaerelse_ventilation_ind' if (state_attr('fan.sovevaerelse_ventilation', 'direction') == 'forward') else 'fan.sovevaerelse_ventilation_ud' }}"
+            speed: "{{ speed }}"
+        set_direction:
+          service: fan.turn_on
+          data_template:
+            entity_id: "{{ 'fan.sovevaerelse_ventilation_ud' if is_state('fan.sovevaerelse_ventilation_ind', 'on') else 'fan.sovevaerelse_ventilation_ind' }}"
+            speed: "{{ state_attr(('fan.sovevaerelse_ventilation_ind' if is_state('fan.sovevaerelse_ventilation_ind', 'on') else 'fan.sovevaerelse_ventilation_ud'), 'speed') }}"
+        speeds:
+          - 'off'
+          - 'low'
+          - 'medium'
+          - 'high'
