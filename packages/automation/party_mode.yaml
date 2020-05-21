@@ -11,8 +11,6 @@ input_boolean:
   party_mode:
     initial: off
     icon: mdi:cake-variant
-  party_alert:
-    initial: off
   party_lights:
     initial: off
 
@@ -47,9 +45,6 @@ automation:
       entity_id: input_boolean.party_mode
       to: 'on'
     action:
-      - service: input_boolean.turn_on
-        data:
-          entity_id: input_boolean.party_alert
       - service: light.turn_off
         data:
           entity_id:
@@ -57,7 +52,18 @@ automation:
             - light.sovevaerelse_hvidt_lys
             - light.kontor_hvidt_lys
             - light.kokken_hvidt_lys
-      - event: party_alert_loop
+      - service: light.turn_on
+        data:
+          brightness: 127
+          rgb_color: [255,0,0]
+          effect: 'Fade'
+          entity_id:
+            - light.stue_farvet_lys
+            - light.sovevaerelse_farvet_lys
+            - light.kontor_farvet_lys
+            - light.kokken_farvet_lys
+            - light.gang_farvet_lys
+            - light.badevaerelse_lys
       - service: input_select.select_option
         data:
           entity_id: input_select.playlist_player
@@ -66,7 +72,7 @@ automation:
         data:
           entity_id: media_player.mpd
           media_content_type: playlist
-          media_content_id: 'Sparkle Party'
+          media_content_id: "BPM - Today's Dance Hits (by spotify)"
       - wait_template: "{{ is_state('media_player.alle_hojttalere', 'playing') }}"
         timeout: '00:00:30'
       - service: media_player.volume_set
@@ -74,10 +80,22 @@ automation:
           entity_id: group.alle_hojttalere
           volume_level: 0.60
       - delay:
-          seconds: 10
-      - service: input_boolean.turn_off
+          seconds: 20
+      - service: light.turn_off
         data:
-          entity_id: input_boolean.party_alert
+          entity_id:
+            - light.stue_hvidt_lys
+            - light.sovevaerelse_hvidt_lys
+            - light.kontor_hvidt_lys
+            - light.kokken_hvidt_lys
+            - light.stue_farvet_lys
+            - light.sovevaerelse_farvet_lys
+            - light.kontor_farvet_lys
+            - light.kokken_farvet_lys
+            - light.gang_farvet_lys
+            - light.badevaerelse_lys
+      - delay:
+          seconds: 2
       - condition: state
         entity_id: 'input_boolean.party_mode'
         state: 'on'
@@ -109,58 +127,3 @@ automation:
       - service:  media_player.media_stop
         data:
           entity_id: media_player.alle_hojttalere
-
-  - alias: party_alert_loop
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: party_alert_loop
-    condition:
-      - condition: state
-        entity_id: 'input_boolean.party_mode'
-        state: 'on'
-      - condition: state
-        entity_id: 'input_boolean.party_alert'
-        state: 'on'
-    action:
-      - service: light.turn_on
-        data:
-          brightness: 0
-          rgb_color: [255,0,0]
-          transition: 1
-          entity_id:
-            - light.stue_farvet_lys
-            - light.sovevaerelse_farvet_lys
-            - light.kontor_farvet_lys
-            - light.kontor_farvet_lys
-            - light.gang_lys
-            - light.badevaerelse_lys
-      - delay:
-          seconds: 1.5
-      - condition: state
-        entity_id: 'input_boolean.party_mode'
-        state: 'on'
-      - condition: state
-        entity_id: 'input_boolean.party_alert'
-        state: 'on'
-      - service: light.turn_on
-        data:
-          brightness: 127
-          rgb_color: [255,0,0]
-          transition: 1
-          entity_id:
-            - light.stue_farvet_lys
-            - light.sovevaerelse_farvet_lys
-            - light.kontor_farvet_lys
-            - light.kontor_farvet_lys
-            - light.gang_lys
-            - light.badevaerelse_lys
-      - delay:
-          seconds: 1.5
-      - condition: state
-        entity_id: 'input_boolean.party_mode'
-        state: 'on'
-      - condition: state
-        entity_id: 'input_boolean.party_alert'
-        state: 'on'
-      - event: party_alert_loop
