@@ -2,6 +2,19 @@ media_player:
   - platform: mpd
     host: 40817795-mopidy
 
+sensor:
+  - platform: scrape
+    name: icecast_stream_test
+    resource: http://192.168.42.2:8008/status.xsl
+    select: ".yellowkeys > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(1)"
+    scan_interval: 10
+
+binary_sensor:
+  - platform: template
+    sensors:
+      icecast_stream_running:
+        value_template: "{{ not is_state('sensor.icecast_stream_test', 'Currently playing:') }}"
+
 automation:
   - alias: start_mopidy_on_playlist_speaker
     trigger:
