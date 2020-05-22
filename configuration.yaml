@@ -50,71 +50,77 @@ recorder:
   db_url: !secret db_url
   purge_keep_days: 31
   exclude:
-    domains:
+    event_types:
+      - call_service
+    domains: &recorder_domain_excludes
       - automation
+      - script
       - weblink
       - updater
-    entities:
-      - binary_sensor.workday_sensor
+      - scene
+      - zwave
+    entities: &recorder_entity_excludes
+      - sensor.last_successful_authentication
 
+      - binary_sensor.workday_sensor
       - sensor.time
+      - sensor.time_utc
+      - sensor.internet_time
       - sensor.date
-      - sensor.s_train_b_next
       - sensor.date_text
       - sensor.date_time
-      - sensor.time_utc
+      - sun.sun
 
       - sensor.s_train_b_next
       - sensor.s_train_b_next_fmt
       - sensor.s_train_b_later_fmt
+      - sensor.s_train_message
       - sensor.s_tog_brondbyoster_til_kbh
       - sensor.s_tog_norreport_til_brondbyoster
+      - sensor.dsb_trafikinfo
 
       - sensor.podcast_bbc_minute
       - sensor.podcast_daily_tech_news_show
       - sensor.podcast_radioavisen
-      
+
       - binary_sensor.vacation_mode_random_boolean
       - sensor.vacation_mode_random_minutes
 
+      - sensor.dmi_vejr
       - sensor.dmi_warnings_raw
+      - sensor.dmi_warnings_specific_raw
       - sensor.dmi_weather_raw
+      - sensor.wind_text
+      - sensor.wind_speed_name
+      - sensor.wind_bearing_name_initials
+      - sensor.wind_bearing_name
 
       - sensor.valetudo_map
+
+      - binary_sensor.grocy_expired_products
+      - binary_sensor.grocy_expiring_products
+      - binary_sensor.grocy_missing_products
+      - sensor.grocy_shopping_list
+      - sensor.grocy_stock
+
+      - input_number.handwash_timer
+
+      - media_player.mpd
+      - sensor.icecast_stream_test
+      - sensor.musicure_tracks
+      - sensor.youtube_watch_later
+
+      - sensor.ledfx_presets_config
+      - sensor.ledfx_presets
+
+#_tank_capacity
 
 history:
   exclude: 
     domains:
-      - automation
-      - weblink
-      - updater
+      *recorder_domain_excludes
     entities:
-      - binary_sensor.workday_sensor
-
-      - sensor.time
-      - sensor.date
-      - sensor.s_train_b_next
-      - sensor.date_text
-      - sensor.date_time
-      - sensor.time_utc
-
-      - sensor.s_train_b_next
-      - sensor.s_train_b_next_fmt
-      - sensor.s_train_b_later_fmt
-      - sensor.s_tog_brondbyoster_til_kbh
-      - sensor.s_tog_norreport_til_brondbyoster
-
-      - sensor.podcast_bbc_minute
-      - sensor.podcast_daily_tech_news_show
-      - sensor.podcast_radioavisen
-      
-      - binary_sensor.vacation_mode_random_boolean
-      - sensor.vacation_mode_random_minutes
-
-      - sensor.dmi_warnings_raw
-      - sensor.dmi_weather_raw
-
-      - sensor.valetudo_map
+      *recorder_entity_excludes
 
 
 binary_sensor:
