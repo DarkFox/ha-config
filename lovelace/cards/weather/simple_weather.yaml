@@ -1,30 +1,42 @@
 type: vertical-stack
 cards:
-  - type: custom:simple-weather-card
+  - type: weather-forecast
     entity: weather.dark_sky
-    style: |
-      .weather__info__title {
-        font-size: 150%;
-        font-weight: bold;
-      }
-    backdrop:
-      day: transparent
-      night: transparent
-      text: "var(--primary-text-color)"
-    name: " "
-    custom:
-      - temp: sensor.udenfor_temperature
-      - humidity: sensor.udenfor_humidity
-    tap_action:
-      action: call-service
-      service: browser_mod.command
-      service_data:
-        command: popup
-        title: Vejr
-        deviceID:
-          - this
-        card:
-          type: vertical-stack
-          cards:
-            - !include forecast.yaml
-            - !include temp_graph.yaml
+    show_forecast: false
+    style:
+        .: |
+          ha-card {
+            background-color: transparent;
+          }
+  - type: horizontal-stack
+    cards:
+      - type: custom:button-card
+        size: 20px
+        show_name: false
+        show_state: true
+        layout: icon_state
+        icon: mdi:weather-pouring
+        entity: sensor.precip_today
+        styles:
+          card:
+            - —paper-card-background-color: transparent
+            - box-shadow: transparent
+            - background-color: transparent
+            - border-color: transparent
+          state:
+            - font-size: 10pt
+      - type: custom:button-card
+        size: 20px
+        show_name: false
+        show_state: true
+        layout: icon_state
+        icon: mdi:weather-windy
+        entity: sensor.wind_text
+        styles:
+          card:
+            - —paper-card-background-color: transparent
+            - box-shadow: transparent
+            - background-color: transparent
+            - border-color: transparent
+          state:
+            - font-size: 10pt
