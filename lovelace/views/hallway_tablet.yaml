@@ -9,50 +9,33 @@ cards:
         cards:
           - type: vertical-stack
             cards:
-              - !include ../cards/clock.yaml
-              - !include ../cards/weekday.yaml
+              - type: horizontal-stack
+                cards:
+                  - !include ../cards/clock.yaml
+                  - !include ../cards/weekday.yaml
 
-              - !include ../cards/light_profile_buttons.yaml
+              - !include ../cards/s_train_status.yaml
 
-              - type: entities
-                title: ""
-                show_header_toggle: false
-                style: >
-                  .card-content {
-                    padding: 1px 5px;
-                  }
-                entities:
-                  - entity: input_select.theme
-                  - entity: input_select.ledfx_preset
+              - type: custom:decluttering-card
+                template: compact_room_light_profile
+                variables:
+                  - room: hallway
+
+              - !include ../cards/power_gauges.yaml
 
               - !include ../cards/media_players/playlist_controls.yaml
               - !include ../cards/media_players/conditional_groups.yaml
 
-              - type: horizontal-stack
-                cards:
-                  # - type: custom:decluttering-card
-                  #   template: app_shortcut
-                  #   variables:
-                  #     - app: Spotify
-                  #     - icon: mdi:spotify
-                  #     - device: hallway_tablet
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.guests
+                    state: "off"
+                card: !include ../cards/mode_toggles.yaml
+          - type: vertical-stack
+            cards:
+              - !include ../cards/weather/weather_forecast.yaml
 
-                  - type: "custom:button-card"
-                    icon: mdi:music-circle
-                    name: Mopidy
-                    size: 50px
-                    tap_action:
-                      action: navigate
-                      navigation_path: /40817795_mopidy
-
-                  - type: custom:decluttering-card
-                    template: app_shortcut
-                    variables:
-                      - app: Pocket Casts
-                      - icon: mdi:podcast
-                      - device: hallway_tablet
-
-              - !include ../cards/thermostats.yaml
+              - !include ../cards/climate/compact_thermostats_3x2.yaml
 
               - type: horizontal-stack
                 cards:
@@ -63,13 +46,11 @@ cards:
               - type: conditional
                 conditions:
                   - entity: input_boolean.guests
-                    state: "off"
-                card: !include ../cards/mode_toggles.yaml
-          - type: vertical-stack
-            cards:
-              - !include ../cards/s_train_status.yaml
-
-              - !include ../cards/weather/weather.yaml
+                    state: "on"
+                card:
+                  type: custom:html-card
+                  title: WiFi
+                  content: !secret ui_wifi_content
 
               - !include ../cards/conditional_timers.yaml
 
@@ -80,12 +61,3 @@ cards:
                   - entity: input_boolean.guests
                     state: "off"
                 card: !include ../cards/calendar.yaml
-
-              - type: conditional
-                conditions:
-                  - entity: input_boolean.guests
-                    state: "on"
-                card:
-                  type: custom:html-card
-                  title: WiFi
-                  content: !secret ui_wifi_content

@@ -1,0 +1,118 @@
+card:
+  type: custom:vertical-stack-in-card
+  cards:
+    - type: horizontal-stack
+      cards:
+        - type: "custom:button-card"
+          entity: "[[entity]]"
+          name: Ventilation
+          size: 93px
+          styles:
+            card:
+              - background-color: transparent
+              - border-radius: 0 10px 10px 0
+          tap_action:
+            action: toggle
+          hold_action:
+            action: more-info
+
+        - type: vertical-stack
+          cards:
+            - type: "custom:button-card"
+              triggers_update:
+                - "[[entity]]"
+              icon: mdi:arrow-expand-right
+              size: 51px
+              styles:
+                card:
+                  - background-color: transparent
+                  - border-radius: 0
+              style: |
+                ha-icon {
+                  --primary-text-color: {% if state_attr('[[entity]]', 'direction') == 'forward' %} var(--paper-item-icon-active-color) {% endif %};
+                }
+              tap_action:
+                action: call-service
+                service: fan.set_direction
+                service_data:
+                  entity_id: "[[entity]]"
+                  direction: forward
+            - type: "custom:button-card"
+              triggers_update:
+                - "[[entity]]"
+              icon: mdi:arrow-collapse-left
+              size: 51px
+              styles:
+                card:
+                  - background-color: transparent
+                  - border-radius: 0
+              style: |
+                ha-icon {
+                  --primary-text-color: {% if state_attr('[[entity]]', 'direction') == 'reverse' %} var(--paper-item-icon-active-color) {% endif %};
+                }
+              tap_action:
+                action: call-service
+                service: fan.set_direction
+                service_data:
+                  entity_id: "[[entity]]"
+                  direction: reverse
+
+        - type: vertical-stack
+          cards:
+            - type: "custom:button-card"
+              triggers_update:
+                - "[[entity]]"
+              icon: mdi:chevron-up
+              size: 30px
+              styles:
+                card:
+                  - background-color: transparent
+                  - border-radius: 0 10px 0 0
+              style: |
+                ha-icon {
+                  --primary-text-color: {% if state_attr('[[entity]]', 'speed') == 'high' %} var(--paper-item-icon-active-color) {% endif %};
+                }
+              tap_action:
+                action: call-service
+                service: fan.set_speed
+                service_data:
+                  entity_id: "[[entity]]"
+                  speed: high
+            - type: "custom:button-card"
+              triggers_update:
+                - "[[entity]]"
+              icon: mdi:minus
+              size: 30px
+              styles:
+                card:
+                  - background-color: transparent
+                  - border-radius: 0 0 0 0
+              style: |
+                ha-icon {
+                  --primary-text-color: {% if state_attr('[[entity]]', 'speed') == 'medium' %} var(--paper-item-icon-active-color) {% endif %};
+                }
+              tap_action:
+                action: call-service
+                service: fan.set_speed
+                service_data:
+                  entity_id: "[[entity]]"
+                  speed: medium
+            - type: "custom:button-card"
+              triggers_update:
+                - "[[entity]]"
+              icon: mdi:chevron-down
+              size: 30px
+              styles:
+                card:
+                  - background-color: transparent
+                  - border-radius: 0 0 10px 0
+              style: |
+                ha-icon {
+                  --primary-text-color: {% if state_attr('[[entity]]', 'speed') == 'low' %} var(--paper-item-icon-active-color) {% endif %};
+                }
+              tap_action:
+                action: call-service
+                service: fan.set_speed
+                service_data:
+                  entity_id: "[[entity]]"
+                  speed: low

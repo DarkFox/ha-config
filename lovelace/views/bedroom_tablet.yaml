@@ -1,0 +1,62 @@
+title: Soveværelse Tablet
+path: bedroom-tablet
+icon: mdi:cellphone-android
+panel: true
+cards:
+  - type: vertical-stack
+    cards:
+      - !include ../cards/weather/simple_weather.yaml
+      - type: horizontal-stack
+        cards:
+          - type: vertical-stack
+            cards:
+              - !include ../cards/clock.yaml
+              - !include ../cards/weekday.yaml
+              - type: horizontal-stack
+                cards:
+                  - !include ../cards/compact_hoveddor_laas.yaml
+
+                  - type: "custom:button-card"
+                    entity: input_select.sleep_state
+                    icon: mdi:sleep
+                    size: 40px
+                    layout: icon_state
+                    show_state: true
+                    show_name: false
+                    color: auto
+                    tap-action:
+                      action: more-info
+
+              - type: custom:decluttering-card
+                template: compact_room_light_profile
+                variables:
+                  - room: bedroom
+
+              - type: custom:decluttering-card
+                template: ventilation
+                variables:
+                  - entity: fan.sovevaerelse_ventilation
+
+              - !include ../cards/climate/compact_thermostats_3x2.yaml
+
+              - type: entities
+                entities:
+                  - entity: cover.sovevaerelse_rullegardin
+                    name: Rullegardin
+                  - type: custom:slider-entity-row
+                    entity: cover.sovevaerelse_rullegardin
+                    full_row: true
+                    step: 5
+
+          - type: vertical-stack
+            cards:
+              - !include ../cards/s_train_status.yaml
+
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.guests
+                    state: "off"
+                card: !include ../cards/calendar.yaml
+
+              - !include ../cards/media_players/playlist_controls.yaml
+              - !include ../cards/media_players/conditional_groups.yaml
