@@ -1,14 +1,4 @@
 automation:
-  - alias: Restart wallpanels on startup
-    initial_state: true
-    trigger:
-      platform: homeassistant
-      event: start
-    action:
-      - delay:
-          seconds: 5
-      - service: script.restart_wallpanels
-
   - alias: kitchen_tablet_screen_webhook
     initial_state: True
     trigger:
@@ -29,77 +19,91 @@ automation:
         entity_id: input_number.kitchen_tablet_brightness
         value: "{{ trigger.json.state }}"
 
-  - alias: hallway_tablet_screen_webhook
+  # - alias: hallway_tablet_screen_webhook
+  #   initial_state: True
+  #   trigger:
+  #     platform: webhook
+  #     webhook_id: !secret hallway_tablet_screen_webhook
+  #   action:
+  #     service_template: "input_boolean.turn_{{ trigger.json.state }}"
+  #     data:
+  #       entity_id: input_boolean.hallway_tablet_screen
+  # - alias: hallway_tablet_brightness_webhook
+  #   initial_state: True
+  #   trigger:
+  #     platform: webhook
+  #     webhook_id: !secret hallway_tablet_brightness_webhook
+  #   action:
+  #     service: input_number.set_value
+  #     data_template:
+  #       entity_id: input_number.hallway_tablet_brightness
+  #       value: "{{ trigger.json.state }}"
+
+  # - alias: bathroom_tablet_screen_webhook
+  #   initial_state: True
+  #   trigger:
+  #     platform: webhook
+  #     webhook_id: !secret bathroom_tablet_screen_webhook
+  #   action:
+  #     service_template: "input_boolean.turn_{{ trigger.json.state }}"
+  #     data:
+  #       entity_id: input_boolean.bathroom_tablet_screen
+  # - alias: bathroom_tablet_brightness_webhook
+  #   initial_state: True
+  #   trigger:
+  #     platform: webhook
+  #     webhook_id: !secret bathroom_tablet_brightness_webhook
+  #   action:
+  #     service: input_number.set_value
+  #     data_template:
+  #       entity_id: input_number.bathroom_tablet_brightness
+  #       value: "{{ trigger.json.state }}"
+
+  - alias: bedroom_tablet_screen_webhook
     initial_state: True
     trigger:
       platform: webhook
-      webhook_id: !secret hallway_tablet_screen_webhook
+      webhook_id: !secret bedroom_tablet_screen_webhook
     action:
       service_template: "input_boolean.turn_{{ trigger.json.state }}"
       data:
-        entity_id: input_boolean.hallway_tablet_screen
-  - alias: hallway_tablet_brightness_webhook
+        entity_id: input_boolean.bedroom_tablet_screen
+  - alias: bedroom_tablet_brightness_webhook
     initial_state: True
     trigger:
       platform: webhook
-      webhook_id: !secret hallway_tablet_brightness_webhook
+      webhook_id: !secret bedroom_tablet_brightness_webhook
     action:
       service: input_number.set_value
       data_template:
-        entity_id: input_number.hallway_tablet_brightness
+        entity_id: input_number.bedroom_tablet_brightness
         value: "{{ trigger.json.state }}"
-
-  - alias: bathroom_tablet_screen_webhook
-    initial_state: True
-    trigger:
-      platform: webhook
-      webhook_id: !secret bathroom_tablet_screen_webhook
-    action:
-      service_template: "input_boolean.turn_{{ trigger.json.state }}"
-      data:
-        entity_id: input_boolean.bathroom_tablet_screen
-  - alias: bathroom_tablet_brightness_webhook
-    initial_state: True
-    trigger:
-      platform: webhook
-      webhook_id: !secret bathroom_tablet_brightness_webhook
-    action:
-      service: input_number.set_value
-      data_template:
-        entity_id: input_number.bathroom_tablet_brightness
-        value: "{{ trigger.json.state }}"
-
-script:
-  restart_wallpanels:
-    sequence:
-      - service: mqtt.publish
-        data:
-          topic: wallpanel/hallway-tablet/command
-          payload: '{"wake": true, "clearCache": true, "reload": true}'
-      - service: mqtt.publish
-        data:
-          topic: wallpanel/bathroom-tablet/command
-          payload: '{"wake": true, "clearCache": true, "reload": true}'
 
 input_boolean:
   kitchen_tablet_screen:
     name: kitchen_tablet_screen
-  hallway_tablet_screen:
-    name: hallway_tablet_screen
-  bathroom_tablet_screen:
-    name: bathroom_tablet_screen
+  # hallway_tablet_screen:
+  #   name: hallway_tablet_screen
+  # bathroom_tablet_screen:
+  #   name: bathroom_tablet_scree
+  bedroom_tablet_screen:
+    name: bedroom_tablet_screen
 
 input_number:
   kitchen_tablet_brightness:
     name: kitchen_tablet_brightness
     min: 0
     max: 255
-  hallway_tablet_brightness:
-    name: hallway_tablet_brightness
-    min: 0
-    max: 255
-  bathroom_tablet_brightness:
-    name: bathroom_tablet_brightness
+  # hallway_tablet_brightness:
+  #   name: hallway_tablet_brightness
+  #   min: 0
+  #   max: 255
+  # bathroom_tablet_brightness:
+  #   name: bathroom_tablet_brightness
+  #   min: 0
+  #   max: 255
+  bedroom_tablet_brightness:
+    name: bedroom_tablet_brightness
     min: 0
     max: 255
 
@@ -107,11 +111,14 @@ rest_command:
   kitchen_tablet_command:
     url: "http://192.168.42.20:1817/?message={{ command }}"
     method: GET
-  hallway_tablet_command:
-    url: "http://192.168.42.22:1817/?message={{ command }}"
-    method: GET
-  bathroom_tablet_command:
-    url: "http://192.168.42.21:1817/?message={{ command }}"
+  # hallway_tablet_command:
+  #   url: "http://192.168.42.21:1817/?message={{ command }}"
+  #   method: GET
+  # bathroom_tablet_command:
+  #   url: "http://192.168.42.23:1817/?message={{ command }}"
+  #   method: GET
+  bedroom_tablet_command:
+    url: "http://192.168.42.24:1817/?message={{ command }}"
     method: GET
 
 light:
@@ -137,44 +144,62 @@ light:
             data_template:
               command: "brightness=:={{ brightness }}"
 
-  - platform: template
-    lights:
-      hallway_tablet:
-        friendly_name: "Hallway Tablet"
-        level_template: "{{ states('input_number.hallway_tablet_brightness')|int }}"
-        value_template: "{{ states('input_boolean.hallway_tablet_screen') }}"
-        turn_on:
-          - service: rest_command.hallway_tablet_command
-            data:
-              command: "screen=:=on"
-        turn_off:
-          - service: rest_command.hallway_tablet_command
-            data:
-              command: "screen=:=off"
-        set_level:
-          - service: rest_command.hallway_tablet_command
-            data:
-              command: "screen=:=on"
-          - service: rest_command.hallway_tablet_command
-            data_template:
-              command: "brightness=:={{ brightness }}"
+      # hallway_tablet:
+      #   friendly_name: "Hallway Tablet"
+      #   level_template: "{{ states('input_number.hallway_tablet_brightness')|int }}"
+      #   value_template: "{{ states('input_boolean.hallway_tablet_screen') }}"
+      #   turn_on:
+      #     - service: rest_command.hallway_tablet_command
+      #       data:
+      #         command: "screen=:=on"
+      #   turn_off:
+      #     - service: rest_command.hallway_tablet_command
+      #       data:
+      #         command: "screen=:=off"
+      #   set_level:
+      #     - service: rest_command.hallway_tablet_command
+      #       data:
+      #         command: "screen=:=on"
+      #     - service: rest_command.hallway_tablet_command
+      #       data_template:
+      #         command: "brightness=:={{ brightness }}"
 
-      bathroom_tablet:
-        friendly_name: "Bathroom Tablet"
-        level_template: "{{ states('input_number.bathroom_tablet_brightness')|int }}"
-        value_template: "{{ states('input_boolean.bathroom_tablet_screen') }}"
+      # bathroom_tablet:
+      #   friendly_name: "Bathroom Tablet"
+      #   level_template: "{{ states('input_number.bathroom_tablet_brightness')|int }}"
+      #   value_template: "{{ states('input_boolean.bathroom_tablet_screen') }}"
+      #   turn_on:
+      #     - service: rest_command.bathroom_tablet_command
+      #       data:
+      #         command: "screen=:=on"
+      #   turn_off:
+      #     - service: rest_command.bathroom_tablet_command
+      #       data:
+      #         command: "screen=:=off"
+      #   set_level:
+      #     - service: rest_command.bathroom_tablet_command
+      #       data:
+      #         command: "screen=:=on"
+      #     - service: rest_command.bathroom_tablet_command
+      #       data_template:
+      #         command: "brightness=:={{ brightness }}"
+
+      bedroom_tablet:
+        friendly_name: "Bedroom Tablet"
+        level_template: "{{ states('input_number.bedroom_tablet_brightness')|int }}"
+        value_template: "{{ states('input_boolean.bedroom_tablet_screen') }}"
         turn_on:
-          - service: rest_command.bathroom_tablet_command
+          - service: rest_command.bedroom_tablet_command
             data:
               command: "screen=:=on"
         turn_off:
-          - service: rest_command.bathroom_tablet_command
+          - service: rest_command.bedroom_tablet_command
             data:
               command: "screen=:=off"
         set_level:
-          - service: rest_command.bathroom_tablet_command
+          - service: rest_command.bedroom_tablet_command
             data:
               command: "screen=:=on"
-          - service: rest_command.bathroom_tablet_command
+          - service: rest_command.bedroom_tablet_command
             data_template:
               command: "brightness=:={{ brightness }}"
