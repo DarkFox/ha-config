@@ -89,25 +89,25 @@ automation:
             light.kontor_spots:
               state: on
               color_temp: 370
+            light.skrivebord_lampe:
+              state: on
+              color_temp: 370
       - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
+            light.skrivebord_lampe:
+              state: on
+              brightness: 255
             light.kontor_spots:
               state: on
               brightness: 255
-              color_temp: 370
             light.kontor_loftlys:
               state: on
               brightness: 255
               color_temp: 370
               effect: 'None'
             light.skrivebord_uplight:
-              state: on
-              brightness: 255
-              color_temp: 370
-              effect: 'None'
-            light.skrivebord_lampe:
               state: on
               brightness: 255
               color_temp: 370
@@ -137,7 +137,7 @@ automation:
               state: on
               brightness: 255
               hs_color: [15, 43]
-              effect: 'None'
+              effect: 'Solid'
             light.blink1:
               state: on
               brightness: 255
@@ -174,6 +174,9 @@ automation:
             light.kontor_spots:
               state: on
               color_temp: 390
+            light.skrivebord_lampe:
+              state: on
+              color_temp: 390
       - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
@@ -181,11 +184,9 @@ automation:
             light.kontor_spots:
               state: on
               brightness: 172
-              color_temp: 390
             light.skrivebord_lampe:
               state: on
               brightness: 172
-              color_temp: 390
             light.office_desk_spots:
               state: on
               brightness: 200
@@ -221,7 +222,7 @@ automation:
               state: on
               brightness: 255
               hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-              effect: 'None'
+              effect: 'Solid'
             light.blink1:
               state: on
               brightness: 255
@@ -253,13 +254,20 @@ automation:
     action:
       - service: scene.apply
         data_template:
+          transition: 0
+          entities:
+            light.skrivebord_lampe:
+              state: on
+              color_temp: 390
+      - service: scene.apply
+        data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
             light.skrivebord_lampe:
               state: on
-              brightness: 2
-              color_temp: 390
-              effect: 'None'
+              brightness: 1
+            light.kontor_spots:
+              state: off
             light.office_desk_spots:
               state: on
               brightness: 127
@@ -293,7 +301,7 @@ automation:
               state: on
               brightness: 172
               hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-              effect: 'None'
+              effect: 'Solid'
             light.blink1:
               state: on
               brightness: 172
@@ -309,8 +317,6 @@ automation:
               brightness: 72
               hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
               effect: 'Solid'
-            light.kontor_spots:
-              state: off
 
   - alias: activate_light_profile_office_ambient
     initial_state: true
@@ -327,8 +333,18 @@ automation:
     action:
       - service: scene.apply
         data_template:
+          transition: 0
+          entities:
+            light.skrivebord_lampe:
+              state: on
+              color_temp: 454
+      - service: scene.apply
+        data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
+            light.skrivebord_lampe:
+              state: on
+              brightness: 1
             light.kontor_spots:
               state: off
             light.hobbybord_hylder:
@@ -363,16 +379,11 @@ automation:
               state: on
               brightness: 127
               hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-              effect: 'None'
+              effect: 'Solid'
             light.blink1:
               state: on
               brightness: 127
               hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-              effect: 'None'
-            light.skrivebord_lampe:
-              state: on
-              brightness: 2
-              hs_color: [ "{{ states.sensor.theme_secondary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color_hue.state.split(',')[1]|int }}" ]
               effect: 'None'
             light.pc_skaerm_hojre:
               state: on
@@ -402,6 +413,8 @@ automation:
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
+            light.skrivebord_lampe:
+              state: off
             light.kontor_spots:
               state: off
             light.office_desk_spots:
@@ -433,12 +446,7 @@ automation:
               state: on
               brightness: 24
               rgb_color: [255, 0, 0]
-              effect: 'None'
-            light.skrivebord_lampe:
-              state: on
-              brightness: 24
-              rgb_color: [255, 0, 0]
-              effect: 'None'
+              effect: 'Solid'
             light.pc_skaerm_hojre:
               state: on
               brightness: 8

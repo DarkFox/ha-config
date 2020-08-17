@@ -144,6 +144,9 @@ automation:
               brightness: 255
               hs_color: [29, 15]
               effect: 'None'
+            light.bedroom_tablet:
+              state: on
+              brightness: 255
 
 
   - alias: activate_light_profile_bedroom_default
@@ -211,6 +214,9 @@ automation:
               brightness: 255
               hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
               effect: 'None'
+            light.bedroom_tablet:
+              state: on
+              brightness: 172
 
   - alias: activate_light_profile_bedroom_dimmed
     initial_state: true
@@ -229,8 +235,6 @@ automation:
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
-            light.bedroom_shelf_strip:
-              state: off
             light.sengelampe:
               state: on
               brightness: 127
@@ -279,6 +283,9 @@ automation:
               brightness: 86
               hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
               effect: 'None'
+            light.bedroom_tablet:
+              state: on
+              brightness: 127
 
 
   - alias: activate_light_profile_bedroom_ambient
@@ -344,6 +351,9 @@ automation:
               brightness: 127
               hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
               effect: 'None'
+            light.bedroom_tablet:
+              state: on
+              brightness: 72
 
   - alias: activate_light_profile_bedroom_night
     initial_state: true
@@ -399,6 +409,9 @@ automation:
               brightness: 127
               rgb_color: [255,0,0]
               effect: 'None'
+            light.bedroom_tablet:
+              state: on
+              brightness: 1
 
   - alias: sengelampe_nat_on
     initial_state: true
@@ -490,13 +503,17 @@ automation:
         entity_id: binary_sensor.night_light
         state: 'on'
     action:
-      - service: light.turn_on
+      - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 24
-          rgb_color: [255,0,0]
-          entity_id:
-            - light.bed_table
+          entities:
+            light.bed_table:
+              state: on
+              brightness: 24
+              rgb_color: [255,0,0]
+            light.bedroom_tablet:
+              state: on
+              brightness: 1
 
   - alias: bed_table_night_light_off
     initial_state: true
@@ -514,11 +531,14 @@ automation:
         entity_id: binary_sensor.night_light
         state: 'off'
     action:
-      - service: light.turn_off
+      - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          entity_id:
-            - light.bed_table
+          entities:
+            light.bed_table:
+              state: off
+            light.bedroom_tablet:
+              state: off
 
   - alias: activate_light_profile_bedroom_party
     initial_state: true
@@ -569,6 +589,9 @@ automation:
               state: on
               effect: "colorloop"
               brightness: 32
+            light.bedroom_tablet:
+              state: on
+              brightness: 1
 
 input_boolean:
   bedroom_activity_override:

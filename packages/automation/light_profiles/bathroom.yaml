@@ -42,7 +42,7 @@ binary_sensor:
         friendly_name: 'Bathroom Activity'
         entity_id:
           - binary_sensor.toilet_sensor
-          - binary_sensor.bruseniche_bevaegelse
+          - binary_sensor.bruseniche_vand
           - input_boolean.bathroom_activity_override
           - input_select.bathroom_room_state
           - input_select.latest_motion
@@ -52,7 +52,7 @@ binary_sensor:
           {%- if is_state('input_boolean.bathroom_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.bathroom_room_state', 'active') else 'false' }}
           {%- elif is_state('binary_sensor.toilet_sensor', 'on')
-          or is_state('binary_sensor.bruseniche_bevaegelse', 'on')
+          or is_state('binary_sensor.bruseniche_vand', 'on')
           or is_state('binary_sensor.bathroom_door_activity', 'on')
           or is_state('input_select.latest_motion', 'Bathroom')
           or is_state('input_select.martin_activity', 'Showering')  -%}
@@ -94,7 +94,7 @@ automation:
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
-            light.badevaerelse:
+            light.badevaerelse_lampe:
               state: on
               brightness: 255
               color_temp: 300
@@ -109,7 +109,7 @@ automation:
               brightness: 255
               color_temp: 300
               effect: 'Solid'
-            light.bathroom_tablet:
+            light.browser_bathroom_tablet:
               state: on
               brightness: 255
 
@@ -130,7 +130,7 @@ automation:
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
-            light.badevaerelse:
+            light.badevaerelse_lampe:
               state: on
               brightness: 255
               color_temp: 250
@@ -145,7 +145,7 @@ automation:
               brightness: 255
               color_temp: 250
               effect: 'Solid'
-            light.bathroom_tablet:
+            light.browser_bathroom_tablet:
               state: on
               brightness: 255
 
@@ -166,7 +166,7 @@ automation:
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
-            light.badevaerelse:
+            light.badevaerelse_lampe:
               state: on
               brightness: 172
               color_temp: 370
@@ -181,7 +181,7 @@ automation:
               brightness: 172
               color_temp: 370
               effect: 'Solid'
-            light.bathroom_tablet:
+            light.browser_bathroom_tablet:
               state: on
               brightness: 127
 
@@ -202,7 +202,7 @@ automation:
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
-            light.badevaerelse:
+            light.badevaerelse_lampe:
               state: on
               brightness: 127
               color_temp: 370
@@ -217,7 +217,7 @@ automation:
               brightness: 127
               color_temp: 370
               effect: 'Solid'
-            light.bathroom_tablet:
+            light.browser_bathroom_tablet:
               state: on
               brightness: 64
 
@@ -238,7 +238,7 @@ automation:
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
-            light.badevaerelse:
+            light.badevaerelse_lampe:
               state: on
               brightness: 2
               rgb_color: [255,0,0]
@@ -253,7 +253,7 @@ automation:
               brightness: 8
               rgb_color: [255,0,0]
               effect: 'Solid'
-            light.bathroom_tablet:
+            light.browser_bathroom_tablet:
               state: on
               brightness: 24
 
@@ -265,9 +265,6 @@ automation:
         to: 'Night'
         for:
           minutes: 1
-          seconds: 30
-      - platform: event
-        event_type: refresh_light_profile
     condition:
       - condition: state
         entity_id: *room_light_profile
@@ -277,11 +274,11 @@ automation:
         data_template:
           transition: 90
           entities:
-            light.badevaerelse:
-              state: on
-              brightness: 127
-              color_temp: 370
-              effect: 'None'
+            # light.badevaerelse_lampe:
+            #   state: on
+            #   brightness: 127
+            #   color_temp: 370
+            #   effect: 'None'
             light.badevaerelse_skab:
               state: on
               brightness: 127
@@ -312,7 +309,7 @@ automation:
           entities:
             light.badevaerelse_lys:
               state: off
-            light.bathroom_tablet:
+            light.browser_bathroom_tablet:
               state: off
 
   - alias: activate_light_profile_bathroom_party
@@ -332,7 +329,7 @@ automation:
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
-            light.badevaerelse:
+            light.badevaerelse_lampe:
               state: on
               brightness: 127
               color_temp: 370
@@ -347,7 +344,7 @@ automation:
               brightness: 127
               color_temp: 370
               effect: 'Solid'
-            light.bathroom_tablet:
+            light.browser_bathroom_tablet:
               state: on
               brightness: 64
 
@@ -495,4 +492,4 @@ group:
       - input_select.latest_motion
       - input_select.martin_activity
       - binary_sensor.toilet_sensor
-      - binary_sensor.bruseniche_bevaegelse
+      - binary_sensor.bruseniche_vand
