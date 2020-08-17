@@ -162,67 +162,78 @@ sensor:
     outdoor_temp_sensor: sensor.udenfor_temperature
     calibration_factor: 1.44
 
-  - platform: statistics
-    name: sovevaerelse_temperatur_mean
-    entity_id: sensor.sovevaerelse_temperatur
-  - platform: statistics
-    name: bedroom_relative_humidity_mean
-    entity_id: sensor.bedroom_relative_humidity
-
-  - platform: statistics
-    name: badevaerelse_temperatur_mean
-    entity_id: sensor.badevaerelse_temperatur
-  - platform: statistics
-    name: toilet_relative_humidity_mean
-    entity_id: sensor.toilet_relative_humidity
-
-  - platform: statistics
-    name: kokken_temperatur_mean
-    entity_id: sensor.kokken_temperatur
-  - platform: statistics
-    name: kitchen_relative_humidity_mean
-    entity_id: sensor.kitchen_relative_humidity
-
-  - platform: statistics
-    name: stue_temperatur_mean
-    entity_id: sensor.stue_temperatur
-  - platform: statistics
-    name: livingroom_relative_humidity_mean
-    entity_id: sensor.livingroom_relative_humidity
-
-  - platform: statistics
-    name: kontor_temperatur_mean
-    entity_id: sensor.kontor_temperatur
-  - platform: statistics
-    name: office_relative_humidity_mean
-    entity_id: sensor.office_relative_humidity
-
-  - platform: statistics
-    name: hallway_temperature_mean
-    entity_id: sensor.hallway_temperature
-  - platform: statistics
-    name: hallway_relative_humidity_mean
-    entity_id: sensor.hallway_relative_humidity
-
-  - platform: statistics
-    name: klaedeskab_temperature_mean
-    entity_id: sensor.klaedeskab_temperature
-  - platform: statistics
-    name: klaedeskab_humidity_mean
-    entity_id: sensor.klaedeskab_humidity
-
-  - platform: statistics
-    name: udenfor_temperature_mean
-    entity_id: sensor.udenfor_temperature
-  - platform: statistics
-    name: udenfor_humidity_mean
-    entity_id: sensor.udenfor_humidity
-  - platform: statistics
-    name: Lufttryk_mean
-    entity_id: sensor.lufttryk
-
   - platform: template
     sensors:
+      bedroom_temperature_feels_like:
+        friendly_name: Soveværelse Temperatur Føles Som
+        value_template: >
+          {%- set temp = states('sensor.sovevaerelse_temperatur')|float -%}
+          {%- set humidity = states('sensor.bedroom_relative_humidity')|float -%}
+          {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
+
+      toilet_temperature_feels_like:
+        friendly_name: Toilet Temperatur Føles Som
+        value_template: >
+          {%- set temp = states('sensor.badevaerelse_temperatur')|float -%}
+          {%- set humidity = states('sensor.toilet_relative_humidity')|float -%}
+          {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
+
+      kitchen_temperature_feels_like:
+        friendly_name: Køkken Temperatur Føles Som
+        value_template: >
+          {%- set temp = states('sensor.kokken_temperatur')|float -%}
+          {%- set humidity = states('sensor.kitchen_relative_humidity')|float -%}
+          {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
+
+      livingroom_temperature_feels_like:
+        friendly_name: Stue Temperatur Føles Som
+        value_template: >
+          {%- set temp = states('sensor.stue_temperatur')|float -%}
+          {%- set humidity = states('sensor.livingroom_relative_humidity')|float -%}
+          {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
+
+      office_temperature_feels_like:
+        friendly_name: Kontor Temperatur Føles Som
+        value_template: >
+          {%- set temp = states('sensor.kontor_temperatur')|float -%}
+          {%- set humidity = states('sensor.office_relative_humidity')|float -%}
+          {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
+
+      hallway_temperature_feels_like:
+        friendly_name: Gang Temperatur Føles Som
+        value_template: >
+          {%- set temp = states('sensor.hallway_temperature')|float -%}
+          {%- set humidity = states('sensor.hallway_relative_humidity')|float -%}
+          {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
+
+      klaedeskab_temperature_feels_like:
+        friendly_name: Klædeskab Temperatur Føles Som
+        value_template: >
+          {%- set temp = states('sensor.klaedeskab_temperature')|float -%}
+          {%- set humidity = states('sensor.klaedeskab_humidity')|float -%}
+          {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
+
+      udenfor_temperature_feels_like:
+        friendly_name: Udenfor Temperatur Føles Som
+        value_template: >
+          {%- set temp = states('sensor.udenfor_temperature')|float -%}
+          {%- set humidity = states('sensor.udenfor_humidity')|float -%}
+          {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
+
+      udenfor_ost_temperature_feels_like:
+        friendly_name: Udenfor Øst Temperatur Føles Som
+        value_template: >
+          {%- set temp = states('sensor.udenfor_ost_temperature')|float -%}
+          {%- set humidity = states('sensor.udenfor_ost_humidity')|float -%}
+          {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
+
+      udenfor_vest_temperature_feels_like:
+        friendly_name: Udenfor Vest Temperatur Føles Som
+        value_template: >
+          {%- set temp = states('sensor.udenfor_vest_temperature')|float -%}
+          {%- set humidity = states('sensor.udenfor_vest_humidity')|float -%}
+          {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
+
       toilet_relative_humidity_change:
         unit_of_measurement: "%"
         friendly_name: 'Toilet Humidity Change'
