@@ -83,6 +83,7 @@ automation:
           - binary_sensor.martin_pc
           - binary_sensor.working_from_home
           - binary_sensor.martin_presence_extended
+          - sensor.season
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
         to: 'on'
@@ -96,11 +97,12 @@ automation:
           temperature: |
             {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
             {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
+            {%- set summer = is_state('sensor.season', 'summer') -%}
             {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
             {%- set active = is_state('binary_sensor.martin_pc', 'on') or is_state('binary_sensor.working_from_home', 'on') -%}
 
             {% if on %}
-              {% if night %}
+              {% if night or summer %}
                 19
               {% elif active %}
                 23
@@ -121,6 +123,7 @@ automation:
           - binary_sensor.thermostats_night_mode
           - device_tracker.sony_tv
           - binary_sensor.martin_presence_extended
+          - sensor.season
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
         to: 'on'
@@ -134,11 +137,12 @@ automation:
           temperature: |
             {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
             {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
+            {%- set summer = is_state('sensor.season', 'summer') -%}
             {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
             {%- set active = is_state('device_tracker.sony_tv', 'home') -%}
 
             {% if on %}
-              {% if night %}
+              {% if night or summer %}
                 19
               {% elif active %}
                 23
@@ -159,6 +163,7 @@ automation:
           - binary_sensor.thermostats_night_mode
           - binary_sensor.martin_presence_extended
           - binary_sensor.kitchen_activity
+          - sensor.season
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
         to: 'on'
@@ -172,11 +177,12 @@ automation:
           temperature: |
             {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
             {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
+            {%- set summer = is_state('sensor.season', 'summer') -%}
             {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
             {%- set active = is_state('binary_sensor.kitchen_activity', 'on') -%}
 
             {% if on %}
-              {% if night %}
+              {% if night or summer %}
                 19
               {% elif active %}
                 23
@@ -197,6 +203,7 @@ automation:
           - binary_sensor.thermostats_night_mode
           - input_select.sleep_state
           - binary_sensor.martin_presence_extended
+          - sensor.season
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
         to: 'on'
@@ -210,11 +217,12 @@ automation:
           temperature: |
             {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
             {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
+            {%- set summer = is_state('sensor.season', 'summer') -%}
             {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
             {%- set sleeping = is_state('input_select.sleep_state', 'sleeping') -%}
 
             {% if on %}
-              {% if sleeping %}
+              {% if sleeping or summer %}
                 19
               {% elif night %}
                 22
