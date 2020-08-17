@@ -268,60 +268,11 @@ script:
           entity_id: sensor.youtube_watch_later
       - wait_template: "{{ as_timestamp(now()) - states('sensor.youtube_watch_later')|float < 10 }}"
         timeout: '00:01:00'
-      - service: input_select.set_options
-        data_template:
-          entity_id: input_select.playlist
-          options:
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[0] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[1] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[2] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[3] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[4] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[5] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[6] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[7] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[8] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[9] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[10] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[11] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[12] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[13] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[14] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[15] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[16] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[17] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[18] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[19] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[20] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[21] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[22] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[23] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[24] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[25] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[26] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[27] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[28] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[29] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[30] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[31] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[32] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[33] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[34] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[35] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[36] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[37] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[38] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[39] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[40] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[41] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[42] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[43] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[44] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[45] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[46] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[47] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[48] or '==END==' }}"
-            - "{{ state_attr('sensor.youtube_watch_later', 'list')[49] or '==END==' }}"
+      - service: python_script.input_select_set_options
+        entity_id: input_select.playlist
+        data:
+          data_source: sensor.youtube_watch_later.list
+          append_items:
             - '==END=='
 
   playlist_play_bbc_minute:
@@ -414,31 +365,12 @@ automation:
       - platform: state
         entity_id: sensor.musicure_tracks
     action:
-      - service: input_select.set_options
-        data_template:
-          entity_id: input_select.musicure_tracks
-          options:
-            - "==NONE=="
-            - "{{ state_attr('sensor.musicure_tracks', 'list')[0] or '==END==' }}"
-            - "{{ state_attr('sensor.musicure_tracks', 'list')[1] or '==END==' }}"
-            - "{{ state_attr('sensor.musicure_tracks', 'list')[2] or '==END==' }}"
-            - "{{ state_attr('sensor.musicure_tracks', 'list')[3] or '==END==' }}"
-            - "{{ state_attr('sensor.musicure_tracks', 'list')[4] or '==END==' }}"
-            - "{{ state_attr('sensor.musicure_tracks', 'list')[5] or '==END==' }}"
-            - "{{ state_attr('sensor.musicure_tracks', 'list')[6] or '==END==' }}"
-            - "{{ state_attr('sensor.musicure_tracks', 'list')[7] or '==END==' }}"
-            - "{{ state_attr('sensor.musicure_tracks', 'list')[8] or '==END==' }}"
-            - "{{ state_attr('sensor.musicure_tracks', 'list')[9] or '==END==' }}"
-            - "{{ state_attr('sensor.musicure_tracks', 'list')[10] or '==END==' }}"
-            - "{{ state_attr('sensor.musicure_tracks', 'list')[11] or '==END==' }}"
-            - "{{ state_attr('sensor.musicure_tracks', 'list')[12] or '==END==' }}"
-            - "{{ state_attr('sensor.musicure_tracks', 'list')[13] or '==END==' }}"
-            - "{{ state_attr('sensor.musicure_tracks', 'list')[14] or '==END==' }}"
-            - "{{ state_attr('sensor.musicure_tracks', 'list')[15] or '==END==' }}"
-            - "{{ state_attr('sensor.musicure_tracks', 'list')[16] or '==END==' }}"
-            - "{{ state_attr('sensor.musicure_tracks', 'list')[17] or '==END==' }}"
-            - "{{ state_attr('sensor.musicure_tracks', 'list')[18] or '==END==' }}"
-            - "{{ state_attr('sensor.musicure_tracks', 'list')[19] or '==END==' }}"
+      - service: python_script.input_select_set_options
+        entity_id: input_select.musicure_tracks
+        data:
+          data_source: sensor.musicure_tracks.list
+          prepend_items:
+            - '==NONE=='
 
   - alias: musicure_play
     initial_state: true
@@ -642,8 +574,8 @@ automation:
     initial_state: true
     trigger:
       - platform: state
-      entity_id: input_select.playlist
-      to: '==END=='
+        entity_id: input_select.playlist
+        to: '==END=='
     action:
       - service: input_select.set_options
         data:
