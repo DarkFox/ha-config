@@ -66,7 +66,7 @@ automation:
     action:
       - service: notify.telegram_darkfox
         data:
-          message: "Vinduet på badeværelset er åbent, husk at lukke det før du tager afsted!"
+          message: "Vinduet på badeværelset er åbent!"
 
   - alias: Bathroom Aired Out
     initial_state: true
@@ -83,7 +83,7 @@ automation:
     action:
       - service: script.notify_everywhere
         data:
-          message: "Badeværelset er udluftet tilstrækkeligt, du kan nu lukke vinduet."
+          message: "Badeværelset er udluftet."
 
   - alias: Apartment Door Lock Notification
     initial_state: true
@@ -97,3 +97,30 @@ automation:
       - service: script.notify_everywhere
         data_template:
           message: "Hoveddøren er ikke låst!"
+
+  - alias: Freezer Door Open Notification
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: binary_sensor.fryser_dor
+      to: 'on'
+      for:
+        minutes: 3
+    action:
+      - service: script.notify_everywhere
+        data_template:
+          message: "Fryseren står åben!"
+
+  - alias: Fridge Door Open Notification
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: binary_sensor.koleskab_dor
+      to: 'on'
+      for:
+        minutes: 3
+    action:
+      - service: script.notify_everywhere
+        data_template:
+          message: "Køleskabet står åben!"
+
