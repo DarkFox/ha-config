@@ -8,6 +8,14 @@ weather:
       minutes: 3
 
 sensor:
+  - platform: thermal_comfort
+    sensors:
+      udenfor:
+        friendly_name: Udenfor
+        temperature_sensor: sensor.udenfor_temperature
+        humidity_sensor: sensor.udenfor_humidity
+        pressure_sensor: sensor.lufttryk
+
   - platform: darksky
     api_key: !secret darksky_api_key
     language: da
@@ -25,78 +33,83 @@ sensor:
 
   - platform: template
     sensors:
+      weather_card_secondary_info:
+        value_template: "({{ states('sensor.udenfor_temperature_feels_like')|round(1) }}°) {{ state_attr('weather.dark_sky', 'forecast')[0].temperature|round }}°/{{ state_attr('weather.dark_sky', 'forecast')[0].templow|round }}°"
+      weather_card_name_text:
+        value_template: "{{ states('sensor.precip_today')+' mm. ' if states('sensor.precip_today') != 'None' }}{{ states('sensor.wind_text') }}"
+
       wind_bearing_name:
         friendly_name: Vindretning
         value_template: >-
           {%- set wind_bearing = (state_attr('weather.dark_sky', 'wind_bearing')|float) -%}
-          {%- if wind_bearing > 348.75 or wind_bearing < 11.25 -%}
+          {%- if wind_bearing > 348.75 or wind_bearing <= 11.25 -%}
             Nord
-          {%- elif wind_bearing > 11.25 and wind_bearing < 33.75 -%}
+          {%- elif wind_bearing > 11.25 and wind_bearing <= 33.75 -%}
             Nordnordøst
-          {%- elif wind_bearing > 33.75 and wind_bearing < 56.25 -%}
+          {%- elif wind_bearing > 33.75 and wind_bearing <= 56.25 -%}
             Nordøst
-          {%- elif wind_bearing > 56.25 and wind_bearing < 78.75 -%}
+          {%- elif wind_bearing > 56.25 and wind_bearing <= 78.75 -%}
             Østnordøst
-          {%- elif wind_bearing > 78.75 and wind_bearing < 101.25 -%}
+          {%- elif wind_bearing > 78.75 and wind_bearing <= 101.25 -%}
             Øst
-          {%- elif wind_bearing > 101.25 and wind_bearing < 123.75 -%}
+          {%- elif wind_bearing > 101.25 and wind_bearing <= 123.75 -%}
             Østsydøst
-          {%- elif wind_bearing > 123.75 and wind_bearing < 146.25 -%}
+          {%- elif wind_bearing > 123.75 and wind_bearing <= 146.25 -%}
             Sydøst
-          {%- elif wind_bearing > 146.25 and wind_bearing < 168.75 -%}
+          {%- elif wind_bearing > 146.25 and wind_bearing <= 168.75 -%}
             Sydsydøst
-          {%- elif wind_bearing > 168.75 and wind_bearing < 191.25 -%}
+          {%- elif wind_bearing > 168.75 and wind_bearing <= 191.25 -%}
             Syd
-          {%- elif wind_bearing > 191.25 and wind_bearing < 213.75 -%}
+          {%- elif wind_bearing > 191.25 and wind_bearing <= 213.75 -%}
             Sydsydvest
-          {%- elif wind_bearing > 213.75 and wind_bearing < 236.25 -%}
+          {%- elif wind_bearing > 213.75 and wind_bearing <= 236.25 -%}
             Sydvest
-          {%- elif wind_bearing > 236.25 and wind_bearing < 258.75 -%}
+          {%- elif wind_bearing > 236.25 and wind_bearing <= 258.75 -%}
             Vestsydvest
-          {%- elif wind_bearing > 258.75 and wind_bearing < 281.25 -%}
+          {%- elif wind_bearing > 258.75 and wind_bearing <= 281.25 -%}
             Vest
-          {%- elif wind_bearing > 281.25 and wind_bearing < 303.75 -%}
+          {%- elif wind_bearing > 281.25 and wind_bearing <= 303.75 -%}
             Vestnordvest
-          {%- elif wind_bearing > 303.75 and wind_bearing < 326.25 -%}
+          {%- elif wind_bearing > 303.75 and wind_bearing <= 326.25 -%}
             Nordvest
-          {%- elif wind_bearing > 326.25 and wind_bearing < 348.75 -%}
+          {%- elif wind_bearing > 326.25 and wind_bearing <= 348.75 -%}
             Nordnordvest
           {%- endif -%}
       wind_bearing_name_initials:
         friendly_name: Vindretning Forkortelse
         value_template: >-
           {%- set wind_bearing = (state_attr('weather.dark_sky', 'wind_bearing')|float) -%}
-          {%- if wind_bearing > 348.75 or wind_bearing < 11.25 -%}
+          {%- if wind_bearing > 348.75 or wind_bearing <= 11.25 -%}
             N
-          {%- elif wind_bearing > 11.25 and wind_bearing < 33.75 -%}
+          {%- elif wind_bearing > 11.25 and wind_bearing <= 33.75 -%}
             NNØ
-          {%- elif wind_bearing > 33.75 and wind_bearing < 56.25 -%}
+          {%- elif wind_bearing > 33.75 and wind_bearing <= 56.25 -%}
             NØ
-          {%- elif wind_bearing > 56.25 and wind_bearing < 78.75 -%}
+          {%- elif wind_bearing > 56.25 and wind_bearing <= 78.75 -%}
             ØNØ
-          {%- elif wind_bearing > 78.75 and wind_bearing < 101.25 -%}
+          {%- elif wind_bearing > 78.75 and wind_bearing <= 101.25 -%}
             Ø
-          {%- elif wind_bearing > 101.25 and wind_bearing < 123.75 -%}
+          {%- elif wind_bearing > 101.25 and wind_bearing <= 123.75 -%}
             ØSØ
-          {%- elif wind_bearing > 123.75 and wind_bearing < 146.25 -%}
+          {%- elif wind_bearing > 123.75 and wind_bearing <= 146.25 -%}
             SØ
-          {%- elif wind_bearing > 146.25 and wind_bearing < 168.75 -%}
+          {%- elif wind_bearing > 146.25 and wind_bearing <= 168.75 -%}
             SSØ
-          {%- elif wind_bearing > 168.75 and wind_bearing < 191.25 -%}
+          {%- elif wind_bearing > 168.75 and wind_bearing <= 191.25 -%}
             S
-          {%- elif wind_bearing > 191.25 and wind_bearing < 213.75 -%}
+          {%- elif wind_bearing > 191.25 and wind_bearing <= 213.75 -%}
             SSV
-          {%- elif wind_bearing > 213.75 and wind_bearing < 236.25 -%}
+          {%- elif wind_bearing > 213.75 and wind_bearing <= 236.25 -%}
             SV
-          {%- elif wind_bearing > 236.25 and wind_bearing < 258.75 -%}
+          {%- elif wind_bearing > 236.25 and wind_bearing <= 258.75 -%}
             VSV
-          {%- elif wind_bearing > 258.75 and wind_bearing < 281.25 -%}
+          {%- elif wind_bearing > 258.75 and wind_bearing <= 281.25 -%}
             V
-          {%- elif wind_bearing > 281.25 and wind_bearing < 303.75 -%}
+          {%- elif wind_bearing > 281.25 and wind_bearing <= 303.75 -%}
             VNV
-          {%- elif wind_bearing > 303.75 and wind_bearing < 326.25 -%}
+          {%- elif wind_bearing > 303.75 and wind_bearing <= 326.25 -%}
             NV
-          {%- elif wind_bearing > 326.25 and wind_bearing < 348.75 -%}
+          {%- elif wind_bearing > 326.25 and wind_bearing <= 348.75 -%}
             NNV
           {%- endif -%}
       wind_speed_name:
@@ -105,29 +118,29 @@ sensor:
           {%- set wind_speed = (state_attr('weather.dark_sky', 'wind_speed')|int) -%}
           {%- if wind_speed == 0 -%}
             Stille
-          {%- elif wind_speed > 1 and wind_speed < 6 -%}
+          {%- elif wind_speed > 1 and wind_speed <= 6 -%}
             Luftning
-          {%- elif wind_speed > 7 and wind_speed < 11 -%}
+          {%- elif wind_speed > 6 and wind_speed <= 11 -%}
             Svag vind
-          {%- elif wind_speed > 12 and wind_speed < 19 -%}
+          {%- elif wind_speed > 11 and wind_speed <= 19 -%}
             Let vind
-          {%- elif wind_speed > 20 and wind_speed < 29 -%}
+          {%- elif wind_speed > 19 and wind_speed <= 29 -%}
             Jævn vind
-          {%- elif wind_speed > 30 and wind_speed < 39 -%}
+          {%- elif wind_speed > 29 and wind_speed <= 39 -%}
             Frisk vind
-          {%- elif wind_speed > 40 and wind_speed < 50 -%}
+          {%- elif wind_speed > 39 and wind_speed <= 50 -%}
             Hård vind
-          {%- elif wind_speed > 51 and wind_speed < 62 -%}
+          {%- elif wind_speed > 50 and wind_speed <= 62 -%}
             Stiv kuling
-          {%- elif wind_speed > 63 and wind_speed < 75 -%}
+          {%- elif wind_speed > 62 and wind_speed <= 75 -%}
             Hård kuling
-          {%- elif wind_speed > 76 and wind_speed < 87 -%}
+          {%- elif wind_speed > 75 and wind_speed <= 87 -%}
             Stormende kuling
-          {%- elif wind_speed > 88 and wind_speed < 102 -%}
+          {%- elif wind_speed > 87 and wind_speed <= 102 -%}
             Storm
-          {%- elif wind_speed > 103 and wind_speed < 117 -%}
+          {%- elif wind_speed > 102 and wind_speed <= 117 -%}
             Stærk storm
-          {%- else -%}
+          {%- elif wind_speed > 117 -%}
             Orkan
           {%- endif -%}
       wind_text:
@@ -204,14 +217,6 @@ sensor:
             /local/downloads/dmi_warning_icons/{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].icon }}
 
 
-  - platform: thermal_comfort
-    sensors:
-      udenfor:
-        friendly_name: Udenfor
-        temperature_sensor: sensor.udenfor_temperature
-        humidity_sensor: sensor.udenfor_humidity
-        pressure_sensor: sensor.lufttryk
-
   - platform: rest
     name: dmi_weather_raw
     resource: !secret dmi_weather_url
@@ -284,10 +289,10 @@ automation:
       - service: notify.telegram_darkfox
         data_template:
           title: "Vejr Varsel: {{ states('sensor.dmi_aktuel_varsel') }}"
-          message: "Kategori {{ state_attr('sensor.dmi_aktuel_varsel', 'category') }} varsel: {{ state_attr('sensor.dmi_aktuel_varsel', 'text') }}"
+          message: "{{ state_attr('sensor.dmi_aktuel_varsel', 'text') }}"
       - service: script.assistant_broadcast_if_home
         data_template:
-          message: "Kategori {{ state_attr('sensor.dmi_aktuel_varsel', 'category') }} vejr varsel: {{ state_attr('sensor.dmi_aktuel_varsel', 'text') }}"
+          message: "DMI: {{ state_attr('sensor.dmi_aktuel_varsel', 'text') }}"
 
   - alias: update_dmi_warning_specific_sensor
     trigger:
