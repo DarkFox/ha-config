@@ -3,6 +3,9 @@ homeassistant:
     sensor.playlist_player:
       icon: mdi:cast
 
+input_text:
+  playlist_media_position:
+
 input_select:
   playlist:
     name: Playlist
@@ -597,10 +600,48 @@ automation:
       data:
         entity_id: input_select.playlist
 
+  - alias: playlist_restore_media_position
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.playlist_player
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: "{{ is_state(trigger.from_state.state, 'playing') }}"
+        - condition: template
+          value_template: "{{ not is_state('input_select.playlist_player', 'None') }}"
+        - condition: template
+          value_template: "{{ not is_state('input_select.playlist', '==NONE==') }}"
+        - condition: template
+          value_template: "{{ not is_state('input_select.playlist', '==END==') }}"
+    action:
+        - service: input_text.set_value
+          data_template:
+            entity_id: input_text.playlist_media_position
+            value: "{{ state_attr(trigger.from_state.state, 'media_position') }}"
+        - service_template: >
+            {%- if 'youtube' in states('input_select.playlist') -%}
+              media_extractor.play_media
+            {%- else -%}
+              media_player.play_media
+            {%- endif -%}
+          data_template:
+            entity_id: "{{ trigger.to_state.state }}"
+            media_content_id: "{{ states('input_select.playlist') }}"
+            media_content_type: EPISODE
+        - delay:
+            seconds: 2
+        - service: media_player.media_seek
+          data_template:
+            entity_id: "{{ trigger.to_state.state }}"
+            seek_position: "{{ states('input_text.playlist_media_position') }}"
+
   - alias: playlist_end
     initial_state: true
     trigger:
-      platform: state
+      - platform: state
       entity_id: input_select.playlist
       to: '==END=='
     action:
