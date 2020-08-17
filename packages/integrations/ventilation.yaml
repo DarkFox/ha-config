@@ -14,6 +14,28 @@ sensor:
             {% set hue = hue + 360 -%}
           {%- endif -%}
           {{ hue }}
+      sovevaerelse_ventilation_active_fan:
+        value_template: "{{ 'fan.sovevaerelse_ventilation_ind' if (state_attr('fan.sovevaerelse_ventilation', 'direction') == 'forward') else 'fan.sovevaerelse_ventilation_ud' }}"
+      sovevaerelse_ventilation_inactive_fan:
+        value_template: "{{ 'fan.sovevaerelse_ventilation_ud' if (state_attr('fan.sovevaerelse_ventilation', 'direction') == 'forward') else 'fan.sovevaerelse_ventilation_ind' }}"
+
+      stue_ventilation_hue:
+        value_template: >
+          {%- set inside_temp = states('sensor.living_room_temperature')|int -%}
+          {%- set outside_temp = states('sensor.udenfor_vest_temperature')|int -%}
+          {%- set deviation = (outside_temp - inside_temp)*5 -%}
+          {%- set hue = 300 + deviation -%}
+          {%- if hue > 360 -%}
+            {% set hue = hue - 360 -%}
+          {%- endif -%}
+          {%- if hue < 0 -%}
+            {% set hue = hue + 360 -%}
+          {%- endif -%}
+          {{ hue }}
+      stue_ventilation_active_fan:
+        value_template: "{{ 'fan.stue_ventilation_ind' if (state_attr('fan.stue_ventilation', 'direction') == 'forward') else 'fan.stue_ventilation_ud' }}"
+      stue_ventilation_inactive_fan:
+        value_template: "{{ 'fan.stue_ventilation_ud' if (state_attr('fan.stue_ventilation', 'direction') == 'forward') else 'fan.stue_ventilation_ind' }}"
 
 automation:
   - alias: Set Soveværelse Ventilation Light
@@ -42,6 +64,33 @@ automation:
               0
             {%- endif -%}
           hs_color: ["{{ states('sensor.sovevaerelse_ventilation_hue')|int }}", 100]
+  
+  - alias: Set Stue Ventilation Light
+    trigger:
+      - platform: state
+        entity_id:
+          - sensor.stue_ventilation_hue
+          - sensor.living_room_light_profile
+    action:
+      - service: light.turn_on
+        data_template:
+          entity_id: light.stue_ventilation
+          brightness: >
+            {%- set profile = states('sensor.living_room_light_profile') -%}
+            {%- if profile == 'Bright' -%}
+              128
+            {%- elif profile == 'Default' -%}
+              64
+            {%- elif profile == 'Dimmed' -%}
+              32
+            {%- elif profile == 'Ambient' -%}
+              16
+            {%- elif profile == 'Night' -%}
+              8
+            {%- else -%}
+              0
+            {%- endif -%}
+          hs_color: ["{{ states('sensor.stue_ventilation_hue')|int }}", 100]
 
 fan:
   - platform: template
@@ -49,12 +98,12 @@ fan:
       sovevaerelse_ventilation:
         friendly_name: "Soveværelse Ventilation"
         value_template: "{{ 'on' if (is_state('fan.sovevaerelse_ventilation_ind', 'on') or is_state('fan.sovevaerelse_ventilation_ud', 'on')) else 'off' }}"
-        speed_template: "{{ state_attr(('fan.sovevaerelse_ventilation_ind' if (state_attr('fan.sovevaerelse_ventilation', 'direction') == 'forward') else 'fan.sovevaerelse_ventilation_ind'), 'speed') }}"
+        speed_template: "{{ state_attr(states('sensor.sovevaerelse_ventilation_active_fan'), 'speed') }}"
         direction_template: "{{ 'forward' if is_state('fan.sovevaerelse_ventilation_ind', 'on') else 'reverse' }}"
         turn_on:
           service: fan.turn_on
           data_template:
-            entity_id: "{{ 'fan.sovevaerelse_ventilation_ind' if (state_attr('fan.sovevaerelse_ventilation', 'direction') == 'forward') else 'fan.sovevaerelse_ventilation_ud' }}"
+            entity_id: "{{ states('sensor.sovevaerelse_ventilation_active_fan') }}"
             speed: "{{ state_attr('fan.sovevaerelse_ventilation', 'speed') }}"
         turn_off:
           service: fan.turn_off
@@ -65,13 +114,45 @@ fan:
         set_speed:
           service: fan.set_speed
           data_template:
-            entity_id: "{{ 'fan.sovevaerelse_ventilation_ind' if (state_attr('fan.sovevaerelse_ventilation', 'direction') == 'forward') else 'fan.sovevaerelse_ventilation_ud' }}"
+            entity_id: "{{ states('sensor.sovevaerelse_ventilation_active_fan') }}"
             speed: "{{ speed }}"
         set_direction:
           service: fan.turn_on
           data_template:
-            entity_id: "{{ 'fan.sovevaerelse_ventilation_ud' if is_state('fan.sovevaerelse_ventilation_ind', 'on') else 'fan.sovevaerelse_ventilation_ind' }}"
-            speed: "{{ state_attr(('fan.sovevaerelse_ventilation_ind' if is_state('fan.sovevaerelse_ventilation_ind', 'on') else 'fan.sovevaerelse_ventilation_ud'), 'speed') }}"
+            entity_id: "{{ states('sensor.sovevaerelse_ventilation_inactive_fan') }}"
+            speed: "{{ state_attr(states('sensor.sovevaerelse_ventilation_active_fan'), 'speed') }}"
+        speeds:
+          - 'off'
+          - 'low'
+          - 'medium'
+          - 'high'
+
+      stue_ventilation:
+        friendly_name: "Soveværelse Ventilation"
+        value_template: "{{ 'on' if (is_state('fan.stue_ventilation_ind', 'on') or is_state('fan.stue_ventilation_ud', 'on')) else 'off' }}"
+        speed_template: "{{ state_attr(states('sensor.stue_ventilation_active_fan'), 'speed') }}"
+        direction_template: "{{ 'forward' if is_state('fan.stue_ventilation_ind', 'on') else 'reverse' }}"
+        turn_on:
+          service: fan.turn_on
+          data_template:
+            entity_id: "{{ states('sensor.stue_ventilation_active_fan') }}"
+            speed: "{{ state_attr('fan.stue_ventilation', 'speed') }}"
+        turn_off:
+          service: fan.turn_off
+          data:
+            entity_id:
+              - fan.stue_ventilation_ind
+              - fan.stue_ventilation_ud
+        set_speed:
+          service: fan.set_speed
+          data_template:
+            entity_id: "{{ states('sensor.stue_ventilation_active_fan') }}"
+            speed: "{{ speed }}"
+        set_direction:
+          service: fan.turn_on
+          data_template:
+            entity_id: "{{ states('sensor.stue_ventilation_inactive_fan') }}"
+            speed: "{{ state_attr(states('sensor.stue_ventilation_active_fan'), 'speed') }}"
         speeds:
           - 'off'
           - 'low'
