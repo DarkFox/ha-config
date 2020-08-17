@@ -1,0 +1,53 @@
+switch:
+  - platform: template
+    switches:
+      projector:
+        icon_template: mdi:projector
+        value_template: "{{ is_state('binary_sensor.projector_power', 'on') }}"
+        turn_on:
+          service: script.turn_on
+          data:
+            entity_id: script.projector_on
+        turn_off:
+          service: script.turn_on
+          data:
+            entity_id: script.projector_off
+
+binary_sensor:
+  - platform: command_line
+    name: projector_power
+    device_class: power
+    command: response=$(curl -LIk -m 3 http://192.168.42.70/download.asp -o /dev/null -w "%{http_code}\n" -s); test "$response" -eq 200 && echo "ON" || echo "OFF"
+    scan_interval: 5
+    value_template: '{{ value }}'
+
+sensor:
+  - platform: scrape
+    name: projector_source
+    resource: http://192.168.42.70/download.asp
+    select: ".stat"
+    index: 9
+    value_template: "{{ value.split(' : ')[1] }}"
+
+script:
+  projector_on:
+    alias: "Projector On"
+    sequence:
+      - condition: state
+        entity_id: binary_sensor.projector_power
+        state: 'off'
+      - service: switch.turn_on
+        entity_id: switch.projector_power
+
+  projector_off:
+    alias: "Projector Off"
+    sequence:
+      - condition: state
+        entity_id: binary_sensor.projector_power
+        state: 'on'
+      - service: switch.turn_on
+        entity_id: switch.projector_power
+      - delay:
+          seconds: 1
+      - service: switch.turn_on
+        entity_id: switch.projector_power
