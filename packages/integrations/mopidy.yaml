@@ -7,7 +7,7 @@ sensor:
     name: icecast_stream_test
     resource: http://192.168.42.2:8008/status.xsl
     select: ".yellowkeys > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(1)"
-    scan_interval: 10
+    scan_interval: 1
 
 binary_sensor:
   - platform: template
@@ -16,7 +16,19 @@ binary_sensor:
         value_template: "{{ not is_state('sensor.icecast_stream_test', 'Currently playing:') }}"
 
 automation:
-  - alias: start_mopidy_on_playlist_speaker
+  - alias: stop_icecast_on_playlist_speaker
+    trigger:
+      - platform: state
+        entity_id: media_player.mpd
+        to: 'off'
+      - platform: state
+        entity_id: input_select.playlist_player
+    action:
+      - service: media_player.turn_off
+        data_template:
+          entity_id: "{{ states('input_select.playlist_player') if trigger.entity_id == 'binary_sensor.icecast_stream_running' else trigger.from_state.state }}"
+
+  - alias: start_icecast_on_playlist_speaker
     trigger:
       - platform: state
         entity_id: media_player.mpd
@@ -29,19 +41,7 @@ automation:
           entity_id: "{{ states('input_select.playlist_player') }}"
           media_content_id: !secret mopidy_cast_url
           media_content_type: music
-      - delay: '00:00:05'
+      - delay: '00:00:04'
       - service: media_player.media_play
         data_template:
           entity_id: "{{ states('input_select.playlist_player') }}"
-
-  - alias: start_mopidy_on_playlist_speaker
-    trigger:
-      - platform: state
-        entity_id: media_player.mpd
-        to: 'off'
-      - platform: state
-        entity_id: input_select.playlist_player
-    action:
-      - service: media_player.turn_off
-        data_template:
-          entity_id: "{{ states('input_select.playlist_player') if trigger.entity_id == 'media_player.mpd' else trigger.from_state.state }}"
