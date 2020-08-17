@@ -7,21 +7,35 @@
 # {% set string = "Product found. Adding  1 Flaske of Olivenolie. Barcode: 5712871447222" %}
 # {% set string = "Product found. Consuming 1 spoiled Flaske of Olivenolie. Barcode: 5712871447222" %}
 # {% set string = "Product found. None in stock, not consuming: Olivenolie. Barcode: 5712871447222" %}
-automation:
-  - alias: Barcode Buddy scan webhook event
-    initial_state: True
-    trigger:
-      platform: webhook
-      webhook_id: !secret barcode_buddy_webhook
-    action:
+sensor:
+  - platform: template
+    sensors:
+      secret_bbuddy_url:
+        value_template: !secret bbuddy_url
+
+  - platform: rest
+    name: Barcode Buddy Mode
+    resource_template: "{{ states('sensor.secret_bbuddy_url') }}/api/state/getmode"
+    headers:
+      BBUDDY-API-KEY: !secret bbuddy_api_key
+    value_template: "{{ value_json.data.mode }}"
+    scan_interval:
+      seconds: 2
+
+shell_command:
+  bbuddy_set_mode: '/usr/bin/curl -sS -X POST -H "BBUDDY-API-KEY: {{ api_key }}" -F "state={{ mode }}" {{ url }}/api/state/setmode'
+
+script:
+  bbuddy_event:
+    sequence:
       - event: barcode_buddy_scan_raw
         event_data_template:
-          data: "{{ trigger.data }}"
+          data: "{{ message }}"
       - service: mqtt.publish
         data_template:
           topic: barcode-buddy/scan
           payload: >-
-            {% set string = trigger.json.result %}
+            {% set string = message | regex_findall_index('1(.+)', ignorecase=False) %}
 
             {%- if (string|regex_match('Unknown', ignorecase=True)) -%}
               {% set action = 'Drafting' if (string|regex_match('.+could not be looked up.+', ignorecase=True)) else 'Increasing' %}
@@ -51,213 +65,6 @@ automation:
             {%- endif -%}
             {"result": "{{ string }}", "barcode": "{{ barcode }}", "action": "{{ action }}", "count": "{{ count }}", "unit": "{{ unit }}", "product": "{{ product}}", "timestamp": "{{ as_timestamp(now()) }}" }
 
-  - alias: Barcode Buddy Scan Event
-    initial_state: True
-    trigger:
-      - platform: mqtt
-        topic: barcode-buddy/scan
-    action:
-      - event: barcode_buddy_scan
-        event_data_template:
-          result: "{{ trigger.payload_json.result }}"
-          barcode: "{{ trigger.payload_json.barcode }}"
-          action: "{{ trigger.payload_json.action }}"
-          count: "{{ trigger.payload_json.count }}"
-          unit: "{{ trigger.payload_json.unit }}"
-          product: "{{ trigger.payload_json.product }}"
-          timestamp: "{{ trigger.payload_json.timestamp }}"
-
-  - alias: Barcode Buddy Drafting Notification
-    initial_state: True
-    trigger:
-      - platform: event
-        event_type: barcode_buddy_scan
-        event_data:
-          action: 'Drafting'
-    action:
-      - service: persistent_notification.create
-        data_template:
-          title: "Barcode Buddy"
-          notification_id: "barcode_buddy_scan.drafting_{{ trigger.event.data.timestamp }}"
-          message: "Nyt ukendt produkt. Stregkode: **{{ trigger.event.data.barcode }}**"
-      - delay:
-          minutes: 1
-      - service: persistent_notification.dismiss
-        data_template:
-          notification_id: "barcode_buddy_scan.drafting_{{ trigger.event.data.timestamp }}"
-
-  - alias: Barcode Buddy Increasing Notification
-    initial_state: True
-    trigger:
-      - platform: event
-        event_type: barcode_buddy_scan
-        event_data:
-          action: 'Increasing'
-    action:
-      - service: persistent_notification.create
-        data_template:
-          title: "Barcode Buddy"
-          notification_id: "barcode_buddy_scan.increasing_{{ trigger.event.data.timestamp }}"
-          message: "Før scannet ukendt produkt, øger antal. Stregkode: **{{ trigger.event.data.barcode }}**"
-      - delay:
-          minutes: 1
-      - service: persistent_notification.dismiss
-        data_template:
-          notification_id: "barcode_buddy_scan.increasing_{{ trigger.event.data.timestamp }}"
-
-  - alias: Barcode Buddy Adding Notification
-    initial_state: True
-    trigger:
-      - platform: event
-        event_type: barcode_buddy_scan
-        event_data:
-          action: 'Adding'
-    action:
-      - service: persistent_notification.create
-        data_template:
-          title: "Barcode Buddy"
-          notification_id: "barcode_buddy_scan.adding_{{ trigger.event.data.timestamp }}"
-          message: "Købt **{{ trigger.event.data.count }}** {{ trigger.event.data.unit }} **{{ trigger.event.data.product }}**"
-      - delay:
-          minutes: 1
-      - service: persistent_notification.dismiss
-        data_template:
-          notification_id: "barcode_buddy_scan.adding_{{ trigger.event.data.timestamp }}"
-
-  - alias: Barcode Buddy Opening Notification
-    initial_state: True
-    trigger:
-      - platform: event
-        event_type: barcode_buddy_scan
-        event_data:
-          action: 'Opening'
-    action:
-      - service: persistent_notification.create
-        data_template:
-          title: "Barcode Buddy"
-          notification_id: "barcode_buddy_scan.opening_{{ trigger.event.data.timestamp }}"
-          message: "Åbner **{{ trigger.event.data.count }}** {{ trigger.event.data.unit }} **{{ trigger.event.data.product }}**"
-      - delay:
-          minutes: 1
-      - service: persistent_notification.dismiss
-        data_template:
-          notification_id: "barcode_buddy_scan.opening_{{ trigger.event.data.timestamp }}"
-
-  - alias: Barcode Buddy Consuming Notification
-    initial_state: True
-    trigger:
-      - platform: event
-        event_type: barcode_buddy_scan
-        event_data:
-          action: 'Consuming'
-    action:
-      - service: persistent_notification.create
-        data_template:
-          title: "Barcode Buddy"
-          notification_id: "barcode_buddy_scan.consuming_{{ trigger.event.data.timestamp }}"
-          message: "Bruger **{{ trigger.event.data.count }}** {{ trigger.event.data.unit }} **{{ trigger.event.data.product }}**"
-      - delay:
-          minutes: 1
-      - service: persistent_notification.dismiss
-        data_template:
-          notification_id: "barcode_buddy_scan.consuming_{{ trigger.event.data.timestamp }}"
-
-  - alias: Barcode Buddy Spoiled Notification
-    initial_state: True
-    trigger:
-      - platform: event
-        event_type: barcode_buddy_scan
-        event_data:
-          action: 'Spoiled'
-    action:
-      - service: persistent_notification.create
-        data_template:
-          title: "Barcode Buddy"
-          notification_id: "barcode_buddy_scan.spoiled_{{ trigger.event.data.timestamp }}"
-          message: "Fjerner **{{ trigger.event.data.count }}** udløbet {{ trigger.event.data.unit }} **{{ trigger.event.data.product }}**"
-      - delay:
-          minutes: 1
-      - service: persistent_notification.dismiss
-        data_template:
-          notification_id: "barcode_buddy_scan.spoiled_{{ trigger.event.data.timestamp }}"
-
-  - alias: Barcode Buddy Add to SL Notification
-    initial_state: True
-    trigger:
-      - platform: event
-        event_type: barcode_buddy_scan
-        event_data:
-          action: 'Add to SL'
-    action:
-      - service: persistent_notification.create
-        data_template:
-          title: "Barcode Buddy"
-          notification_id: "barcode_buddy_scan.add_to_sl_{{ trigger.event.data.timestamp }}"
-          message: "Tilføjet **{{ trigger.event.data.count }}** {{ trigger.event.data.unit }} **{{ trigger.event.data.product }}** til indkøbsliste"
-      - delay:
-          minutes: 1
-      - service: persistent_notification.dismiss
-        data_template:
-          notification_id: "barcode_buddy_scan.add_to_sl_{{ trigger.event.data.timestamp }}"
-
-  - alias: Barcode Buddy None In Stock Consuming Notification
-    initial_state: True
-    trigger:
-      - platform: event
-        event_type: barcode_buddy_scan
-        event_data:
-          action: 'not consuming'
-    action:
-      - service: persistent_notification.create
-        data_template:
-          title: "Barcode Buddy"
-          notification_id: "barcode_buddy_scan.not_consuming_{{ trigger.event.data.timestamp }}"
-          message: "Ikke nogen **{{ trigger.event.data.product }}** på lager, bruges ikke."
-      - delay:
-          minutes: 1
-      - service: persistent_notification.dismiss
-        data_template:
-          notification_id: "barcode_buddy_scan.not_consuming_{{ trigger.event.data.timestamp }}"
-
-  - alias: Barcode Buddy None In Stock Opening Notification
-    initial_state: True
-    trigger:
-      - platform: event
-        event_type: barcode_buddy_scan
-        event_data:
-          action: 'not opening'
-    action:
-      - service: persistent_notification.create
-        data_template:
-          title: "Barcode Buddy"
-          notification_id: "barcode_buddy_scan.not_opening_{{ trigger.event.data.timestamp }}"
-          message: "Ikke nogen **{{ trigger.event.data.product }}** på lager, åbner ikke."
-      - delay:
-          minutes: 1
-      - service: persistent_notification.dismiss
-        data_template:
-          notification_id: "barcode_buddy_scan.not_opening_{{ trigger.event.data.timestamp }}"
-
-
-sensor:
-  - platform: template
-    sensors:
-      secret_bbuddy_url:
-        value_template: !secret bbuddy_url
-
-  - platform: rest
-    name: Barcode Buddy Mode
-    resource_template: "{{ states('sensor.secret_bbuddy_url') }}/api/state/getmode"
-    headers:
-      BBUDDY-API-KEY: !secret bbuddy_api_key
-    value_template: "{{ value_json.data.mode }}"
-    scan_interval:
-      seconds: 2
-
-shell_command:
-  bbuddy_set_mode: '/usr/bin/curl -sS -X POST -H "BBUDDY-API-KEY: {{ api_key }}" -F "state={{ mode }}" {{ url }}/api/state/setmode'
-
-script:
   # STATE_CONSUME = 0
   # STATE_CONSUME_SPOILED = 1
   # STATE_PURCHASE = 2
@@ -330,3 +137,173 @@ script:
           url: !secret bbuddy_url
           api_key: !secret bbuddy_api_key
           mode: '6'
+
+automation:
+  - alias: Barcode Buddy Scan Event
+    initial_state: True
+    trigger:
+      - platform: mqtt
+        topic: barcode-buddy/scan
+    action:
+      - event: barcode_buddy_scan
+        event_data_template:
+          result: "{{ trigger.payload_json.result }}"
+          barcode: "{{ trigger.payload_json.barcode }}"
+          action: "{{ trigger.payload_json.action }}"
+          count: "{{ trigger.payload_json.count }}"
+          unit: "{{ trigger.payload_json.unit }}"
+          product: "{{ trigger.payload_json.product }}"
+          timestamp: "{{ trigger.payload_json.timestamp }}"
+
+  - alias: Barcode Buddy Drafting Notification
+    initial_state: True
+    trigger:
+      - platform: event
+        event_type: barcode_buddy_scan
+        event_data:
+          action: 'Drafting'
+    action:
+      - service: persistent_notification.create
+        data_template:
+          title: "Barcode Buddy"
+          notification_id: "barcode_buddy_scan.drafting_{{ trigger.event.data.timestamp }}"
+          message: "Nyt ukendt produkt. Stregkode: **{{ trigger.event.data.barcode }}**"
+      - event: delayed_dismiss_notification
+        event_data_template:
+          notification_id: "barcode_buddy_scan.drafting_{{ trigger.event.data.timestamp }}"
+
+  - alias: Barcode Buddy Increasing Notification
+    initial_state: True
+    trigger:
+      - platform: event
+        event_type: barcode_buddy_scan
+        event_data:
+          action: 'Increasing'
+    action:
+      - service: persistent_notification.create
+        data_template:
+          title: "Barcode Buddy"
+          notification_id: "barcode_buddy_scan.increasing_{{ trigger.event.data.timestamp }}"
+          message: "Før scannet ukendt produkt, øger antal. Stregkode: **{{ trigger.event.data.barcode }}**"
+      - event: delayed_dismiss_notification
+        event_data_template:
+          notification_id: "barcode_buddy_scan.increasing_{{ trigger.event.data.timestamp }}"
+
+  - alias: Barcode Buddy Adding Notification
+    initial_state: True
+    trigger:
+      - platform: event
+        event_type: barcode_buddy_scan
+        event_data:
+          action: 'Adding'
+    action:
+      - service: persistent_notification.create
+        data_template:
+          title: "Barcode Buddy"
+          notification_id: "barcode_buddy_scan.adding_{{ trigger.event.data.timestamp }}"
+          message: "Købt **{{ trigger.event.data.count }}** {{ trigger.event.data.unit }} **{{ trigger.event.data.product }}**"
+      - event: delayed_dismiss_notification
+        event_data_template:
+          notification_id: "barcode_buddy_scan.adding_{{ trigger.event.data.timestamp }}"
+
+  - alias: Barcode Buddy Opening Notification
+    initial_state: True
+    trigger:
+      - platform: event
+        event_type: barcode_buddy_scan
+        event_data:
+          action: 'Opening'
+    action:
+      - service: persistent_notification.create
+        data_template:
+          title: "Barcode Buddy"
+          notification_id: "barcode_buddy_scan.opening_{{ trigger.event.data.timestamp }}"
+          message: "Åbner **{{ trigger.event.data.count }}** {{ trigger.event.data.unit }} **{{ trigger.event.data.product }}**"
+      - event: delayed_dismiss_notification
+        event_data_template:
+          notification_id: "barcode_buddy_scan.opening_{{ trigger.event.data.timestamp }}"
+
+  - alias: Barcode Buddy Consuming Notification
+    initial_state: True
+    trigger:
+      - platform: event
+        event_type: barcode_buddy_scan
+        event_data:
+          action: 'Consuming'
+    action:
+      - service: persistent_notification.create
+        data_template:
+          title: "Barcode Buddy"
+          notification_id: "barcode_buddy_scan.consuming_{{ trigger.event.data.timestamp }}"
+          message: "Bruger **{{ trigger.event.data.count }}** {{ trigger.event.data.unit }} **{{ trigger.event.data.product }}**"
+      - event: delayed_dismiss_notification
+        event_data_template:
+          notification_id: "barcode_buddy_scan.consuming_{{ trigger.event.data.timestamp }}"
+
+  - alias: Barcode Buddy Spoiled Notification
+    initial_state: True
+    trigger:
+      - platform: event
+        event_type: barcode_buddy_scan
+        event_data:
+          action: 'Spoiled'
+    action:
+      - service: persistent_notification.create
+        data_template:
+          title: "Barcode Buddy"
+          notification_id: "barcode_buddy_scan.spoiled_{{ trigger.event.data.timestamp }}"
+          message: "Fjerner **{{ trigger.event.data.count }}** udløbet {{ trigger.event.data.unit }} **{{ trigger.event.data.product }}**"
+      - event: delayed_dismiss_notification
+        event_data_template:
+          notification_id: "barcode_buddy_scan.spoiled_{{ trigger.event.data.timestamp }}"
+
+  - alias: Barcode Buddy Add to SL Notification
+    initial_state: True
+    trigger:
+      - platform: event
+        event_type: barcode_buddy_scan
+        event_data:
+          action: 'Add to SL'
+    action:
+      - service: persistent_notification.create
+        data_template:
+          title: "Barcode Buddy"
+          notification_id: "barcode_buddy_scan.add_to_sl_{{ trigger.event.data.timestamp }}"
+          message: "Tilføjet **{{ trigger.event.data.count }}** {{ trigger.event.data.unit }} **{{ trigger.event.data.product }}** til indkøbsliste"
+      - event: delayed_dismiss_notification
+        event_data_template:
+          notification_id: "barcode_buddy_scan.add_to_sl_{{ trigger.event.data.timestamp }}"
+
+  - alias: Barcode Buddy None In Stock Consuming Notification
+    initial_state: True
+    trigger:
+      - platform: event
+        event_type: barcode_buddy_scan
+        event_data:
+          action: 'not consuming'
+    action:
+      - service: persistent_notification.create
+        data_template:
+          title: "Barcode Buddy"
+          notification_id: "barcode_buddy_scan.not_consuming_{{ trigger.event.data.timestamp }}"
+          message: "Ikke nogen **{{ trigger.event.data.product }}** på lager, bruges ikke."
+      - event: delayed_dismiss_notification
+        event_data_template:
+          notification_id: "barcode_buddy_scan.not_consuming_{{ trigger.event.data.timestamp }}"
+
+  - alias: Barcode Buddy None In Stock Opening Notification
+    initial_state: True
+    trigger:
+      - platform: event
+        event_type: barcode_buddy_scan
+        event_data:
+          action: 'not opening'
+    action:
+      - service: persistent_notification.create
+        data_template:
+          title: "Barcode Buddy"
+          notification_id: "barcode_buddy_scan.not_opening_{{ trigger.event.data.timestamp }}"
+          message: "Ikke nogen **{{ trigger.event.data.product }}** på lager, åbner ikke."
+      - event: delayed_dismiss_notification
+        event_data_template:
+          notification_id: "barcode_buddy_scan.not_opening_{{ trigger.event.data.timestamp }}"
