@@ -24,3 +24,97 @@ binary_sensor:
         value_template: "{{ not is_state('media_player.minis', 'off') }}"
         friendly_name: Minis Spiller
         device_class: sound
+
+sensor:
+  - platform: template
+    sensors:
+      active_media_player:
+        value_template: >
+          {% set dev = namespace(active_player='') %}
+          {% for item in states.group.all_media.attributes.entity_id if is_state(item, 'playing') %}
+            {% if dev.active_player == '' %}
+              {% set dev.active_player = item %}
+            {% endif %}
+          {%- endfor %}
+
+          {{ dev.active_player }}
+        entity_id: &all_media
+          - media_player.alle_hojttalere
+          - media_player.ost_hojttalere
+          - media_player.vest_hojttalere
+          - media_player.minis
+
+          - media_player.stue_chromecast
+          - media_player.kokken_chromecast
+          - media_player.kontor_chromecast
+          - media_player.sovevaerelse_chromecast
+          - media_player.bar_skaerm
+          
+          - media_player.kokken_hojttaler
+          - media_player.sovevaerelse_soundbar
+          - media_player.stue_soundbar
+          - media_player.pc_line_in
+          - media_player.home_assistant_lyd_ind
+
+          - media_player.bedroom_tv
+
+          - media_player.hallway_tablet
+          - media_player.kitchen_tablet
+
+          - media_player.badevaerelse_mini
+          - media_player.gang_mini
+          - media_player.kokken_mini
+          - media_player.kontor_mini
+          - media_player.sovevaerelse_mini
+          - media_player.stue_mini
+
+          - media_player.srs_hg1
+          - media_player.sovevaerelse_soundbar_songpal
+          - media_player.stue_soundbar_songpal
+          - media_player.spotify_martin
+          - media_player.mpd
+
+group:  
+  all_media:
+    name: All Media
+    entities: *all_media
+
+  cast_groups_group:
+    name: Cast Grupper Gruppe
+    entities:
+      - group.cast_groups
+      - group.cast_video
+      - group.cast_audio
+      - group.cast_minis
+
+  cast_groups:
+    name: Cast Grupper
+    entities:
+      - media_player.alle_hojttalere
+      - media_player.ost_hojttalere
+      - media_player.vest_hojttalere
+      - media_player.minis
+  cast_video:
+    name: Cast Video
+    entities:
+      - media_player.kokken_chromecast
+      - media_player.sovevaerelse_chromecast
+      - media_player.stue_chromecast
+      - media_player.kontor_chromecast
+  cast_audio:
+    name: Cast Lyd
+    entities:
+      - media_player.kokken_chromecast
+      - media_player.stue_soundbar
+      - media_player.sovevaerelse_soundbar
+      - media_player.pc_line_in
+      - media_player.home_assistant_lyd_ind
+  cast_minis:
+    name: Cast Minis
+    entities:
+      - media_player.sovevaerelse_mini
+      - media_player.kokken_mini
+      - media_player.badevaerelse_mini
+      - media_player.stue_mini
+      - media_player.kontor_mini
+      - media_player.gang_mini
