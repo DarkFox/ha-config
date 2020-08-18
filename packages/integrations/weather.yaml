@@ -280,6 +280,20 @@ binary_sensor:
         value_template: "{{ not is_state('sensor.dmi_kommende_varsler', '0') }}"
 
 automation:
+  - alias: thunder_warning
+    initial_state: true
+    trigger:
+      platform: template
+      value_template: "{{ (states('sensor.blitzortung_lightning_distance') | int) < 20 }}"
+    action:
+      - service: notify.telegram_darkfox
+        data_template:
+          title: "Vejr Varsel: Torden"
+          message: "Lynnedslag {{ states('sensor.blitzortung_lightning_distance') }} {{ state_attr('sensor.blitzortung_lightning_distance', 'unit_of_measurement') }} væk."
+      - service: script.assistant_broadcast_if_home
+        data_template:
+          message: "Vejr Varsel: Torden. Lynnedslag {{ states('sensor.blitzortung_lightning_distance') }} {{ state_attr('sensor.blitzortung_lightning_distance', 'unit_of_measurement') }} væk."
+
   - alias: severe_weather_warning
     initial_state: true
     trigger:
