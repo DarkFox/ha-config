@@ -195,13 +195,48 @@ cards:
                       - entity: media_player.stue_chromecast
                         state_not: "off"
                     card:
-                      type: custom:mini-media-player
-                      name: Chromecast
-                      artwork: full-cover
-                      entity: media_player.stue_chromecast
-                      group: true
-                      hide:
-                        name: true
-                        volume: true
+                      type: vertical-stack
+                      cards:
+                        - type: custom:mini-media-player
+                          name: Chromecast
+                          artwork: full-cover
+                          entity: media_player.stue_chromecast
+                          group: true
+                          hide:
+                            name: true
+                            volume: true
+                            controls: true
+                        - type: horizontal-stack
+                          cards:
+                            - type: "custom:button-card"
+                              entity: media_player.stue_chromecast
+                              icon: mdi:skip-previous
+                              show_name: false
+                              tap_action:
+                                action: call-service
+                                service: media_player.media_previous_track
+                                service_data:
+                                  entity_id: media_player.stue_chromecast
+                            - type: "custom:button-card"
+                              entity: media_player.stue_chromecast
+                              icon: mdi:play
+                              show_name: false
+                              state:
+                                - value: "playing"
+                                  icon: mdi:pause
+                              tap_action:
+                                action: call-service
+                                service: media_player.media_play_pause
+                                service_data:
+                                  entity_id: media_player.stue_chromecast
+                            - type: "custom:button-card"
+                              entity: media_player.stue_chromecast
+                              icon: mdi:skip-next
+                              show_name: false
+                              tap_action:
+                                action: call-service
+                                service: media_player.media_next_track
+                                service_data:
+                                  entity_id: media_player.stue_chromecast
 
               - !include ../cards/media_players/playlist_controls.yaml
