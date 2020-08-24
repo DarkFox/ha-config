@@ -280,11 +280,13 @@ binary_sensor:
         value_template: "{{ not is_state('sensor.dmi_kommende_varsler', '0') }}"
 
 automation:
-  - alias: thunder_warning
+  - alias: lightning_warning
     initial_state: true
     trigger:
       platform: template
-      value_template: "{{ (states('sensor.blitzortung_lightning_distance') | int) < 20 }}"
+      value_template: "{{ not is_state('sensor.blitzortung_lightning_distance', 'unknown') and (states('sensor.blitzortung_lightning_distance') | int) < 20 }}"
+      for:
+        minutes: 5
     action:
       - service: notify.telegram_darkfox
         data_template:
