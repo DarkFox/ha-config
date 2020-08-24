@@ -1,0 +1,73 @@
+automation:
+  - alias: bar_skaerm_chromecast_on
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.living_room_room_state
+        to: 'active'
+      - platform: state
+        entity_id: sensor.living_room_light_profile
+      - platform: state
+        entity_id: media_player.bar_skaerm
+    condition:
+      - condition: state
+        entity_id: input_select.living_room_room_state
+        state: 'active'
+      - condition: or
+        conditions:
+          - condition: not
+            conditions:
+              - condition: state
+                entity_id: media_player.bar_skaerm
+                state: 'off'
+          - condition: not
+            conditions:
+              - condition: state
+                entity_id: input_select.living_room_light_profile
+                state: Night
+              - condition: state
+                entity_id: input_select.living_room_light_profile
+                state: 'Off'
+    action:
+      - service: switch.turn_on
+        data:
+          entity_id: switch.bar_skaerm
+
+  - alias: bar_skaerm_inactive
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.living_room_room_state
+        to: 'inactive'
+      - platform: state
+        entity_id: input_select.living_room_room_state
+        to: 'off'
+      - platform: state
+        entity_id: sensor.living_room_light_profile
+    condition:
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: media_player.bar_skaerm
+            state: 'off'
+          - condition: state
+            entity_id: media_player.bar_skaerm
+            state: 'unavailable'
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: sensor.living_room_light_profile
+            state: 'Night'
+          - condition: state
+            entity_id: sensor.living_room_light_profile
+            state: 'Off'
+          - condition: state
+            entity_id: input_select.living_room_room_state
+            state: 'inactive'
+          - condition: state
+            entity_id: input_select.living_room_room_state
+            state: 'off'
+    action:
+      service: switch.turn_off
+      data:
+        entity_id: switch.bar_skaerm

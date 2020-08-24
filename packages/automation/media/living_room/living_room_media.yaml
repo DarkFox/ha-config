@@ -1,0 +1,148 @@
+input_select:
+  living_room_video_output:
+    name: Video Udgang
+    options:
+      - TV
+      - Projektor
+
+binary_sensor:
+  - platform: template
+    sensors:
+      living_room_video_out:
+        entity_id:
+          - media_player.stue_soundbar_songpal
+          - media_player.stue_chromecast
+        value_template: >-
+          {{
+            is_state('media_player.stue_chromecast', 'playing')
+            or is_state('media_player.stue_chromecast', 'paused')
+            or is_state('media_player.stue_chromecast', 'idle')
+            or is_state_attr('media_player.stue_soundbar_songpal', 'source', 'GAME(HDMI1)')
+            or is_state_attr('media_player.stue_soundbar_songpal', 'source', 'GAME(HDMI2)')
+          }}
+
+automation:
+  - alias: living_room_tv_on
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.living_room_video_out
+        to: 'on'
+      - platform: state
+        entity_id: input_select.living_room_video_output
+        to: 'TV'
+    condition:
+      - condition: state
+        entity_id: binary_sensor.living_room_video_out
+        state: 'on'
+      - condition: state
+        entity_id: input_select.living_room_video_output
+        state: 'TV'
+    action:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.from_state.state == 'Projektor' }}"
+            sequence:
+              - delay:
+                  seconds: 10
+      - service: switch.turn_on
+        data:
+          entity_id: switch.living_room_tv_power
+
+  - alias: living_room_tv_off
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.living_room_video_out
+        to: 'off'
+        for:
+          minutes: 10
+      - platform: state
+        entity_id: input_select.living_room_video_output
+        from: 'TV'
+    action:
+      - service: switch.turn_off
+        data:
+          entity_id: switch.living_room_tv_power
+
+  - alias: living_room_projector_on
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.living_room_video_out
+        to: 'on'
+      - platform: state
+        entity_id: input_select.living_room_video_output
+        to: 'Projektor'
+    condition:
+      - condition: state
+        entity_id: binary_sensor.living_room_video_out
+        state: 'on'
+      - condition: state
+        entity_id: input_select.living_room_video_output
+        state: 'Projektor'
+    action:
+      - service: switch.turn_on
+        data:
+          entity_id: switch.projector
+
+  - alias: living_room_projector_off
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.living_room_video_out
+        to: 'off'
+        for:
+          minutes: 10
+      - platform: state
+        entity_id: input_select.living_room_video_output
+        from: 'Projektor'
+    action:
+      - service: switch.turn_off
+        data:
+          entity_id: switch.projector
+
+  - alias: livingroom_media_unmute
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.living_room_room_state
+        to: 'active'
+      - platform: state
+        entity_id: media_player.stue_soundbar_songpal
+        to: 'on'
+    condition:
+      - condition: state
+        entity_id: input_select.living_room_room_state
+        state: 'active'
+      - condition: state
+        entity_id: media_player.stue_soundbar_songpal
+        state: 'on'
+    action:
+      - service: media_player.volume_mute
+        data:
+          entity_id: media_player.stue_soundbar_songpal
+          is_volume_muted: false
+
+  - alias: livingroom_media_mute
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.living_room_room_state
+        to: 'off'
+      - platform: state
+        entity_id: media_player.stue_soundbar_songpal
+        to: 'on'
+    condition:
+      - condition: state
+        entity_id: input_select.living_room_room_state
+        state: 'off'
+      - condition: state
+        entity_id: media_player.stue_soundbar_songpal
+        state: 'on'
+    action:
+      - service: media_player.volume_mute
+        data:
+          entity_id: media_player.stue_soundbar_songpal
+          is_volume_muted: true
