@@ -1,0 +1,39 @@
+binary_sensor:
+  - platform: ping
+    name: Stue TV
+    host: 192.168.42.46
+    count: 3
+
+switch:
+  - platform: template
+    switches:
+      stue_tv:
+        turn_on:
+          service: script.turn_on
+          data:
+            entity_id: script.living_room_tv_on
+        turn_off:
+          service: script.turn_on
+          data:
+            entity_id: script.living_room_tv_off
+
+script:
+  living_room_tv_on:
+    sequence:
+      - service: switch.turn_on
+        entity_id: switch.stue_tv_afbryder
+      - delay:
+          seconds: 2
+      - service: switch.turn_on
+        data:
+          entity_id: switch.living_room_tv_power
+
+  living_room_tv_off:
+    sequence:
+      - service: switch.turn_off
+        data:
+          entity_id: switch.living_room_tv_power
+      - delay:
+          seconds: 2
+      - service: switch.turn_off
+        entity_id: switch.stue_tv_afbryder
