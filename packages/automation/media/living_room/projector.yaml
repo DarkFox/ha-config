@@ -14,14 +14,34 @@ switch:
             entity_id: script.projector_off
 
 binary_sensor:
-  - platform: command_line
-    name: projector_power
-    device_class: power
-    command: response=$(curl -LIk -m 3 http://192.168.42.70/download.asp -o /dev/null -w "%{http_code}\n" -s); test "$response" -eq 200 && echo "ON" || echo "OFF"
-    scan_interval: 5
-    value_template: '{{ value }}'
+  - platform: template
+    sensors:
+      projector_power:
+        entity_id: sensor.projector_state
+        value_template: "{{ is_state('sensor.projector_state', 'on') }}"
 
 sensor:
+  - platform: template
+    sensors:
+      projector_state:
+        entity_id:
+          - switch.projector_afbryder
+          - sensor.projector_afbryder_forbrug
+        value_template: >
+          {%- if is_state('switch.projector_afbryder', 'off') -%}
+            off
+          {%- else -%}
+            {%- if states('sensor.projector_afbryder_forbrug')|int < 2 -%}
+              standby
+            {%- elif states('sensor.projector_afbryder_forbrug')|int < 8 -%}
+              booting
+            {%- elif states('sensor.projector_afbryder_forbrug')|int < 18 -%}
+              shutdown
+            {%- else -%}
+              on
+            {%- endif -%}
+          {%- endif -%}
+
   - platform: scrape
     name: projector_source
     resource: http://192.168.42.70/download.asp
@@ -39,6 +59,16 @@ script:
       - service: cover.close_cover
         data:
           entity_id: cover.projektor_laerred
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: sensor.projector_state
+                state: 'off'
+            sequence:
+              - service: switch.turn_on
+                entity_id: switch.projector_afbryder
+              - delay:
+                  seconds: 2
       - service: switch.turn_on
         entity_id: switch.projector_power
 
@@ -57,3 +87,20 @@ script:
           seconds: 1
       - service: switch.turn_on
         entity_id: switch.projector_power
+      - wait_template: "{{ is_state('sensor.projector_state', 'standby') }}"
+        timeout: '00:01:00'
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: sensor.projector_state
+                state: 'standby'
+            sequence:
+              - service: switch.turn_off
+                entity_id: switch.projector_afbryder
+          - conditions:
+              - condition: state
+                entity_id: sensor.projector_state
+                state: 'on'
+            sequence:
+              - service: script.turn_on
+                entity_id: script.projector_off
