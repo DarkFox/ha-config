@@ -1,0 +1,106 @@
+card:
+  type: custom:stack-in-card
+  mode: horizontal
+  cards:
+    - type: "custom:button-card"
+      icon: mdi:window-closed
+      styles:
+        card:
+          - background-color: transparent
+          - border-radius: 0
+
+    - type: "custom:button-card"
+      triggers_update:
+        - "[[entity]]"
+      icon: mdi:circle-outline
+      styles:
+        card:
+          - background-color: transparent
+          - border-radius: 0
+      style: |
+        ha-icon {
+        {% if (state_attr('[[entity]]', 'current_position')|int) < 2 %}
+          --primary-text-color:  var(--paper-item-icon-active-color);
+        {% endif %}
+        }
+      tap_action:
+        action: call-service
+        service: cover.close_cover
+        service_data:
+          entity_id: "[[entity]]"
+
+    - type: "custom:button-card"
+      triggers_update:
+        - "[[entity]]"
+      icon: mdi:circle-slice-1
+      styles:
+        card:
+          - background-color: transparent
+          - border-radius: 0
+      style: |
+        ha-icon {
+        {% if (state_attr('[[entity]]', 'current_position')|int) > 8 and (state_attr('[[entity]]', 'current_position')|int) < 12 %}
+          --primary-text-color:  var(--paper-item-icon-active-color);
+        {% endif %}
+        }
+      tap_action:
+        action: call-service
+        service: cover.set_cover_position
+        service_data:
+          entity_id: "[[entity]]"
+          position: 10
+
+    - type: "custom:button-card"
+      triggers_update:
+        - "[[entity]]"
+      icon: mdi:circle-slice-4
+      styles:
+        card:
+          - background-color: transparent
+          - border-radius: 0
+      style: |
+        ha-icon {
+        {% if (state_attr('[[entity]]', 'current_position')|int) > 48 and (state_attr('[[entity]]', 'current_position')|int) < 52 %}
+          --primary-text-color:  var(--paper-item-icon-active-color);
+        {% endif %}
+        }
+      tap_action:
+        action: call-service
+        service: cover.set_cover_position
+        service_data:
+          entity_id: "[[entity]]"
+          position: 50
+
+    - type: "custom:button-card"
+      triggers_update:
+        - "[[entity]]"
+      icon: mdi:circle
+      styles:
+        card:
+          - background-color: transparent
+          - border-radius: 0
+      style: |
+        ha-icon {
+        {% if (state_attr('[[entity]]', 'current_position')|int) > 98 %}
+          --primary-text-color:  var(--paper-item-icon-active-color);
+        {% endif %}
+        }
+      tap_action:
+        action: call-service
+        service: cover.open_cover
+        service_data:
+          entity_id: "[[entity]]"
+
+    - type: "custom:button-card"
+      triggers_update:
+        - "[[entity]]"
+      icon: mdi:stop
+      styles:
+        card:
+          - background-color: transparent
+          - border-radius: 0
+      tap_action:
+        action: call-service
+        service: cover.stop_cover
+        service_data:
+          entity_id: "[[entity]]"
