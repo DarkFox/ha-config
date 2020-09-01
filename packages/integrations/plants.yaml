@@ -29,3 +29,45 @@ plant:
     max_temperature: 32
     min_brightness: 3700
     max_brightness: 50000
+
+automation:
+  - alias: 'Water the plants'
+    trigger:
+      platform: time
+      at: '10:00:00'
+    condition:
+      - condition: template
+        value_template: "{{ 'moisture high' not in state_attr('plant.basilikum', 'problem') and 'moisture high' not in state_attr('plant.mynte', 'problem') }}"
+    action:
+      - service: switch.turn_on
+        entity_id: switch.vandpumpe_1
+      - delay:
+          seconds: 30
+      - service: switch.turn_off
+        entity_id: switch.vandpumpe_1
+
+  - alias: basilikum_problem_notification
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: plant.basilikum
+        from: 'ok'
+        to: 'problem'
+    action:
+      - service: notify.telegram_darkfox
+        data_template:
+          title: "Plante problem: Basilikum"
+          message: "Problem: {{ state_attr('plant.basilikum', 'problem') }}"
+
+  - alias: mynte_problem_notification
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: plant.mynte
+        from: 'ok'
+        to: 'problem'
+    action:
+      - service: notify.telegram_darkfox
+        data_template:
+          title: "Plante problem: mynte"
+          message: "Problem: {{ state_attr('plant.mynte', 'problem') }}"
