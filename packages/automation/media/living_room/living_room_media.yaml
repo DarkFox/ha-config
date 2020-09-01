@@ -5,6 +5,13 @@ input_select:
       - TV
       - Projektor
 
+  stue_soundbar_volume_remote_state:
+    initial: 'off'
+    options:
+      - 'off'
+      - up
+      - down
+
 binary_sensor:
   - platform: template
     sensors:
@@ -22,6 +29,128 @@ binary_sensor:
           }}
 
 automation:
+  - alias: stue_soundbar_volume_remote_state_up
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: symfonisk_controller
+          event: 2001
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.stue_soundbar_volume_remote_state
+        option: 'up'
+
+  - alias: stue_soundbar_volume_remote_state_down
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: symfonisk_controller
+          event: 3001
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.stue_soundbar_volume_remote_state
+        option: 'down'
+
+  - alias: stue_soundbar_volume_remote_state_off
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: symfonisk_controller
+          event: 2003
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: symfonisk_controller
+          event: 3003
+      - platform: state
+        entity_id: input_select.stue_soundbar_volume_remote_state
+        to: 
+          - 'up'
+          - 'down'
+        for:
+          seconds: 10
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.stue_soundbar_volume_remote_state
+        option: 'off'
+
+  - alias: stue_soundbar_volume_remote_mute
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: symfonisk_controller
+          event: 1002
+    action:
+      service: media_player.volume_mute
+      data_template:
+        entity_id: media_player.stue_soundbar_songpal
+        is_volume_muted: "{{ not state_attr('media_player.stue_soundbar_songpal', 'is_volume_muted') }}"
+
+  - alias: stue_soundbar_volume_remote_up
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.stue_soundbar_volume_remote_state
+        to: up
+        for:
+          milliseconds: 100
+    mode: single
+    action:
+      - repeat:
+          sequence:
+            - service: media_player.volume_up
+              data_template:
+                entity_id: media_player.stue_soundbar_songpal
+            - delay:
+                milliseconds: 100
+          until:
+            - condition: or
+              conditions:
+                - condition: state
+                  entity_id: input_select.stue_soundbar_volume_remote_state
+                  state: 'off'
+                - condition: state
+                  entity_id: input_select.stue_soundbar_volume_remote_state
+                  state: 'down'
+
+  - alias: stue_soundbar_volume_remote_down
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.stue_soundbar_volume_remote_state
+        to: down
+        for:
+          milliseconds: 100
+    mode: single
+    action:
+      - repeat:
+          sequence:
+            - service: media_player.volume_down
+              data_template:
+                entity_id: media_player.stue_soundbar_songpal
+            - delay:
+                milliseconds: 100
+          until:
+            - condition: or
+              conditions:
+                - condition: state
+                  entity_id: input_select.stue_soundbar_volume_remote_state
+                  state: 'off'
+                - condition: state
+                  entity_id: input_select.stue_soundbar_volume_remote_state
+                  state: 'up'
+
   - alias: living_room_tv_on
     initial_state: true
     trigger:
