@@ -1,0 +1,49 @@
+substitutions:
+  devicename: emhaette
+  upper_devicename: Emhætte
+
+esphome:
+  name: $devicename
+  platform: ESP8266
+  board: esp8285
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret api_pass
+
+ota:
+  password: !secret ota_pass
+
+status_led:
+  pin:
+    number: GPIO13
+    inverted: yes
+
+## For some reason this causes the WiFi to not work...
+# binary_sensor:
+#   - platform: gpio
+#     id: button
+#     pin:
+#       number: GPIO0
+#       mode: INPUT_PULLUP
+#       inverted: True
+#     on_press:
+#       - light.toggle: $devicename
+
+output:
+  - platform: gpio
+    id: light_relay
+    pin: GPIO12
+
+light:
+  - platform: binary
+    id: $devicename
+    name: $upper_devicename
+    output: light_relay
