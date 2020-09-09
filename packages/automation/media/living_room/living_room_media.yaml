@@ -28,6 +28,26 @@ binary_sensor:
             or is_state_attr('media_player.stue_soundbar_songpal', 'source', 'GAME(HDMI2)')
           }}
 
+script:
+  change_living_room_media_source:
+    sequence:
+      - choose:
+        - conditions:
+            - condition: state
+              entity_id: media_player.stue_soundbar_songpal
+              state: 'off'
+          sequence:
+            - service: 'media_player.turn_on'
+              data:
+                entity_id: media_player.stue_soundbar_songpal
+            - wait_template: "{{ is_state('media_player.stue_soundbar_songpal', 'on') }}"
+              timeout: '00:00:30'
+              continue_on_timeout: true
+      - service: media_player.select_source
+        data_template:
+          entity_id: media_player.stue_soundbar_songpal
+          source: "{{ source }}"
+
 automation:
   - alias: stue_soundbar_volume_remote_state_up
     initial_state: true
