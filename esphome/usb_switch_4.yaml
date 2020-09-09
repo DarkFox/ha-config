@@ -1,0 +1,53 @@
+substitutions:
+  devicename: usb_switch_4
+  upper_devicename: USB Switch 4
+
+esphome:
+  name: $devicename
+  platform: ESP8266
+  board: esp8285
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret api_pass
+
+ota:
+  password: !secret ota_pass
+
+status_led:
+  pin:
+    number: GPIO16
+    #inverted: yes
+
+binary_sensor:
+  - platform: gpio
+    id: button
+    pin: 
+      number: GPIO4
+      mode: INPUT_PULLUP
+      inverted: yes
+    on_press:
+      - switch.toggle: $devicename
+
+switch:
+  - platform: gpio
+    id: $devicename
+    name: $upper_devicename
+    pin: GPIO5
+    on_turn_on:
+      - switch.turn_on: relay_led
+    on_turn_off:
+      - switch.turn_off: relay_led
+
+  - platform: gpio
+    id: relay_led
+    pin:
+      number: GPIO14
+      inverted: yes
