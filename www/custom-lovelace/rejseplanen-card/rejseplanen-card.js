@@ -6,16 +6,10 @@ class RejseplanenCard extends HTMLElement {
 
     if (state === undefined) {
       this.innerHTML = `
-        <style>
-          .warning {
-            display: block;
-            color: black;
-            background-color: #fce588;
-            padding: 8px;
-          }
-        </style>
         <ha-card>
-          <div class="warning">Entity not found: ${entityId} </div>
+          <div style="display: block; color: black; background-color: #fce588; padding: 8px;">
+            Entity not found: ${entityId}
+          </div>
         </ha-card>
       `;
       return;
@@ -33,28 +27,28 @@ class RejseplanenCard extends HTMLElement {
       this.content = document.createElement('div');
       const style = document.createElement('style');
       style.textContent = `
-        table {
+        .type-custom-rejseplanen-card table {
           width: 100%;
           padding: 6px 10px;
         }
-        tr:nth-child(even) {
+        .type-custom-rejseplanen-card tr:nth-child(even) {
           background: var(--table-row-background-color);
         }
-        tr:nth-child(odd) {
+        .type-custom-rejseplanen-card tr:nth-child(odd) {
           background: var(--table-row-alternative-background-color);
         }
-        td {
+        .type-custom-rejseplanen-card td {
           padding: 3px 0px;
         }
-        td.shrink {
+        .type-custom-rejseplanen-card td.shrink {
           white-space:nowrap;
           padding: 0px 4px;
         }
-        td.expand {
+        .type-custom-rejseplanen-card td.expand {
           width: 99%;
           padding-left: 4px;
         }
-        span.route {
+        .type-custom-rejseplanen-card span.route {
           font-weight: bold;
           font-size:0.9em;
           padding:3px 8px 2px 8px;
@@ -63,100 +57,112 @@ class RejseplanenCard extends HTMLElement {
           margin-right:0.7em;
           border-radius: 2px;
         }
+        .type-custom-rejseplanen-card span.track {
+          color: var(--secondary-text-color);
+          font-size: 90%;
+          float: right;
+          padding-right: 4px;
+        }
+        .type-custom-rejseplanen-card span.delay {
+          color: #b41730;
+          font-size: 90%;
+          float: right;
+          padding-right: 4px;
+        }
 
-        span.type-S.route-A {
+        .type-custom-rejseplanen-card span.type-S.route-A {
           background-color: #4AA5E5;
         }
 
-        span.type-S.route-B {
+        .type-custom-rejseplanen-card span.type-S.route-B {
           background-color: #68AB45;
         }
 
-        span.type-S.route-Bx {
+        .type-custom-rejseplanen-card span.type-S.route-Bx {
           background-color: #B3CD78;
         }
 
-        span.type-S.route-C {
+        .type-custom-rejseplanen-card span.type-S.route-C {
           background-color: #E59535;
         }
 
-        span.type-S.route-E {
+        .type-custom-rejseplanen-card span.type-S.route-E {
           background-color: #7670B3;
         }
 
-        span.type-S.route-F {
+        .type-custom-rejseplanen-card span.type-S.route-F {
           background-color: #F4C443;
         }
 
-        span.type-S.route-H {
+        .type-custom-rejseplanen-card span.type-S.route-H {
           background-color: #D44E28;
         }
 
-        span.type-M.route-Metro-M1 {
+        .type-custom-rejseplanen-card span.type-M.route-Metro-M1 {
           background-color: #037756;
         }
 
-        span.type-M.route-Metro-M2 {
+        .type-custom-rejseplanen-card span.type-M.route-Metro-M2 {
           background-color: #FECE00;
         }
 
-        span.type-M.route-Metro-M3 {
+        .type-custom-rejseplanen-card span.type-M.route-Metro-M3 {
           background-color: #EA3755;
         }
 
-        span.type-M.route-Metro-M4 {
+        .type-custom-rejseplanen-card span.type-M.route-Metro-M4 {
           background-color: #3CB4EF;
         }
 
-        span.type-REG {
+        .type-custom-rejseplanen-card span.type-REG {
           background-color: #47A541;
         }
 
-        span.type-IC {
+        .type-custom-rejseplanen-card span.type-IC {
           background-color: #EE4230;
         }
 
-        span.type-LYN {
+        .type-custom-rejseplanen-card span.type-LYN {
           background-color: #FCBB58;
         }
 
-        span.type-TOG[class*=" route-SJ"] {
+        .type-custom-rejseplanen-card span.type-TOG[class*=" route-SJ"] {
           background-color: #767676;
         }
 
-        span.type-TOG[class*=" route-Lokalbane"] {
+        .type-custom-rejseplanen-card span.type-TOG[class*=" route-Lokalbane"] {
           background-color: #061D42;
         }
 
-        span[class*=" route-Letbane-"] {
+        .type-custom-rejseplanen-card span[class*=" route-Letbane-"] {
           background-color: #31546F;
         }
 
-        span.type-BUS {
+        .type-custom-rejseplanen-card span.type-BUS {
           background-color: #FEC100;
         }
 
-        span.type-EXB {
+        .type-custom-rejseplanen-card span.type-EXB {
           background-color: #2A8DFF;
         }
 
-        span[class*=" route-Bus-"][class$="A"] {
+        .type-custom-rejseplanen-card span[class*=" route-Bus-"][class$="A"] {
           background-color: #B12222;
         }
 
-        span[class*=" route-Bus-"][class$="C"] {
+        .type-custom-rejseplanen-card span[class*=" route-Bus-"][class$="C"] {
           background-color: #17AACF;
         }
 
-        span[class*=" route-Bus-"][class$="E"] {
+        .type-custom-rejseplanen-card span[class*=" route-Bus-"][class$="E"] {
           background-color: #228C22;
         }
 
-        span[class*=" route-Bus-"][class$="N"] {
+        .type-custom-rejseplanen-card span[class*=" route-Bus-"][class$="N"] {
           background-color: #808080;
         }
 
-        span[class*=" route-Havnebus-"] {
+        .type-custom-rejseplanen-card span[class*=" route-Havnebus-"] {
           background-color: #021C4C;
         }
         `;
@@ -175,7 +181,9 @@ class RejseplanenCard extends HTMLElement {
         'route': state.attributes['route'],
         'type': state.attributes['type'],
         'due_in': state.attributes['due_in'],
-        'direction': state.attributes['direction']
+        'direction': state.attributes['direction'],
+        'track': state.attributes['track'],
+        'real_time_at': state.attributes['real_time_at'],
       };
 
       journeys = [next].concat(state.attributes['next_departures']);
@@ -186,27 +194,44 @@ class RejseplanenCard extends HTMLElement {
     }
 
     for (const journey of journeys) {
-      const direction = journey['direction']
-      const routename = journey['route']
-      const type = journey['type']
-      const time = journey['due_in']
+      const direction = journey['direction'];
+      const routename = journey['route'];
+      const type = journey['type'];
+      const time = journey['due_in'];
+      const track = journey['track'];
+      const realTimeAt = journey['real_time_at'];
 
-      const styleType = type.replace(' ', '-')
-      const styleRoutename = routename.replace(' ', '-')
+      const styleType = type.replace(' ', '-');
+      const styleRoutename = routename.replace(' ', '-');
+
+      let trackSnippet = '';
+      if (track) {
+        trackSnippet = `<span class="track">(Spor ${track})</span>`;
+      }
+
+      let delaySnippet = '';
+      if (realTimeAt) {
+        const realTimeAtTime = realTimeAt.split(' ')[1]
+        delaySnippet = `<span class="delay">(${realTimeAtTime})</span>`
+      }
 
       tablehtml += `
           <tr>
             <td class="shrink" style="text-align:center;"><span class="route type-${styleType} route-${styleRoutename}">${routename}</span></td>
-            <td class="expand">${direction}</td>
+            <td class="expand">
+              ${direction}
+              ${delaySnippet}
+              ${trackSnippet}
+            </td>
             <td class="shrink" style="text-align:right;">${time}</td>
           </tr>
-      `
+      `;
     }
     tablehtml += `
     </table>
-    `
+    `;
 
-    this.content.innerHTML = tablehtml
+    this.content.innerHTML = tablehtml;
   }
 
   setConfig(config) {
