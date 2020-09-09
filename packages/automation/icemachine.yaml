@@ -57,14 +57,18 @@ automation:
         data:
           entity_id: switch.ismaskine
 
-#   - alias: Ismaskine Fuld
-#     trigger:
-#       - platform: state
-#         entity_id: sensor.icemachine_state
-#         to: 'idle'
-#         for:
-#           seconds: 5
-#     action:
-#       - service: notify.telegram_darkfox
-#         data:
-#           message: "Isterningmaskinen er fuld."
+  - alias: Ismaskine Fuld
+    trigger:
+      - platform: state
+        entity_id: sensor.icemachine_state
+        to: 'idle'
+        for:
+          seconds: 5
+    condition:
+        - condition: state
+          entity_id: binary_sensor.barskab
+          state: 'on'
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Isterningmaskinen er fuld."
