@@ -30,11 +30,138 @@ plant:
     min_brightness: 3700
     max_brightness: 50000
 
+sensor:
+  - platform: template
+    sensors:
+      basilikum_moisture_problem:
+        value_template: >
+          {% set problems = state_attr('plant.basilikum', 'problem').split(', ') %}
+          {%- for problem in problems -%}
+            {%- set parameter, state = problem.split(' ') -%}
+            {%- if parameter == 'moisture' -%}
+              {{ state }}
+            {%- endif -%}
+          {% endfor -%}
+      basilikum_temperature_problem:
+        value_template: >
+          {% set problems = state_attr('plant.basilikum', 'problem').split(', ') %}
+          {%- for problem in problems -%}
+            {%- set parameter, state = problem.split(' ') -%}
+            {%- if parameter == 'temperature' -%}
+              {{ state }}
+            {%- endif -%}
+          {% endfor -%}
+      basilikum_conductivity_problem:
+        value_template: >
+          {% set problems = state_attr('plant.basilikum', 'problem').split(', ') %}
+          {%- for problem in problems -%}
+            {%- set parameter, state = problem.split(' ') -%}
+            {%- if parameter == 'conductivity' -%}
+              {{ state }}
+            {%- endif -%}
+          {% endfor -%}
+      basilikum_brightness_problem:
+        value_template: >
+          {% set problems = state_attr('plant.basilikum', 'problem').split(', ') %}
+          {%- for problem in problems -%}
+            {%- set parameter, state = problem.split(' ') -%}
+            {%- if parameter == 'brightness' -%}
+              {{ state }}
+            {%- endif -%}
+          {% endfor -%}
+
+      mynte_moisture_problem:
+        value_template: >
+          {% set problems = state_attr('plant.mynte', 'problem').split(', ') %}
+          {%- for problem in problems -%}
+            {%- set parameter, state = problem.split(' ') -%}
+            {%- if parameter == 'moisture' -%}
+              {{ state }}
+            {%- endif -%}
+          {% endfor -%}
+      mynte_temperature_problem:
+        value_template: >
+          {% set problems = state_attr('plant.mynte', 'problem').split(', ') %}
+          {%- for problem in problems -%}
+            {%- set parameter, state = problem.split(' ') -%}
+            {%- if parameter == 'temperature' -%}
+              {{ state }}
+            {%- endif -%}
+          {% endfor -%}
+      mynte_conductivity_problem:
+        value_template: >
+          {% set problems = state_attr('plant.mynte', 'problem').split(', ') %}
+          {%- for problem in problems -%}
+            {%- set parameter, state = problem.split(' ') -%}
+            {%- if parameter == 'conductivity' -%}
+              {{ state }}
+            {%- endif -%}
+          {% endfor -%}
+      mynte_brightness_problem:
+        value_template: >
+          {% set problems = state_attr('plant.mynte', 'problem').split(', ') %}
+          {%- for problem in problems -%}
+            {%- set parameter, state = problem.split(' ') -%}
+            {%- if parameter == 'brightness' -%}
+              {{ state }}
+            {%- endif -%}
+          {% endfor -%}
+
+input_select:
+  basilikum_moisture:
+    options:
+      - ok
+      - low
+      - high
+  basilikum_temperature:
+    options:
+      - ok
+      - low
+      - high
+  basilikum_conductivity:
+    options:
+      - ok
+      - low
+      - high
+  basilikum_brightness:
+    options:
+      - ok
+      - low
+      - high
+
+  mynte_moisture:
+    options:
+      - ok
+      - low
+      - high
+  mynte_temperature:
+    options:
+      - ok
+      - low
+      - high
+  mynte_conductivity:
+    options:
+      - ok
+      - low
+      - high
+  mynte_brightness:
+    options:
+      - ok
+      - low
+      - high
+
+
 automation:
   - alias: 'Water the plants'
     trigger:
-      platform: time
-      at: '10:00:00'
+      - platform: time
+        at: '10:00:00'
+      - platform: state
+        entity_id: input_select.mynte_moisture
+        to: 'low'
+      - platform: state
+        entity_id: input_select.basilikum_moisture
+        to: 'low'
     condition:
       - condition: template
         value_template: "{{ 'moisture high' not in state_attr('plant.basilikum', 'problem') and 'moisture high' not in state_attr('plant.mynte', 'problem') }}"
@@ -46,28 +173,65 @@ automation:
       - service: switch.turn_off
         entity_id: switch.vandpumpe_1
 
+  - alias: update_plant_problem_states
+    initial_state: true
+    mode: parallel
+    trigger:
+      - platform: state
+        entity_id:
+          - sensor.basilikum_moisture_problem
+          - sensor.basilikum_temperature_problem
+          - sensor.basilikum_conductivity_problem
+          - sensor.basilikum_brightness_problem
+          - sensor.mynte_moisture_problem
+          - sensor.mynte_temperature_problem
+          - sensor.mynte_conductivity_problem
+          - sensor.mynte_brightness_problem
+        to:
+          - ''
+          - low
+          - high
+        for:
+          minutes: 30
+    condition:
+        - condition: template
+          value_template: "{{ trigger.to_state.state != 'unavailable' }}"
+    action:
+      - service: input_select.select_option
+        data_template:
+          entity_id: >
+            {% set plant, parameter, problem = trigger.entity_id.split('.')[1].split('_') %}
+            input_select.{{ plant }}_{{ parameter }}
+          option: "{{ trigger.to_state.state or 'ok' }}"
+
   - alias: basilikum_problem_notification
     initial_state: true
+    mode: parallel
     trigger:
       - platform: state
-        entity_id: plant.basilikum
-        from: 'ok'
-        to: 'problem'
+        entity_id:
+          - input_select.basilikum_moisture
+          - input_select.basilikum_temperature
+          - input_select.basilikum_conductivity
+          - input_select.basilikum_brightness
+          - input_select.mynte_moisture
+          - input_select.mynte_temperature
+          - input_select.mynte_conductivity
+          - input_select.mynte_brightness
+        to:
+          - high
+          - low
+        for:
+          minutes: 30
     action:
-      - service: notify.telegram_darkfox
+      - service: notify.mobile_app_darkphone
         data_template:
-          title: "Plante problem: Basilikum"
-          message: "Problem: {{ state_attr('plant.basilikum', 'problem') }}"
-
-  - alias: mynte_problem_notification
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: plant.mynte
-        from: 'ok'
-        to: 'problem'
-    action:
-      - service: notify.telegram_darkfox
-        data_template:
-          title: "Plante problem: mynte"
-          message: "Problem: {{ state_attr('plant.mynte', 'problem') }}"
+          message: "{{ trigger.entity_id.split('.')[1].split('_')[0] }} Problem: {{ trigger.entity_id.split('.')[1].split('_')[1] }} {{ trigger.to_state.state }}"
+          data:
+            channel: Planter
+            color: '#517042'
+            ledColor: '#517042'
+      # - service: notify.telegram_darkfox
+      #   data_template:
+      #     title: "Plante problem: {{ trigger.entity_id.split('.')[1].split('_')[0] }}"
+      #     message: "Problem: {{ trigger.entity_id.split('.')[1].split('_')[1] }} {{ trigger.to_state.state }}"
