@@ -18,26 +18,90 @@ automation:
       data_template:
         entity_id: input_number.kitchen_tablet_brightness
         value: "{{ trigger.json.state }}"
+  - alias: charge_kitchen_tablet
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.kitchen_tablet_battery_level
+        below: 60
+      - platform: state
+        entity_id: binary_sensor.kitchen_activity
+        to: 'on'
+    action:
+      - service: switch.turn_on
+        data_template:
+          entity_id: switch.kitchen_tablet_charger
+  - alias: discharge_kitchen_tablet
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.kitchen_tablet_battery_level
+        above: 80
+      - platform: state
+        entity_id: binary_sensor.kitchen_activity
+        to: 'off'
+    condition:
+      - condition: numeric_state
+        entity_id: sensor.kitchen_tablet_battery_level
+        above: 80
+      - condition: state
+        entity_id: binary_sensor.kitchen_activity
+        state: 'off'
+    action:
+      - service: switch.turn_off
+        data_template:
+          entity_id: switch.kitchen_tablet_charger
 
-  # - alias: hallway_tablet_screen_webhook
-  #   initial_state: True
-  #   trigger:
-  #     platform: webhook
-  #     webhook_id: !secret hallway_tablet_screen_webhook
-  #   action:
-  #     service_template: "input_boolean.turn_{{ trigger.json.state }}"
-  #     data:
-  #       entity_id: input_boolean.hallway_tablet_screen
-  # - alias: hallway_tablet_brightness_webhook
-  #   initial_state: True
-  #   trigger:
-  #     platform: webhook
-  #     webhook_id: !secret hallway_tablet_brightness_webhook
-  #   action:
-  #     service: input_number.set_value
-  #     data_template:
-  #       entity_id: input_number.hallway_tablet_brightness
-  #       value: "{{ trigger.json.state }}"
+
+  - alias: hallway_tablet_screen_webhook
+    initial_state: True
+    trigger:
+      platform: webhook
+      webhook_id: !secret hallway_tablet_screen_webhook
+    action:
+      service_template: "input_boolean.turn_{{ trigger.json.state }}"
+      data:
+        entity_id: input_boolean.hallway_tablet_screen
+  - alias: hallway_tablet_brightness_webhook
+    initial_state: True
+    trigger:
+      platform: webhook
+      webhook_id: !secret hallway_tablet_brightness_webhook
+    action:
+      service: input_number.set_value
+      data_template:
+        entity_id: input_number.hallway_tablet_brightness
+        value: "{{ trigger.json.state }}"
+  - alias: charge_hallway_tablet
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.hallway_tablet_battery_level
+        below: 60
+      - platform: state
+        entity_id: binary_sensor.hallway_activity
+        to: 'on'
+    action:
+      - service: switch.turn_on
+        data_template:
+          entity_id: switch.hallway_tablet_charger
+  - alias: discharge_hallway_tablet
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.hallway_tablet_battery_level
+        above: 80
+      - platform: state
+        entity_id: binary_sensor.hallway_activity
+        to: 'off'
+    condition:
+      - condition: numeric_state
+        entity_id: sensor.hallway_tablet_battery_level
+        above: 80
+      - condition: state
+        entity_id: binary_sensor.hallway_activity
+        state: 'off'
+    action:
+      - service: switch.turn_off
+        data_template:
+          entity_id: switch.hallway_tablet_charger
+
 
   # - alias: bathroom_tablet_screen_webhook
   #   initial_state: True
@@ -78,14 +142,45 @@ automation:
       data_template:
         entity_id: input_number.bedroom_tablet_brightness
         value: "{{ trigger.json.state }}"
+  - alias: charge_bedroom_tablet
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.bedroom_tablet_battery_level
+        below: 60
+      - platform: state
+        entity_id: binary_sensor.bedroom_activity
+        to: 'on'
+    action:
+      - service: switch.turn_on
+        data_template:
+          entity_id: switch.bedroom_tablet_charger
+  - alias: discharge_bedroom_tablet
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.bedroom_tablet_battery_level
+        above: 80
+      - platform: state
+        entity_id: binary_sensor.bedroom_activity
+        to: 'off'
+    condition:
+      - condition: numeric_state
+        entity_id: sensor.bedroom_tablet_battery_level
+        above: 80
+      - condition: state
+        entity_id: binary_sensor.bedroom_activity
+        state: 'off'
+    action:
+      - service: switch.turn_off
+        data_template:
+          entity_id: switch.bedroom_tablet_charger
 
 input_boolean:
   kitchen_tablet_screen:
     name: kitchen_tablet_screen
-  # hallway_tablet_screen:
-  #   name: hallway_tablet_screen
+  hallway_tablet_screen:
+    name: hallway_tablet_screen
   # bathroom_tablet_screen:
-  #   name: bathroom_tablet_scree
+  #   name: bathroom_tablet_screen
   bedroom_tablet_screen:
     name: bedroom_tablet_screen
 
@@ -94,10 +189,10 @@ input_number:
     name: kitchen_tablet_brightness
     min: 0
     max: 255
-  # hallway_tablet_brightness:
-  #   name: hallway_tablet_brightness
-  #   min: 0
-  #   max: 255
+  hallway_tablet_brightness:
+    name: hallway_tablet_brightness
+    min: 0
+    max: 255
   # bathroom_tablet_brightness:
   #   name: bathroom_tablet_brightness
   #   min: 0
@@ -111,9 +206,9 @@ rest_command:
   kitchen_tablet_command:
     url: "http://192.168.42.20:1817/?message={{ command }}"
     method: GET
-  # hallway_tablet_command:
-  #   url: "http://192.168.42.21:1817/?message={{ command }}"
-  #   method: GET
+  hallway_tablet_command:
+    url: "http://192.168.42.21:1817/?message={{ command }}"
+    method: GET
   # bathroom_tablet_command:
   #   url: "http://192.168.42.23:1817/?message={{ command }}"
   #   method: GET
@@ -144,25 +239,25 @@ light:
             data_template:
               command: "brightness=:={{ brightness }}"
 
-      # hallway_tablet:
-      #   friendly_name: "Hallway Tablet"
-      #   level_template: "{{ states('input_number.hallway_tablet_brightness')|int }}"
-      #   value_template: "{{ states('input_boolean.hallway_tablet_screen') }}"
-      #   turn_on:
-      #     - service: rest_command.hallway_tablet_command
-      #       data:
-      #         command: "screen=:=on"
-      #   turn_off:
-      #     - service: rest_command.hallway_tablet_command
-      #       data:
-      #         command: "screen=:=off"
-      #   set_level:
-      #     - service: rest_command.hallway_tablet_command
-      #       data:
-      #         command: "screen=:=on"
-      #     - service: rest_command.hallway_tablet_command
-      #       data_template:
-      #         command: "brightness=:={{ brightness }}"
+      hallway_tablet:
+        friendly_name: "Hallway Tablet"
+        level_template: "{{ states('input_number.hallway_tablet_brightness')|int }}"
+        value_template: "{{ states('input_boolean.hallway_tablet_screen') }}"
+        turn_on:
+          - service: rest_command.hallway_tablet_command
+            data:
+              command: "screen=:=on"
+        turn_off:
+          - service: rest_command.hallway_tablet_command
+            data:
+              command: "screen=:=off"
+        set_level:
+          - service: rest_command.hallway_tablet_command
+            data:
+              command: "screen=:=on"
+          - service: rest_command.hallway_tablet_command
+            data_template:
+              command: "brightness=:={{ brightness }}"
 
       # bathroom_tablet:
       #   friendly_name: "Bathroom Tablet"
