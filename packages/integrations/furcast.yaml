@@ -30,28 +30,28 @@ automation:
     trigger:
       - platform: state
         entity_id: sensor.furcast_live
-        from: 'tonight'
-        to: 'starting soon'
+        from: "tonight"
+        to: "starting soon"
     condition:
       condition: or
       conditions:
         - condition: state
           entity_id: input_select.sleep_state
-          state: 'awake'
+          state: "awake"
         - condition: state
           entity_id: input_select.sleep_state
-          state: 'bedtime'
+          state: "bedtime"
         - condition: state
           entity_id: input_select.sleep_state
-          state: 'in bed'
+          state: "in bed"
     action:
       service: notify.mobile_app_darkphone
       data_template:
         message: "Furcast starter snart!"
         data:
           channel: Furcast
-          color: '#FE9A00'
-          ledColor: '#FE9A00'
+          color: "#FE9A00"
+          ledColor: "#FE9A00"
           actions:
             - action: "show_furcast"
               title: "Spil på {{ state_attr(states('sensor.current_room_video_player'), 'friendly_name')}}"
@@ -66,11 +66,11 @@ automation:
       event_data:
         action: show_furcast
     condition:
-        - condition: template
-          value_template: "{{ not is_state('sensor.current_room_video_player', 'unknown') }}"
+      - condition: template
+        value_template: "{{ not is_state('sensor.current_room_video_player', 'unknown') }}"
     action:
-        - service: input_select.select_option
-          data_template:
-            entity_id: input_select.playlist_player
-            option: "{{ states('sensor.current_room_video_player') }}"
-        - service: script.playlist_play_furcast
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.playlist_player
+          option: "{{ states('sensor.current_room_video_player') }}"
+      - service: script.playlist_play_furcast

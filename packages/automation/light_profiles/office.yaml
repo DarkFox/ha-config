@@ -39,7 +39,7 @@ binary_sensor:
   - platform: template
     sensors:
       office_activity:
-        friendly_name: 'Office Activity'
+        friendly_name: "Office Activity"
         entity_id:
           - binary_sensor.office_sensor
           - binary_sensor.pc_hobby_bevaegelse
@@ -58,7 +58,7 @@ binary_sensor:
           {%- endif -%}
 
       office_activity_predicted:
-        friendly_name: 'Office Activity Predicted'
+        friendly_name: "Office Activity Predicted"
         entity_id:
           - binary_sensor.moved_from_to_hallway_to_living_room
         value_template: >
@@ -74,13 +74,13 @@ automation:
     trigger:
       - platform: state
         entity_id: &room_light_profile sensor.office_light_profile
-        to: 'Bright'
+        to: "Bright"
       - platform: event
         event_type: refresh_light_profile
     condition:
       - condition: state
         entity_id: *room_light_profile
-        state: 'Bright'
+        state: "Bright"
     action:
       - service: scene.apply
         data_template:
@@ -106,66 +106,66 @@ automation:
               state: on
               brightness: 255
               color_temp: 370
-              effect: 'None'
+              effect: "None"
             light.skrivebord_uplight:
               state: on
               brightness: 255
               color_temp: 370
-              effect: 'None'
+              effect: "None"
             light.office_desk_spots:
               state: on
               brightness: 255
-              effect: 'None'
+              effect: "None"
             light.office_door_spots:
               state: on
               brightness: 255
-              effect: 'None'
+              effect: "None"
             light.hobbybord_hylder:
               state: on
               brightness: 255
-              effect: 'None'
+              effect: "None"
             light.hobbybord:
               state: on
               brightness: 255
-              effect: 'None'
+              effect: "None"
             light.office_shelf:
               state: on
               brightness: 255
               hs_color: [15, 43]
-              effect: 'None'
+              effect: "None"
             light.kontor_sofa:
               state: on
               brightness: 255
               hs_color: [15, 43]
-              effect: 'Solid'
+              effect: "Solid"
             light.blink1:
               state: on
               brightness: 255
               hs_color: [15, 43]
-              effect: 'None'
+              effect: "None"
             light.pc_skaerm_hojre:
               state: on
               brightness: 255
               hs_color: [15, 43]
-              effect: 'Solid'
+              effect: "Solid"
             light.pc_skaerm_venstre:
               state: on
               brightness: 255
               hs_color: [15, 43]
-              effect: 'Solid'
+              effect: "Solid"
 
   - alias: activate_light_profile_office_default
     initial_state: true
     trigger:
       - platform: state
         entity_id: *room_light_profile
-        to: 'Default'
+        to: "Default"
       - platform: event
         event_type: refresh_light_profile
     condition:
       - condition: state
         entity_id: *room_light_profile
-        state: 'Default'
+        state: "Default"
     action:
       - service: scene.apply
         data_template:
@@ -190,67 +190,95 @@ automation:
             light.office_desk_spots:
               state: on
               brightness: 200
-              effect: 'None'
+              effect: "None"
             light.office_door_spots:
               state: on
               brightness: 200
-              effect: 'None'
+              effect: "None"
             light.hobbybord_hylder:
               state: on
               brightness: 255
-              effect: 'None'
+              effect: "None"
             light.hobbybord:
               state: on
               brightness: 255
-              effect: 'None'
+              effect: "None"
             light.kontor_loftlys:
               state: on
               brightness: 255
-              hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
-              effect: 'None'
+              hs_color:
+                [
+                  "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}",
+                  "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}",
+                ]
+              effect: "None"
             light.skrivebord_uplight:
               state: on
               brightness: 255
-              hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
-              effect: 'None'
+              hs_color:
+                [
+                  "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}",
+                  "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}",
+                ]
+              effect: "None"
             light.office_shelf:
               state: on
               brightness: 255
-              hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
-              effect: 'None'
+              hs_color:
+                [
+                  "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}",
+                  "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}",
+                ]
+              effect: "None"
             light.kontor_sofa:
               state: on
               brightness: 255
-              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-              effect: 'Solid'
+              hs_color:
+                [
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}",
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}",
+                ]
+              effect: "Solid"
             light.blink1:
               state: on
               brightness: 255
-              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-              effect: 'None'
+              hs_color:
+                [
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}",
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}",
+                ]
+              effect: "None"
             light.pc_skaerm_hojre:
               state: on
               brightness: 127
-              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-              effect: 'Solid'
+              hs_color:
+                [
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}",
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}",
+                ]
+              effect: "Solid"
             light.pc_skaerm_venstre:
               state: on
               brightness: 127
-              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-              effect: 'Solid'
+              hs_color:
+                [
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}",
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}",
+                ]
+              effect: "Solid"
 
   - alias: activate_light_profile_office_dimmed
     initial_state: true
     trigger:
       - platform: state
         entity_id: *room_light_profile
-        to: 'Dimmed'
+        to: "Dimmed"
       - platform: event
         event_type: refresh_light_profile
     condition:
       - condition: state
         entity_id: *room_light_profile
-        state: 'Dimmed'
+        state: "Dimmed"
     action:
       - service: scene.apply
         data_template:
@@ -271,11 +299,11 @@ automation:
             light.office_desk_spots:
               state: on
               brightness: 127
-              effect: 'None'
+              effect: "None"
             light.office_door_spots:
               state: on
               brightness: 127
-              effect: 'None'
+              effect: "None"
             light.hobbybord_hylder:
               state: on
               brightness: 64
@@ -285,51 +313,79 @@ automation:
             light.kontor_loftlys:
               state: on
               brightness: 172
-              hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
-              effect: 'None'
+              hs_color:
+                [
+                  "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}",
+                  "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}",
+                ]
+              effect: "None"
             light.skrivebord_uplight:
               state: on
               brightness: 172
-              hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
-              effect: 'None'
+              hs_color:
+                [
+                  "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}",
+                  "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}",
+                ]
+              effect: "None"
             light.office_shelf:
               state: on
               brightness: 127
-              hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
-              effect: 'None'
+              hs_color:
+                [
+                  "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}",
+                  "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}",
+                ]
+              effect: "None"
             light.kontor_sofa:
               state: on
               brightness: 172
-              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-              effect: 'Solid'
+              hs_color:
+                [
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}",
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}",
+                ]
+              effect: "Solid"
             light.blink1:
               state: on
               brightness: 172
-              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-              effect: 'None'
+              hs_color:
+                [
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}",
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}",
+                ]
+              effect: "None"
             light.pc_skaerm_hojre:
               state: on
               brightness: 72
-              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-              effect: 'Solid'
+              hs_color:
+                [
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}",
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}",
+                ]
+              effect: "Solid"
             light.pc_skaerm_venstre:
               state: on
               brightness: 72
-              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-              effect: 'Solid'
+              hs_color:
+                [
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}",
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}",
+                ]
+              effect: "Solid"
 
   - alias: activate_light_profile_office_ambient
     initial_state: true
     trigger:
       - platform: state
         entity_id: *room_light_profile
-        to: 'Ambient'
+        to: "Ambient"
       - platform: event
         event_type: refresh_light_profile
     condition:
       - condition: state
         entity_id: *room_light_profile
-        state: 'Ambient'
+        state: "Ambient"
     action:
       - service: scene.apply
         data_template:
@@ -352,62 +408,90 @@ automation:
             light.office_desk_spots:
               state: on
               brightness: 16
-              effect: 'None'
+              effect: "None"
             light.office_door_spots:
               state: on
               brightness: 16
-              effect: 'None'
+              effect: "None"
             light.hobbybord:
               state: on
               brightness: 1
             light.kontor_loftlys:
               state: on
               brightness: 86
-              hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
-              effect: 'None'
+              hs_color:
+                [
+                  "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}",
+                  "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}",
+                ]
+              effect: "None"
             light.skrivebord_uplight:
               state: on
               brightness: 86
-              hs_color: [ "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}"]
-              effect: 'None'
+              hs_color:
+                [
+                  "{{ states.sensor.theme_primary_color_hue.state.split(',')[0]|int }}",
+                  "{{ states.sensor.theme_primary_color_hue.state.split(',')[1]|int }}",
+                ]
+              effect: "None"
             light.office_shelf:
               state: on
               brightness: 96
-              hs_color: [ "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}"]
-              effect: 'None'
+              hs_color:
+                [
+                  "{{ states.sensor.theme_primary_color.state.split(',')[0]|int }}",
+                  "{{ states.sensor.theme_primary_color.state.split(',')[1]|int }}",
+                ]
+              effect: "None"
             light.kontor_sofa:
               state: on
               brightness: 127
-              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-              effect: 'Solid'
+              hs_color:
+                [
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}",
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}",
+                ]
+              effect: "Solid"
             light.blink1:
               state: on
               brightness: 127
-              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-              effect: 'None'
+              hs_color:
+                [
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}",
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}",
+                ]
+              effect: "None"
             light.pc_skaerm_hojre:
               state: on
               brightness: 32
-              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-              effect: 'Solid'
+              hs_color:
+                [
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}",
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}",
+                ]
+              effect: "Solid"
             light.pc_skaerm_venstre:
               state: on
               brightness: 32
-              hs_color: [ "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}", "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}" ]
-              effect: 'Solid'
+              hs_color:
+                [
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[0]|int }}",
+                  "{{ states.sensor.theme_secondary_color.state.split(',')[1]|int }}",
+                ]
+              effect: "Solid"
 
   - alias: activate_light_profile_office_night
     initial_state: true
     trigger:
       - platform: state
         entity_id: *room_light_profile
-        to: 'Night'
+        to: "Night"
       - platform: event
         event_type: refresh_light_profile
     condition:
       - condition: state
         entity_id: *room_light_profile
-        state: 'Night'
+        state: "Night"
     action:
       - service: scene.apply
         data_template:
@@ -431,45 +515,45 @@ automation:
               state: on
               brightness: 24
               rgb_color: [255, 0, 0]
-              effect: 'None'
+              effect: "None"
             light.kontor_loftlys:
               state: on
               brightness: 24
               rgb_color: [255, 0, 0]
-              effect: 'None'
+              effect: "None"
             light.skrivebord_uplight:
               state: on
               brightness: 24
               rgb_color: [255, 0, 0]
-              effect: 'None'
+              effect: "None"
             light.kontor_sofa:
               state: on
               brightness: 24
               rgb_color: [255, 0, 0]
-              effect: 'Solid'
+              effect: "Solid"
             light.pc_skaerm_hojre:
               state: on
               brightness: 8
               rgb_color: [255, 0, 0]
-              effect: 'Solid'
+              effect: "Solid"
             light.pc_skaerm_venstre:
               state: on
               brightness: 8
               rgb_color: [255, 0, 0]
-              effect: 'Solid'
+              effect: "Solid"
 
   - alias: activate_light_profile_office_off
     initial_state: true
     trigger:
       - platform: state
         entity_id: *room_light_profile
-        to: 'Off'
+        to: "Off"
       - platform: event
         event_type: refresh_light_profile
     condition:
       - condition: state
         entity_id: *room_light_profile
-        state: 'Off'
+        state: "Off"
     action:
       # Off Lights
       - service: light.turn_off
@@ -483,13 +567,13 @@ automation:
     trigger:
       - platform: state
         entity_id: *room_light_profile
-        to: 'Party'
+        to: "Party"
       - platform: event
         event_type: refresh_light_profile
     condition:
       - condition: state
         entity_id: *room_light_profile
-        state: 'Party'
+        state: "Party"
     action:
       - service: scene.apply
         data_template:
@@ -549,7 +633,7 @@ input_select:
     options:
       - active
       - inactive
-      - 'off'
+      - "off"
 
   office_light_profile:
     name: Office Light Profile
@@ -559,7 +643,7 @@ input_select:
       - Dimmed
       - Ambient
       - Night
-      - 'Off'
+      - "Off"
 
   office_inactive_light_profile:
     options:
@@ -567,7 +651,7 @@ input_select:
       - Dimmed
       - Ambient
       - Night
-      - 'Off'
+      - "Off"
 
 light:
   - platform: template
@@ -659,14 +743,14 @@ light:
           event: office_light_profile_off_null
 
       office_light_profile_off:
-        friendly_name: 'Slukket'
+        friendly_name: "Slukket"
         icon_template: "mdi:power"
         value_template: "{{ is_state('input_select.office_light_profile', 'Off') }}"
         turn_on:
           service: input_select.select_option
           data:
             entity_id: input_select.office_light_profile
-            option: 'Off'
+            option: "Off"
         turn_off:
           event: office_light_profile_off_null
 

@@ -2,7 +2,7 @@ sensor:
   - platform: template
     sensors:
       dishwasher_state:
-        friendly_name: 'Opvaskemaskine Status'
+        friendly_name: "Opvaskemaskine Status"
         value_template: >-
           {% set watts = states('sensor.opvaskemaskine_forbrug')|int %}
           {% if is_state('sensor.opvaskemaskine_forbrug', 'unavailable') %}
@@ -18,7 +18,6 @@ sensor:
           {% else %}
             idle
           {% endif %}
-
 
 input_number:
   dishwasher_tabs:
@@ -53,30 +52,30 @@ automation:
     trigger:
       - platform: state
         entity_id: sensor.dishwasher_state
-        from: 'idle'
-        to: 'pumping'
+        from: "idle"
+        to: "pumping"
       - platform: state
         entity_id: sensor.dishwasher_state
-        from: 'idle'
-        to: 'rinsing'
+        from: "idle"
+        to: "rinsing"
       - platform: state
         entity_id: sensor.dishwasher_state
-        from: 'idle'
-        to: 'heating'
+        from: "idle"
+        to: "heating"
     condition:
       condition: or
       conditions:
         - condition: state
           entity_id: input_select.dishwasher_state
-          state: 'Tømt'
+          state: "Tømt"
         - condition: state
           entity_id: input_select.dishwasher_state
-          state: 'Beskidt'
+          state: "Beskidt"
     action:
       - service: input_select.select_option
         data_template:
           entity_id: input_select.dishwasher_state
-          option: 'Vasker'
+          option: "Vasker"
       - service: notify.telegram_darkfox
         data:
           message: Opvaskemaskinen er startet.
@@ -89,25 +88,24 @@ automation:
           amount: 1
           transaction_type: CONSUME
 
-
   - id: dishwasher_done
     alias: Opvaskemaskine Færdig
     initial_state: true
     trigger:
       - platform: state
         entity_id: sensor.dishwasher_state
-        to: 'idle'
+        to: "idle"
         for:
           minutes: 30
     condition:
       - condition: state
         entity_id: input_select.dishwasher_state
-        state: 'Vasker'
+        state: "Vasker"
     action:
       - service: input_select.select_option
         data_template:
           entity_id: input_select.dishwasher_state
-          option: 'Ren'
+          option: "Ren"
       - service: notify.telegram_darkfox
         data:
           message: Opvaskemaskinen er færdig.
@@ -118,16 +116,16 @@ automation:
     trigger:
       platform: state
       entity_id: binary_sensor.opvaskemaskine_dor
-      to: 'off'
+      to: "off"
     condition:
       - condition: state
         entity_id: input_select.dishwasher_state
-        state: 'Ren'
+        state: "Ren"
     action:
       - service: input_select.select_option
         data_template:
           entity_id: input_select.dishwasher_state
-          option: 'Tømt'
+          option: "Tømt"
 
   - id: dishwasher_dirty
     alias: Opvaskemaskine Beskidt
@@ -135,16 +133,16 @@ automation:
     trigger:
       platform: state
       entity_id: binary_sensor.opvaskemaskine_dor
-      to: 'off'
+      to: "off"
     condition:
       - condition: state
         entity_id: input_select.dishwasher_state
-        state: 'Tømt'
+        state: "Tømt"
     action:
       - service: input_select.select_option
         data_template:
           entity_id: input_select.dishwasher_state
-          option: 'Beskidt'
+          option: "Beskidt"
 
   - id: dishwasher_tabs_low_notification
     alias: Opvaskemaskinetabsbeholdning Lav Notifikation

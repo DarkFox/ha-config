@@ -11,34 +11,34 @@ automation:
     condition:
       - condition: state
         entity_id: binary_sensor.martin_presence
-        state: 'on'
+        state: "on"
     action:
-        - service: input_text.set_value
-          data_template:
-            entity_id: input_text.active_media_player
-            value: "{{ states('sensor.active_media_player') }}"
-        - service: input_text.set_value
-          data_template:
-            entity_id: input_text.active_media_type
-            value: "{{ 'file' if state_attr(states('sensor.active_media_player'), 'media_duration') else 'stream' }}"
-        - choose:
-            - conditions:
-                - condition: state
-                  entity_id: input_text.active_media_type
-                  state: "file"
-              sequence:
-                - service: "media_player.media_pause"
-                  data_template:
-                    entity_id: "{{ states('input_text.active_media_player') }}"
-            - conditions:
-                - condition: state
-                  entity_id: input_text.active_media_type
-                  state: "stream"
-              sequence:
-                - service: "media_player.volume_mute"
-                  data_template:
-                    entity_id: "{{ states('input_text.active_media_player') }}"
-                    is_volume_muted: true
+      - service: input_text.set_value
+        data_template:
+          entity_id: input_text.active_media_player
+          value: "{{ states('sensor.active_media_player') }}"
+      - service: input_text.set_value
+        data_template:
+          entity_id: input_text.active_media_type
+          value: "{{ 'file' if state_attr(states('sensor.active_media_player'), 'media_duration') else 'stream' }}"
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_text.active_media_type
+                state: "file"
+            sequence:
+              - service: "media_player.media_pause"
+                data_template:
+                  entity_id: "{{ states('input_text.active_media_player') }}"
+          - conditions:
+              - condition: state
+                entity_id: input_text.active_media_type
+                state: "stream"
+            sequence:
+              - service: "media_player.volume_mute"
+                data_template:
+                  entity_id: "{{ states('input_text.active_media_player') }}"
+                  is_volume_muted: true
 
   - alias: unpause_on_phone_call_finished
     trigger:
@@ -48,23 +48,23 @@ automation:
     condition:
       - condition: state
         entity_id: binary_sensor.martin_presence
-        state: 'on'
+        state: "on"
     action:
       - choose:
-        - conditions:
-            - condition: state
-              entity_id: input_text.active_media_type
-              state: "file"
-          sequence:
-            - service: "media_player.media_play"
-              data_template:
-                entity_id: "{{ states('input_text.active_media_player') }}"
-        - conditions:
-            - condition: state
-              entity_id: input_text.active_media_type
-              state: "stream"
-          sequence:
-            - service: "media_player.volume_mute"
-              data_template:
-                entity_id: "{{ states('input_text.active_media_player') }}"
-                is_volume_muted: false
+          - conditions:
+              - condition: state
+                entity_id: input_text.active_media_type
+                state: "file"
+            sequence:
+              - service: "media_player.media_play"
+                data_template:
+                  entity_id: "{{ states('input_text.active_media_player') }}"
+          - conditions:
+              - condition: state
+                entity_id: input_text.active_media_type
+                state: "stream"
+            sequence:
+              - service: "media_player.volume_mute"
+                data_template:
+                  entity_id: "{{ states('input_text.active_media_player') }}"
+                  is_volume_muted: false

@@ -23,7 +23,7 @@ input_select:
       - Dimmed
       - Ambient
       - Night
-      - 'Off'
+      - "Off"
 
   inactive_light_profile:
     name: Inactive Light Profile
@@ -32,7 +32,7 @@ input_select:
       - Dimmed
       - Ambient
       - Night
-      - 'Off'
+      - "Off"
 
   theme:
     name: Theme
@@ -127,14 +127,14 @@ light:
           event: light_profile_off_null
 
       light_profile_off:
-        friendly_name: 'Slukket'
+        friendly_name: "Slukket"
         icon_template: "mdi:power"
         value_template: "{{ is_state('input_select.light_profile', 'Off') }}"
         turn_on:
           service: input_select.select_option
           data:
             entity_id: input_select.light_profile
-            option: 'Off'
+            option: "Off"
         turn_off:
           event: light_profile_off_null
 
@@ -312,27 +312,27 @@ sensor:
 scene:
   - name: Bright
     entities:
-      input_select.light_profile: 'Bright'
+      input_select.light_profile: "Bright"
 
   - name: Default
     entities:
-      input_select.light_profile: 'Default'
+      input_select.light_profile: "Default"
 
   - name: Dimmed
     entities:
-      input_select.light_profile: 'Dimmed'
+      input_select.light_profile: "Dimmed"
 
   - name: Ambient
     entities:
-      input_select.light_profile: 'Ambient'
+      input_select.light_profile: "Ambient"
 
   - name: Night
     entities:
-      input_select.light_profile: 'Night'
+      input_select.light_profile: "Night"
 
-  - name: 'Off'
+  - name: "Off"
     entities:
-      input_select.light_profile: 'Off'
+      input_select.light_profile: "Off"
 
 script:
   dim_light_profile:
@@ -378,7 +378,7 @@ script:
       service: input_select.select_option
       data:
         entity_id: input_select.light_profile
-        option: 'Off'
+        option: "Off"
 
 automation:
   - alias: Reset Scene Transition Time
@@ -392,12 +392,11 @@ automation:
           entity_id: "input_number.scene_transition_time"
           value: 0.5
 
-
   - alias: refresh_light_profile_event_on_theme_change
     initial_state: true
     trigger:
       - platform: state
-        entity_id:  input_select.theme
+        entity_id: input_select.theme
     action:
       - event: refresh_light_profile
 
@@ -420,11 +419,11 @@ automation:
     trigger:
       - platform: numeric_state
         entity_id: light.apartment_light_level
-        value_template: '{{ state.attributes.brightness }}'
+        value_template: "{{ state.attributes.brightness }}"
         below: 120
       - platform: numeric_state
         entity_id: light.apartment_light_level
-        value_template: '{{ state.attributes.brightness }}'
+        value_template: "{{ state.attributes.brightness }}"
         above: 135
     action:
       - service_template: "input_select.select_{%- if states.light.apartment_light_level.attributes.brightness | int < 120 -%}next{%- else -%}previous{%- endif -%}"
@@ -564,12 +563,12 @@ automation:
         - input_boolean.living_room_activity_override
         - input_boolean.office_activity_override
         - input_boolean.storage_room_activity_override
-      to: 'on'
+      to: "on"
     action:
       - service: input_select.select_option
         data_template:
           entity_id: "input_select.{{ trigger.entity_id.replace('input_boolean.', '').replace('_activity_override', '') }}_room_state"
-          option: 'active'
+          option: "active"
 
   - alias: Room Separate Light Profile
     initial_state: true
@@ -584,7 +583,7 @@ automation:
         - input_boolean.living_room_separate_light_profile
         - input_boolean.office_separate_light_profile
         - input_boolean.storage_room_separate_light_profile
-      to: 'off'
+      to: "off"
     action:
       - service: input_select.select_option
         data_template:
@@ -604,7 +603,7 @@ automation:
         - binary_sensor.living_room_activity
         - binary_sensor.office_activity
         - binary_sensor.storage_room_activity
-      to: 'on'
+      to: "on"
     condition:
       condition: template
       value_template: "{{ 'True' if is_state('input_boolean.' + trigger.entity_id.replace('binary_sensor.', '').replace('_activity', '') + '_activity_override', 'off') }}"
@@ -612,7 +611,7 @@ automation:
       service: input_select.select_option
       data_template:
         entity_id: "input_select.{{ trigger.entity_id.replace('binary_sensor.', '').replace('_activity', '') }}_room_state"
-        option: 'active'
+        option: "active"
 
   - alias: Room State Inactive Trigger
     initial_state: true
@@ -620,37 +619,37 @@ automation:
     trigger:
       - platform: state
         entity_id: binary_sensor.bathroom_activity
-        to: 'off'
+        to: "off"
         for:
           minutes: 3
       - platform: state
         entity_id: binary_sensor.bedroom_activity
-        to: 'off'
+        to: "off"
         for:
           minutes: 3
       - platform: state
         entity_id: binary_sensor.hallway_activity
-        to: 'off'
+        to: "off"
         for:
           minutes: 3
       - platform: state
         entity_id: binary_sensor.kitchen_activity
-        to: 'off'
+        to: "off"
         for:
           minutes: 3
       - platform: state
         entity_id: binary_sensor.living_room_activity
-        to: 'off'
+        to: "off"
         for:
           minutes: 3
       - platform: state
         entity_id: binary_sensor.office_activity
-        to: 'off'
+        to: "off"
         for:
           minutes: 3
       - platform: state
         entity_id: binary_sensor.storage_room_activity
-        to: 'off'
+        to: "off"
         for:
           minutes: 3
     condition:
@@ -660,7 +659,7 @@ automation:
       service: input_select.select_option
       data_template:
         entity_id: "input_select.{{ trigger.entity_id.replace('binary_sensor.', '').replace('_activity', '') }}_room_state"
-        option: 'inactive'
+        option: "inactive"
 
   - alias: Room State Off Trigger
     initial_state: true
@@ -668,37 +667,37 @@ automation:
     trigger:
       - platform: state
         entity_id: binary_sensor.bathroom_activity
-        to: 'off'
+        to: "off"
         for:
           minutes: 5
       - platform: state
         entity_id: binary_sensor.bedroom_activity
-        to: 'off'
+        to: "off"
         for:
           minutes: 5
       - platform: state
         entity_id: binary_sensor.hallway_activity
-        to: 'off'
+        to: "off"
         for:
           minutes: 5
       - platform: state
         entity_id: binary_sensor.kitchen_activity
-        to: 'off'
+        to: "off"
         for:
           minutes: 5
       - platform: state
         entity_id: binary_sensor.living_room_activity
-        to: 'off'
+        to: "off"
         for:
           minutes: 5
       - platform: state
         entity_id: binary_sensor.office_activity
-        to: 'off'
+        to: "off"
         for:
           minutes: 5
       - platform: state
         entity_id: binary_sensor.storage_room_activity
-        to: 'off'
+        to: "off"
         for:
           minutes: 5
     condition:
@@ -712,4 +711,4 @@ automation:
       service: input_select.select_option
       data_template:
         entity_id: "input_select.{{ trigger.entity_id.replace('binary_sensor.', '').replace('_activity', '') }}_room_state"
-        option: 'off'
+        option: "off"

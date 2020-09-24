@@ -3,23 +3,27 @@ rest_command:
     url: "http://wled-{{ entity_id | replace('light.','') | replace('_', '-') }}.local/win&SC"
 
 script:
-    # USAGE EXAMPLE:
-    # - service: script.wled_effect_with_secondary_color
-    #   data_template:
-    #     entity_id: light.kokken_gulv
-    #     effect: Solid Pattern
-    #     intensity: 18
-    #     speed: 34
-    #     brightness: 255
-    #     primary_hs_color: "{{ states.sensor.theme_secondary_color.state }}"
-    #     secondary_hs_color: "125,100"
+  # USAGE EXAMPLE:
+  # - service: script.wled_effect_with_secondary_color
+  #   data_template:
+  #     entity_id: light.kokken_gulv
+  #     effect: Solid Pattern
+  #     intensity: 18
+  #     speed: 34
+  #     brightness: 255
+  #     primary_hs_color: "{{ states.sensor.theme_secondary_color.state }}"
+  #     secondary_hs_color: "125,100"
   wled_effect_with_secondary_color:
     sequence:
       - service: light.turn_on
         data_template:
           entity_id: "{{ entity_id }}"
           brightness: "{{ brightness }}"
-          hs_color: [ "{{ primary_hs_color.split(',')[0]|int }}", "{{ primary_hs_color.split(',')[1]|int }}"]
+          hs_color:
+            [
+              "{{ primary_hs_color.split(',')[0]|int }}",
+              "{{ primary_hs_color.split(',')[1]|int }}",
+            ]
       - delay:
           milliseconds: 10
       - service: rest_command.wled_swap_secondary_color
@@ -31,7 +35,11 @@ script:
         data_template:
           entity_id: "{{ entity_id }}"
           brightness: "{{ brightness }}"
-          hs_color: [ "{{ secondary_hs_color.split(',')[0]|int }}", "{{ secondary_hs_color.split(',')[1]|int }}"]
+          hs_color:
+            [
+              "{{ secondary_hs_color.split(',')[0]|int }}",
+              "{{ secondary_hs_color.split(',')[1]|int }}",
+            ]
       - delay:
           milliseconds: 10
       - service: rest_command.wled_swap_secondary_color

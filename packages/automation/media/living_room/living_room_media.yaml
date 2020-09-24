@@ -6,9 +6,9 @@ input_select:
       - Projektor
 
   stue_soundbar_volume_remote_state:
-    initial: 'off'
+    initial: "off"
     options:
-      - 'off'
+      - "off"
       - up
       - down
 
@@ -32,17 +32,17 @@ script:
   change_living_room_media_source:
     sequence:
       - choose:
-        - conditions:
-            - condition: state
-              entity_id: media_player.stue_soundbar_songpal
-              state: 'off'
-          sequence:
-            - service: 'media_player.turn_on'
-              data:
+          - conditions:
+              - condition: state
                 entity_id: media_player.stue_soundbar_songpal
-            - wait_template: "{{ is_state('media_player.stue_soundbar_songpal', 'on') }}"
-              timeout: '00:00:30'
-              continue_on_timeout: true
+                state: "off"
+            sequence:
+              - service: "media_player.turn_on"
+                data:
+                  entity_id: media_player.stue_soundbar_songpal
+              - wait_template: "{{ is_state('media_player.stue_soundbar_songpal', 'on') }}"
+                timeout: "00:00:30"
+                continue_on_timeout: true
       - service: media_player.select_source
         data_template:
           entity_id: media_player.stue_soundbar_songpal
@@ -61,7 +61,7 @@ automation:
       service: input_select.select_option
       data_template:
         entity_id: input_select.stue_soundbar_volume_remote_state
-        option: 'up'
+        option: "up"
 
   - alias: stue_soundbar_volume_remote_state_down
     initial_state: true
@@ -75,7 +75,7 @@ automation:
       service: input_select.select_option
       data_template:
         entity_id: input_select.stue_soundbar_volume_remote_state
-        option: 'down'
+        option: "down"
 
   - alias: stue_soundbar_volume_remote_state_off
     initial_state: true
@@ -92,16 +92,16 @@ automation:
           event: 3003
       - platform: state
         entity_id: input_select.stue_soundbar_volume_remote_state
-        to: 
-          - 'up'
-          - 'down'
+        to:
+          - "up"
+          - "down"
         for:
           seconds: 10
     action:
       service: input_select.select_option
       data_template:
         entity_id: input_select.stue_soundbar_volume_remote_state
-        option: 'off'
+        option: "off"
 
   - alias: stue_soundbar_volume_remote_mute
     initial_state: true
@@ -139,10 +139,10 @@ automation:
               conditions:
                 - condition: state
                   entity_id: input_select.stue_soundbar_volume_remote_state
-                  state: 'off'
+                  state: "off"
                 - condition: state
                   entity_id: input_select.stue_soundbar_volume_remote_state
-                  state: 'down'
+                  state: "down"
 
   - alias: stue_soundbar_volume_remote_down
     initial_state: true
@@ -166,27 +166,27 @@ automation:
               conditions:
                 - condition: state
                   entity_id: input_select.stue_soundbar_volume_remote_state
-                  state: 'off'
+                  state: "off"
                 - condition: state
                   entity_id: input_select.stue_soundbar_volume_remote_state
-                  state: 'up'
+                  state: "up"
 
   - alias: living_room_tv_on
     initial_state: true
     trigger:
       - platform: state
         entity_id: binary_sensor.living_room_video_out
-        to: 'on'
+        to: "on"
       - platform: state
         entity_id: input_select.living_room_video_output
-        to: 'TV'
+        to: "TV"
     condition:
       - condition: state
         entity_id: binary_sensor.living_room_video_out
-        state: 'on'
+        state: "on"
       - condition: state
         entity_id: input_select.living_room_video_output
-        state: 'TV'
+        state: "TV"
     action:
       - choose:
           - conditions:
@@ -204,12 +204,12 @@ automation:
     trigger:
       - platform: state
         entity_id: binary_sensor.living_room_video_out
-        to: 'off'
+        to: "off"
         for:
           minutes: 5
       - platform: state
         entity_id: input_select.living_room_video_output
-        from: 'TV'
+        from: "TV"
     action:
       - service: switch.turn_off
         data:
@@ -220,17 +220,17 @@ automation:
     trigger:
       - platform: state
         entity_id: binary_sensor.living_room_video_out
-        to: 'on'
+        to: "on"
       - platform: state
         entity_id: input_select.living_room_video_output
-        to: 'Projektor'
+        to: "Projektor"
     condition:
       - condition: state
         entity_id: binary_sensor.living_room_video_out
-        state: 'on'
+        state: "on"
       - condition: state
         entity_id: input_select.living_room_video_output
-        state: 'Projektor'
+        state: "Projektor"
     action:
       - service: switch.turn_on
         data:
@@ -241,12 +241,12 @@ automation:
     trigger:
       - platform: state
         entity_id: binary_sensor.living_room_video_out
-        to: 'off'
+        to: "off"
         for:
           minutes: 5
       - platform: state
         entity_id: input_select.living_room_video_output
-        from: 'Projektor'
+        from: "Projektor"
     action:
       - service: switch.turn_off
         data:
@@ -257,17 +257,17 @@ automation:
     trigger:
       - platform: state
         entity_id: input_select.living_room_room_state
-        to: 'active'
+        to: "active"
       - platform: state
         entity_id: media_player.stue_soundbar_songpal
-        to: 'on'
+        to: "on"
     condition:
       - condition: state
         entity_id: input_select.living_room_room_state
-        state: 'active'
+        state: "active"
       - condition: state
         entity_id: media_player.stue_soundbar_songpal
-        state: 'on'
+        state: "on"
     action:
       - service: media_player.volume_mute
         data:
@@ -279,17 +279,17 @@ automation:
     trigger:
       - platform: state
         entity_id: input_select.living_room_room_state
-        to: 'off'
+        to: "off"
       - platform: state
         entity_id: media_player.stue_soundbar_songpal
-        to: 'on'
+        to: "on"
     condition:
       - condition: state
         entity_id: input_select.living_room_room_state
-        state: 'off'
+        state: "off"
       - condition: state
         entity_id: media_player.stue_soundbar_songpal
-        state: 'on'
+        state: "on"
     action:
       - service: media_player.volume_mute
         data:

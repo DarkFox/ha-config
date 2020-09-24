@@ -9,9 +9,9 @@ input_text:
 input_select:
   playlist:
     name: Playlist
-    initial: '==NONE=='
+    initial: "==NONE=="
     options:
-      - '==NONE=='
+      - "==NONE=="
 
   playlist_player:
     name: Destination
@@ -43,7 +43,7 @@ input_select:
   musicure_tracks:
     name: MusiCure
     options:
-      - '==NONE=='
+      - "==NONE=="
 
 binary_sensor:
   - platform: template
@@ -117,7 +117,7 @@ group:
       - script.playlist_play_dr_p6_beat
       - script.playlist_play_my_rock
       - script.playlist_play_groove_salad
-  
+
   playlists_video_streams:
     name: TV
     entities:
@@ -267,13 +267,13 @@ script:
         data:
           entity_id: sensor.youtube_watch_later
       - wait_template: "{{ as_timestamp(now()) - states('sensor.youtube_watch_later')|float < 10 }}"
-        timeout: '00:01:00'
+        timeout: "00:01:00"
       - service: python_script.input_select_set_options
         entity_id: input_select.playlist
         data:
           data_source: sensor.youtube_watch_later.list
           append_items:
-            - '==END=='
+            - "==END=="
 
   playlist_play_bbc_minute:
     alias: BBC Minute
@@ -370,7 +370,7 @@ automation:
         data:
           data_source: sensor.musicure_tracks.list
           prepend_items:
-            - '==NONE=='
+            - "==NONE=="
 
   - alias: musicure_play
     initial_state: true
@@ -396,7 +396,7 @@ automation:
           - input_select.playlist
           - input_select.playlist_player
     action:
-    - service: browser_mod.close_popup
+      - service: browser_mod.close_popup
 
   - alias: playlist_start
     initial_state: true
@@ -482,7 +482,6 @@ automation:
         data:
           entity_id: input_select.playlist
 
-
   - alias: playlist_auto_next
     initial_state: true
     trigger:
@@ -510,8 +509,8 @@ automation:
           - media_player.badevaerelse_mini
           - media_player.kontor_mini
           - media_player.stue_mini
-        from: 'playing'
-        to: 'idle'
+        from: "playing"
+        to: "idle"
         for:
           seconds: 1
     condition:
@@ -549,39 +548,39 @@ automation:
         - condition: template
           value_template: "{{ not is_state('input_select.playlist', '==END==') }}"
     action:
-        - service: input_text.set_value
-          data_template:
-            entity_id: input_text.playlist_media_position
-            value: "{{ state_attr(trigger.from_state.state, 'media_position') }}"
-        - service_template: >
-            {%- if 'youtube' in states('input_select.playlist') -%}
-              media_extractor.play_media
-            {%- else -%}
-              media_player.play_media
-            {%- endif -%}
-          data_template:
-            entity_id: "{{ trigger.to_state.state }}"
-            media_content_id: "{{ states('input_select.playlist') }}"
-            media_content_type: EPISODE
-        - delay:
-            seconds: 2
-        - service: media_player.media_seek
-          data_template:
-            entity_id: "{{ trigger.to_state.state }}"
-            seek_position: "{{ states('input_text.playlist_media_position') }}"
+      - service: input_text.set_value
+        data_template:
+          entity_id: input_text.playlist_media_position
+          value: "{{ state_attr(trigger.from_state.state, 'media_position') }}"
+      - service_template: >
+          {%- if 'youtube' in states('input_select.playlist') -%}
+            media_extractor.play_media
+          {%- else -%}
+            media_player.play_media
+          {%- endif -%}
+        data_template:
+          entity_id: "{{ trigger.to_state.state }}"
+          media_content_id: "{{ states('input_select.playlist') }}"
+          media_content_type: EPISODE
+      - delay:
+          seconds: 2
+      - service: media_player.media_seek
+        data_template:
+          entity_id: "{{ trigger.to_state.state }}"
+          seek_position: "{{ states('input_text.playlist_media_position') }}"
 
   - alias: playlist_end
     initial_state: true
     trigger:
       - platform: state
         entity_id: input_select.playlist
-        to: '==END=='
+        to: "==END=="
     action:
       - service: input_select.set_options
         data:
           entity_id: input_select.playlist
           options:
-            - '==NONE=='
+            - "==NONE=="
       - service: media_player.media_stop
         data_template:
           entity_id: "{{ states.input_select.playlist_player.state }}"

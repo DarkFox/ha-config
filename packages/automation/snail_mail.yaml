@@ -38,7 +38,7 @@ automation:
     trigger:
       - platform: state
         entity_id: binary_sensor.postkasse
-        to: 'on'
+        to: "on"
     action:
       - service: input_number.increment
         data:
@@ -49,25 +49,25 @@ automation:
           data:
             inline_keyboard:
               - "Nulstil:/reset_snail_mail"
-  
-  - alias: 'Telegram bot reset snail mail'
+
+  - alias: "Telegram bot reset snail mail"
     trigger:
       platform: event
       event_type: telegram_callback
       event_data:
-        data: '/reset_snail_mail'
+        data: "/reset_snail_mail"
     action:
       - service: script.turn_on
         entity_id: script.reset_snail_mail
       - service: telegram_bot.edit_message
         data_template:
-          message_id: '{{ trigger.event.data.message.message_id }}'
-          chat_id: '{{ trigger.event.data.chat_id }}'
-          message: 'Postkasse tømt.'
+          message_id: "{{ trigger.event.data.message.message_id }}"
+          chat_id: "{{ trigger.event.data.chat_id }}"
+          message: "Postkasse tømt."
           inline_keyboard: []
       - delay:
           seconds: 30
       - service: telegram_bot.delete_message
         data_template:
-          message_id: '{{ trigger.event.data.message.message_id }}'
-          chat_id: '{{ trigger.event.data.chat_id }}'
+          message_id: "{{ trigger.event.data.message.message_id }}"
+          chat_id: "{{ trigger.event.data.chat_id }}"
