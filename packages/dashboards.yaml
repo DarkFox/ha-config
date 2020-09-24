@@ -2,6 +2,14 @@ input_boolean:
   bedroom_tv_lovelace:
 
 script:
+  cast_dashboard:
+    sequence:
+      - service: hassio.addon_stdin
+        data_template:
+          addon: a0d7b954_ssh
+          input: >
+            catt -d '{{ state_attr(entity_id, 'friendly_name') }}' \
+            cast_site {{ states('sensor.base_url') }}/{{ dashboard_path }}/{{ view_path }}
   start_bedroom_tv_dashboard:
     sequence:
       - service: media_player.turn_on
