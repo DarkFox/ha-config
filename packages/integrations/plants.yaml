@@ -150,18 +150,17 @@ input_select:
       - low
       - high
 
-
 automation:
-  - alias: 'Water the plants'
+  - alias: "Water the plants"
     trigger:
       - platform: time
-        at: '10:00:00'
+        at: "10:00:00"
       - platform: state
         entity_id: input_select.mynte_moisture
-        to: 'low'
+        to: "low"
       - platform: state
         entity_id: input_select.basilikum_moisture
-        to: 'low'
+        to: "low"
     condition:
       - condition: template
         value_template: "{{ 'moisture high' not in state_attr('plant.basilikum', 'problem') and 'moisture high' not in state_attr('plant.mynte', 'problem') }}"
@@ -188,14 +187,14 @@ automation:
           - sensor.mynte_conductivity_problem
           - sensor.mynte_brightness_problem
         to:
-          - ''
+          - ""
           - low
           - high
         for:
           minutes: 30
     condition:
-        - condition: template
-          value_template: "{{ trigger.to_state.state != 'unavailable' }}"
+      - condition: template
+        value_template: "{{ trigger.to_state.state != 'unavailable' }}"
     action:
       - service: input_select.select_option
         data_template:
@@ -229,8 +228,8 @@ automation:
           message: "{{ trigger.entity_id.split('.')[1].split('_')[0] }} Problem: {{ trigger.entity_id.split('.')[1].split('_')[1] }} {{ trigger.to_state.state }}"
           data:
             channel: Planter
-            color: '#517042'
-            ledColor: '#517042'
+            color: "#517042"
+            ledColor: "#517042"
       # - service: notify.telegram_darkfox
       #   data_template:
       #     title: "Plante problem: {{ trigger.entity_id.split('.')[1].split('_')[0] }}"

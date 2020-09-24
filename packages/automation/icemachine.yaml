@@ -2,7 +2,7 @@ sensor:
   - platform: template
     sensors:
       icemachine_state:
-        friendly_name: 'Ismaskine Status'
+        friendly_name: "Ismaskine Status"
         value_template: >-
           {% set watts = states('sensor.ismaskine_forbrug')|int %}
           {% if is_state('sensor.ismaskine_forbrug', 'unavailable') %}
@@ -29,7 +29,7 @@ automation:
     trigger:
       - platform: state
         entity_id: input_boolean.ismaskine
-        to: 'on'
+        to: "on"
     action:
       - service: switch.turn_on
         data:
@@ -39,19 +39,19 @@ automation:
     trigger:
       - platform: state
         entity_id: sensor.icemachine_state
-        to: 'idle'
+        to: "idle"
         for:
           seconds: 5
       - platform: state
         entity_id: input_boolean.ismaskine
-        to: 'off'
+        to: "off"
     condition:
       - condition: state
         entity_id: sensor.icemachine_state
-        state: 'idle'
+        state: "idle"
       - condition: state
         entity_id: input_boolean.ismaskine
-        state: 'off'
+        state: "off"
     action:
       - service: switch.turn_off
         data:
@@ -61,13 +61,13 @@ automation:
     trigger:
       - platform: state
         entity_id: sensor.icemachine_state
-        to: 'idle'
+        to: "idle"
         for:
           seconds: 30
     condition:
-        - condition: state
-          entity_id: binary_sensor.barskab
-          state: 'on'
+      - condition: state
+        entity_id: binary_sensor.barskab
+        state: "on"
     action:
       - service: notify.telegram_darkfox
         data:
