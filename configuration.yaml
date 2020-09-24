@@ -12,11 +12,42 @@ homeassistant:
 
   auth_providers:
     - type: homeassistant
+    - type: trusted_networks
+      allow_bypass_login: true
+      trusted_networks:
+        - 192.168.42.0/24
+      trusted_users:
+        # Chromecast
+        192.168.42.80: 8c5410dab8e54ea2897e1f73531b2f09
+        192.168.42.81: 8c5410dab8e54ea2897e1f73531b2f09
+        192.168.42.82: 8c5410dab8e54ea2897e1f73531b2f09
+        192.168.42.83: 8c5410dab8e54ea2897e1f73531b2f09
+        # Kitchen Tablet
+        192.168.42.20: 165965cdafd64b1bbd3c56d9347f9f5c
+        # Hallway Tablet
+        192.168.42.21: 72ae5b2a23844d1abefd65ed5e755755
+        # Bedroom Tablet
+        192.168.42.24: 1cda5bdef3954c8aba4ee00b69a30eef
 
   customize: !include customize.yaml
 
 sensor:
   - platform: authenticated
+
+http:
+  ip_ban_enabled: false
+  # cors_allowed_origins:
+  #   - !secret base_url
+  #   - !secret local_url
+  #   - https://cast.home-assistant.io
+  login_attempts_threshold: 10
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 127.0.0.1
+    - ::1
+    - 172.30.33.3
+    - 172.30.33.2
+    - 172.16.0.0/12
 
 config:
 
@@ -100,21 +131,6 @@ lovelace:
     type: js
 
 simpleicons:
-
-http:
-  ip_ban_enabled: false
-  # cors_allowed_origins:
-  #   - !secret base_url
-  #   - !secret local_url
-  #   - https://cast.home-assistant.io
-  login_attempts_threshold: 10
-  use_x_forwarded_for: true
-  trusted_proxies:
-    - 127.0.0.1
-    - ::1
-    - 172.30.33.3
-    - 172.30.33.2
-    - 172.16.0.0/12
 
 mobile_app:
 
