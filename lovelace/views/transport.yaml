@@ -81,38 +81,32 @@ cards:
 
       - type: vertical-stack
         cards:
-          - !include /config/lovelace/cards/s_train_status.yaml
-          
           - type: conditional
             conditions:
               - entity: binary_sensor.s_train_message_present
                 state: 'on'
-            card:
-              type: custom:html-card
-              ignore_line_breaks: true
-              style: |
-                ha-card {
-                  padding: 0px;
-                }
-              content: >-
-                <font size=4>
-                  [[ sensor.s_train_message ]]
-                </font>
-
-          - type: custom:rejseplanen-card
-            entity: sensor.s_tog_brondbyoster_til_kbh
-            max_entries: 5
+            card: !include /config/lovelace/cards/s_train_status.yaml
 
           - type: custom:rejseplanen-stog-card
             entity: sensor.s_tog_brondbyoster_til_kbh
             title: 'Brøndbyøster St.'
+            max_entries: 2
+
+          - type: custom:rejseplanen-stog-card
+            entity: sensor.s_tog_norreport_til_brondbyoster
+            title: 'Nørreport St.'
+            max_entries: 2
+
+          - type: custom:rejseplanen-card
+            entity: sensor.s_tog_brondbyoster_til_kbh
+            max_entries: 5
+            show_scheduled_time: true
 
           - type: custom:rejseplanen-card
             entity: sensor.s_tog_norreport_til_brondbyoster
+            show_scheduled_time: true
 
           - type: custom:rejseplanen-card
             entity: sensor.kobenhavn_h_afgange
+            show_scheduled_time: true
 
-          - type: custom:rejseplanen-stog-card
-            entity: sensor.kobenhavn_h_afgange
-            max_entries: 20

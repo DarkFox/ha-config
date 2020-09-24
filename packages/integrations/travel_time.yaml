@@ -3,24 +3,24 @@ homeassistant:
     sensor.s_train_b_status:
       friendly_name: S-Tog Linje B Status
       entity_picture: !secret s_tog_icon_url
-    sensor.s_train_b_next:
-      friendly_name: S-Tog Linje B Næste Afgang
-      entity_picture: !secret s_tog_icon_url
     sensor.s_train_message:
       friendly_name: S-Tog Driftbesked
       icon: mdi:train
 
-group:
-  travel_time:
-    name: Travel Time
-    entities:
-      - sensor.travel_time_to_work_driving
-      - sensor.s_train_b_status
-      - sensor.s_train_message
-      - sensor.s_tog_brondbyoster_til_kbh
-
 sensor:
-  - platform: custom_rejseplanen
+  - platform: waze_travel_time
+    name: "MTE til RHR"
+    origin: person.martin
+    destination: zone.rhr
+    region: 'EU'
+
+  - platform: waze_travel_time
+    name: "MTE til RHH"
+    origin: person.martin
+    destination: zone.rhh
+    region: 'EU'
+
+  - platform: rejseplanen
     name: S-Tog Brøndbyøster til KBH
     stop_id: '008600679'
     route: B
@@ -32,7 +32,7 @@ sensor:
       - Nørreport St.
       - Østerport St.
 
-  - platform: custom_rejseplanen
+  - platform: rejseplanen
     name: S-Tog Nørreport til Brøndbyøster
     stop_id: '008600646'
     route: B
@@ -41,7 +41,7 @@ sensor:
       - Høje Taastrup St.
       - Glostrup St.
   
-  - platform: custom_rejseplanen
+  - platform: rejseplanen
     name: København H Afgange
     stop_id: '8600626'
 
@@ -63,34 +63,6 @@ sensor:
     select: 'table.RepeaterTable tr:nth-of-type(2) td.TDItemLabel div b'
     value_template: "{{ value | trim }}"
     scan_interval: 600
-
-  - platform: template
-    sensors:
-      s_train_b_next_fmt:
-        friendly_name: "Næste afgang"
-        value_template: >
-          {% set ct = states('sensor.s_tog_brondbyoster_til_kbh') | int %}
-          {% if ct > 60 %}
-            {{ ct // 60 }}:{{ '{:0>2d}'.format(ct%60) }}
-          {% else %}
-            {{ ct }}
-          {% endif %}
-
-  - platform: template
-    sensors:
-      s_train_b_later_fmt:
-        friendly_name: "Efterfølgende afgang"
-        value_template: >
-          {% if state_attr('sensor.s_tog_brondbyoster_til_kbh', 'next_departures') %}
-            {% set ct = state_attr('sensor.s_tog_brondbyoster_til_kbh', 'next_departures')[0]['due_in'] | int %}
-            {% if ct > 60 %}
-              {{ ct // 60 }}:{{ '{:0>2d}'.format(ct%60) }}
-            {% else %}
-              {{ ct }}
-            {% endif %}
-          {% else %}
-            -
-          {% endif%}
 
 binary_sensor:
   - platform: template

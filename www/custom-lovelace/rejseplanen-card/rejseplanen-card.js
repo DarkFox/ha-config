@@ -3,6 +3,7 @@ class RejseplanenCard extends HTMLElement {
     const entityId = this.config.entity;
     const state = hass.states[entityId];
     const max_entries = this.config.max_entries;
+    const show_scheduled_time = this.config.show_scheduled_time;
 
     if (state === undefined) {
       this.innerHTML = `
@@ -169,7 +170,7 @@ class RejseplanenCard extends HTMLElement {
       card.appendChild(style);
       card.appendChild(this.content);
       this.appendChild(card);
-    };
+    }
 
     var tablehtml = `
     <table>
@@ -181,6 +182,7 @@ class RejseplanenCard extends HTMLElement {
         'route': state.attributes['route'],
         'type': state.attributes['type'],
         'due_in': state.attributes['due_in'],
+        'scheduled_at': state.attributes['scheduled_at'],
         'direction': state.attributes['direction'],
         'track': state.attributes['track'],
         'real_time_at': state.attributes['real_time_at'],
@@ -197,16 +199,20 @@ class RejseplanenCard extends HTMLElement {
       const direction = journey['direction'];
       const routename = journey['route'];
       const type = journey['type'];
-      const time = journey['due_in'];
       const track = journey['track'];
       const realTimeAt = journey['real_time_at'];
+      let time = journey['due_in'];
+
+      if (show_scheduled_time) {
+        time = journey['scheduled_at'].split(' ')[1]
+      }
 
       const styleType = type.replace(' ', '-');
       const styleRoutename = routename.replace(' ', '-');
 
       let trackSnippet = '';
       if (track) {
-        trackSnippet = `<span class="track">(Spor ${track})</span>`;
+        trackSnippet = `<span class="track">Spor ${track}</span>`;
       }
 
       let delaySnippet = '';

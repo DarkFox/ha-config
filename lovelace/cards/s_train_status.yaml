@@ -2,45 +2,15 @@ type: horizontal-stack
 cards:
   - type: "custom:button-card"
     show_label: true
-    show_name: true
-    show_icon: false
-    triggers_update:
-      - sensor.s_train_b_next_fmt
-      - sensor.s_train_b_later_fmt
-    name: "[[[return states['sensor.s_train_b_next_fmt'].state + ' min']]]"
-    label: "[[[return states['sensor.s_train_b_later_fmt'].state + ' min']]]"
-    entity: sensor.s_train_b_next_fmt
-    tap_action:
-      action: call-service
-      service: browser_mod.command
-      service_data:
-        command: popup
-        title: S-Tog Brøndbyøster til KBH
-        deviceID:
-          - this
-        card:
-          type: custom:rejseplanen-card
-          title: ' '
-          entity: sensor.s_tog_brondbyoster_til_kbh
-    styles:
-      card:
-        - padding-top: 16px
-        - height: 81px
-        - background-color: '#7DB362AA'
-        - color: white
-      name:
-        - font-size: 24pt
-      label:
-        - font-size: 16pt
-
-  - type: "custom:button-card"
-    show_label: true
     show_name: false
     show_icon: true
+    show_state: true
+    layout: icon_state
+    size: 50px
     triggers_update:
       - sensor.s_train_b_status
       - sensor.s_train_message
-    label: "[[[ return states['sensor.s_train_b_status'].state ]]]"
+    label: "[[[ return states['sensor.s_train_message'].state ]]]"
     icon: >
       [[[
         if (states['sensor.s_train_b_status'].state != 'Til tiden')
@@ -64,8 +34,12 @@ cards:
           ignore_line_breaks: true
           content: "[[sensor.s_train_message]]"
     styles:
+      label:
+        - text-overflow: 'initial'
+        - white-space: 'normal'
+        - overflow: 'visible'
       card:
-        - height: 81px
+        - font-size: '150%'
       icon:
         - color: >
             [[[
