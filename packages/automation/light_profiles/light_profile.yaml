@@ -25,15 +25,6 @@ input_select:
       - Night
       - "Off"
 
-  inactive_light_profile:
-    name: Inactive Light Profile
-    options:
-      - Default
-      - Dimmed
-      - Ambient
-      - Night
-      - "Off"
-
   theme:
     name: Theme
     options:
@@ -71,10 +62,9 @@ light:
         icon_template: "mdi:brightness-7"
         value_template: "{{ is_state('input_select.light_profile', 'Bright') }}"
         turn_on:
-          service: input_select.select_option
-          data:
-            entity_id: input_select.light_profile
-            option: Bright
+          event: set_light_profile
+          event_data:
+            profile: Bright
         turn_off:
           event: light_profile_off_null
 
@@ -83,10 +73,9 @@ light:
         icon_template: "mdi:brightness-5"
         value_template: "{{ is_state('input_select.light_profile', 'Default') }}"
         turn_on:
-          service: input_select.select_option
-          data:
-            entity_id: input_select.light_profile
-            option: Default
+          event: set_light_profile
+          event_data:
+            profile: Default
         turn_off:
           event: light_profile_off_null
 
@@ -95,10 +84,9 @@ light:
         icon_template: "mdi:brightness-6"
         value_template: "{{ is_state('input_select.light_profile', 'Dimmed') }}"
         turn_on:
-          service: input_select.select_option
-          data:
-            entity_id: input_select.light_profile
-            option: Dimmed
+          event: set_light_profile
+          event_data:
+            profile: Dimmed
         turn_off:
           event: light_profile_off_null
 
@@ -107,10 +95,9 @@ light:
         icon_template: "mdi:brightness-4"
         value_template: "{{ is_state('input_select.light_profile', 'Ambient') }}"
         turn_on:
-          service: input_select.select_option
-          data:
-            entity_id: input_select.light_profile
-            option: Ambient
+          event: set_light_profile
+          event_data:
+            profile: Ambient
         turn_off:
           event: light_profile_off_null
 
@@ -119,10 +106,9 @@ light:
         icon_template: "mdi:brightness-3"
         value_template: "{{ is_state('input_select.light_profile', 'Night') }}"
         turn_on:
-          service: input_select.select_option
-          data:
-            entity_id: input_select.light_profile
-            option: Night
+          event: set_light_profile
+          event_data:
+            profile: Night
         turn_off:
           event: light_profile_off_null
 
@@ -131,16 +117,28 @@ light:
         icon_template: "mdi:power"
         value_template: "{{ is_state('input_select.light_profile', 'Off') }}"
         turn_on:
-          service: input_select.select_option
-          data:
-            entity_id: input_select.light_profile
-            option: "Off"
+          event: set_light_profile
+          event_data:
+            profile: "Off"
         turn_off:
           event: light_profile_off_null
 
 sensor:
   - platform: template
     sensors:
+      inactive_light_profile:
+        value_template: >
+          {% if is_state('input_select.light_profile', 'Bright') %}
+            Default
+          {% elif is_state('input_select.light_profile', 'Default') %}
+            Dimmed
+          {% elif is_state('input_select.light_profile', 'Dimmed') %}
+            Ambient
+          {% elif is_state('input_select.light_profile', 'Ambient') %}
+            Night
+          {% else %}
+            Off
+          {% endif %}
       theme_primary_color: # Usually the warmer color
         friendly_name: Primary Color
         entity_id: input_select.theme
@@ -312,73 +310,60 @@ sensor:
 scene:
   - name: Bright
     entities:
-      input_select.light_profile: "Bright"
-
+      script.activate_bright_scene: "on"
   - name: Default
     entities:
-      input_select.light_profile: "Default"
-
+      script.activate_default_scene: "on"
   - name: Dimmed
     entities:
-      input_select.light_profile: "Dimmed"
-
+      script.activate_dimmed_scene: "on"
   - name: Ambient
     entities:
-      input_select.light_profile: "Ambient"
-
+      script.activate_ambient_scene: "on"
   - name: Night
     entities:
-      input_select.light_profile: "Night"
-
+      script.activate_night_scene: "on"
   - name: "Off"
     entities:
-      input_select.light_profile: "Off"
+      script.activate_off_scene: "on"
 
 script:
   dim_light_profile:
     sequence:
-      service: input_select.select_next
-      entity_id: input_select.light_profile
+      event: decrease_light_profile
   brighten_light_profile:
     sequence:
-      service: input_select.select_previous
-      entity_id: input_select.light_profile
+      event: increase_light_profile
   activate_bright_scene:
     sequence:
-      service: input_select.select_option
-      data:
-        entity_id: input_select.light_profile
-        option: Bright
+      event: set_light_profile
+      event_data:
+        profile: Bright
   activate_default_scene:
     sequence:
-      service: input_select.select_option
-      data:
-        entity_id: input_select.light_profile
-        option: Default
+      event: set_light_profile
+      event_data:
+        profile: Default
   activate_dimmed_scene:
     sequence:
-      service: input_select.select_option
-      data:
-        entity_id: input_select.light_profile
-        option: Dimmed
+      event: set_light_profile
+      event_data:
+        profile: Dimmed
   activate_ambient_scene:
     sequence:
-      service: input_select.select_option
-      data:
-        entity_id: input_select.light_profile
-        option: Ambient
+      event: set_light_profile
+      event_data:
+        profile: Ambient
   activate_night_scene:
     sequence:
-      service: input_select.select_option
-      data:
-        entity_id: input_select.light_profile
-        option: Night
+      event: set_light_profile
+      event_data:
+        profile: Night
   activate_off_scene:
     sequence:
-      service: input_select.select_option
-      data:
-        entity_id: input_select.light_profile
-        option: "Off"
+      event: set_light_profile
+      event_data:
+        profile: "Off"
 
 automation:
   - alias: Reset Scene Transition Time
@@ -426,35 +411,11 @@ automation:
         value_template: "{{ state.attributes.brightness }}"
         above: 135
     action:
-      - service: "input_select.select_{%- if states.light.apartment_light_level.attributes.brightness | int < 120 -%}next{%- else -%}previous{%- endif -%}"
-        data:
-          entity_id: input_select.light_profile
+      - event: "{{ 'decrease' if states.light.apartment_light_level.attributes.brightness | int < 120 else 'increase' }}_light_profile"
       - service: light.turn_on
         data:
           entity_id: light.apartment_light_level
           brightness: 127
-
-  - alias: Inactive Light Profile Setter
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: input_select.light_profile
-    action:
-      service: input_select.select_option
-      data_template:
-        entity_id: input_select.inactive_light_profile
-        option: >
-          {% if is_state('input_select.light_profile', 'Bright') %}
-            Default
-          {% elif is_state('input_select.light_profile', 'Default') %}
-            Dimmed
-          {% elif is_state('input_select.light_profile', 'Dimmed') %}
-            Ambient
-          {% elif is_state('input_select.light_profile', 'Ambient') %}
-            Night
-          {% else %}
-            Off
-          {% endif %}
 
   # Room States and light profile #
   # bathroom
@@ -465,90 +426,76 @@ automation:
   # office
   # storage_room
 
-  - alias: rooms global profile change
-    initial_state: true
-    mode: queued
-    trigger:
-      - platform: state
-        entity_id:
-          - input_select.light_profile
-    action:
-      - event: sync_room_light_profile
-        event_data:
-          room: bathroom
-      - event: sync_room_light_profile
-        event_data:
-          room: bedroom
-      - event: sync_room_light_profile
-        event_data:
-          room: hallway
-      - event: sync_room_light_profile
-        event_data:
-          room: kitchen
-      - event: sync_room_light_profile
-        event_data:
-          room: living_room
-      - event: sync_room_light_profile
-        event_data:
-          room: office
-      - event: sync_room_light_profile
-        event_data:
-          room: storage_room
-
-  - alias: sync_room_light_profile_from_global
+  - alias: set_light_profile
     initial_state: true
     trigger:
-      platform: event
-      event_type: sync_room_light_profile
-    condition:
-      condition: and
-      conditions:
-        - condition: template
-          value_template: "{{ 'True' if is_state('input_boolean.' + trigger.event.data.room + '_separate_light_profile', 'off') }}"
+      - platform: event
+        event_type: set_light_profile
+    variables:
+      room: "{{ trigger.event.data.room }}"
+      profile: "{{ trigger.event.data.profile }}"
+      room_separate: "{{ room and is_state('input_boolean.'+room+'_separate_light_profile', 'on') }}"
     action:
+      - event: debug
+        event_data:
+          room: "{{ room }}"
+          profile: "{{ profile }}"
+          room_separate: "{{ room_separate }}"
       - service: input_select.select_option
         data_template:
-          entity_id: "input_select.{{ trigger.event.data.room }}_light_profile"
-          option: "{{ states('input_select.light_profile') }}"
-
-  - alias: Room Light Profile Changed
-    initial_state: true
-    mode: parallel
-    trigger:
-      platform: state
-      entity_id:
-        - input_select.bathroom_light_profile
-        - input_select.bedroom_light_profile
-        - input_select.hallway_light_profile
-        - input_select.kitchen_light_profile
-        - input_select.living_room_light_profile
-        - input_select.office_light_profile
-        - input_select.storage_room_light_profile
-    action:
-      - service: input_select.select_option
-        data_template:
-          entity_id: "input_select.{{ trigger.entity_id.replace('input_select.', '').replace('_light_profile', '') }}_inactive_light_profile"
-          option: >
-            {%- set entity_id = 'input_select.' + trigger.entity_id.replace('input_select.', '').replace('_light_profile', '') + '_light_profile' -%}
-            {%- if is_state(entity_id, 'Bright') -%}
-              Default
-            {%- elif is_state(entity_id, 'Default') -%}
-              Dimmed
-            {%- elif is_state(entity_id, 'Dimmed') -%}
-              Ambient
-            {%- elif is_state(entity_id, 'Ambient') -%}
-              Night
+          entity_id: >
+            {%- if room_separate != "False" -%}
+              input_select.{{ room }}_light_profile
             {%- else -%}
-              Off
+              input_select.light_profile
             {%- endif -%}
-      - condition: and
-        conditions:
-          condition: template
-          value_template: "{{ 'True' if is_state('input_boolean.' + trigger.entity_id.replace('input_select.', '').replace('_light_profile', '') + '_separate_light_profile', 'off') }}"
-      - service: input_select.select_option
-        data_template:
-          entity_id: "input_select.light_profile"
-          option: "{{ trigger.to_state.state }}"
+          option: "{{ profile }}"
+
+  - alias: increase_light_profile
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: increase_light_profile
+    variables:
+      room: "{{ trigger.event.data.room }}"
+      room_separate: "{{ room and is_state('input_boolean.'+room+'_separate_light_profile', 'on') }}"
+    condition:
+      - condition: template
+        value_template: >
+          {%- set entity_id = ('sensor.' + room + '_light_profile' if room_separate else 'input_select.light_profile') -%}
+          {{ not is_state(entity_id, 'Bright') }}
+    action:
+      - service: input_select.select_previous
+        data:
+          entity_id: >
+            {%- if room_separate != "False" -%}
+              input_select.{{ room }}_light_profile
+            {%- else -%}
+              input_select.light_profile
+            {%- endif -%}
+
+  - alias: decrease_light_profile
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: decrease_light_profile
+    variables:
+      room: "{{ trigger.event.data.room }}"
+      room_separate: "{{ room and is_state('input_boolean.'+room+'_separate_light_profile', 'on') }}"
+    condition:
+      - condition: template
+        value_template: >
+          {%- set entity_id = ('sensor.' + room + '_light_profile' if room_separate else 'input_select.light_profile') -%}
+          {{ not is_state(entity_id, 'Off') }}
+    action:
+      - service: input_select.select_next
+        data:
+          entity_id: >
+            {%- if room_separate != "False" -%}
+              input_select.{{ room }}_light_profile
+            {%- else -%}
+              input_select.light_profile
+            {%- endif -%}
 
   - alias: Room activity override on
     initial_state: true
@@ -583,11 +530,12 @@ automation:
         - input_boolean.living_room_separate_light_profile
         - input_boolean.office_separate_light_profile
         - input_boolean.storage_room_separate_light_profile
-      to: "off"
+    variables:
+      room: "{{ trigger.entity_id.replace('input_boolean.', '').replace('_separate_light_profile', '') }}"
     action:
       - service: input_select.select_option
         data_template:
-          entity_id: "input_select.{{ trigger.entity_id.replace('input_boolean.', '').replace('_separate_light_profile', '') }}_light_profile"
+          entity_id: "input_select.{{ room }}_light_profile"
           option: "{{ states('input_select.light_profile') }}"
 
   - alias: Room State Active Trigger
