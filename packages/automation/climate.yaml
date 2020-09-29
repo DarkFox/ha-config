@@ -3,7 +3,6 @@ binary_sensor:
     sensors:
       thermostats_night_mode:
         friendly_name: "Termostater Nattilstand"
-        entity_id: input_select.sleep_state
         value_template: >
           {{
             is_state('input_select.sleep_state', 'bedtime')
@@ -14,23 +13,145 @@ binary_sensor:
 
       thermostats_on:
         friendly_name: "Termostater Tændt"
-        entity_id:
-          - binary_sensor.martin_presence_delayed
-          - binary_sensor.martin_home_soon
         value_template: >
           {{ (is_state('binary_sensor.martin_presence_delayed', 'on') or is_state('binary_sensor.martin_home_soon', 'on')) }}
+
+sensor:
+  - platform: template
+    sensors:
+      bathroom_max_temp:
+        value_template: "26"
+      bathroom_min_temp:
+        value_template: >
+          {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
+          {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
+          {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
+          {%- set active = is_state('binary_sensor.bathroom_activity', 'on') -%}
+          {% if on %}
+            {% if active %}
+              23
+            {% elif night %}
+              19
+            {% else %}
+              21
+            {% endif %}
+          {% elif extended %}
+            18
+          {% else %}
+            15
+          {% endif %}
+
+      office_max_temp:
+        value_template: "26"
+      office_min_temp:
+        value_template: >
+          {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
+          {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
+          {%- set summer = is_state('sensor.season', 'summer') -%}
+          {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
+          {%- set active = is_state('binary_sensor.martin_pc', 'on') or is_state('binary_sensor.working_from_home', 'on') -%}
+          {% if on %}
+            {% if night or summer %}
+              18
+            {% elif active %}
+              22
+            {% else %}
+              20
+            {% endif %}
+          {% elif extended %}
+            18
+          {% else %}
+            15
+          {% endif %}
+
+      living_room_max_temp:
+        value_template: "26"
+      living_room_min_temp:
+        value_template: >
+          {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
+          {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
+          {%- set summer = is_state('sensor.season', 'summer') -%}
+          {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
+          {%- set active = is_state('device_tracker.sony_tv', 'home') -%}
+
+          {% if on %}
+            {% if night or summer %}
+              18
+            {% elif active %}
+              22
+            {% else %}
+              20
+            {% endif %}
+          {% elif extended %}
+            18
+          {% else %}
+            15
+          {% endif %}
+
+      kitchen_max_temp:
+        value_template: "26"
+      kitchen_min_temp:
+        value_template: >
+          {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
+          {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
+          {%- set summer = is_state('sensor.season', 'summer') -%}
+          {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
+          {%- set active = is_state('binary_sensor.kitchen_activity', 'on') -%}
+
+          {% if on %}
+            {% if night or summer %}
+              18
+            {% elif active %}
+              22
+            {% else %}
+              20
+            {% endif %}
+          {% elif extended %}
+            18
+          {% else %}
+            15
+          {% endif %}
+
+      bedroom_max_temp:
+        value_template: >
+          {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
+          {%- set sleeping = is_state('input_select.sleep_state', 'sleeping') -%}
+          {% if sleeping %}
+            22
+          {% elif night %}
+            20
+          {% else %}
+            26
+          {% endif %}
+      bedroom_min_temp:
+        value_template: >
+          {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
+          {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
+          {%- set summer = is_state('sensor.season', 'summer') -%}
+          {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
+          {%- set sleeping = is_state('input_select.sleep_state', 'sleeping') -%}
+
+          {% if on %}
+            {% if sleeping or summer %}
+              18
+            {% elif night %}
+              16
+            {% else %}
+              20
+            {% endif %}
+          {% elif extended %}
+            18
+          {% else %}
+            15
+          {% endif %}
 
 automation:
   - alias: Termostat Badeværelse
     trigger:
       - platform: state
         entity_id:
-          - binary_sensor.thermostats_on
-          - binary_sensor.thermostats_night_mode
+          - sensor.bathroom_min_temp
           - binary_sensor.badevaerelse_vindue
-          - binary_sensor.bathroom_activity
-          # - sensor.toilet_mold_indicator
-          - binary_sensor.martin_presence_extended
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
@@ -44,45 +165,14 @@ automation:
         data:
           entity_id: climate.badevaerelse
       - service: climate.set_temperature
-        data_template:
+        data:
           entity_id: climate.badevaerelse
-          temperature: |
-            {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
-            {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
-            {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
-            {%- set active = is_state('binary_sensor.bathroom_activity', 'on') -%}
-
-            {%- set critical_temp = state_attr('sensor.toilet_mold_indicator','estimated_critical_temp')|float|round(0, "ceil") -%}
-            {%- set target_temp = 15 -%}
-
-            {%- if on -%}
-              {%- if active -%}
-                {%- set target_temp = 23 -%}
-              {%- elif night -%}
-                {%- set target_temp = 19 -%}
-              {%- else -%}
-                {%- set target_temp = 21 -%}
-              {%- endif -%}
-            {%- elif extended -%}
-              {%- set target_temp = 18 -%}
-            {%- else -%}
-              {%- set target_temp = 15 -%}
-            {%- endif -%}            
-            {#%- if target_temp < (critical_temp) -%#}
-              {#{ set target_temp = critical_temp }#}
-            {#%- endif -%#}
-            {{ target_temp }}
+          temperature: "{{ states('sensor.bathroom_min_temp') }}"
 
   - alias: Termostat Kontor
     trigger:
       - platform: state
-        entity_id:
-          - binary_sensor.thermostats_on
-          - binary_sensor.thermostats_night_mode
-          - binary_sensor.martin_pc
-          - binary_sensor.working_from_home
-          - binary_sensor.martin_presence_extended
-          - sensor.season
+        entity_id: sensor.office_min_temp
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
@@ -91,38 +181,14 @@ automation:
         data:
           entity_id: climate.kontor
       - service: climate.set_temperature
-        data_template:
+        data:
           entity_id: climate.kontor
-          temperature: |
-            {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
-            {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
-            {%- set summer = is_state('sensor.season', 'summer') -%}
-            {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
-            {%- set active = is_state('binary_sensor.martin_pc', 'on') or is_state('binary_sensor.working_from_home', 'on') -%}
-
-            {% if on %}
-              {% if night or summer %}
-                18
-              {% elif active %}
-                22
-              {% else %}
-                20
-              {% endif %}
-            {% elif extended %}
-              18
-            {% else %}
-              15
-            {% endif %}
+          temperature: "{{ states('sensor.office_min_temp') }}"
 
   - alias: Termostat Stue
     trigger:
       - platform: state
-        entity_id:
-          - binary_sensor.thermostats_on
-          - binary_sensor.thermostats_night_mode
-          - device_tracker.sony_tv
-          - binary_sensor.martin_presence_extended
-          - sensor.season
+        entity_id: sensor.living_room_min_temp
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
@@ -131,38 +197,14 @@ automation:
         data:
           entity_id: climate.stue
       - service: climate.set_temperature
-        data_template:
+        data:
           entity_id: climate.stue
-          temperature: |
-            {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
-            {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
-            {%- set summer = is_state('sensor.season', 'summer') -%}
-            {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
-            {%- set active = is_state('device_tracker.sony_tv', 'home') -%}
-
-            {% if on %}
-              {% if night or summer %}
-                18
-              {% elif active %}
-                22
-              {% else %}
-                20
-              {% endif %}
-            {% elif extended %}
-              18
-            {% else %}
-              15
-            {% endif %}
+          temperature: "{{ states('sensor.living_room_min_temp') }}"
 
   - alias: Termostat Køkken
     trigger:
       - platform: state
-        entity_id:
-          - binary_sensor.thermostats_on
-          - binary_sensor.thermostats_night_mode
-          - binary_sensor.martin_presence_extended
-          - binary_sensor.kitchen_activity
-          - sensor.season
+        entity_id: sensor.kitchen_min_temp
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
@@ -171,38 +213,14 @@ automation:
         data:
           entity_id: climate.kokken
       - service: climate.set_temperature
-        data_template:
+        data:
           entity_id: climate.kokken
-          temperature: |
-            {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
-            {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
-            {%- set summer = is_state('sensor.season', 'summer') -%}
-            {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
-            {%- set active = is_state('binary_sensor.kitchen_activity', 'on') -%}
-
-            {% if on %}
-              {% if night or summer %}
-                18
-              {% elif active %}
-                22
-              {% else %}
-                20
-              {% endif %}
-            {% elif extended %}
-              18
-            {% else %}
-              15
-            {% endif %}
+          temperature: "{{ states('sensor.kitchen_min_temp') }}"
 
   - alias: Termostat Soveværelse
     trigger:
       - platform: state
-        entity_id:
-          - binary_sensor.thermostats_on
-          - binary_sensor.thermostats_night_mode
-          - input_select.sleep_state
-          - binary_sensor.martin_presence_extended
-          - sensor.season
+        entity_id: sensor.bedroom_min_temp
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
@@ -211,25 +229,57 @@ automation:
         data:
           entity_id: climate.sovevaerelse
       - service: climate.set_temperature
-        data_template:
+        data:
           entity_id: climate.sovevaerelse
-          temperature: |
-            {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
-            {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
-            {%- set summer = is_state('sensor.season', 'summer') -%}
-            {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
-            {%- set sleeping = is_state('input_select.sleep_state', 'sleeping') -%}
+          temperature: "{{ states('sensor.bedroom_min_temp') }}"
 
-            {% if on %}
-              {% if sleeping or summer %}
-                18
-              {% elif night %}
-                22
+  - alias: Blæser Soveværelse
+    trigger:
+      - platform: state
+        entity_id:
+          - sensor.bedroom_min_temp
+          - sensor.bedroom_max_temp
+          - sensor.bedroom_temperature
+          - sensor.udenfor_ost_temperature
+    variables:
+      min_temp: "{{ states('sensor.bedroom_min_temp') }}"
+      max_temp: "{{ states('sensor.bedroom_max_temp') }}"
+      outside_temp: "{{ states('sensor.udenfor_ost_temperature') }}"
+      inside_temp: "{{ states('sensor.bedroom_temperature') }}"
+      operation: >
+        {% if inside_temp|int > max_temp|int %}
+          cool
+        {% elif inside_temp|int < min_temp|int %}
+          heat
+        {% else %}
+          ventilate
+        {% endif %}
+      direction: >
+        {% if operation == 'cool' and inside_temp|int < outside_temp|int %}
+          out
+        {% else %}
+          in
+        {% endif %}
+      difference: "{{ inside_temp|int - max_temp|int }}"
+    action:
+      - service: fan.set_direction
+        data:
+          entity_id: fan.sovevaerelse_ventilation
+          # forward = in, reverse = out
+          direction: "{{ 'forward' if direction == 'in' else 'reverse' }}"
+      - service: fan.set_speed
+        data:
+          entity_id: fan.sovevaerelse_ventilation
+          # off, low, medium, high
+          speed: >
+            {% if operation == 'cool' %}
+              {% if difference|int > 4 %}
+                'high'
+              {% elif difference|int > 2 %}
+                'medium'
               {% else %}
-                20
+                'low'
               {% endif %}
-            {% elif extended %}
-              18
             {% else %}
-              15
+              'low'
             {% endif %}
