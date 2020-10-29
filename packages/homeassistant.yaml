@@ -7,9 +7,6 @@ homeassistant:
       friendly_name: External IP Address
       icon: mdi:source-branch
 
-    binary_sensor.workday_sensor:
-      friendly_name: Weekday
-
     # System Info Sensor
     sensor.cpu_speed:
       friendly_name: CPU Speed
@@ -47,34 +44,6 @@ homeassistant:
       friendly_name: Notify of new updates
       icon: mdi:update
 
-group:
-  System Monitor:
-    entities:
-      - sensor.processor_use
-      - sensor.memory_free
-      - sensor.swap_use
-      - sensor.disk_free
-      - sensor.load_1m
-      - sensor.load_5m
-      - sensor.load_15m
-      - sensor.last_boot
-      - sensor.ha_installed_version
-      - sensor.ha_current_version
-      - sensor.ha_last_restart
-
-  date_time:
-    name: "Time and Date"
-    entities:
-      - sensor.time
-      - sensor.date
-      - binary_sensor.workday_sensor
-
-  Home Assistant Automations:
-    entities:
-      - automation.notify_of_new_external_ip
-      - automation.startup_notification
-      - automation.update_available_notification
-
 input_boolean:
   home_assistant_started:
     initial: off
@@ -107,14 +76,14 @@ sensor:
   - platform: template
     sensors:
       day_name:
-        entity_id: sensor.date
         value_template: >-
+          {%- set time = states('sensor.time') -%}
           {%- set weekday_names = ["Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag", "Søndag"] -%}
           {%- set weekday_name = weekday_names[now().weekday()] -%}
           {{ weekday_name }}
       date_text:
-        entity_id: sensor.date
         value_template: >-
+          {%- set time = states('sensor.time') -%}
           {%- set weekday_names = ["Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag", "Søndag"] -%}
           {%- set month_names = ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"] -%}
           {%- set weekday_name = weekday_names[now().weekday()] -%}

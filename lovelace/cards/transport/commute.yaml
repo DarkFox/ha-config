@@ -1,0 +1,211 @@
+type: custom:stack-in-card
+mode: vertical
+cards:
+  - type: horizontal-stack
+    cards:
+      - type: "custom:button-card"
+        entity: input_select.preferred_commute
+        icon: mdi:car
+        show_name: false
+        size: 30px
+        tap_action:
+          action: call-service
+          service: input_select.select_option
+          service_data:
+            entity_id: input_select.preferred_commute
+            option: car
+        color_type: card
+        color: "var(--primary-background-color)"
+        state:
+          - value: "car"
+            color: inherit
+        styles:
+          icon:
+            - color: >
+                [[[
+                  if (states['sensor.commute_status_car'].state == 'bad')
+                    return "#FF0000AA";
+                  else if (states['sensor.commute_status_car'].state == 'ok')
+                    return '#FFB300AA';
+                  else {
+                    return "#7DB362AA";
+                  }
+                ]]]
+      - type: "custom:button-card"
+        entity: input_select.preferred_commute
+        icon: mdi:train
+        show_name: false
+        size: 30px
+        tap_action:
+          action: call-service
+          service: input_select.select_option
+          service_data:
+            entity_id: input_select.preferred_commute
+            option: transit
+        color_type: card
+        color: "var(--primary-background-color)"
+        state:
+          - value: "transit"
+            color: inherit
+        styles:
+          icon:
+            - color: >
+                [[[
+                  if (states['sensor.commute_status_transit'].state == 'bad')
+                    return "#FF0000AA";
+                  else if (states['sensor.commute_status_transit'].state == 'ok')
+                    return '#FFB300AA';
+                  else {
+                    return "#7DB362AA";
+                  }
+                ]]]
+
+      - type: "custom:button-card"
+        entity: input_select.preferred_commute
+        icon: mdi:bicycle
+        show_name: false
+        size: 30px
+        tap_action:
+          action: call-service
+          service: input_select.select_option
+          service_data:
+            entity_id: input_select.preferred_commute
+            option: bike
+        color_type: card
+        color: "var(--primary-background-color)"
+        state:
+          - value: "bike"
+            color: inherit
+        styles:
+          icon:
+            - color: >
+                [[[
+                  if (states['sensor.commute_status_bike'].state == 'bad')
+                    return "#FF0000AA";
+                  else if (states['sensor.commute_status_bike'].state == 'ok')
+                    return '#FFB300AA';
+                  else {
+                    return "#7DB362AA";
+                  }
+                ]]]
+
+  - type: custom:state-switch
+    entity: input_select.preferred_commute
+    default: car
+    transition: slide-left
+    transition_time: 250
+    states:
+      car:
+        type: vertical-stack
+        cards:
+          - type: horizontal-stack
+            cards:
+              - type: "custom:button-card"
+                entity: sensor.hjem_til_rsr
+                # size: 24px
+                name: RSR
+                label: "[[[ return states['sensor.hjem_til_rsr'].attributes['route']; ]]]"
+                layout: icon_name_state
+                show_state: true
+                show_label: true
+                triggers_update:
+                  - sensor.next_work_at
+                icon: >-
+                  [[[
+                    if (states['sensor.next_work_at'].state == 'rsr')
+                      return "mdi:arrow-right";
+                    else
+                      return "mdi:alpha-x-circle-outline"
+                  ]]]
+                styles:
+                  icon:
+                    - color: >-
+                        [[[
+                          if (states['sensor.next_work_at'].state == 'rsr')
+                            return "var(--primary-text-color)";
+                          else
+                            return "var(--disabled-text-color)"
+                        ]]]
+                  card:
+                    - color: >-
+                        [[[
+                          if (states['sensor.next_work_at'].state == 'rsr')
+                            return "var(--primary-text-color)";
+                          else
+                            return "var(--disabled-text-color)"
+                        ]]]
+
+              - type: "custom:button-card"
+                entity: sensor.hjem_til_rsh
+                # size: 24px
+                name: RSH
+                label: "[[[ return states['sensor.hjem_til_rsh'].attributes['route']; ]]]"
+                layout: icon_name_state
+                show_state: true
+                show_label: true
+                triggers_update:
+                  - sensor.next_work_at
+                icon: >-
+                  [[[
+                    if (states['sensor.next_work_at'].state == 'rsh')
+                      return "mdi:arrow-right";
+                    else
+                      return "mdi:alpha-x-circle-outline"
+                  ]]]
+                styles:
+                  icon:
+                    - color: >-
+                        [[[
+                          if (states['sensor.next_work_at'].state == 'rsh')
+                            return "var(--primary-text-color)";
+                          else
+                            return "var(--disabled-text-color)"
+                        ]]]
+                  card:
+                    - color: >-
+                        [[[
+                          if (states['sensor.next_work_at'].state == 'rsh')
+                            return "var(--primary-text-color)";
+                          else
+                            return "var(--disabled-text-color)"
+                        ]]]
+
+          - type: iframe
+            url: https://embed.waze.com/da/iframe?zoom=12&lat=55.710&lon=12.495
+            aspect_ratio: 125%
+      transit:
+        type: vertical-stack
+        cards:
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.s_train_message_present
+                state: "on"
+            card: !include /config/lovelace/cards/s_train_status.yaml
+
+          - type: custom:rejseplanen-stog-card
+            entity: sensor.s_tog_brondbyoster
+            title: " "
+            max_entries: 4
+      bike:
+        type: horizontal-stack
+        cards:
+          - type: custom:button-card
+            entity: sensor.weather_card_secondary_info
+            icon: "[[[ return 'mdi:weather-' + states['weather.dark_sky'].attributes['forecast'][0]['condition']; ]]]"
+            label: >
+              [[[
+                if (states['sensor.precip_today'].state != 'None') {
+                  return states['sensor.precip_today'].state + ' mm. ' + states['weather.dark_sky'].attributes['forecast'][0]['condition'];
+                } else {
+                  return states['weather.dark_sky'].attributes['forecast'][0]['condition'];
+                }
+              ]]]
+            show_state: true
+            show_label: true
+            show_name: false
+          - type: custom:compass-card
+            entity: sensor.wind_bearing
+            secondary_entity: sensor.wind_speed_name
+            compass:
+              indicator: arrow_inward
+              language: "no"

@@ -1,17 +1,35 @@
 title: Soveværelse Tablet
-path: bedroom-tablet
+path: kiosk
 icon: mdi:cellphone-android
 panel: true
 cards:
   - type: vertical-stack
     cards:
       - !include ../cards/weather/simple_weather.yaml
+
       - type: horizontal-stack
         cards:
           - type: vertical-stack
             cards:
               - !include ../cards/clock.yaml
               - !include ../cards/weekday.yaml
+              - type: conditional
+                conditions:
+                  - entity: binary_sensor.commute_soon
+                    state: "on"
+                card: !include /config/lovelace/cards/transport/commute.yaml
+
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.guests
+                    state: "off"
+                card: !include ../cards/calendar.yaml
+
+          - type: vertical-stack
+            cards:
+              - !include ../cards/media_players/playlist_controls.yaml
+              - !include ../cards/media_players/conditional_groups.yaml
+
               - type: horizontal-stack
                 cards:
                   - !include ../cards/compact_hoveddor_laas.yaml
@@ -24,11 +42,19 @@ cards:
                     show_state: true
                     show_name: false
                     color: auto
-                    tap-action:
-                      action: more-info
+                    tap_action:
+                      action: call-service
+                      service: input_select.select_next
+                      service_data:
+                        entity_id: input_select.sleep_state
+                    hold_action:
+                      action: call-service
+                      service: input_select.select_previous
+                      service_data:
+                        entity_id: input_select.sleep_state
 
               - type: custom:decluttering-card
-                template: compact_room_light_profile
+                template: room_light_profile
                 variables:
                   - room: bedroom
 
@@ -37,30 +63,6 @@ cards:
                 variables:
                   - entity: cover.sovevaerelse_rullegardin
 
-              - type: custom:decluttering-card
-                template: ventilation
-                variables:
-                  - entity: fan.sovevaerelse_ventilation
+              - !include ../cards/thermostats.yaml
 
-              - !include ../cards/climate/compact_thermostats_3x2.yaml
-
-          - type: vertical-stack
-            cards:
-              - type: conditional
-                conditions:
-                  - entity: binary_sensor.s_train_message_present
-                    state: "on"
-                card: !include ../cards/s_train_status.yaml
-              - type: custom:rejseplanen-stog-card
-                entity: sensor.s_tog_brondbyoster_til_kbh
-                title: " "
-                max_entries: 2
-
-              - type: conditional
-                conditions:
-                  - entity: input_boolean.guests
-                    state: "off"
-                card: !include ../cards/calendar.yaml
-
-              - !include ../cards/media_players/playlist_controls.yaml
-              - !include ../cards/media_players/conditional_groups.yaml
+              - !include ../cards/power_gauges.yaml

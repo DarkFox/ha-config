@@ -147,6 +147,8 @@ sensor:
 
 automation:
   - alias: Termostat Badeværelse
+    initial_state: true
+    mode: queued
     trigger:
       - platform: state
         entity_id:
@@ -155,6 +157,8 @@ automation:
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
+      - platform: state
+        entity_id: binary_sensor.tado_hub_crashed
     action:
       - service: >
           {%- if is_state('binary_sensor.badevaerelse_vindue', 'off') -%}
@@ -170,12 +174,16 @@ automation:
           temperature: "{{ states('sensor.bathroom_min_temp') }}"
 
   - alias: Termostat Kontor
+    initial_state: true
+    mode: queued
     trigger:
       - platform: state
         entity_id: sensor.office_min_temp
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
+      - platform: state
+        entity_id: binary_sensor.tado_hub_crashed
     action:
       - service: climate.turn_on
         data:
@@ -186,12 +194,16 @@ automation:
           temperature: "{{ states('sensor.office_min_temp') }}"
 
   - alias: Termostat Stue
+    initial_state: true
+    mode: queued
     trigger:
       - platform: state
         entity_id: sensor.living_room_min_temp
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
+      - platform: state
+        entity_id: binary_sensor.tado_hub_crashed
     action:
       - service: climate.turn_on
         data:
@@ -202,12 +214,16 @@ automation:
           temperature: "{{ states('sensor.living_room_min_temp') }}"
 
   - alias: Termostat Køkken
+    initial_state: true
+    mode: queued
     trigger:
       - platform: state
         entity_id: sensor.kitchen_min_temp
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
+      - platform: state
+        entity_id: binary_sensor.tado_hub_crashed
     action:
       - service: climate.turn_on
         data:
@@ -218,12 +234,16 @@ automation:
           temperature: "{{ states('sensor.kitchen_min_temp') }}"
 
   - alias: Termostat Soveværelse
+    initial_state: true
+    mode: queued
     trigger:
       - platform: state
         entity_id: sensor.bedroom_min_temp
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
+      - platform: state
+        entity_id: binary_sensor.tado_hub_crashed
     action:
       - service: climate.turn_on
         data:
@@ -232,54 +252,3 @@ automation:
         data:
           entity_id: climate.sovevaerelse
           temperature: "{{ states('sensor.bedroom_min_temp') }}"
-
-  - alias: Blæser Soveværelse
-    trigger:
-      - platform: state
-        entity_id:
-          - sensor.bedroom_min_temp
-          - sensor.bedroom_max_temp
-          - sensor.bedroom_temperature
-          - sensor.udenfor_ost_temperature
-    variables:
-      min_temp: "{{ states('sensor.bedroom_min_temp') }}"
-      max_temp: "{{ states('sensor.bedroom_max_temp') }}"
-      outside_temp: "{{ states('sensor.udenfor_ost_temperature') }}"
-      inside_temp: "{{ states('sensor.bedroom_temperature') }}"
-      operation: >
-        {% if inside_temp|int > max_temp|int %}
-          cool
-        {% elif inside_temp|int < min_temp|int %}
-          heat
-        {% else %}
-          ventilate
-        {% endif %}
-      direction: >
-        {% if operation == 'cool' and inside_temp|int < outside_temp|int %}
-          out
-        {% else %}
-          in
-        {% endif %}
-      difference: "{{ inside_temp|int - max_temp|int }}"
-    action:
-      - service: fan.set_direction
-        data:
-          entity_id: fan.sovevaerelse_ventilation
-          # forward = in, reverse = out
-          direction: "{{ 'forward' if direction == 'in' else 'reverse' }}"
-      - service: fan.set_speed
-        data:
-          entity_id: fan.sovevaerelse_ventilation
-          # off, low, medium, high
-          speed: >
-            {% if operation == 'cool' %}
-              {% if difference|int > 4 %}
-                'high'
-              {% elif difference|int > 2 %}
-                'medium'
-              {% else %}
-                'low'
-              {% endif %}
-            {% else %}
-              'low'
-            {% endif %}

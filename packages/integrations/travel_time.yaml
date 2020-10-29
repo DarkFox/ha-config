@@ -7,30 +7,91 @@ homeassistant:
       friendly_name: S-Tog Driftbesked
       icon: mdi:train
 
+binary_sensor:
+  - platform: template
+    sensors:
+      s_train_message_present:
+        value_template: "{{ not is_state('sensor.s_train_message', '') }}"
+
+      commute_soon:
+        value_template: "{{ 0 < states('sensor.next_work_in')|int < 7200 }}"
+
 sensor:
+  - platform: template
+    sensors:
+      next_work_in:
+        value_template: >
+          {% set time = states('sensor.time') %}
+          {% set rsr_time = as_timestamp(state_attr('calendar.paa_rsr', 'start_time'))|int %}
+          {% set rsh_time = as_timestamp(state_attr('calendar.paa_rsh', 'start_time'))|int %}
+          {% if not rsh_time or rsr_time < rsh_time %}
+            {{ rsr_time - as_timestamp(now()) | int }}
+          {% else %}
+            {{ rsh_time - as_timestamp(now()) | int }}
+          {% endif %}
+      next_work_at:
+        value_template: >
+          {% set time = states('sensor.time') %}
+          {% set rsr_time = as_timestamp(state_attr('calendar.paa_rsr', 'start_time'))|int %}
+          {% set rsh_time = as_timestamp(state_attr('calendar.paa_rsh', 'start_time'))|int %}
+          {% if not rsh_time or rsr_time < rsh_time %}
+            rsr
+          {% else %}
+            rsh
+          {% endif %}
+
+  - platform: template
+    sensors:
+      commute_status_car:
+        value_template: >
+          {%- if states('sensor.hjem_til_'+states('sensor.next_work_at'))|int > 45 -%}
+            bad
+          {%- elif states('sensor.hjem_til_'+states('sensor.next_work_at'))|int > 35 -%}
+            ok
+          {%- else -%}
+            good
+          {%- endif -%}
+      commute_status_transit:
+        value_template: >
+          {%- if states('sensor.precip_today')|int > 5 or states('sensor.s_train_b_status') != 'Til tiden' -%}
+            bad
+          {%- elif states('sensor.precip_today')|int > 1 or states('sensor.s_train_message') != '' -%}
+            ok
+          {%- else -%}
+            good
+          {%- endif -%}
+      commute_status_bike:
+        value_template: >
+          {%- set headwind = (states('sensor.wind_bearing')|int > 35 and states('sensor.wind_bearing')|int < 146) -%}
+          {%- if states('sensor.udenfor_temperature_feels_like')|int < 0
+              or states('sensor.precip_today')|int > 5
+              or (headwind and states('sensor.wind_speed')|int > 39) -%}
+            bad
+          {%- elif states('sensor.udenfor_temperature_feels_like')|int < 10
+              or states('sensor.precip_today')|int > 1
+              or (headwind and states('sensor.wind_speed')|int > 19) -%}
+            ok
+          {%- else -%}
+            good
+          {%- endif -%}
+
   - platform: waze_travel_time
-    name: "MTE til RHR"
-    origin: person.martin
-    destination: zone.rhr
+    name: "Hjem til RSR"
+    origin: zone.home
+    destination: zone.rsr
     region: "EU"
 
   - platform: waze_travel_time
-    name: "MTE til RHH"
-    origin: person.martin
-    destination: zone.rhh
+    name: "Hjem til RSH"
+    origin: zone.home
+    destination: zone.rsh
     region: "EU"
 
   - platform: rejseplanen
-    name: S-Tog Brøndbyøster til KBH
+    name: S-Tog Brøndbyøster
     stop_id: "008600679"
     route: B
     departure_type: S
-    direction:
-      - Farum St.
-      - Valby St.
-      - København H
-      - Nørreport St.
-      - Østerport St.
 
   - platform: rejseplanen
     name: S-Tog Nørreport til Brøndbyøster
@@ -63,10 +124,3 @@ sensor:
     select: "table.RepeaterTable tr:nth-of-type(2) td.TDItemLabel div b"
     value_template: "{{ value | trim }}"
     scan_interval: 600
-
-binary_sensor:
-  - platform: template
-    sensors:
-      s_train_message_present:
-        entity_id: sensor.s_train_message
-        value_template: "{{ not is_state('sensor.s_train_message', '') }}"

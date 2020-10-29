@@ -1,20 +1,34 @@
+input_boolean:
+  doorphone_ringing:
+    initial: off
+  answering_door:
+    initial: off
+
+script:
+  # This is turned on by Tasker on the hallway tablet,
+  # when triggered by a notification from Live Transcribe.
+  doorphone_ringing:
+    alias: "Dørtelefon Ringer"
+    sequence:
+      - service: input_boolean.turn_on
+        data:
+          entity_id: input_boolean.doorphone_ringing
+
 automation:
-  - alias: Notify Door Phone Ringing
+  - alias: Door Phone Ringing
+    initial_state: true
     trigger:
       - platform: state
-        entity_id: binary_sensor.dortelefon_ringer
+        entity_id: input_boolean.doorphone_ringing
         to: "on"
     action:
-      - service: script.notify_everywhere
-        data_template:
-          message: "Dørtelefonen Ringer!"
       - service: scene.create
         data:
           scene_id: before_doorphone
           snapshot_entities:
             - light.display_cabinet_front_4
             - light.office_desk_spots
-            - light.kokken_gulv
+            - light.kokken_gulv_affald
             - light.blyant
             - light.badevaerelse_skab
             - light.skoskab
@@ -25,28 +39,102 @@ automation:
           entity_id:
             - light.display_cabinet_front_4
             - light.office_desk_spots
-            - light.kokken_gulv
             - light.blyant
-            - light.badevaerelse_skab
       - service: light.turn_on
         data:
           brightness: 255
           effect: "Strobe Mega"
           entity_id:
             - light.skoskab
+            - light.kokken_gulv_affald
+            - light.badevaerelse_skab
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.guests
+                state: "off"
+            sequence:
+              - service: script.turn_on
+                entity_id: script.pause_all_media
+      - service: script.notify_everywhere
+        data_template:
+          message: "Dørtelefonen Ringer!"
 
-  - alias: Dismiss Door Phone
+  - alias: Answering Door
+    initial_state: true
     trigger:
       - platform: state
-        entity_id: binary_sensor.dortelefon_ringer
-        to: "off"
-      - platform: state
-        entity_id: binary_sensor.dortelefon_aben
+        entity_id: binary_sensor.hoveddor
         to: "on"
       - platform: state
         entity_id: binary_sensor.hoveddor_laas
         to: "on"
+    condition:
+      - condition: state
+        entity_id: input_boolean.doorphone_ringing
+        state: "on"
     action:
+      - service: input_boolean.turn_on
+        data:
+          entity_id: input_boolean.answering_door
+      - service: input_boolean.turn_off
+        data:
+          entity_id: input_boolean.doorphone_ringing
       - service: scene.turn_on
         data:
           entity_id: scene.before_doorphone
+
+  - alias: Ignoring Door Phone
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_boolean.doorphone_ringing
+        to: "on"
+        for:
+          minutes: 2
+    action:
+      - condition: state
+        entity_id: input_boolean.doorphone_ringing
+        state: "on"
+      - service: scene.turn_on
+        data:
+          entity_id: scene.before_doorphone
+      - service: input_boolean.turn_off
+        data:
+          entity_id: input_boolean.doorphone_ringing
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.guests
+                state: "off"
+            sequence:
+              - service: script.turn_on
+                entity_id: script.resume_all_media
+
+  - alias: Door Answered
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.hoveddor
+        to: "off"
+      - platform: state
+        entity_id: binary_sensor.hoveddor_laas
+        to: "off"
+    condition:
+      - condition: state
+        entity_id: input_boolean.answering_door
+        state: "on"
+    action:
+      - service: input_boolean.turn_off
+        data:
+          entity_id: input_boolean.answering_door
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.guests
+                state: "off"
+            sequence:
+              - delay:
+                  seconds: 5
+              - service: script.turn_on
+                entity_id: script.resume_all_media

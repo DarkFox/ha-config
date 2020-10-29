@@ -1,12 +1,54 @@
-title: Stue Fjernbetjening
+title: Stue Tablet
 path: kiosk
-icon: mdi:remote
+icon: mdi:tablet-ipad
 panel: true
 cards:
   - type: vertical-stack
     cards:
       - type: horizontal-stack
         cards:
+          - type: vertical-stack
+            cards:
+              - !include ../cards/clock.yaml
+              - !include ../cards/weekday.yaml
+              - !include ../cards/weather/simple_weather.yaml
+
+              - type: custom:decluttering-card
+                template: room_light_profile
+                variables:
+                  - room: living_room
+
+              - !include ../cards/thermostats.yaml
+
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.guests
+                    state: "on"
+                card:
+                  type: custom:html-card
+                  title: WiFi
+                  content: !secret ui_wifi_content
+
+              - !include ../cards/power_gauges.yaml
+
+              # - type: custom:decluttering-card
+              #   template: ventilation
+              #   variables:
+              #     - entity: fan.stue_ventilation
+
+              - type: entities
+                show_header_toggle: false
+                entities:
+                  - entity: switch.bar_skaerm
+                    name: Bar Skærm
+                  - entity: cover.projektor_laerred
+                    name: Projektor Lærred
+                  - entity: switch.projector
+                    name: Projektor
+                    icon: mdi:projector
+                  - entity: switch.stue_tv
+                    name: TV
+
           - type: vertical-stack
             cards:
               - type: custom:stack-in-card
@@ -228,15 +270,4 @@ cards:
 
               - !include ../cards/media_players/playlist_controls.yaml
 
-              - type: entities
-                show_header_toggle: false
-                entities:
-                  - entity: switch.bar_skaerm
-                    name: Bar Skærm
-                  - entity: cover.projektor_laerred
-                    name: Projektor Lærred
-                  - entity: switch.projector
-                    name: Projektor
-                    icon: mdi:projector
-                  - entity: switch.stue_tv
-                    name: TV
+              - !include ../cards/conditional_timers.yaml

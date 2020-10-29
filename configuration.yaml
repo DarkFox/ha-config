@@ -36,10 +36,11 @@ sensor:
 
 http:
   ip_ban_enabled: false
-  # cors_allowed_origins:
-  #   - !secret base_url
-  #   - !secret local_url
-  #   - https://cast.home-assistant.io
+  cors_allowed_origins:
+    - !secret base_url
+    - !secret local_url
+    - https://cast.home-assistant.io
+    - https://embed.waze.com
   login_attempts_threshold: 10
   use_x_forwarded_for: true
   trusted_proxies:
@@ -57,6 +58,57 @@ python_script:
 lovelace:
   mode: yaml
 
+  dashboards:
+    lovelace-living-room-remote:
+      mode: yaml
+      filename: lovelace-living-room-remote.yaml
+      title: Stue Fjernbetjening
+      icon: mdi:remote
+      show_in_sidebar: false
+      require_admin: false
+    lovelace-living-room-tablet:
+      mode: yaml
+      filename: lovelace-living-room-tablet.yaml
+      title: Stue Tablet
+      icon: mdi:tablet-ipad
+      show_in_sidebar: false
+      require_admin: false
+    lovelace-bedroom-tablet:
+      mode: yaml
+      filename: lovelace-bedroom-tablet.yaml
+      title: Soveværelse Tablet
+      icon: mdi:tablet-android
+      show_in_sidebar: false
+      require_admin: false
+    lovelace-bathroom-tablet:
+      mode: yaml
+      filename: lovelace-bathroom-tablet.yaml
+      title: Badeværelse Tablet
+      icon: mdi:tablet-android
+      show_in_sidebar: false
+      require_admin: false
+    lovelace-hallway-tablet:
+      mode: yaml
+      filename: lovelace-hallway-tablet.yaml
+      title: Gang Tablet
+      icon: mdi:tablet
+      show_in_sidebar: false
+      require_admin: false
+    lovelace-kitchen-tablet:
+      mode: yaml
+      filename: lovelace-kitchen-tablet.yaml
+      title: Køkken Tablet
+      icon: mdi:tablet
+      show_in_sidebar: false
+      require_admin: false
+    lovelace-bathroom-mirror:
+      mode: yaml
+      filename: lovelace-bathroom-mirror.yaml
+      title: Badeværelse Spejl
+      icon: mdi:mirror
+      show_in_sidebar: false
+      require_admin: false
+
   resources:
     ### HACS ###
     # Libs
@@ -70,9 +122,9 @@ lovelace:
       type: module
     - url: /hacsfiles/lovelace-card-mod/card-mod.js
       type: module
-    - url: /hacsfiles/custom-header/custom-header.js
-      type: module
     - url: /hacsfiles/decluttering-card/decluttering-card.js
+      type: module
+    - url: /hacsfiles/kiosk-mode/kiosk-mode.js
       type: module
 
     # Cards
@@ -112,8 +164,6 @@ lovelace:
       type: module
     - url: /hacsfiles/simple-thermostat/simple-thermostat.js
       type: module
-    - url: /hacsfiles/dual-thermostat/dual-thermostat.js
-      type: module
     - url: /hacsfiles/lovelace-thermostat-card/main.js
       type: module
     - url: /hacsfiles/lovelace-home-feed-card/lovelace-home-feed-card.js
@@ -122,17 +172,25 @@ lovelace:
       type: module
     - url: /hacsfiles/stack-in-card/stack-in-card.js
       type: module
+    - url: /hacsfiles/ha-card-waze-travel-time/ha-card-waze-travel-time.js
+      type: module
+    - url: /hacsfiles/lovelace-state-switch/state-switch.js
+      type: module
+    - url: /hacsfiles/compass-card/compass-card.js
+      type: module
+    - url: /hacsfiles/lovelace-xiaomi-vacuum-map-card/xiaomi-vacuum-map-card.js
+      type: module
 
     ### MY CARDS ###
-    - url: /hacsfiles/rejseplanen-card/rejseplanen-card.js
-      type: js
-    # - url: /local/custom-lovelace/rejseplanen-card/rejseplanen-card.js?v=2.26
+    # - url: /hacsfiles/rejseplanen-card/rejseplanen-card.js
     #   type: js
+    - url: /local/custom-lovelace/rejseplanen-card/rejseplanen-card.js?v=2.28
+      type: module
 
-    - url: /hacsfiles/rejseplanen-stog-card/rejseplanen-stog-card.js
-      type: js
-  # - url: /local/custom-lovelace/rejseplanen-stog-card/rejseplanen-stog-card.js?v=2.37
-  #   type: js
+    # - url: /hacsfiles/rejseplanen-stog-card/rejseplanen-stog-card.js
+    #   type: js
+    - url: /local/custom-lovelace/rejseplanen-stog-card/rejseplanen-stog-card.js?v=2.39
+      type: module
 
 simpleicons:
 
@@ -160,7 +218,8 @@ recorder:
     entities: &recorder_entity_excludes
       - sensor.last_successful_authentication
 
-      - binary_sensor.workday_sensor
+      - binary_sensor.weekday_sensor
+      - binary_sensor.workday
       - sensor.time
       - sensor.time_utc
       - sensor.internet_time
@@ -171,7 +230,7 @@ recorder:
 
       - sensor.s_train_b_next
       - sensor.s_train_message
-      - sensor.s_tog_brondbyoster_til_kbh
+      - sensor.s_tog_brondbyoster
       - sensor.s_tog_norreport_til_brondbyoster
       - sensor.dsb_trafikinfo
 
@@ -221,12 +280,19 @@ logbook:
 
 binary_sensor:
   - platform: workday
+    name: Weekday
     country: DK
-  - platform: workday
-    name: Workday Tomorrow
-    country: DK
-    days_offset: 1
-  # Consider template sensor to merge workday sensors and vacation calendar.
+  - platform: template
+    sensors:
+      workday:
+        value_template: >
+          {%- if is_state('calendar.ferie', 'on') -%}
+            False
+          {%- elif is_state('binary_sensor.weekday_sensor', 'off') -%}
+            False
+          {%- else -%}
+            True
+          {%- endif -%}
 
 media_extractor:
 wake_on_lan:

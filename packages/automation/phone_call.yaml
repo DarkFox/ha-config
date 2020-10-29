@@ -2,17 +2,10 @@ input_text:
   active_media_player:
   active_media_type:
 
-automation:
-  - alias: pause_media_on_phone_call
-    trigger:
-      - platform: state
-        entity_id: sensor.darkphone_phone_state
-        to: offhook
-    condition:
-      - condition: state
-        entity_id: binary_sensor.martin_presence
-        state: "on"
-    action:
+script:
+  pause_all_media:
+    alias: "Sæt afspilning på pause"
+    sequence:
       - service: input_text.set_value
         data_template:
           entity_id: input_text.active_media_player
@@ -40,16 +33,9 @@ automation:
                   entity_id: "{{ states('input_text.active_media_player') }}"
                   is_volume_muted: true
 
-  - alias: unpause_on_phone_call_finished
-    trigger:
-      - platform: state
-        entity_id: sensor.darkphone_phone_state
-        from: offhook
-    condition:
-      - condition: state
-        entity_id: binary_sensor.martin_presence
-        state: "on"
-    action:
+  resume_all_media:
+    alias: "Genoptag afspilning"
+    sequence:
       - choose:
           - conditions:
               - condition: state
@@ -68,3 +54,30 @@ automation:
                 data_template:
                   entity_id: "{{ states('input_text.active_media_player') }}"
                   is_volume_muted: false
+
+automation:
+  - alias: pause_media_on_phone_call
+    trigger:
+      - platform: state
+        entity_id: sensor.darkphone_phone_state
+        to: offhook
+    condition:
+      - condition: state
+        entity_id: binary_sensor.martin_presence
+        state: "on"
+    action:
+      - service: script.turn_on
+        entity_id: script.pause_all_media
+
+  - alias: unpause_on_phone_call_finished
+    trigger:
+      - platform: state
+        entity_id: sensor.darkphone_phone_state
+        from: offhook
+    condition:
+      - condition: state
+        entity_id: binary_sensor.martin_presence
+        state: "on"
+    action:
+      - service: script.turn_on
+        entity_id: script.resume_all_media

@@ -1,5 +1,5 @@
 title: Badeværelse Tablet
-path: bathroom-tablet
+path: kiosk
 icon: "mdi:tablet"
 panel: true
 cards:
@@ -7,101 +7,79 @@ cards:
     cards:
       - type: vertical-stack
         cards:
-          - !include ../cards/clock.yaml
-          - !include ../cards/weekday.yaml
+          - type: horizontal-stack
+            cards:
+              - !include ../cards/clock.yaml
+              - !include ../cards/weekday.yaml
 
           - type: conditional
             conditions:
-              - entity: binary_sensor.s_train_message_present
+              - entity: binary_sensor.commute_soon
                 state: "on"
-            card: !include ../cards/s_train_status.yaml
-          - type: custom:rejseplanen-stog-card
-            entity: sensor.s_tog_brondbyoster_til_kbh
-            title: " "
-            max_entries: 2
+            card: !include /config/lovelace/cards/transport/commute.yaml
 
-          - !include ../cards/weather/simple_weather.yaml
+          - !include ../cards/weather/weather_forecast.yaml
 
+      - type: horizontal-stack
+        cards:
           - type: conditional
             conditions:
               - entity: input_boolean.guests
                 state: "off"
             card: !include ../cards/calendar.yaml
 
-          - type: conditional
-            conditions:
-              - entity: input_boolean.guests
-                state: "on"
-            card: !include ../cards/bathroom_occupied.yaml
+          - type: vertical-stack
+            cards:
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.guests
+                    state: "on"
+                card: !include ../cards/bathroom_occupied.yaml
 
-      - type: conditional
-        conditions:
-          - entity: input_boolean.guests
-            state: "off"
-        card:
-          type: vertical-stack
-          cards:
-            - type: custom:decluttering-card
-              template: room_light_profile
-              variables:
-                - room: bathroom
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.guests
+                    state: "off"
+                card:
+                  type: vertical-stack
+                  cards:
+                    - type: custom:decluttering-card
+                      template: room_light_profile
+                      variables:
+                        - room: bathroom
 
-            - !include ../cards/media_players/playlist_controls.yaml
+                    - !include ../cards/media_players/playlist_controls.yaml
 
-            - type: horizontal-stack
-              cards:
-                # - type: custom:decluttering-card
-                #   template: app_shortcut
-                #   variables:
-                #     - app: Spotify
-                #     - icon: mdi:spotify
-                #     - device: bathroom_tablet
+                    - type: conditional
+                      card:
+                        type: custom:mini-media-player
+                        artwork: cover
+                        entity: media_player.badevaerelse_mini
+                      conditions:
+                        - entity: media_player.badevaerelse_mini
+                          state_not: "off"
 
-                - type: "custom:button-card"
-                  icon: mdi:music-circle
-                  name: Mopidy
-                  size: 50px
-                  tap_action:
-                    action: navigate
-                    navigation_path: /40817795_mopidy
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.guests
+                    state: "on"
+                card:
+                  type: vertical-stack
+                  cards:
+                    - type: custom:decluttering-card
+                      template: room_state_and_light_profile
+                      variables:
+                        - room: bathroom
 
-                - type: custom:decluttering-card
-                  template: app_shortcut
-                  variables:
-                    - app: Pocket Casts
-                    - icon: mdi:podcast
-                    - device: bathroom_tablet
+                    - !include ../cards/media_players/playlist_controls.yaml
 
-            - type: conditional
-              card:
-                type: custom:mini-media-player
-                artwork: cover
-                entity: media_player.badevaerelse_mini
-              conditions:
-                - entity: media_player.badevaerelse_mini
-                  state_not: "off"
+                    - type: conditional
+                      card:
+                        type: custom:mini-media-player
+                        artwork: cover
+                        entity: media_player.badevaerelse_mini
+                      conditions:
+                        - entity: media_player.badevaerelse_mini
+                          state_not: "off"
 
-      - type: conditional
-        conditions:
-          - entity: input_boolean.guests
-            state: "on"
-        card:
-          type: vertical-stack
-          cards:
-            - type: custom:decluttering-card
-              template: room_state_and_light_profile
-              variables:
-                - room: bathroom
-
-            - !include ../cards/media_players/playlist_controls.yaml
-
-            - type: conditional
-              card:
-                type: custom:mini-media-player
-                artwork: cover
-                entity: media_player.badevaerelse_mini
-              conditions:
-                - entity: media_player.badevaerelse_mini
-                  state_not: "off"
-
-      - !include ../cards/compact_thermostats.yaml
+              - !include ../cards/compact_thermostats.yaml
