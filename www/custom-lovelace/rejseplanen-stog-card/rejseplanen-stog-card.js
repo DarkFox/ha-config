@@ -1,3 +1,4 @@
+/*jshint esversion: 9 */
 class RejseplanenStogCard extends HTMLElement {
   set hass(hass) {
     const entityId = this.config.entity;
@@ -21,17 +22,17 @@ class RejseplanenStogCard extends HTMLElement {
       return;
     }
 
-    const name = this.config.title || state.attributes['friendly_name'];
+    const name = this.config.title || state.attributes["friendly_name"];
 
     if (!this.content) {
-      const card = document.createElement('ha-card');
-      if (name == ' ') {
-        card.header = '';
+      const card = document.createElement("ha-card");
+      if (name == " ") {
+        card.header = "";
       } else {
         card.header = name;
       }
-      this.content = document.createElement('div');
-      const style = document.createElement('style');
+      this.content = document.createElement("div");
+      const style = document.createElement("style");
       style.textContent = `
         ha-card.type-custom-rejseplanen-stog-card  {
           font-family: sans-serif;
@@ -189,24 +190,24 @@ class RejseplanenStogCard extends HTMLElement {
       card.appendChild(style);
       card.appendChild(this.content);
       this.appendChild(card);
-    };
+    }
 
     var tablehtml = `
     <table>
     `;
 
     var journeys = [];
-    if (state.state != 'unknown') {
+    if (state.state != "unknown") {
       const next = {
-        'route': state.attributes['route'],
-        'type': state.attributes['type'],
-        'due_in': state.attributes['due_in'],
-        'direction': state.attributes['direction'],
-        'track': state.attributes['track'],
-        'real_time_at': state.attributes['real_time_at'],
+        route: state.attributes["route"],
+        type: state.attributes["type"],
+        due_in: state.attributes["due_in"],
+        direction: state.attributes["direction"],
+        track: state.attributes["track"],
+        real_time_at: state.attributes["real_time_at"],
       };
 
-      journeys = [next].concat(state.attributes['next_departures']);
+      journeys = [next].concat(state.attributes["next_departures"]);
     }
 
     if (max_entries) {
@@ -216,25 +217,25 @@ class RejseplanenStogCard extends HTMLElement {
     }
 
     for (const journey of journeys) {
-      const direction = journey['direction'];
-      const routename = journey['route'];
-      const type = journey['type'];
-      const time = journey['due_in'];
-      const track = journey['track'];
-      const realTimeAt = journey['real_time_at'];
+      const direction = journey["direction"];
+      const routename = journey["route"];
+      const type = journey["type"];
+      const time = journey["due_in"];
+      const track = journey["track"];
+      const realTimeAt = journey["real_time_at"];
 
-      const styleType = type.replace(' ', '-');
-      const styleRoutename = routename.replace(' ', '-');
-      
-      let trackSnippet = '';
+      const styleType = type.replace(" ", "-");
+      const styleRoutename = routename.replace(" ", "-");
+
+      let trackSnippet = "";
       if (track) {
         trackSnippet = `<span>Spor </span>${track}`;
       }
 
-      let delaySnippet = '';
+      let delaySnippet = "";
       if (realTimeAt) {
-        const realTimeAtTime = realTimeAt.split(' ')[1]
-        delaySnippet = `<span class="delay">(${realTimeAtTime})</span>`
+        const realTimeAtTime = realTimeAt.split(" ")[1];
+        delaySnippet = `<span class="delay">(${realTimeAtTime})</span>`;
       }
 
       tablehtml += `
@@ -258,14 +259,14 @@ class RejseplanenStogCard extends HTMLElement {
 
   setConfig(config) {
     if (!config.entity) {
-      throw new Error('You need to define an entity');
+      throw new Error("You need to define an entity");
     }
     this.config = config;
   }
 
   getCardSize() {
-    return 1
+    return 1;
   }
 }
 
-customElements.define('rejseplanen-stog-card', RejseplanenStogCard);
+customElements.define("rejseplanen-stog-card", RejseplanenStogCard);
