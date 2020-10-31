@@ -1,96 +1,3 @@
-###############################################################################
-#   @author         :   Mahasri Kalavala
-#   @date           :   04/15/2017
-#   @package        :   Multi Sensors
-#   @description    :   Multi Sensor Stuff
-###############################################################################
-homeassistant:
-  customize:
-    zwave.bedroom:
-      friendly_name: Bedroom Multi-Sensor
-    zwave.toilet:
-      friendly_name: Bathroom Multi-Sensor
-    zwave.kitchen:
-      friendly_name: Kitchen Multi-Sensor
-    zwave.livingroom:
-      friendly_name: Livingroom Multi-Sensor
-    zwave.office:
-      friendly_name: Office Multi-Sensor
-    zwave.hallway:
-      friendly_name: Hallway Multi-Sensor
-
-    binary_sensor.bedroom_sensor:
-      device_class: motion
-      friendly_name: Bedroom Activity
-    sensor.bedroom_luminance:
-      friendly_name: Bedroom Light Level
-      icon: mdi:white-balance-sunny
-    sensor.bedroom_relative_humidity:
-      friendly_name: Bedroom Humidity
-      icon: mdi:water-percent
-    sensor.bedroom_temperature:
-      friendly_name: Bedroom Temperature
-
-    binary_sensor.toilet_sensor:
-      device_class: motion
-      friendly_name: Bathroom Activity
-    sensor.toilet_luminance:
-      friendly_name: Bathroom Light Level
-      icon: mdi:white-balance-sunny
-    sensor.toilet_relative_humidity:
-      friendly_name: Bathroom Humidity
-      icon: mdi:water-percent
-    sensor.toilet_temperature:
-      friendly_name: Bathroom Temperature
-
-    binary_sensor.kitchen_sensor:
-      device_class: motion
-      friendly_name: Kitchen Activity
-    sensor.kitchen_luminance:
-      friendly_name: Kitchen Light Level
-      icon: mdi:white-balance-sunny
-    sensor.kitchen_relative_humidity:
-      friendly_name: Kitchen Humidity
-      icon: mdi:water-percent
-    sensor.kitchen_temperature:
-      friendly_name: Kitchen Temperature
-
-    binary_sensor.livingroom_sensor:
-      device_class: motion
-      friendly_name: Livingroom Activity
-    sensor.livingroom_luminance:
-      friendly_name: Livingroom Light Level
-      icon: mdi:white-balance-sunny
-    sensor.livingroom_relative_humidity:
-      friendly_name: Livingroom Humidity
-      icon: mdi:water-percent
-    sensor.livingroom_temperature:
-      friendly_name: Livingroom Temperature
-
-    binary_sensor.office_sensor:
-      device_class: motion
-      friendly_name: Office Activity
-    sensor.office_luminance:
-      friendly_name: Office Light Level
-      icon: mdi:white-balance-sunny
-    sensor.office_relative_humidity:
-      friendly_name: Office Humidity
-      icon: mdi:water-percent
-    sensor.office_temperature:
-      friendly_name: Office Temperature
-
-    binary_sensor.hallway_sensor:
-      device_class: motion
-      friendly_name: Hallway Activity
-    sensor.hallway_luminance:
-      friendly_name: Hallway Light Level
-      icon: mdi:white-balance-sunny
-    sensor.hallway_relative_humidity:
-      friendly_name: Hallway Humidity
-      icon: mdi:water-percent
-    sensor.hallway_temperature:
-      friendly_name: Hallway Temperature
-
 sensor:
   - platform: min_max
     type: min
@@ -116,37 +23,37 @@ sensor:
       bedroom:
         friendly_name: Bedroom
         temperature_sensor: sensor.sovevaerelse_temperatur
-        humidity_sensor: sensor.bedroom_relative_humidity
+        humidity_sensor: sensor.sovevaerelse_humidity
         pressure_sensor: sensor.lufttryk
 
       toilet:
         friendly_name: Toilet
         temperature_sensor: sensor.badevaerelse_temperatur
-        humidity_sensor: sensor.toilet_relative_humidity
+        humidity_sensor: sensor.badevaerelse_humidity
         pressure_sensor: sensor.lufttryk
 
       kitchen:
         friendly_name: Kitchen
         temperature_sensor: sensor.kokken_temperatur
-        humidity_sensor: sensor.kitchen_relative_humidity
+        humidity_sensor: sensor.kokken_humidity
         pressure_sensor: sensor.lufttryk
 
       livingroom:
         friendly_name: Living Room
         temperature_sensor: sensor.stue_temperatur
-        humidity_sensor: sensor.livingroom_relative_humidity
+        humidity_sensor: sensor.stue_humidity
         pressure_sensor: sensor.lufttryk
 
       office:
         friendly_name: Office
         temperature_sensor: sensor.kontor_temperatur
-        humidity_sensor: sensor.office_relative_humidity
+        humidity_sensor: sensor.kontor_humidity
         pressure_sensor: sensor.lufttryk
 
       hallway:
         friendly_name: Hallway
-        temperature_sensor: sensor.hallway_temperature
-        humidity_sensor: sensor.hallway_relative_humidity
+        temperature_sensor: sensor.gang_air_temperature
+        humidity_sensor: sensor.gang_humidity
         pressure_sensor: sensor.lufttryk
 
       klaedeskab:
@@ -157,53 +64,53 @@ sensor:
 
   - platform: mold_indicator
     name: Toilet Mold Indicator
-    indoor_temp_sensor: sensor.toilet_temperature
-    indoor_humidity_sensor: sensor.toilet_relative_humidity
+    indoor_temp_sensor: sensor.badevaerelse_air_temperature
+    indoor_humidity_sensor: sensor.badevaerelse_humidity
     outdoor_temp_sensor: sensor.udenfor_temperature
     calibration_factor: 1.44
 
   - platform: template
     sensors:
-      bedroom_temperature_feels_like:
+      sovevaerelse_temperatur_feels_like:
         friendly_name: Soveværelse Temperatur Føles Som
         value_template: >
           {%- set temp = states('sensor.sovevaerelse_temperatur')|float -%}
-          {%- set humidity = states('sensor.bedroom_relative_humidity')|float -%}
+          {%- set humidity = states('sensor.sovevaerelse_humidity')|float -%}
           {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
 
-      toilet_temperature_feels_like:
+      badevaerelse_temperatur_feels_like:
         friendly_name: Toilet Temperatur Føles Som
         value_template: >
           {%- set temp = states('sensor.badevaerelse_temperatur')|float -%}
-          {%- set humidity = states('sensor.toilet_relative_humidity')|float -%}
+          {%- set humidity = states('sensor.badevaerelse_humidity')|float -%}
           {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
 
-      kitchen_temperature_feels_like:
+      kokken_temperatur_feels_like:
         friendly_name: Køkken Temperatur Føles Som
         value_template: >
           {%- set temp = states('sensor.kokken_temperatur')|float -%}
-          {%- set humidity = states('sensor.kitchen_relative_humidity')|float -%}
+          {%- set humidity = states('sensor.kokken_humidity')|float -%}
           {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
 
-      livingroom_temperature_feels_like:
+      stue_temperatur_feels_like:
         friendly_name: Stue Temperatur Føles Som
         value_template: >
           {%- set temp = states('sensor.stue_temperatur')|float -%}
-          {%- set humidity = states('sensor.livingroom_relative_humidity')|float -%}
+          {%- set humidity = states('sensor.stue_humidity')|float -%}
           {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
 
-      office_temperature_feels_like:
+      kontor_temperatur_feels_like:
         friendly_name: Kontor Temperatur Føles Som
         value_template: >
           {%- set temp = states('sensor.kontor_temperatur')|float -%}
-          {%- set humidity = states('sensor.office_relative_humidity')|float -%}
+          {%- set humidity = states('sensor.kontor_humidity')|float -%}
           {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
 
-      hallway_temperature_feels_like:
+      gang_temperature_feels_like:
         friendly_name: Gang Temperatur Føles Som
         value_template: >
-          {%- set temp = states('sensor.hallway_temperature')|float -%}
-          {%- set humidity = states('sensor.hallway_relative_humidity')|float -%}
+          {%- set temp = states('sensor.gang_air_temperature')|float -%}
+          {%- set humidity = states('sensor.gang_humidity')|float -%}
           {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
 
       klaedeskab_temperature_feels_like:
@@ -233,25 +140,3 @@ sensor:
           {%- set temp = states('sensor.udenfor_vest_temperature')|float -%}
           {%- set humidity = states('sensor.udenfor_vest_humidity')|float -%}
           {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
-
-      toilet_relative_humidity_change:
-        unit_of_measurement: "%"
-        friendly_name: "Toilet Humidity Change"
-        entity_id: sensor.toilet_relative_humidity_mean
-        value_template: "{{ states.sensor.toilet_relative_humidity_mean.attributes.change | float }}"
-
-      hoveddor_temp:
-        friendly_name: "Hoveddør Temperatur"
-        value_template: "{{ state_attr('binary_sensor.hoveddor', 'temperature') }}"
-      hoveddor_laas_temp:
-        friendly_name: "Hoveddør Lås Temperatur"
-        value_template: "{{ state_attr('binary_sensor.hoveddor_laas', 'temperature') }}"
-      opvaskemaskine_dor_temp:
-        friendly_name: "Opvaskemaskine Dør Temperatur"
-        value_template: "{{ state_attr('binary_sensor.opvaskemaskine_dor', 'temperature') }}"
-      opvaskemaskine_laek_temp:
-        friendly_name: "Opvaskemaskine Læk Temperatur"
-        value_template: "{{ state_attr('binary_sensor.opvaskemaskine_laek', 'temperature') }}"
-      mikroovn_dor_temp:
-        friendly_name: "Mikroovn Dør Temperatur"
-        value_template: "{{ state_attr('binary_sensor.mikroovn_dor', 'temperature') }}"

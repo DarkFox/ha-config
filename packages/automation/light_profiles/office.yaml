@@ -48,16 +48,10 @@ binary_sensor:
     sensors:
       office_activity:
         friendly_name: "Office Activity"
-        entity_id:
-          - binary_sensor.office_sensor
-          - binary_sensor.pc_hobby_bevaegelse
-          - input_boolean.office_activity_override
-          - input_select.office_room_state
-          - input_select.latest_motion
         value_template: >
           {%- if is_state('input_boolean.office_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.office_room_state', 'active') else 'false' }}
-          {%- elif is_state('binary_sensor.office_sensor', 'on')
+          {%- elif is_state('binary_sensor.kontor_home_security_motion_detected', 'on')
           or is_state('binary_sensor.pc_hobby_bevaegelse', 'on')
           or is_state('input_select.latest_motion', 'Office') -%}
             true
@@ -67,8 +61,6 @@ binary_sensor:
 
       office_activity_predicted:
         friendly_name: "Office Activity Predicted"
-        entity_id:
-          - binary_sensor.moved_from_to_hallway_to_living_room
         value_template: >
           {%- if is_state('binary_sensor.moved_from_to_hallway_to_living_room', 'on') -%}
             true
@@ -761,6 +753,6 @@ group:
       - input_boolean.office_activity_override
       - input_select.office_room_state
       - input_select.latest_motion
-      - binary_sensor.office_sensor
+      - binary_sensor.kontor_home_security_motion_detected
       - binary_sensor.pc_hobby_bevaegelse
       - binary_sensor.working_from_home

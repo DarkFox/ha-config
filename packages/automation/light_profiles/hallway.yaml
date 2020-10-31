@@ -48,16 +48,10 @@ binary_sensor:
     sensors:
       hallway_activity:
         friendly_name: "hallway Activity"
-        entity_id:
-          - binary_sensor.hallway_sensor
-          - input_boolean.hallway_activity_override
-          - input_select.hallway_room_state
-          - binary_sensor.hoveddor
-          - binary_sensor.hoveddor_laas
         value_template: >
           {%- if is_state('input_boolean.hallway_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.hallway_room_state', 'active') else 'false' }}
-          {%- elif is_state('binary_sensor.hallway_sensor', 'on')
+          {%- elif is_state('binary_sensor.gang_home_security_motion_detected', 'on')
           or is_state('binary_sensor.hoveddor', 'on')
           or is_state('binary_sensor.hoveddor_laas', 'on') -%}
             true
@@ -67,11 +61,6 @@ binary_sensor:
 
       hallway_activity_predicted:
         friendly_name: "Hallway Activity Predicted"
-        entity_id:
-          - binary_sensor.moved_from_office_to_living_room
-          - binary_sensor.moved_from_bed
-          - binary_sensor.bathroom_activity
-          - binary_sensor.bathroom_door_activity
         value_template: >
           {%-
             if is_state('binary_sensor.moved_from_office_to_living_room', 'on')
@@ -443,6 +432,6 @@ group:
       - input_boolean.hallway_activity_override
       - input_select.hallway_room_state
       - binary_sensor.bathroom_activity
-      - binary_sensor.hallway_sensor
+      - binary_sensor.gang_home_security_motion_detected
       - binary_sensor.hoveddor
       - binary_sensor.hoveddor_laas

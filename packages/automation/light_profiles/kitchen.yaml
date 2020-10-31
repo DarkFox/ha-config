@@ -44,10 +44,6 @@ sensor:
           {%- endif -%}
 
       dishwasher_hue:
-        entity_id:
-          - input_select.dishwasher_state
-          - sensor.theme_secondary_color
-          - sensor.kitchen_light_profile
         value_template: |
           {%- set state = states('input_select.dishwasher_state') -%}
           {%- if state == 'Vasker' -%}
@@ -69,17 +65,10 @@ binary_sensor:
     sensors:
       kitchen_activity:
         friendly_name: "Kitchen Activity"
-        entity_id:
-          - binary_sensor.kitchen_sensor
-          - binary_sensor.kokken_bevaegelse
-          - input_boolean.kitchen_activity_override
-          - input_select.kitchen_room_state
-          - input_select.latest_motion
-          - media_player.kokken_chromecast
         value_template: >
           {%- if is_state('input_boolean.kitchen_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.kitchen_room_state', 'active') else 'false' }}
-          {%- elif is_state('binary_sensor.kitchen_sensor', 'on')
+          {%- elif is_state('binary_sensor.kokken_home_security_motion_detected', 'on')
           or is_state('binary_sensor.kokken_bevaegelse', 'on')
           or is_state('media_player.kokken_chromecast', 'playing')
           or is_state('media_player.kokken_chromecast', 'paused')
@@ -91,9 +80,6 @@ binary_sensor:
 
       kitchen_activity_predicted:
         friendly_name: "Kitchen Activity Predicted"
-        entity_id:
-          - binary_sensor.moved_from_living_room_to_hallway
-          - binary_sensor.moved_from_bedroom_to_hallway
         value_template: >
           {%- 
             if is_state('binary_sensor.moved_from_living_room_to_hallway', 'on')
@@ -720,5 +706,5 @@ group:
       - input_boolean.kitchen_activity_override
       - input_select.kitchen_room_state
       - input_select.latest_motion
-      - binary_sensor.kitchen_sensor
+      - binary_sensor.kokken_home_security_motion_detected
       - binary_sensor.kokken_bevaegelse

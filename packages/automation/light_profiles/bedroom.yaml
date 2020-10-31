@@ -47,29 +47,17 @@ binary_sensor:
   - platform: template
     sensors:
       reading_light:
-        entity_id: input_select.sleep_state
         value_template: "{{ is_state('input_select.sleep_state', 'bedtime') or is_state('input_select.sleep_state', 'in bed') }}"
 
       night_light:
-        entity_id: input_select.sleep_state
         value_template: "{{ is_state('input_select.sleep_state', 'sleeping') }}"
 
       bedroom_activity:
         friendly_name: "Bedroom Activity"
-        entity_id:
-          - binary_sensor.bedroom_sensor
-          - binary_sensor.seng_bevaegelse
-          - binary_sensor.sovevaerelse_gulv_bevaegelse
-          - input_boolean.bedroom_activity_override
-          - input_select.bedroom_room_state
-          - input_select.latest_motion
-          - input_select.martin_activity
-          - media_player.sovevaerelse_chromecast
-          - media_player.bedroom_tv
         value_template: >
           {%- if is_state('input_boolean.bedroom_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.bedroom_room_state', 'active') else 'false' }}
-          {%- elif is_state('binary_sensor.bedroom_sensor', 'on')
+          {%- elif is_state('binary_sensor.sovevaerelse_home_security_motion_detected', 'on')
           or is_state('binary_sensor.seng_bevaegelse', 'on')
           or is_state('binary_sensor.sovevaerelse_gulv_bevaegelse', 'on')
           or is_state('input_select.latest_motion', 'Bedroom')
@@ -818,7 +806,7 @@ group:
       - input_select.bedroom_room_state
       - input_select.latest_motion
       - input_select.martin_activity
-      - binary_sensor.bedroom_sensor
+      - binary_sensor.sovevaerelse_home_security_motion_detected
       - binary_sensor.seng_bevaegelse
       - binary_sensor.sovevaerelse_gulv_bevaegelse
       - media_player.sovevaerelse_chromecast

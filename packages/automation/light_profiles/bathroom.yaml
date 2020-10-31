@@ -48,18 +48,10 @@ binary_sensor:
     sensors:
       bathroom_activity:
         friendly_name: "Bathroom Activity"
-        entity_id:
-          - binary_sensor.toilet_sensor
-          - binary_sensor.bruseniche_vand
-          - input_boolean.bathroom_activity_override
-          - input_select.bathroom_room_state
-          - input_select.latest_motion
-          - input_select.martin_activity
-          - binary_sensor.bathroom_door_activity
         value_template: >
           {%- if is_state('input_boolean.bathroom_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.bathroom_room_state', 'active') else 'false' }}
-          {%- elif is_state('binary_sensor.toilet_sensor', 'on')
+          {%- elif is_state('binary_sensor.badevaerelse_home_security_motion_detected', 'on')
           or is_state('binary_sensor.bruseniche_vand', 'on')
           or is_state('binary_sensor.bathroom_door_activity', 'on')
           or is_state('input_select.latest_motion', 'Bathroom')
@@ -71,9 +63,6 @@ binary_sensor:
 
       bathroom_activity_predicted:
         friendly_name: "Bathroom Activity Predicted"
-        entity_id:
-          - binary_sensor.moved_from_living_room_to_hallway
-          - binary_sensor.moved_from_bedroom_to_hallway
         value_template: >
           {%- 
             if is_state('binary_sensor.moved_from_living_room_to_hallway', 'on')
@@ -491,5 +480,5 @@ group:
       - input_select.bathroom_room_state
       - input_select.latest_motion
       - input_select.martin_activity
-      - binary_sensor.toilet_sensor
+      - binary_sensor.badevaerelse_home_security_motion_detected
       - binary_sensor.bruseniche_vand
