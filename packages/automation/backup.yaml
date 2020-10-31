@@ -1,3 +1,12 @@
+sensor:
+  - platform: command_line
+    command: 'curl http://supervisor/snapshots -H "Authorization: Bearer $(printenv SUPERVISOR_TOKEN)"'
+    name: Latest Snapshot
+    value_template: >
+      {% set snapshots = value_json.data.snapshots|sort(attribute='date', reverse=True) %}
+      {{ snapshots[0].name }}
+    scan_interval: 60
+
 automation:
   - alias: Snapshot and Dropbox upload
     initial_state: true
@@ -9,11 +18,22 @@ automation:
       weekday:
         - sun
         - wed
+    variables:
+      name: "Automated Backup {{ now().strftime('%Y-%m-%d') }}"
     action:
+      - service: persistent_notification.create
+        data_template:
+          message: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}: Starting backup"
+          title: "{{ name }}"
       - service: hassio.snapshot_full
         data_template:
-          name: Automated Backup {{ now().strftime('%Y-%m-%d') }}
-      - delay: "01:00:00"
+          name: "{{ name }}"
+      - wait_template: "{{ states('sensor.latest_snapshot') == name }}"
+        timeout: "02:00:00"
+      - service: persistent_notification.create
+        data_template:
+          message: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}: Snapshot done. Syncing to Dropbox"
+          title: "{{ name }}"
       - service: hassio.addon_stdin
         data_template:
           addon: 7be23ff5_dropbox_sync
