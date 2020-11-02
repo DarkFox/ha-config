@@ -19,6 +19,8 @@ binary_sensor:
 sensor:
   - platform: template
     sensors:
+      google_maps_embed_key:
+        value_template: !secret google_maps_embed_key
       next_work_in:
         value_template: >
           {% set rsr_time = as_timestamp(state_attr('calendar.paa_rsr', 'start_time'))|int %}
@@ -37,9 +39,14 @@ sensor:
           {% else %}
             rsh
           {% endif %}
-
-  - platform: template
-    sensors:
+      next_work_at_url_coords:
+        value_template: >
+          {% set zone = 'zone.'+states('sensor.next_work_at') %}
+          {{ state_attr(zone, 'latitude') }}%2C{{ state_attr(zone, 'longitude') }}
+      home_url_coords:
+        value_template: >
+          {% set zone = 'zone.home' %}
+          {{ state_attr(zone, 'latitude') }}%2C{{ state_attr(zone, 'longitude') }}
       commute_status_car:
         value_template: >
           {%- if states('sensor.hjem_til_'+states('sensor.next_work_at'))|int > 45 -%}
@@ -73,17 +80,21 @@ sensor:
             good
           {%- endif -%}
 
-  - platform: waze_travel_time
+  - platform: google_travel_time
+    api_key: !secret google_directions_secret
     name: "Hjem til RSR"
     origin: zone.home
     destination: zone.rsr
-    region: "EU"
+    options:
+      language: da
 
-  - platform: waze_travel_time
+  - platform: google_travel_time
+    api_key: !secret google_directions_secret
     name: "Hjem til RSH"
     origin: zone.home
     destination: zone.rsh
-    region: "EU"
+    options:
+      language: da
 
   - platform: rejseplanen
     name: S-Tog Brøndbyøster
