@@ -16,6 +16,16 @@ binary_sensor:
         value_template: >
           {{ (is_state('binary_sensor.martin_presence_delayed', 'on') or is_state('binary_sensor.martin_home_soon', 'on')) }}
 
+      check_climate:
+        value_template: >
+          {{
+            states('sensor.bathroom_min_temp')|int == state_attr('climate.badevaerelse', 'temperature')|int
+            and states('sensor.office_min_temp')|int == state_attr('climate.kontor', 'temperature')|int
+            and states('sensor.living_room_min_temp')|int == state_attr('climate.stue', 'temperature')|int
+            and states('sensor.kitchen_min_temp')|int == state_attr('climate.kokken', 'temperature')|int
+            and states('sensor.bedroom_min_temp')|int == state_attr('climate.sovevaerelse', 'temperature')|int
+          }}
+
 sensor:
   - platform: template
     sensors:
@@ -143,6 +153,25 @@ sensor:
           {% endif %}
 
 automation:
+  # Restart Tado stick if temperature changes don't take.
+  - alias: Check Climate
+    initial_state: true
+    mode: single
+    trigger:
+      - platform: event
+        event_type: check_climate
+    action:
+      - delay:
+          seconds: 30
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.check_climate
+                state: "off"
+            sequence:
+              - service: script.turn_on
+                entity_id: script.restart_tado
+
   - alias: Termostat Badeværelse
     initial_state: true
     mode: queued
@@ -151,16 +180,8 @@ automation:
         entity_id:
           - sensor.bathroom_min_temp
           - binary_sensor.badevaerelse_vindue
-      - platform: state
-        entity_id: binary_sensor.home_assistant_loaded
-        to: "on"
-        for:
-          minutes: 2
-      - platform: state
-        entity_id: binary_sensor.tado_hub_crashed
-        to: "off"
-        for:
-          minutes: 2
+      - platform: event
+        event_type: set_climate
     action:
       - service: >
           {%- if is_state('binary_sensor.badevaerelse_vindue', 'off') -%}
@@ -174,6 +195,7 @@ automation:
         data:
           entity_id: climate.badevaerelse
           temperature: "{{ states('sensor.bathroom_min_temp') }}"
+      - event: check_climate
 
   - alias: Termostat Kontor
     initial_state: true
@@ -181,16 +203,8 @@ automation:
     trigger:
       - platform: state
         entity_id: sensor.office_min_temp
-      - platform: state
-        entity_id: binary_sensor.home_assistant_loaded
-        to: "on"
-        for:
-          minutes: 2
-      - platform: state
-        entity_id: binary_sensor.tado_hub_crashed
-        to: "off"
-        for:
-          minutes: 2
+      - platform: event
+        event_type: set_climate
     action:
       - service: climate.turn_on
         data:
@@ -199,6 +213,7 @@ automation:
         data:
           entity_id: climate.kontor
           temperature: "{{ states('sensor.office_min_temp') }}"
+      - event: check_climate
 
   - alias: Termostat Stue
     initial_state: true
@@ -206,16 +221,8 @@ automation:
     trigger:
       - platform: state
         entity_id: sensor.living_room_min_temp
-      - platform: state
-        entity_id: binary_sensor.home_assistant_loaded
-        to: "on"
-        for:
-          minutes: 2
-      - platform: state
-        entity_id: binary_sensor.tado_hub_crashed
-        to: "off"
-        for:
-          minutes: 2
+      - platform: event
+        event_type: set_climate
     action:
       - service: climate.turn_on
         data:
@@ -224,6 +231,7 @@ automation:
         data:
           entity_id: climate.stue
           temperature: "{{ states('sensor.living_room_min_temp') }}"
+      - event: check_climate
 
   - alias: Termostat Køkken
     initial_state: true
@@ -231,16 +239,8 @@ automation:
     trigger:
       - platform: state
         entity_id: sensor.kitchen_min_temp
-      - platform: state
-        entity_id: binary_sensor.home_assistant_loaded
-        to: "on"
-        for:
-          minutes: 2
-      - platform: state
-        entity_id: binary_sensor.tado_hub_crashed
-        to: "off"
-        for:
-          minutes: 2
+      - platform: event
+        event_type: set_climate
     action:
       - service: climate.turn_on
         data:
@@ -249,6 +249,7 @@ automation:
         data:
           entity_id: climate.kokken
           temperature: "{{ states('sensor.kitchen_min_temp') }}"
+      - event: check_climate
 
   - alias: Termostat Soveværelse
     initial_state: true
@@ -256,16 +257,8 @@ automation:
     trigger:
       - platform: state
         entity_id: sensor.bedroom_min_temp
-      - platform: state
-        entity_id: binary_sensor.home_assistant_loaded
-        to: "on"
-        for:
-          minutes: 2
-      - platform: state
-        entity_id: binary_sensor.tado_hub_crashed
-        to: "off"
-        for:
-          minutes: 2
+      - platform: event
+        event_type: set_climate
     action:
       - service: climate.turn_on
         data:
@@ -274,3 +267,4 @@ automation:
         data:
           entity_id: climate.sovevaerelse
           temperature: "{{ states('sensor.bedroom_min_temp') }}"
+      - event: check_climate
