@@ -29,28 +29,28 @@ class RejseplanenCard extends HTMLElement {
       this.content = document.createElement("div");
       const style = document.createElement("style");
       style.textContent = `
-        .type-custom-rejseplanen-card table {
+        rejseplanen-card table {
           width: 100%;
           padding: 6px 10px;
         }
-        .type-custom-rejseplanen-card tr:nth-child(even) {
+        rejseplanen-card tr:nth-child(even) {
           background: var(--table-row-background-color);
         }
-        .type-custom-rejseplanen-card tr:nth-child(odd) {
+        rejseplanen-card tr:nth-child(odd) {
           background: var(--table-row-alternative-background-color);
         }
-        .type-custom-rejseplanen-card td {
+        rejseplanen-card td {
           padding: 3px 0px;
         }
-        .type-custom-rejseplanen-card td.shrink {
+        rejseplanen-card td.shrink {
           white-space:nowrap;
           padding: 0px 4px;
         }
-        .type-custom-rejseplanen-card td.expand {
+        rejseplanen-card td.expand {
           width: 99%;
           padding-left: 4px;
         }
-        .type-custom-rejseplanen-card span.route {
+        rejseplanen-card span.route {
           font-weight: bold;
           font-size:0.9em;
           padding:3px 8px 2px 8px;
@@ -59,112 +59,112 @@ class RejseplanenCard extends HTMLElement {
           margin-right:0.7em;
           border-radius: 2px;
         }
-        .type-custom-rejseplanen-card span.track {
+        rejseplanen-card span.track {
           color: var(--secondary-text-color);
           font-size: 90%;
           float: right;
           padding-right: 4px;
         }
-        .type-custom-rejseplanen-card span.delay {
+        rejseplanen-card span.delay {
           color: #b41730;
           font-size: 90%;
           float: right;
           padding-right: 4px;
         }
 
-        .type-custom-rejseplanen-card span.type-S.route-A {
+        rejseplanen-card span.type-S.route-A {
           background-color: #4AA5E5;
         }
 
-        .type-custom-rejseplanen-card span.type-S.route-B {
+        rejseplanen-card span.type-S.route-B {
           background-color: #68AB45;
         }
 
-        .type-custom-rejseplanen-card span.type-S.route-Bx {
+        rejseplanen-card span.type-S.route-Bx {
           background-color: #B3CD78;
         }
 
-        .type-custom-rejseplanen-card span.type-S.route-C {
+        rejseplanen-card span.type-S.route-C {
           background-color: #E59535;
         }
 
-        .type-custom-rejseplanen-card span.type-S.route-E {
+        rejseplanen-card span.type-S.route-E {
           background-color: #7670B3;
         }
 
-        .type-custom-rejseplanen-card span.type-S.route-F {
+        rejseplanen-card span.type-S.route-F {
           background-color: #F4C443;
         }
 
-        .type-custom-rejseplanen-card span.type-S.route-H {
+        rejseplanen-card span.type-S.route-H {
           background-color: #D44E28;
         }
 
-        .type-custom-rejseplanen-card span.type-M.route-Metro-M1 {
+        rejseplanen-card span.type-M.route-Metro-M1 {
           background-color: #037756;
         }
 
-        .type-custom-rejseplanen-card span.type-M.route-Metro-M2 {
+        rejseplanen-card span.type-M.route-Metro-M2 {
           background-color: #FECE00;
         }
 
-        .type-custom-rejseplanen-card span.type-M.route-Metro-M3 {
+        rejseplanen-card span.type-M.route-Metro-M3 {
           background-color: #EA3755;
         }
 
-        .type-custom-rejseplanen-card span.type-M.route-Metro-M4 {
+        rejseplanen-card span.type-M.route-Metro-M4 {
           background-color: #3CB4EF;
         }
 
-        .type-custom-rejseplanen-card span.type-REG {
+        rejseplanen-card span.type-REG {
           background-color: #47A541;
         }
 
-        .type-custom-rejseplanen-card span.type-IC {
+        rejseplanen-card span.type-IC {
           background-color: #EE4230;
         }
 
-        .type-custom-rejseplanen-card span.type-LYN {
+        rejseplanen-card span.type-LYN {
           background-color: #FCBB58;
         }
 
-        .type-custom-rejseplanen-card span.type-TOG[class*=" route-SJ"] {
+        rejseplanen-card span.type-TOG[class*=" route-SJ"] {
           background-color: #767676;
         }
 
-        .type-custom-rejseplanen-card span.type-TOG[class*=" route-Lokalbane"] {
+        rejseplanen-card span.type-TOG[class*=" route-Lokalbane"] {
           background-color: #061D42;
         }
 
-        .type-custom-rejseplanen-card span[class*=" route-Letbane-"] {
+        rejseplanen-card span[class*=" route-Letbane-"] {
           background-color: #31546F;
         }
 
-        .type-custom-rejseplanen-card span.type-BUS {
+        rejseplanen-card span.type-BUS {
           background-color: #FEC100;
         }
 
-        .type-custom-rejseplanen-card span.type-EXB {
+        rejseplanen-card span.type-EXB {
           background-color: #2A8DFF;
         }
 
-        .type-custom-rejseplanen-card span[class*=" route-Bus-"][class$="A"] {
+        rejseplanen-card span[class*=" route-Bus-"][class$="A"] {
           background-color: #B12222;
         }
 
-        .type-custom-rejseplanen-card span[class*=" route-Bus-"][class$="C"] {
+        rejseplanen-card span[class*=" route-Bus-"][class$="C"] {
           background-color: #17AACF;
         }
 
-        .type-custom-rejseplanen-card span[class*=" route-Bus-"][class$="E"] {
+        rejseplanen-card span[class*=" route-Bus-"][class$="E"] {
           background-color: #228C22;
         }
 
-        .type-custom-rejseplanen-card span[class*=" route-Bus-"][class$="N"] {
+        rejseplanen-card span[class*=" route-Bus-"][class$="N"] {
           background-color: #808080;
         }
 
-        .type-custom-rejseplanen-card span[class*=" route-Havnebus-"] {
+        rejseplanen-card span[class*=" route-Havnebus-"] {
           background-color: #021C4C;
         }
         `;
