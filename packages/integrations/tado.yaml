@@ -20,11 +20,11 @@ binary_sensor:
           {{
             is_state('device_tracker.tado', 'not_home')
             or state_attr('device_tracker.tado', 'ip').split('.')[0] == '169'
-            or is_state('climate.badevaerelse', 'unavailable')
-            or is_state('climate.kokken', 'unavailable')
-            or is_state('climate.sovevaerelse', 'unavailable')
-            or is_state('climate.kontor', 'unavailable')
-            or is_state('climate.stue', 'unavailable')
+            or is_state('climate.badevaerelse', 'unknown')
+            or is_state('climate.kokken', 'unknown')
+            or is_state('climate.sovevaerelse', 'unknown')
+            or is_state('climate.kontor', 'unknown')
+            or is_state('climate.stue', 'unknown')
           }}
 
 automation:
@@ -49,7 +49,10 @@ automation:
           message: "Mistet forbindelsen til Tado stick, genstarter."
       - service: script.turn_on
         entity_id: script.restart_tado
-      - wait_template: "{{ is_state('switch.tado_poe', 'off') and is_state('binary_sensor.tado_hub_crashed', 'off') }}"
+      - wait_template: "{{ is_state('switch.tado_poe', 'off') }}"
+        timeout: "00:05:00"
+        continue_on_timeout: false
+      - wait_template: "{{ is_state('switch.tado_poe', 'on') and is_state('binary_sensor.tado_hub_crashed', 'off') }}"
         timeout: "00:05:00"
         continue_on_timeout: false
       - service: notify.telegram_darkfox
@@ -80,7 +83,7 @@ script:
       - service: switch.turn_on
         data:
           entity_id: switch.tado_poe
-      - wait_template: "{{ is_state('switch.tado_poe', 'off') and is_state('binary_sensor.tado_hub_crashed', 'off') }}"
+      - wait_template: "{{ is_state('switch.tado_poe', 'on') and is_state('binary_sensor.tado_hub_crashed', 'off') }}"
         timeout: "00:05:00"
         continue_on_timeout: false
       - event: set_climate
