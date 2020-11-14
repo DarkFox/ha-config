@@ -463,20 +463,20 @@ automation:
     variables:
       room: "{{ trigger.event.data.room }}"
       room_separate: "{{ not not room and is_state('input_boolean.'+room+'_separate_light_profile', 'on') }}"
+      current_light_profile: "{{ states('sensor.' + room + '_light_profile' if room_separate else 'input_select.light_profile') }}"
+      light_profile_entity: >
+        {%- if room_separate != "False" -%}
+          input_select.{{ room }}_light_profile
+        {%- else -%}
+          input_select.light_profile
+        {%- endif -%}
     condition:
       - condition: template
-        value_template: >
-          {%- set entity_id = ('sensor.' + room + '_light_profile' if room_separate else 'input_select.light_profile') -%}
-          {{ not is_state(entity_id, 'Bright') }}
+        value_template: "{{ current_light_profile != 'Bright' }}"
     action:
       - service: input_select.select_previous
         data:
-          entity_id: >
-            {%- if room_separate != "False" -%}
-              input_select.{{ room }}_light_profile
-            {%- else -%}
-              input_select.light_profile
-            {%- endif -%}
+          entity_id: "{{ light_profile_entity }}"
 
   - alias: decrease_light_profile
     initial_state: true
@@ -487,20 +487,59 @@ automation:
     variables:
       room: "{{ trigger.event.data.room }}"
       room_separate: "{{ not not room and is_state('input_boolean.'+room+'_separate_light_profile', 'on') }}"
+      current_light_profile: "{{ states('sensor.' + room + '_light_profile' if room_separate else 'input_select.light_profile') }}"
+      light_profile_entity: >
+        {%- if room_separate != "False" -%}
+          input_select.{{ room }}_light_profile
+        {%- else -%}
+          input_select.light_profile
+        {%- endif -%}
     condition:
       - condition: template
-        value_template: >
-          {%- set entity_id = ('sensor.' + room + '_light_profile' if room_separate else 'input_select.light_profile') -%}
-          {{ not is_state(entity_id, 'Off') }}
+        value_template: "{{ current_light_profile != 'Off' }}"
     action:
       - service: input_select.select_next
         data:
-          entity_id: >
-            {%- if room_separate != "False" -%}
-              input_select.{{ room }}_light_profile
-            {%- else -%}
-              input_select.light_profile
-            {%- endif -%}
+          entity_id: "{{ light_profile_entity }}"
+
+  - alias: cycle_light_profile
+    initial_state: true
+    mode: queued
+    trigger:
+      - platform: event
+        event_type: cycle_light_profile
+    variables:
+      room: "{{ trigger.event.data.room }}"
+      room_separate: "{{ not not room and is_state('input_boolean.'+room+'_separate_light_profile', 'on') }}"
+      current_light_profile: "{{ states('sensor.' + room + '_light_profile' if room_separate else 'input_select.light_profile') }}"
+      light_profile_entity: >
+        {%- if room_separate != "False" -%}
+          input_select.{{ room }}_light_profile
+        {%- else -%}
+          input_select.light_profile
+        {%- endif -%}
+    action:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ current_light_profile == 'Bright' }}"
+            sequence:
+              - service: input_select.select_option
+                data:
+                  option: Night
+                  entity_id: "{{ light_profile_entity }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ current_light_profile == 'Off' }}"
+            sequence:
+              - service: input_select.select_option
+                data:
+                  option: Default
+                  entity_id: "{{ light_profile_entity }}"
+        default:
+          - service: input_select.select_previous
+            data:
+              entity_id: "{{ light_profile_entity }}"
 
   - alias: Room activity override on
     initial_state: true
