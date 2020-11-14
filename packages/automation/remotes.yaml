@@ -43,7 +43,7 @@ automation:
       data_template:
         entity_id: input_number.tradfri_dimmer
 
-  # Office Hue Dimmer, ID: kontor_fjernbetjening #
+  # kontor_fjernbetjening #
   - alias: office_dimmer_on
     initial_state: true
     trigger:
@@ -56,7 +56,12 @@ automation:
       - event: set_light_profile
         event_data:
           room: office
-          profile: Default
+          profile: |
+            {% if is_state('sensor.office_light_profile', 'Off') %}
+              Default
+            {% else %}
+              Off
+            {% endif %}
 
   - alias: office_dimmer_up
     initial_state: true
@@ -84,7 +89,7 @@ automation:
         event_data:
           room: office
 
-  - alias: office_dimmer_off
+  - alias: office_dimmer_left
     initial_state: true
     trigger:
       - platform: event
@@ -92,6 +97,46 @@ automation:
         event_data:
           id: kontor_fjernbetjening
           event: 4002
+    action:
+      service: input_select.select_previous
+      data:
+        entity_id: input_select.theme
+
+  - alias: office_dimmer_right
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: kontor_fjernbetjening
+          event: 5002
+    action:
+      service: input_select.select_next
+      data:
+        entity_id: input_select.theme
+
+  # Kontor Tryk #
+  - alias: office_switch_on
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: kontor_tryk
+          event: 1002
+    action:
+      - event: cycle_light_profile
+        event_data:
+          room: office
+
+  - alias: office_switch_off
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: kontor_tryk
+          event: 2002
     action:
       - event: set_light_profile
         event_data:
@@ -104,7 +149,7 @@ automation:
       - platform: event
         event_type: deconz_event
         event_data:
-          id: kontor_fjernbetjening
+          id: kontor_tryk
           event: 1003
     action:
       - service: input_boolean.toggle
@@ -115,58 +160,14 @@ automation:
           entity_id: media_player.kontor_mini
           message: "Kontor overstyring {{'tilkoblet' if states('input_boolean.office_activity_override') == 'on' else 'frakoblet'}}"
 
-  - alias: office_override_room_state_up
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: kontor_fjernbetjening
-          event: 2003
-    condition:
-      condition: and
-      conditions:
-        - condition: state
-          entity_id: input_boolean.office_activity_override
-          state: "on"
-        - condition: template
-          value_template: >
-            {{ states.input_select.office_room_state.state != 'active' }}
-    action:
-      - service: input_select.select_previous
-        data:
-          entity_id: input_select.office_room_state
-
-  - alias: office_override_room_state_down
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: kontor_fjernbetjening
-          event: 3003
-    condition:
-      condition: and
-      conditions:
-        - condition: state
-          entity_id: input_boolean.office_activity_override
-          state: "on"
-        - condition: template
-          value_template: >
-            {{ states.input_select.office_room_state.state != 'off' }}
-    action:
-      - service: input_select.select_next
-        data:
-          entity_id: input_select.office_room_state
-
   - alias: office_separate_light_profile_toggle
     initial_state: true
     trigger:
       - platform: event
         event_type: deconz_event
         event_data:
-          id: kontor_fjernbetjening
-          event: 4003
+          id: kontor_tryk
+          event: 2003
     action:
       - service: input_boolean.toggle
         data:
@@ -190,7 +191,7 @@ automation:
         event_data:
           room: bedroom
           profile: >
-            {% if is_state('sensor.living_room_light_profile', 'Off') %}
+            {% if is_state('sensor.bedroom_light_profile', 'Off') %}
               Default
             {% else %}
               Off
@@ -234,7 +235,7 @@ automation:
         event_type: deconz_event
         event_data:
           id: sovevaerelse_fjernbetjening
-          event: 1003
+          event: 2003
     action:
       service: light.turn_on
       data:
@@ -266,7 +267,7 @@ automation:
         event_type: deconz_event
         event_data:
           id: sovevaerelse_fjernbetjening
-          event: 4003
+          event: 4002
     action:
       service: light.turn_on
       data:
@@ -287,12 +288,74 @@ automation:
         event_type: deconz_event
         event_data:
           id: sovevaerelse_fjernbetjening
-          event: 5003
+          event: 3003
     action:
       service: light.turn_off
       data:
         entity_id:
           - light.sengelampe
+
+  # Soveværelse Tryk #
+  - alias: bedroom_switch_on
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: sovevaerelse_tryk
+          event: 1002
+    action:
+      - event: cycle_light_profile
+        event_data:
+          room: bedroom
+
+  - alias: bedroom_switch_off
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: sovevaerelse_tryk
+          event: 2002
+    action:
+      - event: set_light_profile
+        event_data:
+          room: bedroom
+          profile: "Off"
+
+  - alias: bedroom_activity_override_toggle
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: sovevaerelse_tryk
+          event: 1003
+    action:
+      - service: input_boolean.toggle
+        data:
+          entity_id: input_boolean.bedroom_activity_override
+      - service: tts.google_cloud_say
+        data_template:
+          entity_id: media_player.sovevaerelse_mini
+          message: "Soveværelse overstyring {{'tilkoblet' if states('input_boolean.bedroom_activity_override') == 'on' else 'frakoblet'}}"
+
+  - alias: bedroom_separate_light_profile_toggle
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: sovevaerelse_tryk
+          event: 2003
+    action:
+      - service: input_boolean.toggle
+        data:
+          entity_id: input_boolean.bedroom_separate_light_profile
+      - service: tts.google_cloud_say
+        data_template:
+          entity_id: media_player.sovevaerelse_mini
+          message: "Soveværelse separat lysstyring {{'tilkoblet' if states('input_boolean.bedroom_separate_light_profile') == 'on' else 'frakoblet'}}"
 
   # Bedroom Blind Remote (Hue Dimmer) sovevaerelse_gardin_fjernbtj #
   - alias: sovevaerelse_gardin_fjernbtj_on
@@ -329,7 +392,7 @@ automation:
         event_type: deconz_event
         event_data:
           id: sovevaerelse_gardin_fjernbtj
-          event: 2002
+          event: 3002
     action:
       - service: cover.set_cover_position
         data:
@@ -343,7 +406,7 @@ automation:
         event_type: deconz_event
         event_data:
           id: sovevaerelse_gardin_fjernbtj
-          event: 2002
+          event: 4002
     action:
       - service: cover.close_cover
         data:
@@ -356,26 +419,26 @@ automation:
         event_type: deconz_event
         event_data:
           id: sovevaerelse_gardin_fjernbtj
-          event: 1003
+          event: 1001
       - platform: event
         event_type: deconz_event
         event_data:
           id: sovevaerelse_gardin_fjernbtj
-          event: 2003
+          event: 2001
       - platform: event
         event_type: deconz_event
         event_data:
           id: sovevaerelse_gardin_fjernbtj
-          event: 3003
+          event: 3001
       - platform: event
         event_type: deconz_event
         event_data:
           id: sovevaerelse_gardin_fjernbtj
-          event: 4003
+          event: 4001
     action:
-      - service: cover.close_cover
+      - service: cover.stop_cover
         data:
-          entity_id: cover.stop_cover
+          entity_id: cover.sovevaerelse_rullegardin
 
   # Living room IKEA remote, ID: stue_fjernbetjening #
   - alias: living_room_dimmer_on
@@ -478,6 +541,68 @@ automation:
         entity_id: light.sofa_laeselampe
         brightness: 1
         color_temp: 500
+
+  # Stue Tryk #
+  - alias: living_room_switch_on
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: stue_tryk
+          event: 1002
+    action:
+      - event: cycle_light_profile
+        event_data:
+          room: living_room
+
+  - alias: living_room_switch_off
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: stue_tryk
+          event: 2002
+    action:
+      - event: set_light_profile
+        event_data:
+          room: living_room
+          profile: "Off"
+
+  - alias: living_room_activity_override_toggle
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: stue_tryk
+          event: 1003
+    action:
+      - service: input_boolean.toggle
+        data:
+          entity_id: input_boolean.living_room_activity_override
+      - service: tts.google_cloud_say
+        data_template:
+          entity_id: media_player.stue_mini
+          message: "Stue overstyring {{'tilkoblet' if states('input_boolean.living_room_activity_override') == 'on' else 'frakoblet'}}"
+
+  - alias: living_room_separate_light_profile_toggle
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: stue_tryk
+          event: 2003
+    action:
+      - service: input_boolean.toggle
+        data:
+          entity_id: input_boolean.living_room_separate_light_profile
+      - service: tts.google_cloud_say
+        data_template:
+          entity_id: media_player.stue_mini
+          message: "Stue separat lysstyring {{'tilkoblet' if states('input_boolean.living_room_separate_light_profile') == 'on' else 'frakoblet'}}"
 
   # Kitchen IKEA remote, ID: kokken_fjernbetjening #
   - alias: kokken_dimmer_on
@@ -610,3 +735,127 @@ automation:
       service: switch.toggle
       data:
         entity_id: switch.elkedel
+
+  # Køkken Tryk #
+  - alias: kitchen_switch_on
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: kokken_tryk
+          event: 1002
+    action:
+      - event: cycle_light_profile
+        event_data:
+          room: kitchen
+
+  - alias: kitchen_switch_off
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: kokken_tryk
+          event: 2002
+    action:
+      - event: set_light_profile
+        event_data:
+          room: kitchen
+          profile: "Off"
+
+  - alias: kitchen_activity_override_toggle
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: kokken_tryk
+          event: 1003
+    action:
+      - service: input_boolean.toggle
+        data:
+          entity_id: input_boolean.kitchen_activity_override
+      - service: tts.google_cloud_say
+        data_template:
+          entity_id: media_player.kokken_mini
+          message: "Køkken overstyring {{'tilkoblet' if states('input_boolean.kitchen_activity_override') == 'on' else 'frakoblet'}}"
+
+  - alias: kitchen_separate_light_profile_toggle
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: kokken_tryk
+          event: 2003
+    action:
+      - service: input_boolean.toggle
+        data:
+          entity_id: input_boolean.kitchen_separate_light_profile
+      - service: tts.google_cloud_say
+        data_template:
+          entity_id: media_player.kokken_mini
+          message: "Køkken separat lysstyring {{'tilkoblet' if states('input_boolean.kitchen_separate_light_profile') == 'on' else 'frakoblet'}}"
+
+  # Badeværelse Tryk #
+  - alias: bathroom_switch_on
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: badevaerelse_tryk
+          event: 1002
+    action:
+      - event: cycle_light_profile
+        event_data:
+          room: bathroom
+
+  - alias: bathroom_switch_off
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: badevaerelse_tryk
+          event: 2002
+    action:
+      - event: set_light_profile
+        event_data:
+          room: bathroom
+          profile: "Off"
+
+  - alias: bathroom_activity_override_toggle
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: badevaerelse_tryk
+          event: 1003
+    action:
+      - service: input_boolean.toggle
+        data:
+          entity_id: input_boolean.bathroom_activity_override
+      - service: tts.google_cloud_say
+        data_template:
+          entity_id: media_player.badevaerelse_mini
+          message: "Badeværelse overstyring {{'tilkoblet' if states('input_boolean.bathroom_activity_override') == 'on' else 'frakoblet'}}"
+
+  - alias: bathroom_separate_light_profile_toggle
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: badevaerelse_tryk
+          event: 2003
+    action:
+      - service: input_boolean.toggle
+        data:
+          entity_id: input_boolean.bathroom_separate_light_profile
+      - service: tts.google_cloud_say
+        data_template:
+          entity_id: media_player.badevaerelse_mini
+          message: "Badeværelse separat lysstyring {{'tilkoblet' if states('input_boolean.bathroom_separate_light_profile') == 'on' else 'frakoblet'}}"
