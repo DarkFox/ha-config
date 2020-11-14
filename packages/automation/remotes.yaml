@@ -176,7 +176,7 @@ automation:
           entity_id: media_player.kontor_mini
           message: "Kontor separat lysstyring {{'tilkoblet' if states('input_boolean.office_separate_light_profile') == 'on' else 'frakoblet'}}"
 
-  # Bedroom Hue Dimmer, ID: sovevaerelse_fjernbetjening #
+  # Bedroom Remote, ID: sovevaerelse_fjernbetjening #
   - alias: bedroom_dimmer_on
     initial_state: true
     trigger:
@@ -189,7 +189,12 @@ automation:
       - event: set_light_profile
         event_data:
           room: bedroom
-          profile: Default
+          profile: >
+            {% if is_state('sensor.living_room_light_profile', 'Off') %}
+              Default
+            {% else %}
+              Off
+            {% endif %}
 
   - alias: bedroom_dimmer_up
     initial_state: true
@@ -222,23 +227,6 @@ automation:
         event_data:
           room: bedroom
 
-  - alias: bedroom_dimmer_off
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: sovevaerelse_fjernbetjening
-          event: 4002
-    condition:
-      condition: template
-      value_template: "{{ (states('input_select.sleep_state') not in ['smart wake', 'alarm', 'snoozing', 'waking']) }}"
-    action:
-      - event: set_light_profile
-        event_data:
-          room: bedroom
-          profile: "Off"
-
   - alias: bedroom_dimmer_bedside_bright
     initial_state: true
     trigger:
@@ -262,7 +250,7 @@ automation:
         event_type: deconz_event
         event_data:
           id: sovevaerelse_fjernbetjening
-          event: 2003
+          event: 5002
     action:
       service: light.turn_on
       data:
@@ -278,7 +266,7 @@ automation:
         event_type: deconz_event
         event_data:
           id: sovevaerelse_fjernbetjening
-          event: 3003
+          event: 4003
     action:
       service: light.turn_on
       data:
@@ -295,11 +283,99 @@ automation:
         event_data:
           id: sovevaerelse_fjernbetjening
           event: 4003
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: sovevaerelse_fjernbetjening
+          event: 5003
     action:
       service: light.turn_off
       data:
         entity_id:
           - light.sengelampe
+
+  # Bedroom Blind Remote (Hue Dimmer) sovevaerelse_gardin_fjernbtj #
+  - alias: sovevaerelse_gardin_fjernbtj_on
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: sovevaerelse_gardin_fjernbtj
+          event: 1002
+    action:
+      - service: cover.open_cover
+        data:
+          entity_id: cover.sovevaerelse_rullegardin
+
+  - alias: sovevaerelse_gardin_fjernbtj_up
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: sovevaerelse_gardin_fjernbtj
+          event: 2002
+    action:
+      - service: cover.set_cover_position
+        data:
+          entity_id: cover.sovevaerelse_rullegardin
+          position: 50
+
+  - alias: sovevaerelse_gardin_fjernbtj_dn
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: sovevaerelse_gardin_fjernbtj
+          event: 2002
+    action:
+      - service: cover.set_cover_position
+        data:
+          entity_id: cover.sovevaerelse_rullegardin
+          position: 10
+
+  - alias: sovevaerelse_gardin_fjernbtj_off
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: sovevaerelse_gardin_fjernbtj
+          event: 2002
+    action:
+      - service: cover.close_cover
+        data:
+          entity_id: cover.sovevaerelse_rullegardin
+
+  - alias: sovevaerelse_gardin_fjernbtj_stop
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: sovevaerelse_gardin_fjernbtj
+          event: 1003
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: sovevaerelse_gardin_fjernbtj
+          event: 2003
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: sovevaerelse_gardin_fjernbtj
+          event: 3003
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: sovevaerelse_gardin_fjernbtj
+          event: 4003
+    action:
+      - service: cover.close_cover
+        data:
+          entity_id: cover.stop_cover
 
   # Living room IKEA remote, ID: stue_fjernbetjening #
   - alias: living_room_dimmer_on
