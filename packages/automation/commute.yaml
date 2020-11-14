@@ -1,0 +1,22 @@
+automation:
+  - alias: Update Tasker - Location
+    trigger:
+      - platform: state
+        entity_id: person.martin
+    action:
+      - service: rest_command.darkphone_autoremote
+        data:
+          group: location
+          message: "location=:={{ states('person.martin') }}"
+
+  - alias: Update Tasker - Commute
+    trigger:
+      - platform: state
+        entity_id:
+          - sensor.next_work_at
+          - binary_sensor.commute_soon
+    action:
+      - service: rest_command.darkphone_autoremote
+        data:
+          group: work
+          message: "{{ states('sensor.next_work_at') }} {{ states('binary_sensor.commute_soon') }}=:=work"
