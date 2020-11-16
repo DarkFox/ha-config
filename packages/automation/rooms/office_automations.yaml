@@ -1,0 +1,40 @@
+input_boolean:
+  office_door_activity:
+    initial: off
+    name: Kontor Dør Aktivitet
+
+binary_sensor:
+  - platform: template
+    sensors:
+      office_door_activity:
+        friendly_name: Kontor Dør Aktivitet
+        device_class: motion
+        value_template: "{{ is_state('input_boolean.office_door_activity', 'on') }}"
+      office_occupied:
+        friendly_name: Kontor Optaget
+        device_class: occupancy
+        value_template: "{{ is_state('input_boolean.office_occupied', 'on') }}"
+
+automation:
+  - alias: office_door_activity_on
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.kontor_dor
+    action:
+      - service: input_boolean.turn_on
+        data:
+          entity_id: input_boolean.office_door_activity
+
+  - alias: office_door_activity_off
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_boolean.office_door_activity
+        to: "on"
+        for:
+          seconds: 5
+    action:
+      - service: input_boolean.turn_off
+        data:
+          entity_id: input_boolean.office_door_activity
