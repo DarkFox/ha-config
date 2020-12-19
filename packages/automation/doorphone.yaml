@@ -4,16 +4,6 @@ input_boolean:
   answering_door:
     initial: off
 
-script:
-  # This is turned on by Tasker on the hallway tablet,
-  # when triggered by a notification from Live Transcribe.
-  doorphone_ringing:
-    alias: "Dørtelefon Ringer"
-    sequence:
-      - service: input_boolean.turn_on
-        data:
-          entity_id: input_boolean.doorphone_ringing
-
 automation:
   - alias: Door Phone Ringing
     initial_state: true
@@ -22,43 +12,8 @@ automation:
         entity_id: input_boolean.doorphone_ringing
         to: "on"
     action:
-      - service: scene.create
-        data:
-          scene_id: before_doorphone
-          snapshot_entities:
-            - light.display_cabinet_front_4
-            - light.office_desk_spots
-            - light.kokken_gulv_affald
-            - light.blyant
-            - light.badevaerelse_skab
-            - light.skoskab
-      - service: light.turn_on
-        data:
-          brightness: 255
-          effect: "Strobe"
-          entity_id:
-            - light.display_cabinet_front_4
-            - light.office_desk_spots
-            - light.blyant
-      - service: light.turn_on
-        data:
-          brightness: 255
-          effect: "Strobe Mega"
-          entity_id:
-            - light.skoskab
-            - light.kokken_gulv_affald
-            - light.badevaerelse_skab
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: input_boolean.guests
-                state: "off"
-            sequence:
-              - service: script.turn_on
-                entity_id: script.pause_all_media
-      - service: script.notify_everywhere
-        data_template:
-          message: "Dørtelefonen Ringer!"
+      - service: script.turn_on
+        entity_id: script.alert_lights
 
   - alias: Answering Door
     initial_state: true
@@ -80,9 +35,8 @@ automation:
       - service: input_boolean.turn_off
         data:
           entity_id: input_boolean.doorphone_ringing
-      - service: scene.turn_on
-        data:
-          entity_id: scene.before_doorphone
+      - service: script.turn_on
+        entity_id: script.alert_lights_restore
 
   - alias: Ignoring Door Phone
     initial_state: true
@@ -93,12 +47,8 @@ automation:
         for:
           minutes: 2
     action:
-      - condition: state
-        entity_id: input_boolean.doorphone_ringing
-        state: "on"
-      - service: scene.turn_on
-        data:
-          entity_id: scene.before_doorphone
+      - service: script.turn_on
+        entity_id: script.alert_lights_restore
       - service: input_boolean.turn_off
         data:
           entity_id: input_boolean.doorphone_ringing
@@ -138,3 +88,58 @@ automation:
                   seconds: 5
               - service: script.turn_on
                 entity_id: script.resume_all_media
+
+script:
+  # This is turned on by Tasker on the hallway tablet,
+  # when triggered by a notification from Live Transcribe.
+  doorphone_ringing:
+    alias: "Dørtelefon Ringer"
+    sequence:
+      - service: input_boolean.turn_on
+        data:
+          entity_id: input_boolean.doorphone_ringing
+
+  alert_lights:
+    sequence:
+      - service: scene.create
+        data:
+          scene_id: before_alert_lights
+          snapshot_entities:
+            - light.display_cabinet_front_4
+            - light.office_desk_spots
+            - light.kokken_gulv_affald
+            - light.blyant
+            - light.badevaerelse_skab
+            - light.skoskab
+      - service: light.turn_on
+        data:
+          brightness: 255
+          effect: "Strobe"
+          entity_id:
+            - light.display_cabinet_front_4
+            - light.office_desk_spots
+            - light.blyant
+      - service: light.turn_on
+        data:
+          brightness: 255
+          effect: "Strobe Mega"
+          entity_id:
+            - light.skoskab
+            - light.kokken_gulv_affald
+            - light.badevaerelse_skab
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.guests
+                state: "off"
+            sequence:
+              - service: script.turn_on
+                entity_id: script.pause_all_media
+      - service: script.notify_everywhere
+        data_template:
+          message: "Dørtelefonen Ringer!"
+  alert_lights_restore:
+    sequence:
+      - service: scene.turn_on
+        data:
+          entity_id: scene.before_alert_lights
