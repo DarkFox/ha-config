@@ -3,83 +3,54 @@ path: kiosk
 icon: "mdi:tablet"
 panel: true
 cards:
-  - type: vertical-stack
+  - type: custom:layout-card
+    layout: horizontal
+    column_num: 2
+    column_width: [50%, 50%]
     cards:
       - type: vertical-stack
         cards:
-          - type: horizontal-stack
-            cards:
-              - !include ../cards/clock.yaml
-              - !include ../cards/weekday.yaml
+          - !include ../cards/clock.yaml
+          - !include ../cards/weekday.yaml
+          - !include ../cards/weather/simple_weather.yaml
 
+          - type: conditional
+            conditions:
+              - entity: input_boolean.guests
+                state: "on"
+            card:
+              type: vertical-stack
+              cards:
+                - !include ../cards/bathroom_occupied.yaml
+
+          - !include ../cards/media_players/playlist_controls.yaml
+
+          - type: conditional
+            card:
+              type: custom:mini-media-player
+              artwork: cover
+              entity: media_player.badevaerelse_mini
+            conditions:
+              - entity: media_player.badevaerelse_mini
+                state_not: "off"
+
+          - type: custom:decluttering-card
+            template: room_light_profile
+            variables:
+              - room: bathroom
+
+          - !include ../cards/compact_thermostats.yaml
+
+      - type: vertical-stack
+        cards:
           - type: conditional
             conditions:
               - entity: binary_sensor.commute_soon
                 state: "on"
             card: !include /config/lovelace/cards/transport/commute.yaml
 
-          - !include ../cards/weather/weather_forecast.yaml
-
-      - type: horizontal-stack
-        cards:
           - type: conditional
             conditions:
               - entity: input_boolean.guests
                 state: "off"
             card: !include ../cards/calendar.yaml
-
-          - type: vertical-stack
-            cards:
-              - type: conditional
-                conditions:
-                  - entity: input_boolean.guests
-                    state: "on"
-                card: !include ../cards/bathroom_occupied.yaml
-
-              - type: conditional
-                conditions:
-                  - entity: input_boolean.guests
-                    state: "off"
-                card:
-                  type: vertical-stack
-                  cards:
-                    - type: custom:decluttering-card
-                      template: room_light_profile
-                      variables:
-                        - room: bathroom
-
-                    - !include ../cards/media_players/playlist_controls.yaml
-
-                    - type: conditional
-                      card:
-                        type: custom:mini-media-player
-                        artwork: cover
-                        entity: media_player.badevaerelse_mini
-                      conditions:
-                        - entity: media_player.badevaerelse_mini
-                          state_not: "off"
-
-              - type: conditional
-                conditions:
-                  - entity: input_boolean.guests
-                    state: "on"
-                card:
-                  type: vertical-stack
-                  cards:
-                    - type: custom:decluttering-card
-                      template: room_state_and_light_profile
-                      variables:
-                        - room: bathroom
-
-                    - !include ../cards/media_players/playlist_controls.yaml
-
-                    - type: conditional
-                      card:
-                        type: custom:mini-media-player
-                        artwork: cover
-                        entity: media_player.badevaerelse_mini
-                      conditions:
-                        - entity: media_player.badevaerelse_mini
-                          state_not: "off"
-
-              - !include ../cards/compact_thermostats.yaml

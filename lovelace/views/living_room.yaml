@@ -12,15 +12,6 @@ cards:
             variables:
               - room: living_room
 
-          - type: plant-status
-            entity: plant.basilikum
-          - type: plant-status
-            entity: plant.mynte
-
-      - break
-
-      - type: vertical-stack
-        cards:
           - type: custom:decluttering-card
             template: room_climate_with_thermostat
             variables:
@@ -33,28 +24,184 @@ cards:
 
       - type: vertical-stack
         cards:
+          - !include ../cards/media_players/playlist_controls.yaml
+
           - type: horizontal-stack
             cards:
               - type: "custom:button-card"
-                name: Soundbar Nat Tilstand
+                entity: binary_sensor.living_room_video_out
+                icon: mdi:import
+                show_name: false
+                color: auto
+                tap_action:
+                  action: none
+                style:
+                  .: |
+                    #icon {
+                      border-right: 2px solid var(--border-color);
+                    }
+              - type: "custom:button-card"
+                entity: input_select.living_room_video_output
+                icon: mdi:television
+                show_name: false
+                tap_action:
+                  action: call-service
+                  service: input_select.select_option
+                  service_data:
+                    entity_id: input_select.living_room_video_output
+                    option: TV
+                state:
+                  - value: "Projektor"
+                    color: var(--paper-item-icon-color)
+                  - value: "TV"
+                    color: var(--paper-item-icon-active-color)
+              - type: "custom:button-card"
+                entity: input_select.living_room_video_output
+                icon: mdi:projector
+                show_name: false
+                tap_action:
+                  action: call-service
+                  service: input_select.select_option
+                  service_data:
+                    entity_id: input_select.living_room_video_output
+                    option: Projektor
+                extra_styles: |
+                  @keyframes fade1 {
+                    0% {
+                      filter: saturate(1.0);
+                    }
+                    50% {
+                      filter: saturate(0);
+                    }
+                    100% {
+                      filter: saturate(1.0);
+                    }
+                  }
+                state:
+                  - value: "TV"
+                    color: var(--paper-item-icon-color)
+                  - operator: template
+                    value: >
+                      [[[
+                        return states['binary_sensor.projector_power'].state == 'off'
+                      ]]]
+                    color: var(--paper-item-icon-active-color)
+                    styles:
+                      icon:
+                        - animation: fade1 4s linear infinite
+                  - value: "Projektor"
+                    color: var(--paper-item-icon-active-color)
+
+          - type: horizontal-stack
+            cards:
+              - type: custom:button-card
+                size: 50px
+                icon: mdi:volume-minus
+                tap_action:
+                  action: call-service
+                  service: media_player.volume_down
+                  service_data:
+                    entity_id: media_player.stue_soundbar_songpal
+              - type: custom:button-card
+                size: 50px
+                icon: mdi:volume-plus
+                tap_action:
+                  action: call-service
+                  service: media_player.volume_up
+                  service_data:
+                    entity_id: media_player.stue_soundbar_songpal
+              - type: "custom:button-card"
+                size: 50px
                 color: auto
                 entity: switch.living_room_soundbar_night_mode
+                show_name: false
 
+          - type: horizontal-stack
+            cards:
               - type: "custom:button-card"
-                entity: switch.stue_tv
-                name: TV
+                name: Chromecast
+                icon: mdi:cast
+                tap_action:
+                  action: call-service
+                  service: script.turn_on
+                  service_data:
+                    entity_id: script.change_living_room_media_source
+                    variables:
+                      source: "Cable Box(HDMI3)"
+                state:
+                  - operator: template
+                    value: >
+                      [[[
+                        return states['media_player.stue_soundbar_songpal'].attributes
+                          && (states['media_player.stue_soundbar_songpal'].attributes.source == 'Cable Box(HDMI3)')
+                      ]]]
+                    color: var(--paper-item-icon-active-color)
+              - type: "custom:button-card"
+                name: Nintendo Switch
+                icon: mdi:nintendo-switch
+                tap_action:
+                  action: call-service
+                  service: script.turn_on
+                  service_data:
+                    entity_id: script.change_living_room_media_source
+                    variables:
+                      source: "GAME(HDMI1)"
+                state:
+                  - operator: template
+                    value: >
+                      [[[
+                        return states['media_player.stue_soundbar_songpal'].attributes
+                          && (states['media_player.stue_soundbar_songpal'].attributes.source == 'GAME(HDMI1)')
+                      ]]]
+                    color: var(--paper-item-icon-active-color)
+              - type: "custom:button-card"
+                name: SNES
+                icon: mdi:gamepad-variant
+                tap_action:
+                  action: call-service
+                  service: script.turn_on
+                  service_data:
+                    entity_id: script.change_living_room_media_source
+                    variables:
+                      source: "GAME(HDMI2)"
+                state:
+                  - operator: template
+                    value: >
+                      [[[
+                        return states['media_player.stue_soundbar_songpal'].attributes
+                          && (states['media_player.stue_soundbar_songpal'].attributes.source == 'GAME(HDMI2)')
+                      ]]]
+                    color: var(--paper-item-icon-active-color)
+
+          - type: horizontal-stack
+            cards:
+              - type: "custom:button-card"
+                entity: switch.stue_soundbar_afbryder
+                name: Soundbar Afbryder
                 color: auto
+                size: 50px
 
               - type: "custom:button-card"
                 entity: switch.bar_skaerm
                 name: Bar Skærm
                 color: auto
+                size: 50px
 
-          - !include ../cards/media_players/playlist_controls.yaml
+      - break
+
+      - type: vertical-stack
+        cards:
+          - type: custom:mini-media-player
+            artwork: cover
+            entity: media_player.stue_shield
 
           - type: custom:mini-media-player
             artwork: cover
-            entity: media_player.stue_chromecast
+            entity: media_player.nvidia_shield_adb
+
+          - type: custom:mini-media-player
+            artwork: cover
+            entity: media_player.stue_tv
 
           - type: custom:mini-media-player
             artwork: cover
