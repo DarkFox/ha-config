@@ -1,6 +1,248 @@
 input_text:
   active_media_player:
   active_media_type:
+  darkphone_caller:
+  work_phone_caller:
+
+input_boolean:
+  darkphone_ringing:
+  work_phone_ringing:
+
+automation:
+  - alias: pause_media_on_phone_call
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id:
+          - sensor.darkphone_phone_state
+          - sensor.arbejdstelefon_telefonstatus
+        to: offhook
+    condition:
+      - condition: state
+        entity_id: binary_sensor.martin_presence
+        state: "on"
+    action:
+      - service: script.turn_on
+        entity_id: script.pause_all_media
+
+  - alias: unpause_on_phone_call_finished
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id:
+          - sensor.darkphone_phone_state
+          - sensor.arbejdstelefon_telefonstatus
+        from: offhook
+    condition:
+      - condition: state
+        entity_id: binary_sensor.martin_presence
+        state: "on"
+    action:
+      - service: script.turn_on
+        entity_id: script.resume_all_media
+
+  - alias: on_call_ringing
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_boolean.work_phone_ringing
+        to: "on"
+    condition:
+      - condition: state
+        entity_id: binary_sensor.martin_presence
+        state: "on"
+      - condition: state
+        entity_id: calendar.arbejde_vagt
+        state: "on"
+    action:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_select.sleep_state
+                state:
+                  - "sleeping"
+                  - "smart wake"
+            sequence:
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.sleep_state
+                  option: paused
+              - delay:
+                  seconds: 1
+      - service: script.turn_on
+        entity_id: script.alert_lights
+
+  - alias: on_call_picked_up
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: sensor.arbejdstelefon_telefonstatus
+        to: offhook
+    condition:
+      - condition: state
+        entity_id: binary_sensor.martin_presence
+        state: "on"
+      - condition: state
+        entity_id: calendar.arbejde_vagt
+        state: "on"
+    action:
+      - service: script.turn_on
+        entity_id: script.alert_lights_restore
+      - delay:
+          seconds: 1
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_select.sleep_state
+                state:
+                  - "sleeping"
+                  - "smart wake"
+                  - "paused"
+            sequence:
+              - event: set_light_profile
+                event_data:
+                  room: bedroom
+                  profile: Ambient
+              - delay:
+                  seconds: 30
+              - condition: state
+                entity_id: sensor.arbejdstelefon_telefonstatus
+                state: offhook
+              - event: set_light_profile
+                event_data:
+                  room: bedroom
+                  profile: Dimmed
+
+  - alias: on_call_done
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: sensor.arbejdstelefon_telefonstatus
+        from: "offhook"
+        to: "idle"
+        for:
+          seconds: 10
+      - platform: state
+        entity_id: device_tracker.pc074805
+        to: "not_home"
+        for:
+          seconds: 10
+    condition:
+      - condition: state
+        entity_id: binary_sensor.martin_presence
+        state: "on"
+      - condition: state
+        entity_id: calendar.arbejde_vagt
+        state: "on"
+      - condition: state
+        entity_id: device_tracker.pc074805
+        state: "not_home"
+      - condition: state
+        entity_id: sensor.arbejdstelefon_telefonstatus
+        state: "idle"
+    action:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_select.sleep_state
+                state:
+                  - "paused"
+            sequence:
+              - event: set_light_profile
+                event_data:
+                  room: bedroom
+                  profile: "Off"
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.sleep_state
+                  option: sleeping
+
+  - alias: on_call_not_picked_up
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_boolean.work_phone_ringing
+        to: "off"
+        for:
+          seconds: 5
+    condition:
+      - condition: state
+        entity_id: sensor.arbejdstelefon_telefonstatus
+        state: "idle"
+      - condition: state
+        entity_id: binary_sensor.martin_presence
+        state: "on"
+      - condition: state
+        entity_id: calendar.arbejde_vagt
+        state: "on"
+    action:
+      - service: script.turn_on
+        entity_id: script.alert_lights_restore
+      - delay:
+          seconds: 1
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_select.sleep_state
+                state:
+                  - "paused"
+            sequence:
+              - event: set_light_profile
+                event_data:
+                  room: bedroom
+                  profile: "Off"
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.sleep_state
+                  option: sleeping
+
+  - alias: darkphone_ringing
+    initial_state: true
+    trigger:
+      platform: webhook
+      webhook_id: !secret darkphone_ringing_webhook
+    action:
+      - service: "input_boolean.turn_{{ 'on' if trigger.json.state else 'off' }}"
+        data:
+          entity_id: input_boolean.darkphone_ringing
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.json.state }}"
+            sequence:
+              - service: input_text.set_value
+                data_template:
+                  entity_id: input_text.darkphone_caller
+                  value: "{{ trigger.json.caller }}"
+        default:
+          - service: input_text.set_value
+            data_template:
+              entity_id: input_text.darkphone_caller
+              value: ""
+
+  - alias: work_phone_ringing
+    initial_state: true
+    trigger:
+      platform: webhook
+      webhook_id: !secret work_phone_ringing_webhook
+    action:
+      - service: "input_boolean.turn_{{ 'on' if trigger.json.state else 'off' }}"
+        data:
+          entity_id: input_boolean.work_phone_ringing
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.json.state }}"
+            sequence:
+              - service: input_text.set_value
+                data_template:
+                  entity_id: input_text.work_phone_caller
+                  value: "{{ trigger.json.caller }}"
+        default:
+          - service: input_text.set_value
+            data_template:
+              entity_id: input_text.work_phone_caller
+              value: ""
 
 script:
   pause_all_media:
@@ -54,30 +296,3 @@ script:
                 data_template:
                   entity_id: "{{ states('input_text.active_media_player') }}"
                   is_volume_muted: false
-
-automation:
-  - alias: pause_media_on_phone_call
-    trigger:
-      - platform: state
-        entity_id: sensor.darkphone_phone_state
-        to: offhook
-    condition:
-      - condition: state
-        entity_id: binary_sensor.martin_presence
-        state: "on"
-    action:
-      - service: script.turn_on
-        entity_id: script.pause_all_media
-
-  - alias: unpause_on_phone_call_finished
-    trigger:
-      - platform: state
-        entity_id: sensor.darkphone_phone_state
-        from: offhook
-    condition:
-      - condition: state
-        entity_id: binary_sensor.martin_presence
-        state: "on"
-    action:
-      - service: script.turn_on
-        entity_id: script.resume_all_media
