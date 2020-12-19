@@ -5,6 +5,13 @@ input_select:
       - TV
       - Projektor
 
+  living_room_matrix_input:
+    name: Video Indgang
+    options:
+      - NVIDIA
+      - Nintendo Switch
+      - PC
+
   stue_soundbar_volume_remote_state:
     initial: "off"
     options:
@@ -15,37 +22,80 @@ input_select:
 binary_sensor:
   - platform: template
     sensors:
+      living_room_nvidia_shield:
+        value_template: >-
+          {{
+            is_state('media_player.nvidia_shield_adb', 'playing')
+            or is_state('media_player.nvidia_shield_adb', 'paused')
+            or is_state('media_player.nvidia_shield_adb', 'idle')
+          }}
       living_room_video_out:
         value_template: >-
           {{
-            is_state('media_player.stue_chromecast', 'playing')
-            or is_state('media_player.stue_chromecast', 'paused')
-            or is_state('media_player.stue_chromecast', 'idle')
-            or is_state_attr('media_player.stue_soundbar_songpal', 'source', 'GAME(HDMI1)')
-            or is_state_attr('media_player.stue_soundbar_songpal', 'source', 'GAME(HDMI2)')
+            (is_state('input_select.living_room_matrix_input', 'NVIDIA') and is_state('binary_sensor.living_room_nvidia_shield', 'on'))
+            or (is_state('input_select.living_room_matrix_input', 'Nintendo Switch') and is_state('device_tracker.nintendo_switch_wired', 'home'))
+            or (is_state('input_select.living_room_matrix_input', 'PC') and is_state('binary_sensor.martin_pc', 'on'))
           }}
 
 script:
   change_living_room_media_source:
     sequence:
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.living_room_matrix_input
+          option: "{{ source }}"
+
+automation:
+  - alias: living_room_nvidia_shield_on
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.living_room_nvidia_shield
+        to: "on"
+    action:
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.living_room_matrix_input
+          option: "NVIDIA"
+
+  - alias: living_room_video_switch_input
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.living_room_matrix_input
+    action:
       - choose:
           - conditions:
               - condition: state
-                entity_id: media_player.stue_soundbar_songpal
-                state: "off"
+                entity_id: input_select.living_room_matrix_input
+                state: NVIDIA
             sequence:
-              - service: "media_player.turn_on"
+              - service: switch.turn_on
                 data:
-                  entity_id: media_player.stue_soundbar_songpal
-              - wait_template: "{{ is_state('media_player.stue_soundbar_songpal', 'on') }}"
-                timeout: "00:00:30"
-                continue_on_timeout: true
-      - service: media_player.select_source
-        data_template:
-          entity_id: media_player.stue_soundbar_songpal
-          source: "{{ source }}"
+                  entity_id:
+                    - switch.hdmi_matrix_a_1
+                    - switch.hdmi_matrix_b_1
+          - conditions:
+              - condition: state
+                entity_id: input_select.living_room_matrix_input
+                state: Nintendo Switch
+            sequence:
+              - service: switch.turn_on
+                data:
+                  entity_id:
+                    - switch.hdmi_matrix_a_2
+                    - switch.hdmi_matrix_b_2
+          - conditions:
+              - condition: state
+                entity_id: input_select.living_room_matrix_input
+                state: PC
+            sequence:
+              - service: switch.turn_on
+                data:
+                  entity_id:
+                    - switch.hdmi_matrix_a_3
+                    - switch.hdmi_matrix_b_3
 
-automation:
   - alias: stue_soundbar_volume_remote_state_up
     initial_state: true
     trigger:
@@ -192,9 +242,9 @@ automation:
             sequence:
               - delay:
                   seconds: 10
-      - service: switch.turn_on
+      - service: media_player.turn_on
         data:
-          entity_id: switch.stue_tv
+          entity_id: media_player.stue_tv
 
   - alias: living_room_tv_off
     initial_state: true
@@ -208,9 +258,9 @@ automation:
         entity_id: input_select.living_room_video_output
         from: "TV"
     action:
-      - service: switch.turn_off
+      - service: media_player.turn_off
         data:
-          entity_id: switch.stue_tv
+          entity_id: media_player.stue_tv
 
   - alias: living_room_projector_on
     initial_state: true
@@ -249,7 +299,7 @@ automation:
         data:
           entity_id: switch.projector
 
-  - alias: livingroom_media_unmute
+  - alias: living_room_media_unmute
     initial_state: true
     trigger:
       - platform: state
@@ -271,7 +321,7 @@ automation:
           entity_id: media_player.stue_soundbar_songpal
           is_volume_muted: false
 
-  - alias: livingroom_media_mute
+  - alias: living_room_media_mute
     initial_state: true
     trigger:
       - platform: state

@@ -1,0 +1,306 @@
+input_boolean:
+  office_pc_tv_out:
+
+input_select:
+  kontor_soundbar_volume_remote_state:
+    initial: "off"
+    options:
+      - "off"
+      - up
+      - down
+
+switch:
+  - platform: template
+    switches:
+      kontor_tv:
+        value_template: "{{ is_state('switch.kontor_tv_afbryder', 'on') }}"
+        turn_on:
+          service: script.turn_on
+          data:
+            entity_id: script.kontor_tv_on
+        turn_off:
+          service: script.turn_on
+          data:
+            entity_id: script.kontor_tv_off
+
+binary_sensor:
+  - platform: template
+    sensors:
+      office_video_out:
+        value_template: >-
+          {{
+            is_state('media_player.kontor_chromecast', 'playing')
+            or is_state('media_player.kontor_chromecast', 'paused')
+            or is_state('media_player.kontor_chromecast', 'idle')
+            or is_state('media_player.alle_hojttalere', 'playing')
+            or is_state('media_player.alle_hojttalere', 'paused')
+            or is_state('media_player.alle_hojttalere', 'idle')
+            or is_state('media_player.vest_hojttalere', 'playing')
+            or is_state('media_player.vest_hojttalere', 'paused')
+            or is_state('media_player.vest_hojttalere', 'idle')
+            or is_state('input_boolean.office_pc_tv_out', 'on')
+          }}
+
+script:
+  kontor_tv_on:
+    sequence:
+      - service: switch.turn_on
+        data:
+          entity_id: switch.kontor_soundbar_power
+      - service: switch.turn_on
+        entity_id: switch.kontor_tv_afbryder
+      - delay:
+          seconds: 2
+      - service: switch.turn_on
+        data:
+          entity_id: switch.kontor_tv_power
+      - service: script.turn_on
+        data:
+          entity_id: script.kontor_soundbar_fix_audio_lag
+
+  kontor_tv_off:
+    sequence:
+      - service: switch.turn_off
+        data:
+          entity_id: switch.kontor_tv_power
+      - delay:
+          seconds: 2
+      - service: switch.turn_off
+        entity_id: switch.kontor_tv_afbryder
+
+  kontor_soundbar_fix_audio_lag:
+    sequence:
+      - service: switch.turn_on
+        data:
+          entity_id: switch.kontor_soundbar_menu
+      - delay:
+          milliseconds: 250
+      - service: switch.turn_on
+        data:
+          entity_id: switch.kontor_soundbar_down
+      - delay:
+          milliseconds: 250
+      - service: switch.turn_on
+        data:
+          entity_id: switch.kontor_soundbar_down
+      - delay:
+          milliseconds: 250
+      - service: switch.turn_on
+        data:
+          entity_id: switch.kontor_soundbar_ok
+      - delay:
+          milliseconds: 250
+      - service: switch.turn_on
+        data:
+          entity_id: switch.kontor_soundbar_down
+      - delay:
+          milliseconds: 250
+      - service: switch.turn_on
+        data:
+          entity_id: switch.kontor_soundbar_down
+      - delay:
+          milliseconds: 250
+      - service: switch.turn_on
+        data:
+          entity_id: switch.kontor_soundbar_ok
+      - delay:
+          milliseconds: 250
+      - service: switch.turn_on
+        data:
+          entity_id: switch.kontor_soundbar_down
+      - delay:
+          milliseconds: 250
+      - service: switch.turn_on
+        data:
+          entity_id: switch.kontor_soundbar_up
+      - delay:
+          milliseconds: 250
+      - service: switch.turn_on
+        data:
+          entity_id: switch.kontor_soundbar_menu
+
+automation:
+  - alias: office_tv_on
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.office_video_out
+        to: "on"
+      - platform: state
+        entity_id: input_select.office_room_state
+        to: "active"
+    condition:
+      - condition: state
+        entity_id: binary_sensor.office_video_out
+        state: "on"
+      - condition: state
+        entity_id: input_select.office_room_state
+        state: "active"
+      - condition: state
+        entity_id: switch.kontor_tv
+        state: "off"
+    action:
+      - service: switch.turn_on
+        data:
+          entity_id: switch.kontor_tv
+
+  - alias: office_tv_off
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.office_video_out
+        to: "off"
+        for:
+          minutes: 2
+    action:
+      - service: switch.turn_off
+        data:
+          entity_id: switch.kontor_tv
+
+  - alias: office_media_mute
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.office_room_state
+        to: "off"
+    action:
+      - service: switch.turn_on
+        data:
+          entity_id: switch.kontor_soundbar_mute
+
+  - alias: office_media_unmute
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.office_room_state
+        to: "active"
+    action:
+      - service: switch.turn_on
+        data:
+          entity_id: switch.kontor_soundbar_volume_down
+      - delay:
+          milliseconds: 250
+      - service: switch.turn_on
+        data:
+          entity_id: switch.kontor_soundbar_volume_up
+
+  - alias: kontor_soundbar_volume_remote_state_up
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: kontor_volumeknap
+          event: 2001
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.kontor_soundbar_volume_remote_state
+        option: "up"
+
+  - alias: kontor_soundbar_volume_remote_state_down
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: kontor_volumeknap
+          event: 3001
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.kontor_soundbar_volume_remote_state
+        option: "down"
+
+  - alias: kontor_soundbar_volume_remote_state_off
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: kontor_volumeknap
+          event: 2003
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: kontor_volumeknap
+          event: 3003
+      - platform: state
+        entity_id: input_select.kontor_soundbar_volume_remote_state
+        to:
+          - "up"
+          - "down"
+        for:
+          seconds: 10
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.kontor_soundbar_volume_remote_state
+        option: "off"
+
+  - alias: kontor_soundbar_volume_remote_mute
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: kontor_volumeknap
+          event: 1002
+    action:
+      service: switch.turn_on
+      data_template:
+        entity_id: switch.kontor_soundbar_mute
+
+  - alias: kontor_soundbar_volume_remote_up
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.kontor_soundbar_volume_remote_state
+        to: up
+        for:
+          milliseconds: 75
+    mode: single
+    action:
+      - repeat:
+          sequence:
+            - service: switch.turn_on
+              data_template:
+                entity_id: switch.kontor_soundbar_volume_up
+            - delay:
+                milliseconds: 75
+          until:
+            - condition: or
+              conditions:
+                - condition: state
+                  entity_id: input_select.kontor_soundbar_volume_remote_state
+                  state: "off"
+                - condition: state
+                  entity_id: input_select.kontor_soundbar_volume_remote_state
+                  state: "down"
+
+  - alias: kontor_soundbar_volume_remote_down
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.kontor_soundbar_volume_remote_state
+        to: down
+        for:
+          milliseconds: 75
+    mode: single
+    action:
+      - repeat:
+          sequence:
+            - service: switch.turn_on
+              data_template:
+                entity_id: switch.kontor_soundbar_volume_down
+            - delay:
+                milliseconds: 75
+          until:
+            - condition: or
+              conditions:
+                - condition: state
+                  entity_id: input_select.kontor_soundbar_volume_remote_state
+                  state: "off"
+                - condition: state
+                  entity_id: input_select.kontor_soundbar_volume_remote_state
+                  state: "up"
