@@ -16,6 +16,43 @@ binary_sensor:
         value_template: "{{ is_state('input_boolean.living_room_occupied', 'on') }}"
 
 automation:
+  - alias: Barskab åbnet
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.barskab
+        to: "on"
+    action:
+      - service: scene.create
+        data_template:
+          scene_id: barskab_aabnet_restore
+          snapshot_entities:
+            - light.barskab_under
+            - light.barskab_over
+            - light.bar_spots
+            - light.bar_hylde_spots
+            - light.stue_bar
+      - service: light.turn_on
+        data:
+          brightness: 255
+          entity_id:
+            - light.barskab_under
+            - light.barskab_over
+            - light.bar_spots
+            - light.bar_hylde_spots
+            - light.stue_bar
+
+  - alias: Barskab lukket
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.barskab
+        to: "off"
+    action:
+      - service: scene.turn_on
+        data:
+          entity_id: scene.barskab_aabnet_restore
+
   - alias: living_room_door_activity_on
     initial_state: true
     trigger:
