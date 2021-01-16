@@ -4,6 +4,8 @@ input_boolean:
     name: Badeværelse Dør Aktivitet
   bathroom_occupied:
     name: Badeværelse Optaget
+  showering:
+    name: Bruser
 
 binary_sensor:
   - platform: template
@@ -18,6 +20,50 @@ binary_sensor:
         value_template: "{{ is_state('input_boolean.bathroom_occupied', 'on') }}"
 
 automation:
+  - alias: showering_on
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.bruseniche_vand
+          - binary_sensor.badevaerelse_sensor
+        to: "on"
+    condition:
+      - condition: state
+        entity_id: binary_sensor.bruseniche_vand
+        state: "on"
+    action:
+      - service: input_boolean.turn_on
+        data:
+          entity_id: input_boolean.showering
+
+  - alias: showering_off
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.bruseniche_vand
+          - binary_sensor.badevaerelse_sensor
+        to: "off"
+      - platform: state
+        entity_id: input_boolean.showering
+        to: "on"
+        for:
+          minutes: 30
+    condition:
+      - condition: state
+        entity_id: binary_sensor.badevaerelse_sensor
+        state: "off"
+      - condition: state
+        entity_id: input_boolean.showering
+        state: "on"
+        for:
+          minutes: 30
+    action:
+      - service: input_boolean.turn_off
+        data:
+          entity_id: input_boolean.showering
+
   - alias: bathroom_door_activity_on
     initial_state: true
     trigger:
@@ -51,7 +97,7 @@ automation:
         seconds: 10
     condition:
       condition: state
-      entity_id: binary_sensor.badevaerelse_home_security_motion_detected
+      entity_id: binary_sensor.badevaerelse_sensor
       state: "on"
     action:
       - service: input_boolean.turn_on
@@ -78,7 +124,7 @@ automation:
     trigger:
       - platform: state
         entity_id:
-          - binary_sensor.badevaerelse_home_security_motion_detected
+          - binary_sensor.badevaerelse_sensor
           - binary_sensor.bruseniche_vand
         to: "off"
         for:
@@ -90,7 +136,7 @@ automation:
           entity_id: input_boolean.bathroom_occupied
           state: "on"
         - condition: state
-          entity_id: binary_sensor.badevaerelse_home_security_motion_detected
+          entity_id: binary_sensor.badevaerelse_sensor
           state: "off"
         - condition: state
           entity_id: binary_sensor.bruseniche_vand
