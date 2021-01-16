@@ -47,16 +47,43 @@ utility_meter:
     source: sensor.energy_meter_active_import
     cycle: quarterly
 
+input_number:
+  energy_cost:
+    name: Energy Cost
+    mode: box
+    min: 0
+    max: 100000
+    step: 0.001
+    unit_of_measurement: kr
+
+automation:
+  - alias: Update Energy Cost
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: sensor.energy_cost_hourly_barry
+        to: "0.000"
+    action:
+      - service: input_number.set_value
+        data:
+          entity_id: input_number.energy_cost
+          value: "{{ (state('input_number.energy_cost')|float) + (trigger.from_state.state|float) }}"
+
 sensor:
   - platform: template
     sensors:
       energy_price:
         friendly_name: "Elpris"
-        value_template: "2.19"
+        value_template: "2.190"
         unit_of_measurement: kr
       energy_price_barry:
         friendly_name: "Elpris v/Barry"
-        value_template: "{{ states('sensor.nordpool_kwh_dk2_dkk_3_10_025')|float + 1.62 }}"
+        value_template: "{{ (states('sensor.nordpool_kwh_dk2_dkk_3_10_025')|float) + 1.62 | round(3) }}"
+        unit_of_measurement: kr
+
+      energy_cost_hourly_barry:
+        friendly_name: "Elomkostning Denne Time v/Barry"
+        value_template: "{{ ((states('sensor.energy_hourly')|float) * (states('sensor.energy_price_barry')|float)) | round(3) }}"
         unit_of_measurement: kr
 
       energy_last_hour:
