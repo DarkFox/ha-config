@@ -68,7 +68,7 @@ binary_sensor:
         value_template: >
           {%- if is_state('input_boolean.kitchen_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.kitchen_room_state', 'active') else 'false' }}
-          {%- elif is_state('binary_sensor.kokken_home_security_motion_detected', 'on')
+          {%- elif is_state('binary_sensor.kokken_sensor', 'on')
           or is_state('binary_sensor.kokken_bevaegelse', 'on')
           or is_state('media_player.kokken_chromecast', 'playing')
           or is_state('media_player.kokken_chromecast', 'paused')
@@ -91,6 +91,14 @@ binary_sensor:
           {% endif -%}
 
 automation:
+  - alias: Refresh lights on extractor hood state change
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.emhaette
+    action:
+      - event: refresh_light_profile
+
   - alias: activate_light_profile_kitchen_bright
     initial_state: true
     trigger:
@@ -278,7 +286,7 @@ automation:
           entities:
             light.emhaette_lys:
               state: on
-              brightness: 200
+              brightness: "{{ 255 if is_state('binary_sensor.emhaette', 'on') else 200 }}"
               color_temp: 400
               effect: "None"
             light.kokken_loftlampe:
@@ -356,7 +364,7 @@ automation:
           entities:
             light.emhaette_lys:
               state: on
-              brightness: 32
+              brightness: "{{ 255 if is_state('binary_sensor.emhaette', 'on') else 32 }}"
               color_temp: 400
               effect: "None"
             light.kokken_loftlampe:
@@ -425,7 +433,9 @@ automation:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
             light.emhaette_lys:
-              state: off
+              state: "{{ 'on' if is_state('binary_sensor.emhaette', 'on') else 'off' }}"
+              brightness: "{{ 255 if is_state('binary_sensor.emhaette', 'on') else '' }}"
+              color_temp: "{{ 400 if is_state('binary_sensor.emhaette', 'on') else '' }}"
             light.kokken_loftlampe:
               state: on
               brightness: 2
@@ -697,5 +707,5 @@ group:
       - input_boolean.kitchen_activity_override
       - input_select.kitchen_room_state
       - input_select.latest_motion
-      - binary_sensor.kokken_home_security_motion_detected
+      - binary_sensor.kokken_sensor
       - binary_sensor.kokken_bevaegelse

@@ -51,7 +51,7 @@ binary_sensor:
         value_template: >
           {%- if is_state('input_boolean.living_room_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.living_room_room_state', 'active') else 'false' }}
-          {%- elif is_state('binary_sensor.stue_home_security_motion_detected', 'on')
+          {%- elif is_state('binary_sensor.stue_sensor', 'on')
           or is_state('binary_sensor.spisebord_bevaegelse', 'on')
           or is_state('binary_sensor.sofagruppe_bevaegelse', 'on')
           or is_state('binary_sensor.living_room_door_activity', 'on')
@@ -186,12 +186,7 @@ automation:
               brightness: 255
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
               effect: "None"
-            light.stue_tv_hojre:
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-              effect: "None"
-            light.stue_tv_venstre:
+            light.stue_tv_bund:
               state: on
               brightness: 255
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
@@ -248,6 +243,9 @@ automation:
               effect: "Solid"
             light.stue_tablet:
               state: on
+            light.juletrae:
+              state: on
+              brightness: 255
 
   - alias: activate_light_profile_living_room_dimmed
     initial_state: true
@@ -340,12 +338,7 @@ automation:
               brightness: 127
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
               effect: "None"
-            light.stue_tv_hojre:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-              effect: "None"
-            light.stue_tv_venstre:
+            light.stue_tv_bund:
               state: on
               brightness: 127
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
@@ -402,6 +395,9 @@ automation:
               effect: "Solid"
             light.stue_tablet:
               state: on
+            light.juletrae:
+              state: on
+              brightness: 172
 
   - alias: activate_light_profile_living_room_ambient
     initial_state: true
@@ -471,12 +467,7 @@ automation:
               brightness: 32
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
               effect: "None"
-            light.stue_tv_hojre:
-              state: on
-              brightness: 32
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-              effect: "None"
-            light.stue_tv_venstre:
+            light.stue_tv_bund:
               state: on
               brightness: 32
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
@@ -533,6 +524,9 @@ automation:
               effect: "Solid"
             light.stue_tablet:
               state: on
+            light.juletrae:
+              state: on
+              brightness: 127
 
   - alias: activate_light_profile_living_room_night
     initial_state: true
@@ -637,18 +631,16 @@ automation:
               brightness: 2
               rgb_color: [255, 0, 0]
               effect: "None"
-            light.stue_tv_hojre:
-              state: on
-              brightness: 2
-              rgb_color: [255, 0, 0]
-              effect: "None"
-            light.stue_tv_venstre:
+            light.stue_tv_bund:
               state: on
               brightness: 2
               rgb_color: [255, 0, 0]
               effect: "None"
             light.stue_tablet:
               state: on
+            light.juletrae:
+              state: on
+              brightness: 32
 
   - alias: activate_light_profile_living_room_off
     initial_state: true
@@ -669,7 +661,9 @@ automation:
           entity_id: group.living_room_lights
       - service: light.turn_off
         data:
-          entity_id: light.stue_tablet
+          entity_id:
+            - light.stue_tablet
+            - light.juletrae
 
   - alias: activate_light_profile_living_room_party
     initial_state: true
@@ -760,12 +754,7 @@ automation:
               brightness: 32
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
               effect: "None"
-            light.stue_tv_hojre:
-              state: on
-              brightness: 32
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-              effect: "None"
-            light.stue_tv_venstre:
+            light.stue_tv_bund:
               state: on
               brightness: 32
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
@@ -812,6 +801,9 @@ automation:
               brightness: 255
             light.stue_tablet:
               state: on
+            light.juletrae:
+              state: on
+              brightness: 255
 
 input_boolean:
   living_room_activity_override:
@@ -947,7 +939,7 @@ group:
       - input_boolean.living_room_activity_override
       - input_select.living_room_state
       - input_select.latest_motion
-      - binary_sensor.stue_home_security_motion_detected
+      - binary_sensor.stue_sensor
       - binary_sensor.spisebord_bevaegelse
       - binary_sensor.sofagruppe_bevaegelse
       - media_player.stue_shield
