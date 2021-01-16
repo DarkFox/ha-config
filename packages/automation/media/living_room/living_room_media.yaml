@@ -8,6 +8,7 @@ input_select:
   living_room_matrix_input:
     name: Video Indgang
     options:
+      - "Off"
       - NVIDIA
       - Nintendo Switch
       - PC
@@ -34,7 +35,7 @@ binary_sensor:
           {{
             (is_state('input_select.living_room_matrix_input', 'NVIDIA') and is_state('binary_sensor.living_room_nvidia_shield', 'on'))
             or (is_state('input_select.living_room_matrix_input', 'Nintendo Switch') and is_state('device_tracker.nintendo_switch_wired', 'home'))
-            or (is_state('input_select.living_room_matrix_input', 'PC') and is_state('binary_sensor.martin_pc', 'on'))
+            or (is_state('input_select.living_room_matrix_input', 'PC') and is_state('binary_sensor.martin_pc_activity', 'on'))
           }}
 
 script:
@@ -50,9 +51,15 @@ automation:
     initial_state: true
     trigger:
       - platform: state
-        entity_id: binary_sensor.living_room_nvidia_shield
-        to: "on"
+        entity_id: media_player.nvidia_shield_adb
+        from: "off"
     action:
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.living_room_matrix_input
+          option: "Off"
+      - delay:
+          seconds: 2
       - service: input_select.select_option
         data:
           entity_id: input_select.living_room_matrix_input
@@ -75,6 +82,9 @@ automation:
                   entity_id:
                     - switch.hdmi_matrix_a_1
                     - switch.hdmi_matrix_b_1
+              - service: media_player.turn_on
+                data:
+                  entity_id: media_player.nvidia_shield_adb
           - conditions:
               - condition: state
                 entity_id: input_select.living_room_matrix_input
@@ -95,6 +105,16 @@ automation:
                   entity_id:
                     - switch.hdmi_matrix_a_3
                     - switch.hdmi_matrix_b_3
+          - conditions:
+              - condition: state
+                entity_id: input_select.living_room_matrix_input
+                state: "Off"
+            sequence:
+              - service: switch.turn_on
+                data:
+                  entity_id:
+                    - switch.hdmi_matrix_a_4
+                    - switch.hdmi_matrix_b_4
 
   - alias: stue_soundbar_volume_remote_state_up
     initial_state: true
@@ -255,6 +275,11 @@ automation:
         for:
           minutes: 5
       - platform: state
+        entity_id: input_select.living_room_matrix_input
+        to: "Off"
+        for:
+          seconds: 5
+      - platform: state
         entity_id: input_select.living_room_video_output
         from: "TV"
     action:
@@ -291,6 +316,11 @@ automation:
         to: "off"
         for:
           minutes: 5
+      - platform: state
+        entity_id: input_select.living_room_matrix_input
+        to: "Off"
+        for:
+          seconds: 5
       - platform: state
         entity_id: input_select.living_room_video_output
         from: "Projektor"

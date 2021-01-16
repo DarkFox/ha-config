@@ -1,4 +1,165 @@
+input_select:
+  kokken_soundbar_volume_remote_state:
+    initial: "off"
+    options:
+      - "off"
+      - up
+      - down
+
 automation:
+  - alias: kokken_soundbar_volume_remote_state_up
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: kokken_volumeknap
+          event: 2001
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.kokken_soundbar_volume_remote_state
+        option: "up"
+
+  - alias: kokken_soundbar_volume_remote_state_down
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: kokken_volumeknap
+          event: 3001
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.kokken_soundbar_volume_remote_state
+        option: "down"
+
+  - alias: kokken_soundbar_volume_remote_state_off
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: kokken_volumeknap
+          event: 2003
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: kokken_volumeknap
+          event: 3003
+      - platform: state
+        entity_id: input_select.kokken_soundbar_volume_remote_state
+        to:
+          - "up"
+          - "down"
+        for:
+          seconds: 10
+    action:
+      service: input_select.select_option
+      data_template:
+        entity_id: input_select.kokken_soundbar_volume_remote_state
+        option: "off"
+
+  - alias: kokken_soundbar_volume_remote_mute
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: kokken_volumeknap
+          event: 1002
+    action:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: media_player.kokken_mini
+                state: "playing"
+            sequence:
+              - service: media_player.volume_mute
+                data_template:
+                  entity_id: media_player.kokken_mini
+                  is_volume_muted: "{{ not state_attr('media_player.kokken_mini', 'is_volume_muted') }}"
+        default:
+          - service: media_player.volume_mute
+            data_template:
+              entity_id: media_player.srs_hg1
+              is_volume_muted: "{{ not state_attr('media_player.srs_hg1', 'is_volume_muted') }}"
+
+  - alias: kokken_soundbar_volume_remote_up
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.kokken_soundbar_volume_remote_state
+        to: up
+        for:
+          milliseconds: 75
+    mode: single
+    action:
+      - repeat:
+          sequence:
+            - choose:
+                - conditions:
+                    - condition: state
+                      entity_id: media_player.kokken_mini
+                      state: "playing"
+                  sequence:
+                    - service: media_player.volume_up
+                      data_template:
+                        entity_id: media_player.kokken_mini
+              default:
+                - service: media_player.volume_up
+                  data_template:
+                    entity_id: media_player.srs_hg1
+            - delay:
+                milliseconds: 75
+          until:
+            - condition: or
+              conditions:
+                - condition: state
+                  entity_id: input_select.kokken_soundbar_volume_remote_state
+                  state: "off"
+                - condition: state
+                  entity_id: input_select.kokken_soundbar_volume_remote_state
+                  state: "down"
+
+  - alias: kokken_soundbar_volume_remote_down
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.kokken_soundbar_volume_remote_state
+        to: down
+        for:
+          milliseconds: 75
+    mode: single
+    action:
+      - repeat:
+          sequence:
+            - choose:
+                - conditions:
+                    - condition: state
+                      entity_id: media_player.kokken_mini
+                      state: "playing"
+                  sequence:
+                    - service: media_player.volume_down
+                      data_template:
+                        entity_id: media_player.kokken_mini
+              default:
+                - service: media_player.volume_down
+                  data_template:
+                    entity_id: media_player.srs_hg1
+            - delay:
+                milliseconds: 75
+          until:
+            - condition: or
+              conditions:
+                - condition: state
+                  entity_id: input_select.kokken_soundbar_volume_remote_state
+                  state: "off"
+                - condition: state
+                  entity_id: input_select.kokken_soundbar_volume_remote_state
+                  state: "up"
+
   - alias: Kitchen Speaker reboot
     initial_state: true
     trigger:
@@ -23,6 +184,8 @@ automation:
       - service: switch.turn_off
         data:
           entity_id: switch.kitchen_speaker_power
+      - delay:
+          seconds: 5
       - wait_template: "{{ is_state('media_player.srs_hg1', 'unavailable') }}"
         timeout: "00:01:00"
         continue_on_timeout: true
@@ -58,10 +221,10 @@ automation:
         entity_id: media_player.srs_hg1
         state: "on"
     action:
-      service: media_player.volume_mute
-      data:
-        entity_id: media_player.srs_hg1
-        is_volume_muted: false
+      - service: media_player.volume_mute
+        data:
+          entity_id: media_player.srs_hg1
+          is_volume_muted: false
 
   - alias: Kitchen Speaker inactive trigger
     initial_state: true
@@ -86,10 +249,10 @@ automation:
         entity_id: media_player.srs_hg1
         state: "on"
     action:
-      service: media_player.volume_mute
-      data:
-        entity_id: media_player.srs_hg1
-        is_volume_muted: true
+      - service: media_player.volume_mute
+        data:
+          entity_id: media_player.srs_hg1
+          is_volume_muted: true
 
   - alias: kitchen_tv_chromecast_on
     initial_state: true
@@ -118,6 +281,9 @@ automation:
       - service: switch.turn_on
         data:
           entity_id: switch.kokken_tv_afbryder
+      - service: media_player.turn_on
+        data:
+          entity_id: media_player.srs_hg1
       - service: media_player.select_source
         data:
           entity_id: media_player.srs_hg1
@@ -132,9 +298,12 @@ automation:
       for:
         minutes: 1
     action:
-      service: switch.turn_off
-      data:
-        entity_id: switch.kokken_tv_afbryder
+      - service: switch.turn_off
+        data:
+          entity_id: switch.kokken_tv_afbryder
+      - service: media_player.turn_off
+        data:
+          entity_id: media_player.srs_hg1
 
   - alias: Kitchen TV inactive trigger
     initial_state: true
