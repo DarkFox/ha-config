@@ -17,11 +17,6 @@ input_select:
       - snoozing
       - waking
 
-counter:
-  snooze_counter:
-    name: Snooze Counter
-    icon: mdi:alarm-snooze
-
 script:
   morning_briefing:
     alias: Morning Briefing
@@ -35,57 +30,8 @@ script:
           message: >
             {{ states("sensor.tts_greeting") }}. Klokken er {{ states("sensor.time") }}.
             Vejrudsigt: {{ states("sensor.dmi_vejr") }}.
-            {% if is_state('binary_sensor.workday', 'on') and now().hour < 12 -%}
-              S-Tog Linje B:
-              {%- if is_state('sensor.s_train_b_status', 'Til tiden') -%}
-                {{ ' ' }}Kører normalt.
-              {%- else -%}
-                {{ ' ' }}{{ states('sensor.s_train_b_status') }}.
-                {{ states('sensor.s_train_message') }}.
-              {%- endif -%}
-            {%- endif -%}
 
 automation:
-  ###########################
-  # SLEEP AS ANDROID EVENTS #
-  ###########################
-
-  ## Possible Sleep as Android events
-  # - sleep_tracking_started
-  # - sleep_tracking_stopped
-  # - sleep_tracking_paused
-  # - sleep_tracking_resumed
-  # - alarm_snooze_clicked
-  # - alarm_snooze_cancelled
-  #     Only from Tasker! - When cancelled from snooze notification
-  # - time_to_bed_alarm_alert
-  #     fires when you get a bedtime notification
-  # - alarm_alert_start
-  # - alarm_alert_dismiss
-  #     fires when you dismiss alarm (after you solve CAPTCHA, if it’s set)
-  # - rem
-  #     fires when we estimate the start of REM phase
-  # - antisnoring
-  #     fires when we detect snoring
-  # - smart_period
-  #     fires 45 minutes before the smart wakeup period starts
-  # - lullaby
-  #     Only from Tasker!
-
-  - alias: Sleep as Android webhook event
-    initial_state: True
-    trigger:
-      platform: webhook
-      webhook_id: !secret sleep_as_android_webhook
-    action:
-      - event: sleep_as_android
-        event_data_template:
-          value: "{{ trigger.json.event }}"
-      # - service: script.debug_notification
-      #   data_template:
-      #     message: "{{ trigger.json.event }}"
-      #     title: "Sleep As Android Event"
-
   #######################
   # SLEEP STATE MACHINE #
   #######################
@@ -243,9 +189,6 @@ automation:
               entity_id: input_select.sleep_state
               state: paused
     action:
-      - service: counter.reset
-        data:
-          entity_id: counter.snooze_counter
       - service: input_select.select_option
         data:
           entity_id: input_select.sleep_state
@@ -414,9 +357,6 @@ automation:
       event_data:
         value: alarm_snooze_clicked
     action:
-      - service: counter.increment
-        data:
-          entity_id: counter.snooze_counter
       - condition: state
         entity_id: binary_sensor.martin_presence_delayed
         state: "on"
@@ -662,7 +602,9 @@ automation:
     trigger:
       platform: state
       entity_id: input_select.sleep_state
-      to: "alarm"
+      to:
+        - "alarm"
+        - "snoozing"
       for:
         minutes: 2
     action:
@@ -676,7 +618,9 @@ automation:
     trigger:
       platform: state
       entity_id: input_select.sleep_state
-      to: "alarm"
+      to:
+        - "alarm"
+        - "snoozing"
       for:
         minutes: 5
     action:
@@ -690,7 +634,9 @@ automation:
     trigger:
       platform: state
       entity_id: input_select.sleep_state
-      to: "alarm"
+      to:
+        - "alarm"
+        - "snoozing"
       for:
         minutes: 10
     action:
