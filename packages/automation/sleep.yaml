@@ -1,7 +1,8 @@
-input_boolean:
-  bedtime:
-    name: Sengetid
-    icon: mdi:bed
+input_datetime:
+  fallback_wake_up_time:
+    name: Standard opvågningstid
+    has_date: false
+    has_time: true
 
 input_select:
   sleep_state:
@@ -31,77 +32,63 @@ script:
             {{ states("sensor.tts_greeting") }}. Klokken er {{ states("sensor.time") }}.
             Vejrudsigt: {{ states("sensor.dmi_vejr") }}.
 
+sensor:
+  - platform: template
+    sensors:
+      next_wfh_event:
+        value_template: "{{ (state_attr('calendar.arbejde_arbejder_hjemmefra', 'start_time') or false) | as_timestamp() }}"
+      next_rsr_event:
+        value_template: "{{ (state_attr('calendar.arbejde_pa_rsr', 'start_time') or false) | as_timestamp() }}"
+      next_rsh_event:
+        value_template: "{{ (state_attr('calendar.arbejde_pa_rsh', 'start_time') or false) | as_timestamp() }}"
+      next_personal_event:
+        value_template: "{{ (state_attr('calendar.personlig', 'start_time') or false) | as_timestamp() }}"
+      next_tripit_event:
+        value_template: "{{ (state_attr('calendar.tripit', 'start_time') or false) | as_timestamp() }}"
+      fallback_wake_up_time:
+        value_template: >-
+          {%- set hour = state_attr('input_datetime.fallback_wake_up_time', 'hour') -%}
+          {%- set minute = state_attr('input_datetime.fallback_wake_up_time', 'minute') -%}
+          {%- set days = 0 if 0 <= now().hour <= hour else 1 -%}
+          {{ now().replace(hour=hour,minute=minute,second=0,microsecond=0) + timedelta(days=days) }}
+      wake_up_event_source:
+        value_template: "{{ state_attr('sensor.next_event_for_wakeup_time', 'min_entity_id') }}"
+      wake_up_time:
+        friendly_name: "Opvågningstidspunkt"
+        value_template: >-
+          {%- if states('sensor.wake_up_event_source') == 'fallback_wake_up_time' -%}
+            {{ (states('sensor.next_event_for_wakeup_time')|int) | timestamp_local() }}
+          {%- else -%}
+            {{ (states('sensor.next_event_for_wakeup_time')|int - (2*60*60)) | timestamp_local() }}
+          {%- endif -%}
+      bedtime:
+        friendly_name: "Sengetid"
+        value_template: "{{ (states('sensor.wake_up_time')|as_timestamp() - (8*60*60)) | timestamp_local() }}"
+  - platform: min_max
+    name: next_event_for_wakeup_time
+    type: min
+    entity_ids:
+      - sensor.next_wfh_event
+      - sensor.next_rsr_event
+      - sensor.next_rsh_event
+      - sensor.next_personal_event
+      - sensor.next_tripit_event
+      - sensor.fallback_wake_up_time
+
+binary_sensor:
+  - platform: template
+    sensors:
+      wake_up_time:
+        friendly_name: "Opvågningstidspunkt"
+        value_template: "{{ (states('sensor.wake_up_time')|as_timestamp()) < (now()|as_timestamp) }}"
+      bedtime:
+        friendly_name: "Sengetid"
+        value_template: "{{ (states('sensor.bedtime')|as_timestamp()) < (now()|as_timestamp) < (states('sensor.wake_up_time')|as_timestamp()) }}"
+
 automation:
   #######################
   # SLEEP STATE MACHINE #
   #######################
-
-  - alias: bedtime_on
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: sleep_as_android
-        event_data:
-          value: time_to_bed_alarm_alert
-      - platform: state
-        entity_id: input_select.sleep_state
-        to: "in bed"
-    action:
-      service: input_boolean.turn_on
-      data:
-        entity_id: input_boolean.bedtime
-
-  - alias: bedtime_off
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: sleep_as_android
-        event_data:
-          value: smart_period
-      - platform: event
-        event_type: sleep_as_android
-        event_data:
-          value: alarm_alert_start
-      - platform: event
-        event_type: sleep_as_android
-        event_data:
-          value: alarm_snooze_clicked
-      - platform: event
-        event_type: sleep_as_android
-        event_data:
-          value: alarm_alert_dismiss
-      - platform: event
-        event_type: sleep_as_android
-        event_data:
-          value: alarm_snooze_cancelled
-      - platform: state
-        entity_id: input_select.sleep_state
-        to: awake
-    action:
-      service: input_boolean.turn_off
-      data:
-        entity_id: input_boolean.bedtime
-
-  - alias: bedtime_off_tracking_stopped_workaround
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: sleep_as_android
-        event_data:
-          value: sleep_tracking_stopped
-    condition:
-      condition: or
-      conditions:
-        - condition: state
-          entity_id: input_select.sleep_state
-          state: alarm
-        - condition: state
-          entity_id: input_select.sleep_state
-          state: snoozing
-    action:
-      service: input_boolean.turn_off
-      data:
-        entity_id: input_boolean.bedtime
 
   - alias: sleep_state_bedtime
     initial_state: true
@@ -110,7 +97,7 @@ automation:
         entity_id: binary_sensor.martin_presence_delayed
         to: "on"
       - platform: state
-        entity_id: input_boolean.bedtime
+        entity_id: binary_sensor.bedtime
         to: "on"
     condition:
       condition: and
@@ -119,7 +106,7 @@ automation:
           entity_id: binary_sensor.martin_presence_delayed
           state: "on"
         - condition: state
-          entity_id: input_boolean.bedtime
+          entity_id: binary_sensor.bedtime
           state: "on"
         - condition: state
           entity_id: input_select.sleep_state
@@ -239,7 +226,7 @@ automation:
         entity_id: binary_sensor.sovevaerelse_gulv_bevaegelse
         to: "on"
       - platform: state
-        entity_id: binary_sensor.gang_sensor
+        entity_id: binary_sensor.gang_motion
         to: "on"
     condition:
       condition: and
@@ -402,7 +389,7 @@ automation:
     initial_state: true
     trigger:
       - platform: state
-        entity_id: binary_sensor.gang_sensor
+        entity_id: binary_sensor.gang_motion
         to: "on"
       - platform: state
         entity_id: binary_sensor.sovevaerelse_gulv_bevaegelse

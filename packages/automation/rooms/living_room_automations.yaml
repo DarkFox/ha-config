@@ -2,6 +2,8 @@ input_boolean:
   living_room_door_activity:
     initial: off
     name: Stue Dør Aktivitet
+  bar_open:
+    name: Bar Åben
 
 binary_sensor:
   - platform: template
@@ -16,11 +18,37 @@ binary_sensor:
         value_template: "{{ is_state('input_boolean.living_room_occupied', 'on') }}"
 
 automation:
+  - alias: bar_switch_on
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: bar_fjernbetjening
+          event: 1002
+    action:
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.bar_open
+
+  - alias: bar_switch_off
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: bar_fjernbetjening
+          event: 2002
+    action:
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.bar_open
+
   - alias: Barskab åbnet
     initial_state: true
     trigger:
       - platform: state
-        entity_id: binary_sensor.barskab
+        entity_id: input_boolean.bar_open
         to: "on"
     action:
       - service: scene.create
@@ -41,17 +69,22 @@ automation:
             - light.bar_spots
             - light.bar_hylde_spots
             - light.stue_bar
+            - light.bar_skuffer
 
   - alias: Barskab lukket
     initial_state: true
     trigger:
       - platform: state
-        entity_id: binary_sensor.barskab
+        entity_id: input_boolean.bar_open
         to: "off"
     action:
       - service: scene.turn_on
         data:
           entity_id: scene.barskab_aabnet_restore
+      - service: light.turn_off
+        target:
+          entity_id:
+            - light.bar_skuffer
 
   - alias: living_room_door_activity_on
     initial_state: true

@@ -1,0 +1,57 @@
+binary_sensor:
+  - platform: template
+    sensors:
+      working_from_home:
+        value_template: "{{ is_state('calendar.arbejde_arbejder_hjemmefra', 'on') }}"
+      on_call:
+        value_template: "{{ is_state('calendar.arbejde_vagt', 'on') }}"
+      scheduled_at_work:
+        value_template: >
+          {{
+            is_state('calendar.arbejde_pa_rsr', 'on')
+            or is_state('calendar.arbejde_pa_rsh', 'on')
+          }}
+      location_at_work:
+        value_template: >
+          {{
+            is_state('device_tracker.darkphone', 'RSR')
+            or is_state('device_tracker.darkphone', 'RSH')
+          }}
+      working:
+        value_template: >
+          {{
+            is_state('binary_sensor.scheduled_at_work', 'on')
+            or is_state('binary_sensor.location_at_work', 'on')
+            or is_state('binary_sensor.working_from_home', 'on')
+            or is_state('binary_sensor.on_call', 'on')
+          }}
+
+automation:
+  - id: set_phone_modes
+    alias: Set Phone Modes
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.working
+          - binary_sensor.on_call
+    variables:
+      working: "{{ is_state('binary_sensor.working', 'on') }}"
+      on_call: "{{ is_state('binary_sensor.on_call', 'on') }}"
+    action:
+      - service: notify.mobile_app_arbejdstelefon
+        data:
+          message: "command_ringer_mode"
+          title: "{{ 'normal' if working else 'vibrate' }}"
+      - service: notify.mobile_app_arbejdstelefon
+        data:
+          message: "command_dnd"
+          title: "{{ 'off' if working else 'priority_only' }}"
+
+      - service: notify.mobile_app_darkphone
+        data:
+          message: "command_ringer_mode"
+          title: "{{ 'vibrate' if (working and not on_call) else 'normal' }}"
+      - service: notify.mobile_app_darkphone
+        data:
+          message: "command_dnd"
+          title: "{{ 'priority_only' if (working and not on_call) else 'off' }}"

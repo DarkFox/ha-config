@@ -1,8 +1,26 @@
 substitutions:
   devicename: ismaskine
   upper_devicename: Ismaskine
-  restore_mode: RESTORE_DEFAULT_OFF
+  restore_mode: ALWAYS_OFF
+
+esphome:
+  name: $devicename
+  platform: ESP8266
+  board: nodemcuv2
 
 <<: !include shared/base.yaml
 
-<<: !include shared/gosund.yaml
+switch:
+  # Switch to toggle the relay
+  - platform: gpio
+    id: relay
+    pin: D1
+    restore_mode: $restore_mode
+
+  - platform: template
+    name: $upper_devicename
+    icon: "mdi:delete-variant"
+    turn_on_action:
+    - switch.turn_on: relay
+    - delay: 500ms
+    - switch.turn_off: relay

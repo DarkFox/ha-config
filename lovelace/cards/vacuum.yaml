@@ -1,69 +1,91 @@
-type: "custom:vacuum-card"
-entity: vacuum.xiaomi_vacuum_cleaner
-compact_view: True
-stats:
-  default:
-    - attribute: filter_left
-      unit: timer
-      subtitle: Filter
-    - attribute: side_brush_left
-      unit: timer
-      subtitle: Sidebørste
-    - attribute: main_brush_left
-      unit: timer
-      subtitle: Hovedbørste
-    - attribute: sensor_dirty_left
-      unit: timer
-      subtitle: Sensorer
-  cleaning:
-    - attribute: cleaned_area
-      unit: m2
-      subtitle: Støvsuget areal
-    - attribute: cleaning_time
-      unit: m
-      subtitle: Støvsuget tid
-actions:
-  - name: Støvsug Køkken
-    icon: "mdi:silverware-fork-knife"
-    service: xiaomi_miio.vacuum_clean_segment
-    service_data:
-      entity_id: vacuum.xiaomi_vacuum_cleaner
-      segments: [1]
-  - name: Støvsug Soveværelse
-    icon: "mdi:bed-empty"
-    service: xiaomi_miio.vacuum_clean_segment
-    service_data:
-      entity_id: vacuum.xiaomi_vacuum_cleaner
-      segments: [2]
-  - name: Støvsug Gang
-    icon: mdi:door-closed
-    service: xiaomi_miio.vacuum_clean_segment
-    service_data:
-      entity_id: vacuum.xiaomi_vacuum_cleaner
-      segments: [3]
-  - name: Støvsug Stue
-    icon: mdi:sofa
-    service: xiaomi_miio.vacuum_clean_segment
-    service_data:
-      entity_id: vacuum.xiaomi_vacuum_cleaner
-      segments: [4]
-  - name: Støvsug Kontor
-    icon: mdi:desktop-tower-monitor
-    service: xiaomi_miio.vacuum_clean_segment
-    service_data:
-      entity_id: vacuum.xiaomi_vacuum_cleaner
-      segments: [5]
-style:
-  .: |
-    .preview, .toolbar {
-      background: initial !important;
-    }
-    .header, .metadata, .stats, .vacuum-name, .status-text {
-      color: var(--primary-text-color) !important;
-    }
-    ha-icon {
-      color: var(--primary-text-color) !important;
-    }
-    .stats-block, .stats {
-      border-color: var(--primary-text-color) !important;
-    }
+type: vertical-stack
+cards:
+  - type: "custom:vacuum-card"
+    entity: vacuum.xiaomi_vacuum_cleaner
+    compact_view: True
+    stats:
+      default:
+        - attribute: filter_left
+          unit: timer
+          subtitle: Filter
+        - attribute: side_brush_left
+          unit: timer
+          subtitle: Sidebørste
+        - attribute: main_brush_left
+          unit: timer
+          subtitle: Hovedbørste
+        - attribute: sensor_dirty_left
+          unit: timer
+          subtitle: Sensorer
+      cleaning:
+        - attribute: cleaned_area
+          unit: m2
+          subtitle: Støvsuget areal
+        - attribute: cleaning_time
+          unit: m
+          subtitle: Støvsuget tid
+    actions:
+      - name: Tømmeposition
+        icon: mdi:delete-circle-outline
+        service: script.send_vacuum_to_emptying_position
+      - name: Støvsug Køkken
+        icon: "mdi:silverware-fork-knife"
+        service: xiaomi_miio.vacuum_clean_segment
+        service_data:
+          entity_id: vacuum.xiaomi_vacuum_cleaner
+          segments: [1]
+      - name: Støvsug Soveværelse
+        icon: "mdi:bed-empty"
+        service: xiaomi_miio.vacuum_clean_segment
+        service_data:
+          entity_id: vacuum.xiaomi_vacuum_cleaner
+          segments: [2]
+      - name: Støvsug Gang
+        icon: mdi:door-closed
+        service: xiaomi_miio.vacuum_clean_segment
+        service_data:
+          entity_id: vacuum.xiaomi_vacuum_cleaner
+          segments: [3]
+      - name: Støvsug Stue
+        icon: mdi:sofa
+        service: xiaomi_miio.vacuum_clean_segment
+        service_data:
+          entity_id: vacuum.xiaomi_vacuum_cleaner
+          segments: [4]
+      - name: Støvsug Kontor
+        icon: mdi:desktop-tower-monitor
+        service: xiaomi_miio.vacuum_clean_segment
+        service_data:
+          entity_id: vacuum.xiaomi_vacuum_cleaner
+          segments: [5]
+    style:
+      .: |
+        .preview, .toolbar {
+          background: initial !important;
+        }
+        .header, .metadata, .stats, .vacuum-name, .status-text {
+          color: var(--primary-text-color) !important;
+        }
+        ha-icon {
+          color: var(--primary-text-color) !important;
+        }
+        .stats-block, .stats {
+          border-color: var(--primary-text-color) !important;
+        }
+
+  - type: conditional
+    conditions:
+      - entity: vacuum.xiaomi_vacuum_cleaner
+        state_not: "docked"
+    card:
+      type: picture-entity
+      entity: camera.xiaomi_cloud_map_extractor
+      camera_view: live
+      show_name: false
+      show_state: false
+      tap_action:
+        action: none
+      hold_action:
+        action: none
+      double_tap_action:
+        action: none

@@ -1,0 +1,62 @@
+substitutions:
+  devicename: 3d_printer_filament_camera
+  upper_devicename: 3D Printer Filament Camera
+
+esphome:
+  name: $devicename
+  platform: ESP32
+  board: esp32dev
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret api_pass
+
+ota:
+  password: !secret ota_pass
+
+switch:
+  - platform: restart
+    name: "3D Printer Filament Camera Restart"
+
+# Flashlight
+output:
+  - platform: ledc
+    pin: GPIO4
+    channel: 2 # channel 1 is used for esp32_camera
+    id: led
+light:
+  - platform: monochromatic
+    output: led
+    name: $upper_devicename Light
+
+# ESP32-CAM
+esp32_camera:
+  external_clock:
+    pin: GPIO0
+    frequency: 20MHz
+  i2c_pins:
+    sda: GPIO26
+    scl: GPIO27
+  data_pins: [GPIO5, GPIO18, GPIO19, GPIO21, GPIO36, GPIO39, GPIO34, GPIO35]
+  vsync_pin: GPIO25
+  href_pin: GPIO23
+  pixel_clock_pin: GPIO22
+  power_down_pin: GPIO32
+
+  name: $upper_devicename
+  vertical_flip: false
+  horizontal_mirror: false
+  max_framerate: 0.5 fps
+  idle_framerate: 0.1 fps
+  resolution: 800x600
+  # jpeg_quality: 30
+  contrast: 1
+  brightness: 2
+  saturation: 0

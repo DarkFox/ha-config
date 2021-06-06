@@ -1,14 +1,14 @@
 homeassistant:
   customize:
-    sensor.stue_temperatur:
+    sensor.stue_air_temperature:
       icon: mdi:thermometer
-    sensor.kontor_temperatur:
+    sensor.kontor_air_temperature:
       icon: mdi:thermometer
-    sensor.sovevaerelse_temperatur:
+    sensor.sovevaerelse_air_temperature:
       icon: mdi:thermometer
-    sensor.kokken_temperatur:
+    sensor.kokken_air_temperature:
       icon: mdi:thermometer
-    sensor.badevaerelse_temperatur:
+    sensor.badevaerelse_air_temperature:
       icon: mdi:thermometer
 
 binary_sensor:
@@ -27,68 +27,68 @@ binary_sensor:
             or is_state('climate.stue', 'unknown')
           }}
 
-automation:
-  - alias: Restart Tado stick if it or the thermostats go offline
-    # Attempts to restart twice.
-    initial_state: true
-    mode: single
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.tado_hub_crashed
-        to: "on"
-        for:
-          minutes: 2
-      - platform: state
-        entity_id: binary_sensor.tado_hub_crashed
-        to: "on"
-        for:
-          minutes: 20
-    action:
-      - service: script.debug_notification
-        data:
-          message: "Mistet forbindelsen til Tado stick, genstarter."
-          title: "Tado Watchdog"
-      - service: script.turn_on
-        entity_id: script.restart_tado
-      - wait_template: "{{ is_state('switch.tado_poe', 'off') }}"
-        timeout: "00:05:00"
-        continue_on_timeout: false
-      - wait_template: "{{ is_state('switch.tado_poe', 'on') and is_state('binary_sensor.tado_hub_crashed', 'off') }}"
-        timeout: "00:05:00"
-        continue_on_timeout: false
-      - service: script.debug_notification
-        data:
-          message: "Forbindelse til Tado genoprettet."
-          title: "Tado Watchdog"
+# automation:
+# - alias: Restart Tado stick if it or the thermostats go offline
+#   # Attempts to restart twice.
+#   initial_state: true
+#   mode: single
+#   trigger:
+#     - platform: state
+#       entity_id: binary_sensor.tado_hub_crashed
+#       to: "on"
+#       for:
+#         minutes: 2
+#     - platform: state
+#       entity_id: binary_sensor.tado_hub_crashed
+#       to: "on"
+#       for:
+#         minutes: 20
+#   action:
+#     - service: script.debug_notification
+#       data:
+#         message: "Mistet forbindelsen til Tado stick, genstarter."
+#         title: "Tado Watchdog"
+#     - service: script.turn_on
+#       entity_id: script.restart_tado
+#     - wait_template: "{{ is_state('switch.tado_poe', 'off') }}"
+#       timeout: "00:05:00"
+#       continue_on_timeout: false
+#     - wait_template: "{{ is_state('switch.tado_poe', 'on') and is_state('binary_sensor.tado_hub_crashed', 'off') }}"
+#       timeout: "00:05:00"
+#       continue_on_timeout: false
+#     - service: script.debug_notification
+#       data:
+#         message: "Forbindelse til Tado genoprettet."
+#         title: "Tado Watchdog"
 
-  - alias: Restart Tado stick every night
-    initial_state: true
-    mode: single
-    trigger:
-      platform: time
-      at: "02:00:00"
-    action:
-      - service: script.turn_on
-        entity_id: script.restart_tado
+# - alias: Restart Tado stick every night
+#   initial_state: true
+#   mode: single
+#   trigger:
+#     platform: time
+#     at: "02:00:00"
+#   action:
+#     - service: script.turn_on
+#       entity_id: script.restart_tado
 
 script:
-  restart_tado:
-    alias: Restart Tado
-    sequence:
-      - service: switch.turn_off
-        data:
-          entity_id: switch.tado_poe
-      - wait_template: "{{ is_state('switch.tado_poe', 'off') }}"
-        timeout: "00:05:00"
-      - delay:
-          seconds: 5
-      - service: switch.turn_on
-        data:
-          entity_id: switch.tado_poe
-      - wait_template: "{{ is_state('switch.tado_poe', 'on') and is_state('binary_sensor.tado_hub_crashed', 'off') }}"
-        timeout: "00:05:00"
-        continue_on_timeout: false
-      - event: set_climate
+  # restart_tado:
+  #   alias: Restart Tado
+  #   sequence:
+  #     - service: switch.turn_off
+  #       data:
+  #         entity_id: switch.tado_poe
+  #     - wait_template: "{{ is_state('switch.tado_poe', 'off') }}"
+  #       timeout: "00:05:00"
+  #     - delay:
+  #         seconds: 5
+  #     - service: switch.turn_on
+  #       data:
+  #         entity_id: switch.tado_poe
+  #     - wait_template: "{{ is_state('switch.tado_poe', 'on') and is_state('binary_sensor.tado_hub_crashed', 'off') }}"
+  #       timeout: "00:05:00"
+  #       continue_on_timeout: false
+  #     - event: set_climate
 
   increase_temperature:
     alias: Increase Temperature

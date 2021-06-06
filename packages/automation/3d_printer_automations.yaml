@@ -1,0 +1,40 @@
+sensor:
+  - platform: min_max
+    name: 3d_printer_max_temp
+    type: max
+    entity_ids:
+      - sensor.octoprint_actual_tool0_temp
+      - sensor.octoprint_actual_bed_temp
+
+automation:
+  - id: turn_on_3d_printer_ventilation
+    alias: Turn on 3D printer ventilation
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.3d_printer_max_temp
+        above: 40
+    action:
+      service: fan.set_percentage
+      target:
+        entity_id:
+          - fan.3d_printer_enclosure_ind
+          - fan.3d_printer_enclosure_ud_1
+          - fan.3d_printer_enclosure_ud_2
+      data:
+        percentage: 100
+
+  - id: turn_off_3d_printer_ventilation
+    alias: Turn off 3D printer ventilation
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.3d_printer_max_temp
+        below: 30
+    action:
+      service: fan.set_percentage
+      target:
+        entity_id:
+          - fan.3d_printer_enclosure_ind
+          - fan.3d_printer_enclosure_ud_1
+          - fan.3d_printer_enclosure_ud_2
+      data:
+        percentage: 0

@@ -1,0 +1,62 @@
+binary_sensor:
+  - platform: template
+    sensors:
+      3d_printer_running:
+        value_template: "{{ states('sensor.3d_printer_afbryder_forbrug')|int > 10 }}"
+
+sensor:
+  - platform: template
+    sensors:
+      3d_printer_time_elapsed:
+        icon_template: mdi:clock-start
+        friendly_name: 3D Printer Time Elapsed
+        value_template: "{{ timedelta(seconds=states('sensor.octoprint_time_elapsed')|int) }}"
+      3d_printer_time_remaining:
+        icon_template: mdi:clock-end
+        friendly_name: 3D Printer Time Remaining
+        value_template: "{{ timedelta(seconds=states('sensor.octoprint_time_remaining')|int) }}"
+      3d_printer_finish_time:
+        icon_template: mdi:clock-outline
+        friendly_name: 3D Printer Finish Time
+        value_template: >-
+          {%- set end_time = (states('sensor.octoprint_time_remaining')|int) + (as_timestamp(now())|int) -%}
+          {{ end_time | timestamp_custom('%Y-%m-%d %H:%M') }}
+
+# camera:
+#   - platform: mjpeg
+#     name: OctoPrint
+#     still_image_url: http://192.168.42.245/webcam/?action=snapshot
+#     mjpeg_url: http://192.168.42.245/webcam/?action=stream
+
+android_ip_webcam:
+  - host: 192.168.42.24
+    name: 3D Printer Camera
+    sensors:
+      - audio_connections
+      - battery_level
+      - battery_temp
+      - battery_voltage
+      - light
+      - motion
+      - pressure
+      - proximity
+      - sound
+      - video_connections
+    switches:
+      - exposure_lock
+      - ffc
+      - focus
+      - gps_active
+      - motion_detect
+      - night_vision
+      - overlay
+      - torch
+      - whitebalance_lock
+      - video_recording
+
+octoprint:
+  host: 192.168.42.204
+  port: 5000
+  api_key: !secret octoprint_key
+  bed: true
+  number_of_tools: 1

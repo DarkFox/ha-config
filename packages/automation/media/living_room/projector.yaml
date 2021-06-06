@@ -38,12 +38,12 @@ sensor:
             {%- endif -%}
           {%- endif -%}
 
-  - platform: scrape
-    name: projector_source
-    resource: http://192.168.42.70/download.asp
-    select: ".stat"
-    index: 9
-    value_template: "{{ value.split(' : ')[1] }}"
+  # - platform: scrape
+  #   name: projector_source
+  #   resource: http://192.168.42.70/download.asp
+  #   select: ".stat"
+  #   index: 9
+  #   value_template: "{{ value.split(' : ')[1] }}"
 
 script:
   projector_on:
@@ -52,9 +52,6 @@ script:
       - condition: state
         entity_id: binary_sensor.projector_power
         state: "off"
-      - service: cover.close_cover
-        data:
-          entity_id: cover.projektor_laerred
       - choose:
           - conditions:
               - condition: state
@@ -67,6 +64,23 @@ script:
                   seconds: 2
       - service: switch.turn_on
         entity_id: switch.projector_power
+      - service: cover.close_cover
+        data:
+          entity_id:
+            - cover.projektor_laerred
+            - cover.stue_gardin
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: sensor.living_room_light_profile
+                state:
+                  - "Bright"
+                  - "Default"
+            sequence:
+              - event: set_light_profile
+                event_data:
+                  room: living_room
+                  profile: Dimmed
 
   projector_off:
     alias: "Projector Off"
@@ -76,7 +90,9 @@ script:
         state: "on"
       - service: cover.open_cover
         data:
-          entity_id: cover.projektor_laerred
+          entity_id:
+            - cover.projektor_laerred
+            - cover.stue_gardin
       - service: switch.turn_on
         entity_id: switch.projector_power
       - delay:

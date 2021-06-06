@@ -1,0 +1,241 @@
+homeassistant:
+  customize:
+    stue_gardin:
+      assumed_state: true
+
+script:
+  switchbot_control:
+    mode: parallel
+    sequence:
+      - service: mqtt.publish
+        data:
+          topic: "switchbotMQTT/control"
+          payload: '{"id": "{{ id }}", "value": "{{ value }}"}'
+      - delay:
+          seconds: 1
+      - service: mqtt.publish
+        data:
+          topic: "switchbotMQTT/requestInfo"
+          payload: '{"id": "{{ id }}"}'
+      - delay:
+          seconds: 10
+      - service: mqtt.publish
+        data:
+          topic: "switchbotMQTT/requestInfo"
+          payload: '{"id": "{{ id }}"}'
+      - delay:
+          seconds: 10
+      - service: mqtt.publish
+        data:
+          topic: "switchbotMQTT/requestInfo"
+          payload: '{"id": "{{ id }}"}'
+  stue_gardin:
+    sequence:
+      - service: "cover.{{modus}}_cover"
+        target:
+          entity_id:
+            - cover.stue_gardin_hojre
+            - cover.stue_gardin_venstre
+  stue_gardin_position:
+    sequence:
+      - service: cover.set_cover_position
+        target:
+          entity_id:
+            - cover.stue_gardin_hojre
+            - cover.stue_gardin_venstre
+        data:
+          position: "{{position}}"
+
+cover:
+  - platform: template
+    covers:
+      stue_gardin:
+        friendly_name: "Stue Gardin"
+        device_class: curtain
+        position_template: "{{ states('sensor.stue_gardin_hojre') }}"
+        open_cover:
+          service: script.stue_gardin
+          data:
+            modus: "open"
+        close_cover:
+          service: script.stue_gardin
+          data:
+            modus: "close"
+        stop_cover:
+          service: script.stue_gardin
+          data:
+            modus: "stop"
+        set_cover_position:
+          service: script.stue_gardin_position
+          data:
+            position: "{{ position }}"
+
+      stue_gardin_hojre:
+        friendly_name: "Stue Gardin Højre"
+        device_class: curtain
+        position_template: "{{ states('sensor.stue_gardin_hojre') }}"
+        open_cover:
+          service: script.switchbot_control
+          data:
+            id: stue_hojre
+            value: open
+        close_cover:
+          service: script.switchbot_control
+          data:
+            id: stue_hojre
+            value: close
+        stop_cover:
+          service: script.switchbot_control
+          data:
+            id: stue_hojre
+            value: pause
+        set_cover_position:
+          service: script.switchbot_control
+          data:
+            id: stue_hojre
+            value: "{{ 100 - position }}"
+
+      stue_gardin_venstre:
+        friendly_name: "Stue Gardin Venstre"
+        device_class: curtain
+        position_template: "{{ states('sensor.stue_gardin_venstre') }}"
+        open_cover:
+          service: script.switchbot_control
+          data:
+            id: stue_venstre
+            value: open
+        close_cover:
+          service: script.switchbot_control
+          data:
+            id: stue_venstre
+            value: close
+        stop_cover:
+          service: script.switchbot_control
+          data:
+            id: stue_venstre
+            value: pause
+        set_cover_position:
+          service: script.switchbot_control
+          data:
+            id: stue_venstre
+            value: "{{ 100 - position }}"
+
+      skrivebord_gardin:
+        friendly_name: "Skrivebord Gardin"
+        device_class: curtain
+        position_template: "{{ states('sensor.skrivebord_gardin') }}"
+        open_cover:
+          service: script.switchbot_control
+          data:
+            id: skrivebord
+            value: open
+        close_cover:
+          service: script.switchbot_control
+          data:
+            id: skrivebord
+            value: close
+        stop_cover:
+          service: script.switchbot_control
+          data:
+            id: skrivebord
+            value: pause
+        set_cover_position:
+          service: script.switchbot_control
+          data:
+            id: skrivebord
+            value: "{{ 100 - position }}"
+
+      hobbybord_gardin:
+        friendly_name: "Hobbybord Gardin"
+        device_class: curtain
+        position_template: "{{ states('sensor.hobbybord_gardin') }}"
+        open_cover:
+          service: script.switchbot_control
+          data:
+            id: hobbybord
+            value: open
+        close_cover:
+          service: script.switchbot_control
+          data:
+            id: hobbybord
+            value: close
+        stop_cover:
+          service: script.switchbot_control
+          data:
+            id: hobbybord
+            value: pause
+        set_cover_position:
+          service: script.switchbot_control
+          data:
+            id: hobbybord
+            value: "{{ 100 - position }}"
+
+sensor:
+  - platform: template
+    sensors:
+      stue_gardin:
+        value_template: >-
+          {% if is_state('cover.stue_gardin_hojre', 'open') or is_state('cover.stue_gardin_venstre', 'open') %}
+            open
+          {% else %}
+            closed
+          {% endif %}
+      stue_gardin_venstre_battery:
+        value_template: "{{ state_attr('sensor.stue_gardin_venstre', 'batt') }}"
+        device_class: battery
+        unit_of_measurement: "%"
+      stue_gardin_hojre_battery:
+        value_template: "{{ state_attr('sensor.stue_gardin_hojre', 'batt') }}"
+        device_class: battery
+        unit_of_measurement: "%"
+      skrivebord_gardin_battery:
+        value_template: "{{ state_attr('sensor.skrivebord_gardin', 'batt') }}"
+        device_class: battery
+        unit_of_measurement: "%"
+      hobbybord_gardin_battery:
+        value_template: "{{ state_attr('sensor.skrivebord_gardin', 'batt') }}"
+        device_class: battery
+        unit_of_measurement: "%"
+
+  - platform: mqtt
+    name: "Stue Gardin Højre"
+    state_topic: "switchbotMQTT/curtain/stue_hojre"
+    value_template: >-
+      {%- set result = 100 - ((value_json.pos | float ) * 100 / 97 ) | round -%}
+      {{ 0 if result < 0 else result }}
+    json_attributes_topic: "switchbotMQTT/curtain/stue_hojre"
+
+  - platform: mqtt
+    name: "Stue Gardin Venstre"
+    state_topic: "switchbotMQTT/curtain/stue_venstre"
+    value_template: >-
+      {%- set result = 100 - ((value_json.pos | float ) * 100 / 97 ) | round -%}
+      {{ 0 if result < 0 else result }}
+    json_attributes_topic: "switchbotMQTT/curtain/stue_venstre"
+
+  - platform: mqtt
+    name: "Skrivebord Gardin"
+    state_topic: "switchbotMQTT/curtain/skrivebord"
+    value_template: >-
+      {%- set result = 100 - ((value_json.pos | float ) * 100 / 97 ) | round -%}
+      {{ 0 if result < 0 else result }}
+    json_attributes_topic: "switchbotMQTT/curtain/skrivebord"
+
+  - platform: mqtt
+    name: "Hobbybord Gardin"
+    state_topic: "switchbotMQTT/curtain/hobbybord"
+    value_template: >-
+      {%- set result = 100 - ((value_json.pos | float ) * 100 / 97 ) | round -%}
+      {{ 0 if result < 0 else result }}
+    json_attributes_topic: "switchbotMQTT/curtain/hobbybord"
+
+automation:
+  - alias: switchbot_rescan
+    trigger:
+      - platform: time_pattern
+        minutes: "/10"
+    action:
+      service: mqtt.publish
+      data:
+        topic: "switchbotMQTT/rescan"
+        payload: '{"sec": "30"}'

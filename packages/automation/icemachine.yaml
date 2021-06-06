@@ -4,8 +4,8 @@ sensor:
       icemachine_state:
         friendly_name: "Ismaskine Status"
         value_template: >-
-          {% set watts = states('sensor.ismaskine_forbrug')|int %}
-          {% if is_state('sensor.ismaskine_forbrug', 'unavailable') %}
+          {% set watts = states('sensor.ismaskine_afbryder_forbrug')|int %}
+          {% if is_state('sensor.ismaskine_afbryder_forbrug', 'unavailable') %}
             unavailable
           {% elif watts > 2 and watts < 10 %}
             startup
@@ -15,7 +15,7 @@ sensor:
             batch_done
           {% elif watts > 200 %}
             startup
-          {% elif is_state('switch.ismaskine', 'off') %}
+          {% elif is_state('switch.ismaskine_afbryder', 'off') %}
             off
           {% else %}
             idle
@@ -25,39 +25,46 @@ input_boolean:
   ismaskine:
 
 automation:
-  - alias: Tænd ismaskine
+  - alias: Tænd/Sluk ismaskine
+    mode: queued
     trigger:
       - platform: state
         entity_id: input_boolean.ismaskine
-        to: "on"
+        to:
+          - "on"
+          - "off"
     action:
-      - service: switch.turn_on
-        data:
-          entity_id: switch.ismaskine
-
-  - alias: Sluk ismaskine ved idle
-    trigger:
-      - platform: state
-        entity_id: sensor.icemachine_state
-        to: "idle"
-        for:
-          seconds: 5
-      - platform: state
-        entity_id: input_boolean.ismaskine
-        to: "off"
-    condition:
-      - condition: state
-        entity_id: sensor.icemachine_state
-        state: "idle"
-      - condition: state
-        entity_id: input_boolean.ismaskine
-        state: "off"
-    action:
-      - service: switch.turn_off
-        data:
-          entity_id: switch.ismaskine
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.ismaskine
+                state: "on"
+            sequence:
+              - service: switch.turn_on
+                data:
+                  entity_id: switch.ismaskine_afbryder
+              - wait_template: "{{ not is_state('switch.ismaskine', 'unavailable') }}"
+                timeout: 60
+                continue_on_timeout: false
+              - service: switch.turn_on
+                data:
+                  entity_id: switch.ismaskine
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.ismaskine
+                state: "off"
+            sequence:
+              - service: switch.turn_on
+                data:
+                  entity_id: switch.ismaskine
+              - delay:
+                  seconds: 15
+              - service: switch.turn_off
+                data:
+                  entity_id: switch.ismaskine_afbryder
 
   - alias: Ismaskine Fuld
+    mode: single
     trigger:
       - platform: state
         entity_id: sensor.icemachine_state

@@ -143,8 +143,6 @@ sensor:
           {% if on %}
             {% if sleeping or summer %}
               18
-            {% elif night %}
-              19
             {% else %}
               21
             {% endif %}
@@ -185,12 +183,13 @@ automation:
       - platform: event
         event_type: set_climate
     action:
-      - service: >
-          {%- if is_state('binary_sensor.badevaerelse_vindue', 'off') -%}
-            climate.turn_on
-          {%- else -%}
-            climate.turn_off
-          {%- endif -%}
+      # - service: >
+      #     {%- if is_state('binary_sensor.badevaerelse_vindue', 'off') -%}
+      #       climate.turn_on
+      #     {%- else -%}
+      #       climate.turn_off
+      #     {%- endif -%}
+      - service: climate.turn_on
         data:
           entity_id: climate.badevaerelse
       - service: climate.set_temperature

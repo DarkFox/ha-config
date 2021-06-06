@@ -3,77 +3,83 @@ path: kiosk
 icon: "mdi:tablet"
 panel: true
 cards:
-  - type: vertical-stack
+  - type: custom:layout-card
+    layout: horizontal
+    column_num: 3
+    column_width: [30%, 40%, 30%]
     cards:
-      - type: horizontal-stack
+      - type: vertical-stack
         cards:
-          - type: vertical-stack
+          - !include ../cards/clock.yaml
+          - !include ../cards/weekday.yaml
+          - !include ../cards/fridge.yaml
+          - type: horizontal-stack
             cards:
-              - !include ../cards/clock.yaml
-              - !include ../cards/weekday.yaml
-              - !include ../cards/fridge.yaml
-              - !include ../cards/power_gauges.yaml
-              - !include ../cards/grocy.yaml
-          - type: vertical-stack
-            cards:
-              - type: horizontal-stack
-                cards:
-                  - type: "custom:button-card"
-                    entity: switch.mikroovn
-                    name: Mikroovn
-                    color: auto
-                    tap_action:
-                      action: toggle
-                    hold_action:
-                      action: more-info
-
-                  - type: "custom:button-card"
-                    entity: sensor.kettle_state
-                    icon: mdi:kettle
-                    state:
-                      - value: "Slukket"
-                        name: "Elkedel"
-                        color: "var(--paper-item-icon-color)"
-                      - value: "Tændt"
-                        name: "Elkedel: Tændt"
-                        color: "var(--paper-item-icon-active-color)"
-                      - value: "Brygger"
-                        name: "Elkedel: Brygger"
-                        color: "#FF0000"
-                    tap_action:
-                      action: call-service
-                      service: switch.toggle
-                      service_data:
-                        entity_id: switch.elkedel
-
-                  - !include ../cards/icemachine.yaml
-
-              - !include ../cards/dishwasher_timer.yaml
+              - type: "custom:button-card"
+                entity: switch.mikroovn
+                name: Mikroovn
+                color: auto
+                tap_action:
+                  action: toggle
+                hold_action:
+                  action: more-info
 
               - type: "custom:button-card"
-                name: Start Timer
-                icon: mdi:timer
-                size: 50px
-                layout: icon_name
+                entity: sensor.kettle_state
+                icon: mdi:kettle
+                state:
+                  - value: "Slukket"
+                    name: "Elkedel"
+                    color: "var(--paper-item-icon-color)"
+                  - value: "Tændt"
+                    name: "Elkedel: Tændt"
+                    color: "var(--paper-item-icon-active-color)"
+                  - value: "Brygger"
+                    name: "Elkedel: Brygger"
+                    color: "#FF0000"
                 tap_action:
                   action: call-service
-                  service: browser_mod.command
+                  service: switch.toggle
                   service_data:
-                    command: popup
-                    deviceID:
-                      - this
-                    title: Timers
-                    card: !include ../cards/kitchen_timers.yaml
+                    entity_id: switch.elkedel
 
-              - !include ../cards/conditional_timers.yaml
+              - !include ../cards/icemachine.yaml
+          - type: custom:decluttering-card
+            template: room_state_and_light_profile
+            variables:
+              - room: kitchen
+      - type: vertical-stack
+        cards:
+          - !include ../cards/dishwasher_timer.yaml
 
-          - type: vertical-stack
-            cards:
-              - type: custom:decluttering-card
-                template: room_state_and_light_profile
-                variables:
-                  - room: kitchen
+          - type: "custom:button-card"
+            name: Start Timer
+            icon: mdi:timer
+            size: 50px
+            layout: icon_name
+            tap_action:
+              action: fire-dom-event
+              browser_mod:
+                command: popup
+                title: Timers
+                card: !include ../cards/kitchen_timers.yaml
 
-              - !include ../cards/compact_thermostats.yaml
+          - !include ../cards/conditional_timers.yaml
 
-              - !include ../cards/media_players/playlist_controls.yaml
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.octoprint_printing
+                state: "on"
+            card: !include ../cards/3d_printer_preview.yaml
+
+          - !include ../cards/vacuum.yaml
+
+          - !include ../cards/power_gauges.yaml
+
+      - type: vertical-stack
+        cards:
+          - !include ../cards/media_players/playlist_controls.yaml
+
+          - !include ../cards/compact_thermostats.yaml
+
+          - !include ../cards/grocy.yaml

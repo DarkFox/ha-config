@@ -57,7 +57,7 @@ binary_sensor:
         value_template: >
           {%- if is_state('input_boolean.bedroom_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.bedroom_room_state', 'active') else 'false' }}
-          {%- elif is_state('binary_sensor.sovevaerelse_sensor', 'on')
+          {%- elif is_state('binary_sensor.sovevaerelse_motion', 'on')
           or is_state('binary_sensor.seng_bevaegelse', 'on')
           or is_state('binary_sensor.sovevaerelse_gulv_bevaegelse', 'on')
           or is_state('binary_sensor.bedroom_door_activity', 'on')
@@ -103,6 +103,10 @@ automation:
               brightness: 255
               color_temp: 370
               effect: "None"
+            light.sovevaerelse_tv:
+              state: on
+              brightness: 255
+              color_temp: 370
             light.bedroom_shelf_strip:
               state: on
               brightness: 255
@@ -190,6 +194,10 @@ automation:
               brightness: 255
               hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
               effect: "None"
+            light.sovevaerelse_tv:
+              state: on
+              brightness: 255
+              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
             light.bedroom_floor:
               state: on
               brightness: 255
@@ -259,6 +267,10 @@ automation:
               brightness: 86
               hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
               effect: "None"
+            light.sovevaerelse_tv:
+              state: on
+              brightness: 127
+              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
             light.bedroom_floor:
               state: on
               brightness: 127
@@ -326,6 +338,10 @@ automation:
               brightness: 2
               hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
               effect: "None"
+            light.sovevaerelse_tv:
+              state: on
+              brightness: 24
+              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
             light.blyant:
               state: on
               brightness: 32
@@ -379,6 +395,10 @@ automation:
               state: off
             light.luftfugter_lampe:
               state: off
+            light.sovevaerelse_tv:
+              state: on
+              brightness: 8
+              rgb_color: [255, 0, 0]
             light.blyant:
               state: on
               brightness: 16
@@ -479,6 +499,7 @@ automation:
             - light.bedroom_floor
             - light.sovevaerelse_reol_spots
             - light.blyant
+            - light.sovevaerelse_tv
             - light.sovevaerelse_tv_bord
             - light.luftfugter_lampe
 
@@ -555,6 +576,8 @@ automation:
             light.bedroom_shelf_strip:
               state: off
             light.sky:
+              state: off
+            light.sovevaerelse_tv:
               state: off
             light.bedroom_shelf_spots:
               state: on
@@ -723,7 +746,7 @@ group:
       - input_select.bedroom_room_state
       - input_select.latest_motion
       - input_select.martin_activity
-      - binary_sensor.sovevaerelse_sensor
+      - binary_sensor.sovevaerelse_motion
       - binary_sensor.seng_bevaegelse
       - binary_sensor.sovevaerelse_gulv_bevaegelse
       - media_player.sovevaerelse_chromecast

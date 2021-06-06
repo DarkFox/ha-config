@@ -1,0 +1,51 @@
+automation:
+  - alias: notify_car_charging
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: sensor.vw_connect_charging_state
+        to: "charging"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: >
+            Opladning startet. Bilen lader op til {{ states('sensor.vw_connect_target_soc_pct') }}%.
+            Færdig ca. {{ states('sensor.vw_connect_charging_complete_at') }}
+
+  - alias: notify_15_minutes_till_car_charged
+    initial_state: true
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.vw_connect_remaining_charging_time_to_complete_min
+        below: 16
+        for:
+          minutes: 2
+    condition:
+      - condition: state
+        entity_id: sensor.vw_connect_charging_state
+        state: "charging"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Bilen er ladt op til {{ states('sensor.vw_connect_target_soc_pct') }}% om {{ states('sensor.vw_connect_remaining_charging_time_to_complete_min') }} minutter."
+
+  - alias: notify_car_charged
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: sensor.vw_connect_charging_state
+        from: "charging"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Oplading afsluttet. Bilen er ladt op til {{ states('sensor.vw_connect_current_soc_pct') }}%."
+
+  - alias: notify_car_heating
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.id_3_climatising
+        to: "on"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Klimatiserer bilen. {{ states('sensor.vw_connect_remaining_climatisation_time_min') }} minutter tilbage."
