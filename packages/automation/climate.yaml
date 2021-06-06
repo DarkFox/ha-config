@@ -153,6 +153,34 @@ sensor:
           {% endif %}
 
 automation:
+  - id: toggle_living_room_fan
+    alias: Toggle Living Room Fan
+    trigger:
+      - platform: state
+        entity_id: input_select.living_room_room_state
+    action:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_select.living_room_room_state
+                state: "off"
+            sequence:
+              - service: fan.turn_off
+                target:
+                  entity_id: fan.livingroom_fan
+        default:
+          - service: fan.turn_on
+            data:
+              entity_id: fan.livingroom_fan
+              speed: >-
+                {%- if states('sensor.stue_temperatur')|int > 26 -%}
+                  "high"
+                {%- elif states('sensor.stue_temperatur')|int > 24 -%}
+                  "medium"
+                {%- else -%}
+                  "low"
+                {%- endif -%}
+
   # Restart Tado stick if temperature changes don't take.
   - alias: Check Climate
     initial_state: true
