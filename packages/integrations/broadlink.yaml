@@ -1,6 +1,28 @@
+input_boolean:
+  livingroom_fan_state:
+    name: "livingroom_fan_state"
+  livingroom_fan_osc:
+    name: "livingroom_fan_osc"
+
+input_select:
+  requested_livingroom_fan_speed:
+    options:
+      - "0"
+      - "33"
+      - "66"
+      - "100"
+  livingroom_fan_speed:
+    options:
+      - "33"
+      - "66"
+      - "100"
+
 script:
   livingroom_fan_on:
     sequence:
+      - condition: state
+        entity_id: input_boolean.livingroom_fan_state
+        state: "off"
       - service: switch.turn_on
         data:
           entity_id: switch.livingroom_fan_power
@@ -9,6 +31,9 @@ script:
 
   livingroom_fan_off:
     sequence:
+      - condition: state
+        entity_id: input_boolean.livingroom_fan_state
+        state: "on"
       - service: switch.turn_off
         data:
           entity_id: switch.livingroom_fan_power
@@ -26,12 +51,9 @@ script:
             sequence:
               service: script.livingroom_fan_off
         default:
-          - choose:
-              - conditions: "{{ is_state('input_boolean.livingroom_fan_state', 'off') }}"
-                sequence:
-                  - service: script.livingroom_fan_on
-                  - delay:
-                      milliseconds: 200
+          - service: script.livingroom_fan_on
+          - delay:
+              milliseconds: 200
           - choose:
               - conditions: "{{ states('input_select.requested_livingroom_fan_speed') != states('input_select.livingroom_fan_speed') }}"
                 sequence:
@@ -52,25 +74,6 @@ script:
         entity_id: switch.livingroom_fan_swing
       - service: input_boolean.toggle
         entity_id: input_boolean.livingroom_fan_osc
-
-input_boolean:
-  livingroom_fan_state:
-    name: "livingroom_fan_state"
-  livingroom_fan_osc:
-    name: "livingroom_fan_osc"
-
-input_select:
-  requested_livingroom_fan_speed:
-    options:
-      - "0"
-      - "33"
-      - "66"
-      - "100"
-  livingroom_fan_speed:
-    options:
-      - "33"
-      - "66"
-      - "100"
 
 fan:
   - platform: template
