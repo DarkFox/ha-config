@@ -7,6 +7,16 @@ sensor:
       - sensor.octoprint_actual_bed_temp
 
 automation:
+  - id: toggle_3d_printer_light
+    alias: Toggle 3D printer light
+    trigger:
+      - platform: state
+        entity_id: switch.3d_printer_afbryder
+    action:
+      service: "light.turn_{{ states('switch.3d_printer_afbryder') }}"
+      target:
+        entity_id: light.3d_printer_enclosure_light
+
   - id: turn_on_3d_printer_ventilation
     alias: Turn on 3D printer ventilation
     trigger:
@@ -18,8 +28,7 @@ automation:
       target:
         entity_id:
           - fan.3d_printer_enclosure_ind
-          - fan.3d_printer_enclosure_ud_1
-          - fan.3d_printer_enclosure_ud_2
+          - fan.3d_printer_enclosure_ud
       data:
         percentage: 100
 
@@ -34,7 +43,6 @@ automation:
       target:
         entity_id:
           - fan.3d_printer_enclosure_ind
-          - fan.3d_printer_enclosure_ud_1
-          - fan.3d_printer_enclosure_ud_2
+          - fan.3d_printer_enclosure_ud
       data:
         percentage: 0
