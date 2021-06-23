@@ -12,6 +12,14 @@ input_select:
       - up
       - down
 
+  living_room_matrix_input:
+    name: Video Indgang
+    options:
+      - "Off"
+      - Nvidia Shield
+      - Nintendo Switch
+      - PC
+
 binary_sensor:
   - platform: template
     sensors:
@@ -21,16 +29,61 @@ binary_sensor:
             is_state('media_player.nvidia_shield_adb', 'playing')
             or is_state('media_player.nvidia_shield_adb', 'paused')
             or is_state('media_player.nvidia_shield_adb', 'idle')
+            or is_state('media_player.stue_shield', 'playing')
+            or is_state('media_player.stue_shield', 'paused')
+            or is_state('media_player.stue_shield', 'idle')
           }}
       living_room_video_out:
         value_template: >-
           {{
-            (state_attr('media_player.sync_box', 'source') == 'Nvidia Shield' and is_state('binary_sensor.living_room_nvidia_shield', 'on'))
-            or (state_attr('media_player.sync_box', 'source') == 'Nintendo Switch' and is_state('device_tracker.nintendo_switch_wired', 'home'))
-            or (state_attr('media_player.sync_box', 'source') == 'PC' and is_state('binary_sensor.martin_pc_activity', 'on'))
+            (is_state('input_select.living_room_matrix_input', 'Nvidia Shield') and is_state('binary_sensor.living_room_nvidia_shield', 'on'))
+            or (is_state('input_select.living_room_matrix_input', 'Nintendo Switch') and is_state('device_tracker.nintendo_switch_wired', 'home'))
+            or (is_state('input_select.living_room_matrix_input', 'PC') and is_state('binary_sensor.martin_pc_activity', 'on'))
           }}
 
+script:
+  change_living_room_media_source:
+    sequence:
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.living_room_matrix_input
+          option: "{{ source }}"
+
 automation:
+  - alias: living_room_nvidia_shield_on
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: media_player.nvidia_shield_adb
+        from: "off"
+    action:
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.living_room_matrix_input
+          option: "Nvidia Shield"
+
+  - alias: living_room_video_switch_input
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.living_room_matrix_input
+    action:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_select.living_room_matrix_input
+                state: "Off"
+            sequence:
+              - service: media_player.turn_off
+                data:
+                  entity_id: media_player.sync_box
+        default:
+          - service: script.turn_on
+            data:
+              entity_id: script.change_living_room_media_source
+              variables:
+                source: "{{ states('input_select.living_room_matrix_input') }}"
+
   - alias: stue_soundbar_volume_remote_state_up
     initial_state: true
     trigger:
@@ -179,7 +232,9 @@ automation:
                   seconds: 10
       - service: media_player.turn_on
         data:
-          entity_id: media_player.stue_tv
+          entity_id:
+            - media_player.sync_box
+            - media_player.stue_tv
 
   - alias: living_room_tv_off
     initial_state: true
@@ -189,6 +244,11 @@ automation:
         to: "off"
         for:
           minutes: 5
+      - platform: state
+        entity_id: input_select.living_room_matrix_input
+        to: "Off"
+        for:
+          seconds: 5
       - platform: state
         entity_id: input_select.living_room_video_output
         from: "TV"
@@ -214,6 +274,9 @@ automation:
         entity_id: input_select.living_room_video_output
         state: "Projektor"
     action:
+      - service: media_player.turn_on
+        data:
+          entity_id: media_player.sync_box
       - service: switch.turn_on
         data:
           entity_id: switch.projector
@@ -226,6 +289,11 @@ automation:
         to: "off"
         for:
           minutes: 5
+      - platform: state
+        entity_id: input_select.living_room_matrix_input
+        to: "Off"
+        for:
+          seconds: 5
       - platform: state
         entity_id: input_select.living_room_video_output
         from: "Projektor"

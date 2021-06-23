@@ -77,15 +77,16 @@ cards:
             icon: si:nvidia
             tap_action:
               action: call-service
-              service: media_player.select_source
+              service: script.turn_on
               service_data:
-                entity_id: media_player.sync_box
-                source: "Nvidia Shield"
+                entity_id: script.change_living_room_media_source
+                variables:
+                  source: "Nvidia Shield"
             state:
               - operator: template
                 value: >
                   [[[
-                    return (states['media_player.sync_box'].attributes['source'] == 'Nvidia Shield')
+                    return (states['input_select.living_room_matrix_input'].state == 'Nvidia Shield')
                   ]]]
                 color: var(--paper-item-icon-active-color)
           - type: "custom:button-card"
@@ -93,15 +94,16 @@ cards:
             icon: mdi:nintendo-switch
             tap_action:
               action: call-service
-              service: media_player.select_source
+              service: script.turn_on
               service_data:
-                entity_id: media_player.sync_box
-                source: "Nintendo Switch"
+                entity_id: script.change_living_room_media_source
+                variables:
+                  source: "Nintendo Switch"
             state:
               - operator: template
                 value: >
                   [[[
-                    return (states['media_player.sync_box'].attributes['source'] == 'Nintendo Switch')
+                    return (states['input_select.living_room_matrix_input'].state == 'Nintendo Switch')
                   ]]]
                 color: var(--paper-item-icon-active-color)
           - type: "custom:button-card"
@@ -109,15 +111,16 @@ cards:
             icon: mdi:desktop-tower-monitor
             tap_action:
               action: call-service
-              service: media_player.select_source
+              service: script.turn_on
               service_data:
-                entity_id: media_player.sync_box
-                source: "PC"
+                entity_id: script.change_living_room_media_source
+                variables:
+                  source: "PC"
             state:
               - operator: template
                 value: >
                   [[[
-                    return (states['media_player.sync_box'].attributes['source'] == 'PC')
+                    return (states['input_select.living_room_matrix_input'].state == 'PC')
                   ]]]
                 color: var(--paper-item-icon-active-color)
           - type: "custom:button-card"
@@ -125,15 +128,16 @@ cards:
             icon: mdi:power
             tap_action:
               action: call-service
-              service: media_player.turn_off
+              service: script.turn_on
               service_data:
-                entity_id: media_player.sync_box
-
+                entity_id: script.change_living_room_media_source
+                variables:
+                  source: "Off"
             state:
               - operator: template
                 value: >
                   [[[
-                    return (states['media_player.sync_box'].attributes['source'] == 'Off')
+                    return (states['input_select.living_room_matrix_input'].state == 'Off')
                   ]]]
                 color: var(--paper-item-icon-active-color)
 
@@ -176,32 +180,27 @@ cards:
       type: vertical-stack
       cards:
         - type: custom:mini-media-player
-          name: NVIDIA
-          artwork: full-cover
-          entity: media_player.nvidia_shield_adb
+          name: Nvidia Shield
+          artwork: cover
+          entity: media_player.stue_shield
           info: scroll
           hide:
             name: true
             volume: true
             controls: true
-          style:
-            .: |
-              .cover, .mmp__bg, .mmp__container, ha-card {
-                border-radius: 0 !important;
-              }
         - type: horizontal-stack
           cards:
             - type: "custom:button-card"
-              entity: media_player.nvidia_shield_adb
+              entity: media_player.stue_shield
               icon: mdi:skip-previous
               show_name: false
               tap_action:
                 action: call-service
                 service: media_player.media_previous_track
                 service_data:
-                  entity_id: media_player.nvidia_shield_adb
+                  entity_id: media_player.stue_shield
             - type: "custom:button-card"
-              entity: media_player.nvidia_shield_adb
+              entity: media_player.stue_shield
               icon: mdi:play
               show_name: false
               state:
@@ -211,13 +210,13 @@ cards:
                 action: call-service
                 service: media_player.media_play_pause
                 service_data:
-                  entity_id: media_player.nvidia_shield_adb
+                  entity_id: media_player.stue_shield
             - type: "custom:button-card"
-              entity: media_player.nvidia_shield_adb
+              entity: media_player.stue_shield
               icon: mdi:skip-next
               show_name: false
               tap_action:
                 action: call-service
                 service: media_player.media_next_track
                 service_data:
-                  entity_id: media_player.nvidia_shield_adb
+                  entity_id: media_player.stue_shield
