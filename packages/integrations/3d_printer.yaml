@@ -22,40 +22,18 @@ sensor:
           {%- set end_time = (states('sensor.octoprint_time_remaining')|int) + (as_timestamp(now())|int) -%}
           {{ end_time | timestamp_custom('%Y-%m-%d %H:%M') }}
 
-# camera:
-#   - platform: mjpeg
-#     name: OctoPrint
-#     still_image_url: http://192.168.42.245/webcam/?action=snapshot
-#     mjpeg_url: http://192.168.42.245/webcam/?action=stream
-
-android_ip_webcam:
-  - host: 192.168.42.24
-    name: 3D Printer Camera
-    sensors:
-      - audio_connections
-      - battery_level
-      - battery_temp
-      - battery_voltage
-      - light
-      - motion
-      - pressure
-      - proximity
-      - sound
-      - video_connections
-    switches:
-      - exposure_lock
-      - ffc
-      - focus
-      - gps_active
-      - motion_detect
-      - night_vision
-      - overlay
-      - torch
-      - whitebalance_lock
-      - video_recording
+camera:
+  - platform: mjpeg
+    name: 3D Printer Head
+    still_image_url: http://192.168.42.238/webcam/?action=snapshot
+    mjpeg_url: http://192.168.42.238/webcam/?action=stream
+  - platform: mjpeg
+    name: 3D Printer
+    still_image_url: http://192.168.42.238/webcam2/?action=snapshot
+    mjpeg_url: http://192.168.42.238/webcam2/?action=stream
 
 octoprint:
-  host: 192.168.42.204
+  host: 192.168.42.238
   port: 5000
   api_key: !secret octoprint_key
   bed: true
