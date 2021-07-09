@@ -4,59 +4,49 @@ icon: "mdi:tablet-android"
 panel: true
 cards:
   - type: custom:layout-card
-    layout: horizontal
-    column_num: 2
-    column_width: [60%, 40%]
+    layout_type: custom:grid-layout
+    layout:
+      grid-template-columns: 35% 30% 35%
+      grid-template-rows: auto
     cards:
       - type: vertical-stack
         cards:
+          - !include ../cards/clock.yaml
+          - !include ../cards/weekday.yaml
+
           - type: conditional
             conditions:
-              - entity: binary_sensor.xxx
+              - entity: input_boolean.guests
+                state: "off"
+            card: !include ../cards/calendar.yaml
+
+          - type: conditional
+            conditions:
+              - entity: input_boolean.guests
                 state: "on"
             card:
-              type: custom:button-card
-              color_type: blank-card
+              type: custom:html-card
+              title: WiFi
+              content: !secret ui_wifi_content
 
-          - type: horizontal-stack
-            cards:
-              - type: vertical-stack
-                cards:
-                  - !include ../cards/clock.yaml
-                  - !include ../cards/weekday.yaml
+          - type: conditional
+            conditions:
+              - entity: input_boolean.guests
+                state: "off"
+            card: !include ../cards/mode_toggles.yaml
 
-                  - type: conditional
-                    conditions:
-                      - entity: input_boolean.guests
-                        state: "off"
-                    card: !include ../cards/calendar.yaml
+      - type: vertical-stack
+        cards:
+          - type: custom:decluttering-card
+            template: room_light_profile
+            variables:
+              - room: hallway
 
-                  - type: conditional
-                    conditions:
-                      - entity: input_boolean.guests
-                        state: "on"
-                    card:
-                      type: custom:html-card
-                      title: WiFi
-                      content: !secret ui_wifi_content
+          - !include ../cards/compact_thermostats.yaml
 
-                  - type: conditional
-                    conditions:
-                      - entity: input_boolean.guests
-                        state: "off"
-                    card: !include ../cards/mode_toggles.yaml
-
-              - type: vertical-stack
-                cards:
-                  - type: custom:decluttering-card
-                    template: room_light_profile
-                    variables:
-                      - room: hallway
-
-                  - !include ../cards/compact_thermostats.yaml
-
-                  - !include ../cards/media_players/playlist_controls.yaml
-                  - !include ../cards/media_players/conditional_groups.yaml
+          - !include ../cards/media_players/playlist_controls.yaml
+          - !include ../cards/media_players/conditional_groups.yaml
+          - !include ../cards/low_battery.yaml
 
       - type: vertical-stack
         cards:
@@ -81,7 +71,5 @@ cards:
               - !include ../cards/bathroom_occupied_small.yaml
 
               - !include ../cards/hoveddor_laas.yaml
-
-          - !include ../cards/low_battery.yaml
 
           - !include ../cards/power_gauges.yaml
