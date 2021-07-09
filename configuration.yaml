@@ -216,10 +216,24 @@ conversation:
 
 recorder:
   db_url: !secret db_url
-  purge_keep_days: 31
+  purge_keep_days: 7
   exclude:
     event_types:
       - call_service
+      - service_removed
+      - service_executed
+      - platform_discovered
+      - homeassistant_start
+      - homeassistant_stop
+      - feedreader
+      - service_registered
+      - call_service
+      - component_loaded
+      - logbook_entry
+      - system_log_event
+      - automation_triggered
+      - script_started
+      - timer_out_of_sync
     domains: &recorder_domain_excludes
       - automation
       - script
@@ -227,8 +241,22 @@ recorder:
       - updater
       - scene
       - zwave
+      - geo_location
+      - persistent_notification
+    entity_globs: &recorder_entity_globs
+      - device_tracker.unifi_*
+      - sensor.browser_*
+      - sensor.*_spaending
+      - sensor.*_stromstyrke
+      - sensor.*_uptime
+      - sensor.*_uptime_2
+      - sensor.*_wifi_signal
+      - sensor.*_app_hukommelse
+      - sensor.secret_*
     entities: &recorder_entity_excludes
       - sensor.last_successful_authentication
+
+      - sensor.uptime
 
       - binary_sensor.weekday_sensor
       - binary_sensor.workday
@@ -279,15 +307,19 @@ recorder:
       - sensor.ledfx_presets_config
       - sensor.ledfx_presets
 
+      - sensor.octoprint_last_event
+
 history:
   exclude:
     domains: *recorder_domain_excludes
     entities: *recorder_entity_excludes
+    entity_globs: *recorder_entity_globs
 
 logbook:
   exclude:
     domains: *recorder_domain_excludes
     entities: *recorder_entity_excludes
+    entity_globs: *recorder_entity_globs
 
 binary_sensor:
   - platform: workday
