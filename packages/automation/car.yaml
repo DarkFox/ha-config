@@ -1,5 +1,6 @@
 automation:
   - alias: notify_car_charging
+    id: notify_car_charging
     initial_state: true
     trigger:
       - platform: state
@@ -13,6 +14,7 @@ automation:
             Færdig ca. {{ states('sensor.vw_connect_charging_complete_at') }}
 
   - alias: notify_15_minutes_till_car_charged
+    id: notify_15_minutes_till_car_charged
     initial_state: true
     trigger:
       - platform: numeric_state
@@ -30,6 +32,7 @@ automation:
           message: "Bilen er ladt op til {{ states('sensor.vw_connect_target_soc_pct') }}% om {{ states('sensor.vw_connect_remaining_charging_time_to_complete_min') }} minutter."
 
   - alias: notify_car_charged
+    id: notify_car_charged
     initial_state: true
     trigger:
       - platform: state
@@ -41,6 +44,7 @@ automation:
           message: "Oplading afsluttet. Bilen er ladt op til {{ states('sensor.vw_connect_current_soc_pct') }}%."
 
   - alias: notify_car_heating
+    id: notify_car_heating
     trigger:
       - platform: state
         entity_id: binary_sensor.id_3_climatising
@@ -49,3 +53,31 @@ automation:
       - service: notify.telegram_darkfox
         data:
           message: "Klimatiserer bilen. {{ states('sensor.vw_connect_remaining_climatisation_time_min') }} minutter tilbage."
+
+  - alias: notify_charger_available_rsr
+    id: notify_charger_available_rsr
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.rsr_spirii_lader_1_status
+          - binary_sensor.rsr_spirii_lader_2_status
+          - binary_sensor.rsr_spirii_lader_3_status
+          - binary_sensor.rsr_spirii_lader_4_status
+        to: "off"
+    condition:
+      - alias: "Car not plugged in"
+        condition: state
+        entity_id: binary_sensor.vw_connect_plug_connected
+        state: "off"
+      - alias: "Car needs charging"
+        condition: numeric_state
+        entity_id: sensor.id_3_battery
+        below: 40
+      - alias: "Is at RSR"
+        condition: state
+        entity_id: device_tracker.darkphone
+        state: "RSR"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "En ladeplads er lige blevet ledig."

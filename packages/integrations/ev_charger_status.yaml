@@ -1,0 +1,23 @@
+sensor:
+  - platform: rest
+    name: RSR Spirii Ladere Data
+    resource: https://api.chargefinder.com/station/pgxp35
+    value_template: "{{ value_json.outletCount }}"
+    json_attributes:
+      - outletList
+
+binary_sensor:
+  - platform: template
+    sensors:
+      rsr_spirii_lader_1_status:
+        value_template: "{{ 'false' if state_attr('sensor.rsr_spirii_ladere_data', 'outletList')[0]['outlets'][0]['status'] == 0 else 'true' }}"
+        device_class: occupancy
+      rsr_spirii_lader_2_status:
+        value_template: "{{ 'false' if state_attr('sensor.rsr_spirii_ladere_data', 'outletList')[0]['outlets'][1]['status'] == 0 else 'true'  }}"
+        device_class: occupancy
+      rsr_spirii_lader_3_status:
+        value_template: "{{ 'false' if state_attr('sensor.rsr_spirii_ladere_data', 'outletList')[0]['outlets'][2]['status'] == 0 else 'true'  }}"
+        device_class: occupancy
+      rsr_spirii_lader_4_status:
+        value_template: "{{ 'false' if state_attr('sensor.rsr_spirii_ladere_data', 'outletList')[0]['outlets'][3]['status'] == 0 else 'true'  }}"
+        device_class: occupancy
