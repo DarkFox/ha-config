@@ -58,12 +58,7 @@ automation:
     id: notify_charger_available_rsr
     trigger:
       - platform: state
-        entity_id:
-          - binary_sensor.rsr_spirii_lader_1_status
-          - binary_sensor.rsr_spirii_lader_2_status
-          - binary_sensor.rsr_spirii_lader_3_status
-          - binary_sensor.rsr_spirii_lader_4_status
-        to: "off"
+        entity_id: sensor.rsr_spirii_ladere
     condition:
       - alias: "Car not plugged in"
         condition: state
@@ -77,6 +72,10 @@ automation:
         condition: state
         entity_id: device_tracker.darkphone
         state: "RSR"
+      - alias: "Charger available"
+        condition: numeric_state
+        entity_id: sensor.rsr_spirii_ladere
+        above: 1
     action:
       - service: notify.telegram_darkfox
         data:

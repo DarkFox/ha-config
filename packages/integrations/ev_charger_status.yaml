@@ -1,23 +1,26 @@
 sensor:
   - platform: rest
-    name: RSR Spirii Ladere Data
-    resource: https://api.chargefinder.com/station/pgxp35
-    value_template: "{{ value_json.outletCount }}"
-    json_attributes:
-      - outletList
-
+    name: RSR Spirii Ladere
+    resource: https://adm.chargefinder.com/status/pgxp35
+    value_template: "{{ value_json | selectattr('status', 'equalto', 2) | list | length }}"
 binary_sensor:
-  - platform: template
-    sensors:
-      rsr_spirii_lader_1_status:
-        value_template: "{{ 'false' if state_attr('sensor.rsr_spirii_ladere_data', 'outletList')[0]['outlets'][0]['status'] == 0 else 'true' }}"
-        device_class: occupancy
-      rsr_spirii_lader_2_status:
-        value_template: "{{ 'false' if state_attr('sensor.rsr_spirii_ladere_data', 'outletList')[0]['outlets'][1]['status'] == 0 else 'true'  }}"
-        device_class: occupancy
-      rsr_spirii_lader_3_status:
-        value_template: "{{ 'false' if state_attr('sensor.rsr_spirii_ladere_data', 'outletList')[0]['outlets'][2]['status'] == 0 else 'true'  }}"
-        device_class: occupancy
-      rsr_spirii_lader_4_status:
-        value_template: "{{ 'false' if state_attr('sensor.rsr_spirii_ladere_data', 'outletList')[0]['outlets'][3]['status'] == 0 else 'true'  }}"
-        device_class: occupancy
+  - platform: rest
+    name: RSR Spirii Lader Z416 Status
+    resource: https://adm.chargefinder.com/status/pgxp35
+    value_template: "{{ (value_json | selectattr('id', 'equalto', 'DK.SPI.Z416*1') | first).status == 3 }}"
+    device_class: occupancy
+  - platform: rest
+    name: RSR Spirii Lader Z417 Status
+    resource: https://adm.chargefinder.com/status/pgxp35
+    value_template: "{{ (value_json | selectattr('id', 'equalto', 'DK.SPI.Z417*1') | first).status == 3 }}"
+    device_class: occupancy
+  - platform: rest
+    name: RSR Spirii Lader Z418 Status
+    resource: https://adm.chargefinder.com/status/pgxp35
+    value_template: "{{ (value_json | selectattr('id', 'equalto', 'DK.SPI.Z418*1') | first).status == 3 }}"
+    device_class: occupancy
+  - platform: rest
+    name: RSR Spirii Lader Z419 Status
+    resource: https://adm.chargefinder.com/status/pgxp35
+    value_template: "{{ (value_json | selectattr('id', 'equalto', 'DK.SPI.Z419*1') | first).status == 3 }}"
+    device_class: occupancy
