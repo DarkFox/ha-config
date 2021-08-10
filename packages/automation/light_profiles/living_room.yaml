@@ -91,13 +91,6 @@ automation:
     action:
       - service: scene.apply
         data_template:
-          transition: 0
-          entities:
-            light.sofa_laeselampe:
-              state: on
-              color_temp: 370
-      - service: scene.apply
-        data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
             group.living_room_lights:
@@ -123,24 +116,19 @@ automation:
         state: "Default"
     action:
       - service: scene.apply
-        data_template:
-          transition: 0
-          entities:
-            light.sofa_laeselampe:
-              state: on
-              color_temp: 430
-      - service: scene.apply
-        data_template:
+        data:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
-            light.sofa_laeselampe:
-              state: on
-              brightness: 96
-              color_temp: 430
             light.stue_spots:
               state: on
               brightness: 128
               color_temp: 430
+              effect: "None"
+            light.sofa_laeselampe:
+              state: on
+              brightness: 96
+              color_temp: 430
+              effect: "None"
             light.sofalampe:
               state: on
               brightness: 128
@@ -243,9 +231,14 @@ automation:
               effect: "Solid"
             light.stue_tablet:
               state: on
-            light.juletrae:
+            # light.juletrae:
+            #   state: on
+            #   brightness: 255
+            light.stue_hjorne:
               state: on
-              brightness: 255
+              brightness: 128
+              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+              effect: "{{ states('sensor.theme') if states('sensor.theme') is in state_attr('light.stue_hjorne', 'effect_list') else '' }}"
 
   - alias: activate_light_profile_living_room_dimmed
     initial_state: true
@@ -262,18 +255,8 @@ automation:
     action:
       - service: scene.apply
         data_template:
-          transition: 0
-          entities:
-            light.sofa_laeselampe:
-              state: on
-              color_temp: 454
-      - service: scene.apply
-        data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
-            light.sofa_laeselampe:
-              state: on
-              brightness: 76
             light.spisebord:
               state: on
               brightness: 76
@@ -308,6 +291,11 @@ automation:
               brightness: 127
               hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
               effect: "None"
+            light.sofa_laeselampe:
+              state: on
+              brightness: 76
+              color_temp: 500
+              effect: "None"
             light.sofalampe:
               state: on
               brightness: 127
@@ -395,9 +383,14 @@ automation:
               effect: "Solid"
             light.stue_tablet:
               state: on
-            light.juletrae:
+            # light.juletrae:
+            #   state: on
+            #   brightness: 172
+            light.stue_hjorne:
               state: on
-              brightness: 172
+              brightness: 64
+              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+              effect: "{{ states('sensor.theme') if states('sensor.theme') is in state_attr('light.stue_hjorne', 'effect_list') else '' }}"
 
   - alias: activate_light_profile_living_room_ambient
     initial_state: true
@@ -416,8 +409,6 @@ automation:
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
-            light.sofa_laeselampe:
-              state: off
             light.display_cabinet_front_1:
               state: off
             light.display_cabinet_front_4:
@@ -442,6 +433,8 @@ automation:
             light.display_cabinet_front_3:
               state: on
               brightness: 16
+            light.sofa_laeselampe:
+              state: off
             light.sofalampe:
               state: on
               brightness: 32
@@ -524,9 +517,14 @@ automation:
               effect: "Solid"
             light.stue_tablet:
               state: on
-            light.juletrae:
+            # light.juletrae:
+            #   state: on
+            #   brightness: 127
+            light.stue_hjorne:
               state: on
-              brightness: 127
+              brightness: 24
+              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+              effect: "{{ states('sensor.theme') if states('sensor.theme') is in state_attr('light.stue_hjorne', 'effect_list') else '' }}"
 
   - alias: activate_light_profile_living_room_night
     initial_state: true
@@ -545,8 +543,6 @@ automation:
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
-            light.sofa_laeselampe:
-              state: off
             light.barskab_under:
               state: off
             light.barskab_over:
@@ -601,6 +597,11 @@ automation:
               brightness: 16
               rgb_color: [255, 0, 0]
               effect: "Solid"
+            light.sofa_laeselampe:
+              state: on
+              brightness: 2
+              rgb_color: [255, 0, 0]
+              effect: "None"
             light.stue_spots:
               state: on
               brightness: 2
@@ -638,9 +639,14 @@ automation:
               effect: "None"
             light.stue_tablet:
               state: on
-            light.juletrae:
+            # light.juletrae:
+            #   state: on
+            #   brightness: 32
+            light.stue_hjorne:
               state: on
-              brightness: 32
+              brightness: 8
+              rgb_color: [255, 0, 0]
+              effect: "None"
 
   - alias: activate_light_profile_living_room_off
     initial_state: true
@@ -663,7 +669,7 @@ automation:
         data:
           entity_id:
             - light.stue_tablet
-            - light.juletrae
+            # - light.juletrae
 
   - alias: activate_light_profile_living_room_party
     initial_state: true
@@ -678,13 +684,6 @@ automation:
         entity_id: *room_light_profile
         state: "Party"
     action:
-      - service: scene.apply
-        data_template:
-          transition: 0
-          entities:
-            light.sofa_laeselampe:
-              state: on
-              color_temp: 454
       - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
@@ -801,9 +800,13 @@ automation:
               brightness: 255
             light.stue_tablet:
               state: on
-            light.juletrae:
+            # light.juletrae:
+            #   state: on
+            #   brightness: 255
+            light.stue_hjorne:
               state: on
-              brightness: 255
+              brightness: 24
+              effect: "Pulse Pop Beats"
 
 input_boolean:
   living_room_activity_override:
