@@ -1,8 +1,40 @@
+switch:
+  - platform: template
+    switches:
+      martin_pc:
+        friendly_name: Martin PC
+        icon_template: mdi:desktop-classic
+        value_template: "{{ is_state('binary_sensor.martin_pc', 'on') }}"
+        turn_on:
+          service: switch.turn_on
+          target:
+            entity_id: switch.martin_pc_wol
+        turn_off:
+          service: switch.turn_off
+          target:
+            entity_id: switch.martin_pc_wol
+
+  - platform: wake_on_lan
+    name: Martin PC WoL
+    mac: b4:2e:99:f8:1f:6e
+    broadcast_address: 192.168.32.99
+    broadcast_port: 9
+    turn_off:
+      service: mqtt.publish
+      data:
+        topic: "iotlink/workgroup/martin-pc/commands/shutdown"
+        payload: ""
+
 binary_sensor:
   - platform: template
     sensors:
       martin_pc:
-        value_template: "{{ is_state('device_tracker.martin_pc', 'home') or is_state('device_tracker.martin_pc_wifi', 'home') }}"
+        value_template: >-
+          {{
+            is_state('device_tracker.martin_pc', 'home')
+            or is_state('device_tracker.martin_pc_wifi', 'home')
+            or is_state('binary_sensor.martin_pc_network_0_wired', 'on')
+          }}
 
 automation:
   - alias: pc_speaker_output
