@@ -1,49 +1,47 @@
-type: horizontal-stack
-cards:
-  - type: "custom:button-card"
-    show_label: true
-    show_name: false
-    show_icon: true
-    show_state: true
-    layout: icon_state
-    size: 50px
-    triggers_update:
-      - sensor.s_train_b_status
-      - sensor.s_train_message
-    label: "[[[ return states['sensor.s_train_message'].state ]]]"
-    icon: >
-      [[[
-        if (states['sensor.s_train_b_status'].state != 'Til tiden')
-          return "mdi:clock-alert";
-        else if (states['sensor.s_train_message'].state != '')
-          return "mdi:information";
-        else
-          return "mdi:checkbox-marked-circle";
-      ]]]
-    entity: sensor.s_train_b_status
-    tap_action:
-      action: fire-dom-event
-      browser_mod:
-        command: popup
-        title: S-Tog Driftsbesked
-        card:
-          type: custom:html-card
-          ignore_line_breaks: true
-          content: "[[sensor.s_train_message]]"
-    styles:
-      label:
-        - text-overflow: "initial"
-        - white-space: "normal"
-        - overflow: "visible"
-      card:
-        - font-size: "150%"
-      icon:
-        - color: >
-            [[[
-              if (states['sensor.s_train_b_status'].state != 'Til tiden')
-                return "#FF0000AA";
-              else if (states['sensor.s_train_message'].state != '')
-                return '#FFB300AA';
-              else
-                return "#7DB362AA";
-            ]]]
+type: "custom:button-card"
+show_label: true
+show_name: false
+show_icon: true
+show_state: true
+layout: icon_state
+size: 50px
+triggers_update:
+  - sensor.s_train_b_status
+  - sensor.s_train_message
+label: "[[[ return states['sensor.s_train_message'].state ]]]"
+icon: >
+  [[[
+    if (states['sensor.s_train_b_status'].state != 'Til tiden')
+      return "mdi:clock-alert";
+    else if (states['sensor.s_train_message'].state != '')
+      return "mdi:information";
+    else
+      return "mdi:checkbox-marked-circle";
+  ]]]
+entity: sensor.s_train_b_status
+tap_action:
+  action: fire-dom-event
+  browser_mod:
+    command: popup
+    title: S-Tog Driftsbesked
+    card:
+      type: custom:html-card
+      ignore_line_breaks: true
+      content: "[[sensor.s_train_message]]"
+styles:
+  label:
+    - text-overflow: "initial"
+    - white-space: "normal"
+    - overflow: "visible"
+  card:
+    - font-size: "150%"
+  icon:
+    - color: >
+        [[[
+          if (states['sensor.s_train_b_status'].state != 'Til tiden')
+            return "#FF0000AA";
+          else if (states['sensor.s_train_message'].state != '')
+            return '#FFB300AA';
+          else
+            return "#7DB362AA";
+        ]]]
