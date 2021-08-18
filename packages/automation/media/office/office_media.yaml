@@ -163,10 +163,17 @@ automation:
       - platform: state
         entity_id: input_select.office_room_state
         to: "off"
+    condition:
+      - condition: state
+        entity_id: binary_sensor.office_video_out
+        state: "on"
     action:
       - service: switch.turn_on
         data:
           entity_id: switch.kontor_soundbar_mute
+      - service: switch.turn_off
+        data:
+          entity_id: switch.kontor_tv_afbryder
 
   - alias: office_media_unmute
     initial_state: true
@@ -174,7 +181,14 @@ automation:
       - platform: state
         entity_id: input_select.office_room_state
         to: "active"
+    condition:
+      - condition: state
+        entity_id: binary_sensor.office_video_out
+        state: "on"
     action:
+      - service: switch.turn_on
+        data:
+          entity_id: switch.kontor_tv_afbryder
       - service: switch.turn_on
         data:
           entity_id: switch.kontor_soundbar_volume_down
