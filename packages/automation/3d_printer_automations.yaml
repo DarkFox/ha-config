@@ -3,8 +3,8 @@ sensor:
     name: 3d_printer_max_temp
     type: max
     entity_ids:
-      - sensor.octoprint_actual_tool0_temp
-      - sensor.octoprint_actual_bed_temp
+      - sensor.octoprint_tool_0_temperature
+      - sensor.octoprint_bed_temperature
 
 automation:
   - id: toggle_3d_printer_light
@@ -32,6 +32,20 @@ automation:
       data:
         percentage: 100
 
+  - id: lower_3d_printer_ventilation_for_abs
+    alias: Turn on 3D printer ventilation
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.octoprint_bed_temperature
+        above: 80
+    action:
+      service: fan.set_percentage
+      target:
+        entity_id:
+          - fan.3d_printer_enclosure_ind
+      data:
+        percentage: 25
+
   - id: turn_off_3d_printer_ventilation
     alias: Turn off 3D printer ventilation
     trigger:
@@ -39,10 +53,72 @@ automation:
         entity_id: sensor.3d_printer_max_temp
         below: 40
     action:
-      service: fan.set_percentage
+      service: fan.turn_off
       target:
         entity_id:
           - fan.3d_printer_enclosure_ind
           - fan.3d_printer_enclosure_ud
-      data:
-        percentage: 15
+
+  - id: turn_on_printer_window
+    alias: Turn on printer window
+    trigger:
+      - platform: state
+        entity_id: switch.3d_printer_afbryder
+        to: "on"
+      - platform: state
+        entity_id: input_select.office_room_state
+        to: "active"
+    condition:
+      - alias: "Printer On"
+        condition: state
+        entity_id: switch.3d_printer_afbryder
+        state: "on"
+      - alias: "Room active"
+        condition: state
+        entity_id: input_select.office_room_state
+        state: "active"
+    action:
+      - alias: "Turn on screen"
+        service: switch.turn_on
+        target:
+          entity_id: switch.3d_printer_screen
+
+  - id: turn_off_printer_window
+    alias: Turn off printer window
+    trigger:
+      - platform: state
+        entity_id: switch.3d_printer_afbryder
+        to: "off"
+      - platform: state
+        entity_id: input_select.office_room_state
+        from: "active"
+    action:
+      - alias: "Turn off screen"
+        service: switch.turn_off
+        target:
+          entity_id: switch.3d_printer_screen
+
+  - id: 3d_print_status_notification
+    alias: 3D Print status notification
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.3d_printer_running
+        to: "on"
+      - platform: time_pattern
+        minutes: "/5"
+        seconds: "0"
+    condition:
+      - alias: "Print active"
+        condition: state
+        entity_id: binary_sensor.3d_printer_running
+        state: "on"
+    action:
+      - service: notify.mobile_app_darkphone
+        data:
+          title: "3D Print Progress {{ states('sensor.octoprint_print_progress') }}%"
+          message: "Time left: {{ states('sensor.octoprint_print_time_left') }}"
+          data:
+            tag: "3d_print_status_notification"
+            channel: "3D Printer Status"
+            importance: low
+            image: /api/camera_proxy/camera.3d_printer_head

@@ -7,20 +7,16 @@ binary_sensor:
 sensor:
   - platform: template
     sensors:
-      3d_printer_time_elapsed:
-        icon_template: mdi:clock-start
-        friendly_name: 3D Printer Time Elapsed
-        value_template: "{{ timedelta(seconds=states('sensor.octoprint_time_elapsed')|int) }}"
-      3d_printer_time_remaining:
-        icon_template: mdi:clock-end
-        friendly_name: 3D Printer Time Remaining
-        value_template: "{{ timedelta(seconds=states('sensor.octoprint_time_remaining')|int) }}"
       3d_printer_finish_time:
         icon_template: mdi:clock-outline
         friendly_name: 3D Printer Finish Time
         value_template: >-
-          {%- set end_time = (states('sensor.octoprint_time_remaining')|int) + (as_timestamp(now())|int) -%}
-          {{ end_time | timestamp_custom('%Y-%m-%d %H:%M') }}
+          {%- if is_state('sensor.octoprint_print_time_left', 'None') -%}
+            None
+          {%- else -%}
+            {%- set time_left = states('sensor.octoprint_print_time_left').split(':') -%}
+            {{ (timedelta(hours = time_left[0]|int, minutes = time_left[1]|int, seconds = time_left[2]|int) + utcnow()) | as_timestamp | timestamp_custom('%Y-%M-%d %H:%M') }}
+          {%- endif -%}
 
 camera:
   - platform: mjpeg
@@ -32,9 +28,18 @@ camera:
     still_image_url: http://192.168.42.238/webcam2/?action=snapshot
     mjpeg_url: http://192.168.42.238/webcam2/?action=stream
 
-octoprint:
-  host: 192.168.42.238
-  port: 5000
-  api_key: !secret octoprint_key
-  bed: true
-  number_of_tools: 1
+# octoprint:
+#   host: 192.168.42.238
+#   port: 5000
+#   api_key: !secret octoprint_key
+#   bed: true
+#   number_of_tools: 1
+
+switch:
+  - platform: command_line
+    switches:
+      3d_printer_screen:
+        command_on: ssh -i /config/id_rsa -o 'StrictHostKeyChecking=no' pi@192.168.42.238 vcgencmd display_power 1
+        command_off: ssh -i /config/id_rsa -o 'StrictHostKeyChecking=no' pi@192.168.42.238 vcgencmd display_power 0
+        command_state: ssh -i /config/id_rsa -o 'StrictHostKeyChecking=no' pi@192.168.42.238 vcgencmd display_power
+        value_template: "{{ value.split('=')[1] == '1' }}"
