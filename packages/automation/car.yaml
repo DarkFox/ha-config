@@ -1,4 +1,38 @@
 automation:
+  - id: climatise_car_for_commute_to_work
+    alias: climatise_car_for_commute_to_work
+    trigger:
+      - platform: time
+        at: "{{ strptime(states('sensor.time_to_leave_car_commute'), '%Y-%m-%d %H:%M:%S') - timedelta(minutes=15) }}"
+    condition:
+      - alias: "If at home"
+        condition: state
+        entity_id: person.martin
+        state: "Home"
+    action:
+      - alias: "Climatise car"
+        service: switch.turn_on
+        target:
+          entity_id: switch.vw_connect_climatisation
+
+  - id: climatise_car_for_commute_from_work
+    alias: climatise_car_for_commute_from_work
+    trigger:
+      - platform: time
+        at: sensor.work_end_time
+    condition:
+      - alias: "If at work"
+        condition: state
+        entity_id: person.martin
+        state:
+          - RSR
+          - RSH
+    action:
+      - alias: "Climatise car"
+        service: switch.turn_on
+        target:
+          entity_id: switch.vw_connect_climatisation
+
   - alias: notify_car_charging
     id: notify_car_charging
     initial_state: true
@@ -43,8 +77,8 @@ automation:
         data:
           message: "Oplading afsluttet. Bilen er ladt op til {{ states('sensor.vw_connect_current_soc_pct') }}%."
 
-  - alias: notify_car_heating
-    id: notify_car_heating
+  - alias: notify_car_climatising
+    id: notify_car_climatising
     trigger:
       - platform: state
         entity_id: binary_sensor.id_3_climatising

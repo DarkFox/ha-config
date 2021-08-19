@@ -47,6 +47,15 @@ sensor:
         value_template: >
           {% set zone = 'zone.home' %}
           {{ state_attr(zone, 'latitude') }}%2C{{ state_attr(zone, 'longitude') }}
+      time_to_leave_car_commute:
+        value_template: "{{ strptime(states('sensor.work_start_time'), '%Y-%m-%d %H:%M:%S') - timedelta(minutes=states('sensor.hjem_til_'+states('sensor.next_work_at'))|int+10) }}"
+        device_class: timestamp
+      work_start_time:
+        value_template: "{{ state_attr('calendar.arbejde_pa_'+states('sensor.next_work_at'), 'start_time') }}"
+        device_class: timestamp
+      work_end_time:
+        value_template: "{{ state_attr('calendar.arbejde_pa_rsr', 'end_time') if is_state('calendar.arbejde_pa_rsr', 'on') else state_attr('calendar.arbejde_pa_rsh', 'end_time') }}"
+        device_class: timestamp
       commute_status_car:
         value_template: >
           {%- if states('sensor.hjem_til_'+states('sensor.next_work_at'))|int > 45 -%}
