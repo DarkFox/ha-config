@@ -36,31 +36,36 @@ sensor:
   - platform: template
     sensors:
       next_wfh_event:
-        value_template: "{{ (state_attr('calendar.arbejde_arbejder_hjemmefra', 'start_time') or false) | as_timestamp() }}"
+        value_template: >-
+          {% set time = as_timestamp(state_attr('calendar.arbejde_arbejder_hjemmefra', 'start_time')) or false %}
+          {{ time if as_timestamp(now())+(1*60*60) < time else false }}
       next_rsr_event:
-        value_template: "{{ (state_attr('calendar.arbejde_pa_rsr', 'start_time') or false) | as_timestamp() }}"
+        value_template: >-
+          {% set time = as_timestamp(state_attr('calendar.arbejde_pa_rsr', 'start_time')) or false %}
+          {{ time if as_timestamp(now())+(1*60*60) < time else false }}
       next_rsh_event:
-        value_template: "{{ (state_attr('calendar.arbejde_pa_rsh', 'start_time') or false) | as_timestamp() }}"
+        value_template: >-
+          {% set time = as_timestamp(state_attr('calendar.arbejde_pa_rsh', 'start_time')) or false %}
+          {{ time if as_timestamp(now())+(1*60*60) < time else false }}
       next_personal_event:
-        value_template: "{{ (state_attr('calendar.personlig', 'start_time') or false) | as_timestamp() }}"
+        value_template: >-
+          {% set time = as_timestamp(state_attr('calendar.personlig', 'start_time')) or false %}
+          {{ time if as_timestamp(now())+(1*60*60) < time else false }}
       next_tripit_event:
-        value_template: "{{ (state_attr('calendar.tripit', 'start_time') or false) | as_timestamp() }}"
+        value_template: >-
+          {% set time = as_timestamp(state_attr('calendar.tripit', 'start_time')) or false %}
+          {{ time if as_timestamp(now())+(1*60*60) < time else false }}
       fallback_wake_up_time:
         value_template: >-
           {%- set hour = state_attr('input_datetime.fallback_wake_up_time', 'hour') -%}
           {%- set minute = state_attr('input_datetime.fallback_wake_up_time', 'minute') -%}
           {%- set days = 0 if 0 <= now().hour <= hour else 1 -%}
-          {{ now().replace(hour=hour,minute=minute,second=0,microsecond=0) + timedelta(days=days) }}
+          {{ as_timestamp(now().replace(hour=hour+2,minute=minute,second=0,microsecond=0) + timedelta(days=days)) }}
       wake_up_event_source:
         value_template: "{{ state_attr('sensor.next_event_for_wakeup_time', 'min_entity_id') }}"
       wake_up_time:
         friendly_name: "Opvågningstidspunkt"
-        value_template: >-
-          {%- if states('sensor.wake_up_event_source') == 'fallback_wake_up_time' -%}
-            {{ (states('sensor.next_event_for_wakeup_time')|int) | timestamp_local() }}
-          {%- else -%}
-            {{ (states('sensor.next_event_for_wakeup_time')|int - (2*60*60)) | timestamp_local() }}
-          {%- endif -%}
+        value_template: "{{ (states('sensor.next_event_for_wakeup_time')|int - (2*60*60)) | timestamp_local() }}"
       bedtime:
         friendly_name: "Sengetid"
         value_template: "{{ (states('sensor.wake_up_time')|as_timestamp() - (8*60*60)) | timestamp_local() }}"
