@@ -207,31 +207,30 @@ automation:
                   entity_id: input_select.stue_soundbar_volume_remote_state
                   state: "up"
 
-  - id: set_hue_sync_box_mode_from_source
-    alias: Set Hue Sync Box Mode From Source
-    trigger:
-      - platform: template
-        value_template: "{{ state_attr('media_player.sync_box', 'source') }}"
-      - platform: template
-        value_template: "{{ state_attr('media_player.stue_shield', 'app_name') }}"
-    variables:
-      source: "{{ state_attr('media_player.sync_box', 'source') }}"
-      mode: >-
-        {% if source == 'Nvidia Shield' %}
-          {% if is_state_attr('media_player.stue_shield', 'app_name', 'Netflix') %}
-            video
-          {% else %}
-            video
-          {% endif %}
-        {% elif source == 'Nintendo Switch' or source == 'PC' %}
-          game
-        {% endif %}
-    action:
-      - service: huesyncbox.set_sync_mode
-        target:
-          entity_id: media_player.sync_box
-        data:
-          mode: "{{ mode }}"
+  # - id: set_hue_sync_box_mode_from_source
+  #   alias: Set Hue Sync Box Mode From Source
+  #   trigger:
+  #     - platform: state
+  #       entity_id: media_player.sync_box
+  #       from: "off"
+  #     - platform: template
+  #       value_template: "{{ state_attr('media_player.sync_box', 'source') }}"
+  #     - platform: template
+  #       value_template: "{{ state_attr('media_player.stue_shield', 'app_name') }}"
+  #   variables:
+  #     source: "{{ state_attr('media_player.sync_box', 'source') }}"
+  #     mode: >-
+  #       {% if source == 'Nvidia Shield' %}
+  #         video
+  #       {% elif source == 'Nintendo Switch' or source == 'PC' %}
+  #         game
+  #       {% endif %}
+  #   action:
+  #     - service: huesyncbox.set_sync_mode
+  #       target:
+  #         entity_id: media_player.sync_box
+  #       data:
+  #         mode: "{{ mode }}"
 
   - alias: living_room_tv_on
     initial_state: true
