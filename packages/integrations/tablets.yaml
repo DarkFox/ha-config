@@ -101,6 +101,16 @@ automation:
         data_template:
           entity_id: switch.hallway_tablet_charger
 
+  - alias: bathroom_tablet_ip_webhook
+    initial_state: True
+    trigger:
+      platform: webhook
+      webhook_id: !secret bathroom_tablet_ip_webhook
+    action:
+      service: "input_text.set_value"
+      data:
+        entity_id: input_text.bathroom_tablet_ip
+        value: "{{ trigger.json.state }}"
   - alias: bathroom_tablet_screen_webhook
     initial_state: True
     trigger:
@@ -215,6 +225,10 @@ input_boolean:
   bedroom_tablet_screensaver:
     name: bedroom_tablet_screensaver
 
+input_text:
+  bathroom_tablet_ip:
+    name: Bathroom Tablet IP
+
 input_number:
   kitchen_tablet_brightness:
     name: kitchen_tablet_brightness
@@ -245,7 +259,7 @@ rest_command:
     url: "http://{{ states('sensor.gang_tablet_wifi_ip_adresse') }}:1817/?message={{ command }}"
     method: GET
   bathroom_tablet_command:
-    url: "http://{{ states('sensor.badevaerelse_tablet_wifi_ip_adresse') }}:1817/?message={{ command }}"
+    url: "http://{{ states('input_text.bathroom_tablet_ip') }}:1817/?message={{ command }}"
     method: GET
   living_room_remote_command:
     url: "http://{{ states('sensor.stue_fjernbetjening_wifi_ip_adresse') }}:1817/?message={{ command }}"
