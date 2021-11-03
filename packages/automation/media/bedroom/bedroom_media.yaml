@@ -104,10 +104,21 @@ automation:
           id: sovevaerelse_volumeknap
           event: 1002
     action:
-      service: media_player.volume_mute
-      data_template:
-        entity_id: media_player.sovevaerelse_soundbar_songpal
-        is_volume_muted: "{{ not state_attr('media_player.sovevaerelse_soundbar_songpal', 'is_volume_muted') }}"
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: media_player.sovevaerelse_mini
+                state: "playing"
+            sequence:
+              - service: media_player.volume_mute
+                data_template:
+                  entity_id: media_player.sovevaerelse_mini
+                  is_volume_muted: "{{ not state_attr('media_player.sovevaerelse_mini', 'is_volume_muted') }}"
+        default:
+          - service: media_player.volume_mute
+            data_template:
+              entity_id: media_player.sovevaerelse_soundbar_songpal
+              is_volume_muted: "{{ not state_attr('media_player.sovevaerelse_soundbar_songpal', 'is_volume_muted') }}"
 
   - alias: sovevaerelse_soundbar_volume_remote_up
     initial_state: true
@@ -121,9 +132,19 @@ automation:
     action:
       - repeat:
           sequence:
-            - service: media_player.volume_up
-              data_template:
-                entity_id: media_player.sovevaerelse_soundbar_songpal
+            - choose:
+                - conditions:
+                    - condition: state
+                      entity_id: media_player.sovevaerelse_mini
+                      state: "playing"
+                  sequence:
+                    - service: media_player.volume_up
+                      data_template:
+                        entity_id: media_player.sovevaerelse_mini
+              default:
+                - service: media_player.volume_up
+                  data_template:
+                    entity_id: media_player.sovevaerelse_soundbar_songpal
             - delay:
                 milliseconds: 75
           until:
@@ -148,9 +169,19 @@ automation:
     action:
       - repeat:
           sequence:
-            - service: media_player.volume_down
-              data_template:
-                entity_id: media_player.sovevaerelse_soundbar_songpal
+            - choose:
+                - conditions:
+                    - condition: state
+                      entity_id: media_player.sovevaerelse_mini
+                      state: "playing"
+                  sequence:
+                    - service: media_player.volume_down
+                      data_template:
+                        entity_id: media_player.sovevaerelse_mini
+              default:
+                - service: media_player.volume_down
+                  data_template:
+                    entity_id: media_player.sovevaerelse_soundbar_songpal
             - delay:
                 milliseconds: 75
           until:
