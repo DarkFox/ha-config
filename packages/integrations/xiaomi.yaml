@@ -11,11 +11,15 @@ camera:
       color_goto_path: [255, 0, 0]
       color_predicted_path: [0, 172, 0]
     room_colors:
-      "1": [245, 217, 91] # Køkken
-      "2": [184, 133, 204] # Soveværelse
-      "3": [255, 176, 235] # Gang
-      "4": [250, 126, 112] # Stue
-      "5": [255, 180, 117] # Kontor
+      "16": [127, 127, 127]
+      "17": [245, 217, 91] # Køkken
+      "18": [255, 180, 117] # Kontor
+      "19": [127, 127, 127]
+      "20": [127, 127, 127]
+      "21": [255, 176, 235] # Gang
+      "22": [127, 127, 127]
+      "23": [250, 126, 112] # Stue
+      "24": [184, 133, 204] # Soveværelse
     map_transformation:
       scale: 2
       trim:
@@ -32,7 +36,7 @@ camera:
       - no_mopping_zones
       - vacuum_position
       - virtual_walls
-      - zones
+      # - zones
     attributes:
       - calibration_points
       - charger
@@ -56,6 +60,40 @@ camera:
     auto_update: true
 
 script:
+  vacuum_follow_path:
+    mode: single
+    alias: Vacuum follow path
+    fields:
+      path:
+        name: Path
+      entity_id:
+        name: Vacuum entity
+    sequence:
+      - repeat:
+          count: "{{ path | length }}"
+          sequence:
+            - service: vacuum.send_command
+              data:
+                entity_id: "{{ entity_id }}"
+                command: app_goto_target
+                params: "{{ path[repeat.index-1] }}"
+            - wait_template: "{{ is_state(entity_id, 'cleaning') }}"
+              timeout: 00:00:30
+              continue_on_timeout: false
+            - delay: 00:00:01
+            - wait_template: "{{ is_state(entity_id, 'idle') or is_state(entity_id, 'paused') }}"
+              timeout: 00:05:00
+              continue_on_timeout: false
+
+  vacuum_all_rooms:
+    alias: "Støvsug i alle rum"
+    sequence:
+      - service: xiaomi_miio.vacuum_clean_segment
+        target:
+          entity_id: vacuum.xiaomi_vacuum
+        data:
+          segments: [17, 17, 18, 18, 21, 21, 23, 23, 24, 24]
+
   send_vacuum_to_emptying_position:
     alias: "Send støvsuger til tømmeposition"
     sequence:
@@ -64,3 +102,55 @@ script:
           entity_id: vacuum.xiaomi_vacuum_cleaner
           x_coord: 27500
           y_coord: 19500
+      - alias: "update last empty count"
+        service: input_text.set_value
+        data:
+          entity_id: input_text.vacuum_last_empty
+          value: "{{ states('sensor.xiaomi_vacuum_cleaner_total_clean_area') }}"
+
+input_text:
+  vacuum_last_empty:
+    name: Vacuum Last Empty
+    icon: mdi:delete
+
+sensor:
+  - platform: template
+    sensors:
+      vacuum_area_cleaned_since_last_empty:
+        friendly_name: "Areal støvsuget siden sidste tømning"
+        value_template: "{{ (states('sensor.xiaomi_vacuum_cleaner_total_clean_area')|float) - (states('input_text.vacuum_last_empty')|float) }}"
+
+automation:
+  - id: vacuum_while_at_work
+    alias: Støvsug mens jeg er på arbejde
+    trigger:
+      - platform: time_pattern
+        hours: "11"
+        minutes: "/5"
+        seconds: "0"
+      - platform: time_pattern
+        hours: "16"
+        minutes: "/5"
+        seconds: "0"
+    condition:
+      - alias: "Is at work"
+        condition: state
+        entity_id: binary_sensor.location_at_work
+        state: "on"
+      - alias: "Last clean was more than 8 hours ago"
+        condition: template
+        value_template: "{{ states('sensor.xiaomi_vacuum_cleaner_last_clean_end')|as_timestamp < now()|as_timestamp - 8*60*60 }}"
+    action:
+      - service: script.vacuum_all_rooms
+
+  - id: vacuum_go_to_empty_position_before_coming_home
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.martin_home_soon
+        from: "off"
+        to: "on"
+    condition:
+      - condition: template
+        value_template: "{{ states('sensor.vacuum_area_cleaned_since_last_empty')|int > 50 }}"
+    action:
+      - service: script.send_vacuum_to_emptying_position
