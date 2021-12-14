@@ -1,0 +1,111 @@
+title: Kontor Tablet
+path: office-tablet
+panel: true
+icon: "mdi:desktop-tower-monitor"
+cards:
+  - type: custom:layout-card
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: custom:decluttering-card
+            template: room_state_and_light_profile
+            variables:
+              - room: office
+
+          - type: horizontal-stack
+            cards:
+              - type: button
+                tap_action:
+                  action: more-info
+                entity: cover.skrivebord_gardin
+              - type: button
+                tap_action:
+                  action: call-service
+                  service: cover.close_cover
+                  service_data: {}
+                  target:
+                    entity_id: cover.skrivebord_gardin
+                entity: cover.skrivebord_gardin
+                icon: mdi:arrow-left
+                show_name: false
+                state_color: false
+              - type: button
+                tap_action:
+                  action: call-service
+                  service: cover.open_cover
+                  service_data: {}
+                  target:
+                    entity_id: cover.skrivebord_gardin
+                entity: cover.skrivebord_gardin
+                icon: mdi:arrow-right
+                show_name: false
+                state_color: false
+
+          - !include ../cards/conditional_timers.yaml
+
+          - type: entities
+            state_color: true
+            entities:
+              - switch.skrivebord_blaser
+
+      - type: custom:layout-break
+
+      - type: vertical-stack
+        cards:
+          - type: entities
+            title: PC
+            show_header_toggle: false
+            entities:
+              - switch.martin_pc
+              - entity: switch.pc_tilbehor_afbryder
+                name: PC Tilbehør
+                color: auto
+              - entity: input_boolean.office_pc_tv_out
+                name: TV Ud
+                color: auto
+                icon: mdi:television
+              - binary_sensor.martin_pc_activity
+              - sensor.steam_76561197970641649
+              - sensor.steam_game
+
+          - !include ../cards/media_players/playlist_controls.yaml
+
+          - type: custom:mini-media-player
+            artwork: cover
+            entity: media_player.kontor_chromecast
+
+          - type: custom:mini-media-player
+            artwork: cover
+            entity: media_player.kontor_mini
+
+          - type: custom:mini-media-player
+            artwork: cover
+            entity: media_player.kontor_hojttaler
+
+          - type: custom:mini-media-player
+            artwork: cover
+            entity: media_player.pc_line_in
+
+      - type: custom:layout-break
+
+      - type: vertical-stack
+        cards:
+          - type: custom:mini-climate
+            entity: climate.aircondition
+            secondary_info: fan-mode-dropdown
+            toggle:
+              hide: true
+
+          - type: custom:decluttering-card
+            template: room_climate_with_thermostat
+            variables:
+              - rum: kontor
+              - icon: mdi:desktop-tower-monitor
+
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.octoprint_printing
+                state: "on"
+            card: !include ../cards/3d_printer_preview.yaml
+
+          - !include ../cards/lights/rooms/office.yaml
