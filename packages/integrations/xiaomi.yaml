@@ -11,13 +11,13 @@ camera:
       color_goto_path: [255, 0, 0]
       color_predicted_path: [0, 172, 0]
     room_colors:
-      "16": [127, 127, 127]
+      "16": [172, 172, 172]
       "17": [245, 217, 91] # Køkken
       "18": [255, 180, 117] # Kontor
-      "19": [127, 127, 127]
-      "20": [127, 127, 127]
+      "19": [172, 172, 172]
+      "20": [172, 172, 172]
       "21": [255, 176, 235] # Gang
-      "22": [127, 127, 127]
+      "22": [172, 172, 172]
       "23": [250, 126, 112] # Stue
       "24": [184, 133, 204] # Soveværelse
     map_transformation:
@@ -85,15 +85,6 @@ script:
               timeout: 00:05:00
               continue_on_timeout: false
 
-  vacuum_all_rooms:
-    alias: "Støvsug i alle rum"
-    sequence:
-      - service: xiaomi_miio.vacuum_clean_segment
-        target:
-          entity_id: vacuum.xiaomi_vacuum
-        data:
-          segments: [17, 17, 18, 18, 21, 21, 23, 23, 24, 24]
-
   send_vacuum_to_emptying_position:
     alias: "Send støvsuger til tømmeposition"
     sequence:
@@ -108,10 +99,29 @@ script:
           entity_id: input_text.vacuum_last_empty
           value: "{{ states('sensor.xiaomi_vacuum_cleaner_total_clean_area') }}"
 
+input_boolean:
+  vacuum_show_card:
+    name: Vis Støvsuger Menu
+    icon: mdi:menu
+
 input_text:
   vacuum_last_empty:
     name: Vacuum Last Empty
     icon: mdi:delete
+
+binary_sensor:
+  - platform: template
+    sensors:
+      vacuum_show_card:
+        friendly_name: "Vis Støvsuger Menu"
+        value_template: >-
+          {{ 
+            is_state('input_boolean.vacuum_show_card', 'on')
+            or not (
+              is_state('vacuum.xiaomi_vacuum_cleaner', 'docked')
+              or  is_state('vacuum.xiaomi_vacuum_cleaner', 'charging')
+            )
+          }}
 
 sensor:
   - platform: template
@@ -122,6 +132,7 @@ sensor:
 
 automation:
   - id: vacuum_while_at_work
+    initial_state: true
     alias: Støvsug mens jeg er på arbejde
     trigger:
       - platform: time_pattern
@@ -129,21 +140,32 @@ automation:
         minutes: "/5"
         seconds: "0"
       - platform: time_pattern
-        hours: "16"
+        hours: "15"
         minutes: "/5"
         seconds: "0"
     condition:
-      - alias: "Is at work"
-        condition: state
+      - condition: state
+        entity_id: vacuum.xiaomi_vacuum_cleaner
+        state: "docked"
+      - condition: state
         entity_id: binary_sensor.location_at_work
         state: "on"
       - alias: "Last clean was more than 8 hours ago"
         condition: template
-        value_template: "{{ states('sensor.xiaomi_vacuum_cleaner_last_clean_end')|as_timestamp < now()|as_timestamp - 8*60*60 }}"
+        value_template: "{{ states('sensor.xiaomi_vacuum_cleaner_last_clean_start')|as_timestamp < now()|as_timestamp - 8*60*60 }}"
     action:
-      - service: script.vacuum_all_rooms
+      - service: script.debug_notification
+        data_template:
+          message: "Vacuum all rooms"
+          title: "Vacuum"
+      - service: xiaomi_miio.vacuum_clean_segment
+        target:
+          entity_id: vacuum.xiaomi_vacuum_cleaner
+        data:
+          segments: [17, 17, 21, 21, 24, 24, 23, 23, 18, 18]
 
   - id: vacuum_go_to_empty_position_before_coming_home
+    initial_state: true
     trigger:
       - platform: state
         entity_id: binary_sensor.martin_home_soon
@@ -154,3 +176,14 @@ automation:
         value_template: "{{ states('sensor.vacuum_area_cleaned_since_last_empty')|int > 50 }}"
     action:
       - service: script.send_vacuum_to_emptying_position
+
+  - id: vacuum_hide_menu_when_docked
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: vacuum.xiaomi_vacuum_cleaner
+        to: "docked"
+    action:
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.vacuum_show_card

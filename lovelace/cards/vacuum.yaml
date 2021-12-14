@@ -1,91 +1,159 @@
 type: vertical-stack
 cards:
-  - type: "custom:vacuum-card"
-    entity: vacuum.xiaomi_vacuum_cleaner
-    compact_view: True
-    stats:
-      default:
-        - attribute: filter_left
-          unit: timer
-          subtitle: Filter
-        - attribute: side_brush_left
-          unit: timer
-          subtitle: Sidebørste
-        - attribute: main_brush_left
-          unit: timer
-          subtitle: Hovedbørste
-        - attribute: sensor_dirty_left
-          unit: timer
-          subtitle: Sensorer
-      cleaning:
-        - attribute: cleaned_area
-          unit: m2
-          subtitle: Støvsuget areal
-        - attribute: cleaning_time
-          unit: m
-          subtitle: Støvsuget tid
-    actions:
-      - name: Tømmeposition
-        icon: mdi:delete-circle-outline
-        service: script.send_vacuum_to_emptying_position
-      - name: Støvsug Køkken
-        icon: "mdi:silverware-fork-knife"
-        service: xiaomi_miio.vacuum_clean_segment
-        service_data:
-          entity_id: vacuum.xiaomi_vacuum_cleaner
-          segments: [1]
-      - name: Støvsug Soveværelse
-        icon: "mdi:bed-empty"
-        service: xiaomi_miio.vacuum_clean_segment
-        service_data:
-          entity_id: vacuum.xiaomi_vacuum_cleaner
-          segments: [2]
-      - name: Støvsug Gang
-        icon: mdi:door-closed
-        service: xiaomi_miio.vacuum_clean_segment
-        service_data:
-          entity_id: vacuum.xiaomi_vacuum_cleaner
-          segments: [3]
-      - name: Støvsug Stue
-        icon: mdi:sofa
-        service: xiaomi_miio.vacuum_clean_segment
-        service_data:
-          entity_id: vacuum.xiaomi_vacuum_cleaner
-          segments: [4]
-      - name: Støvsug Kontor
-        icon: mdi:desktop-tower-monitor
-        service: xiaomi_miio.vacuum_clean_segment
-        service_data:
-          entity_id: vacuum.xiaomi_vacuum_cleaner
-          segments: [5]
-    style:
-      .: |
-        .preview, .toolbar {
-          background: initial !important;
-        }
-        .header, .metadata, .stats, .vacuum-name, .status-text {
-          color: var(--primary-text-color) !important;
-        }
-        ha-icon {
-          color: var(--primary-text-color) !important;
-        }
-        .stats-block, .stats {
-          border-color: var(--primary-text-color) !important;
-        }
+  - type: horizontal-stack
+    cards:
+      - type: button
+        tap_action:
+          action: toggle
+        entity: vacuum.xiaomi_vacuum_cleaner
+        show_state: true
+        show_name: false
+        show_icon: true
+        icon_height: 50px
+      - type: button
+        tap_action:
+          action: toggle
+        entity: script.send_vacuum_to_emptying_position
+        icon: mdi:trash-can
+        icon_height: 50px
+      - type: button
+        tap_action:
+          action: call-service
+          service: input_boolean.toggle
+          service_data: {}
+          target:
+            entity_id: input_boolean.vacuum_show_card
+        entity: binary_sensor.vacuum_show_card
+        hold_action:
+          action: none
+        icon: mdi:menu
+        icon_height: 50px
 
   - type: conditional
     conditions:
-      - entity: vacuum.xiaomi_vacuum_cleaner
-        state_not: "docked"
+      - entity: binary_sensor.vacuum_show_card
+        state: "on"
     card:
-      type: picture-entity
-      entity: camera.xiaomi_cloud_map_extractor
-      camera_view: live
-      show_name: false
-      show_state: false
-      tap_action:
-        action: none
-      hold_action:
-        action: none
-      double_tap_action:
-        action: none
+      type: custom:xiaomi-vacuum-map-card
+      entity: vacuum.xiaomi_vacuum_cleaner
+      map_source:
+        camera: camera.xiaomi_cloud_map_extractor
+      calibration_source:
+        camera: true
+      map_modes:
+        - template: vacuum_clean_segment
+          predefined_selections:
+            - id: 17
+              label:
+                text: Køkken
+                x: 27150
+                "y": 21000
+                offset_y: 35
+              icon:
+                x: 27150
+                "y": 21000
+                name: mdi:food-fork-drink
+              outline:
+                - - 26150
+                  - 18300
+                - - 28300
+                  - 18300
+                - - 28300
+                  - 22250
+                - - 26150
+                  - 22250
+            - id: 18
+              label:
+                text: Kontor
+                x: 26000
+                "y": 27350
+                offset_y: 35
+              icon:
+                x: 26000
+                "y": 27350
+                name: mdi:desktop-tower-monitor
+              outline:
+                - - 23700
+                  - 25100
+                - - 28350
+                  - 25100
+                - - 28350
+                  - 28150
+                - - 23700
+                  - 28150
+            - id: 21
+              label:
+                text: Gang
+                x: 29100
+                "y": 22500
+                offset_y: 35
+              icon:
+                x: 29100
+                "y": 22500
+                name: mdi:door
+              outline:
+                - - 28550
+                  - 20850
+                - - 29650
+                  - 20850
+                - - 29650
+                  - 23500
+                - - 28550
+                  - 23500
+            - id: 23
+              label:
+                text: Stue
+                x: 30100
+                "y": 26600
+                offset_y: 35
+              icon:
+                x: 30100
+                "y": 26600
+                name: mdi:sofa
+              outline:
+                - - 28550
+                  - 23600
+                - - 32350
+                  - 23600
+                - - 32350
+                  - 28150
+                - - 28550
+                  - 28150
+            - id: 24
+              label:
+                text: Soveværelse
+                x: 30800
+                "y": 21600
+                offset_y: 35
+              icon:
+                x: 30800
+                "y": 21600
+                name: mdi:bed
+              outline:
+                - - 29800
+                  - 18300
+                - - 32350
+                  - 18300
+                - - 32350
+                  - 22400
+                - - 29800
+                  - 22400
+        - template: vacuum_clean_zone
+        - template: vacuum_goto
+        - template: vacuum_goto_predefined
+          predefined_selections:
+            - position:
+                - 27500
+                - 19500
+              label:
+                text: Emptying
+                x: 27500
+                "y": 19500
+                offset_y: 35
+              icon:
+                name: mdi:broom
+                x: 27500
+                "y": 19500
+        - template: vacuum_follow_path
+      vacuum_platform: default
+      map_locked: true
