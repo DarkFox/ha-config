@@ -1,11 +1,9 @@
 input_text:
   active_media_player:
   active_media_type:
-  darkphone_caller:
   work_phone_caller:
 
 input_boolean:
-  darkphone_ringing:
   work_phone_ringing:
 
 automation:
@@ -14,7 +12,6 @@ automation:
     trigger:
       - platform: state
         entity_id:
-          - sensor.darkphone_phone_state
           - sensor.arbejdstelefon_telefonstatus
         to: offhook
     condition:
@@ -30,7 +27,6 @@ automation:
     trigger:
       - platform: state
         entity_id:
-          - sensor.darkphone_phone_state
           - sensor.arbejdstelefon_telefonstatus
         from: offhook
     condition:
@@ -195,30 +191,6 @@ automation:
                 data:
                   entity_id: input_select.sleep_state
                   option: sleeping
-
-  - alias: darkphone_ringing
-    initial_state: true
-    trigger:
-      platform: webhook
-      webhook_id: !secret darkphone_ringing_webhook
-    action:
-      - service: "input_boolean.turn_{{ 'on' if trigger.json.state else 'off' }}"
-        data:
-          entity_id: input_boolean.darkphone_ringing
-      - choose:
-          - conditions:
-              - condition: template
-                value_template: "{{ trigger.json.state }}"
-            sequence:
-              - service: input_text.set_value
-                data_template:
-                  entity_id: input_text.darkphone_caller
-                  value: "{{ trigger.json.caller }}"
-        default:
-          - service: input_text.set_value
-            data_template:
-              entity_id: input_text.darkphone_caller
-              value: ""
 
   - alias: work_phone_ringing
     initial_state: true
