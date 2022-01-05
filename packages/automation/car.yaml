@@ -35,6 +35,53 @@ automation:
         target:
           entity_id: switch.vw_connect_climatisation
 
+  - id: charge_car_to_90_pct_before_going_home
+    alias: charge_car_to_90_pct_before_going_home
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.going_home_early_trigger
+        to: "on"
+    condition:
+      - alias: "If at work"
+        condition: state
+        entity_id: person.martin
+        state:
+          - RSR
+          - RSH
+      - alias: "Car plugged in"
+        condition: state
+        entity_id: binary_sensor.vw_connect_plug_connected
+        state: "on"
+    action:
+      - alias: "Set car charge target to 90%"
+        service: input_number.set_value
+        target:
+          entity_id: input_number.id_3_target_soc
+        data:
+          value: 90
+
+  - id: reset_car_target_soc_when_unplugged
+    alias: reset_car_target_soc_when_unplugged
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.vw_connect_plug_connected
+        from: "on"
+        to: "off"
+    condition:
+      - alias: "If at work"
+        condition: state
+        entity_id: person.martin
+        state:
+          - RSR
+          - RSH
+    action:
+      - alias: "Set car charge target to 80%"
+        service: input_number.set_value
+        target:
+          entity_id: input_number.id_3_target_soc
+        data:
+          value: 80
+
   - alias: notify_car_charging
     id: notify_car_charging
     initial_state: true
@@ -93,6 +140,138 @@ automation:
       - service: notify.telegram_darkfox
         data:
           message: "Klimatiserer bilen. {{ states('sensor.vw_connect_remaining_climatisation_time_min') }} minutter tilbage."
+
+  - alias: notify_chargers_available_work
+    id: notify_chargers_available_work
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.martin_at_work_soon
+        to: "on"
+        for:
+          minutes: 1
+    condition:
+      - alias: "Car not plugged in"
+        condition: state
+        entity_id: binary_sensor.vw_connect_plug_connected
+        state: "off"
+      - alias: "Car needs charging"
+        condition: numeric_state
+        entity_id: sensor.id_3_battery
+        below: 60
+      - alias: "Charger available"
+        condition: numeric_state
+        entity_id: sensor.rsr_p_hus_spirii_ladere
+        above: 1
+    action:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: sensor.next_work_at
+                state: "rsr"
+            sequence:
+              - choose:
+                  - conditions:
+                      - condition: numeric_state
+                        entity_id: sensor.rsr_p_hus_spirii_ladere
+                        above: 1 # One spot likely taken by car charging from Clever charger
+                    sequence:
+                      - service: notify.telegram_darkfox
+                        data:
+                          message: "Der er {{ states('sensor.rsr_p_hus_spirii_ladere') }} Spirii ladere ledige i P-Huset."
+                  - conditions:
+                      - condition: numeric_state
+                        entity_id: sensor.rsr_p_hus_clever_ladere
+                        above: 1 # One spot reserved for carshare
+                    sequence:
+                      - service: notify.telegram_darkfox
+                        data:
+                          message: "Der er {{ states('sensor.rsr_p_hus_clever_ladere') }} Clever ladere ledige i P-Huset."
+                  - conditions:
+                      - condition: numeric_state
+                        entity_id: sensor.rsr_hovedindgang_spirii_ladere
+                        above: 0
+                    sequence:
+                      - service: notify.telegram_darkfox
+                        data:
+                          message: "Der er {{ states('sensor.rsr_hovedindgang_spirii_ladere') }} Spirii ladere ledige ved hovedindgangen."
+                  - conditions:
+                      - condition: numeric_state
+                        entity_id: sensor.rsr_patienthotel_clever_ladere
+                        above: 0
+                    sequence:
+                      - service: notify.telegram_darkfox
+                        data:
+                          message: "Der er {{ states('sensor.rsr_patienthotel_clever_ladere') }} ladere ledige ved patienthotellet."
+                  - conditions:
+                      - condition: numeric_state
+                        entity_id: sensor.rsr_hovedindgang_clever_ladere
+                        above: 0
+                    sequence:
+                      - service: notify.telegram_darkfox
+                        data:
+                          message: "Der er {{ states('sensor.rsr_hovedindgang_clever_ladere') }} Clever ladere ledige ved hovedindgangen."
+                  - conditions:
+                      - condition: numeric_state
+                        entity_id: sensor.rsr_hovedindgang_eon_ladere
+                        above: 0
+                    sequence:
+                      - service: notify.telegram_darkfox
+                        data:
+                          message: "Der er {{ states('sensor.rsr_hovedindgang_eon_ladere') }} Eon ladere ledige ved hovedindgangen."
+                  - conditions:
+                      - condition: numeric_state
+                        entity_id: sensor.rsr_nordflojen_eon_ladere
+                        above: 0
+                    sequence:
+                      - service: notify.telegram_darkfox
+                        data:
+                          message: "Der er {{ states('sensor.rsr_nordflojen_eon_ladere') }} Eon ladere ledige ved nordfløjen."
+                  - conditions:
+                      - condition: numeric_state
+                        entity_id: sensor.rsr_blegdamsvej_spirii_ladere
+                        above: 0
+                    sequence:
+                      - service: notify.telegram_darkfox
+                        data:
+                          message: "Der er {{ states('sensor.rsr_blegdamsvej_spirii_ladere') }} Spirii ladere ledige på den anden side af Blegdamsvej."
+          - conditions:
+              - condition: state
+                entity_id: sensor.next_work_at
+                state: "rsh"
+            sequence:
+              - choose:
+                  - conditions:
+                      - condition: numeric_state
+                        entity_id: sensor.rsh_p2_clever_ladere
+                        above: 0
+                    sequence:
+                      - service: notify.telegram_darkfox
+                        data:
+                          message: "Der er {{ states('sensor.rsh_p2_clever_ladere') }} Clever ladere ledige i P2."
+                  - conditions:
+                      - condition: numeric_state
+                        entity_id: sensor.rsh_p2_eon_ladere
+                        above: 0
+                    sequence:
+                      - service: notify.telegram_darkfox
+                        data:
+                          message: "Der er {{ states('sensor.rsh_p2_eon_ladere') }} Eon ladere ledige i P2."
+                  - conditions:
+                      - condition: numeric_state
+                        entity_id: sensor.rsh_p4_spirii_ladere
+                        above: 0
+                    sequence:
+                      - service: notify.telegram_darkfox
+                        data:
+                          message: "Der er {{ states('sensor.rsh_p4_spirii_ladere') }} Spirii ladere ledige på P4."
+                  - conditions:
+                      - condition: numeric_state
+                        entity_id: sensor.rsh_p7_spirii_ladere
+                        above: 0
+                    sequence:
+                      - service: notify.telegram_darkfox
+                        data:
+                          message: "Der er {{ states('sensor.rsh_p7_spirii_ladere') }} Spirii ladere ledige på P7."
 
   - alias: notify_charger_available_rsr
     id: notify_charger_available_rsr
