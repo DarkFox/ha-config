@@ -27,31 +27,222 @@ binary_sensor:
           }}
 
 automation:
+  - id: puzzel_state_confirmation
+    alias: Puzzel state confirmation
+    trigger:
+      - platform: state
+        entity_id: sensor.puzzel_profil
+    condition:
+      - condition: template
+        value_template: "{{ trigger.from_state.state != 'unknown' }}"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: >-
+            {% if is_state('sensor.puzzel_profil', 'Logget af') %}
+              Logget af Puzzel
+            {% else %}
+              Logget på Puzzel - {{ states('sensor.puzzel_profil') }}
+            {% endif %}
+
+  - id: puzzel_remind_at_work
+    initial_state: true
+    alias: Remind me to log into puzzel queue
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.working
+        to: "on"
+        for:
+          minutes: 5
+    condition:
+      - alias: "Not logged into an on call queue"
+        condition: template
+        value_template: "{{ is_state('sensor.puzzel_profil', 'Logget af') }}"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Log på Puzzel?"
+          data:
+            inline_keyboard:
+              - "Log på Primær:/puzzel_login_primary"
+              - "Log på Sekundær:/puzzel_login_secondary"
+              - "Log på LSS+Vagt:/puzzel_login_primary_on_call"
+
+  - id: puzzel_remind_on_call
+    initial_state: true
+    alias: Remind me to log into on call queue
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.on_call
+        to: "on"
+    condition:
+      - alias: "Not logged into an on call queue"
+        condition: template
+        value_template: "{{ not is_state('sensor.puzzel_profil', 'Vagt') }}"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Skift til vagt køen?"
+          data:
+            inline_keyboard:
+              - "Log på Vagt:/puzzel_login_on_call"
+
+  - id: puzzel_remind_log_off
+    initial_state: true
+    alias: Remind me to log off Puzzel
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.working
+          - binary_sensor.on_call
+    condition:
+      - condition: and
+        conditions:
+          - condition: state
+            entity_id: binary_sensor.working
+            state: "off"
+          - condition: state
+            entity_id: binary_sensor.on_call
+            state: "off"
+          - condition: state
+            entity_id: binary_sensor.puzzel_status
+            state: "on"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Du er stadig logget på Puzzel!"
+          data:
+            inline_keyboard:
+              - "Log af:/puzzel_log_off"
+
+  - id: telegram_bot_log_off_puzzel
+    alias: "Telegram bot log off puzzel"
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: telegram_callback
+        event_data:
+          data: "/puzzel_log_off"
+      - platform: event
+        event_type: telegram_command
+        event_data:
+          command: "/puzzel_log_off"
+    action:
+      - service: script.puzzel_log_off
+
+  - id: telegram_bot_log_on_puzzel_on_call
+    alias: "Telegram bot log on puzzel on call"
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: telegram_callback
+        event_data:
+          data: "/puzzel_login_on_call"
+      - platform: event
+        event_type: telegram_command
+        event_data:
+          command: "/puzzel_login_on_call"
+    action:
+      - service: script.puzzel_log_on
+        data:
+          queue: "Vagt"
+
+  - id: telegram_bot_log_on_puzzel_primary
+    alias: "Telegram bot log on puzzel primary"
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: telegram_callback
+        event_data:
+          data: "/puzzel_login_primary"
+      - platform: event
+        event_type: telegram_command
+        event_data:
+          command: "/puzzel_login_primary"
+    action:
+      - service: script.puzzel_log_on
+        data:
+          queue: "LSS Primær"
+
+  - id: telegram_bot_log_on_puzzel_secondary
+    alias: "Telegram bot log on puzzel secondary"
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: telegram_callback
+        event_data:
+          data: "/puzzel_login_secondary"
+      - platform: event
+        event_type: telegram_command
+        event_data:
+          command: "/puzzel_login_secondary"
+    action:
+      - service: script.puzzel_log_on
+        data:
+          queue: "LSS Sekundær"
+
+  - id: telegram_bot_log_on_puzzel_primary_plus_on_call
+    alias: "Telegram bot log on puzzel primary plus on call"
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: telegram_callback
+        event_data:
+          data: "/puzzel_login_primary_on_call"
+      - platform: event
+        event_type: telegram_command
+        event_data:
+          command: "/puzzel_login_primary_on_call"
+    action:
+      - service: script.puzzel_log_on
+        data:
+          queue: "LSS + Vagt"
+
   - id: set_phone_modes
+    initial_state: true
     alias: Set Phone Modes
     trigger:
       - platform: state
         entity_id:
           - binary_sensor.working
           - binary_sensor.on_call
-    variables:
-      working: "{{ is_state('binary_sensor.working', 'on') }}"
-      on_call: "{{ is_state('binary_sensor.on_call', 'on') }}"
+          - binary_sensor.puzzel_status
+          - sensor.arbejdstelefon_forstyr_ikke_sensoren
+          - sensor.arbejdstelefon_ringetilstand
     action:
-      - service: notify.mobile_app_arbejdstelefon
-        data:
-          message: "command_ringer_mode"
-          title: "{{ 'normal' if working else 'vibrate' }}"
-      - service: notify.mobile_app_arbejdstelefon
-        data:
-          message: "command_dnd"
-          title: "{{ 'off' if working else 'priority_only' }}"
-
-      - service: notify.mobile_app_darkphone
-        data:
-          message: "command_ringer_mode"
-          title: "{{ 'vibrate' if (working and not on_call) else 'normal' }}"
-      # - service: notify.mobile_app_darkphone
-      #   data:
-      #     message: "command_dnd"
-      #     title: "{{ 'priority_only' if (working and not on_call) else 'off' }}"
+      - choose:
+          - conditions:
+              - alias: "Prevent silencing phone when active on Puzzel while on call or at work"
+                condition: template
+                value_template: >-
+                  {{
+                    (is_state('binary_sensor.working', 'on') or is_state('binary_sensor.on_call', 'on'))
+                    and is_state('binary_sensor.puzzel_status', 'on')
+                  }}
+            sequence:
+              - service: notify.mobile_app_arbejdstelefon
+                data:
+                  message: "command_ringer_mode"
+                  title: normal
+              - service: notify.mobile_app_arbejdstelefon
+                data:
+                  message: "command_dnd"
+                  title: "off"
+          - conditions:
+              - alias: "Silence phone when going off call while sleeping"
+                condition: template
+                value_template: >-
+                  {{
+                    is_state('binary_sensor.working', 'off')
+                    and is_state('binary_sensor.on_call', 'off')
+                    and is_state('input_select.sleep_state', 'sleeping')
+                  }}
+            sequence:
+              - service: notify.mobile_app_arbejdstelefon
+                data:
+                  message: "command_ringer_mode"
+                  title: "vibrate"
+              - service: notify.mobile_app_arbejdstelefon
+                data:
+                  message: "command_dnd"
+                  title: "priority_only"

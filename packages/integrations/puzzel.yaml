@@ -1,0 +1,121 @@
+sensor:
+  - platform: rest
+    name: puzzel_login
+    scan_interval: 1740
+    resource: https://auth.puzzel.com/api/Authenticate/LogIn
+    method: POST
+    payload: !secret puzzel_login
+    headers:
+      Content-Type: application/json
+    value_template: "{{ value_json.refreshToken.sessionId }}"
+    json_attributes:
+      - accessToken
+      - refreshToken
+
+  - platform: command_line
+    name: puzzel_user
+    scan_interval: 86400
+    command: >
+      curl
+      --request GET "https://agent.puzzel.com/contactcentre5/accessTokenExtendedInformation"
+      --header "Authorization: Bearer {{ state_attr('sensor.puzzel_login', 'accessToken') }}"
+      --header "Content-Type: application/json"
+    value_template: "{{ value_json.result.accessTokenExpiryIso }}"
+    json_attributes:
+      - result
+
+  - platform: command_line
+    name: puzzel_status
+    scan_interval: 30
+    command: >
+      curl
+      --request GET "https://agent.puzzel.com/contactcentre5/{{ state_attr('sensor.puzzel_user', 'result').customerKey }}/users/{{ state_attr('sensor.puzzel_user', 'result').userId }}"
+      --header "Authorization: Bearer {{ state_attr('sensor.puzzel_login', 'accessToken') }}"
+      --header "Content-Type: application/json"
+    value_template: "{{ value_json.result.contactCentreStatus }}"
+    json_attributes:
+      - result
+
+template:
+  - sensor:
+      - name: "Puzzel Profil"
+        state: "{{ 'Logget af' if is_state('sensor.puzzel_status', 'LoggedOff') else state_attr('binary_sensor.puzzel_status', 'profil') }}"
+  - binary_sensor:
+      - name: "Puzzel Status"
+        state: "{{ is_state('sensor.puzzel_status', 'LoggedOn') }}"
+        attributes:
+          profil: "{{ (state_attr('sensor.puzzel_status', 'result').profiles | selectattr('id', 'equalto', state_attr('sensor.puzzel_status', 'result').currentProfileId) | first).name }}"
+          state: >-
+            {% if is_state('sensor.puzzel_status', 'Pause') %}
+              {{ (state_attr('sensor.puzzel_user', 'result').pauseTypes | selectattr('id', 'equalto', state_attr('sensor.puzzel_status', 'result').pauseTypeId) | first).description }}
+            {% elif is_state('sensor.puzzel_status', 'LoggedOff') %}
+              Logget af
+            {% else %}
+              Ledig
+            {% endif %}
+          nummer: "{{ state_attr('sensor.puzzel_status', 'result').mobilePhone }}"
+
+script:
+  puzzel_log_on:
+    alias: "Log onto Puzzel queue"
+    variables:
+      profile_id: "{{ (state_attr('sensor.puzzel_status', 'result').profiles | selectattr('name', 'equalto', queue) | first).id }}"
+      phone_number: !secret work_phone_number
+    sequence:
+      - alias: "ensure all variables"
+        condition: template
+        value_template: "{{ not not (profile_id and phone_number) }}"
+      - alias: "Log off if already logged on"
+        choose:
+          - conditions:
+              - condition: state
+                entity_id: sensor.puzzel_status
+                state:
+                  - "LoggedOn"
+                  - "Pause"
+            sequence:
+              - service: script.turn_on
+                target:
+                  entity_id: script.puzzel_log_off
+      - service: shell_command.curl
+        data:
+          url: "https://agent.puzzel.com/contactcentre5/{{ state_attr('sensor.puzzel_user', 'result').customerKey }}/users/{{ state_attr('sensor.puzzel_user', 'result').userId|string }}/logon"
+          method: post
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ state_attr('sensor.puzzel_login', 'accessToken') }}"
+          payload:
+            phoneType: "Phone"
+            profileId: "{{ profile_id|int }}"
+            phoneNumber: "{{ phone_number|string }}"
+
+  puzzel_log_off:
+    alias: "Log off Puzzel"
+    sequence:
+      - service: shell_command.curl
+        data:
+          url: "https://agent.puzzel.com/contactcentre5/{{ state_attr('sensor.puzzel_user', 'result').customerKey }}/users/{{ state_attr('sensor.puzzel_user', 'result').userId }}/logoff"
+          method: post
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ state_attr('sensor.puzzel_login', 'accessToken') }}"
+          payload_string: "{}"
+
+automation:
+  - alias: Update Puzzel user info
+    trigger:
+      - platform: state
+        entity_id: sensor.puzzel_login
+      - platform: homeassistant
+        event: start
+    action:
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.puzzel_user
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.puzzel_status
