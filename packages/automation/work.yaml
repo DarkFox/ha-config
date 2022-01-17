@@ -63,10 +63,8 @@ automation:
         data:
           message: "Log på Puzzel?"
           data:
-            inline_keyboard:
-              - "Log på Primær:/puzzel_login_primary"
-              - "Log på Sekundær:/puzzel_login_secondary"
-              - "Log på LSS+Vagt:/puzzel_login_primary_on_call"
+            inline_keyboard: >-
+              {{ state_attr('sensor.puzzel_status', 'result').profiles | map(attribute='name') | map('regex_replace', '\A(.*)\Z', '\\1:/puzzel_login \\1') | list }}
 
   - id: puzzel_remind_on_call
     initial_state: true
@@ -85,7 +83,7 @@ automation:
           message: "Skift til vagt køen?"
           data:
             inline_keyboard:
-              - "Log på Vagt:/puzzel_login_on_call"
+              - "Log på RSR + Vagt:/puzzel_login RSR + Vagt"
 
   - id: puzzel_remind_log_off
     initial_state: true
@@ -129,74 +127,29 @@ automation:
           command: "/puzzel_log_off"
     action:
       - service: script.puzzel_log_off
+      - service: notify.telegram_darkfox
+        data:
+          message: "Logger af Puzzel..."
 
-  - id: telegram_bot_log_on_puzzel_on_call
-    alias: "Telegram bot log on puzzel on call"
+  - id: telegram_bot_log_on_puzzel
+    alias: "Telegram bot log on Puzzel"
     initial_state: true
     trigger:
       - platform: event
         event_type: telegram_callback
         event_data:
-          data: "/puzzel_login_on_call"
+          data: "/puzzel_login"
       - platform: event
         event_type: telegram_command
         event_data:
-          command: "/puzzel_login_on_call"
+          command: "/puzzel_login"
     action:
       - service: script.puzzel_log_on
         data:
-          queue: "Vagt"
-
-  - id: telegram_bot_log_on_puzzel_primary
-    alias: "Telegram bot log on puzzel primary"
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: telegram_callback
-        event_data:
-          data: "/puzzel_login_primary"
-      - platform: event
-        event_type: telegram_command
-        event_data:
-          command: "/puzzel_login_primary"
-    action:
-      - service: script.puzzel_log_on
+          queue: "{{ trigger.event.data['args'] | join(' ') }}"
+      - service: notify.telegram_darkfox
         data:
-          queue: "LSS Primær"
-
-  - id: telegram_bot_log_on_puzzel_secondary
-    alias: "Telegram bot log on puzzel secondary"
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: telegram_callback
-        event_data:
-          data: "/puzzel_login_secondary"
-      - platform: event
-        event_type: telegram_command
-        event_data:
-          command: "/puzzel_login_secondary"
-    action:
-      - service: script.puzzel_log_on
-        data:
-          queue: "LSS Sekundær"
-
-  - id: telegram_bot_log_on_puzzel_primary_plus_on_call
-    alias: "Telegram bot log on puzzel primary plus on call"
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: telegram_callback
-        event_data:
-          data: "/puzzel_login_primary_on_call"
-      - platform: event
-        event_type: telegram_command
-        event_data:
-          command: "/puzzel_login_primary_on_call"
-    action:
-      - service: script.puzzel_log_on
-        data:
-          queue: "LSS + Vagt"
+          message: "Logger på {{ trigger.event.data['args'] | join(' ') }}..."
 
   - id: set_phone_modes
     initial_state: true
