@@ -1,0 +1,50 @@
+rest:
+  # https://app.evnotify.de/soc?akey={akey}&token={token}
+  - resource: !secret evnotify_soc_url
+    sensor:
+      - name: "EVNotify SoC"
+        value_template: "{{ value_json.soc_display }}"
+        unit_of_measurement: "%"
+        json_attributes:
+          - soc_display
+          - soc_bms
+          - last_soc
+
+  # https://app.evnotify.de/extended?akey={akey}&token={token}
+  - resource: !secret evnotify_extended_url
+    sensor:
+      - name: "EVNotify Extended"
+        value_template: "{{ value_json.battery_min_temperature }}"
+        unit_of_measurement: "°C"
+        json_attributes:
+          - soh
+          - charging
+          - rapid_charge_port
+          - normal_charge_port
+          - slow_charge_port
+          - aux_battery_voltage
+          - dc_battery_voltage
+          - dc_battery_current
+          - dc_battery_power
+          - cumulative_energy_charged
+          - cumulative_energy_discharged
+          - battery_min_temperature
+          - battery_max_temperature
+          - battery_inlet_temperature
+          - external_temperature
+          - odo
+          - last_extended
+
+  # https://app.evnotify.de/location?akey={akey}&token={token}
+  - resource: !secret evnotify_location_url
+    sensor:
+      - name: "EVNotify Location"
+        value_template: "{{ value_json.gps_speed }}"
+        unit_of_measurement: "km/h"
+        json_attributes:
+          - latitude
+          - longitude
+          - gps_speed
+          - accuracy
+          - location_timestamp
+          - last_location
