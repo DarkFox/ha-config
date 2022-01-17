@@ -60,14 +60,17 @@ automation:
         data:
           value: 90
 
-  - id: reset_car_target_soc_when_unplugged
-    alias: reset_car_target_soc_when_unplugged
+  - id: reset_charge_target_after_90_pct
+    alias: reset_charge_target_after_90_pct
     trigger:
-      - platform: state
-        entity_id: binary_sensor.vw_connect_plug_connected
-        from: "on"
-        to: "off"
+      - platform: numeric_state
+        entity_id: sensor.id_3_battery
+        above: 89
     condition:
+      - alias: "SoC target set to 90%"
+        condition: state
+        entity_id: input_number.id_3_target_soc
+        state: "90"
       - alias: "If at work"
         condition: state
         entity_id: person.martin
@@ -171,7 +174,7 @@ automation:
                     sequence:
                       - service: notify.telegram_darkfox
                         data:
-                          message: "Der er {{ states('sensor.rsr_p_hus_spirii_ladere') }} Spirii ladere ledige i P-Huset."
+                          message: "Der er {{ states('sensor.rsr_p_hus_spirii_ladere') }} Spirii ladestationer ledige i P-Huset."
                   - conditions:
                       - condition: numeric_state
                         entity_id: sensor.rsr_p_hus_clever_ladere
@@ -179,7 +182,7 @@ automation:
                     sequence:
                       - service: notify.telegram_darkfox
                         data:
-                          message: "Der er {{ states('sensor.rsr_p_hus_clever_ladere') }} Clever ladere ledige i P-Huset."
+                          message: "Der er {{ states('sensor.rsr_p_hus_clever_ladere') }} Clever ladestationer ledige i P-Huset."
                   - conditions:
                       - condition: numeric_state
                         entity_id: sensor.rsr_hovedindgang_spirii_ladere
@@ -187,7 +190,7 @@ automation:
                     sequence:
                       - service: notify.telegram_darkfox
                         data:
-                          message: "Der er {{ states('sensor.rsr_hovedindgang_spirii_ladere') }} Spirii ladere ledige ved hovedindgangen."
+                          message: "Der er {{ states('sensor.rsr_hovedindgang_spirii_ladere') }} Spirii ladestationer ledige ved hovedindgangen."
                   - conditions:
                       - condition: numeric_state
                         entity_id: sensor.rsr_patienthotel_clever_ladere
@@ -195,7 +198,7 @@ automation:
                     sequence:
                       - service: notify.telegram_darkfox
                         data:
-                          message: "Der er {{ states('sensor.rsr_patienthotel_clever_ladere') }} ladere ledige ved patienthotellet."
+                          message: "Der er {{ states('sensor.rsr_patienthotel_clever_ladere') }} ladestationer ledige ved patienthotellet."
                   - conditions:
                       - condition: numeric_state
                         entity_id: sensor.rsr_hovedindgang_clever_ladere
@@ -203,7 +206,7 @@ automation:
                     sequence:
                       - service: notify.telegram_darkfox
                         data:
-                          message: "Der er {{ states('sensor.rsr_hovedindgang_clever_ladere') }} Clever ladere ledige ved hovedindgangen."
+                          message: "Der er {{ states('sensor.rsr_hovedindgang_clever_ladere') }} Clever ladestationer ledige ved hovedindgangen."
                   - conditions:
                       - condition: numeric_state
                         entity_id: sensor.rsr_hovedindgang_eon_ladere
@@ -211,7 +214,7 @@ automation:
                     sequence:
                       - service: notify.telegram_darkfox
                         data:
-                          message: "Der er {{ states('sensor.rsr_hovedindgang_eon_ladere') }} Eon ladere ledige ved hovedindgangen."
+                          message: "Der er {{ states('sensor.rsr_hovedindgang_eon_ladere') }} Eon ladestationer ledige ved hovedindgangen."
                   - conditions:
                       - condition: numeric_state
                         entity_id: sensor.rsr_nordflojen_eon_ladere
@@ -219,7 +222,7 @@ automation:
                     sequence:
                       - service: notify.telegram_darkfox
                         data:
-                          message: "Der er {{ states('sensor.rsr_nordflojen_eon_ladere') }} Eon ladere ledige ved nordfløjen."
+                          message: "Der er {{ states('sensor.rsr_nordflojen_eon_ladere') }} Eon ladestationer ledige ved nordfløjen."
                   - conditions:
                       - condition: numeric_state
                         entity_id: sensor.rsr_blegdamsvej_spirii_ladere
@@ -227,7 +230,7 @@ automation:
                     sequence:
                       - service: notify.telegram_darkfox
                         data:
-                          message: "Der er {{ states('sensor.rsr_blegdamsvej_spirii_ladere') }} Spirii ladere ledige på den anden side af Blegdamsvej."
+                          message: "Der er {{ states('sensor.rsr_blegdamsvej_spirii_ladere') }} Spirii ladestationer ledige på den anden side af Blegdamsvej."
           - conditions:
               - condition: state
                 entity_id: sensor.next_work_at
@@ -236,20 +239,12 @@ automation:
               - choose:
                   - conditions:
                       - condition: numeric_state
-                        entity_id: sensor.rsh_p2_clever_ladere
+                        entity_id: sensor.rsh_p7_spirii_ladere
                         above: 0
                     sequence:
                       - service: notify.telegram_darkfox
                         data:
-                          message: "Der er {{ states('sensor.rsh_p2_clever_ladere') }} Clever ladere ledige i P2."
-                  - conditions:
-                      - condition: numeric_state
-                        entity_id: sensor.rsh_p2_eon_ladere
-                        above: 0
-                    sequence:
-                      - service: notify.telegram_darkfox
-                        data:
-                          message: "Der er {{ states('sensor.rsh_p2_eon_ladere') }} Eon ladere ledige i P2."
+                          message: "Der er {{ states('sensor.rsh_p7_spirii_ladere') }} Spirii ladestationer ledige på P7."
                   - conditions:
                       - condition: numeric_state
                         entity_id: sensor.rsh_p4_spirii_ladere
@@ -257,15 +252,23 @@ automation:
                     sequence:
                       - service: notify.telegram_darkfox
                         data:
-                          message: "Der er {{ states('sensor.rsh_p4_spirii_ladere') }} Spirii ladere ledige på P4."
+                          message: "Der er {{ states('sensor.rsh_p4_spirii_ladere') }} Spirii ladestationer ledige på P4."
                   - conditions:
                       - condition: numeric_state
-                        entity_id: sensor.rsh_p7_spirii_ladere
+                        entity_id: sensor.rsh_p2_clever_ladere
                         above: 0
                     sequence:
                       - service: notify.telegram_darkfox
                         data:
-                          message: "Der er {{ states('sensor.rsh_p7_spirii_ladere') }} Spirii ladere ledige på P7."
+                          message: "Der er {{ states('sensor.rsh_p2_clever_ladere') }} Clever ladestationer ledige i P2."
+                  - conditions:
+                      - condition: numeric_state
+                        entity_id: sensor.rsh_p2_eon_ladere
+                        above: 0
+                    sequence:
+                      - service: notify.telegram_darkfox
+                        data:
+                          message: "Der er {{ states('sensor.rsh_p2_eon_ladere') }} Eon ladestationer ledige i P2."
 
   - alias: notify_charger_available_rsr
     id: notify_charger_available_rsr
