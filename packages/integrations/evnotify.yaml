@@ -1,50 +1,125 @@
 rest:
   # https://app.evnotify.de/soc?akey={akey}&token={token}
   - resource: !secret evnotify_soc_url
+    scan_interval: 30
     sensor:
-      - name: "EVNotify SoC"
+      - name: Bil SoC Display
         value_template: "{{ value_json.soc_display }}"
         unit_of_measurement: "%"
-        json_attributes:
-          - soc_display
-          - soc_bms
-          - last_soc
+        device_class: battery
+      - name: Bil SoC Bms
+        value_template: "{{ value_json.soc_bms }}"
+        unit_of_measurement: "%"
+        device_class: battery
+      - name: Bil Last Updated SoC
+        value_template: "{{ value_json.last_soc | int | timestamp_local }}"
+        device_class: timestamp
 
   # https://app.evnotify.de/extended?akey={akey}&token={token}
   - resource: !secret evnotify_extended_url
+    scan_interval: 30
     sensor:
-      - name: "EVNotify Extended"
+      - name: Bil Battery SoH
+        value_template: "{{ value_json.soh }}"
+        unit_of_measurement: "%"
+        device_class: battery
+      - name: Bil Charging
+        value_template: "{{ value_json.charging }}"
+        unit_of_measurement: ""
+      - name: Bil Rapid Charge Port
+        value_template: "{{ value_json.rapid_charge_port }}"
+        unit_of_measurement: ""
+      - name: Bil Normal Charge Port
+        value_template: "{{ value_json.normal_charge_port }}"
+        unit_of_measurement: ""
+      - name: Bil Slow Charge Port
+        value_template: "{{ value_json.slow_charge_port }}"
+        unit_of_measurement: ""
+      - name: Bil Aux Battery Voltage
+        value_template: "{{ value_json.aux_battery_voltage }}"
+        unit_of_measurement: "V"
+        device_class: voltage
+      - name: Bil DC Battery Voltage
+        value_template: "{{ value_json.dc_battery_voltage }}"
+        unit_of_measurement: "V"
+        device_class: voltage
+      - name: Bil DC Battery Current
+        value_template: "{{ value_json.dc_battery_current }}"
+        device_class: current
+        unit_of_measurement: "A"
+      - name: Bil DC Battery Power
+        value_template: "{{ value_json.dc_battery_power }}"
+        unit_of_measurement: "kW"
+        device_class: power
+      - name: Bil Cumulative Energy Charged
+        value_template: "{{ value_json.cumulative_energy_charged }}"
+        unit_of_measurement: "kWh"
+        device_class: energy
+      - name: Bil Cumulative Energy Discharged
+        value_template: "{{ value_json.cumulative_energy_discharged }}"
+        unit_of_measurement: "kWh"
+        device_class: energy
+      - name: Bil Battery Min Temperature
         value_template: "{{ value_json.battery_min_temperature }}"
         unit_of_measurement: "°C"
-        json_attributes:
-          - soh
-          - charging
-          - rapid_charge_port
-          - normal_charge_port
-          - slow_charge_port
-          - aux_battery_voltage
-          - dc_battery_voltage
-          - dc_battery_current
-          - dc_battery_power
-          - cumulative_energy_charged
-          - cumulative_energy_discharged
-          - battery_min_temperature
-          - battery_max_temperature
-          - battery_inlet_temperature
-          - external_temperature
-          - odo
-          - last_extended
+        device_class: temperature
+      - name: Bil Battery Max Temperature
+        value_template: "{{ value_json.battery_max_temperature }}"
+        unit_of_measurement: "°C"
+        device_class: temperature
+      - name: Bil Battery Inlet Temperature
+        value_template: "{{ value_json.battery_inlet_temperature }}"
+        unit_of_measurement: "°C"
+        device_class: temperature
+      - name: Bil External Temperature
+        value_template: "{{ value_json.external_temperature }}"
+        unit_of_measurement: "°C"
+        device_class: temperature
+      - name: Bil Odo
+        value_template: "{{ value_json.odo }}"
+        unit_of_measurement: "km"
+      - name: Bil Last Updated Extended
+        value_template: "{{ value_json.last_extended | int | timestamp_local }}"
+        device_class: timestamp
 
   # https://app.evnotify.de/location?akey={akey}&token={token}
   - resource: !secret evnotify_location_url
+    scan_interval: 30
     sensor:
-      - name: "EVNotify Location"
+      - name: Bil Latitude
+        value_template: "{{ value_json.latitude }}"
+        unit_of_measurement: "°"
+      - name: Bil Longitude
+        value_template: "{{ value_json.longitude }}"
+        unit_of_measurement: "°"
+      - name: Bil GPS Speed
         value_template: "{{ value_json.gps_speed }}"
         unit_of_measurement: "km/h"
-        json_attributes:
-          - latitude
-          - longitude
-          - gps_speed
-          - accuracy
-          - location_timestamp
-          - last_location
+      - name: Bil Accuracy
+        value_template: "{{ value_json.accuracy }}"
+        unit_of_measurement: "m"
+      - name: Bil Location Timestamp
+        value_template: "{{ value_json.location_timestamp | int | timestamp_local }}"
+        device_class: timestamp
+      - name: Bil Last Updated Location
+        value_template: "{{ value_json.last_location | int | timestamp_local }}"
+        device_class: timestamp
+
+automation:
+  - alias: Update Car Tracker
+    trigger:
+      - platform: event
+        event_type: state_changed
+        event_data:
+          entity_id:
+            - sensor.bil_latitude
+            - sensor.bil_longitude
+    condition: []
+    action:
+      - service: device_tracker.see
+        data:
+          dev_id: bil
+          gps:
+            - "{{ states('sensor.bil_latitude') }}"
+            - "{{ states('sensor.bil_longitude') }}"
+    mode: single
