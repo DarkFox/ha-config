@@ -1,0 +1,55 @@
+automation:
+  - id: vacuum_while_away
+    alias: Vacuum While Away
+    initial_state: true
+    trigger:
+      - platform: time_pattern
+        hours: "11"
+        minutes: "/5"
+        seconds: "0"
+      - platform: time_pattern
+        hours: "15"
+        minutes: "/5"
+        seconds: "0"
+    condition:
+      - condition: state
+        entity_id: vacuum.roborock_s5
+        state: "docked"
+      - condition: state
+        entity_id: binary_sensor.martin_presence_delayed
+        state: "off"
+      - alias: "Last clean was more than 8 hours ago"
+        condition: template
+        value_template: "{{ states('sensor.roborock_s5_last_clean_start')|as_timestamp < now()|as_timestamp - 8*60*60 }}"
+    action:
+      - service: script.debug_notification
+        data_template:
+          message: "Vacuum all rooms"
+          title: "Vacuum"
+      - service: xiaomi_miio.vacuum_clean_segment
+        target:
+          entity_id: vacuum.roborock_s5
+        data:
+          segments: [17, 17, 21, 21, 24, 24, 23, 23, 18, 18]
+
+  - id: vacuum_stop_before_coming_home
+    alias: Vacuum Stop Before Coming Home
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.martin_home_soon
+        from: "off"
+        to: "on"
+    action:
+      - alias: "Go to empty position if more than 75m2 since last empty"
+        choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ states('sensor.vacuum_area_cleaned_since_last_empty')|int > 75 }}"
+            sequence:
+              - service: script.send_vacuum_to_emptying_position
+        default:
+          # Go to dock if not going to empty, and not docked already
+          - condition: template
+            value_template: "{{ not is_state('vacuum.roborock_s5', 'docked') }}"
+          - service: vacuum.return_to_base

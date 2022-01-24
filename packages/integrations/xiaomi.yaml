@@ -1,6 +1,6 @@
 camera:
   - platform: xiaomi_cloud_map_extractor
-    host: 192.168.42.180
+    host: 192.168.42.196
     token: !secret xiaomi_token
     username: !secret xiaomi_cloud_username
     password: !secret xiaomi_cloud_password
@@ -90,14 +90,14 @@ script:
     sequence:
       - service: xiaomi_miio.vacuum_goto
         data:
-          entity_id: vacuum.xiaomi_vacuum_cleaner
+          entity_id: vacuum.roborock_s5
           x_coord: 27500
           y_coord: 19500
       - alias: "update last empty count"
         service: input_text.set_value
         data:
           entity_id: input_text.vacuum_last_empty
-          value: "{{ states('sensor.xiaomi_vacuum_cleaner_total_clean_area') }}"
+          value: "{{ states('sensor.roborock_s5_total_clean_area') }}"
 
 input_boolean:
   vacuum_show_card:
@@ -109,79 +109,37 @@ input_text:
     name: Vacuum Last Empty
     icon: mdi:delete
 
-binary_sensor:
-  - platform: template
-    sensors:
-      vacuum_show_card:
-        friendly_name: "Vis Støvsuger Menu"
-        value_template: >-
-          {{ 
-            is_state('input_boolean.vacuum_show_card', 'on')
-            or not (
-              is_state('vacuum.xiaomi_vacuum_cleaner', 'docked')
-              or  is_state('vacuum.xiaomi_vacuum_cleaner', 'charging')
-            )
-          }}
-
 sensor:
   - platform: template
     sensors:
       vacuum_area_cleaned_since_last_empty:
         friendly_name: "Areal støvsuget siden sidste tømning"
-        value_template: "{{ (states('sensor.xiaomi_vacuum_cleaner_total_clean_area')|float) - (states('input_text.vacuum_last_empty')|float) }}"
+        value_template: "{{ (states('sensor.roborock_s5_total_clean_area')|float) - (states('input_text.vacuum_last_empty')|float) }}"
 
 automation:
-  - id: vacuum_while_at_work
-    initial_state: true
-    alias: Støvsug mens jeg er på arbejde
-    trigger:
-      - platform: time_pattern
-        hours: "11"
-        minutes: "/5"
-        seconds: "0"
-      - platform: time_pattern
-        hours: "15"
-        minutes: "/5"
-        seconds: "0"
-    condition:
-      - condition: state
-        entity_id: vacuum.xiaomi_vacuum_cleaner
-        state: "docked"
-      - condition: state
-        entity_id: binary_sensor.location_at_work
-        state: "on"
-      - alias: "Last clean was more than 8 hours ago"
-        condition: template
-        value_template: "{{ states('sensor.xiaomi_vacuum_cleaner_last_clean_start')|as_timestamp < now()|as_timestamp - 8*60*60 }}"
-    action:
-      - service: script.debug_notification
-        data_template:
-          message: "Vacuum all rooms"
-          title: "Vacuum"
-      - service: xiaomi_miio.vacuum_clean_segment
-        target:
-          entity_id: vacuum.xiaomi_vacuum_cleaner
-        data:
-          segments: [17, 17, 21, 21, 24, 24, 23, 23, 18, 18]
-
-  - id: vacuum_go_to_empty_position_before_coming_home
+  - id: vacuum_show_menu_when_undocked
+    alias: Vacuum Show Menu When Undocked
     initial_state: true
     trigger:
       - platform: state
-        entity_id: binary_sensor.martin_home_soon
-        from: "off"
-        to: "on"
-    condition:
-      - condition: template
-        value_template: "{{ states('sensor.vacuum_area_cleaned_since_last_empty')|int > 50 }}"
+        entity_id: vacuum.roborock_s5
+        to:
+          - cleaning
+          - paused
+          - idle
+          - returning
+          - error
     action:
-      - service: script.send_vacuum_to_emptying_position
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.vacuum_show_card
 
   - id: vacuum_hide_menu_when_docked
+    alias: Vacuum Hide Menu When Docked
     initial_state: true
     trigger:
       - platform: state
-        entity_id: vacuum.xiaomi_vacuum_cleaner
+        entity_id: vacuum.roborock_s5
         to: "docked"
     action:
       - service: input_boolean.turn_off

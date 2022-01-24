@@ -2,28 +2,52 @@ type: vertical-stack
 cards:
   - type: horizontal-stack
     cards:
-      - type: button
+      - type: custom:button-card
         tap_action:
           action: toggle
-        entity: vacuum.xiaomi_vacuum_cleaner
+        hold_action:
+          action: more-info
+        entity: vacuum.roborock_s5
         show_state: true
         show_name: false
         show_icon: true
         icon_height: 50px
-      - type: button
+        state:
+          - value: "cleaning"
+            styles:
+              icon:
+                - color: var(--paper-item-icon-active-color)
+          - value: "docked"
+            styles:
+              icon:
+                - color: var(--light-primary-color)
+          - value: "returning"
+            styles:
+              icon:
+                - color: var(--secondary-color)
+          - value: "paused"
+            styles:
+              icon:
+                - color: var(--secondary-color)
+          - value: "idle"
+            styles:
+              icon:
+                - color: var(--secondary-color)
+          - value: "error"
+            styles:
+              icon:
+                - color: var(--error-color)
+      - type: custom:button-card
         tap_action:
           action: toggle
         entity: script.send_vacuum_to_emptying_position
+        name: Tømmeposition
         icon: mdi:trash-can
         icon_height: 50px
-      - type: button
+      - type: custom:button-card
         tap_action:
-          action: call-service
-          service: input_boolean.toggle
-          service_data: {}
-          target:
-            entity_id: input_boolean.vacuum_show_card
-        entity: binary_sensor.vacuum_show_card
+          action: toggle
+        entity: input_boolean.vacuum_show_card
         hold_action:
           action: none
         icon: mdi:menu
@@ -31,11 +55,11 @@ cards:
 
   - type: conditional
     conditions:
-      - entity: binary_sensor.vacuum_show_card
+      - entity: input_boolean.vacuum_show_card
         state: "on"
     card:
       type: custom:xiaomi-vacuum-map-card
-      entity: vacuum.xiaomi_vacuum_cleaner
+      entity: vacuum.roborock_s5
       map_source:
         camera: camera.xiaomi_cloud_map_extractor
       calibration_source:
