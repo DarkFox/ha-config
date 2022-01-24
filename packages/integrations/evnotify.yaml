@@ -1,7 +1,7 @@
 rest:
   # https://app.evnotify.de/soc?akey={akey}&token={token}
   - resource: !secret evnotify_soc_url
-    scan_interval: 30
+    scan_interval: 10
     sensor:
       - name: Bil SoC Display
         value_template: "{{ value_json.soc_display }}"
@@ -17,24 +17,25 @@ rest:
 
   # https://app.evnotify.de/extended?akey={akey}&token={token}
   - resource: !secret evnotify_extended_url
-    scan_interval: 30
+    scan_interval: 10
+    binary_sensor:
+      - name: Bil Charging
+        value_template: "{{ value_json.charging == 1 }}"
+        device_class: battery_charging
+      - name: Bil Rapid Charge Port
+        value_template: "{{ value_json.rapid_charge_port == 1 }}"
+        device_class: battery_charging
+      - name: Bil Normal Charge Port
+        value_template: "{{ value_json.normal_charge_port == 1 }}"
+        device_class: battery_charging
+      - name: Bil Slow Charge Port
+        value_template: "{{ value_json.slow_charge_port == 1 }}"
+        device_class: battery_charging
     sensor:
       - name: Bil Battery SoH
         value_template: "{{ value_json.soh }}"
         unit_of_measurement: "%"
         device_class: battery
-      - name: Bil Charging
-        value_template: "{{ value_json.charging }}"
-        unit_of_measurement: ""
-      - name: Bil Rapid Charge Port
-        value_template: "{{ value_json.rapid_charge_port }}"
-        unit_of_measurement: ""
-      - name: Bil Normal Charge Port
-        value_template: "{{ value_json.normal_charge_port }}"
-        unit_of_measurement: ""
-      - name: Bil Slow Charge Port
-        value_template: "{{ value_json.slow_charge_port }}"
-        unit_of_measurement: ""
       - name: Bil Aux Battery Voltage
         value_template: "{{ value_json.aux_battery_voltage }}"
         unit_of_measurement: "V"
@@ -84,7 +85,7 @@ rest:
 
   # https://app.evnotify.de/location?akey={akey}&token={token}
   - resource: !secret evnotify_location_url
-    scan_interval: 30
+    scan_interval: 10
     sensor:
       - name: Bil Latitude
         value_template: "{{ value_json.latitude }}"
@@ -107,14 +108,18 @@ rest:
 
 automation:
   - alias: Update Car Tracker
+    mode: single
     trigger:
-      - platform: event
-        event_type: state_changed
-        event_data:
-          entity_id:
-            - sensor.bil_latitude
-            - sensor.bil_longitude
-    condition: []
+      - platform: time_pattern
+        hours: "*"
+        minutes: "*"
+        seconds: "/10"
+      - platform: state
+        entity_id:
+          - sensor.bil_latitude
+          - sensor.bil_longitude
+          - sensor.bil_accuracy
+          - sensor.bil_soc_display
     action:
       - service: device_tracker.see
         data:
@@ -122,4 +127,5 @@ automation:
           gps:
             - "{{ states('sensor.bil_latitude') }}"
             - "{{ states('sensor.bil_longitude') }}"
-    mode: single
+          gps_accuracy: "{{ states('sensor.bil_accuracy') }}"
+          battery: "{{ states('sensor.bil_soc_display') }}"

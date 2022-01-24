@@ -68,18 +68,6 @@ sensor:
     max_age:
       minutes: 5
 
-  - platform: statistics
-    name: proximity_martin_to_rsr_stats
-    entity_id: proximity.martin_to_rsr
-    max_age:
-      minutes: 5
-
-  - platform: statistics
-    name: proximity_martin_to_rsh_stats
-    entity_id: proximity.martin_to_rsh
-    max_age:
-      minutes: 5
-
 binary_sensor:
   - platform: template
     sensors:
@@ -93,27 +81,6 @@ binary_sensor:
               states('sensor.martin_to_home_distance_change')|float * 4
             ) + states('proximity.martin_to_home')|float < 0
           }}
-
-      martin_at_work_soon:
-        friendly_name: "Martin Snart På Arbejde"
-        value_template: >
-          {% if is_state('sensor.next_work_at', 'rsr') %}
-            {{
-              states('proximity.martin_to_rsr')|float < 1500
-              or
-              (
-                states('sensor.martin_to_work_distance_change')|float * 3
-              ) + states('proximity.martin_to_rsr')|float < 0
-            }}
-          {% else %}
-            {{
-              states('proximity.martin_to_rsh')|float < 1500
-              or
-              (
-                states('sensor.martin_to_work_distance_change')|float * 3
-              ) + states('proximity.martin_to_rsh')|float < 0
-            }}
-          {% endif %}
 
       martin_presence:
         friendly_name: "Martin Presence"

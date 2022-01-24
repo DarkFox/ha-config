@@ -1,3 +1,47 @@
+proximity:
+  bil_to_home:
+    zone: home
+    devices: device_tracker.bil
+    unit_of_measurement: m
+    tolerance: 100
+
+  bil_to_rsr:
+    zone: rsr
+    devices: device_tracker.bil
+    unit_of_measurement: m
+    tolerance: 100
+
+  bil_to_rsh:
+    zone: rsh
+    devices: device_tracker.bil
+    unit_of_measurement: m
+    tolerance: 100
+
+sensor:
+  - platform: statistics
+    name: proximity_bil_to_rsr_stats
+    entity_id: proximity.bil_to_rsr
+    max_age:
+      minutes: 5
+
+  - platform: statistics
+    name: proximity_bil_to_rsh_stats
+    entity_id: proximity.bil_to_rsh
+    max_age:
+      minutes: 5
+
+binary_sensor:
+  - platform: template
+    sensors:
+      bil_at_work_soon:
+        friendly_name: "Bil Snart På Arbejde"
+        value_template: >
+          {% if is_state('sensor.next_work_at', 'rsr') %}
+            {{ states('proximity.bil_to_rsr')|float < 1500 }}
+          {% else %}
+            {{ states('proximity.bil_to_rsh')|float < 1500 }}
+          {% endif %}
+
 automation:
   - id: climatise_car_for_commute_to_work
     alias: climatise_car_for_commute_to_work
@@ -148,7 +192,7 @@ automation:
     id: notify_chargers_available_work
     trigger:
       - platform: state
-        entity_id: binary_sensor.martin_at_work_soon
+        entity_id: binary_sensor.bil_at_work_soon
         to: "on"
     condition:
       - alias: "Car not plugged in"
