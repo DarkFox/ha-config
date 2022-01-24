@@ -120,16 +120,17 @@ automation:
       - platform: event
         event_type: telegram_callback
         event_data:
-          data: "/puzzel_log_off"
+          command: "/puzzel_log_off"
       - platform: event
         event_type: telegram_command
         event_data:
           command: "/puzzel_log_off"
     action:
-      - service: script.puzzel_log_off
-      - service: notify.telegram_darkfox
+      - service: telegram_bot.answer_callback_query
         data:
+          callback_query_id: "{{ trigger.event.data.id }}"
           message: "Logger af Puzzel..."
+      - service: script.puzzel_log_off
 
   - id: telegram_bot_log_on_puzzel
     alias: "Telegram bot log on Puzzel"
@@ -138,18 +139,19 @@ automation:
       - platform: event
         event_type: telegram_callback
         event_data:
-          data: "/puzzel_login"
+          command: "/puzzel_login"
       - platform: event
         event_type: telegram_command
         event_data:
           command: "/puzzel_login"
     action:
+      - service: telegram_bot.answer_callback_query
+        data:
+          callback_query_id: "{{ trigger.event.data.id }}"
+          message: "Logger på {{ trigger.event.data['args'] | join(' ') }}..."
       - service: script.puzzel_log_on
         data:
           queue: "{{ trigger.event.data['args'] | join(' ') }}"
-      - service: notify.telegram_darkfox
-        data:
-          message: "Logger på {{ trigger.event.data['args'] | join(' ') }}..."
 
   - id: set_phone_modes
     initial_state: true
