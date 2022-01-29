@@ -62,10 +62,14 @@ binary_sensor:
           or is_state('binary_sensor.sovevaerelse_gulv_bevaegelse', 'on')
           or is_state('binary_sensor.bedroom_door_activity', 'on')
           or is_state('input_select.latest_motion', 'Bedroom')
-          or is_state('input_select.martin_activity', 'Sleeping')
-          or is_state('input_select.martin_activity', 'Waking')
           or is_state('media_player.sovevaerelse_chromecast', 'playing')
-          or is_state('media_player.sovevaerelse_tv', 'on') -%}
+          or is_state('media_player.sovevaerelse_tv', 'on')
+          or not (
+            is_state('input_select.sleep_state', 'awake')
+            or is_state('input_select.sleep_state', 'bedtime')
+            or is_state('input_select.sleep_state', 'unknown')
+            or is_state('input_select.sleep_state', 'unavailable')
+          ) -%}
             true
           {% else -%}
             false
@@ -744,10 +748,11 @@ group:
     entities:
       - input_boolean.bedroom_activity_override
       - input_select.bedroom_room_state
-      - input_select.latest_motion
-      - input_select.martin_activity
       - binary_sensor.sovevaerelse_motion
       - binary_sensor.seng_bevaegelse
       - binary_sensor.sovevaerelse_gulv_bevaegelse
+      - binary_sensor.bedroom_door_activity
+      - input_select.latest_motion
       - media_player.sovevaerelse_chromecast
       - media_player.sovevaerelse_tv
+      - input_select.sleep_state
