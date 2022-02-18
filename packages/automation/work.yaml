@@ -1,9 +1,19 @@
+input_boolean:
+  force_on_call:
+
 binary_sensor:
   - platform: template
     sensors:
       working_from_home:
         value_template: "{{ is_state('calendar.arbejde_arbejder_hjemmefra', 'on') }}"
       on_call:
+        value_template: >-
+          {{
+            is_state('calendar.arbejde_vagt', 'on')
+            or (is_state('binary_sensor.puzzel_status', 'on') and 'vagt' in (state_attr('binary_sensor.puzzel_status', 'profil')|lower))
+            or is_state('input_boolean.force_on_call', 'on')
+          }}
+      scheduled_on_call:
         value_template: "{{ is_state('calendar.arbejde_vagt', 'on') }}"
       scheduled_at_work:
         value_template: >
@@ -24,6 +34,7 @@ binary_sensor:
             or is_state('binary_sensor.location_at_work', 'on')
             or is_state('binary_sensor.working_from_home', 'on')
             or is_state('binary_sensor.on_call', 'on')
+            or is_state('binary_sensor.puzzel_status', 'on')
           }}
 
 automation:
@@ -76,7 +87,7 @@ automation:
     alias: Remind me to log into on call queue
     trigger:
       - platform: state
-        entity_id: binary_sensor.on_call
+        entity_id: binary_sensor.scheduled_on_call
         to: "on"
     condition:
       - alias: "Not logged into an on call queue"
@@ -97,7 +108,7 @@ automation:
       - platform: state
         entity_id:
           - binary_sensor.working
-          - binary_sensor.on_call
+          - binary_sensor.scheduled_on_call
     condition:
       - condition: and
         conditions:
@@ -105,7 +116,7 @@ automation:
             entity_id: binary_sensor.working
             state: "off"
           - condition: state
-            entity_id: binary_sensor.on_call
+            entity_id: binary_sensor.scheduled_on_call
             state: "off"
           - condition: state
             entity_id: binary_sensor.puzzel_status
@@ -176,7 +187,7 @@ automation:
                 condition: template
                 value_template: >-
                   {{
-                    (is_state('binary_sensor.working', 'on') or is_state('binary_sensor.on_call', 'on'))
+                    (is_state('binary_sensor.working', 'on') or is_state('binary_sensor.scheduled_on_call', 'on'))
                     and is_state('binary_sensor.puzzel_status', 'on')
                   }}
             sequence:
@@ -194,7 +205,7 @@ automation:
                 value_template: >-
                   {{
                     is_state('binary_sensor.working', 'off')
-                    and is_state('binary_sensor.on_call', 'off')
+                    and is_state('binary_sensor.scheduled_on_call', 'off')
                     and is_state('input_select.sleep_state', 'sleeping')
                   }}
             sequence:
