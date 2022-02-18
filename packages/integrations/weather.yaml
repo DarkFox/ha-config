@@ -288,7 +288,13 @@ automation:
     initial_state: true
     trigger:
       platform: template
-      value_template: "{{ not is_state('sensor.blitzortung_lightning_distance', 'unknown') and (states('sensor.blitzortung_lightning_distance') | int) < 20 }}"
+      value_template: >-
+        {{
+          not is_state('sensor.blitzortung_lightning_distance', 'unknown')
+          and not is_state('sensor.blitzortung_lightning_distance', 'unavailable')
+          and (states('sensor.blitzortung_lightning_distance') | int) < 20
+        }}
+
       for:
         minutes: 5
     action:
