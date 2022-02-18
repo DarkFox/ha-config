@@ -106,6 +106,23 @@ rest:
         value_template: "{{ value_json.last_location | int | timestamp_local }}"
         device_class: timestamp
 
+template:
+  - binary_sensor:
+      - name: Bil Lader
+        state: "{{ is_state('binary_sensor.bil_charging', 'on') }}"
+        device_class: battery_charging
+        attributes:
+          icon: >-
+            {% if is_state('binary_sensor.bil_rapid_charge_port', 'on') %}
+              mdi:ev-plug-ccs2
+            {% elif is_state('binary_sensor.bil_normal_charge_port', 'on') %}
+              mdi:ev-plug-type2
+            {% elif is_state('binary_sensor.bil_charging', 'on') %}
+              mdi:battery-charging
+            {% else %}
+              mdi:battery
+            {% endif %}
+
 automation:
   - alias: Update Car Tracker
     mode: single
