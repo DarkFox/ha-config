@@ -51,9 +51,9 @@ binary_sensor:
         value_template: >
           {%- if is_state('input_boolean.hallway_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.hallway_room_state', 'active') else 'false' }}
-          {%- elif is_state('binary_sensor.gang_motion', 'on')
-          or is_state('binary_sensor.hoveddor', 'on')
-          or is_state('binary_sensor.hoveddor_laas', 'on') -%}
+          {%- elif is_state('binary_sensor.gang_entre_bevaegelse', 'on')
+            or is_state('binary_sensor.gang_badevaerelse_bevaegelse', 'on')
+            or is_state('binary_sensor.hoveddor', 'on') -%}
             true
           {% else -%}
             false
@@ -65,13 +65,28 @@ binary_sensor:
           {%-
             if is_state('binary_sensor.moved_from_office_to_living_room', 'on')
             or is_state('binary_sensor.moved_from_bed', 'on')
-            or is_state('binary_sensor.bathroom_activity', 'on')
             or is_state('binary_sensor.bathroom_door_activity', 'on')
+            or is_state('binary_sensor.bathroom_activity', 'on')
+            or is_state('binary_sensor.hoveddor_laas', 'on')
           -%}
             true
           {% else -%}
             false
           {% endif -%}
+
+group:
+  hallway_activity_entities:
+    name: Hallway Activity Entities
+    entities:
+      - input_boolean.hallway_activity_override
+      - input_select.hallway_room_state
+      - binary_sensor.hoveddor
+      - binary_sensor.hoveddor_laas
+      - binary_sensor.gang_entre_bevaegelse
+      - binary_sensor.gang_badevaerelse_bevaegelse
+      - binary_sensor.bathroom_door_activity
+      - binary_sensor.moved_from_office_to_living_room
+      - binary_sensor.moved_from_bed
 
 automation:
   - alias: activate_light_profile_hallway_bright
@@ -408,14 +423,3 @@ light:
             profile: "Off"
         turn_off:
           event: hallway_light_profile_off_null
-
-group:
-  hallway_activity_entities:
-    name: Hallway Activity Entities
-    entities:
-      - input_boolean.hallway_activity_override
-      - input_select.hallway_room_state
-      - binary_sensor.bathroom_activity
-      - binary_sensor.gang_motion
-      - binary_sensor.hoveddor
-      - binary_sensor.hoveddor_laas

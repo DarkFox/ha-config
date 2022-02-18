@@ -116,6 +116,13 @@ automation:
         state: "Default"
     action:
       - service: scene.apply
+        data_template:
+          transition: 0
+          entities:
+            light.sofa_laeselampe:
+              state: on
+              color_temp: 390
+      - service: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
@@ -126,8 +133,12 @@ automation:
               effect: "None"
             light.sofa_laeselampe:
               state: on
-              brightness: 96
-              color_temp: 430
+              brightness: 172
+              effect: "None"
+            light.sofa_uplight:
+              state: on
+              brightness: 255
+              color_temp: 390
               effect: "None"
             light.sofalampe:
               state: on
@@ -255,6 +266,13 @@ automation:
     action:
       - service: scene.apply
         data_template:
+          transition: 0
+          entities:
+            light.sofa_laeselampe:
+              state: on
+              color_temp: 454
+      - service: scene.apply
+        data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
             light.spisebord:
@@ -294,7 +312,11 @@ automation:
             light.sofa_laeselampe:
               state: on
               brightness: 76
-              color_temp: 500
+              effect: "None"
+            light.sofa_uplight:
+              state: on
+              brightness: 172
+              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
               effect: "None"
             light.sofalampe:
               state: on
@@ -435,6 +457,11 @@ automation:
               brightness: 16
             light.sofa_laeselampe:
               state: off
+            light.sofa_uplight:
+              state: on
+              brightness: 86
+              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+              effect: "None"
             light.sofalampe:
               state: on
               brightness: 32
@@ -598,8 +625,10 @@ automation:
               rgb_color: [255, 0, 0]
               effect: "Solid"
             light.sofa_laeselampe:
+              state: off
+            light.sofa_uplight:
               state: on
-              brightness: 2
+              brightness: 24
               rgb_color: [255, 0, 0]
               effect: "None"
             light.stue_spots:
@@ -689,8 +718,7 @@ automation:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
             light.sofa_laeselampe:
-              state: on
-              brightness: 2
+              state: off
             light.display_cabinet_front_1:
               state: off
             light.display_cabinet_front_4:
@@ -718,6 +746,10 @@ automation:
               brightness: 32
               hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
               effect: "None"
+            light.sofa_uplight:
+              state: on
+              effect: "colorloop"
+              brightness: 127
             light.sofalampe:
               state: on
               brightness: 32
