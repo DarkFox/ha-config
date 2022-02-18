@@ -1,18 +1,18 @@
 sensor:
   - platform: template
     sensors:
-      storage_room_light_profile:
-        friendly_name: storage_room Light Profile
+      workshop_light_profile:
+        friendly_name: workshop Light Profile
         value_template: >
-          {%- if is_state('input_boolean.storage_room_separate_light_profile', 'off') -%}
+          {%- if is_state('input_boolean.workshop_separate_light_profile', 'off') -%}
             {{ states('input_select.light_profile') }}
           {%- else -%}
-            {{ states('input_select.storage_room_light_profile') }}
+            {{ states('input_select.workshop_light_profile') }}
           {%- endif -%}
 
-      storage_room_inactive_light_profile:
+      workshop_inactive_light_profile:
         value_template: >
-          {% set entity_id = 'sensor.storage_room_light_profile' %}
+          {% set entity_id = 'sensor.workshop_light_profile' %}
           {% if is_state(entity_id, 'Bright') %}
             Default
           {% elif is_state(entity_id, 'Default') %}
@@ -25,17 +25,17 @@ sensor:
             Off
           {% endif %}
 
-      storage_room_active_light_profile:
-        friendly_name: Storage Room Active Light Profile
+      workshop_active_light_profile:
+        friendly_name: Workshop Active Light Profile
         # NOTE: Party mode left out
         value_template: >
-          {%- if is_state('input_select.storage_room_room_state', 'active') -%}
-            {{ states('sensor.storage_room_light_profile') }}
+          {%- if is_state('input_select.workshop_room_state', 'active') -%}
+            {{ states('sensor.workshop_light_profile') }}
           {%-
-            elif is_state('input_select.storage_room_room_state', 'inactive')
-            or is_state('binary_sensor.storage_room_activity_predicted', 'on')
+            elif is_state('input_select.workshop_room_state', 'inactive')
+            or is_state('binary_sensor.workshop_activity_predicted', 'on')
           -%}
-            {{ states('sensor.storage_inactive_light_profile') }}
+            {{ states('sensor.workshop_inactive_light_profile') }}
           {%- else %}
             Off
           {%- endif -%}
@@ -43,28 +43,36 @@ sensor:
 binary_sensor:
   - platform: template
     sensors:
-      storage_room_activity:
-        friendly_name: "Storage Room Activity"
+      workshop_activity:
+        friendly_name: "Workshop Activity"
         value_template: >
-          {%- if is_state('input_boolean.storage_room_activity_override', 'on') -%}
-            {{ 'true' if is_state('input_select.storage_room_room_state', 'active') else 'false' }}
+          {%- if is_state('input_boolean.workshop_activity_override', 'on') -%}
+            {{ 'true' if is_state('input_select.workshop_room_state', 'active') else 'false' }}
           {%- elif is_state('binary_sensor.skab_bevaegelse', 'on')
-              or is_state('binary_sensor.storage_room_door_activity', 'on') -%}
+              or is_state('binary_sensor.workshop_door_activity', 'on') -%}
             true
           {% else -%}
             false
           {% endif -%}
 
-      storage_room_activity_predicted:
-        friendly_name: "Storage Room Activity Predicted"
+      workshop_activity_predicted:
+        friendly_name: "Workshop Activity Predicted"
         value_template: "false"
 
+group:
+  hobby_rooom_activity_entities:
+    name: Workshop Activity Entities
+    entities:
+      - input_boolean.workshop_activity_override
+      - input_select.workshop_state
+      - binary_sensor.skab_bevaegelse
+
 automation:
-  - alias: activate_light_profile_storage_room_bright
+  - alias: activate_light_profile_workshop_bright
     initial_state: true
     trigger:
       - platform: state
-        entity_id: &room_light_profile sensor.storage_room_active_light_profile
+        entity_id: &room_light_profile sensor.workshop_active_light_profile
         to: "Bright"
       - platform: event
         event_type: refresh_light_profile
@@ -79,19 +87,19 @@ automation:
           transition: 0
           color_temp: 256
           entity_id:
-            - light.klaedeskab_spots
+            - light.vaerksted_spots
       - service: light.turn_on
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           entity_id:
-            - light.klaedeskab_spots
-            - light.klaedeskab_gulv
-            - light.klaedeskab_skjorter
-            - light.klaedeskab_t_shirts
-            - light.klaedeskab_spejl
+            - light.vaerksted_spots
+            - light.vaerksted_gulv
+            - light.vaerksted_skjorter
+            - light.vaerksted_t_shirts
+            - light.vaerksted_spejl
 
-  - alias: activate_light_profile_storage_room_default
+  - alias: activate_light_profile_workshop_default
     initial_state: true
     trigger:
       - platform: state
@@ -110,19 +118,19 @@ automation:
           transition: 0
           color_temp: 330
           entity_id:
-            - light.klaedeskab_spots
+            - light.vaerksted_spots
       - service: light.turn_on
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
           entity_id:
-            - light.klaedeskab_spots
-            - light.klaedeskab_gulv
-            - light.klaedeskab_skjorter
-            - light.klaedeskab_t_shirts
-            - light.klaedeskab_spejl
+            - light.vaerksted_spots
+            - light.vaerksted_gulv
+            - light.vaerksted_skjorter
+            - light.vaerksted_t_shirts
+            - light.vaerksted_spejl
 
-  - alias: activate_light_profile_storage_room_dimmed
+  - alias: activate_light_profile_workshop_dimmed
     initial_state: true
     trigger:
       - platform: state
@@ -141,19 +149,19 @@ automation:
           transition: 0
           color_temp: 330
           entity_id:
-            - light.klaedeskab_spots
+            - light.vaerksted_spots
       - service: light.turn_on
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 127
           entity_id:
-            - light.klaedeskab_spots
-            - light.klaedeskab_gulv
-            - light.klaedeskab_skjorter
-            - light.klaedeskab_t_shirts
-            - light.klaedeskab_spejl
+            - light.vaerksted_spots
+            - light.vaerksted_gulv
+            - light.vaerksted_skjorter
+            - light.vaerksted_t_shirts
+            - light.vaerksted_spejl
 
-  - alias: activate_light_profile_storage_room_ambient
+  - alias: activate_light_profile_workshop_ambient
     initial_state: true
     trigger:
       - platform: state
@@ -172,19 +180,19 @@ automation:
           transition: 0
           color_temp: 330
           entity_id:
-            - light.klaedeskab_spots
+            - light.vaerksted_spots
       - service: light.turn_on
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 72
           entity_id:
-            - light.klaedeskab_spots
-            - light.klaedeskab_gulv
-            - light.klaedeskab_skjorter
-            - light.klaedeskab_t_shirts
-            - light.klaedeskab_spejl
+            - light.vaerksted_spots
+            - light.vaerksted_gulv
+            - light.vaerksted_skjorter
+            - light.vaerksted_t_shirts
+            - light.vaerksted_spejl
 
-  - alias: activate_light_profile_storage_room_night
+  - alias: activate_light_profile_workshop_night
     initial_state: true
     trigger:
       - platform: state
@@ -201,18 +209,18 @@ automation:
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entity_id:
-            - light.klaedeskab_spots
+            - light.vaerksted_spots
       - service: light.turn_on
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 16
           entity_id:
-            - light.klaedeskab_gulv
-            - light.klaedeskab_skjorter
-            - light.klaedeskab_t_shirts
-            - light.klaedeskab_spejl
+            - light.vaerksted_gulv
+            - light.vaerksted_skjorter
+            - light.vaerksted_t_shirts
+            - light.vaerksted_spejl
 
-  - alias: activate_light_profile_storage_room_off
+  - alias: activate_light_profile_workshop_off
     initial_state: true
     trigger:
       - platform: state
@@ -230,30 +238,30 @@ automation:
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entity_id:
-            - light.klaedeskab_spots
-            - light.klaedeskab_gulv
-            - light.klaedeskab_skjorter
-            - light.klaedeskab_t_shirts
-            - light.klaedeskab_spejl
+            - light.vaerksted_spots
+            - light.vaerksted_gulv
+            - light.vaerksted_skjorter
+            - light.vaerksted_t_shirts
+            - light.vaerksted_spejl
 
 input_boolean:
-  storage_room_activity_override:
+  workshop_activity_override:
     icon: mdi:checkbox-multiple-marked
-    name: Storage Room Activity Override
-  storage_room_separate_light_profile:
-    name: Storage Room Separate Light Profile
+    name: Workshop Activity Override
+  workshop_separate_light_profile:
+    name: Workshop Separate Light Profile
     icon: mdi:heart-broken
 
 input_select:
-  storage_room_room_state:
-    name: Storage Room State
+  workshop_room_state:
+    name: Workshop State
     options:
       - active
       - inactive
       - "off"
 
-  storage_room_light_profile:
-    name: storage room Light Profile
+  workshop_light_profile:
+    name: Workshop Light Profile
     options:
       - Bright
       - Default
@@ -265,108 +273,100 @@ input_select:
 light:
   - platform: template
     lights:
-      storage_room_activity_override:
-        friendly_name: Light Storage Room Activity Override
+      workshop_activity_override:
+        friendly_name: Light Workshop Activity Override
         icon_template: mdi:checkbox-multiple-marked
-        value_template: "{{ is_state('input_boolean.storage_room_activity_override', 'on') }}"
+        value_template: "{{ is_state('input_boolean.workshop_activity_override', 'on') }}"
         turn_on:
           service: input_boolean.turn_on
           data:
-            entity_id: input_boolean.storage_room_activity_override
+            entity_id: input_boolean.workshop_activity_override
         turn_off:
           service: input_boolean.turn_off
           data:
-            entity_id: input_boolean.storage_room_activity_override
+            entity_id: input_boolean.workshop_activity_override
 
-      storage_room_separate_light_profile:
-        friendly_name: Light Storage Room Separate Light Profile
+      workshop_separate_light_profile:
+        friendly_name: Light Workshop Separate Light Profile
         icon_template: mdi:heart-broken
-        value_template: "{{ is_state('input_boolean.storage_room_separate_light_profile', 'on') }}"
+        value_template: "{{ is_state('input_boolean.workshop_separate_light_profile', 'on') }}"
         turn_on:
           service: input_boolean.turn_on
           data:
-            entity_id: input_boolean.storage_room_separate_light_profile
+            entity_id: input_boolean.workshop_separate_light_profile
         turn_off:
           service: input_boolean.turn_off
           data:
-            entity_id: input_boolean.storage_room_separate_light_profile
+            entity_id: input_boolean.workshop_separate_light_profile
 
-      storage_room_light_profile_bright:
+      workshop_light_profile_bright:
         friendly_name: Lyst
         icon_template: "mdi:brightness-7"
-        value_template: "{{ is_state('sensor.storage_room_light_profile', 'Bright') }}"
+        value_template: "{{ is_state('sensor.workshop_light_profile', 'Bright') }}"
         turn_on:
           event: set_light_profile
           event_data:
-            room: storage_room
+            room: workshop
             profile: Bright
         turn_off:
-          event: storage_room_light_profile_off_null
+          event: workshop_light_profile_off_null
 
-      storage_room_light_profile_default:
+      workshop_light_profile_default:
         friendly_name: Normal
         icon_template: "mdi:brightness-5"
-        value_template: "{{ is_state('sensor.storage_room_light_profile', 'Default') }}"
+        value_template: "{{ is_state('sensor.workshop_light_profile', 'Default') }}"
         turn_on:
           event: set_light_profile
           event_data:
-            room: storage_room
+            room: workshop
             profile: Default
         turn_off:
-          event: storage_room_light_profile_off_null
+          event: workshop_light_profile_off_null
 
-      storage_room_light_profile_dimmed:
+      workshop_light_profile_dimmed:
         friendly_name: Dæmpet
         icon_template: "mdi:brightness-6"
-        value_template: "{{ is_state('sensor.storage_room_light_profile', 'Dimmed') }}"
+        value_template: "{{ is_state('sensor.workshop_light_profile', 'Dimmed') }}"
         turn_on:
           event: set_light_profile
           event_data:
-            room: storage_room
+            room: workshop
             profile: Dimmed
         turn_off:
-          event: storage_room_light_profile_off_null
+          event: workshop_light_profile_off_null
 
-      storage_room_light_profile_ambient:
+      workshop_light_profile_ambient:
         friendly_name: Baggrund
         icon_template: "mdi:brightness-4"
-        value_template: "{{ is_state('sensor.storage_room_light_profile', 'Ambient') }}"
+        value_template: "{{ is_state('sensor.workshop_light_profile', 'Ambient') }}"
         turn_on:
           event: set_light_profile
           event_data:
-            room: storage_room
+            room: workshop
             profile: Ambient
         turn_off:
-          event: storage_room_light_profile_off_null
+          event: workshop_light_profile_off_null
 
-      storage_room_light_profile_night:
+      workshop_light_profile_night:
         friendly_name: Nat
         icon_template: "mdi:brightness-3"
-        value_template: "{{ is_state('sensor.storage_room_light_profile', 'Night') }}"
+        value_template: "{{ is_state('sensor.workshop_light_profile', 'Night') }}"
         turn_on:
           event: set_light_profile
           event_data:
-            room: storage_room
+            room: workshop
             profile: Night
         turn_off:
-          event: storage_room_light_profile_off_null
+          event: workshop_light_profile_off_null
 
-      storage_room_light_profile_off:
+      workshop_light_profile_off:
         friendly_name: "Slukket"
         icon_template: "mdi:power"
-        value_template: "{{ is_state('sensor.storage_room_light_profile', 'Off') }}"
+        value_template: "{{ is_state('sensor.workshop_light_profile', 'Off') }}"
         turn_on:
           event: set_light_profile
           event_data:
-            room: storage_room
+            room: workshop
             profile: "Off"
         turn_off:
-          event: storage_room_light_profile_off_null
-
-group:
-  storage_rooom_activity_entities:
-    name: Storage Room Activity Entities
-    entities:
-      - input_boolean.storage_room_activity_override
-      - input_select.storage_room_state
-      - binary_sensor.skab_bevaegelse
+          event: workshop_light_profile_off_null
