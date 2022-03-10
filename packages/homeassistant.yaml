@@ -129,11 +129,11 @@ automation:
       entity_id: sensor.external_ip
     condition:
       - condition: template
-        value_template: "{% if trigger.from_state and trigger.to_state %} true {% else %} false {% endif %}"
+        value_template: "{{ trigger.from_state and trigger.to_state }}"
       - condition: template
-        value_template: "{% if trigger.from_state.state == 'unknown' %} false {% else %} true {% endif %}"
+        value_template: "{{ not trigger.from_state.state == 'unknown' }}"
       - condition: template
-        value_template: "{% if trigger.to_state.state == 'unknown' %} false {% else %} true {% endif %}"
+        value_template: "{{ not trigger.to_state.state == 'unknown' }}"
     action:
       - service: notify.telegram_darkfox
         data:
@@ -142,17 +142,21 @@ automation:
   - alias: Update Available Notification
     initial_state: true
     trigger:
-      platform: state
-      entity_id: binary_sensor.updater
-      to: "on"
+      - platform: template
+        value_template: "{{ not is_state('sensor.ha_installed_version', states('sensor.ha_latest_version_available')) }}"
+      - platform: state
+        entity_id: sun.sun
+        to: "above_horizon"
     condition:
-      condition: state
-      entity_id: sun.sun
-      state: "above_horizon"
+      - condition: template
+        value_template: "{{ not is_state('sensor.ha_installed_version', states('sensor.ha_latest_version_available')) }}"
+      - condition: state
+        entity_id: sun.sun
+        state: "above_horizon"
     action:
       - service: notify.telegram_darkfox
         data:
-          message: "Ny Home Assistant opdatering!"
+          message: "Ny Home Assistant opdatering! Version {{ states('sensor.ha_latest_version_available') }}"
 
   - alias: Clear TTS Cache
     initial_state: true
