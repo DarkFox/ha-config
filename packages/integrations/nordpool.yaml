@@ -3,9 +3,39 @@ template:
       - name: Billigste time
         state: >
           {% set start_time = now().hour %}
-          {% set prices = (state_attr("sensor.nordpool_kwh_dk2_dkk", "today") + state_attr("sensor.nordpool_kwh_dk2_dkk", "tomorrow"))[start_time:] %}
+          {% set prices = (state_attr("sensor.nordpool_kwh_dk2_dkk",
+          "today") + state_attr("sensor.nordpool_kwh_dk2_dkk", "tomorrow"))[start_time:] %}
           {% set index = prices.index(prices | min) %}
           {{today_at("00:00") + timedelta(hours = index + start_time)}}
+      - name: Additional Costs
+        state: >-
+          {% set s = {
+            "abonnement": 0.03,
+            "elafgift": 0.90,
+            "systemydelse": 0.0,
+            "transport_lavlast_2021": 0.2363,
+            "transport_spidslast_2021": 0.6307,
+            "transport_lavlast_2022": 0.3003,
+            "transport_spidslast_2022": 0.7651,
+          } %}
+          {% set afgiftsum = s.abonnement + s.elafgift + s.systemydelse %}
+          {% set cdt = now() %}
+          {% if cdt < as_datetime("2022-04-01 00:00:00.00+01:00") %}
+            {% set transport_lavlast = s.transport_lavlast_2021 %}
+            {% set transport_spidslast = s.transport_spidslast_2021 %}
+          {% else %}
+            {% set transport_lavlast = s.transport_lavlast_2022 %}
+            {% set transport_spidslast = s.transport_spidslast_2022 %}
+          {% endif %}
+          {% if cdt.month >= 10 or cdt.month < 4 %}
+            {% if cdt.hour >= 17 and cdt.hour < 20 %}
+              {{ ((transport_spidslast + afgiftsum) * 1.25) | round(4) }}
+            {% else %}
+              {{ ((transport_lavlast + afgiftsum) * 1.25) | round(4) }}
+            {% endif %}
+          {% else %}
+            {{ ((transport_lavlast + afgiftsum) * 1.25) | round(4) }}
+          {% endif %}
 
 sensor:
   - platform: template
