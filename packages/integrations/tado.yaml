@@ -12,9 +12,9 @@ homeassistant:
       icon: mdi:thermometer
     sensor.sovevaerelse_luftfugtighed:
       icon: mdi:water-percent
-    sensor.kokken_temperatur:
+    sensor.vaerksted_temperatur:
       icon: mdi:thermometer
-    sensor.kokken_luftfugtighed:
+    sensor.vaerksted_luftfugtighed:
       icon: mdi:water-percent
     sensor.badevaerelse_temperatur:
       icon: mdi:thermometer
@@ -44,7 +44,7 @@ binary_sensor:
             or is_state('switch.tado', 'off')
             or not state_attr('device_tracker.tado', 'ip') or state_attr('device_tracker.tado', 'ip').split('.')[0] == '169'
             or is_state('climate.badevaerelse', 'unknown') or is_state('climate.badevaerelse', 'unavailable')
-            or is_state('climate.kokken', 'unknown') or is_state('climate.kokken', 'unavailable')
+            or is_state('climate.vaerksted', 'unknown') or is_state('climate.vaerksted', 'unavailable')
             or is_state('climate.sovevaerelse', 'unknown') or is_state('climate.sovevaerelse', 'unavailable')
             or is_state('climate.kontor', 'unknown') or is_state('climate.kontor', 'unavailable')
             or is_state('climate.stue', 'unknown') or is_state('climate.stue', 'unavailable')
@@ -144,21 +144,21 @@ sensor:
         unit_of_measurement: "°C"
         value_template: "{{ state_attr('climate.sovevaerelse', 'temperature') }}"
 
-      kokken_thermostat_current_temperature:
-        friendly_name: "Kokken Termostat Temperatur"
+      vaerksted_thermostat_current_temperature:
+        friendly_name: "vaerksted Termostat Temperatur"
         unit_of_measurement: "°C"
-        value_template: "{{ state_attr('climate.kokken', 'current_temperature') }}"
-      kokken_thermostat_current_humidity:
-        friendly_name: "Kokken Luftfugtighed"
+        value_template: "{{ state_attr('climate.vaerksted', 'current_temperature') }}"
+      vaerksted_thermostat_current_humidity:
+        friendly_name: "vaerksted Luftfugtighed"
         unit_of_measurement: "%"
-        value_template: "{{ state_attr('climate.kokken', 'current_humidity') }}"
-      kokken_thermostat_current_action:
-        friendly_name: "Kokken Nuværende Tilstand"
-        value_template: "{{ state_attr('climate.kokken', 'hvac_action') }}"
-      kokken_thermostat_set_temperature:
-        friendly_name: "Kokken Sat Temperatur"
+        value_template: "{{ state_attr('climate.vaerksted', 'current_humidity') }}"
+      vaerksted_thermostat_current_action:
+        friendly_name: "vaerksted Nuværende Tilstand"
+        value_template: "{{ state_attr('climate.vaerksted', 'hvac_action') }}"
+      vaerksted_thermostat_set_temperature:
+        friendly_name: "vaerksted Sat Temperatur"
         unit_of_measurement: "°C"
-        value_template: "{{ state_attr('climate.kokken', 'temperature') }}"
+        value_template: "{{ state_attr('climate.vaerksted', 'temperature') }}"
 
       badevaerelse_thermostat_current_temperature:
         friendly_name: "Badevaerelse Termostat Temperatur"
@@ -185,9 +185,9 @@ sensor:
       sovevaerelse_thermostat_heating:
         friendly_name: "Soveværelse Termostat Varmer"
         value_template: "{{ '1' if is_state('sensor.sovevaerelse_thermostat_current_action', 'heating') else '0' }}"
-      kokken_thermostat_heating:
-        friendly_name: "Køkken Termostat Varmer"
-        value_template: "{{ '1' if is_state('sensor.kokken_thermostat_current_action', 'heating') else '0' }}"
+      vaerksted_thermostat_heating:
+        friendly_name: "Værksted Termostat Varmer"
+        value_template: "{{ '1' if is_state('sensor.vaerksted_thermostat_current_action', 'heating') else '0' }}"
       badevaerelse_thermostat_heating:
         friendly_name: "Badeværelse Termostat Varmer"
         value_template: "{{ '1' if is_state('sensor.badevaerelse_thermostat_current_action', 'heating') else '0' }}"
@@ -239,18 +239,18 @@ sensor:
 
   - platform: min_max
     type: mean
-    name: Køkken Temperatur
+    name: Værksted Temperatur
     entity_ids:
-      - sensor.kokken_tado_temperature
-      - sensor.kokken_radiator_room_temp
-      - sensor.kokken_air_temperature
+      - sensor.vaerksted_tado_temperature
+      - sensor.vaerksted_radiator_room_temp
+      - sensor.vaerksted_air_temperature
 
   - platform: min_max
     type: mean
-    name: Køkken Luftfugtighed
+    name: Værksted Luftfugtighed
     entity_ids:
-      - sensor.kokken_tado_humidity
-      - sensor.kokken_humidity
+      - sensor.vaerksted_tado_humidity
+      - sensor.vaerksted_humidity
 
   - platform: min_max
     type: mean
@@ -286,7 +286,7 @@ sensor:
       - sensor.stue_temperatur
       - sensor.kontor_temperatur
       - sensor.sovevaerelse_temperatur
-      - sensor.kokken_temperatur
+      - sensor.vaerksted_temperatur
       - sensor.badevaerelse_temperatur
       - sensor.gang_temperatur
 
@@ -297,6 +297,6 @@ sensor:
       - sensor.stue_luftfugtighed
       - sensor.kontor_luftfugtighed
       - sensor.sovevaerelse_luftfugtighed
-      - sensor.kokken_luftfugtighed
+      - sensor.vaerksted_luftfugtighed
       - sensor.badevaerelse_luftfugtighed
       - sensor.gang_luftfugtighed

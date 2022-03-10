@@ -1,3 +1,10 @@
+input_number:
+  target_temperature:
+    min: 15
+    max: 25
+    step: 1
+    unit_of_measurement: °C
+
 binary_sensor:
   - platform: template
     sensors:
@@ -39,14 +46,14 @@ sensor:
           {%- set active = is_state('binary_sensor.bathroom_activity', 'on') -%}
           {% if on %}
             {% if active %}
-              23
+              {{ states('input_number.target_temperature')|int }}
             {% elif night %}
-              19
+              {{ states('input_number.target_temperature')|int - 4 }}
             {% else %}
-              21
+              {{ states('input_number.target_temperature')|int - 2 }}
             {% endif %}
           {% elif extended %}
-            18
+            {{ states('input_number.target_temperature')|int - 5 }}
           {% else %}
             15
           {% endif %}
@@ -64,14 +71,14 @@ sensor:
               or is_state('binary_sensor.office_video_out', 'on') -%}
           {% if on %}
             {% if active %}
-              24
+              {{ states('input_number.target_temperature')|int }}
             {% elif night or summer %}
-              18
+              {{ states('input_number.target_temperature')|int -4 }}
             {% else %}
-              21
+              {{ states('input_number.target_temperature')|int- 2 }}
             {% endif %}
           {% elif extended %}
-            18
+            {{ states('input_number.target_temperature')|int - 5 }}
           {% else %}
             15
           {% endif %}
@@ -87,14 +94,14 @@ sensor:
           {%- set active = is_state('binary_sensor.living_room_activity', 'on') -%}
           {% if on %}
             {% if night or summer %}
-              18
+              {{ states('input_number.target_temperature')|int - 4 }}
             {% elif active %}
-              23
+              {{ states('input_number.target_temperature')|int }}
             {% else %}
-              21
+              {{ states('input_number.target_temperature')|int - 2 }}
             {% endif %}
           {% elif extended %}
-            18
+            {{ states('input_number.target_temperature')|int -5 }}
           {% else %}
             15
           {% endif %}
@@ -110,14 +117,14 @@ sensor:
           {%- set active = is_state('binary_sensor.kitchen_activity', 'on') -%}
           {% if on %}
             {% if night or summer %}
-              18
+              {{ states('input_number.target_temperature')|int - 4 }}
             {% elif active %}
-              22
+              {{ states('input_number.target_temperature')|int }}
             {% else %}
-              21
+              {{ states('input_number.target_temperature')|int - 2 }}
             {% endif %}
           {% elif extended %}
-            18
+            {{ states('input_number.target_temperature')|int - 5 }}
           {% else %}
             15
           {% endif %}
@@ -127,9 +134,9 @@ sensor:
           {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
           {%- set sleeping = is_state('input_select.sleep_state', 'sleeping') -%}
           {% if sleeping %}
-            22
+            {{ states('input_number.target_temperature')|int }}
           {% elif night %}
-            20
+            {{ states('input_number.target_temperature')|int - 3 }}
           {% else %}
             26
           {% endif %}
@@ -142,12 +149,12 @@ sensor:
           {%- set sleeping = is_state('input_select.sleep_state', 'sleeping') -%}
           {% if on %}
             {% if sleeping or summer %}
-              18
+              {{ states('input_number.target_temperature')|int - 2 }}
             {% else %}
-              21
+              {{ states('input_number.target_temperature')|int }}
             {% endif %}
           {% elif extended %}
-            18
+            {{ states('input_number.target_temperature')|int - 5 }}
           {% else %}
             15
           {% endif %}
@@ -181,18 +188,18 @@ automation:
                   low
                 {%- endif -%}
 
-  - id: toggle_office_desk_fan
-    alias: Toggle Office Desk Fan
-    trigger:
-      - platform: state
-        entity_id: switch.pc_tilbehor_afbryder
-        to:
-          - "on"
-          - "off"
-    action:
-      - service: "switch.turn_{{ states('switch.pc_tilbehor_afbryder') }}"
-        data:
-          entity_id: switch.skrivebord_blaeser
+  # - id: toggle_office_desk_fan
+  #   alias: Toggle Office Desk Fan
+  #   trigger:
+  #     - platform: state
+  #       entity_id: switch.pc_tilbehor_afbryder
+  #       to:
+  #         - "on"
+  #         - "off"
+  #   action:
+  #     - service: "switch.turn_{{ states('switch.pc_tilbehor_afbryder') }}"
+  #       data:
+  #         entity_id: switch.skrivebord_blaeser
 
   # Restart Tado stick if temperature changes don't take.
   - alias: Check Climate
@@ -224,12 +231,6 @@ automation:
       - platform: event
         event_type: set_climate
     action:
-      # - service: >
-      #     {%- if is_state('binary_sensor.badevaerelse_vindue', 'off') -%}
-      #       climate.turn_on
-      #     {%- else -%}
-      #       climate.turn_off
-      #     {%- endif -%}
       - service: climate.turn_on
         data:
           entity_id: climate.badevaerelse
