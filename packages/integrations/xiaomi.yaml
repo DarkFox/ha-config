@@ -6,27 +6,23 @@ camera:
     password: !secret xiaomi_cloud_password
     country: "de"
     colors:
-      # color_map_outside: [64, 64, 64]
+      color_map_outside: [238, 238, 238]
       color_path: [64, 128, 255]
       color_goto_path: [255, 0, 0]
       color_predicted_path: [0, 172, 0]
     room_colors:
-      "16": [172, 172, 172]
-      "17": [245, 217, 91] # Køkken
-      "18": [255, 180, 117] # Kontor
-      "19": [172, 172, 172]
-      "20": [172, 172, 172]
-      "21": [255, 176, 235] # Gang
-      "22": [172, 172, 172]
-      "23": [250, 126, 112] # Stue
-      "24": [184, 133, 204] # Soveværelse
+      "16": [52, 178, 224] # Værksted
+      "17": [245, 217, 91] # Kontor
+      "18": [255, 180, 117] # Soveværelse
+      "19": [255, 176, 235] # Gang
+      "21": [250, 126, 112] # Køkken
+      "22": [184, 133, 204] # Stue
     map_transformation:
-      scale: 2
       trim:
-        left: 22
-        right: 26
-        top: 25
-        bottom: 23
+        left: 16
+        right: 16
+        top: 23
+        bottom: 30
     draw:
       - charger
       - path
@@ -91,8 +87,8 @@ script:
       - service: xiaomi_miio.vacuum_goto
         data:
           entity_id: vacuum.roborock_s5
-          x_coord: 27500
-          y_coord: 19500
+          x_coord: 27550
+          y_coord: 26450
       - alias: "update last empty count"
         service: input_text.set_value
         data:
@@ -115,6 +111,18 @@ sensor:
       vacuum_area_cleaned_since_last_empty:
         friendly_name: "Areal støvsuget siden sidste tømning"
         value_template: "{{ (states('sensor.roborock_s5_total_clean_area')|float) - (states('input_text.vacuum_last_empty')|float) }}"
+      vacuum_current_room:
+        friendly_name: "Støvsuger Rum"
+        value_template: >-
+          {%- set rooms = {
+            16: "Værksted",
+            17: "Kontor",
+            18: "Soveværelse",
+            19: "Gang",
+            21: "Køkken",
+            22: "Stue"
+          } -%}
+          {{ rooms[state_attr('camera.xiaomi_cloud_map_extractor', 'vacuum_room')] }}
 
 automation:
   - id: vacuum_show_menu_when_undocked
