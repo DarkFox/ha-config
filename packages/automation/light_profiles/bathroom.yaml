@@ -101,6 +101,11 @@ automation:
         data:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
+            light.badevaerelse_loft:
+              state: on
+              brightness: 255
+              color_temp: 300
+              effect: "Solid"
             light.badevaerelse_lampe:
               state: on
               brightness: 255
@@ -114,13 +119,6 @@ automation:
             light.bathroom_tablet:
               state: on
               brightness: 255
-      - delay: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-      - service: light.turn_on
-        data:
-          entity_id: light.badevaerelse_loft
-          brightness: 255
-          color_temp: 300
-          effect: "Solid"
 
   - alias: activate_light_profile_bathroom_default
     initial_state: true
@@ -139,6 +137,11 @@ automation:
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
+            light.badevaerelse_loft:
+              state: on
+              brightness: 255
+              hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
+              effect: "Solid"
             light.badevaerelse_lampe:
               state: on
               brightness: 255
@@ -147,18 +150,11 @@ automation:
             light.badevaerelse_skab:
               state: on
               brightness: 255
-              color_temp: 250
+              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
               effect: "Solid"
             light.bathroom_tablet:
               state: on
               brightness: 255
-      - delay: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-      - service: light.turn_on
-        data:
-          entity_id: light.badevaerelse_loft
-          brightness: 255
-          color_temp: 250
-          effect: "Solid"
 
   - alias: activate_light_profile_bathroom_dimmed
     initial_state: true
@@ -177,26 +173,24 @@ automation:
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
-            light.badevaerelse_lampe:
+            light.badevaerelse_loft:
               state: on
               brightness: 255
+              hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
+              effect: "Solid"
+            light.badevaerelse_lampe:
+              state: on
+              brightness: 127
               color_temp: 370
               effect: "None"
             light.badevaerelse_skab:
               state: on
               brightness: 172
-              color_temp: 370
+              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
               effect: "Solid"
             light.bathroom_tablet:
               state: on
               brightness: 127
-      - delay: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-      - service: light.turn_on
-        data:
-          entity_id: light.badevaerelse_loft
-          brightness: 255
-          hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
-          effect: "Solid"
 
   - alias: activate_light_profile_bathroom_ambient
     initial_state: true
@@ -215,6 +209,11 @@ automation:
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
+            light.badevaerelse_loft:
+              state: on
+              brightness: 60
+              hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
+              effect: "Solid"
             light.badevaerelse_lampe:
               state: on
               brightness: 64
@@ -223,18 +222,11 @@ automation:
             light.badevaerelse_skab:
               state: on
               brightness: 64
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
               effect: "Solid"
             light.bathroom_tablet:
               state: on
               brightness: 64
-      - delay: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-      - service: light.turn_on
-        data:
-          entity_id: light.badevaerelse_loft
-          brightness: 60
-          hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
-          effect: "Solid"
 
   - alias: activate_light_profile_bathroom_night
     initial_state: true
@@ -253,6 +245,11 @@ automation:
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
+            light.badevaerelse_loft:
+              state: on
+              brightness: 8
+              hs_color: [255, 0, 0]
+              effect: "Solid"
             light.badevaerelse_lampe:
               state: on
               brightness: 2
@@ -266,13 +263,6 @@ automation:
             light.bathroom_tablet:
               state: on
               brightness: 24
-      - delay: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-      - service: light.turn_on
-        data:
-          entity_id: light.badevaerelse_loft
-          brightness: 8
-          hs_color: [255, 0, 0]
-          effect: "Solid"
 
   - alias: activate_light_profile_bathroom_night_brighter
     initial_state: true
@@ -291,6 +281,11 @@ automation:
         data_template:
           transition: 90
           entities:
+            light.badevaerelse_loft:
+              state: on
+              brightness: 172
+              hs_color: [255, 0, 0]
+              effect: "Solid"
             light.badevaerelse_lampe:
               state: on
               brightness: 64
@@ -299,14 +294,8 @@ automation:
             light.badevaerelse_skab:
               state: on
               brightness: 64
-              color_temp: 370
+              hs_color: [255, 0, 0]
               effect: "Solid"
-      - service: light.turn_on
-        data:
-          entity_id: light.badevaerelse_loft
-          brightness: 172
-          hs_color: [255, 0, 0]
-          effect: "Solid"
 
   - alias: activate_light_profile_bathroom_off
     initial_state: true
@@ -325,22 +314,14 @@ automation:
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
+            light.badevaerelse_loft:
+              state: off
             light.badevaerelse_lampe:
               state: off
             light.badevaerelse_skab:
               state: off
             light.bathroom_tablet:
               state: off
-      - service: script.fade_light
-        data:
-          light: light.badevaerelse_loft
-          transition: "{{ states('input_number.scene_transition_time') | round(0, 'ceil', 1) | int }}"
-          end_pct: 0
-      - delay:
-          seconds: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-      - service: light.turn_off
-        target:
-          entity_id: light.badevaerelse_loft
 
   - alias: activate_light_profile_bathroom_party
     initial_state: true
@@ -359,6 +340,11 @@ automation:
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
+            light.badevaerelse_loft:
+              state: on
+              brightness: 255
+              hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
+              effect: "Solid"
             light.badevaerelse_lampe:
               state: on
               brightness: 255
@@ -367,20 +353,11 @@ automation:
             light.badevaerelse_skab:
               state: on
               brightness: 172
-              color_temp: 370
-              effect: "Solid"
-            light.badevaerelse_loft:
-              state: on
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
+              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
               effect: "Solid"
             light.bathroom_tablet:
               state: on
               brightness: 127
-      - service: script.fade_light
-        data:
-          light: light.badevaerelse_loft
-          transition: "{{ states('input_number.scene_transition_time') | round(0, 'ceil', 1) | int }}"
-          end_pct: 100
 
 input_boolean:
   bathroom_activity_override:
