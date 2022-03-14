@@ -1,44 +1,63 @@
-type: vertical-stack
+type: custom:layout-card
+layout_type: custom:grid-layout
+layout:
+  grid-template-columns: 4fr 6fr
+  margin: 0 -4px 0 -4px
+  padding: 0
+  card_margin: 0
 cards:
-  - type: horizontal-stack
-    cards:
-      - type: gauge
-        entity: sensor.nordpool_kwh_dk2_dkk
-        unit: kr
-        max: 10
-        severity:
-          green: 0
-          yellow: 3
-          red: 5
-        min: 0
-        needle: true
+  - type: gauge
+    entity: sensor.nordpool_kwh_dk2_dkk
+    unit: kr
+    max: 10
+    severity:
+      green: 0
+      yellow: 3
+      red: 5
+    min: 0
+    needle: true
 
-      # - type: gauge
-      #   entity: sensor.energy_meter_active_power_plus
-      #   name: Forbrug
-      #   max: 8000
-      #   severity:
-      #     green: 0
-      #     yellow: 1000
-      #     red: 3000
-      #   needle: true
+  - type: custom:html-template-card
+    ignore_line_breaks: true
+    content: >
+      {% set value = states("sensor.billigste_time") | as_datetime %}
+      <div style="display: flex; flex-direction: column; align-items: center; padding: 15px 0 5px; text-align: center; font-size: 125%;">
+        Start strømslugere{{" om" if value > now() }}:
+        {% if value > now() -%}
+          <h1>{{'%02d' % ((value - now()).total_seconds() / 60 / 60) | round(0, 'floor')}}:{{'%02d' % ((value - now()).total_seconds() / 60 % 60) | round(0, 'floor')}}</h1>
+        {%- else -%}
+          <h1>NU</h1>
+        {%- endif %}
+      </div>
+    view_layout:
+      position: sidebar
 
-      # # - type: horizontal-stack
-      # #   cards:
-      # - type: gauge
-      #   entity: sensor.energy_cost_hourly
-      #   name: Denne Time
-      #   max: 5
-      #   severity:
-      #     green: 0.0
-      #     yellow: 1
-      #     red: 2
+  # - type: gauge
+  #   entity: sensor.energy_meter_active_power_plus
+  #   name: Forbrug
+  #   max: 8000
+  #   severity:
+  #     green: 0
+  #     yellow: 1000
+  #     red: 3000
+  #   needle: true
 
-      # - type: gauge
-      #   entity: sensor.energy_cost_last_hour
-      #   name: Sidste Time
-      #   max: 5
-      #   severity:
-      #     green: 0.0
-      #     yellow: 1
-      #     red: 2
+  # # - type: horizontal-stack
+  # #   cards:
+  # - type: gauge
+  #   entity: sensor.energy_cost_hourly
+  #   name: Denne Time
+  #   max: 5
+  #   severity:
+  #     green: 0.0
+  #     yellow: 1
+  #     red: 2
+
+  # - type: gauge
+  #   entity: sensor.energy_cost_last_hour
+  #   name: Sidste Time
+  #   max: 5
+  #   severity:
+  #     green: 0.0
+  #     yellow: 1
+  #     red: 2

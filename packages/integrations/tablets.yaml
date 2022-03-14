@@ -1,3 +1,29 @@
+script:
+  reload_lovelace_on_tablets:
+    alias: "Reload lovelace on all tablets"
+    sequence:
+      - service: light.turn_on
+        target:
+          entity_id:
+            - light.kitchen_tablet
+            - light.hallway_tablet
+            - light.bathroom_tablet
+            - light.office_tablet
+            - light.bedroom_tablet
+      - delay:
+          seconds: 5
+      - service: browser_mod.lovelace_reload
+      - delay:
+          seconds: 20
+      - service: light.turn_off
+        target:
+          entity_id:
+            - light.kitchen_tablet
+            - light.hallway_tablet
+            - light.bathroom_tablet
+            - light.office_tablet
+            - light.bedroom_tablet
+
 automation:
   - alias: kitchen_tablet_screen_webhook
     initial_state: True
@@ -131,6 +157,36 @@ automation:
         entity_id: input_number.bathroom_tablet_brightness
         value: "{{ trigger.json.state }}"
 
+  - alias: office_tablet_ip_webhook
+    initial_state: True
+    trigger:
+      platform: webhook
+      webhook_id: !secret office_tablet_ip_webhook
+    action:
+      service: "input_text.set_value"
+      data:
+        entity_id: input_text.office_tablet_ip
+        value: "{{ trigger.json.state }}"
+  - alias: office_tablet_screen_webhook
+    initial_state: True
+    trigger:
+      platform: webhook
+      webhook_id: !secret office_tablet_screen_webhook
+    action:
+      service: "input_boolean.turn_{{ trigger.json.state }}"
+      data:
+        entity_id: input_boolean.office_tablet_screen
+  - alias: office_tablet_brightness_webhook
+    initial_state: True
+    trigger:
+      platform: webhook
+      webhook_id: !secret office_tablet_brightness_webhook
+    action:
+      service: input_number.set_value
+      data_template:
+        entity_id: input_number.office_tablet_brightness
+        value: "{{ trigger.json.state }}"
+
   - alias: living_room_remote_screen_webhook
     initial_state: True
     trigger:
@@ -218,6 +274,8 @@ input_boolean:
     name: hallway_tablet_screen
   bathroom_tablet_screen:
     name: bathroom_tablet_screen
+  office_tablet_screen:
+    name: office_tablet_screen
   living_room_remote_screen:
     name: living_room_remote_screen
   bedroom_tablet_screen:
@@ -228,6 +286,8 @@ input_boolean:
 input_text:
   bathroom_tablet_ip:
     name: Bathroom Tablet IP
+  office_tablet_ip:
+    name: Office Tablet IP
 
 input_number:
   kitchen_tablet_brightness:
@@ -240,6 +300,10 @@ input_number:
     max: 255
   bathroom_tablet_brightness:
     name: bathroom_tablet_brightness
+    min: 0
+    max: 255
+  office_tablet_brightness:
+    name: office_tablet_brightness
     min: 0
     max: 255
   living_room_remote_brightness:
@@ -260,6 +324,9 @@ rest_command:
     method: GET
   bathroom_tablet_command:
     url: "http://{{ states('input_text.bathroom_tablet_ip') }}:1817/?message={{ command }}"
+    method: GET
+  office_tablet_command:
+    url: "http://{{ states('input_text.office_tablet_ip') }}:1817/?message={{ command }}"
     method: GET
   living_room_remote_command:
     url: "http://{{ states('sensor.stue_fjernbetjening_wifi_ip_adresse') }}:1817/?message={{ command }}"
@@ -328,6 +395,26 @@ light:
             data:
               command: "screen=:=on"
           - service: rest_command.bathroom_tablet_command
+            data_template:
+              command: "brightness=:={{ brightness }}"
+
+      office_tablet:
+        friendly_name: "Office Tablet"
+        level_template: "{{ states('input_number.office_tablet_brightness')|int }}"
+        value_template: "{{ states('input_boolean.office_tablet_screen') }}"
+        turn_on:
+          - service: rest_command.office_tablet_command
+            data:
+              command: "screen=:=on"
+        turn_off:
+          - service: rest_command.office_tablet_command
+            data:
+              command: "screen=:=off"
+        set_level:
+          - service: rest_command.office_tablet_command
+            data:
+              command: "screen=:=on"
+          - service: rest_command.office_tablet_command
             data_template:
               command: "brightness=:={{ brightness }}"
 
