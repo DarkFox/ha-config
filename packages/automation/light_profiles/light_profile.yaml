@@ -6,6 +6,11 @@ homeassistant:
     script.brighten_light_profile:
       icon: mdi:brightness-7
 
+input_boolean:
+  auto_light_profile:
+    name: Auto
+    icon: mdi:brightness-auto
+
 input_number:
   scene_transition_time:
     name: Scene Transition Time
@@ -128,17 +133,9 @@ sensor:
     sensors:
       inactive_light_profile:
         value_template: >
-          {% if is_state('input_select.light_profile', 'Bright') %}
-            Default
-          {% elif is_state('input_select.light_profile', 'Default') %}
-            Dimmed
-          {% elif is_state('input_select.light_profile', 'Dimmed') %}
-            Ambient
-          {% elif is_state('input_select.light_profile', 'Ambient') %}
-            Night
-          {% else %}
-            Off
-          {% endif %}
+          {% set profile = states('input_select.light_profile') %}
+          {% set profiles = state_attr('input_select.light_profile', 'options') %}
+          {{ profiles[profiles.index(profile)+1] or 'Off' }}
 
       theme:
         friendly_name: Theme
