@@ -197,6 +197,15 @@ sensor:
           content: >-
             {{ states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text | regex_findall_index("<koebenhavnognordsjaelland.+><text>(.*?)<\/text><\/koebenhavnognordsjaelland>", 0) }}
 
+      dmi_vejr_tts:
+        value_template: >
+          {% if states('sensor.dmi_aktuel_varsel') %}
+            Vejr Varsel kategori {{ state_attr('sensor.dmi_aktuel_varsel', 'category') }}: {{ states('sensor.dmi_aktuel_varsel') }}.
+            {{ state_attr('sensor.dmi_aktuel_varsel', 'text') }}.
+          {% endif %}
+          Vejrudsigt: {{ states("sensor.dmi_vejr") }}.
+          {{ state_attr('sensor.dmi_vejr', 'content') | replace(' temp.', ' temperatur') | replace(' Temp.', ' Temperatur') | replace(' temp ', ' temperatur ') | replace(' Temp ', ' Temperatur ') }}
+
       dmi_aktuel_varsel:
         friendly_name: "DMI Aktuel Varsel"
         value_template: >-
