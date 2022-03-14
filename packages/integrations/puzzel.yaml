@@ -88,6 +88,11 @@ script:
             phoneType: "Phone"
             profileId: "{{ profile_id|int }}"
             phoneNumber: "{{ phone_number|string }}"
+      - delay:
+          seconds: 1
+      - service: automation.trigger
+        target:
+          entity_id: automation.update_puzzel_user_info
 
   puzzel_log_off:
     alias: "Log off Puzzel"
@@ -100,9 +105,15 @@ script:
             Content-Type: application/json
             Authorization: "Bearer {{ state_attr('sensor.puzzel_login', 'accessToken') }}"
           payload_string: "{}"
+      - delay:
+          seconds: 1
+      - service: automation.trigger
+        target:
+          entity_id: automation.update_puzzel_user_info
 
 automation:
-  - alias: Update Puzzel user info
+  - id: update_puzzel_user_info
+    alias: Update Puzzel user info
     trigger:
       - platform: state
         entity_id: sensor.puzzel_login

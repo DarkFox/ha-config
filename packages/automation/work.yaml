@@ -38,6 +38,29 @@ binary_sensor:
           }}
 
 automation:
+  - id: puzzel_menu
+    initial_state: true
+    alias: Remind me to log off Puzzel
+    trigger:
+      - platform: event
+        event_type: telegram_callback
+        event_data:
+          command: "/puzzel"
+      - platform: event
+        event_type: telegram_command
+        event_data:
+          command: "/puzzel"
+    action:
+      - service: automation.trigger
+        target:
+          entity_id: automation.puzzel_state_confirmation
+      - service: notify.telegram_darkfox
+        data:
+          message: "Menu:"
+          data:
+            inline_keyboard:
+              - "Log af:/puzzel_log_off, Log på:/puzzel_login"
+
   - id: puzzel_state_confirmation
     alias: Puzzel state confirmation
     trigger:
@@ -61,9 +84,9 @@ automation:
               Logget på Puzzel - {{ states('sensor.puzzel_profil') }}
             {% endif %}
 
-  - id: puzzel_remind_at_work
+  - id: puzzel_log_on_menu
     initial_state: true
-    alias: Remind me to log into puzzel queue
+    alias: Puzzel log on menu
     trigger:
       - platform: state
         entity_id: binary_sensor.working
@@ -100,6 +123,7 @@ automation:
           data:
             inline_keyboard:
               - "Log på RSR + Vagt:/puzzel_login RSR + Vagt"
+              - "Log på Vagt:/puzzel_login Vagt"
 
   - id: puzzel_remind_log_off
     initial_state: true
@@ -161,13 +185,23 @@ automation:
         event_data:
           command: "/puzzel_login"
     action:
-      - service: telegram_bot.answer_callback_query
-        data:
-          callback_query_id: "{{ trigger.event.data.id }}"
-          message: "Logger på {{ trigger.event.data['args'] | join(' ') }}..."
-      - service: script.puzzel_log_on
-        data:
-          queue: "{{ trigger.event.data['args'] | join(' ') }}"
+      - alias: "choose alias (name)"
+        choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ not trigger.event.data['args'] }}"
+            sequence:
+              - service: automation.trigger
+                target:
+                  entity_id: automation.puzzel_log_on_menu
+        default:
+          - service: telegram_bot.answer_callback_query
+            data:
+              callback_query_id: "{{ trigger.event.data.id }}"
+              message: "Logger på {{ trigger.event.data['args'] | join(' ') }}..."
+          - service: script.puzzel_log_on
+            data:
+              queue: "{{ trigger.event.data['args'] | join(' ') }}"
 
   - id: set_phone_modes
     initial_state: true
