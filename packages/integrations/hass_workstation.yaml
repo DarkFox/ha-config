@@ -1,0 +1,11 @@
+binary_sensor:
+  - platform: template
+    sensors:
+      martin_pc_activity:
+        friendly_name: "Martin PC Activity"
+        value_template: >-
+          {{
+            not is_state('sensor.lastactive', 'unavailable')
+            and not is_state('sensor.lastactive', 'unknown')
+            and states('sensor.lastactive')|int - as_timestamp(now()) < 600
+          }}
