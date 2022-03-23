@@ -1,150 +1,144 @@
 title: Living Room
 path: living-room
 icon: "mdi:sofa"
-panel: true
+type: custom:vertical-layout
+layout:
+  max_cols: 3
 cards:
-  - type: custom:layout-card
+  - type: custom:decluttering-card
+    template: room_state_and_light_profile
+    variables:
+      - room: living_room
+
+  - type: custom:decluttering-card
+    template: room_climate_with_thermostat
+    variables:
+      - rum: stue
+      - icon: mdi:sofa
+
+  - type: custom:decluttering-card
+    template: light_groups
+    variables:
+      - rum: stue
+
+  - type: custom:layout-break
+
+  - !include ../cards/media_players/playlist_controls.yaml
+
+  - !include ../cards/media_players/living_room_media.yaml
+
+  - type: horizontal-stack
     cards:
-      - type: vertical-stack
-        cards:
-          - type: custom:decluttering-card
-            template: room_state_and_light_profile
-            variables:
-              - room: living_room
+      - type: "custom:button-card"
+        entity: switch.stue_soundbar_afbryder
+        name: Soundbar Afbryder
+        color: auto
+        size: 50px
 
-          - type: custom:decluttering-card
-            template: room_climate_with_thermostat
-            variables:
-              - rum: stue
-              - icon: mdi:sofa
+      - type: "custom:button-card"
+        entity: switch.bar_skaerm
+        name: Bar Skærm
+        color: auto
+        size: 50px
 
-          - type: entities
-            state_color: true
-            entities:
-              - cover.stue_gardin
-              - entity: cover.stue_gardin_venstre
-                type: "custom:slider-entity-row"
-              - entity: cover.stue_gardin_hojre
-                type: "custom:slider-entity-row"
-              - entity: fan.livingroom_fan
-                type: "custom:slider-entity-row"
+  - type: entities
+    state_color: true
+    entities:
+      - cover.stue_gardin
+      - entity: cover.stue_gardin_venstre
+        type: "custom:slider-entity-row"
+      - entity: cover.stue_gardin_hojre
+        type: "custom:slider-entity-row"
+      - entity: fan.livingroom_fan
+        type: "custom:slider-entity-row"
 
-          - type: custom:decluttering-card
-            template: light_groups
-            variables:
-              - rum: stue
+  - type: custom:layout-break
 
-      - type: custom:layout-break
+  - type: custom:mini-media-player
+    entity: media_player.sync_box
+    # artwork: cover
+    # sound_mode: icon
+    hide:
+      icon: true
+      # info: true
+      prev: true
+      next: true
+      source: true
+      sound_mode: false
+      power: true
+    shortcuts:
+      columns: 4 # Max buttons per row
+      attribute: source
+      buttons:
+        - icon: si:nvidia
+          type: source
+          id: Nvidia Shield
+        - icon: mdi:nintendo-switch
+          type: source
+          id: Nintendo Switch
+        - icon: mdi:desktop-tower-monitor
+          type: source
+          id: PC
+        - icon: mdi:numeric-3-circle-outline
+          type: source
+          id: HDMI 3
+        - icon: mdi:television
+          type: service
+          id: huesyncbox.set_entertainment_area
+          data:
+            entity_id: media_player.sync_box
+            entertainment_area: Stue TV Ambilight
+        - icon: mdi:sofa
+          type: service
+          id: huesyncbox.set_entertainment_area
+          data:
+            entity_id: media_player.sync_box
+            entertainment_area: Stue Gruppe
+        - icon: mdi:chevron-left
+          type: service
+          id: huesyncbox.set_sync_state
+          data:
+            entity_id: media_player.sync_box
+            mode_prev: true
+        - icon: mdi:chevron-right
+          type: service
+          id: huesyncbox.set_sync_state
+          data:
+            entity_id: media_player.sync_box
+            mode_next: true
 
-      - type: vertical-stack
-        cards:
-          - !include ../cards/media_players/playlist_controls.yaml
+  - type: custom:mini-media-player
+    entity: media_player.stue_tv
+    artwork: cover
+    hide:
+      icon: true
 
-          - !include ../cards/media_players/living_room_media.yaml
+  - type: custom:mini-media-player
+    entity: media_player.stue_soundbar_songpal
+    artwork: cover
+    hide:
+      icon: true
 
-          - type: horizontal-stack
-            cards:
-              - type: "custom:button-card"
-                entity: switch.stue_soundbar_afbryder
-                name: Soundbar Afbryder
-                color: auto
-                size: 50px
+  - type: custom:mini-media-player
+    entity: media_player.stue_shield
+    artwork: cover
+    hide:
+      icon: true
 
-              - type: "custom:button-card"
-                entity: switch.bar_skaerm
-                name: Bar Skærm
-                color: auto
-                size: 50px
+  - type: custom:mini-media-player
+    entity: media_player.bar_skaerm
+    artwork: cover
+    hide:
+      icon: true
 
-      - type: custom:layout-break
+  - type: custom:mini-media-player
+    entity: media_player.stue_mini
+    artwork: cover
+    hide:
+      icon: true
 
-      - type: vertical-stack
-        cards:
-          - type: custom:mini-media-player
-            entity: media_player.sync_box
-            # artwork: cover
-            # sound_mode: icon
-            hide:
-              icon: true
-              # info: true
-              prev: true
-              next: true
-              source: true
-              sound_mode: false
-              power: true
-            shortcuts:
-              columns: 4 # Max buttons per row
-              attribute: source
-              buttons:
-                - icon: si:nvidia
-                  type: source
-                  id: Nvidia Shield
-                - icon: mdi:nintendo-switch
-                  type: source
-                  id: Nintendo Switch
-                - icon: mdi:desktop-tower-monitor
-                  type: source
-                  id: PC
-                - icon: mdi:numeric-3-circle-outline
-                  type: source
-                  id: HDMI 3
-                - icon: mdi:television
-                  type: service
-                  id: huesyncbox.set_entertainment_area
-                  data:
-                    entity_id: media_player.sync_box
-                    entertainment_area: Stue TV Ambilight
-                - icon: mdi:sofa
-                  type: service
-                  id: huesyncbox.set_entertainment_area
-                  data:
-                    entity_id: media_player.sync_box
-                    entertainment_area: Stue Gruppe
-                - icon: mdi:chevron-left
-                  type: service
-                  id: huesyncbox.set_sync_state
-                  data:
-                    entity_id: media_player.sync_box
-                    mode_prev: true
-                - icon: mdi:chevron-right
-                  type: service
-                  id: huesyncbox.set_sync_state
-                  data:
-                    entity_id: media_player.sync_box
-                    mode_next: true
-
-          - type: custom:mini-media-player
-            entity: media_player.stue_tv
-            artwork: cover
-            hide:
-              icon: true
-
-          - type: custom:mini-media-player
-            entity: media_player.stue_soundbar_songpal
-            artwork: cover
-            hide:
-              icon: true
-
-          - type: custom:mini-media-player
-            entity: media_player.stue_shield
-            artwork: cover
-            hide:
-              icon: true
-
-          - type: custom:mini-media-player
-            entity: media_player.bar_skaerm
-            artwork: cover
-            hide:
-              icon: true
-
-          - type: custom:mini-media-player
-            entity: media_player.stue_mini
-            artwork: cover
-            hide:
-              icon: true
-
-          - type: custom:mini-media-player
-            entity: media_player.stue_soundbar
-            artwork: cover
-            hide:
-              icon: true
+  - type: custom:mini-media-player
+    entity: media_player.stue_soundbar
+    artwork: cover
+    hide:
+      icon: true
