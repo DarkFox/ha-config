@@ -1,12 +1,168 @@
 type: horizontal-stack
 cards:
-  - type: entity
-    entity: sensor.id_3_battery
+  - type: "custom:button-card"
     name: Bil
-    icon: mdi:car
-  - type: entity
     entity: sensor.id_3_battery
+    hold_action:
+      action: call-service
+      service: climate.set_hvac_mode
+      service_data:
+        entity_id: climate.id_3_klima
+        hvac_mode: >
+          [[[
+            if (states['climate.id_3_klima'].state == 'auto')
+              return "off";
+            else
+              return "auto";
+          ]]]
+    layout: icon_state_name2nd
+    icon: >
+      [[[
+        if (states['climate.id_3_klima'].state == 'auto')
+          return 'mdi:thermometer'
+        else if (entity.attributes.charging_state == 'charging')
+          return 'mdi:car-electric';
+        else
+          return 'mdi:car';
+      ]]]
+    color_type: icon
+    size: 24px
+    show_state: true
+    show_name: true
+    show_units: false
+    show_label: true
+    label: >
+      [[[
+        if (entity.attributes.charging_state == 'charging')
+          return 'Lader: ' + entity.attributes.charge_power_kw + ' kW - ' + entity.attributes.charge_time_remaining;
+        else
+          return '&nbsp;';
+      ]]]
+    custom_fields:
+      unit: >
+        [[[
+          return '% / ' + entity.attributes.target_soc_pct + ' %'
+        ]]]
+      climate: >
+        [[[
+          if (states['climate.id_3_klima'].state == 'auto')
+            return states['sensor.vw_connect_remaining_climatisation_time_min'].state + ' min';
+          else
+            return '';
+        ]]]
+    styles:
+      card:
+        - height: 105px
+        - padding-top: 0
+      grid:
+        - grid-template-areas: '"n climate i" "s unit unit" "l l l"'
+        - grid-template-columns: min-content 1fr 50px
+        - grid-template-rows: min-content 1fr min-content
+      img_cell:
+        - align-self: start
+        - text-align: left
+      icon:
+        - color: >
+            [[[
+              if (states['climate.id_3_klima'].state == 'auto')
+                return "darkorange";
+              else if (entity.attributes.charging_state == 'charging')
+                return "limegreen";
+              else
+                return "var(--state-icon-color, #44739e)";
+            ]]]
+      name:
+        - justify-self: start
+        - padding-left: 10px
+        - font-weight: bold
+        - color: var(--secondary-text-color)
+        - line-height: 40px
+        - font-weight: 500
+        - font-size: 16px
+        - overflow: hidden
+        - white-space: nowrap
+        - text-overflow: ellipsis
+      state:
+        - justify-self: start
+        - padding-left: 10px
+        - font-size: 28px
+        - margin-right: 4px
+      label:
+        - justify-self: start
+        - padding-left: 10px
+        - color: var(--secondary-text-color)
+      custom_fields:
+        unit:
+          - align-self: end
+          - justify-self: start
+          - text-align: left
+          - padding-bottom: 2px
+          - font-size: 18px
+          - color: var(--secondary-text-color)
+          - font-weight: 300
+        climate:
+          - justify-self: end
+          - padding-left: 10px
+          - font-weight: bold
+          - color: var(--secondary-text-color)
+          - line-height: 40px
+          - font-weight: 500
+          - font-size: 16px
+          - overflow: hidden
+          - white-space: nowrap
+          - text-overflow: ellipsis
+  - type: "custom:button-card"
     name: Rækkevidde
+    entity: sensor.vw_connect_cruising_range_electric_km
+    layout: icon_state_name2nd
     icon: mdi:road
-    attribute: range_km
-    unit: Km
+    color_type: icon
+    color: "var(--state-icon-color, #44739e)"
+    size: 24px
+    show_state: true
+    show_name: true
+    show_units: false
+    show_label: true
+    label: "&nbsp;"
+    custom_fields:
+      unit: "km"
+    styles:
+      card:
+        - height: 105px
+        - padding-top: 0
+      grid:
+        - grid-template-areas: '"n n i" "s unit unit" "l l l"'
+        - grid-template-columns: min-content 1fr 50px
+        - grid-template-rows: min-content 1fr min-content
+      img_cell:
+        - align-self: start
+        - text-align: left
+      name:
+        - justify-self: start
+        - padding-left: 10px
+        - font-weight: bold
+        - color: var(--secondary-text-color)
+        - line-height: 40px
+        - font-weight: 500
+        - font-size: 16px
+        - overflow: hidden
+        - white-space: nowrap
+        - text-overflow: ellipsis
+      state:
+        - justify-self: start
+        - padding-left: 10px
+        - font-size: 28px
+        - margin-right: 4px
+      label:
+        - justify-self: start
+        - padding-left: 10px
+        - color: var(--secondary-text-color)
+      custom_fields:
+        unit:
+          - align-self: end
+          - justify-self: start
+          - text-align: left
+          - padding-bottom: 2px
+          - font-size: 18px
+          - color: var(--secondary-text-color)
+          - font-weight: 300
