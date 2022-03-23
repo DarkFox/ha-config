@@ -12,22 +12,7 @@ sensor:
 
       bathroom_auto_light_profile:
         friendly_name: Bathroom Auto Light Profile
-        value_template: >-
-          {% set outside_lux = states('sensor.weatherflow_brightness')|int %}
-          {% set room_lux = states('sensor.badevaerelse_illuminance')|int %}
-          {% set profile = states('sensor.bathroom_selected_light_profile') %}
-          {% set profiles = state_attr('input_select.light_profile', 'options') %}
-          {% if room_lux > 200 %}
-            {% if outside_lux > 10000 %}
-              {{ profiles[profiles.index(profile)+2] or 'Off' }}
-            {% elif outside_lux > 1000 %}
-              {{ profiles[profiles.index(profile)+1] or 'Off' }}
-            {% else %}
-              {{ profile }}
-            {% endif %}
-          {% else %}
-              {{ profile }}
-          {% endif %}
+        value_template: "{{ states('sensor.bathroom_selected_light_profile') }}"
 
       bathroom_light_profile:
         friendly_name: Bathroom Light Profile
