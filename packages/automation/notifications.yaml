@@ -50,38 +50,6 @@ automation:
         data:
           message: "Vand under opvaskemaskinen!"
 
-  - alias: Bathroom Window Warning
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: binary_sensor.hoveddor
-      to: "on"
-    condition:
-      condition: state
-      entity_id: binary_sensor.badevaerelse_vindue
-      state: "on"
-    action:
-      - service: notify.telegram_darkfox
-        data:
-          message: "Vinduet på badeværelset er åbent!"
-
-  - alias: Bathroom Aired Out
-    initial_state: true
-    trigger:
-      - platform: numeric_state
-        entity_id: sensor.toilet_mold_indicator
-        below: 65
-        for:
-          minutes: 2
-    condition:
-      - condition: state
-        entity_id: binary_sensor.badevaerelse_vindue
-        state: "on"
-    action:
-      - service: script.notify_everywhere
-        data:
-          message: "Badeværelset er udluftet."
-
   - alias: Apartment Door Lock Notification
     initial_state: true
     trigger:
