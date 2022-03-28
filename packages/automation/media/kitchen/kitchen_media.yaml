@@ -83,8 +83,8 @@ automation:
         default:
           - service: media_player.volume_mute
             data_template:
-              entity_id: media_player.srs_hg1
-              is_volume_muted: "{{ not state_attr('media_player.srs_hg1', 'is_volume_muted') }}"
+              entity_id: media_player.kokken_soundbar_songpal
+              is_volume_muted: "{{ not state_attr('media_player.kokken_soundbar_songpal', 'is_volume_muted') }}"
 
   - alias: kokken_soundbar_volume_remote_up
     initial_state: true
@@ -110,7 +110,7 @@ automation:
               default:
                 - service: media_player.volume_up
                   data_template:
-                    entity_id: media_player.srs_hg1
+                    entity_id: media_player.kokken_soundbar_songpal
             - delay:
                 milliseconds: 75
           until:
@@ -147,7 +147,7 @@ automation:
               default:
                 - service: media_player.volume_down
                   data_template:
-                    entity_id: media_player.srs_hg1
+                    entity_id: media_player.kokken_soundbar_songpal
             - delay:
                 milliseconds: 75
           until:
@@ -164,7 +164,7 @@ automation:
     initial_state: true
     trigger:
       - platform: state
-        entity_id: media_player.kokken_hojttaler
+        entity_id: media_player.kokken_soundbar
         to: unavailable
         for:
           minutes: 1
@@ -173,7 +173,7 @@ automation:
         to: "off"
     condition:
       - condition: state
-        entity_id: media_player.kokken_hojttaler
+        entity_id: media_player.kokken_soundbar
         state: unavailable
         for:
           minutes: 1
@@ -186,13 +186,13 @@ automation:
           entity_id: switch.kitchen_speaker_power
       - delay:
           seconds: 5
-      - wait_template: "{{ is_state('media_player.srs_hg1', 'unavailable') }}"
+      - wait_template: "{{ is_state('media_player.kokken_soundbar_songpal', 'unavailable') }}"
         timeout: "00:01:00"
         continue_on_timeout: true
       - service: switch.turn_on
         data:
           entity_id: switch.kitchen_speaker_power
-      - wait_template: "{{ not is_state('media_player.srs_hg1', 'unavailable') }}"
+      - wait_template: "{{ not is_state('media_player.kokken_soundbar_songpal', 'unavailable') }}"
         timeout: "00:05:00"
         continue_on_timeout: true
 
@@ -206,7 +206,7 @@ automation:
         entity_id: input_select.hallway_room_state
         to: "active"
       - platform: state
-        entity_id: media_player.srs_hg1
+        entity_id: media_player.kokken_soundbar_songpal
         to: "on"
     condition:
       - condition: or
@@ -218,12 +218,12 @@ automation:
             entity_id: input_select.hallway_room_state
             state: "active"
       - condition: state
-        entity_id: media_player.srs_hg1
+        entity_id: media_player.kokken_soundbar_songpal
         state: "on"
     action:
       - service: media_player.volume_mute
         data:
-          entity_id: media_player.srs_hg1
+          entity_id: media_player.kokken_soundbar_songpal
           is_volume_muted: false
 
   - alias: Kitchen Speaker inactive trigger
@@ -236,7 +236,7 @@ automation:
         entity_id: input_select.hallway_room_state
         to: "off"
       - platform: state
-        entity_id: media_player.srs_hg1
+        entity_id: media_player.kokken_soundbar_songpal
         to: "on"
     condition:
       - condition: state
@@ -246,12 +246,12 @@ automation:
         entity_id: input_select.hallway_room_state
         state: "off"
       - condition: state
-        entity_id: media_player.srs_hg1
+        entity_id: media_player.kokken_soundbar_songpal
         state: "on"
     action:
       - service: media_player.volume_mute
         data:
-          entity_id: media_player.srs_hg1
+          entity_id: media_player.kokken_soundbar_songpal
           is_volume_muted: true
 
   - alias: kitchen_tv_chromecast_on
@@ -283,10 +283,10 @@ automation:
           entity_id: switch.kokken_tv_afbryder
       - service: media_player.turn_on
         data:
-          entity_id: media_player.srs_hg1
+          entity_id: media_player.kokken_soundbar_songpal
       - service: media_player.select_source
         data:
-          entity_id: media_player.srs_hg1
+          entity_id: media_player.kokken_soundbar_songpal
           source: Audio in
 
   - alias: kitchen_tv_chromecast_off
@@ -303,7 +303,7 @@ automation:
           entity_id: switch.kokken_tv_afbryder
       - service: media_player.turn_off
         data:
-          entity_id: media_player.srs_hg1
+          entity_id: media_player.kokken_soundbar_songpal
 
   - alias: Kitchen TV inactive trigger
     initial_state: true
