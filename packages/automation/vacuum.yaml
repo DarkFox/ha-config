@@ -1,3 +1,10 @@
+# 16: "Værksted",
+# 17: "Kontor",
+# 18: "Soveværelse",
+# 19: "Gang",
+# 21: "Køkken",
+# 22: "Stue"
+
 automation:
   - id: vacuum_while_away
     alias: Vacuum While Away
@@ -12,22 +19,13 @@ automation:
         minutes: "/5"
         seconds: "0"
     condition:
-      - condition: time
-        weekday:
-          - mon
-          - tue
-          - wed
-          - thu
-          - fri
-      - condition: state
-        entity_id: vacuum.roborock_s5
-        state: "docked"
-      - condition: state
-        entity_id: binary_sensor.martin_presence_delayed
-        state: "off"
-      - alias: "Last clean was more than 8 hours ago"
-        condition: template
-        value_template: "{{ states('sensor.roborock_s5_last_clean_start')|as_timestamp < now()|as_timestamp - 8*60*60 }}"
+      - condition: template
+        value_template: >-
+          {{
+            is_state('vacuum.roborock_s5', 'docked')
+            and is_state('binary_sensor.martin_presence_delayed', 'off')
+            and states('sensor.roborock_s5_last_clean_start')|as_timestamp < now()|as_timestamp - 8*60*60
+          }}
     action:
       - service: script.debug_notification
         data_template:
@@ -37,7 +35,7 @@ automation:
         target:
           entity_id: vacuum.roborock_s5
         data:
-          segments: [21, 21, 17, 17, 22, 22, 19, 19, 18, 18, 16, 16]
+          segments: [21, 21, 17, 17, 16, 16, 18, 18, 19, 19, 22, 22]
 
   - id: vacuum_stop_before_coming_home
     alias: Vacuum Stop Before Coming Home
