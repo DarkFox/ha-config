@@ -1,7 +1,10 @@
 type: custom:layout-card
 layout_type: custom:grid-layout
 layout:
-  grid-template-columns: 4fr 6fr
+  grid-template-columns: 2fr 4fr
+  grid-template-areas: |
+    "gauge1 gauge2"
+    "cheapest cheapest"
   margin: 0 -4px 0 -4px
   padding: 0
   card_margin: 0
@@ -16,48 +19,31 @@ cards:
       red: 5
     min: 0
     needle: true
-
-  - type: custom:html-template-card
-    ignore_line_breaks: true
-    content: >
-      {% set value = states("sensor.billigste_time") | as_datetime %}
-      <div style="display: flex; flex-direction: column; align-items: center; padding: 15px 0 5px; text-align: center; font-size: 125%;">
-        Start strømslugere{{" om" if value > now() }}:
-        {% if value > now() -%}
-          <h1>{{'%02d' % ((value - now()).total_seconds() / 60 / 60) | round(0, 'floor')}}:{{'%02d' % ((value - now()).total_seconds() / 60 % 60) | round(0, 'floor')}}</h1>
-        {%- else -%}
-          <h1>NU</h1>
-        {%- endif %}
-      </div>
     view_layout:
-      position: sidebar
+      grid-area: gauge1
 
-  # - type: gauge
-  #   entity: sensor.energy_meter_active_power_plus
-  #   name: Forbrug
-  #   max: 8000
-  #   severity:
-  #     green: 0
-  #     yellow: 1000
-  #     red: 3000
-  #   needle: true
+  - type: gauge
+    entity: sensor.energy_meter_active_power_plus
+    name: Forbrug
+    max: 8000
+    severity:
+      green: 0
+      yellow: 1000
+      red: 3000
+    needle: true
+    view_layout:
+      grid-area: gauge2
 
-  # # - type: horizontal-stack
-  # #   cards:
-  # - type: gauge
-  #   entity: sensor.energy_cost_hourly
-  #   name: Denne Time
-  #   max: 5
-  #   severity:
-  #     green: 0.0
-  #     yellow: 1
-  #     red: 2
-
-  # - type: gauge
-  #   entity: sensor.energy_cost_last_hour
-  #   name: Sidste Time
-  #   max: 5
-  #   severity:
-  #     green: 0.0
-  #     yellow: 1
-  #     red: 2
+  - type: custom:button-card
+    name: Start strømslugere
+    entity: sensor.billigste_time_relative
+    layout: name_state
+    show_state: true
+    show_icon: false
+    styles:
+      card:
+        - font-size: 150%
+        - padding-top: "5px"
+        - padding-bottom: "5px"
+    view_layout:
+      grid-area: cheapest
