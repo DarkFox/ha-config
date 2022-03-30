@@ -1,18 +1,53 @@
 template:
   - sensor:
+      - name: Kommende Elpriser
+        state: "{{ states('sensor.nordpool_kwh_dk2_dkk') }}"
+        attributes:
+          prices: >-
+            {{ (state_attr("sensor.nordpool_kwh_dk2_dkk", "today") + state_attr("sensor.nordpool_kwh_dk2_dkk", "tomorrow"))[now().hour:] }}
+
+      - name: Elpriser Extrema
+        state: "OK"
+        attributes:
+          min: "{{ state_attr('sensor.kommende_elpriser', 'prices') | min }}"
+          max: "{{ state_attr('sensor.kommende_elpriser', 'prices') | max }}"
+          minima: >-
+            {%- set prices = state_attr('sensor.kommende_elpriser', 'prices') -%}
+            {%- for price in prices -%}
+                {%- if not loop.last and prices[loop.index0-1] > price and prices[loop.index0+1] > price -%}
+                  {{ price }},
+                {%- endif -%}
+            {%- endfor -%}
+          maxima: >-
+            {%- set prices = state_attr('sensor.kommende_elpriser', 'prices') -%}
+            {%- for price in prices -%}
+                {%- if not loop.last and prices[loop.index0-1] < price and prices[loop.index0+1] < price -%}
+                  {{ price }},
+                {%- endif -%}
+            {%- endfor -%}
+
+      - name: Næste billige time
+        state: >-
+          {%- set prices = state_attr('sensor.kommende_elpriser', 'prices') -%}
+          {%- set index = prices.index(state_attr('sensor.elpriser_extrema', 'minima')[0]) -%}
+          {{today_at("00:00") + timedelta(hours = index + now().hour)}}
+
+      - name: Næste billige time relative
+        state: >-
+          {% set time_diff =  ((as_timestamp(states('sensor.naeste_billige_time')) - as_timestamp(now())) / 60) | int %}
+          {% if time_diff <= 0 %}
+            Nu!
+          {% elif time_diff > 60 %}
+            Om {{(time_diff / 60) | int}} time{{ 'r' if time_diff > 120 }} og {{(time_diff % 60) }} minutter
+          {% else %}
+            Om {{time_diff}} minutter
+          {% endif %}
+
       - name: Billigste time
         state: >-
-          {% set start_time = now().hour %}
-          {% set off_peak_1 = state_attr("sensor.nordpool_kwh_dk2_dkk", "off_peak_1") %}
-          {% set off_peak_2 = state_attr("sensor.nordpool_kwh_dk2_dkk", "off_peak_2") %}
-          {% set prices = (state_attr("sensor.nordpool_kwh_dk2_dkk", "today") + state_attr("sensor.nordpool_kwh_dk2_dkk", "tomorrow"))[start_time:] %}
-
-          {% set index_min = prices.index(prices | min) %}
-          {% set index_off_peak_1 = prices.index(off_peak_1) if off_peak_1 in prices else 999 %}
-          {% set index_off_peak_2 = prices.index(off_peak_2) if off_peak_2 in prices else 999 %}
-          {% set index = [index_min, index_off_peak_1, index_off_peak_2] | min %}
-
-          {{today_at("00:00") + timedelta(hours = index + start_time)}}
+          {%- set prices = state_attr('sensor.kommende_elpriser', 'prices') -%}
+          {%- set index = prices.index(state_attr('sensor.elpriser_extrema', 'min')) -%}
+          {{today_at("00:00") + timedelta(hours = index + now().hour)}}
 
       - name: Billigste time relative
         state: >-
