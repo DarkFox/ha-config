@@ -1,45 +1,47 @@
 sun:
 
-weather:
-  - platform: darksky
-    api_key: !secret darksky_api_key
-    mode: daily
-    scan_interval:
-      minutes: 3
-
 sensor:
-  # - platform: thermal_comfort
-  #   sensors:
-  #     udenfor:
-  #       friendly_name: Udenfor
-  #       temperature_sensor: sensor.udenfor_temperature
-  #       humidity_sensor: sensor.udenfor_humidity
-  #       pressure_sensor: sensor.lufttryk
-
-  - platform: darksky
-    api_key: !secret darksky_api_key
-    language: da
-    scan_interval:
-      minutes: 3
-    monitored_conditions:
-      - cloud_cover
-      - uv_index
-      - nearest_storm_distance
-      - nearest_storm_bearing
-      - alerts
+  - platform: thermal_comfort
+    sensors:
+      udenfor:
+        friendly_name: Udenfor
+        temperature_sensor: sensor.weatherflow_air_temperature
+        humidity_sensor: sensor.weatherflow_absolute_humidity
+        pressure_sensor: sensor.weatherflow_barometric_pressure
 
   - platform: season
     type: meteorological
 
   - platform: template
     sensors:
+      translated_weather_title:
+        value_template: >-
+          {% set translations = {
+            "clear-night": "Klart, nat",
+            "cloudy": "Overskyet",
+            "exceptional": "Enest\u00e5ende",
+            "fog": "T\u00e5ge",
+            "hail": "Hagl",
+            "lightning": "Lyn",
+            "lightning-rainy": "Lyn, regnvejr",
+            "partlycloudy": "Delvist overskyet",
+            "pouring": "Regnvejr",
+            "rainy": "Regnfuldt",
+            "snowy": "Sne",
+            "snowy-rainy": "Sne, regn",
+            "sunny": "Solrig",
+            "windy": "Bl\u00e6sende",
+            "windy-variant": "Bl\u00e6sende"
+          } %}
+          {{ translations[states('weather.weatherflow_day_based_forecast')] }}
+
       weather_card_secondary_info:
-        value_template: "({{ states('sensor.udenfor_temperature_feels_like')|round(1) }}°) {{ state_attr('weather.dark_sky', 'forecast')[0].temperature|round }}°/{{ state_attr('weather.dark_sky', 'forecast')[0].templow|round }}°"
+        value_template: "({{ states('sensor.udenfor_temperature_feels_like')|round(1) }}°) {{ state_attr('weather.weatherflow_day_based_forecast', 'forecast')[0].temperature|round }}°/{{ state_attr('weather.weatherflow_day_based_forecast', 'forecast')[0].templow|round }}°"
       weather_card_name_text:
         value_template: "{{ states('sensor.precip_today')+' mm. ' if states('sensor.precip_today') != 'None' }}{{ states('sensor.wind_text') }}"
       wind_bearing:
         friendly_name: Vindretning
-        value_template: "{{ state_attr('weather.dark_sky', 'wind_bearing') }}"
+        value_template: "{{ state_attr('weather.weatherflow_day_based_forecast', 'wind_bearing') }}"
       wind_bearing_name:
         friendly_name: Vindretning Kompas
         value_template: >-
@@ -116,7 +118,7 @@ sensor:
           {%- endif -%}
       wind_speed:
         friendly_name: Vindhastighed
-        value_template: "{{ state_attr('weather.dark_sky', 'wind_speed') }}"
+        value_template: "{{ state_attr('weather.weatherflow_day_based_forecast', 'wind_speed') }}"
       wind_speed_name:
         friendly_name: Vindkategori
         value_template: >-
@@ -150,10 +152,10 @@ sensor:
           {%- endif -%}
       wind_text:
         friendly_name: Vind
-        value_template: "{{ states('sensor.wind_speed_name') }}{{ ' fra '+states('sensor.wind_bearing_name') if state_attr('weather.dark_sky', 'wind_speed') != 0 }}"
+        value_template: "{{ states('sensor.wind_speed_name') }}{{ ' fra '+states('sensor.wind_bearing_name') if state_attr('weather.weatherflow_day_based_forecast', 'wind_speed') != 0 }}"
       precip_today:
         friendly_name: Nedbør
-        value_template: "{{ state_attr('weather.dark_sky', 'forecast')[0].precipitation }}"
+        value_template: "{{ state_attr('weather.weatherflow_day_based_forecast', 'forecast')[0].precipitation }}"
         unit_of_measurement: mm
       sun_elevation:
         friendly_name: "Sol Højde"
@@ -164,24 +166,19 @@ sensor:
         friendly_name: "Sol Elevation %"
         value_template: "{{ 0.0 if states('sensor.sun_elevation') | float < 0 else (states('sensor.sun_elevation') | float * 100 / 58.0) | round(2) }}"
         unit_of_measurement: "%"
-      sun_pct:
-        # Amount of sun, minus cloud cover. Totally imaginary number, really :P
-        friendly_name: "Sol%"
-        value_template: "{{ states('sensor.sun_elevation_pct')|float * (1-(states('sensor.dark_sky_cloud_coverage')|float/100))  }}"
-        unit_of_measurement: "%"
       sun_azimuth:
         friendly_name: "Sol Retning"
         value_template: "{{ state_attr('sun.sun', 'azimuth') }}"
         unit_of_measurement: "°"
       outside_temperature:
         friendly_name: "Outside Temperature"
-        value_template: "{{ states('sensor.udenfor_temperature') }}"
+        value_template: "{{ states('sensor.weatherflow_air_temperature') }}"
         device_class: temperature
         unit_of_measurement: "°C"
       sealevel_pressure:
         friendly_name: "Lufttryk (Havniveau)"
         # Calculated as 0.125 per meter above sea level
-        value_template: "{{ states('sensor.lufttryk') | float + 6 }}"
+        value_template: "{{ states('sensor.weatherflow_barometric_pressure') | float + 6 }}"
         device_class: pressure
         unit_of_measurement: "hPa"
 

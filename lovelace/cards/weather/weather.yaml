@@ -3,17 +3,27 @@ mode: vertical
 cards:
   - type: "custom:config-template-card"
     variables:
-      - states['sensor.weather_card_name_text'].state
+      - states['sensor.translated_weather_title'].state
     entities:
-      - sensor.weather_card_name_text
+      - sensor.translated_weather_title
     card:
-      type: weather-forecast
-      entity: weather.dark_sky
+      type: custom:weather-card
+      entity: weather.weatherflow_hourly_based_forecast
       name: "${vars[0]}"
+      number_of_forecasts: "6"
+      hourly_forecast: true
+      forecast: true
+      details: true
+      current: true
       style:
         .: |
           ha-card {
             background-color: transparent;
+            box-shadow: none;
+          }
+          span.title {
+            left: 4em;
+            font-size: 2em;
           }
 
   - !include dmi_weather_warnings.yaml
@@ -31,3 +41,11 @@ cards:
     url: >-
       https://embed.windy.com/embed2.html?lat=55.628&lon=12.579&detailLat=55.649&detailLon=12.419&width=650&height=450&zoom=6&level=surface&overlay=radar&product=radar&menu=&message=false&marker=&calendar=now&pressure=true&type=map&location=coordinates&detail=&metricWind=default&metricTemp=%C2%B0C&radarRange=-1
     aspect_ratio: 66%
+    style:
+      .: |
+        ha-card {
+          background-color: transparent;
+          box-shadow: none;
+          padding-left: 1px;
+          padding-right: 1px;
+        }
