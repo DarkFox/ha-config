@@ -130,8 +130,8 @@ automation:
         entity_id: input_select.sleep_state
         to: "bedtime"
       - platform: state
-        entity_id: sensor.arbejdstelefon_oplader_type
-        to: "wireless"
+        entity_id: binary_sensor.seng_bevaegelse
+        to: "on"
     condition:
       condition: and
       conditions:
@@ -141,9 +141,6 @@ automation:
         - condition: state
           entity_id: input_select.sleep_state
           state: "bedtime"
-        - condition: state
-          entity_id: sensor.arbejdstelefon_oplader_type
-          state: "wireless"
         - condition: state
           entity_id: binary_sensor.martin_presence_delayed
           state: "on"
@@ -222,7 +219,7 @@ automation:
         event_data:
           value: sleep_tracking_paused
       - platform: state
-        entity_id: binary_sensor.sovevaerelse_gulv_bevaegelse
+        entity_id: binary_sensor.sovevaerelse_dor
         to: "on"
       - platform: state
         entity_id:
@@ -251,23 +248,21 @@ automation:
         entity_id: binary_sensor.seng_bevaegelse
         to: "on"
       - platform: state
-        entity_id: binary_sensor.sovevaerelse_gulv_bevaegelse
+        entity_id: binary_sensor.sovevaerelse_dor
         to: "off"
     condition:
-      condition: and
-      conditions:
-        - condition: state
-          entity_id: binary_sensor.seng_bevaegelse
-          state: "on"
-        - condition: state
-          entity_id: input_select.sleep_state
-          state: "paused"
-        - condition: state
-          entity_id: input_select.latest_motion
-          state: "Bedroom"
-        - condition: state
-          entity_id: binary_sensor.sovevaerelse_gulv_bevaegelse
-          state: "off"
+      - condition: state
+        entity_id: binary_sensor.seng_bevaegelse
+        state: "on"
+      - condition: state
+        entity_id: input_select.sleep_state
+        state: "paused"
+      - condition: state
+        entity_id: input_select.latest_motion
+        state: "Bedroom"
+      - condition: state
+        entity_id: binary_sensor.sovevaerelse_dor
+        state: "off"
     action:
       service: input_select.select_option
       data:
@@ -395,7 +390,7 @@ automation:
           - binary_sensor.gang_badevaerelse_bevaegelse
         to: "on"
       - platform: state
-        entity_id: binary_sensor.sovevaerelse_gulv_bevaegelse
+        entity_id: binary_sensor.sovevaerelse_dor
         to: "on"
     condition:
       condition: or
