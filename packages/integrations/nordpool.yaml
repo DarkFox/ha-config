@@ -4,24 +4,30 @@ template:
         state: "{{ states('sensor.nordpool_kwh_dk2_dkk') }}"
         attributes:
           prices: >-
-            {{ (state_attr("sensor.nordpool_kwh_dk2_dkk", "today") + state_attr("sensor.nordpool_kwh_dk2_dkk", "tomorrow"))[now().hour:] }}
+            {%- for price in (state_attr("sensor.nordpool_kwh_dk2_dkk", "today") + state_attr("sensor.nordpool_kwh_dk2_dkk", "tomorrow"))[now().hour:] -%}
+              {{ price ~ ',' if price }}
+            {%- endfor -%}
+          all_prices: >-
+            {%- for price in (state_attr("sensor.nordpool_kwh_dk2_dkk", "today") + state_attr("sensor.nordpool_kwh_dk2_dkk", "tomorrow")) -%}
+              {{ price ~ ',' if price }}
+            {%- endfor -%}
 
       - name: Elpriser Extrema
-        state: "OK"
+        state: "{{ state_attr('sensor.kommende_elpriser', 'all_prices') | min }}"
         attributes:
-          min: "{{ state_attr('sensor.kommende_elpriser', 'prices') | min }}"
-          max: "{{ state_attr('sensor.kommende_elpriser', 'prices') | max }}"
+          min: "{{ state_attr('sensor.kommende_elpriser', 'all_prices') | min }}"
+          max: "{{ state_attr('sensor.kommende_elpriser', 'all_prices') | max }}"
           minima: >-
-            {%- set prices = state_attr('sensor.kommende_elpriser', 'prices') -%}
+            {%- set prices = state_attr('sensor.kommende_elpriser', 'all_prices') -%}
             {%- for price in prices -%}
-                {%- if not loop.last and prices[loop.index0-1] > price and prices[loop.index0+1] > price -%}
+                {%- if prices[loop.index0-1] and prices[loop.index0+1] and prices[loop.index0-1] > price and prices[loop.index0+1] > price -%}
                   {{ price }},
                 {%- endif -%}
             {%- endfor -%}
           maxima: >-
-            {%- set prices = state_attr('sensor.kommende_elpriser', 'prices') -%}
+            {%- set prices = state_attr('sensor.kommende_elpriser', 'all_prices') -%}
             {%- for price in prices -%}
-                {%- if not loop.last and prices[loop.index0-1] < price and prices[loop.index0+1] < price -%}
+                {%- if prices[loop.index0-1] and prices[loop.index0+1] and prices[loop.index0-1] < price and prices[loop.index0+1] < price -%}
                   {{ price }},
                 {%- endif -%}
             {%- endfor -%}
@@ -29,7 +35,8 @@ template:
       - name: Næste billige time
         state: >-
           {%- set prices = state_attr('sensor.kommende_elpriser', 'prices') -%}
-          {%- set index = prices.index(state_attr('sensor.elpriser_extrema', 'minima')[0]) -%}
+          {%- set minima = state_attr('sensor.elpriser_extrema', 'minima') | select('in', prices)|list -%}
+          {%- set index = prices.index(minima[0]) -%}
           {{today_at("00:00") + timedelta(hours = index + now().hour)}}
 
       - name: Næste billige time relative
@@ -46,7 +53,7 @@ template:
       - name: Billigste time
         state: >-
           {%- set prices = state_attr('sensor.kommende_elpriser', 'prices') -%}
-          {%- set index = prices.index(state_attr('sensor.elpriser_extrema', 'min')) -%}
+          {%- set index = prices.index(state_attr('sensor.kommende_elpriser', 'prices') | min) -%}
           {{today_at("00:00") + timedelta(hours = index + now().hour)}}
 
       - name: Billigste time relative
