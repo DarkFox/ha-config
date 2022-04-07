@@ -30,9 +30,21 @@ cards:
               - entity: input_boolean.guests
                 state: "on"
             card:
-              type: custom:html-card
-              title: WiFi
-              content: !secret ui_wifi_content
+              - type: vertical-stack
+                cards:
+                  - type: conditional
+                    conditions:
+                      - entity: binary_sensor.s_train_message_present
+                        state: "on"
+                    card: !include /config/lovelace/cards/s_train_status.yaml
+                  - type: custom:rejseplanen-stog-card
+                    entity: sensor.s_tog_malov
+                    title: " "
+                    max_entries: 4
+
+                  - type: custom:html-card
+                    title: WiFi
+                    content: !secret ui_wifi_content
 
           - type: conditional
             conditions:
