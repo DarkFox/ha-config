@@ -5,21 +5,21 @@ binary_sensor:
   - platform: template
     sensors:
       working_from_home:
-        value_template: "{{ is_state('calendar.arbejde_arbejder_hjemmefra', 'on') }}"
+        value_template: "{{ is_state('binary_sensor.arbejdskalender_arbejder_hjemmefra', 'on') }}"
       on_call:
         value_template: >-
           {{
-            is_state('calendar.arbejde_vagt', 'on')
+            is_state('binary_sensor.arbejdskalender_vagt', 'on')
             or (is_state('binary_sensor.puzzel_status', 'on') and 'vagt' in (state_attr('binary_sensor.puzzel_status', 'profil')|lower))
             or is_state('input_boolean.force_on_call', 'on')
           }}
       scheduled_on_call:
-        value_template: "{{ is_state('calendar.arbejde_vagt', 'on') }}"
+        value_template: "{{ is_state('binary_sensor.arbejdskalender_vagt', 'on') }}"
       scheduled_at_work:
         value_template: >
           {{
-            is_state('calendar.arbejde_pa_rsr', 'on')
-            or is_state('calendar.arbejde_pa_rsh', 'on')
+            is_state('binary_sensor.arbejdskalender_pa_rsr', 'on')
+            or is_state('binary_sensor.arbejdskalender_pa_rsh', 'on')
           }}
       location_at_work:
         value_template: >
@@ -31,9 +31,9 @@ binary_sensor:
         value_template: >
           {{
             is_state('binary_sensor.scheduled_at_work', 'on')
+            or is_state('binary_sensor.scheduled_on_call', 'on')
             or is_state('binary_sensor.location_at_work', 'on')
             or is_state('binary_sensor.working_from_home', 'on')
-            or is_state('binary_sensor.on_call', 'on')
             or is_state('binary_sensor.puzzel_status', 'on')
           }}
 
@@ -210,7 +210,7 @@ automation:
       - platform: state
         entity_id:
           - binary_sensor.working
-          - binary_sensor.on_call
+          - binary_sensor.scheduled_on_call
           - binary_sensor.puzzel_status
           - sensor.arbejdstelefon_forstyr_ikke_sensoren
           - sensor.arbejdstelefon_ringetilstand
@@ -221,7 +221,7 @@ automation:
                 condition: template
                 value_template: >-
                   {{
-                    (is_state('binary_sensor.working', 'on') or is_state('binary_sensor.scheduled_on_call', 'on'))
+                    is_state('binary_sensor.working', 'on')
                     and is_state('binary_sensor.puzzel_status', 'on')
                   }}
             sequence:
