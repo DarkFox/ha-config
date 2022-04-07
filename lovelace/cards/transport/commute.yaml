@@ -96,7 +96,7 @@ cards:
   - type: custom:state-switch
     entity: input_select.preferred_commute
     default: car
-    transition: slide-left
+    transition: slide-down
     transition_time: 250
     states:
       car:
@@ -188,11 +188,13 @@ cards:
             card:
               type: iframe
               url: "${'https://www.google.com/maps/embed/v1/directions?origin='+ORIGIN+'&destination='+DESTINATION+'&key='+KEY}"
-              aspect_ratio: 100%
+              aspect_ratio: 75%
 
       transit:
         type: vertical-stack
         cards:
+          - !include ../weather/simple_weather.yaml
+
           - type: conditional
             conditions:
               - entity: binary_sensor.s_train_message_present
@@ -206,28 +208,4 @@ cards:
       bike:
         type: horizontal-stack
         cards:
-          - type: custom:button-card
-            entity: sensor.weather_card_secondary_info
-            icon: "[[[ return 'mdi:weather-' + states['weather.weatherflow_day_based_forecast'].attributes['forecast'][0]['condition']; ]]]"
-            label: >
-              [[[
-                if (states['sensor.precip_today'].state != 'None') {
-                  return states['sensor.precip_today'].state + ' mm. ' + states['weather.weatherflow_day_based_forecast'].attributes['forecast'][0]['condition'];
-                } else {
-                  return states['weather.weatherflow_day_based_forecast'].attributes['forecast'][0]['condition'];
-                }
-              ]]]
-            show_state: true
-            show_label: true
-            show_name: false
-          - type: custom:compass-card
-            indicator_sensors:
-              - sensor: sensor.wind_bearing
-                indicator:
-                  type: arrow_inward
-            value_sensors:
-              - sensor: sensor.wind_speed_name
-            language: "no"
-            compass:
-              north:
-                show: true
+          - !include ../weather/weather_hourly_forecast.yaml
