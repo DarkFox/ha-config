@@ -29,7 +29,7 @@ binary_sensor:
             states('sensor.bathroom_min_temp')|int == state_attr('climate.badevaerelse', 'temperature')|int
             and states('sensor.office_min_temp')|int == state_attr('climate.kontor', 'temperature')|int
             and states('sensor.living_room_min_temp')|int == state_attr('climate.stue', 'temperature')|int
-            and states('sensor.kitchen_min_temp')|int == state_attr('climate.kokken', 'temperature')|int
+            and states('sensor.workshop_min_temp')|int == state_attr('climate.vaerksted', 'temperature')|int
             and states('sensor.bedroom_min_temp')|int == state_attr('climate.sovevaerelse', 'temperature')|int
           }}
 
@@ -106,15 +106,15 @@ sensor:
             15
           {% endif %}
 
-      kitchen_max_temp:
+      workshop_max_temp:
         value_template: "26"
-      kitchen_min_temp:
+      workshop_min_temp:
         value_template: >
           {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
           {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
           {%- set summer = is_state('sensor.season', 'summer') -%}
           {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
-          {%- set active = is_state('binary_sensor.kitchen_activity', 'on') -%}
+          {%- set active = is_state('binary_sensor.workshop_activity', 'on') -%}
           {% if on %}
             {% if night or summer %}
               {{ states('input_number.target_temperature')|int - 4 }}
@@ -245,10 +245,17 @@ automation:
     trigger:
       - platform: state
         entity_id: sensor.office_min_temp
+      - platform: state
+        entity_id: binary_sensor.kontor_altandor
       - platform: event
         event_type: set_climate
     action:
-      - service: climate.turn_on
+      - service: >
+          {%- if is_state('binary_sensor.kontor_altandor', 'off') -%}
+            climate.turn_on
+          {%- else -%}
+            climate.turn_off
+          {%- endif -%}
         data:
           entity_id: climate.kontor
       - service: climate.set_temperature
@@ -263,10 +270,17 @@ automation:
     trigger:
       - platform: state
         entity_id: sensor.living_room_min_temp
+      - platform: state
+        entity_id: binary_sensor.stue_altandor
       - platform: event
         event_type: set_climate
     action:
-      - service: climate.turn_on
+      - service: >
+          {%- if is_state('binary_sensor.stue_altandor', 'off') -%}
+            climate.turn_on
+          {%- else -%}
+            climate.turn_off
+          {%- endif -%}
         data:
           entity_id: climate.stue
       - service: climate.set_temperature
@@ -275,22 +289,22 @@ automation:
           temperature: "{{ states('sensor.living_room_min_temp') }}"
       - event: check_climate
 
-  - alias: Termostat Køkken
+  - alias: Termostat Værksted
     initial_state: true
     mode: queued
     trigger:
       - platform: state
-        entity_id: sensor.kitchen_min_temp
+        entity_id: sensor.workshop_min_temp
       - platform: event
         event_type: set_climate
     action:
       - service: climate.turn_on
         data:
-          entity_id: climate.kokken
+          entity_id: climate.vaerksted
       - service: climate.set_temperature
         data:
-          entity_id: climate.kokken
-          temperature: "{{ states('sensor.kitchen_min_temp') }}"
+          entity_id: climate.vaerksted
+          temperature: "{{ states('sensor.workshop_min_temp') }}"
       - event: check_climate
 
   - alias: Termostat Soveværelse
@@ -299,10 +313,17 @@ automation:
     trigger:
       - platform: state
         entity_id: sensor.bedroom_min_temp
+      - platform: state
+        entity_id: binary_sensor.sovevaerelse_altandor
       - platform: event
         event_type: set_climate
     action:
-      - service: climate.turn_on
+      - service: >
+          {%- if is_state('binary_sensor.sovevaerelse_altandor', 'off') -%}
+            climate.turn_on
+          {%- else -%}
+            climate.turn_off
+          {%- endif -%}
         data:
           entity_id: climate.sovevaerelse
       - service: climate.set_temperature
