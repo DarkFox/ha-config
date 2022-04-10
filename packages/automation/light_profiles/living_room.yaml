@@ -17,13 +17,15 @@ sensor:
           {% set room_lux = states('sensor.stue_illuminance')|int %}
           {% set profile = states('sensor.living_room_selected_light_profile') %}
           {% set profiles = state_attr('input_select.light_profile', 'options') %}
-          {% if outside_lux > 10000 %}
+          {% if is_state('binary_sensor.quest_in_use', 'on') %}
+            Default
+          {% elif outside_lux > 10000 %}
             {{ profiles[profiles.index(profile)+2] or 'Off' }}
           {% elif outside_lux > 1000 %}
             {{ profiles[profiles.index(profile)+1] or 'Off' }}
           {% else %}
             {{ profile }}
-          {% endif %}
+          {% endif %}i
 
       living_room_light_profile:
         friendly_name: Living Room Light Profile
