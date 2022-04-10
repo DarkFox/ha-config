@@ -1,0 +1,205 @@
+sensor:
+  - platform: min_max
+    type: mean
+    name: Stue Temperatur
+    entity_ids:
+      - sensor.stue_tado_temperature
+      # - sensor.stue_radiator_room_temp
+      - sensor.stue_air_temperature
+
+  - platform: min_max
+    type: mean
+    name: Stue Luftfugtighed
+    entity_ids:
+      - sensor.stue_tado_humidity
+      - sensor.stue_humidity
+
+  - platform: min_max
+    type: mean
+    name: Kontor Temperatur
+    entity_ids:
+      - sensor.kontor_tado_temperature
+      # - sensor.kontor_radiator_room_temp
+      - sensor.kontor_air_temperature
+
+  - platform: min_max
+    type: mean
+    name: Kontor Luftfugtighed
+    entity_ids:
+      - sensor.kontor_tado_humidity
+      - sensor.kontor_humidity
+
+  - platform: min_max
+    type: mean
+    name: Soveværelse Temperatur
+    entity_ids:
+      - sensor.sovevaerelse_tado_temperature
+      # - sensor.sovevaerelse_radiator_room_temp
+      - sensor.sovevaerelse_air_temperature
+
+  - platform: min_max
+    type: mean
+    name: Soveværelse Luftfugtighed
+    entity_ids:
+      - sensor.sovevaerelse_tado_humidity
+      - sensor.sovevaerelse_humidity
+
+  - platform: min_max
+    type: mean
+    name: Værksted Temperatur
+    entity_ids:
+      - sensor.vaerksted_tado_temperature
+      # - sensor.vaerksted_radiator_room_temp
+      - sensor.vaerksted_air_temperature
+
+  - platform: min_max
+    type: mean
+    name: Værksted Luftfugtighed
+    entity_ids:
+      - sensor.vaerksted_tado_humidity
+      - sensor.vaerksted_humidity
+
+  - platform: min_max
+    type: mean
+    name: Badeværelse Temperatur
+    entity_ids:
+      - sensor.badevaerelse_tado_temperature
+      # - sensor.badevaerelse_radiator_room_temp
+      - sensor.badevaerelse_air_temperature
+
+  - platform: min_max
+    type: mean
+    name: Badeværelse Luftfugtighed
+    entity_ids:
+      - sensor.badevaerelse_tado_humidity
+      - sensor.badevaerelse_humidity
+
+  - platform: min_max
+    type: mean
+    name: Køkken Temperatur
+    entity_ids:
+      - sensor.kokken_air_temperature
+
+  - platform: min_max
+    type: mean
+    name: Køkken Luftfugtighed
+    entity_ids:
+      - sensor.kokken_humidity
+
+  - platform: min_max
+    type: mean
+    name: Inde Temperatur
+    entity_ids:
+      - sensor.stue_temperatur
+      - sensor.kontor_temperatur
+      - sensor.sovevaerelse_temperatur
+      - sensor.vaerksted_temperatur
+      - sensor.badevaerelse_temperatur
+      - sensor.kokken_temperatur
+
+  - platform: min_max
+    type: mean
+    name: Inde Luftfugtighed
+    entity_ids:
+      - sensor.stue_luftfugtighed
+      - sensor.kontor_luftfugtighed
+      - sensor.sovevaerelse_luftfugtighed
+      - sensor.vaerksted_luftfugtighed
+      - sensor.badevaerelse_luftfugtighed
+      - sensor.kokken_luftfugtighed
+
+  - platform: derivative
+    source: sensor.badevaerelse_humidity
+    name: Badeværelse Luftfugtighed ændring/min
+    round: 1
+    unit_time: min
+    time_window: "00:05:00"
+
+  - platform: thermal_comfort
+    sensors:
+      sovevaerelse:
+        friendly_name: Soveværelse
+        temperature_sensor: sensor.sovevaerelse_temperatur
+        humidity_sensor: sensor.sovevaerelse_luftfugtighed
+        pressure_sensor: sensor.weatherflow_barometric_pressure
+
+      badevaerelse:
+        friendly_name: Badeværelse
+        temperature_sensor: sensor.badevaerelse_temperatur
+        humidity_sensor: sensor.badevaerelse_luftfugtighed
+        pressure_sensor: sensor.weatherflow_barometric_pressure
+
+      kokken:
+        friendly_name: Køkken
+        temperature_sensor: sensor.kokken_temperatur
+        humidity_sensor: sensor.kokken_luftfugtighed
+        pressure_sensor: sensor.weatherflow_barometric_pressure
+
+      stue:
+        friendly_name: Stue
+        temperature_sensor: sensor.stue_temperatur
+        humidity_sensor: sensor.stue_luftfugtighed
+        pressure_sensor: sensor.weatherflow_barometric_pressure
+
+      kontor:
+        friendly_name: Kontor
+        temperature_sensor: sensor.kontor_temperatur
+        humidity_sensor: sensor.kontor_luftfugtighed
+        pressure_sensor: sensor.weatherflow_barometric_pressure
+
+      vaerksted:
+        friendly_name: Værksted
+        temperature_sensor: sensor.vaerksted_temperatur
+        humidity_sensor: sensor.vaerksted_luftfugtighed
+        pressure_sensor: sensor.weatherflow_barometric_pressure
+
+  - platform: template
+    sensors:
+      sovevaerelse_temperatur_feels_like:
+        friendly_name: Soveværelse Temperatur Føles Som
+        value_template: >
+          {%- set temp = states('sensor.sovevaerelse_temperatur')|float -%}
+          {%- set humidity = states('sensor.sovevaerelse_luftfugtighed')|float -%}
+          {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
+
+      badevaerelse_temperatur_feels_like:
+        friendly_name: Toilet Temperatur Føles Som
+        value_template: >
+          {%- set temp = states('sensor.badevaerelse_temperatur')|float -%}
+          {%- set humidity = states('sensor.badevaerelse_luftfugtighed')|float -%}
+          {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
+
+      kokken_temperatur_feels_like:
+        friendly_name: Køkken Temperatur Føles Som
+        value_template: >
+          {%- set temp = states('sensor.kokken_temperatur')|float -%}
+          {%- set humidity = states('sensor.kokken_luftfugtighed')|float -%}
+          {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
+
+      stue_temperatur_feels_like:
+        friendly_name: Stue Temperatur Føles Som
+        value_template: >
+          {%- set temp = states('sensor.stue_temperatur')|float -%}
+          {%- set humidity = states('sensor.stue_luftfugtighed')|float -%}
+          {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
+
+      kontor_temperatur_feels_like:
+        friendly_name: Kontor Temperatur Føles Som
+        value_template: >
+          {%- set temp = states('sensor.kontor_temperatur')|float -%}
+          {%- set humidity = states('sensor.kontor_luftfugtighed')|float -%}
+          {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
+
+      vaerksted_temperature_feels_like:
+        friendly_name: Værksted Temperatur Føles Som
+        value_template: >
+          {%- set temp = states('sensor.vaerksted_temperatur')|float -%}
+          {%- set humidity = states('sensor.vaerksted_luftfugtighed')|float -%}
+          {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
+
+      udenfor_temperature_feels_like:
+        friendly_name: Udenfor Temperatur Føles Som
+        value_template: >
+          {%- set temp = states('sensor.weatherflow_air_temperature')|float -%}
+          {%- set humidity = states('sensor.weatherflow_absolute_humidity')|float -%}
+          {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
