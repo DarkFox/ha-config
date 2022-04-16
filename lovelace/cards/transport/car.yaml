@@ -1,7 +1,7 @@
 type: horizontal-stack
 cards:
   - type: "custom:button-card"
-    name: Bil
+    name: "Bil"
     entity: sensor.id_3_battery
     hold_action:
       action: call-service
@@ -39,7 +39,7 @@ cards:
     custom_fields:
       unit: >
         [[[
-          return '% / ' + entity.attributes.target_soc_pct + ' %'
+          return '/ ' + entity.attributes.target_soc_pct + ' % (' + states['sensor.vw_connect_cruising_range_electric_km'].state + ' km)';
         ]]]
       climate: >
         [[[
@@ -110,58 +110,58 @@ cards:
           - overflow: hidden
           - white-space: nowrap
           - text-overflow: ellipsis
-  - type: "custom:button-card"
-    name: Rækkevidde
-    entity: sensor.vw_connect_cruising_range_electric_km
-    layout: icon_state_name2nd
-    icon: mdi:road
-    color_type: icon
-    color: "var(--state-icon-color, #44739e)"
-    size: 24px
-    show_state: true
-    show_name: true
-    show_units: false
-    show_label: true
-    label: "&nbsp;"
-    custom_fields:
-      unit: "km"
-    styles:
-      card:
-        - height: 105px
-        - padding-top: 0
-      grid:
-        - grid-template-areas: '"n n i" "s unit unit" "l l l"'
-        - grid-template-columns: min-content 1fr 50px
-        - grid-template-rows: min-content 1fr min-content
-      img_cell:
-        - align-self: start
-        - text-align: left
-      name:
-        - justify-self: start
-        - padding-left: 10px
-        - font-weight: bold
-        - color: var(--secondary-text-color)
-        - line-height: 40px
-        - font-weight: 500
-        - font-size: 16px
-        - overflow: hidden
-        - white-space: nowrap
-        - text-overflow: ellipsis
-      state:
-        - justify-self: start
-        - padding-left: 10px
-        - font-size: 28px
-        - margin-right: 4px
-      label:
-        - justify-self: start
-        - padding-left: 10px
-        - color: var(--secondary-text-color)
-      custom_fields:
-        unit:
-          - align-self: end
-          - justify-self: start
-          - text-align: left
-          - padding-bottom: 2px
-          - font-size: 18px
-          - color: var(--secondary-text-color)
-          - font-weight: 300
+
+  - type: custom:apexcharts-card
+    header:
+      show: false
+    graph_span: 48h
+    apex_config:
+      chart:
+        height: 105px
+        offsetX: -2
+        sparkline:
+          enabled: true
+      legend:
+        show: false
+    yaxis:
+      - id: pct
+        min: 0
+        max: 100
+        apex_config:
+          labels:
+            show: false
+      - id: kw
+        min: 0
+        max: 100
+        apex_config:
+          labels:
+            show: false
+    all_series_config:
+      stroke_width: 2
+    series:
+      - entity: sensor.vw_connect_target_soc_pct
+        yaxis_id: pct
+        color: lightblue
+        name: Max
+        fill_raw: last
+        curve: stepline
+        type: area
+        opacity: 0.3
+        show:
+          legend_value: false
+      - entity: sensor.vw_connect_current_soc_pct
+        yaxis_id: pct
+        color: green
+        name: SoC
+        fill_raw: last
+        curve: stepline
+        show:
+          legend_value: false
+      - entity: sensor.vw_connect_charge_power_kw
+        yaxis_id: kw
+        color: DarkOrange
+        name: kW
+        fill_raw: last
+        curve: stepline
+        show:
+          legend_value: false
