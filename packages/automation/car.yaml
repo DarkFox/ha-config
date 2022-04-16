@@ -193,7 +193,7 @@ automation:
     action:
       - service: notify.telegram_darkfox
         data:
-          message: "Klimatiserer bilen. {{ states('sensor.vw_connect_remaining_climatisation_time_min') }} minutter tilbage."
+          message: "Klimatiserer bilen til {{ state_attr('climate.id_3_klima', 'temperature') }}°. {{ states('sensor.vw_connect_remaining_climatisation_time_min') }} minutter tilbage."
 
   - alias: notify_chargers_available_work
     id: notify_chargers_available_work
@@ -347,3 +347,82 @@ automation:
       - service: notify.telegram_darkfox
         data:
           message: "En ladeplads i P-Huset er lige blevet ledig."
+
+  - id: car_menu
+    initial_state: true
+    alias: Bil Menu
+    trigger:
+      - platform: event
+        event_type: telegram_callback
+        event_data:
+          command: "/bil"
+      - platform: event
+        event_type: telegram_command
+        event_data:
+          command: "/bil"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: >
+            {%- if is_state('sensor.vw_connect_charging_state', 'charging') -%}
+              Opladning startet. Bilen lader op til {{ states('sensor.vw_connect_target_soc_pct') }}%.
+              Færdig ca. {{ states('sensor.vw_connect_charging_complete_at') }}
+            {%- else -%}
+              Oplading afsluttet. Bilen er ladt op til {{ states('sensor.vw_connect_current_soc_pct') }}%.
+            {%- endif -%}
+      - service: notify.telegram_darkfox
+        data:
+          message: >-
+            {%- if states('sensor.vw_connect_remaining_climatisation_time_min')|int > 0 -%}
+              Klimatiserer bilen til {{ state_attr('climate.id_3_klima', 'temperature') }}°. {{ states('sensor.vw_connect_remaining_climatisation_time_min') }} minutter tilbage.
+            {%- else -%}
+              Klimatisering afsluttet.
+            {%- endif -%}
+      - service: notify.telegram_darkfox
+        data:
+          message: "Menu:"
+          data:
+            inline_keyboard:
+              - "Klimatisering:/car_climatisation, Opladning:/car_charging"
+
+  - id: car_climatisation_menu
+    initial_state: true
+    alias: Bil Klimatisering Menu
+    trigger:
+      - platform: event
+        event_type: telegram_callback
+        event_data:
+          command: "/car_climatisation"
+      - platform: event
+        event_type: telegram_command
+        event_data:
+          command: "/car_climatisation"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Klimatisering Menu"
+          data:
+            inline_keyboard:
+              - "{{ 'Stop klimatisering:/car_climatisation_off' if states('sensor.vw_connect_remaining_climatisation_time_min')|int > 0 else 'Klimatiser nu:/car_climatisation_on' }}"
+              - "18°:/car_climatisation_set 18, 19°:/car_climatisation_set 19, 20°:/car_climatisation_set 20, 21°:/car_climatisation_set 21, 22°:/car_climatisation_set 22, 23°:/car_climatisation_set 23"
+
+  - id: car_charging_menu
+    initial_state: true
+    alias: Bil Opladning Menu
+    trigger:
+      - platform: event
+        event_type: telegram_callback
+        event_data:
+          command: "/car_charging"
+      - platform: event
+        event_type: telegram_command
+        event_data:
+          command: "/car_charging"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Opladning Menu"
+          data:
+            inline_keyboard:
+              - "{{ 'Stop opladning:/car_charging_off' if is_state('sensor.vw_connect_charging_state', 'charging') else 'Start opladning:/car_charging_on' }}"
+              - "50%:/car_charging_set 50, 60%:/car_charging_set 60, 70%:/car_charging_set 70, 80%:/car_charging_set 80, 90%:/car_charging_set 90, 100%:/car_charging_set 100"
