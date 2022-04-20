@@ -2,7 +2,6 @@ group:
   activity:
     name: Activity Tracker
     entities:
-      - input_select.martin_activity
       - input_select.latest_motion
       - input_boolean.guests
 
@@ -12,17 +11,6 @@ input_boolean:
     icon: mdi:account-multiple
 
 input_select:
-  martin_activity:
-    name: Martin Activity
-    options:
-      - Unknown
-      - Away
-      - Watching TV
-      - In the bathroom
-      - In the kitchen
-      - Showering # Consider making this a separate binary sensor on the bathroom?
-      - Sleeping
-
   # TODO: Hide this in the UI.
   martin_previous_activity:
     name: Martin Previous Activity
@@ -71,78 +59,59 @@ binary_sensor:
         delay_off:
           minutes: 30
 
-script:
-  return_to_previous_activity:
-    alias: "Return to previous activity"
-    sequence:
-      service: input_select.select_option
-      data:
-        entity_id: input_select.martin_activity
-        option: "{{ states('input_select.martin_previous_activity') }}"
-
 automation:
-  - alias: latest_motion_kitchen
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: binary_sensor.kokken_any
-      to: "on"
-    condition:
-      condition: state
-      entity_id: binary_sensor.martin_presence
-      state: "on"
-    action:
-      service: input_select.select_option
-      data:
-        entity_id: input_select.latest_motion
-        option: "Kitchen"
-
-  - alias: latest_motion_bathroom
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id:
-        - binary_sensor.badevaerelse_any
-      to: "on"
-    condition:
-      condition: state
-      entity_id: binary_sensor.martin_presence
-      state: "on"
-    action:
-      service: input_select.select_option
-      data:
-        entity_id: input_select.latest_motion
-        option: "Bathroom"
-
-  - alias: latest_motion_bedroom
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: binary_sensor.sovevaerelse_any
-      to: "on"
-    condition:
-      condition: state
-      entity_id: binary_sensor.martin_presence
-      state: "on"
-    action:
-      service: input_select.select_option
-      data:
-        entity_id: input_select.latest_motion
-        option: "Bedroom"
-
-  - alias: latest_motion_hallway
+  - alias: latest_motion_rooms
     initial_state: true
     trigger:
       - platform: state
+        variables:
+          room: "Kitchen"
+        entity_id: binary_sensor.kokken_any
+        to: "on"
+
+      - platform: state
+        variables:
+          room: "Bathroom"
+        entity_id:
+          - binary_sensor.badevaerelse_any
+        to: "on"
+
+      - platform: state
+        variables:
+          room: "Bedroom"
+        entity_id: binary_sensor.sovevaerelse_any
+        to: "on"
+
+      - platform: state
+        variables:
+          room: "Hallway"
         entity_id:
           - binary_sensor.gang_entre_bevaegelse
           - binary_sensor.gang_badevaerelse_bevaegelse
           - binary_sensor.hoveddor_access_control_window_door_is_open
         to: "on"
+
       - platform: state
+        variables:
+          room: "Hallway"
         entity_id:
           - lock.hoveddor_las
         to: "unlocked"
+
+      - platform: state
+        variables:
+          room: "Living Room"
+        entity_id:
+          - binary_sensor.stue_any
+          - binary_sensor.sofagruppe_bevaegelse
+        to: "on"
+
+      - platform: state
+        variables:
+          room: "Office"
+        entity_id:
+          - binary_sensor.kontor_any
+        to: "on"
     condition:
       condition: state
       entity_id: binary_sensor.martin_presence
@@ -151,169 +120,16 @@ automation:
       service: input_select.select_option
       data:
         entity_id: input_select.latest_motion
-        option: "Hallway"
-
-  - alias: latest_motion_living_room
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id:
-        - binary_sensor.stue_any
-        - binary_sensor.sofagruppe_bevaegelse
-      to: "on"
-    condition:
-      condition: state
-      entity_id: binary_sensor.martin_presence
-      state: "on"
-    action:
-      service: input_select.select_option
-      data:
-        entity_id: input_select.latest_motion
-        option: "Living Room"
-
-  - alias: latest_motion_office
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id:
-        - binary_sensor.kontor_any
-        - binary_sensor.pc_hobby_bevaegelse
-      to: "on"
-    condition:
-      condition: state
-      entity_id: binary_sensor.martin_presence
-      state: "on"
-    action:
-      service: input_select.select_option
-      data:
-        entity_id: input_select.latest_motion
-        option: "Office"
-
-  - alias: latest_motion_driving
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: binary_sensor.driving
-      to: "on"
-    action:
-      service: input_select.select_option
-      data:
-        entity_id: input_select.latest_motion
-        option: "Away"
+        option: "{{ room }}"
 
   - alias: latest_motion_away
     initial_state: true
     trigger:
-      platform: state
-      entity_id: binary_sensor.martin_presence_delayed
-      to: "off"
+      - platform: state
+        entity_id: binary_sensor.martin_presence_delayed
+        to: "off"
     action:
       service: input_select.select_option
       data:
         entity_id: input_select.latest_motion
         option: "Away"
-
-  #####################
-  # Activity Triggers #
-  #####################
-  - alias: update_previous_activity
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: input_select.martin_activity
-    condition:
-      condition: state
-      entity_id: input_boolean.guests
-      state: "off"
-    action:
-      service: input_select.set_options
-      data_template:
-        entity_id: input_select.martin_previous_activity
-        options: "{{ trigger.from_state.state }}"
-
-  - alias: driving_activity
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: binary_sensor.driving
-      to: "on"
-    action:
-      service: input_select.select_option
-      data:
-        entity_id: input_select.martin_activity
-        option: "Away"
-
-  - alias: bathroom_activity
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: input_select.latest_motion
-      to: "Bathroom"
-    condition:
-      condition: state
-      entity_id: input_boolean.guests
-      state: "off"
-    action:
-      service: input_select.select_option
-      data:
-        entity_id: input_select.martin_activity
-        option: In the bathroom
-
-  - alias: shower_activity
-    initial_state: true
-    trigger:
-      - platform: numeric_state
-        entity_id: sensor.badevaerelse_humidity_change
-        above: 5
-      - platform: state
-        entity_id: binary_sensor.bruseniche_vand
-        to: "on"
-    condition:
-      condition: and
-      conditions:
-        - condition: state
-          entity_id: input_boolean.guests
-          state: "off"
-        - condition: state
-          entity_id: input_select.latest_motion
-          state: "Bathroom"
-    action:
-      service: input_select.select_option
-      data:
-        entity_id: input_select.martin_activity
-        option: Showering
-
-  - alias: kitchen_activity
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: input_select.latest_motion
-      to: "Kitchen"
-    condition:
-      condition: state
-      entity_id: input_boolean.guests
-      state: "off"
-    action:
-      service: input_select.select_option
-      data:
-        entity_id: input_select.martin_activity
-        option: In the kitchen
-
-  ##########################
-  # Activity based actions #
-  ##########################
-
-  - alias: pause_tv_chromecast_on_activity_change
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: input_select.martin_activity
-      from: Watching TV
-    condition:
-      condition: state
-      entity_id: media_player.tv
-      state: "playing"
-    action:
-      service: media_player.media_pause
-      data:
-        entity_id: media_player.tv
