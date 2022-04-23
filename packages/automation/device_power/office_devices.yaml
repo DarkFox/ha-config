@@ -19,14 +19,19 @@ automation:
   - alias: Office Speaker/PC Accessories inactive trigger
     initial_state: true
     trigger:
-      platform: template
-      value_template: >-
-        {{
-          is_state('input_select.office_room_state', 'off') 
-          and is_state('binary_sensor.martin_pc_activity', 'off')
-          and is_state('binary_sensor.working_from_home', 'off')
-          and not is_state('binary_sensor.martin_pc_network_0_wired', 'on')
-        }}
+      - platform: template
+        value_template: >-
+          {{
+            is_state('input_select.office_room_state', 'off') 
+            and is_state('binary_sensor.martin_pc_activity', 'off')
+            and is_state('binary_sensor.working_from_home', 'off')
+            and not is_state('binary_sensor.martin_pc_network_0_wired', 'on')
+          }}
+    condition:
+      - alias: "Quest not in use"
+        condition: state
+        entity_id: binary_sensor.quest_in_use
+        state: "off"
     action:
       service: switch.turn_off
       data:
