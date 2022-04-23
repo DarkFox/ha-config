@@ -405,88 +405,51 @@ automation:
           entity_id: media_player.sovevaerelse_mini
           message: "Soveværelse separat lysstyring {{'tilkoblet' if states('input_boolean.bedroom_separate_light_profile') == 'on' else 'frakoblet'}}"
 
-  # Office Blind Remote (Hue Dimmer) kontor_gardin_fjernbtj #
-  - alias: kontor_gardin_fjernbtj_on
+  # Office Blind Remote (Hue Dimmer) kontor_gardin_fjernbetjening #
+  - alias: kontor_gardin_fjernbetjening_up
     initial_state: true
     trigger:
       - platform: event
         event_type: deconz_event
         event_data:
-          id: kontor_gardin_fjernbtj
+          id: kontor_gardin_fjernbetjening
           event: 1002
     action:
       - service: cover.open_cover
         data:
           entity_id: cover.kontor_rullegardin
 
-  - alias: kontor_gardin_fjernbtj_up
+  - alias: kontor_gardin_fjernbetjening_dn
     initial_state: true
     trigger:
       - platform: event
         event_type: deconz_event
         event_data:
-          id: kontor_gardin_fjernbtj
+          id: kontor_gardin_fjernbetjening
           event: 2002
-    action:
-      - service: cover.set_cover_position
-        data:
-          entity_id: cover.kontor_rullegardin
-          position: 50
-
-  - alias: kontor_gardin_fjernbtj_dn
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: kontor_gardin_fjernbtj
-          event: 3002
-    action:
-      - service: cover.set_cover_position
-        data:
-          entity_id: cover.kontor_rullegardin
-          position: 10
-
-  - alias: kontor_gardin_fjernbtj_off
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: kontor_gardin_fjernbtj
-          event: 4002
     action:
       - service: cover.close_cover
         data:
           entity_id: cover.kontor_rullegardin
 
-  - alias: kontor_gardin_fjernbtj_stop
+  - alias: kontor_gardin_fjernbetjening_hold
     initial_state: true
     trigger:
       - platform: event
         event_type: deconz_event
         event_data:
-          id: kontor_gardin_fjernbtj
-          event: 1001
+          id: kontor_gardin_fjernbetjening
+          event: 1003
       - platform: event
         event_type: deconz_event
         event_data:
-          id: kontor_gardin_fjernbtj
-          event: 2001
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: kontor_gardin_fjernbtj
-          event: 3001
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: kontor_gardin_fjernbtj
-          event: 4001
+          id: kontor_gardin_fjernbetjening
+          event: 2003
     action:
-      - service: cover.stop_cover
+      - service: cover.set_cover_position
         data:
           entity_id: cover.kontor_rullegardin
+          position: 50
 
   # Hobby Bord Remote (Hue Dimmer) hobbybord_fjernbetjening #
   - alias: hobbybord_fjernbetjening_on
