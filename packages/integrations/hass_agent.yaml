@@ -1,0 +1,42 @@
+notify:
+  name: "Martin PC"
+  platform: hass_agent_notifier
+  resource: http://192.168.32.104:5115/notify
+
+binary_sensor:
+  - platform: template
+    sensors:
+      martin_pc:
+        value_template: >-
+          {{
+            is_state('sensor.martin_pc_satellite_lastsystemstatechange', 'ApplicationStarted')
+          }}
+      martin_pc_unlocked:
+        value_template: >-
+          {{
+            is_state('sensor.martin_pc_sessionstate', 'Unlocked')
+          }}
+      martin_pc_activity:
+        friendly_name: "Martin PC Activity"
+        value_template: >-
+          {{
+            not is_state('sensor.martin_pc_lastactive', 'unavailable')
+            and not is_state('sensor.martin_pc_lastactive', 'unknown')
+            and as_timestamp(now()) - (as_timestamp(states('sensor.martin_pc_lastactive'))|int) < 300
+          }}
+
+automation:
+  - id: refresh_hass_agent_on_startup
+    alias: Refresh HASS.agent on startup
+    trigger:
+      platform: homeassistant
+      event: start
+    action:
+      - alias: "Refresh HASS.agent Satellite"
+        service: switch.turn_on
+        target:
+          entity_id: switch.martin_pc_satellite_publishallsensors
+      - alias: "Refresh HASS.agent"
+        service: button.press
+        target:
+          entity_id: button.martin_pc_publishallsensors

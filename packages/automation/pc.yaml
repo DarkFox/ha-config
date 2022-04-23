@@ -20,21 +20,9 @@ switch:
     broadcast_address: 192.168.32.104
     broadcast_port: 9
     turn_off:
-      service: mqtt.publish
+      service: button.press
       data:
-        topic: "iotlink/workgroup/martin-pc/commands/shutdown"
-        payload: ""
-
-binary_sensor:
-  - platform: template
-    sensors:
-      martin_pc:
-        value_template: >-
-          {{
-            is_state('device_tracker.martin_pc', 'home')
-            or is_state('device_tracker.martin_pc_wifi', 'home')
-            or is_state('binary_sensor.martin_pc_network_0_wired', 'on')
-          }}
+        entity_id: button.martin_pc_shutdown
 
 automation:
   - alias: pc_speaker_output
@@ -47,14 +35,3 @@ automation:
       - service: switch.turn_on
         data:
           entity_id: switch.pc_soundbar_power
-
-  - alias: pc_tv_output
-    id: pc_tv_output
-    initial_state: true
-    trigger:
-      platform: webhook
-      webhook_id: !secret pc_tv_output_webhook
-    action:
-      - service: input_boolean.toggle
-        data:
-          entity_id: input_boolean.office_pc_tv_out
