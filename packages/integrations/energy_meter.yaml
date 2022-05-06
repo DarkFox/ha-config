@@ -16,7 +16,7 @@ homeassistant:
       icon: mdi:counter
     sensor.energy_last_quarter:
       icon: mdi:counter
-    sensor.energy_cost_hourly:
+    sensor.energy_cost_this_hour:
       icon: mdi:cash-multiple
     sensor.energy_cost_daily:
       icon: mdi:cash-multiple
@@ -35,16 +35,16 @@ homeassistant:
 
 utility_meter:
   energy_hourly:
-    source: sensor.energy_meter_active_import
+    source: sensor.pow_k_tpi
     cycle: hourly
   energy_daily:
-    source: sensor.energy_meter_active_import
+    source: sensor.pow_k_tpi
     cycle: daily
   energy_monthly:
-    source: sensor.energy_meter_active_import
+    source: sensor.pow_k_tpi
     cycle: monthly
   energy_quarterly:
-    source: sensor.energy_meter_active_import
+    source: sensor.pow_k_tpi
     cycle: quarterly
 
 input_number:
@@ -61,7 +61,7 @@ automation:
     initial_state: true
     trigger:
       - platform: state
-        entity_id: sensor.energy_cost_hourly
+        entity_id: sensor.energy_cost_this_hour
         to: "0.000"
     action:
       - service: input_number.set_value
@@ -73,6 +73,11 @@ sensor:
   - platform: template
     sensors:
       energy_cost_hourly:
+        friendly_name: "Elomkostning/time"
+        value_template: "{{ (((states('sensor.pow_k_p')|float)/1000) * (states('sensor.nordpool_kwh_dk2_dkk')|float)) | round(3) }}"
+        unit_of_measurement: kr
+
+      energy_cost_this_hour:
         friendly_name: "Elomkostning Denne Time"
         value_template: "{{ ((states('sensor.energy_hourly')|float) * (states('sensor.nordpool_kwh_dk2_dkk')|float)) | round(3) }}"
         unit_of_measurement: kr
@@ -122,198 +127,3 @@ sensor:
       #   friendly_name: "Elomkostning Sidste Kvartal"
       #   value_template: "{{ ((states('sensor.energy_last_quarter')|float) * (states('sensor.nordpool_kwh_dk2_dkk')|float)) | round(2) }}"
       #   unit_of_measurement: kr
-
-  - platform: mqtt
-    name: Energy Meter Active Power Plus
-    state_topic: "kamstrup/power/activePowerPlus"
-    device_class: power
-    state_class: measurement
-    unit_of_measurement: W
-  - platform: mqtt
-    name: Energy Meter Active Power Minus
-    state_topic: "kamstrup/power/activePowerMinus"
-    device_class: power
-    state_class: measurement
-    unit_of_measurement: W
-  - platform: mqtt
-    name: Energy Meter Active Power Plus L1
-    state_topic: "kamstrup/power/activePowerPlusL1"
-    device_class: power
-    state_class: measurement
-    unit_of_measurement: W
-  - platform: mqtt
-    name: Energy Meter Active Power Minus L1
-    state_topic: "kamstrup/power/activePowerMinusL1"
-    device_class: power
-    state_class: measurement
-    unit_of_measurement: W
-  - platform: mqtt
-    name: Energy Meter Active Power Plus L2
-    state_topic: "kamstrup/power/activePowerPlusL2"
-    device_class: power
-    state_class: measurement
-    unit_of_measurement: W
-  - platform: mqtt
-    name: Energy Meter Active Power Minus L2
-    state_topic: "kamstrup/power/activePowerMinusL2"
-    device_class: power
-    state_class: measurement
-    unit_of_measurement: W
-  - platform: mqtt
-    name: Energy Meter Active Power Plus L3
-    state_topic: "kamstrup/power/activePowerPlusL3"
-    device_class: power
-    state_class: measurement
-    unit_of_measurement: W
-  - platform: mqtt
-    name: Energy Meter Active Power Minus L3
-    state_topic: "kamstrup/power/activePowerMinusL3"
-    device_class: power
-    state_class: measurement
-    unit_of_measurement: W
-
-  - platform: mqtt
-    name: Energy Meter Reactive Power Plus
-    state_topic: "kamstrup/power/reactivePowerPlus"
-    unit_of_measurement: VARh
-    state_class: measurement
-  - platform: mqtt
-    name: Energy Meter Reactive Power Minus
-    state_topic: "kamstrup/power/reactivePowerMinus"
-    unit_of_measurement: VARh
-    state_class: measurement
-
-  - platform: mqtt
-    name: Energy Meter Power Factor L1
-    state_topic: "kamstrup/power/powerFactorL1"
-    device_class: power_factor
-    state_class: measurement
-    unit_of_measurement: "%"
-  - platform: mqtt
-    name: Energy Meter Power Factor L2
-    state_topic: "kamstrup/power/powerFactorL2"
-    device_class: power_factor
-    state_class: measurement
-    unit_of_measurement: "%"
-  - platform: mqtt
-    name: Energy Meter Power Factor L3
-    state_topic: "kamstrup/power/powerFactorL3"
-    device_class: power_factor
-    state_class: measurement
-    unit_of_measurement: "%"
-  - platform: mqtt
-    name: Energy Meter Power Factor Total
-    state_topic: "kamstrup/power/powerFactorTotal"
-    device_class: power_factor
-    state_class: measurement
-    unit_of_measurement: "%"
-
-  - platform: mqtt
-    name: Energy Meter Voltage L1
-    state_topic: "kamstrup/voltage/L1"
-    device_class: voltage
-    state_class: measurement
-    unit_of_measurement: V
-  - platform: mqtt
-    name: Energy Meter Voltage L2
-    state_topic: "kamstrup/voltage/L2"
-    device_class: voltage
-    state_class: measurement
-    unit_of_measurement: V
-  - platform: mqtt
-    name: Energy Meter Voltage L3
-    state_topic: "kamstrup/voltage/L3"
-    device_class: voltage
-    state_class: measurement
-    unit_of_measurement: V
-
-  - platform: mqtt
-    name: Energy Meter Current L1
-    state_topic: "kamstrup/current/L1"
-    device_class: current
-    state_class: measurement
-    unit_of_measurement: A
-  - platform: mqtt
-    name: Energy Meter Current L2
-    state_topic: "kamstrup/current/L2"
-    device_class: current
-    state_class: measurement
-    unit_of_measurement: A
-  - platform: mqtt
-    name: Energy Meter Current L3
-    state_topic: "kamstrup/current/L3"
-    device_class: current
-    state_class: measurement
-    unit_of_measurement: A
-
-  - platform: mqtt
-    name: Energy Meter Active Import
-    state_topic: "kamstrup/energy/activeImportKWh"
-    last_reset_value_template: "1970-01-01T00:00:00+00:00"
-    device_class: energy
-    state_class: total_increasing
-    unit_of_measurement: kWh
-  - platform: mqtt
-    name: Energy Meter Active Export
-    state_topic: "kamstrup/energy/activeExportKWh"
-    last_reset_value_template: "1970-01-01T00:00:00+00:00"
-    device_class: energy
-    state_class: total_increasing
-    unit_of_measurement: kWh
-  - platform: mqtt
-    name: Energy Meter Active Import L1
-    state_topic: "kamstrup/energy/activeImportKWhL1"
-    last_reset_value_template: "1970-01-01T00:00:00+00:00"
-    device_class: energy
-    state_class: total_increasing
-    unit_of_measurement: kWh
-  - platform: mqtt
-    name: Energy Meter Active Export L1
-    state_topic: "kamstrup/energy/activeExportKWhL1"
-    last_reset_value_template: "1970-01-01T00:00:00+00:00"
-    device_class: energy
-    state_class: total_increasing
-    unit_of_measurement: kWh
-  - platform: mqtt
-    name: Energy Meter Active Import L2
-    state_topic: "kamstrup/energy/activeImportKWhL2"
-    last_reset_value_template: "1970-01-01T00:00:00+00:00"
-    device_class: energy
-    state_class: total_increasing
-    unit_of_measurement: kWh
-  - platform: mqtt
-    name: Energy Meter Active Export L2
-    state_topic: "kamstrup/energy/activeExportKWhL2"
-    last_reset_value_template: "1970-01-01T00:00:00+00:00"
-    device_class: energy
-    state_class: total_increasing
-    unit_of_measurement: kWh
-  - platform: mqtt
-    name: Energy Meter Active Import L3
-    state_topic: "kamstrup/energy/activeImportKWhL3"
-    last_reset_value_template: "1970-01-01T00:00:00+00:00"
-    device_class: energy
-    state_class: total_increasing
-    unit_of_measurement: kWh
-  - platform: mqtt
-    name: Energy Meter Active Export L3
-    state_topic: "kamstrup/energy/activeExportKWhL3"
-    last_reset_value_template: "1970-01-01T00:00:00+00:00"
-    device_class: energy
-    state_class: total_increasing
-    unit_of_measurement: kWh
-
-  - platform: mqtt
-    name: Energy Meter Reactive Import
-    state_topic: "kamstrup/energy/reactiveImportKWh"
-    last_reset_value_template: "1970-01-01T00:00:00+00:00"
-    device_class: energy
-    state_class: total_increasing
-    unit_of_measurement: kWh
-  - platform: mqtt
-    name: Energy Meter Reactive Export
-    state_topic: "kamstrup/energy/reactiveExportKWh"
-    last_reset_value_template: "1970-01-01T00:00:00+00:00"
-    device_class: energy
-    state_class: total_increasing
-    unit_of_measurement: kWh
