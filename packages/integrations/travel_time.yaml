@@ -47,11 +47,13 @@ sensor:
           {{ (as_timestamp(state_attr('calendar.arbejde_pa_'+states('sensor.next_work_at'), 'start_time'))|int)  - as_timestamp(now()) | int }}
       next_work_at:
         value_template: >
-          {% set rsr_time = as_timestamp(state_attr('calendar.arbejde_pa_rsr', 'start_time'))|int %}
-          {% set rsh_time = as_timestamp(state_attr('calendar.arbejde_pa_rsh', 'start_time'))|int %}
-          {% if (rsr_time == 0 and rsh_time != 0) or rsh_time < rsr_time %}
+          {% set rsr_time = as_timestamp(state_attr('calendar.arbejde_pa_rsr', 'start_time')) %}
+          {% set rsh_time = as_timestamp(state_attr('calendar.arbejde_pa_rsh', 'start_time')) %}
+          {% if not rsr_time and not rsh_time %}
+            unknown
+          {% elif not rsr_time or (rsr_time and rsh_time and (rsh_time|int) < (rsr_time|int)) %}
             rsh
-          {% elif (rsh_time == 0 and rsr_time != 0) or rsr_time < rsh_time %}
+          {% elif not rsh_time or (rsr_time and rsh_time and (rsr_time|int) < (rsh_time|int)) %}
             rsr
           {% endif %}
       next_work_at_url_coords:
@@ -73,12 +75,24 @@ sensor:
         device_class: timestamp
       commute_status_car:
         value_template: >
-          {%- if states('sensor.hjem_til_'+states('sensor.next_work_at'))|int > 45 -%}
-            bad
-          {%- elif states('sensor.hjem_til_'+states('sensor.next_work_at'))|int > 35 -%}
-            ok
+          {%- if is_state('sensor.next_work_at', 'rsr') -%}
+            {%- if states('sensor.hjem_til_rsr')|int > 50 -%}
+              bad
+            {%- elif states('sensor.hjem_til_rsr')|int > 35 -%}
+              ok
+            {%- else -%}
+              good
+            {%- endif -%}
+          {%- elif is_state('sensor.next_work_at', 'rsh') -%}
+            {%- if states('sensor.hjem_til_rsh')|int > 45 -%}
+              bad
+            {%- elif states('sensor.hjem_til_rsh')|int > 25 -%}
+              ok
+            {%- else -%}
+              good
+            {%- endif -%}
           {%- else -%}
-            good
+            unknown
           {%- endif -%}
       commute_status_transit:
         value_template: >
