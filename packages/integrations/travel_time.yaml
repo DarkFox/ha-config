@@ -11,8 +11,7 @@ binary_sensor:
   - platform: template
     sensors:
       s_train_message_present:
-        value_template: "{{ not is_state('sensor.s_train_message', '') }}"
-
+        value_template: "{{ not is_state('sensor.s_train_message', '') or not is_state('sensor.s_train_c_status', 'Til tiden') }}"
       commute_soon:
         value_template: >-
           {%- set time_to_leave_car_commute = strptime(states('sensor.time_to_leave_car_commute'), '%Y-%m-%dT%H:%M:%S%z') -%}
@@ -159,12 +158,12 @@ sensor:
     name: s_train_message
     select: "div.FooterFreeText"
     value_template: >-
-      {{ value | trim  | reverse | regex_replace(find='.*(ppA BSD|nalpesjeR|nenalpesjeR).*?\.', replace='.', ignorecase=True) | reverse}}
+      {{ value | trim  | reverse | regex_replace(find='.*(ppA BSD|nalpesjeR|nenalpesjeR|erem eS).*?(\.|\Z)', replace='', ignorecase=True) | reverse }}
     scan_interval: 600
 
   - platform: scrape
     resource: http://www.dsb.dk/trafikinformation/s-tog-overblik/
     name: s_train_c_status
-    select: "table.RepeaterTable tr:nth-of-type(3) td.TDItemLabel div b"
+    select: "table.RepeaterTable tr:nth-of-type(4) td.TDItemLabel div b"
     value_template: "{{ value | trim }}"
     scan_interval: 600
