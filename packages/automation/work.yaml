@@ -10,11 +10,14 @@ binary_sensor:
         value_template: >-
           {{
             is_state('calendar.arbejde_vagt', 'on')
-            or (is_state('binary_sensor.puzzel_status', 'on') and 'vagt' in (state_attr('binary_sensor.puzzel_status', 'profil')|lower))
+            or (
+              is_state('binary_sensor.puzzel_status', 'on')
+              and 'vagt' in (state_attr('binary_sensor.puzzel_status', 'profil')|lower)
+            )
             or is_state('input_boolean.force_on_call', 'on')
           }}
       scheduled_on_call:
-        value_template: "{{ is_state('calendar.arbejde_vagt', 'on') }}"
+        value_template: "{{ is_state('calendar.arbejde_vagt', 'on') or is_state('input_boolean.force_on_call', 'on') }}"
       scheduled_at_work:
         value_template: >
           {{
@@ -34,13 +37,12 @@ binary_sensor:
             or is_state('binary_sensor.scheduled_on_call', 'on')
             or is_state('binary_sensor.location_at_work', 'on')
             or is_state('binary_sensor.working_from_home', 'on')
-            or is_state('binary_sensor.puzzel_status', 'on')
           }}
 
 automation:
   - id: puzzel_menu
     initial_state: true
-    alias: Remind me to log off Puzzel
+    alias: Puzzel menu
     trigger:
       - platform: event
         event_type: telegram_callback
@@ -122,7 +124,6 @@ automation:
           message: "Skift til vagt køen?"
           data:
             inline_keyboard:
-              - "Log på RSR + Vagt:/puzzel_login RSR + Vagt"
               - "Log på Vagt:/puzzel_login Vagt"
 
   - id: puzzel_remind_log_off
@@ -203,26 +204,23 @@ automation:
             data:
               queue: "{{ trigger.event.data['args'] | join(' ') }}"
 
-  - id: set_phone_modes
+  - id: set_work_phone_modes
     initial_state: true
-    alias: Set Phone Modes
+    alias: Set Work Phone Modes
     trigger:
       - platform: state
         entity_id:
           - binary_sensor.working
-          - binary_sensor.scheduled_on_call
-          - binary_sensor.puzzel_status
           - sensor.arbejdstelefon_forstyr_ikke_sensoren
           - sensor.arbejdstelefon_ringetilstand
     action:
       - choose:
           - conditions:
-              - alias: "Prevent silencing phone when active on Puzzel while on call or at work"
+              - alias: "Prevent silencing phone when on call or at work"
                 condition: template
                 value_template: >-
                   {{
                     is_state('binary_sensor.working', 'on')
-                    and is_state('binary_sensor.puzzel_status', 'on')
                   }}
             sequence:
               - service: notify.mobile_app_arbejdstelefon
@@ -234,13 +232,11 @@ automation:
                   message: "command_dnd"
                   title: "off"
           - conditions:
-              - alias: "Silence phone when going off call while sleeping"
+              - alias: "Silence phone when going off call/work"
                 condition: template
                 value_template: >-
                   {{
                     is_state('binary_sensor.working', 'off')
-                    and is_state('binary_sensor.scheduled_on_call', 'off')
-                    and is_state('input_select.sleep_state', 'sleeping')
                   }}
             sequence:
               - service: notify.mobile_app_arbejdstelefon
