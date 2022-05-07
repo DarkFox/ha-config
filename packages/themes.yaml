@@ -15,21 +15,28 @@ automation:
       platform: state
       entity_id: input_select.light_profile
     action:
-      service: frontend.set_theme
-      data:
-        name: >
-          {% if is_state('input_select.light_profile', 'Bright') %}
-            clear
-          {% elif is_state('input_select.light_profile', 'Default') %}
-            clear
-          {% elif is_state('input_select.light_profile', 'Dimmed') %}
-            clear-dark
-          {% elif is_state('input_select.light_profile', 'Ambient') %}
-            clear-dark
-          {% elif is_state('input_select.light_profile', 'Night') %}
-            amoled
-          {% elif is_state('input_select.light_profile', 'Off') %}
-            amoled
-          {% else %}
-            clear-dark
-          {% endif %}
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_select.light_profile
+                state:
+                  - "Bright"
+                  - "Default"
+            sequence:
+              service: frontend.set_theme
+              data:
+                name: "macOS Theme Light"
+          - conditions:
+              - condition: state
+                entity_id: input_select.light_profile
+                state:
+                  - "Night"
+                  - "Off"
+            sequence:
+              service: frontend.set_theme
+              data:
+                name: "AMOLED Blue"
+        default:
+          service: frontend.set_theme
+          data:
+            name: "macOS Theme Dark"
