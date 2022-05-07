@@ -90,6 +90,24 @@ automation:
           entity_id:
             - light.bar_skuffer
 
+  - id: living_room_balcony_door_open_reminder
+    alias: living_room_balcony_door_open_reminder
+    trigger:
+      - platform: state
+        entity_id: sensor.living_room_activity_state
+        to: "off"
+        for:
+          minutes: 15
+    condition:
+      - alias: "Balcony door open"
+        condition: state
+        entity_id: binary_sensor.stue_altandor
+        state: "on"
+    action:
+      - service: script.notify_everywhere
+        data:
+          message: Stue altandør står åben!
+
   # - alias: living_room_door_activity_on
   #   initial_state: true
   #   trigger:

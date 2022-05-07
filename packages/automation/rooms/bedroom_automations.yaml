@@ -14,7 +14,25 @@ binary_sensor:
         friendly_name: Soveværelse Optaget
         device_class: occupancy
         value_template: "{{ is_state('input_boolean.bedroom_occupied', 'on') }}"
-# automation:
+
+automation:
+  - id: bedroom_balcony_door_open_reminder
+    alias: bedroom_balcony_door_open_reminder
+    trigger:
+      - platform: state
+        entity_id: sensor.bedroom_activity_state
+        to: "off"
+        for:
+          minutes: 15
+    condition:
+      - alias: "Balcony door open"
+        condition: state
+        entity_id: binary_sensor.sovevaerelse_altandor
+        state: "on"
+    action:
+      - service: script.notify_everywhere
+        data:
+          message: Soveværelse altandør står åben!
 #   - alias: bedroom_door_activity_on
 #     initial_state: true
 #     trigger:
