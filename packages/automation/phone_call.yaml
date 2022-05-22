@@ -65,10 +65,10 @@ automation:
                 data:
                   entity_id: input_select.sleep_state
                   option: paused
-              - delay:
-                  seconds: 1
-      - service: script.turn_on
-        entity_id: script.alert_lights
+              - event: set_light_profile
+                event_data:
+                  room: bedroom
+                  profile: Night
 
   - alias: on_call_picked_up
     initial_state: true
@@ -84,10 +84,6 @@ automation:
         entity_id: binary_sensor.on_call
         state: "on"
     action:
-      - service: script.turn_on
-        entity_id: script.alert_lights_restore
-      - delay:
-          seconds: 1
       - choose:
           - conditions:
               - condition: state
@@ -119,12 +115,12 @@ automation:
         from: "offhook"
         to: "idle"
         for:
-          seconds: 10
+          minutes: 2
       - platform: state
         entity_id: device_tracker.pc074805
         to: "not_home"
         for:
-          seconds: 10
+          seconds: 30
     condition:
       - condition: state
         entity_id: binary_sensor.martin_presence
@@ -174,10 +170,6 @@ automation:
         entity_id: binary_sensor.on_call
         state: "on"
     action:
-      - service: script.turn_on
-        entity_id: script.alert_lights_restore
-      - delay:
-          seconds: 1
       - choose:
           - conditions:
               - condition: state
