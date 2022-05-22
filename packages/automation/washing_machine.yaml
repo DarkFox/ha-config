@@ -1,0 +1,31 @@
+sensor:
+  - platform: template
+    sensors:
+      washing_machine_finish_at:
+        friendly_name: "Washing Machine Finished At"
+        value_template: "{{ as_datetime(as_timestamp(now())|int + states('sensor.wash_cycle_remaining_time')|int) }}"
+
+automation:
+  - id: notify_washing_machine_started
+    alias: Notify Washing Machine Started
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: sensor.washing_machine
+        to: "running"
+    action:
+      - service: script.notify_everywhere
+        data:
+          message: "Vaskemaskine startet. Færdig ca. kl. {{ states('sensor.washing_machine_finish_at') | timestamp_custom('%H:%M') }}"
+
+  - id: notify_washing_machine_finished
+    alias: Notify Washing Machine Finished
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: sensor.washing_machine
+        from: "running"
+    action:
+      - service: script.notify_everywhere
+        data:
+          message: "Vaskemaskine Færdig!"
