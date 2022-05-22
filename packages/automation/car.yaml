@@ -81,54 +81,54 @@ automation:
         target:
           entity_id: switch.vw_connect_climatisation
 
-  - id: charge_car_to_90_pct_before_going_home
-    alias: charge_car_to_90_pct_before_going_home
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.going_home_early_trigger
-        from: "off"
-        to: "on"
-    condition:
-      - alias: "If at work"
-        condition: state
-        entity_id: person.martin
-        state:
-          - RSR
-          - RSH
-      - alias: "Car plugged in"
-        condition: state
-        entity_id: binary_sensor.vw_connect_plug_connected
-        state: "on"
-    action:
-      - alias: "Turn off slow AC charging"
-        service: switch.turn_off
-        target:
-          entity_id: switch.vw_connect_reduced_charge_current_ac
-      - alias: "Set car charge target to 90%"
-        service: input_number.set_value
-        target:
-          entity_id: input_number.id_3_target_soc
-        data:
-          value: 90
+  # - id: charge_car_to_90_pct_before_going_home
+  #   alias: charge_car_to_90_pct_before_going_home
+  #   trigger:
+  #     - platform: state
+  #       entity_id: binary_sensor.going_home_early_trigger
+  #       from: "off"
+  #       to: "on"
+  #   condition:
+  #     - alias: "If at work"
+  #       condition: state
+  #       entity_id: person.martin
+  #       state:
+  #         - RSR
+  #         - RSH
+  #     - alias: "Car plugged in"
+  #       condition: state
+  #       entity_id: binary_sensor.vw_connect_plug_connected
+  #       state: "on"
+  #   action:
+  #     - alias: "Turn off slow AC charging"
+  #       service: switch.turn_off
+  #       target:
+  #         entity_id: switch.vw_connect_reduced_charge_current_ac
+  #     - alias: "Set car charge target to 90%"
+  #       service: input_number.set_value
+  #       target:
+  #         entity_id: input_number.id_3_target_soc
+  #       data:
+  #         value: 90
 
-  - id: reset_charge_target_after_90_pct
-    alias: reset_charge_target_after_90_pct
-    trigger:
-      - platform: state
-        entity_id: sensor.vw_connect_charging_state
-        from: "charging"
-    condition:
-      - alias: "SoC target set to 90%"
-        condition: state
-        entity_id: input_number.id_3_target_soc
-        state: "90"
-    action:
-      - alias: "Set car charge target to 80%"
-        service: input_number.set_value
-        target:
-          entity_id: input_number.id_3_target_soc
-        data:
-          value: 80
+  # - id: reset_charge_target_after_90_pct
+  #   alias: reset_charge_target_after_90_pct
+  #   trigger:
+  #     - platform: state
+  #       entity_id: sensor.vw_connect_charging_state
+  #       from: "charging"
+  #   condition:
+  #     - alias: "SoC target set to 90%"
+  #       condition: state
+  #       entity_id: input_number.id_3_target_soc
+  #       state: "90"
+  #   action:
+  #     - alias: "Set car charge target to 80%"
+  #       service: input_number.set_value
+  #       target:
+  #         entity_id: input_number.id_3_target_soc
+  #       data:
+  #         value: 80
 
   - alias: notify_car_charging
     id: notify_car_charging
