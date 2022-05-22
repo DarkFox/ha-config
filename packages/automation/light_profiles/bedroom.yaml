@@ -159,11 +159,6 @@ automation:
               brightness: 255
               hs_color: [29, 15]
               effect: "None"
-            light.sengebord:
-              state: on
-              brightness: 255
-              hs_color: [29, 15]
-              effect: "None"
             light.blyant:
               state: on
               brightness: 255
@@ -248,11 +243,6 @@ automation:
               brightness: 255
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
               effect: "None"
-            light.sengebord:
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "None"
             light.blyant:
               state: on
               brightness: 255
@@ -328,11 +318,6 @@ automation:
               hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
               effect: "Solid"
             light.bedroom_floor:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "None"
-            light.sengebord:
               state: on
               brightness: 127
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
@@ -419,11 +404,6 @@ automation:
               brightness: 64
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
               effect: "None"
-            light.sengebord:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "None"
             light.bedroom_tablet:
               state: on
               brightness: 72
@@ -441,10 +421,6 @@ automation:
         entity_id: *room_light_profile
         state: "Night"
     action:
-      - event: sengelampe_nat
-        event_data_template:
-          state: "{{ states('binary_sensor.reading_light') }}"
-          transition_time: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
       - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
@@ -457,6 +433,10 @@ automation:
               state: off
             light.luftfugter_lampe:
               state: off
+            light.seng_laeselampe:
+              state: on
+              brightness: 2
+              hs_color: [20, 100]
             light.sovevaerelse_tv_bund:
               state: on
               brightness: 10
@@ -492,60 +472,9 @@ automation:
               brightness: 64
               rgb_color: [255, 0, 0]
               effect: "None"
-            light.sengebord:
-              state: on
-              brightness: 127
-              rgb_color: [255, 0, 0]
-              effect: "None"
             light.bedroom_tablet:
               state: on
               brightness: 1
-
-  - alias: sengelampe_nat_on
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Night"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Night"
-      - condition: state
-        entity_id: binary_sensor.reading_light
-        state: "on"
-    action:
-      - service: light.turn_on
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 2
-          hs_color: [20, 100]
-          entity_id:
-            - light.seng_laeselampe
-
-  - alias: sengelampe_nat_off
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Night"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Night"
-      - condition: state
-        entity_id: binary_sensor.reading_light
-        state: "off"
-    action:
-      - service: light.turn_off
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          entity_id:
-            - light.seng_laeselampe
 
   - alias: activate_light_profile_bedroom_off
     initial_state: true
@@ -564,69 +493,7 @@ automation:
       - service: light.turn_off
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          entity_id:
-            - light.sky
-            - light.seng_laeselampe
-            - light.bedroom_shelf_strip
-            - light.bedroom_shelf_spots
-            - light.bedroom_floor
-            - light.sovevaerelse_reol_spots
-            - light.blyant
-            - light.sovevaerelse_tv
-            - light.luftfugter_lampe
-
-  - alias: bed_table_night_light_on
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Off"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Off"
-      - condition: state
-        entity_id: binary_sensor.night_light
-        state: "on"
-    action:
-      - service: scene.apply
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          entities:
-            light.sengebord:
-              state: on
-              brightness: 1
-              rgb_color: [255, 0, 0]
-            light.bedroom_tablet:
-              state: on
-              brightness: 1
-
-  - alias: bed_table_night_light_off
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Off"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Off"
-      - condition: state
-        entity_id: binary_sensor.night_light
-        state: "off"
-    action:
-      - service: scene.apply
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          entities:
-            light.sengebord:
-              state: off
-            light.bedroom_tablet:
-              state: off
+          entity_id: light.sovevaerelse_lys
 
   - alias: activate_light_profile_bedroom_party
     initial_state: true
@@ -670,10 +537,6 @@ automation:
               effect: "Rainbow"
               brightness: 127
             light.bedroom_floor:
-              state: on
-              effect: "Rainbow"
-              brightness: 127
-            light.sengebord:
               state: on
               effect: "Rainbow"
               brightness: 127
