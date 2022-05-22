@@ -52,7 +52,7 @@ cover:
       stue_gardin:
         friendly_name: "Stue Gardin"
         device_class: curtain
-        position_template: "{{ states('sensor.stue_gardin_hojre') }}"
+        position_template: "{{ states('sensor.stue_gardin_position') }}"
         open_cover:
           service: script.stue_gardin
           data:
@@ -171,6 +171,14 @@ cover:
             value: "{{ 100 - position }}"
 
 sensor:
+  - platform: min_max
+    name: stue_gardin_position
+    round_digits: 0
+    type: mean
+    entity_ids:
+      - sensor.stue_gardin_hojre
+      - sensor.stue_gardin_venstre
+
   - platform: template
     sensors:
       stue_gardin:
