@@ -1,6 +1,6 @@
 automation:
   # Office #
-  - alias: Office Speaker/PC Accessories active trigger
+  - alias: Office PC active trigger
     initial_state: true
     trigger:
       platform: template
@@ -8,8 +8,44 @@ automation:
         {{
           is_state('input_select.office_room_state', 'active')
           or is_state('binary_sensor.martin_pc_activity', 'on')
+          or is_state('switch.martin_pc', 'on')
+        }}
+    action:
+      service: switch.turn_on
+      data:
+        entity_id: switch.pc_afbryder
+
+  - alias: Office PC inactive trigger
+    initial_state: true
+    trigger:
+      - platform: template
+        value_template: >-
+          {{
+            is_state('input_select.office_room_state', 'off') 
+            and is_state('binary_sensor.martin_pc_activity', 'off')
+            and is_state('switch.martin_pc', 'off')
+          }}
+        for:
+          minutes: 5
+    condition:
+      - alias: "Quest not in use"
+        condition: state
+        entity_id: binary_sensor.quest_in_use_delayed
+        state: "off"
+    action:
+      service: switch.turn_off
+      data:
+        entity_id: switch.pc_afbryder
+
+  - alias: Office Speaker/PC Accessories active trigger
+    initial_state: true
+    trigger:
+      platform: template
+      value_template: >-
+        {{
+          states('sensor.pc_afbryder_forbrug')|int > 30
+          or is_state('binary_sensor.martin_pc_activity', 'on')
           or is_state('binary_sensor.working_from_home', 'on')
-          or is_state('binary_sensor.martin_pc_network_0_wired', 'on')
         }}
     action:
       service: switch.turn_on
@@ -22,16 +58,12 @@ automation:
       - platform: template
         value_template: >-
           {{
-            is_state('input_select.office_room_state', 'off') 
+            is_state('switch.pc_afbryder', 'off')
+            and states('sensor.pc_afbryder_forbrug')|int < 20
             and is_state('binary_sensor.martin_pc_activity', 'off')
             and is_state('binary_sensor.working_from_home', 'off')
-            and not is_state('binary_sensor.martin_pc_network_0_wired', 'on')
+            and is_state('binary_sensor.quest_in_use_delayed', 'off')
           }}
-    condition:
-      - alias: "Quest not in use"
-        condition: state
-        entity_id: binary_sensor.quest_in_use_delayed
-        state: "off"
     action:
       service: switch.turn_off
       data:
