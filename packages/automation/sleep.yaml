@@ -421,6 +421,9 @@ automation:
       entity_id: input_select.sleep_state
       to: "bedtime"
     action:
+      - service: cover.close_cover
+        data:
+          entity_id: cover.sovevaerelse_gardin
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
@@ -444,6 +447,9 @@ automation:
       entity_id: input_select.sleep_state
       to: "in bed"
     action:
+      - service: cover.close_cover
+        data:
+          entity_id: cover.sovevaerelse_gardin
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
@@ -468,6 +474,9 @@ automation:
       to: "sleeping"
       from: "in bed"
     action:
+      - service: cover.close_cover
+        data:
+          entity_id: cover.sovevaerelse_gardin
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
@@ -598,8 +607,8 @@ automation:
     action:
       - service: cover.set_cover_position
         data:
-          entity_id: cover.sovevaerelse_rullegardin
-          position: 7
+          entity_id: cover.sovevaerelse_gardin_dor
+          position: 20
 
   - alias: alarm_action_4_minutes
     initial_state: true
@@ -614,8 +623,8 @@ automation:
     action:
       - service: cover.set_cover_position
         data:
-          entity_id: cover.sovevaerelse_rullegardin
-          position: 10
+          entity_id: cover.sovevaerelse_gardin_dor
+          position: 30
 
   - alias: alarm_action_6_minutes
     initial_state: true
@@ -630,8 +639,8 @@ automation:
     action:
       - service: cover.set_cover_position
         data:
-          entity_id: cover.sovevaerelse_rullegardin
-          position: 15
+          entity_id: cover.sovevaerelse_gardin_dor
+          position: 50
 
   - alias: snoozing_action
     initial_state: true
@@ -670,6 +679,9 @@ automation:
       entity_id: input_select.sleep_state
       to: "waking"
     action:
+      - service: cover.open_cover
+        data:
+          entity_id: cover.sovevaerelse_gardin
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
@@ -715,15 +727,9 @@ automation:
       to: "awake"
       from: "waking"
     action:
-      - service: cover.set_cover_position
+      - service: cover.open_cover
         data:
-          entity_id: cover.sovevaerelse_rullegardin
-          position: 0
-      - service: input_boolean.turn_on
-        data:
-          entity_id:
-            - input_boolean.hallway_activity_override
-            - input_boolean.bathroom_activity_override
+          entity_id: cover.sovevaerelse_gardin
       - delay:
           seconds: 1
       - service: input_number.set_value
@@ -740,15 +746,6 @@ automation:
         data:
           command: "sleep_tracking_stop"
 
-      - service: media_player.turn_off
-        data:
-          entity_id: media_player.sovevaerelse_chromecast
-      - service: media_player.turn_off
-        data:
-          entity_id: media_player.sovevaerelse_tv
-      - service: input_boolean.turn_off
-        data:
-          entity_id: input_boolean.bedroom_tv_lovelace
       - service: input_select.select_option
         data:
           entity_id: input_select.playlist_player
@@ -779,8 +776,3 @@ automation:
       - service: automation.trigger
         data:
           entity_id: "automation.reset_scene_transition_time"
-      - service: input_boolean.turn_off
-        data:
-          entity_id:
-            - input_boolean.hallway_activity_override
-            - input_boolean.bathroom_activity_override
