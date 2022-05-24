@@ -17,7 +17,9 @@ sensor:
           {% set room_lux = states('sensor.kokken_illuminance')|int %}
           {% set profile = states('sensor.kitchen_selected_light_profile') %}
           {% set profiles = state_attr('input_select.light_profile', 'options') %}
-          {% if room_lux > 200 %}
+          {% if profile == 'Bright' %}
+            'Bright'
+          {% elif room_lux > 200 %}
             {% if outside_lux > 10000 %}
               {{ profiles[profiles.index(profile)+2] or 'Off' }}
             {% elif outside_lux > 1000 %}
@@ -99,7 +101,7 @@ binary_sensor:
         value_template: >
           {%- if is_state('input_boolean.kitchen_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.kitchen_room_state', 'active') else 'false' }}
-          {%- elif is_state('binary_sensor.kokken_any', 'on')
+          {%- elif is_state('binary_sensor.kokken_motion', 'on')
           or is_state('binary_sensor.kokken_bevaegelse', 'on')
           or is_state('media_player.kokken_chromecast', 'playing')
           or is_state('media_player.kokken_chromecast', 'paused')
@@ -504,5 +506,5 @@ group:
       - input_boolean.kitchen_activity_override
       - input_select.kitchen_room_state
       - input_select.latest_motion
-      - binary_sensor.kokken_any
+      - binary_sensor.kokken_motion
       - binary_sensor.kokken_bevaegelse

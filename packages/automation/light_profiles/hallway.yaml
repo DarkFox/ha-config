@@ -17,7 +17,9 @@ sensor:
           {% set room_lux = states('sensor.workshop_illuminance')|int %}
           {% set profile = states('sensor.hallway_selected_light_profile') %}
           {% set profiles = state_attr('input_select.light_profile', 'options') %}
-          {% if room_lux > 200 %}
+          {% if profile == 'Bright' %}
+            'Bright'
+          {% elif room_lux > 200 %}
             {% if outside_lux > 10000 %}
               {{ profiles[profiles.index(profile)+2] or 'Off' }}
             {% elif outside_lux > 1000 %}
