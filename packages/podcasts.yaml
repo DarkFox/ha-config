@@ -4,6 +4,8 @@ homeassistant:
       friendly_name: Seneste BBC Minute
     sensor.podcast_daily_tech_news_show:
       friendly_name: Seneste Daily Tech News Show
+    sensor.podcast_daily_tech_headlines:
+      friendly_name: Seneste Daily Tech Headlines
     sensor.podcast_radioavisen:
       friendly_name: Seneste Radioavisen
 
@@ -13,6 +15,7 @@ group:
     entities:
       - sensor.podcast_bbc_minute
       - sensor.podcast_daily_tech_news_show
+      - sensor.podcast_daily_tech_headlines
       - sensor.podcast_radioavisen
 
 sensor:
@@ -26,6 +29,13 @@ sensor:
   - platform: scrape
     resource: http://feeds.feedburner.com/DailyTechNewsShow
     name: podcast_daily_tech_news_show
+    select: "enclosure:nth-of-type(1)"
+    attribute: url
+    scan_interval: 1800
+
+  - platform: scrape
+    resource: https://access.acast.com/rss/30ae66f3-cf9b-4b0b-8f96-9f360b545ece/default
+    name: podcast_daily_tech_headlines
     select: "enclosure:nth-of-type(1)"
     attribute: url
     scan_interval: 1800
