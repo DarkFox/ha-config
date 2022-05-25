@@ -5,119 +5,100 @@ panel: true
 cards:
   - type: custom:layout-card
     cards:
-      - type: vertical-stack
-        cards:
-          - type: history-graph
-            title: Power Usage
-            show_header_toggle: false
-            entities:
-              - sensor.pow_k_p
+      - show_name: true
+        show_icon: true
+        type: button
+        tap_action:
+          action: toggle
+        entity: script.reload_lovelace_on_tablets
 
-          - type: entities
-            title: Energy Meter
-            show_header_toggle: false
-            entities:
-              - sensor.pow_k_p
-              - sensor.pow_k_po
-              - sensor.pow_k_q
-              - sensor.pow_k_qo
-              - sensor.pow_k_u1
-              - sensor.pow_k_u2
-              - sensor.pow_k_u3
-              - sensor.pow_k_i1
-              - sensor.pow_k_i2
-              - sensor.pow_k_i3
-              - sensor.pow_k_tpi
-              - sensor.pow_k_tpo
-              - sensor.pow_k_tqi
-              - sensor.pow_k_tqo
+      - type: history-graph
+        title: Power Usage
+        show_header_toggle: false
+        entities:
+          - sensor.pow_k_p
 
-          - !include ../cards/low_battery.yaml
+      - type: entities
+        title: Energy Meter
+        show_header_toggle: false
+        entities:
+          - sensor.pow_k_p
+          - sensor.pow_k_po
+          - sensor.pow_k_q
+          - sensor.pow_k_qo
+          - sensor.pow_k_u1
+          - sensor.pow_k_u2
+          - sensor.pow_k_u3
+          - sensor.pow_k_i1
+          - sensor.pow_k_i2
+          - sensor.pow_k_i3
+          - sensor.pow_k_tpi
+          - sensor.pow_k_tpo
+          - sensor.pow_k_tqi
+          - sensor.pow_k_tqo
 
-          - type: custom:auto-entities
-            card:
-              type: entities
-              title: Batteries
-              show_header_toggle: false
-            filter:
-              include:
-                - entity_id: "*_battery*"
-                  options:
-                    secondary_info: last-changed
+      - !include ../cards/low_battery.yaml
 
-          - type: custom:mini-graph-card
-            points_per_hour: 4
-            hours_to_show: 12
-            hour24: true
-            line_width: 2
-            entities:
-              - entity: sensor.hoveddor_temp
-              - entity: sensor.opvaskemaskine_dor_temp
-              - entity: sensor.opvaskemaskine_laek_temp
-              - entity: sensor.mikroovn_dor_temp
+      - type: custom:auto-entities
+        card:
+          type: entities
+          title: Batteries
+          show_header_toggle: false
+        filter:
+          include:
+            - entity_id: "*_battery*"
+              options:
+                secondary_info: last-changed
 
-      - type: custom:layout-break
+      - type: entities
+        title: System Monitor
+        show_header_toggle: false
+        entities:
+          - entity: sensor.cpu_temperature
+          - entity: sensor.processor_use
+          - entity: sensor.load_1m
+          - entity: sensor.load_5m
+          - entity: sensor.load_15m
+          - entity: sensor.memory_free
+          - entity: sensor.swap_use
+          - entity: sensor.disk_free
+          - entity: sensor.last_boot
+          - entity: sensor.ha_installed_version
+          - entity: sensor.ha_last_restart
 
-      - type: vertical-stack
-        cards:
-          # - !include ../cards/lights/all_rooms.yaml
+      - type: entities
+        title: ""
+        show_header_toggle: false
+        entities:
+          - person.martin
+          - device_tracker.google_maps_102040676821115196041
+          - device_tracker.arbejdstelefon
+          - device_tracker.darkphone
+          - proximity.martin_to_home
+          - sensor.martin_to_home_dir_of_travel
+          - sensor.martin_to_home_distance_change
+          - sensor.proximity_martin_to_home_stats
 
-          - type: glance
-            entities:
-              - entity: switch.stovsuger_lader
-                tap_action:
-                  action: toggle
+      - type: entities
+        title: Presence
+        show_header_toggle: false
+        entities:
+          - binary_sensor.martin_presence
+          - binary_sensor.martin_presence_delayed
+          - binary_sensor.martin_presence_extended
+          - binary_sensor.martin_home_soon
+          - binary_sensor.activity
+          - binary_sensor.activity_last10
+          - lock.hoveddor_las
+          - input_select.latest_motion
 
-          - type: entities
-            title: System Monitor
-            show_header_toggle: false
-            entities:
-              - entity: sensor.cpu_temperature
-              - entity: sensor.processor_use
-              - entity: sensor.load_1m
-              - entity: sensor.load_5m
-              - entity: sensor.load_15m
-              - entity: sensor.memory_free
-              - entity: sensor.swap_use
-              - entity: sensor.disk_free
-              - entity: sensor.last_boot
-              - entity: sensor.ha_installed_version
-              - entity: sensor.ha_current_version
-              - entity: sensor.ha_last_restart
-
-          - type: entities
-            title: ""
-            show_header_toggle: false
-            entities:
-              - person.martin
-              - device_tracker.google_maps_102040676821115196041
-              - device_tracker.arbejdstelefon
-              - device_tracker.darkphone
-              - proximity.martin_to_home
-              - sensor.martin_to_home_dir_of_travel
-              - sensor.martin_to_home_distance_change
-              - sensor.proximity_martin_to_home_stats
-
-          - type: entities
-            title: Presence
-            show_header_toggle: false
-            entities:
-              - binary_sensor.martin_presence
-              - binary_sensor.martin_presence_delayed
-              - binary_sensor.martin_presence_extended
-              - binary_sensor.martin_home_soon
-              - binary_sensor.activity
-              - binary_sensor.activity_last10
-              - lock.hoveddor_las
-              - input_select.latest_motion
-
-          - type: entities
-            title: Activity Sensors
-            show_header_toggle: false
-            entities:
-              - binary_sensor.living_room_activity
-              - binary_sensor.bedroom_activity
-              - binary_sensor.bathroom_activity
-              - binary_sensor.kitchen_activity
-              - binary_sensor.office_activity
-              - binary_sensor.hallway_activity
+      - type: entities
+        title: Activity Sensors
+        show_header_toggle: false
+        entities:
+          - binary_sensor.living_room_activity
+          - binary_sensor.bedroom_activity
+          - binary_sensor.bathroom_activity
+          - binary_sensor.kitchen_activity
+          - binary_sensor.office_activity
+          - binary_sensor.hallway_activity

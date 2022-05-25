@@ -11,7 +11,7 @@ cards:
   - type: custom:layout-card
     layout_type: custom:grid-layout
     layout:
-      grid-template-columns: 35% 30% 35%
+      grid-template-columns: 30% 30% 40%
       grid-template-rows: auto
     cards:
       - type: vertical-stack
@@ -30,21 +30,10 @@ cards:
               - entity: input_boolean.guests
                 state: "on"
             card:
-              - type: vertical-stack
-                cards:
-                  - type: conditional
-                    conditions:
-                      - entity: binary_sensor.s_train_message_present
-                        state: "on"
-                    card: !include /config/lovelace/cards/s_train_status.yaml
-                  - type: custom:rejseplanen-stog-card
-                    entity: sensor.s_tog_malov
-                    title: " "
-                    max_entries: 4
-
-                  - type: custom:html-card
-                    title: WiFi
-                    content: !secret ui_wifi_content
+              type: vertical-stack
+              cards:
+                - type: custom:html-card
+                  content: !secret ui_wifi_content
 
           - type: conditional
             conditions:
@@ -70,6 +59,8 @@ cards:
 
               - !include ../cards/hoveddor_laas.yaml
 
+          - !include ../cards/transport/car.yaml
+
           - !include ../cards/low_battery.yaml
 
       - type: vertical-stack
@@ -80,15 +71,38 @@ cards:
 
           - type: conditional
             conditions:
-              - entity: binary_sensor.octoprint_printing
+              - entity: input_boolean.guests
                 state: "on"
-            card: !include ../cards/3d_printer_preview.yaml
+            card:
+              type: vertical-stack
+              cards:
+                - type: conditional
+                  conditions:
+                    - entity: binary_sensor.s_train_message_present
+                      state: "on"
+                  card: !include /config/lovelace/cards/s_train_status.yaml
+                - type: custom:rejseplanen-stog-card
+                  entity: sensor.s_tog_malov
+                  title: " "
+                  max_entries: 4
 
           - type: conditional
             conditions:
-              - entity: binary_sensor.commute_soon
-                state: "on"
-            card: !include /config/lovelace/cards/transport/commute.yaml
+              - entity: input_boolean.guests
+                state: "off"
+            card:
+              type: vertical-stack
+              cards:
+                - type: conditional
+                  conditions:
+                    - entity: binary_sensor.octoprint_printing
+                      state: "on"
+                  card: !include ../cards/3d_printer_preview.yaml
 
-          - !include ../cards/transport/car.yaml
-          - !include ../cards/power_gauges.yaml
+                - type: conditional
+                  conditions:
+                    - entity: binary_sensor.commute_soon
+                      state: "on"
+                  card: !include /config/lovelace/cards/transport/commute.yaml
+
+                - !include ../cards/power_gauges.yaml
