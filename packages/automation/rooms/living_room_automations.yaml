@@ -44,51 +44,42 @@ automation:
         target:
           entity_id: input_boolean.bar_open
 
-  - alias: Barskab åbnet
+  - alias: Bar åbnet
     initial_state: true
     trigger:
       - platform: state
         entity_id: input_boolean.bar_open
         to: "on"
     action:
-      - service: scene.create
-        data_template:
-          scene_id: barskab_aabnet_restore
-          snapshot_entities:
-            - light.barskab_under
-            - light.barskab_over
-            - light.bar_spots
-            - light.bar_uplight
-            - light.bar_hylde_spots
-            - light.bar
-            - light.barbord
-      - service: light.turn_on
-        data:
-          brightness: 255
-          entity_id:
-            - light.barskab_under
-            - light.barskab_over
-            - light.bar_spots
-            - light.bar_uplight
-            - light.bar_hylde_spots
-            - light.bar
-            - light.barbord
-            - light.bar_skuffer
+      - event: refresh_light_profile
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.ismaskine
 
-  - alias: Barskab lukket
+  - alias: Bar lukket
     initial_state: true
     trigger:
       - platform: state
         entity_id: input_boolean.bar_open
         to: "off"
     action:
-      - service: scene.turn_on
-        data:
-          entity_id: scene.barskab_aabnet_restore
-      - service: light.turn_off
+      - event: refresh_light_profile
+      - service: input_boolean.turn_off
         target:
-          entity_id:
-            - light.bar_skuffer
+          entity_id: input_boolean.ismaskine
+
+  - id: bar_close_timeout
+    alias: "Bar luk ved idle"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.living_room_activity
+        to: "off"
+        for:
+          hours: 4
+    action:
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.bar_open
 
   - id: living_room_balcony_door_open_reminder
     alias: living_room_balcony_door_open_reminder
@@ -111,27 +102,3 @@ automation:
       - service: script.notify_everywhere
         data:
           message: Stue altandør står åben!
-
-  # - alias: living_room_door_activity_on
-  #   initial_state: true
-  #   trigger:
-  #     - platform: state
-  #       entity_id: binary_sensor.stue_dor
-  #       to: "on"
-  #   action:
-  #     - service: input_boolean.turn_on
-  #       data:
-  #         entity_id: input_boolean.living_room_door_activity
-
-  # - alias: living_room_door_activity_off
-  #   initial_state: true
-  #   trigger:
-  #     - platform: state
-  #       entity_id: input_boolean.living_room_door_activity
-  #       to: "on"
-  #       for:
-  #         seconds: 5
-  #   action:
-  #     - service: input_boolean.turn_off
-  #       data:
-  #         entity_id: input_boolean.living_room_door_activity

@@ -160,6 +160,9 @@ automation:
         entity_id: *room_light_profile
         state: "Default"
     action:
+      - service: script.turn_on
+        target:
+          entity_id: "script.bar_lights_default"
       - service: scene.apply
         data_template:
           transition: 0
@@ -199,26 +202,6 @@ automation:
               state: on
               brightness: 128
               color_temp: 430
-              effect: "None"
-            light.barskab_under:
-              state: on
-              brightness: 127
-              effect: "None"
-            light.barskab_over:
-              state: on
-              brightness: 127
-              effect: "None"
-            light.bar_hylde_spots:
-              state: on
-              brightness: 127
-              effect: "None"
-            light.bar_spots:
-              state: on
-              brightness: 127
-              effect: "None"
-            light.bar_uplight:
-              state: on
-              brightness: 127
               effect: "None"
             light.globe:
               state: on
@@ -260,16 +243,6 @@ automation:
               brightness: 127
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
               effect: "Solid"
-            light.bar:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.barbord:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
             light.stue_tablet:
               state: on
             # light.juletrae:
@@ -294,6 +267,9 @@ automation:
         entity_id: *room_light_profile
         state: "Dimmed"
     action:
+      - service: script.turn_on
+        target:
+          entity_id: "script.bar_lights_{{ is_state('input_boolean.bar_open', 'on') ? 'open' : 'dimmed' }}"
       - service: scene.apply
         data_template:
           transition: 0
@@ -310,21 +286,6 @@ automation:
               brightness: 76
               color_temp: 500
               effect: "None"
-            light.barskab_under:
-              state: on
-              brightness: 32
-            light.barskab_over:
-              state: on
-              brightness: 32
-            light.bar_hylde_spots:
-              state: on
-              brightness: 32
-            light.bar_spots:
-              state: on
-              brightness: 32
-            light.bar_uplight:
-              state: on
-              brightness: 32
             light.display_cabinet_front_1:
               state: on
               brightness: 16
@@ -411,16 +372,6 @@ automation:
               brightness: 64
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
               effect: "Solid"
-            light.bar:
-              state: on
-              brightness: 64
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.barbord:
-              state: on
-              brightness: 64
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
             light.stue_tablet:
               state: on
             # light.juletrae:
@@ -445,6 +396,9 @@ automation:
         entity_id: *room_light_profile
         state: "Ambient"
     action:
+      - service: script.turn_on
+        target:
+          entity_id: "script.bar_lights_{{ is_state('input_boolean.bar_open', 'on') ? 'open' : 'ambient' }}"
       - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
@@ -452,16 +406,6 @@ automation:
             light.display_cabinet_front_1:
               state: off
             light.display_cabinet_front_4:
-              state: off
-            light.barskab_under:
-              state: off
-            light.barskab_over:
-              state: off
-            light.bar_hylde_spots:
-              state: off
-            light.bar_spots:
-              state: off
-            light.bar_uplight:
               state: off
             light.stue_spot_1:
               state: off
@@ -537,16 +481,6 @@ automation:
               brightness: 8
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
               effect: "Solid"
-            light.bar:
-              state: on
-              brightness: 8
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.barbord:
-              state: on
-              brightness: 8
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
             light.stue_tablet:
               state: on
             # light.juletrae:
@@ -571,20 +505,13 @@ automation:
         entity_id: *room_light_profile
         state: "Night"
     action:
+      - service: script.turn_on
+        target:
+          entity_id: "script.bar_lights_{{ is_state('input_boolean.bar_open', 'on') ? 'open' : 'night' }}"
       - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
-            light.barskab_under:
-              state: off
-            light.barskab_over:
-              state: off
-            light.bar_hylde_spots:
-              state: off
-            light.bar_spots:
-              state: off
-            light.bar_uplight:
-              state: off
             light.spisebord:
               state: off
             light.globe:
@@ -635,16 +562,6 @@ automation:
               rgb_color: [255, 0, 0]
               effect: "None"
             light.vindueskarm:
-              state: on
-              brightness: 4
-              rgb_color: [255, 0, 0]
-              effect: "Solid"
-            light.bar:
-              state: on
-              brightness: 4
-              rgb_color: [255, 0, 0]
-              effect: "Solid"
-            light.barbord:
               state: on
               brightness: 4
               rgb_color: [255, 0, 0]
@@ -706,6 +623,9 @@ automation:
         entity_id: *room_light_profile
         state: "Party"
     action:
+      - service: script.turn_on
+        target:
+          entity_id: "script.bar_lights_{{ is_state('input_boolean.bar_open', 'on') ? 'open' : 'party' }}"
       - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
@@ -720,21 +640,6 @@ automation:
               state: on
               brightness: 16
             light.display_cabinet_front_3:
-              state: on
-              brightness: 16
-            light.barskab_under:
-              state: on
-              brightness: 16
-            light.barskab_over:
-              state: on
-              brightness: 16
-            light.bar_hylde_spots:
-              state: on
-              brightness: 16
-            light.bar_spots:
-              state: on
-              brightness: 16
-            light.bar_uplight:
               state: on
               brightness: 16
             light.stue_tv:
@@ -806,14 +711,6 @@ automation:
               state: on
               effect: "Twinklefox"
               brightness: 255
-            light.bar:
-              state: on
-              effect: "Twinklefox"
-              brightness: 255
-            light.barbord:
-              state: on
-              effect: "Twinklefox"
-              brightness: 255
             light.stue_tablet:
               state: on
             # light.juletrae:
@@ -823,6 +720,217 @@ automation:
               state: on
               brightness: 24
               effect: "Pulse Pop Beats"
+
+script:
+  bar_lights_open:
+    alias: "Bar Lights Open"
+    sequence:
+      - service: scene.apply
+        data:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          entities:
+            light.barskab_under:
+              state: on
+              brightness: 255
+              effect: "None"
+            light.barskab_over:
+              state: on
+              brightness: 255
+              effect: "None"
+            light.bar_hylde_spots:
+              state: on
+              brightness: 255
+              effect: "None"
+            light.bar_spots:
+              state: on
+              brightness: 255
+              effect: "None"
+            light.bar_uplight:
+              state: on
+              brightness: 255
+              effect: "None"
+            light.bar_skuffer:
+              state: on
+              brightness: 255
+              effect: "None"
+            light.bar:
+              state: on
+              brightness: 255
+              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+              effect: "Solid"
+            light.barbord:
+              state: on
+              brightness: 255
+              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+              effect: "Solid"
+
+  bar_lights_default:
+    alias: "Bar Lights Default"
+    sequence:
+      - service: scene.apply
+        data:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          entities:
+            light.barskab_under:
+              state: on
+              brightness: 127
+              effect: "None"
+            light.barskab_over:
+              state: on
+              brightness: 127
+              effect: "None"
+            light.bar_hylde_spots:
+              state: on
+              brightness: 127
+              effect: "None"
+            light.bar_spots:
+              state: on
+              brightness: 127
+              effect: "None"
+            light.bar_uplight:
+              state: on
+              brightness: 127
+              effect: "None"
+            light.bar_skuffer:
+              state: off
+            light.bar:
+              state: on
+              brightness: 127
+              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+              effect: "Solid"
+            light.barbord:
+              state: on
+              brightness: 127
+              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+              effect: "Solid"
+
+  bar_lights_dimmed:
+    alias: "Bar Lights Dimmed"
+    sequence:
+      - service: scene.apply
+        data:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          entities:
+            light.barskab_under:
+              state: on
+              brightness: 32
+            light.barskab_over:
+              state: on
+              brightness: 32
+            light.bar_hylde_spots:
+              state: on
+              brightness: 32
+            light.bar_spots:
+              state: on
+              brightness: 32
+            light.bar_uplight:
+              state: on
+              brightness: 32
+            light.bar_skuffer:
+              state: off
+            light.bar:
+              state: on
+              brightness: 64
+              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+              effect: "Solid"
+            light.barbord:
+              state: on
+              brightness: 64
+              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+              effect: "Solid"
+
+  bar_lights_ambient:
+    alias: "Bar Lights Ambient"
+    sequence:
+      - service: scene.apply
+        data:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          entities:
+            light.barskab_under:
+              state: off
+            light.barskab_over:
+              state: off
+            light.bar_hylde_spots:
+              state: off
+            light.bar_spots:
+              state: off
+            light.bar_uplight:
+              state: off
+            light.bar_skuffer:
+              state: off
+            light.bar:
+              state: on
+              brightness: 8
+              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+              effect: "Solid"
+            light.barbord:
+              state: on
+              brightness: 8
+              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+              effect: "Solid"
+
+  bar_lights_night:
+    alias: "Bar Lights Night"
+    sequence:
+      - service: scene.apply
+        data:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          entities:
+            light.barskab_under:
+              state: off
+            light.barskab_over:
+              state: off
+            light.bar_hylde_spots:
+              state: off
+            light.bar_spots:
+              state: off
+            light.bar_uplight:
+              state: off
+            light.bar_skuffer:
+              state: off
+            light.bar:
+              state: on
+              brightness: 4
+              rgb_color: [255, 0, 0]
+              effect: "Solid"
+            light.barbord:
+              state: on
+              brightness: 4
+              rgb_color: [255, 0, 0]
+              effect: "Solid"
+
+  bar_lights_party:
+    alias: "Bar Lights Party"
+    sequence:
+      - service: scene.apply
+        data:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          entities:
+            light.barskab_under:
+              state: on
+              brightness: 16
+            light.barskab_over:
+              state: on
+              brightness: 16
+            light.bar_hylde_spots:
+              state: on
+              brightness: 16
+            light.bar_spots:
+              state: on
+              brightness: 16
+            light.bar_uplight:
+              state: on
+              brightness: 16
+            light.bar_skuffer:
+              state: off
+            light.bar:
+              state: on
+              effect: "Twinklefox"
+              brightness: 255
+            light.barbord:
+              state: on
+              effect: "Twinklefox"
+              brightness: 255
 
 input_boolean:
   living_room_activity_override:
