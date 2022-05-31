@@ -1,0 +1,99 @@
+sensor:
+  - platform: derivative
+    source: sensor.torretumbler_temperature
+    unit_time: min
+
+template:
+  - sensor:
+      - name: "Washing Machine Finished At"
+        state: "{{ as_datetime(as_timestamp(now())|int + states('sensor.wash_cycle_remaining_time')|int*60) }}"
+        device_class: date
+      - name: dryer_temp_delta
+        state: "{{ states('sensor.torretumbler_temperature')|float - states('sensor.badevaerelse_temperatur')|float }}"
+        device_class: temperature
+  - binary_sensor:
+      - name: Tørretumbler
+        state: "{{ states('sensor.dryer_temp_delta')|int > 10 }}"
+        device_class: running
+        attributes:
+          icon: "{{ 'mdi:tumble-dryer' if this.state == 'on' else 'mdi:tumble-dryer-off' }}"
+      - name: laundry
+        state: >-
+          {{
+            not is_state('sensor.washing_machine', 'unavailable')
+            or is_state('binary_sensor.torretumbler', 'on')
+          }}
+
+automation:
+  - id: notify_washing_machine_started
+    alias: Notify Washing Machine Started
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: sensor.washing_machine
+        to: "Running"
+      - platform: numeric_state
+        entity_id: sensor.wash_cycle_remaining_time
+        above: 5
+    condition:
+      - condition: state
+        entity_id: sensor.washing_machine
+        state: "Running"
+    action:
+      - service: script.notify_everywhere
+        data:
+          message: "Vaskemaskine startet. Færdig ca. kl. {{ states('sensor.washing_machine_finish_at') | as_timestamp | timestamp_custom('%H:%M') }}"
+
+  - id: notify_washing_machine_almost_finished
+    alias: Notify Washing Machine Almost Finished
+    initial_state: true
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.wash_cycle_remaining_time
+        below: 11
+    condition:
+      - condition: state
+        entity_id: sensor.washing_machine
+        state: "Running"
+    action:
+      - service: script.notify_everywhere
+        data:
+          message: "Vaskemaskine færdig om 10 minutter."
+
+  - id: notify_washing_machine_finished
+    alias: Notify Washing Machine Finished
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: sensor.washing_machine
+        to: "Finished"
+    action:
+      - service: script.notify_everywhere
+        data:
+          message: "Vaskemaskine Færdig - Dør åbner snart."
+
+  - id: notify_washing_machine_door_unlocked
+    alias: Notify Washing Machine Door Unlocked
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: sensor.washing_machine
+        from: "Finished"
+        to: "unavailable"
+    action:
+      - service: script.notify_everywhere
+        data:
+          message: "Vaskemaskine kan nu åbnes."
+
+  - id: notify_dryer_finished
+    alias: Notify Dryer Finished
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: sensor.torretumbler
+        from: "on"
+        to: "off"
+    action:
+      - service: script.notify_everywhere
+        data:
+          message: "Tørretumbleren er færdig."
