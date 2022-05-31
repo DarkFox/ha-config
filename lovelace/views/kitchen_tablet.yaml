@@ -16,8 +16,8 @@ cards:
     cards:
       - type: vertical-stack
         cards:
-          - !include ../cards/clock.yaml
-          - !include ../cards/weekday.yaml
+          - !include ../cards/weather/simple_weather.yaml
+
           - !include ../cards/fridge.yaml
           - type: horizontal-stack
             cards:
@@ -74,8 +74,6 @@ cards:
 
           - !include ../cards/vacuum.yaml
 
-          - !include ../cards/power_gauges.yaml
-
       - type: vertical-stack
         cards:
           - !include ../cards/media_players/playlist_controls.yaml
@@ -84,8 +82,16 @@ cards:
 
           - type: conditional
             conditions:
+              - entity: binary_sensor.commute_soon
+                state: "on"
+            card: !include /config/lovelace/cards/transport/commute.yaml
+
+          - !include ../cards/power_gauges.yaml
+
+          - type: conditional
+            conditions:
               - entity: binary_sensor.octoprint_printing
                 state: "on"
             card: !include ../cards/3d_printer_preview.yaml
 
-          - !include ../cards/grocy.yaml
+          # - !include ../cards/grocy.yaml

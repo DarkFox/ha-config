@@ -12,16 +12,19 @@ cards:
     cards:
       - type: vertical-stack
         cards:
-          - !include ../cards/clock.yaml
+          - !include ../cards/weather/simple_weather.yaml
+
+          - !include ../cards/conditional_timers.yaml
 
           - type: custom:decluttering-card
             template: room_state_and_light_profile
             variables:
               - room: office
 
-          - !include ../cards/conditional_timers.yaml
-
-          - !include ../cards/power_gauges_compact.yaml
+          - type: custom:decluttering-card
+            template: blinds
+            variables:
+              - entity: cover.kontor_rullegardin
 
           - type: custom:decluttering-card
             template: light_groups
@@ -32,8 +35,6 @@ cards:
 
       - type: vertical-stack
         cards:
-          - !include ../cards/climate/target_temperature.yaml
-
           # - type: custom:mini-climate
           #   entity: climate.aircondition
           #   secondary_info: fan-mode-dropdown
@@ -46,21 +47,32 @@ cards:
               - rum: kontor
               - icon: mdi:desktop-tower-monitor
 
+          - !include ../cards/climate/target_temperature.yaml
+
           - type: conditional
             conditions:
               - entity: binary_sensor.octoprint_printing
                 state: "on"
             card: !include ../cards/3d_printer_preview.yaml
 
-          - type: custom:decluttering-card
-            template: blinds
-            variables:
-              - entity: cover.kontor_rullegardin
+          - !include ../cards/media_players/playlist_controls.yaml
+
+          - type: custom:mini-media-player
+            artwork: cover
+            entity: media_player.kontor_mini
 
       - type: custom:layout-break
 
       - type: vertical-stack
         cards:
+          - !include ../cards/power_gauges_compact.yaml
+
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.commute_soon
+                state: "on"
+            card: !include /config/lovelace/cards/transport/commute.yaml
+
           - type: entities
             title: PC
             show_header_toggle: false
@@ -77,9 +89,3 @@ cards:
               - switch.skrivebord_blaser
               - sensor.steam_76561197970641649
               - sensor.steam_game
-
-          - !include ../cards/media_players/playlist_controls.yaml
-
-          - type: custom:mini-media-player
-            artwork: cover
-            entity: media_player.kontor_mini
