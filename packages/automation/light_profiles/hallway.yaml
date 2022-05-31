@@ -13,23 +13,7 @@ sensor:
       hallway_auto_light_profile:
         friendly_name: Hallway Auto Light Profile
         value_template: >-
-          {% set outside_lux = states('sensor.weatherflow_brightness')|int %}
-          {% set room_lux = states('sensor.workshop_illuminance')|int %}
-          {% set profile = states('sensor.hallway_selected_light_profile') %}
-          {% set profiles = state_attr('input_select.light_profile', 'options') %}
-          {% if profile == 'Bright' %}
-            Bright
-          {% elif room_lux > 200 %}
-            {% if outside_lux > 15000 %}
-              {{ profiles[profiles.index(profile)+2] or 'Off' }}
-            {% elif outside_lux > 5000 %}
-              {{ profiles[profiles.index(profile)+1] or 'Off' }}
-            {% else %}
-              {{ profile }}
-            {% endif %}
-          {% else %}
-              {{ profile }}
-          {% endif %}
+          {{ profile }}
 
       hallway_light_profile:
         friendly_name: Hallway Light Profile
