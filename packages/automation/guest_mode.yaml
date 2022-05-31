@@ -1,0 +1,37 @@
+input_boolean:
+  guests:
+    name: Gæster
+    icon: mdi:account-multiple
+
+automation:
+  - id: guest_mode_on
+    alias: Guest Mode On
+    trigger:
+      - platform: state
+        entity_id: input_boolean.guests
+        from: "off"
+        to: "on"
+    action:
+      - service: input_boolean.turn_on
+        target:
+          entity_id:
+            - input_boolean.bathroom_separate_light_profile
+            - input_boolean.bedroom_separate_light_profile
+            - input_boolean.office_separate_light_profile
+            - input_boolean.workshop_separate_light_profile
+
+  - id: guest_mode_off
+    alias: Guest Mode Off
+    trigger:
+      - platform: state
+        entity_id: input_boolean.guests
+        from: "off"
+        to: "on"
+    action:
+      - service: input_boolean.turn_off
+        target:
+          entity_id:
+            - input_boolean.bathroom_separate_light_profile
+            - input_boolean.bedroom_separate_light_profile
+            - input_boolean.office_separate_light_profile
+            - input_boolean.workshop_separate_light_profile

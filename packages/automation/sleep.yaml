@@ -211,30 +211,45 @@ automation:
           entity_id: input_select.sleep_state
           option: bedtime
 
-  - alias: sleep_state_paused
+  - alias: sleep_state_paused_event
     initial_state: true
     trigger:
       - platform: event
         event_type: sleep_as_android
         event_data:
           value: sleep_tracking_paused
-      - platform: state
-        entity_id: binary_sensor.sovevaerelse_dor
-        to: "on"
+    condition:
+      - condition: state
+        entity_id: binary_sensor.martin_presence_delayed
+        state: "on"
+      - condition: state
+        entity_id: input_select.sleep_state
+        state: sleeping
+    action:
+      service: input_select.select_option
+      data:
+        entity_id: input_select.sleep_state
+        option: paused
+
+  - alias: sleep_state_paused
+    initial_state: true
+    trigger:
       - platform: state
         entity_id:
+          - binary_sensor.sovevaerelse_dor
           - binary_sensor.gang_entre_bevaegelse
           - binary_sensor.gang_badevaerelse_bevaegelse
         to: "on"
     condition:
-      condition: and
-      conditions:
-        - condition: state
-          entity_id: binary_sensor.martin_presence_delayed
-          state: "on"
-        - condition: state
-          entity_id: input_select.sleep_state
-          state: sleeping
+      - condition: state
+        entity_id: binary_sensor.sovevaerelse_dor
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.martin_presence_delayed
+        state: "on"
+      - condition: state
+        entity_id: input_select.sleep_state
+        state: sleeping
     action:
       service: input_select.select_option
       data:
@@ -257,9 +272,6 @@ automation:
       - condition: state
         entity_id: input_select.sleep_state
         state: "paused"
-      - condition: state
-        entity_id: input_select.latest_motion
-        state: "Bedroom"
       - condition: state
         entity_id: binary_sensor.sovevaerelse_dor
         state: "off"
@@ -745,14 +757,29 @@ automation:
         event_data:
           room: bedroom
           profile: Default
+      - event: set_light_profile
+        event_data:
+          room: bathroom
+          profile: Default
       - service: joaoapps_join.phone_send_tasker
         data:
           command: "sleep_tracking_stop"
-
-      - service: input_select.select_option
-        data:
-          entity_id: input_select.playlist_player
-          option: "media_player.minis"
+      - alias: "choose alias (name)"
+        choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.guests
+                state: "on"
+            sequence:
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.playlist_player
+                  option: "media_player.badevaerelse_mini"
+        default:
+          - service: input_select.select_option
+            data:
+              entity_id: input_select.playlist_player
+              option: "media_player.minis"
       - delay:
           seconds: 1
       - service: input_select.set_options
