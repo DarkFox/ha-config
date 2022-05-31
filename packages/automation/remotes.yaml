@@ -405,7 +405,7 @@ automation:
           entity_id: media_player.sovevaerelse_mini
           message: "Soveværelse separat lysstyring {{'tilkoblet' if states('input_boolean.bedroom_separate_light_profile') == 'on' else 'frakoblet'}}"
 
-  # Office Blind Remote (Hue Dimmer) kontor_gardin_fjernbetjening #
+  # Office Blind Remote kontor_gardin_fjernbetjening #
   - alias: kontor_gardin_fjernbetjening_up
     initial_state: true
     trigger:
@@ -451,60 +451,129 @@ automation:
           entity_id: cover.kontor_rullegardin
           position: 50
 
-  # Hobby Bord Remote (Hue Dimmer) hobbybord_fjernbetjening #
-  - alias: hobbybord_fjernbetjening_on
+  # Værksted Remote (Hue Dimmer) vaerksted_fjernbetjening #
+  - alias: vaerksted_fjernbetjening_on
     initial_state: true
     trigger:
       - platform: event
         event_type: deconz_event
         event_data:
-          id: hobbybord_fjernbetjening
+          id: vaerksted_fjernbetjening
           event: 1002
     action:
-      - service: light.turn_on
-        data:
-          entity_id: light.hobbybord_lampe
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.workshop_activity_override
+                state: "on"
+              - condition: state
+                entity_id: input_select.workshop_room_state
+                state: "off"
+            sequence:
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.workshop_room_state
+                  option: "active"
+        default:
+          - event: set_light_profile
+            event_data:
+              profile: "Default"
+              room: workshop
 
-  - alias: hobbybord_fjernbetjening_up
+  - alias: vaerksted_fjernbetjening_on_hold
     initial_state: true
     trigger:
       - platform: event
         event_type: deconz_event
         event_data:
-          id: hobbybord_fjernbetjening
+          id: vaerksted_fjernbetjening
+          event: 1003
+    action:
+      - service: input_boolean.toggle
+        data:
+          entity_id: input_boolean.workshp_activity_override
+      - service: tts.google_cloud_say
+        data_template:
+          entity_id: media_player.vaerksted_mini
+          message: "Værksted overstyring {{'tilkoblet' if states('input_boolean.workshp_activity_override') == 'on' else 'frakoblet'}}"
+
+  - alias: vaerksted_fjernbetjening_up
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: vaerksted_fjernbetjening
           event: 2002
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: vaerksted_fjernbetjening
+          event: 2001
     action:
-      - service: light.turn_on
-        data:
-          entity_id: light.hobbybord_lampe
-          brightness_step_pct: 10
+      - event: increase_light_profile
+        event_data:
+          room: workshop
 
-  - alias: hobbybord_fjernbetjening_dn
+  - alias: vaerksted_fjernbetjening_dn
     initial_state: true
     trigger:
       - platform: event
         event_type: deconz_event
         event_data:
-          id: hobbybord_fjernbetjening
+          id: vaerksted_fjernbetjening
           event: 3002
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: vaerksted_fjernbetjening
+          event: 3001
     action:
-      - service: light.turn_on
-        data:
-          entity_id: light.hobbybord_lampe
-          brightness_step_pct: -10
+      - event: decrease_light_profile
+        event_data:
+          room: workshop
 
-  - alias: hobbybord_fjernbetjening_off
+  - alias: vaerksted_fjernbetjening_off
     initial_state: true
     trigger:
       - platform: event
         event_type: deconz_event
         event_data:
-          id: hobbybord_fjernbetjening
+          id: vaerksted_fjernbetjening
           event: 4002
     action:
-      - service: light.turn_off
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.workshop_activity_override
+                state: "on"
+            sequence:
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.workshop_room_state
+                  option: "off"
+        default:
+          - event: set_light_profile
+            event_data:
+              profile: "Off"
+              room: workshop
+
+  - alias: vaerksted_fjernbetjening_off_hold
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: vaerksted_fjernbetjening
+          event: 4003
+    action:
+      - service: input_boolean.toggle
         data:
-          entity_id: light.hobbybord_lampe
+          entity_id: input_boolean.workshop_separate_light_profile
+      - service: tts.google_cloud_say
+        data_template:
+          entity_id: media_player.vaerksted_mini
+          message: "Værksted separat lysstyring {{'tilkoblet' if states('input_boolean.workshop_separate_light_profile') == 'on' else 'frakoblet'}}"
 
   # Living room IKEA remote, ID: stue_fjernbetjening #
   - alias: living_room_dimmer_on
