@@ -22,9 +22,9 @@ sensor:
             Default
           {% elif is_state('cover.stue_gardin', 'closed') %}
             {{ profile }}
-          {% elif outside_lux > 15000 %}
+          {% elif outside_lux > 20000 %}
             {{ profiles[profiles.index(profile)+2] or 'Off' }}
-          {% elif outside_lux > 5000 %}
+          {% elif outside_lux > 10000 %}
             {{ profiles[profiles.index(profile)+1] or 'Off' }}
           {% else %}
             {{ profile }}
@@ -84,6 +84,7 @@ binary_sensor:
           {%- if is_state('input_boolean.living_room_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.living_room_room_state', 'active') else 'false' }}
           {%- elif is_state('binary_sensor.stue_motion', 'on')
+          or is_state('binary_sensor.stue_any', 'on')
           or is_state('binary_sensor.spisebord_bevaegelse', 'on')
           or is_state('binary_sensor.sofagruppe_bevaegelse', 'on')
           or is_state('binary_sensor.living_room_door_activity', 'on')
@@ -115,6 +116,7 @@ group:
       - input_select.living_room_state
       - input_select.latest_motion
       - binary_sensor.stue_motion
+      - binary_sensor.stue_any
       - binary_sensor.spisebord_bevaegelse
       - binary_sensor.sofagruppe_bevaegelse
       - media_player.stue_shield
@@ -799,7 +801,7 @@ script:
               effect: "Solid"
             light.barbord:
               state: on
-              brightness: 127
+              brightness: 172
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
               effect: "Solid"
 
@@ -834,7 +836,7 @@ script:
               effect: "Solid"
             light.barbord:
               state: on
-              brightness: 64
+              brightness: 72
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
               effect: "Solid"
 
@@ -864,7 +866,7 @@ script:
               effect: "Solid"
             light.barbord:
               state: on
-              brightness: 8
+              brightness: 26
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
               effect: "Solid"
 
@@ -894,7 +896,7 @@ script:
               effect: "Solid"
             light.barbord:
               state: on
-              brightness: 4
+              brightness: 16
               rgb_color: [255, 0, 0]
               effect: "Solid"
 

@@ -19,9 +19,9 @@ sensor:
           {% if profile == 'Bright' %}
             Bright
           {% elif states('sensor.sovevaerelse_gardin_position')|int > 40 %}
-            {% if outside_lux > 15000 %}
+            {% if outside_lux > 20000 %}
               {{ profiles[profiles.index(profile)+2] or 'Off' }}
-            {% elif outside_lux > 5000 %}
+            {% elif outside_lux > 10000 %}
               {{ profiles[profiles.index(profile)+1] or 'Off' }}
             {% else %}
               {{ profile }}
@@ -90,6 +90,7 @@ binary_sensor:
           {%- if is_state('input_boolean.bedroom_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.bedroom_room_state', 'active') else 'false' }}
           {%- elif is_state('binary_sensor.sovevaerelse_motion', 'on')
+          or is_state('binary_sensor.sovevaerelse_any', 'on')
           or is_state('binary_sensor.seng_bevaegelse', 'on')
           or is_state('binary_sensor.bedroom_door_activity', 'on')
           or is_state('input_select.latest_motion', 'Bedroom')
@@ -109,6 +110,21 @@ binary_sensor:
       bedroom_activity_predicted:
         friendly_name: "Bedroom Activity Predicted"
         value_template: "false"
+
+group:
+  bedroom_activity_entities:
+    name: Bedroom Activity Entities
+    entities:
+      - input_boolean.bedroom_activity_override
+      - input_select.bedroom_room_state
+      - binary_sensor.sovevaerelse_motion
+      - binary_sensor.sovevaerelse_any
+      - binary_sensor.seng_bevaegelse
+      - binary_sensor.bedroom_door_activity
+      - input_select.latest_motion
+      - media_player.sovevaerelse_chromecast
+      - media_player.sovevaerelse_tv
+      - input_select.sleep_state
 
 automation:
   - alias: activate_light_profile_bedroom_bright
@@ -683,17 +699,3 @@ light:
             profile: "Off"
         turn_off:
           event: bedroom_light_profile_off_null
-
-group:
-  bedroom_activity_entities:
-    name: Bedroom Activity Entities
-    entities:
-      - input_boolean.bedroom_activity_override
-      - input_select.bedroom_room_state
-      - binary_sensor.sovevaerelse_motion
-      - binary_sensor.seng_bevaegelse
-      - binary_sensor.bedroom_door_activity
-      - input_select.latest_motion
-      - media_player.sovevaerelse_chromecast
-      - media_player.sovevaerelse_tv
-      - input_select.sleep_state
