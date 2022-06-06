@@ -12,19 +12,7 @@ sensor:
 
       workshop_auto_light_profile:
         friendly_name: Workshop Auto Light Profile
-        value_template: >-
-          {% set outside_lux = states('sensor.weatherflow_brightness')|int %}
-          {% set profile = states('sensor.workshop_selected_light_profile') %}
-          {% set profiles = state_attr('input_select.light_profile', 'options') %}
-          {% if profile == 'Bright' %}
-            Bright
-          {% elif outside_lux > 15000 %}
-            {{ profiles[profiles.index(profile)+2] or 'Off' }}
-          {% elif outside_lux > 5000 %}
-            {{ profiles[profiles.index(profile)+1] or 'Off' }}
-          {% else %}
-            {{ profile }}
-          {% endif %}
+        value_template: "{{ states('sensor.workshop_selected_light_profile') }}"
 
       workshop_light_profile:
         friendly_name: Workshop Light Profile
@@ -76,7 +64,8 @@ binary_sensor:
         value_template: >
           {%- if is_state('input_boolean.workshop_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.workshop_room_state', 'active') else 'false' }}
-          {%- elif is_state('binary_sensor.skab_bevaegelse', 'on')
+          {%- elif is_state('binary_sensor.vaerksted_motion', 'on')
+              or is_state('binary_sensor.vaerksted_any', 'on')
               or is_state('binary_sensor.workshop_door_activity', 'on') -%}
             true
           {% else -%}
@@ -93,7 +82,9 @@ group:
     entities:
       - input_boolean.workshop_activity_override
       - input_select.workshop_state
-      - binary_sensor.skab_bevaegelse
+      - input_select.latest_motion
+      - binary_sensor.vaerksted_motion
+      - binary_sensor.vaerksted_any
 
 automation:
   - alias: activate_light_profile_workshop_bright
@@ -109,23 +100,13 @@ automation:
         entity_id: *room_light_profile
         state: "Bright"
     action:
-      # White temp lights
       - service: light.turn_on
-        data_template:
-          transition: 0
-          color_temp: 256
-          entity_id:
-            - light.vaerksted_spots
-      - service: light.turn_on
-        data_template:
+        data:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
+          color_temp: 256
           entity_id:
-            - light.vaerksted_spots
-            - light.vaerksted_gulv
-            - light.vaerksted_skjorter
-            - light.vaerksted_t_shirts
-            - light.vaerksted_spejl
+            - light.vaerksted
 
   - alias: activate_light_profile_workshop_default
     initial_state: true
@@ -140,23 +121,13 @@ automation:
         entity_id: *room_light_profile
         state: "Default"
     action:
-      # White temp lights
       - service: light.turn_on
-        data_template:
-          transition: 0
-          color_temp: 330
-          entity_id:
-            - light.vaerksted_spots
-      - service: light.turn_on
-        data_template:
+        data:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           brightness: 255
+          color_temp: 390
           entity_id:
-            - light.vaerksted_spots
-            - light.vaerksted_gulv
-            - light.vaerksted_skjorter
-            - light.vaerksted_t_shirts
-            - light.vaerksted_spejl
+            - light.vaerksted
 
   - alias: activate_light_profile_workshop_dimmed
     initial_state: true
@@ -171,23 +142,13 @@ automation:
         entity_id: *room_light_profile
         state: "Dimmed"
     action:
-      # White temp lights
       - service: light.turn_on
-        data_template:
-          transition: 0
-          color_temp: 330
-          entity_id:
-            - light.vaerksted_spots
-      - service: light.turn_on
-        data_template:
+        data:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 127
+          brightness: 172
+          color_temp: 500
           entity_id:
-            - light.vaerksted_spots
-            - light.vaerksted_gulv
-            - light.vaerksted_skjorter
-            - light.vaerksted_t_shirts
-            - light.vaerksted_spejl
+            - light.vaerksted
 
   - alias: activate_light_profile_workshop_ambient
     initial_state: true
@@ -202,23 +163,13 @@ automation:
         entity_id: *room_light_profile
         state: "Ambient"
     action:
-      # White temp lights
       - service: light.turn_on
-        data_template:
-          transition: 0
-          color_temp: 330
-          entity_id:
-            - light.vaerksted_spots
-      - service: light.turn_on
-        data_template:
+        data:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 72
+          brightness: 86
+          hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
           entity_id:
-            - light.vaerksted_spots
-            - light.vaerksted_gulv
-            - light.vaerksted_skjorter
-            - light.vaerksted_t_shirts
-            - light.vaerksted_spejl
+            - light.vaerksted
 
   - alias: activate_light_profile_workshop_night
     initial_state: true
@@ -233,20 +184,13 @@ automation:
         entity_id: *room_light_profile
         state: "Night"
     action:
-      - service: light.turn_off
-        data_template:
-          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          entity_id:
-            - light.vaerksted_spots
       - service: light.turn_on
-        data_template:
+        data:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
-          brightness: 16
+          brightness: 24
+          rgb_color: [255, 0, 0]
           entity_id:
-            - light.vaerksted_gulv
-            - light.vaerksted_skjorter
-            - light.vaerksted_t_shirts
-            - light.vaerksted_spejl
+            - light.vaerksted
 
   - alias: activate_light_profile_workshop_off
     initial_state: true
@@ -261,16 +205,11 @@ automation:
         entity_id: *room_light_profile
         state: "Off"
     action:
-      # Primary RGB lights
       - service: light.turn_off
-        data_template:
+        data:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entity_id:
-            - light.vaerksted_spots
-            - light.vaerksted_gulv
-            - light.vaerksted_skjorter
-            - light.vaerksted_t_shirts
-            - light.vaerksted_spejl
+            - light.vaerksted
 
 input_boolean:
   workshop_activity_override:
