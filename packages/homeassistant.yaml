@@ -133,21 +133,24 @@ automation:
   - alias: Update Available Notification
     initial_state: true
     trigger:
-      - platform: template
-        value_template: "{{ not is_state('sensor.ha_installed_version', states('sensor.ha_latest_version_available')) }}"
+      - platform: state
+        entity_id: binary_sensor.docker_hub_update_available
+        from: "off"
+        to: "on"
       - platform: state
         entity_id: sun.sun
         to: "above_horizon"
     condition:
-      - condition: template
-        value_template: "{{ not is_state('sensor.ha_installed_version', states('sensor.ha_latest_version_available')) }}"
+      - condition: state
+        entity_id: binary_sensor.docker_hub_update_available
+        state: "on"
       - condition: state
         entity_id: sun.sun
         state: "above_horizon"
     action:
       - service: notify.telegram_darkfox
         data:
-          message: "Ny Home Assistant opdatering! Version {{ states('sensor.ha_latest_version_available') }}"
+          message: "Ny Home Assistant opdatering! Version {{ states('sensor.docker_hub') }}"
 
   - alias: Clear TTS Cache
     initial_state: true
