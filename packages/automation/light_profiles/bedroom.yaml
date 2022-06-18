@@ -18,16 +18,14 @@ sensor:
           {% set profiles = state_attr('input_select.light_profile', 'options') %}
           {% if profile == 'Bright' %}
             Bright
-          {% elif states('sensor.sovevaerelse_gardin_position')|int > 40 %}
-            {% if outside_lux > 20000 %}
-              {{ profiles[profiles.index(profile)+2] or 'Off' }}
-            {% elif outside_lux > 10000 %}
-              {{ profiles[profiles.index(profile)+1] or 'Off' }}
-            {% else %}
-              {{ profile }}
-            {% endif %}
+          {% elif states('sensor.sovevaerelse_gardin_position')|int < 40 %}
+            {{ profile }}
+          {% elif outside_lux > 20000 %}
+            {{ profiles[profiles.index(profile)+2] or 'Off' }}
+          {% elif outside_lux > 10000 %}
+            {{ profiles[profiles.index(profile)+1] or 'Off' }}
           {% else %}
-              {{ profile }}
+            {{ profile }}
           {% endif %}
 
       bedroom_light_profile:
@@ -288,7 +286,7 @@ automation:
           entities:
             light.seng_laeselampe:
               state: on
-              brightness: 127
+              brightness: 172
               color_temp: 460
               effect: "None"
             light.bedroom_shelf_strip:
@@ -297,7 +295,7 @@ automation:
               effect: "None"
             light.sovevaerelse_reol_spots:
               state: on
-              brightness: 32
+              brightness: 64
               effect: "None"
             light.bedroom_shelf_spots:
               state: on
@@ -311,7 +309,7 @@ automation:
               effect: "None"
             light.sky:
               state: on
-              brightness: 86
+              brightness: 124
               hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
               effect: "None"
             light.sovevaerelse_tv_bund:
@@ -341,7 +339,7 @@ automation:
               effect: "None"
             light.blyant:
               state: on
-              brightness: 86
+              brightness: 96
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
               effect: "None"
             light.bedroom_tablet:
