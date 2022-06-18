@@ -44,11 +44,11 @@ sensor:
         value_template: !secret google_maps_embed_key
       next_work_in:
         value_template: >
-          {{ (as_timestamp(state_attr('calendar.arbejde_pa_'+states('sensor.next_work_at'), 'start_time'))|int)  - as_timestamp(now()) | int }}
+          {{ (as_timestamp(state_attr('calendar.vagtplan_'+states('sensor.next_work_at'), 'start_time'))|int)  - as_timestamp(now()) | int }}
       next_work_at:
         value_template: >
-          {% set rsr_time = as_timestamp(state_attr('calendar.arbejde_pa_rsr', 'start_time')) %}
-          {% set rsh_time = as_timestamp(state_attr('calendar.arbejde_pa_rsh', 'start_time')) %}
+          {% set rsr_time = as_timestamp(state_attr('calendar.vagtplan_rsr', 'start_time')) %}
+          {% set rsh_time = as_timestamp(state_attr('calendar.vagtplan_rsh', 'start_time')) %}
           {% if not rsr_time and not rsh_time %}
             unknown
           {% elif not rsr_time or (rsr_time and rsh_time and (rsh_time|int) < (rsr_time|int)) %}
@@ -68,10 +68,10 @@ sensor:
         value_template: "{{ ((strptime(states('sensor.work_start_time'), '%Y-%m-%dT%H:%M:%S%z') - timedelta(minutes=states('sensor.hjem_til_'+states('sensor.next_work_at'))|int+10))|as_local).isoformat() }}"
         device_class: timestamp
       work_start_time:
-        value_template: "{{ (strptime(state_attr('calendar.arbejde_pa_'+states('sensor.next_work_at'), 'start_time'), '%Y-%m-%d %H:%M:%S')|as_local).isoformat() }}"
+        value_template: "{{ (strptime(state_attr('calendar.vagtplan_'+states('sensor.next_work_at'), 'start_time'), '%Y-%m-%d %H:%M:%S')|as_local).isoformat() }}"
         device_class: timestamp
       work_end_time:
-        value_template: "{{ (strptime(state_attr('calendar.arbejde_pa_rsr', 'end_time') if is_state('calendar.arbejde_pa_rsr', 'on') else state_attr('calendar.arbejde_pa_rsh', 'end_time'), '%Y-%m-%d %H:%M:%S')|as_local).isoformat() }}"
+        value_template: "{{ (strptime(state_attr('calendar.vagtplan_rsr', 'end_time') if is_state('calendar.vagtplan_rsr', 'on') else state_attr('calendar.vagtplan_rsh', 'end_time'), '%Y-%m-%d %H:%M:%S')|as_local).isoformat() }}"
         device_class: timestamp
       commute_status_car:
         value_template: >
@@ -96,22 +96,22 @@ sensor:
           {%- endif -%}
       commute_status_transit:
         value_template: >
-          {%- if states('sensor.precip_today')|int > 5 or states('sensor.s_train_c_status') != 'Til tiden' -%}
+          {%- if states('sensor.weatherflow_precipitation_today')|int > 5 or states('sensor.s_train_c_status') != 'Til tiden' -%}
             bad
-          {%- elif states('sensor.precip_today')|int > 1 or states('sensor.s_train_message') != '' -%}
+          {%- elif states('sensor.weatherflow_precipitation_today')|int > 1 or states('sensor.s_train_message') != '' -%}
             ok
           {%- else -%}
             good
           {%- endif -%}
       commute_status_bike:
         value_template: >
-          {%- set headwind = (states('sensor.wind_bearing')|int > 35 and states('sensor.wind_bearing')|int < 146) -%}
-          {%- if states('sensor.udenfor_temperature_feels_like')|int < 0
-              or states('sensor.precip_today')|int > 5
+          {%- set headwind = (states('sensor.weatherflow_wind_direction_2')|int > 35 and states('sensor.weatherflow_wind_direction_2')|int < 146) -%}
+          {%- if states('sensor.weatherflow_heat_index')|int < 0
+              or states('sensor.weatherflow_precipitation_today')|int > 5
               or (headwind and states('sensor.wind_speed')|int > 39) -%}
             bad
-          {%- elif states('sensor.udenfor_temperature_feels_like')|int < 10
-              or states('sensor.precip_today')|int > 1
+          {%- elif states('sensor.weatherflow_heat_index')|int < 10
+              or states('sensor.weatherflow_precipitation_today')|int > 1
               or (headwind and states('sensor.wind_speed')|int > 19) -%}
             ok
           {%- else -%}
