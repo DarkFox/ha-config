@@ -42,11 +42,11 @@ sensor:
           {{ time if as_timestamp(now())+(1*60*60) < time else false }}
       next_rsr_event:
         value_template: >-
-          {% set time = as_timestamp(state_attr('calendar.arbejde_pa_rsr', 'start_time')) or false %}
+          {% set time = as_timestamp(state_attr('calendar.vagtplan_rsr', 'start_time')) or false %}
           {{ time if as_timestamp(now())+(1*60*60) < time else false }}
       next_rsh_event:
         value_template: >-
-          {% set time = as_timestamp(state_attr('calendar.arbejde_pa_rsh', 'start_time')) or false %}
+          {% set time = as_timestamp(state_attr('calendar.vagtplan_rsh', 'start_time')) or false %}
           {{ time if as_timestamp(now())+(1*60*60) < time else false }}
       next_personal_event:
         value_template: >-
@@ -596,7 +596,6 @@ automation:
           options:
             - "==SCRIPT==morning_briefing"
             - "{{ states('sensor.podcast_bbc_minute') }}"
-            - "{{ states('sensor.podcast_radioavisen') }}"
             - "http://live-icy.gss.dr.dk:8000/A/A05H.mp3"
             - "==END=="
       - service: input_select.select_first
@@ -609,23 +608,7 @@ automation:
           entity_id: "media_player.sovevaerelse_mini"
           volume_level: 0.2
 
-  - alias: alarm_action_2_minutes
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: input_select.sleep_state
-      to:
-        - "alarm"
-        - "snoozing"
-      for:
-        minutes: 2
-    action:
-      - service: cover.set_cover_position
-        data:
-          entity_id: cover.sovevaerelse_gardin_dor
-          position: 20
-
-  - alias: alarm_action_4_minutes
+  - alias: alarm_action_5_minutes
     initial_state: true
     trigger:
       platform: state
@@ -639,9 +622,9 @@ automation:
       - service: cover.set_cover_position
         data:
           entity_id: cover.sovevaerelse_gardin_dor
-          position: 30
+          position: 20
 
-  - alias: alarm_action_6_minutes
+  - alias: alarm_action_10_minutes
     initial_state: true
     trigger:
       platform: state
@@ -651,6 +634,22 @@ automation:
         - "snoozing"
       for:
         minutes: 10
+    action:
+      - service: cover.set_cover_position
+        data:
+          entity_id: cover.sovevaerelse_gardin_dor
+          position: 30
+
+  - alias: alarm_action_20_minutes
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_select.sleep_state
+      to:
+        - "alarm"
+        - "snoozing"
+      for:
+        minutes: 20
     action:
       - service: cover.set_cover_position
         data:
@@ -717,6 +716,7 @@ automation:
           options:
             - "==SCRIPT==morning_briefing"
             - "{{ states('sensor.podcast_bbc_minute') }}"
+            - "{{ states('sensor.podcast_radioavisen') }}"
             - "http://live-icy.gss.dr.dk:8000/A/A05H.mp3"
             - "==END=="
       - service: input_select.select_first
@@ -728,13 +728,13 @@ automation:
         data_template:
           entity_id: "media_player.sovevaerelse_mini"
           volume_level: 0.25
+      - delay:
+          seconds: 2
       - service: automation.trigger
         data:
           entity_id: "automation.reset_scene_transition_time"
-      - delay:
-          seconds: 2
 
-  - alias: awake_activity
+  - alias: awake_action
     initial_state: true
     trigger:
       platform: state
@@ -744,7 +744,7 @@ automation:
     action:
       - service: cover.open_cover
         data:
-          entity_id: cover.sovevaerelse_gardin
+          entity_id: cover.sovevaerelse_gardin_dor
       - delay:
           seconds: 1
       - service: input_number.set_value
@@ -756,16 +756,15 @@ automation:
       - event: set_light_profile
         event_data:
           room: bedroom
-          profile: Default
+          profile: Dimmed
       - event: set_light_profile
         event_data:
           room: bathroom
-          profile: Default
+          profile: Dimmed
       - service: joaoapps_join.phone_send_tasker
         data:
           command: "sleep_tracking_stop"
-      - alias: "choose alias (name)"
-        choose:
+      - choose:
           - conditions:
               - condition: state
                 entity_id: input_boolean.guests
@@ -802,6 +801,30 @@ automation:
         data_template:
           entity_id: "group.minis"
           volume_level: 0.4
+      - delay:
+          seconds: 2
+      - service: automation.trigger
+        data:
+          entity_id: "automation.reset_scene_transition_time"
+      - delay:
+          minutes: 5
+      - service: cover.open_cover
+        data:
+          entity_id: cover.sovevaerelse_gardin
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.scene_transition_time"
+          value: 120.0
+      - delay:
+          seconds: 1
+      - event: set_light_profile
+        event_data:
+          room: bedroom
+          profile: Default
+      - event: set_light_profile
+        event_data:
+          room: bathroom
+          profile: Default
       - delay:
           seconds: 2
       - service: automation.trigger
