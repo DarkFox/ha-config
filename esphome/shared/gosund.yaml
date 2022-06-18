@@ -3,7 +3,17 @@ esphome:
   platform: ESP8266
   board: esp8285
 
+time:
+  - platform: sntp
+    id: my_time
+
 sensor:
+  - platform: total_daily_energy
+    name: ${upper_devicename} Dagligt Forbrug
+    power_id: power
+    device_class: energy
+    state_class: total_increasing
+
   # WiFi Signal sensor
   - platform: wifi_signal
     name: ${upper_devicename} WiFi Signal
@@ -24,6 +34,8 @@ sensor:
     current:
       name: ${upper_devicename} Strømstyrke
       unit_of_measurement: A
+      device_class: current
+      state_class: measurement
       accuracy_decimals: 3
       filters:
         # For some reason the current sensor is almost a
@@ -33,12 +45,19 @@ sensor:
     power:
       id: power
       name: ${upper_devicename} Forbrug
-      unit_of_measurement: W
+      unit_of_measurement: kW
+      device_class: power
+      state_class: measurement
       accuracy_decimals: 3
+      filters:
+        # Multiplication factor from W to kW is 0.001
+        - multiply: 0.001
     # Voltage sensor
     voltage:
       name: ${upper_devicename} Spænding
       unit_of_measurement: V
+      device_class: voltage
+      state_class: measurement
       accuracy_decimals: 1
 
 binary_sensor:
