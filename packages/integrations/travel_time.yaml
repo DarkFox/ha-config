@@ -105,14 +105,14 @@ sensor:
           {%- endif -%}
       commute_status_bike:
         value_template: >
-          {%- set headwind = (states('sensor.weatherflow_wind_direction_2')|int > 35 and states('sensor.weatherflow_wind_direction_2')|int < 146) -%}
+          {%- set headwind = (states('sensor.weatherflow_wind_direction')|int > 35 and states('sensor.weatherflow_wind_direction')|int < 146) -%}
           {%- if states('sensor.weatherflow_heat_index')|int < 0
-              or states('sensor.weatherflow_precipitation_today')|int > 5
-              or (headwind and states('sensor.wind_speed')|int > 39) -%}
+              or states('sensor.precip_today')|int > 5
+              or (headwind and states('sensor.weatherflow_beaufort')|int > 6) -%}
             bad
           {%- elif states('sensor.weatherflow_heat_index')|int < 10
-              or states('sensor.weatherflow_precipitation_today')|int > 1
-              or (headwind and states('sensor.wind_speed')|int > 19) -%}
+              or states('sensor.precip_today')|int > 1
+              or (headwind and states('sensor.weatherflow_beaufort')|int > 5) -%}
             ok
           {%- else -%}
             good
