@@ -1,0 +1,37 @@
+input_boolean:
+  living_room_balcony_door_activity:
+    initial: off
+    name: Stue Altan Dør Aktivitet
+
+binary_sensor:
+  - platform: template
+    sensors:
+      living_room_balcony_door_activity:
+        friendly_name: Stue Altan Dør Aktivitet
+        device_class: motion
+        value_template: "{{ is_state('input_boolean.living_room_balcony_door_activity', 'on') }}"
+
+automation:
+  - alias: living_room_balcony_door_activity_on
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.stue_altandor
+        to: "on"
+    action:
+      - service: input_boolean.turn_on
+        data:
+          entity_id: input_boolean.living_room_balcony_door_activity
+
+  - alias: living_room_balcony_door_activity_off
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_boolean.living_room_balcony_door_activity
+        to: "on"
+        for:
+          seconds: 5
+    action:
+      - service: input_boolean.turn_off
+        data:
+          entity_id: input_boolean.living_room_balcony_door_activity

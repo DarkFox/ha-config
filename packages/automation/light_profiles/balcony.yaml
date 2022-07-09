@@ -105,7 +105,10 @@ binary_sensor:
         value_template: >
           {%- if is_state('input_boolean.balcony_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.balcony_room_state', 'active') else 'false' }}
-          {%- elif is_state('binary_sensor.altan_bevaegelse', 'on')
+          {%- elif (
+                is_state('binary_sensor.altan_bevaegelse', 'on')
+                or is_state('input_select.latest_motion', 'Balcony')
+              )
               and is_state('binary_sensor.stue_altandor', 'on') -%}
             true
           {% else -%}
@@ -114,7 +117,8 @@ binary_sensor:
 
       balcony_activity_predicted:
         friendly_name: "Balcony Activity Predicted"
-        value_template: "false"
+        value_template: >-
+          {{ is_state('binary_sensor.living_room_balcony_door_activity', 'on') }}
 
 group:
   balcony_activity_entities:

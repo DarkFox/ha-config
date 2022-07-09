@@ -16,6 +16,7 @@ input_select:
       - Bedroom
       - Living Room
       - Office
+      - Balcony
 
 binary_sensor:
   - platform: template
@@ -54,20 +55,26 @@ automation:
       - platform: state
         variables:
           room: "Kitchen"
-        entity_id: binary_sensor.kokken_motion
+        entity_id:
+          - binary_sensor.kokken_any
+          - binary_sensor.kokken_motion
         to: "on"
 
       - platform: state
         variables:
           room: "Bathroom"
         entity_id:
+          - binary_sensor.badevaerelse_any
           - binary_sensor.badevaerelse_motion
         to: "on"
 
       - platform: state
         variables:
           room: "Bedroom"
-        entity_id: binary_sensor.sovevaerelse_motion
+        entity_id:
+          - binary_sensor.sovevaerelse_any
+          - binary_sensor.sovevaerelse_motion
+          - binary_sensor.seng_bevaegelse
         to: "on"
 
       - platform: state
@@ -90,19 +97,27 @@ automation:
         variables:
           room: "Living Room"
         entity_id:
+          - binary_sensor.stue_any
           - binary_sensor.stue_motion
           - binary_sensor.sofagruppe_bevaegelse
+          - binary_sensor.spisebord_bevaegelse
         to: "on"
 
       - platform: state
         variables:
           room: "Office"
         entity_id:
+          - binary_sensor.kontor_any
           - binary_sensor.kontor_motion
         to: "on"
+
+      - platform: template
+        variables:
+          room: "Balcony"
+        value_template: "{{ is_state('binary_sensor.stue_altandor', 'on') and is_state('binary_sensor.altan_bevaegelse', 'on') }}"
     condition:
       condition: state
-      entity_id: binary_sensor.martin_presence
+      entity_id: binary_sensor.wasp_sensor_apartment
       state: "on"
     action:
       service: input_select.select_option
@@ -114,8 +129,16 @@ automation:
     initial_state: true
     trigger:
       - platform: state
-        entity_id: binary_sensor.martin_presence_delayed
+        entity_id:
+          - binary_sensor.activity
+          - binary_sensor.wasp_sensor_apartment
         to: "off"
+    condition:
+      - condition: state
+        entity_id:
+          - binary_sensor.activity
+          - binary_sensor.wasp_sensor_apartment
+        state: "off"
     action:
       service: input_select.select_option
       data:
