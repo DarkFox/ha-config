@@ -79,6 +79,7 @@ sensor:
       - sensor.next_rsh_event
       - sensor.next_personal_event
       - sensor.next_tripit_event
+      - sensor.darkphone_next_alarm
       - sensor.fallback_wake_up_time
 
 binary_sensor:
@@ -89,7 +90,11 @@ binary_sensor:
         value_template: "{{ (states('sensor.wake_up_time')|as_timestamp()) < (now()|as_timestamp) }}"
       bedtime:
         friendly_name: "Sengetid"
-        value_template: "{{ (states('sensor.bedtime')|as_timestamp()) < (now()|as_timestamp) < (states('sensor.wake_up_time')|as_timestamp()) }}"
+        value_template: >-
+          {{
+            (states('sensor.bedtime')|as_timestamp()) < (now()|as_timestamp) < (states('sensor.wake_up_time')|as_timestamp())
+            or is_state('binary_sensor.sleep_as_android_bedtime', 'on')
+          }}
 
 automation:
   #######################
@@ -175,6 +180,14 @@ automation:
             - condition: state
               entity_id: input_select.sleep_state
               state: paused
+            - condition: and
+              conditions:
+                - condition: state
+                  entity_id: input_select.sleep_state
+                  state: bedtime
+                - condition: state
+                  entity_id: binary_sensor.sovevaerelse_motion
+                  state: "on"
     action:
       - service: input_select.select_option
         data:
