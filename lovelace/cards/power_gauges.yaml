@@ -1,80 +1,48 @@
-type: custom:layout-card
-layout_type: custom:grid-layout
-layout:
-  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr
-  grid-template-areas: |
-    "gauge1 gauge1 gauge2 gauge2 gauge3 gauge3"
-    "cheapest1 cheapest1 cheapest1 cheapest2 cheapest2 cheapest2"
-  margin: 0 -4px 0 -4px
-  padding: 0
-  card_margin: 0
+type: vertical-stack
 cards:
-  - type: gauge
-    entity: sensor.nordpool_kwh_dk2_dkk
-    unit: kr
-    max: 10
-    severity:
-      green: 0
-      yellow: 3
-      red: 5
-    min: 0
-    needle: true
-    view_layout:
-      grid-area: gauge1
+  - type: horizontal-stack
+    cards:
+      - type: gauge
+        entity: sensor.nordpool_kwh_dk2_dkk
+        unit: kr
+        max: 10
+        severity:
+          green: 0
+          yellow: 3
+          red: 5
+        min: 0
+        needle: true
 
-  - type: gauge
-    entity: sensor.pow_k_p
-    name: Forbrug
-    max: 8000
-    severity:
-      green: 0
-      yellow: 1000
-      red: 3000
-    needle: true
-    view_layout:
-      grid-area: gauge2
+      - type: gauge
+        entity: sensor.pow_k_p
+        name: Forbrug
+        max: 8000
+        severity:
+          green: 0
+          yellow: 1000
+          red: 3000
+        needle: true
 
-  - type: gauge
-    entity: sensor.energy_cost_hourly
-    name: Omkostning/time
-    max: 10
-    severity:
-      green: 0
-      yellow: 3
-      red: 5
-    min: 0
-    needle: true
-    view_layout:
-      grid-area: gauge3
+      - type: gauge
+        entity: sensor.energy_cost_hourly
+        name: Omkostning/time
+        max: 10
+        severity:
+          green: 0
+          yellow: 3
+          red: 5
+        min: 0
+        needle: true
 
-  - type: custom:button-card
-    name: Næste billige time
-    entity: sensor.naeste_billige_time_relative
-    label: "[[[ return states['sensor.elpriser_extrema'].attributes['minima'][0] + ' kr/kWh' ]]]"
-    # layout: name_state
-    show_state: true
+  - type: glance
+    show_name: true
     show_icon: false
-    show_label: true
-    styles:
-      card:
-        # - font-size: 150%
-        - padding-top: "5px"
-        - padding-bottom: "5px"
-    view_layout:
-      grid-area: cheapest1
-
-  - type: custom:button-card
-    name: Billigste time
-    entity: sensor.billigste_time_relative
-    label: "[[[ return states['sensor.elpriser_extrema'].attributes['min'] + ' kr/kWh' ]]]"
-    # layout: name_state
     show_state: true
-    show_icon: false
-    show_label: true
-    styles:
-      card:
-        # - font-size: 150%
-        - padding-top: "5px"
-        - padding-bottom: "5px"
-    view_layout:
-      grid-area: cheapest2
+    columns: 3
+    entities:
+      - entity: sensor.el_billigste_1_time
+        name: 1 Time
+      - entity: sensor.el_billigste_3_timer
+        name: 3 Timer
+      - entity: sensor.el_billigste_6_timer
+        name: 6 Timer

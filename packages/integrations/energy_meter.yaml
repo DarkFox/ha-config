@@ -16,22 +16,13 @@ homeassistant:
       icon: mdi:counter
     sensor.energy_last_quarter:
       icon: mdi:counter
-    sensor.energy_cost_this_hour:
-      icon: mdi:cash-multiple
-    sensor.energy_cost_daily:
-      icon: mdi:cash-multiple
-    sensor.energy_cost_monthly:
-      icon: mdi:cash-multiple
-    sensor.energy_cost_quarterly:
-      icon: mdi:cash-multiple
-    sensor.energy_cost_last_hour:
-      icon: mdi:cash-multiple
-    sensor.energy_cost_last_day:
-      icon: mdi:cash-multiple
-    sensor.energy_cost_last_month:
-      icon: mdi:cash-multiple
-    sensor.energy_cost_last_quarter:
-      icon: mdi:cash-multiple
+
+mqtt:
+  sensor:
+    - name: "Raw Electricity Price"
+      state_topic: "kamstrup/prices"
+      value_template: "{{ value_json.prices['0'] }}"
+      json_attributes_topic: "kamstrup/prices"
 
 utility_meter:
   energy_hourly:
@@ -62,70 +53,269 @@ automation:
     trigger:
       - platform: state
         entity_id: sensor.energy_cost_this_hour
-        to: "0.000"
+    condition:
+      - condition: template
+        value_template: "{{ (trigger.from_state.state|float) > (trigger.to_state.state|float) }}"
     action:
       - service: input_number.set_value
         data:
           entity_id: input_number.energy_cost
           value: "{{ (state('input_number.energy_cost')|float) + (trigger.from_state.state|float) }}"
 
+template:
+  - sensor:
+      - name: "El Priser"
+        device_class: monetary
+        unit_of_measurement: kr
+        state: >-
+          {%- set p = this.attributes.prices | default('unknown') -%}
+          {%- if p == 'unknown' -%}
+            {{ p }}
+          {%- else -%}
+            {{ p[0]["value"] }}
+          {%- endif -%}
+        attributes:
+          min: >-
+            {%- set p = this.attributes.just_prices | default('unknown') -%}
+            {%- if p == 'unknown' -%}
+              {{ p }}
+            {%- else -%}
+              {{ p|min }}
+            {%- endif -%}
+          max: >-
+            {%- set p = this.attributes.just_prices | default('unknown') -%}
+            {%- if p == 'unknown' -%}
+              {{ p }}
+            {%- else -%}
+              {{ p|max }}
+            {%- endif -%}
+          three_hour_seg: >-
+            {%- set p = this.attributes.prices | default('unknown') -%}
+            {%- if p == 'unknown' -%}
+              {{ p }}
+            {%- else -%}
+            [
+              {%- for i in range(p|length-2) -%}
+                {
+                  "start": "{{ p[i]["start"] }}",
+                  "end": "{{ p[i+2]["end"] }}",
+                  "value": {{
+                    ((p[i]['value']
+                    + p[i+1]['value']
+                    + p[i+2]['value'])/3.0) | round(4)
+                  }}
+                },
+              {%- endfor -%}
+            ]
+            {% endif %}
+          three_hour_seg_prices: >-
+            {%- set p = this.attributes.three_hour_seg | default('unknown') -%}
+            {%- if p == 'unknown' -%}
+              {{ p }}
+            {%- else -%}
+              [
+                {% for x in (p|list) %}
+                  {{ x.value }},
+                {% endfor %}
+              ]
+            {%- endif -%}
+          six_hour_seg: >-
+            {%- set p = this.attributes.prices | default('unknown') -%}
+            {%- if p == 'unknown' -%}
+              {{ p }}
+            {%- else -%}
+            [
+              {%- for i in range(p|length-5) -%}
+                {
+                  "start": "{{ p[i]["start"] }}",
+                  "end": "{{ p[i+5]["end"] }}",
+                  "value": {{
+                    ((p[i]['value']
+                    + p[i+1]['value']
+                    + p[i+2]['value']
+                    + p[i+3]['value']
+                    + p[i+4]['value']
+                    + p[i+5]['value'])/6.0) | round(4)
+                  }}
+                },
+              {%- endfor -%}
+            ]
+            {% endif %}
+          six_hour_seg_prices: >-
+            {%- set p = this.attributes.six_hour_seg | default('unknown') -%}
+            {%- if p == 'unknown' -%}
+              {{ p }}
+            {%- else -%}
+              [
+                {% for x in (p|list) %}
+                  {{ x.value }},
+                {% endfor %}
+              ]
+            {%- endif -%}
+          cheapest_1_hr: >-
+            {%- set p = this.attributes.just_prices | default('unknown') -%}
+            {%- if p == 'unknown' -%}
+              {{ p }}
+            {%- else -%}
+              {{ p.index(p|min) }}
+            {%- endif -%}
+          cheapest_3_hr: >-
+            {%- set p = this.attributes.three_hour_seg_prices | default('unknown') -%}
+            {%- if p == 'unknown' -%}
+              {{ p }}
+            {%- else -%}
+              {{ p.index(p|min) }}
+            {%- endif -%}
+          cheapest_6_hr: >-
+            {%- set p = this.attributes.six_hour_seg_prices | default('unknown') -%}
+            {%- if p == 'unknown' -%}
+              {{ p }}
+            {%- else -%}
+              {{ p.index(p|min) }}
+            {%- endif -%}
+          just_prices: >-
+            {%- set p = this.attributes.prices | default('unknown') -%}
+            {%- if p == 'unknown' -%}
+              {{ p }}
+            {%- else -%}
+              [
+                {% for x in (p|list) %}
+                  {{ x.value }},
+                {% endfor %}
+              ]
+            {%- endif -%}
+          prices: >-
+            [
+            {%- set prices = state_attr('sensor.raw_electricity_price', 'prices') -%}
+            {%- for k in prices -%}
+              {%- if k|int(-1) > -1 -%}
+                {%- set s = {
+                  "abonnement": 0.03,
+                  "elafgift": 0.763,
+                  "systemydelse": 0.0,
+                  "transport_lavlast_2021": 0.2363,
+                  "transport_spidslast_2021": 0.6307,
+                  "transport_lavlast_2022": 0.3003,
+                  "transport_spidslast_2022": 0.7651,
+                } -%}
+                {%- set afgiftsum = s.abonnement + s.elafgift + s.systemydelse -%}
+                {%- set cdt = (now().strftime('%Y-%m-%d %H:00:00.0%z') | as_datetime) + timedelta( hours = k|int ) -%}
+                {%- if cdt < as_datetime("2022-04-01 00:00:00.00+01:00") -%}
+                  {%- set transport_lavlast = s.transport_lavlast_2021 -%}
+                  {%- set transport_spidslast = s.transport_spidslast_2021 -%}
+                {%- else -%}
+                  {%- set transport_lavlast = s.transport_lavlast_2022 -%}
+                  {%- set transport_spidslast = s.transport_spidslast_2022 -%}
+                {%- endif -%}
+                {
+                "start": "{{ cdt }}",
+                "end": "{{ cdt + timedelta( hours = 1) }}",
+                {%- if cdt.month >= 10 or cdt.month < 4 -%}
+                  {%- if cdt.hour >= 17 and cdt.hour < 20 -%}
+                    "value": {{ ((prices[k] + transport_spidslast + afgiftsum) * 1.25) | round(4) }}
+                  {%- else -%}
+                    "value":  {{ ((prices[k] + transport_lavlast + afgiftsum) * 1.25) | round(4) }}
+                  {%- endif -%}
+                {%- else -%}
+                  "value": {{ ((prices[k] + transport_lavlast + afgiftsum) * 1.25) | round(4) }}
+                {%- endif -%}
+                },
+              {%- endif -%}
+            {%- endfor -%}
+            ]
+      - name: "El Billigste 1 Time"
+        device_class: timestamp
+        state: "{{ state_attr('sensor.el_priser', 'prices')[state_attr('sensor.el_priser', 'cheapest_1_hr')|int]['start'] }}"
+        attributes:
+          start: "{{ state_attr('sensor.el_priser', 'prices')[state_attr('sensor.el_priser', 'cheapest_1_hr')|int]['start'] }}"
+          end: "{{ state_attr('sensor.el_priser', 'prices')[state_attr('sensor.el_priser', 'cheapest_1_hr')|int]['end'] }}"
+          value: "{{ state_attr('sensor.el_priser', 'prices')[state_attr('sensor.el_priser', 'cheapest_1_hr')|int]['value'] }}"
+          icon: mdi:clock-time-one
+      - name: "El Billigste 3 Timer"
+        device_class: timestamp
+        state: "{{ state_attr('sensor.el_priser', 'three_hour_seg')[state_attr('sensor.el_priser', 'cheapest_3_hr')|int]['start'] }}"
+        attributes:
+          start: "{{ state_attr('sensor.el_priser', 'three_hour_seg')[state_attr('sensor.el_priser', 'cheapest_3_hr')|int]['start'] }}"
+          end: "{{ state_attr('sensor.el_priser', 'three_hour_seg')[state_attr('sensor.el_priser', 'cheapest_3_hr')|int]['end'] }}"
+          value: "{{ state_attr('sensor.el_priser', 'three_hour_seg')[state_attr('sensor.el_priser', 'cheapest_3_hr')|int]['value'] }}"
+          icon: mdi:clock-time-three
+      - name: "El Billigste 6 Timer"
+        device_class: timestamp
+        state: "{{ state_attr('sensor.el_priser', 'six_hour_seg')[state_attr('sensor.el_priser', 'cheapest_6_hr')|int]['start'] }}"
+        attributes:
+          start: "{{ state_attr('sensor.el_priser', 'six_hour_seg')[state_attr('sensor.el_priser', 'cheapest_6_hr')|int]['start'] }}"
+          end: "{{ state_attr('sensor.el_priser', 'six_hour_seg')[state_attr('sensor.el_priser', 'cheapest_6_hr')|int]['end'] }}"
+          value: "{{ state_attr('sensor.el_priser', 'six_hour_seg')[state_attr('sensor.el_priser', 'cheapest_6_hr')|int]['value'] }}"
+          icon: mdi:clock-time-six
+
 sensor:
   - platform: template
     sensors:
       energy_cost_hourly:
         friendly_name: "Elomkostning"
-        value_template: "{{ (((states('sensor.pow_k_p')|float)/1000) * (states('sensor.nordpool_kwh_dk2_dkk')|float)) | round(3) }}"
+        value_template: "{{ (((states('sensor.pow_k_p')|float)/1000) * (states('sensor.el_priser')|float)) | round(3) }}"
         unit_of_measurement: kr/t
-        attribute_templates:
-          icon: mdi:cash
+        device_class: monetary
 
       energy_cost_this_hour:
         friendly_name: "Elomkostning Denne Time"
-        value_template: "{{ ((states('sensor.energy_hourly')|float) * (states('sensor.nordpool_kwh_dk2_dkk')|float)) | round(3) }}"
+        value_template: "{{ ((states('sensor.energy_hourly')|float) * (states('sensor.el_priser')|float)) | round(3) }}"
         unit_of_measurement: kr
+        device_class: monetary
 
       energy_last_hour:
         friendly_name: "Elforbrug Sidste Time"
         value_template: "{{ state_attr('sensor.energy_hourly', 'last_period') }}"
         unit_of_measurement: kWh
+        device_class: energy
       energy_last_day:
         friendly_name: "Elforbrug I Går"
         value_template: "{{ state_attr('sensor.energy_daily', 'last_period') }}"
         unit_of_measurement: kWh
+        device_class: energy
       energy_last_month:
         friendly_name: "Elforbrug Sidste Måned"
         value_template: "{{ state_attr('sensor.energy_monthly', 'last_period') }}"
         unit_of_measurement: kWh
+        device_class: energy
       energy_last_quarter:
         friendly_name: "Elforbrug Sidste Kvartal"
         value_template: "{{ state_attr('sensor.energy_quarterly', 'last_period') }}"
         unit_of_measurement: kWh
+        device_class: energy
 
       # energy_cost_daily:
       #   friendly_name: "Elomkostning I Dag"
       #   value_template: "{{ ((states('sensor.energy_daily')|float) * (states('sensor.nordpool_kwh_dk2_dkk')|float)) | round(2) }}"
       #   unit_of_measurement: kr
+      #   device_class: monetary
       # energy_cost_monthly:
       #   friendly_name: "Elomkostning Denne Måned"
       #   value_template: "{{ ((states('sensor.energy_monthly')|float) * (states('sensor.nordpool_kwh_dk2_dkk')|float)) | round(2) }}"
       #   unit_of_measurement: kr
+      #   device_class: monetary
       # energy_cost_quarterly:
       #   friendly_name: "Elomkostning Dette Kvartal"
       #   value_template: "{{ ((states('sensor.energy_quarterly')|float) * (states('sensor.nordpool_kwh_dk2_dkk')|float)) | round(2) }}"
       #   unit_of_measurement: kr
+      #   device_class: monetary
       # energy_cost_last_hour:
       #   friendly_name: "Elomkostning Sidste Time"
       #   value_template: "{{ ((states('sensor.energy_last_hour')|float) * (states('sensor.nordpool_kwh_dk2_dkk')|float)) | round(2) }}"
       #   unit_of_measurement: kr
+      #   device_class: monetary
       # energy_cost_last_day:
       #   friendly_name: "Elomkostning I Går"
       #   value_template: "{{ ((states('sensor.energy_last_day')|float) * (states('sensor.nordpool_kwh_dk2_dkk')|float)) | round(2) }}"
       #   unit_of_measurement: kr
+      #   device_class: monetary
       # energy_cost_last_month:
       #   friendly_name: "Elomkostning Sidste Måned"
       #   value_template: "{{ ((states('sensor.energy_last_month')|float) * (states('sensor.nordpool_kwh_dk2_dkk')|float)) | round(2) }}"
       #   unit_of_measurement: kr
+      #   device_class: monetary
       # energy_cost_last_quarter:
       #   friendly_name: "Elomkostning Sidste Kvartal"
       #   value_template: "{{ ((states('sensor.energy_last_quarter')|float) * (states('sensor.nordpool_kwh_dk2_dkk')|float)) | round(2) }}"
       #   unit_of_measurement: kr
+      #   device_class: monetary
