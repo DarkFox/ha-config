@@ -10,7 +10,9 @@ switch:
   - platform: template
     switches:
       sovevaerelse_tv:
-        value_template: "{{ is_state('switch.sovevaerelse_tv_afbryder', 'on') }}"
+        friendly_name: Soveværelse TV
+        icon_template: mdi:television
+        value_template: "{{ not is_state('media_player.sovevarelse_tv', 'unavailable') }}"
         turn_on:
           service: script.turn_on
           data:
@@ -39,14 +41,9 @@ script:
     sequence:
       - service: switch.turn_on
         data:
-          entity_id: switch.sovevaerelse_soundbar_power
-      - service: switch.turn_on
-        entity_id: switch.sovevaerelse_tv_afbryder
+          entity_id: switch.sovevaerelse_tv_power
       - delay:
           seconds: 2
-      - service: switch.turn_on
-        data:
-          entity_id: switch.sovevaerelse_tv_power
       - service: script.turn_on
         data:
           entity_id: script.sovevaerelse_soundbar_fix_audio_lag
@@ -56,10 +53,6 @@ script:
       - service: switch.turn_off
         data:
           entity_id: switch.sovevaerelse_tv_power
-      - delay:
-          seconds: 2
-      - service: switch.turn_off
-        entity_id: switch.sovevaerelse_tv_afbryder
 
   sovevaerelse_soundbar_fix_audio_lag:
     sequence:
@@ -164,9 +157,6 @@ automation:
       - service: switch.turn_on
         data:
           entity_id: switch.sovevaerelse_soundbar_mute
-      - service: switch.turn_off
-        data:
-          entity_id: switch.sovevaerelse_tv_afbryder
 
   - alias: bedroom_media_unmute
     initial_state: true
@@ -179,9 +169,6 @@ automation:
         entity_id: binary_sensor.sovevaerelse_video_out
         state: "on"
     action:
-      - service: switch.turn_on
-        data:
-          entity_id: switch.sovevaerelse_tv_afbryder
       - service: switch.turn_on
         data:
           entity_id: switch.sovevaerelse_soundbar_volume_down
@@ -370,15 +357,13 @@ automation:
         for:
           minutes: 1
     condition:
-      - condition: template
-        value_template: "{{ (state_attr('media_player.sovevaerelse_tv', 'source') == 'Chromecast') }}"
       - condition: state
         entity_id: input_boolean.bedroom_tv_lovelace
         state: "off"
     action:
-      - service: media_player.turn_off
+      - service: switch.turn_off
         data:
-          entity_id: media_player.sovevaerelse_tv
+          entity_id: switch.sovevaerelse_tv
 
   - alias: bedroom_soundbar_night_mode
     initial_state: true
