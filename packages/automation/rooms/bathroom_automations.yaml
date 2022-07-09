@@ -2,8 +2,6 @@ input_boolean:
   bathroom_door_activity:
     initial: off
     name: Badeværelse Dør Aktivitet
-  bathroom_occupied:
-    name: Badeværelse Optaget
   showering:
     name: Bruser
 
@@ -17,7 +15,14 @@ binary_sensor:
       bathroom_occupied:
         friendly_name: Badeværelse Optaget
         device_class: occupancy
-        value_template: "{{ is_state('input_boolean.bathroom_occupied', 'on') }}"
+        value_template: >-
+          {{
+            is_state('binary_sensor.wasp_sensor_bathroom', 'on')
+            or (
+              is_state('binary_sensor.badevaerelse_any', 'on')
+              and is_state('binary_sensor.badevaerelse_dor', 'off')
+            )
+          }}
 
 automation:
   - alias: showering_on
@@ -70,62 +75,3 @@ automation:
       - service: input_boolean.turn_off
         data:
           entity_id: input_boolean.bathroom_door_activity
-
-  - alias: bathroom_occupied
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: binary_sensor.badevaerelse_dor
-      to: "off"
-      for:
-        seconds: 10
-    condition:
-      condition: state
-      entity_id: binary_sensor.badevaerelse_motion
-      state: "on"
-    action:
-      - service: input_boolean.turn_on
-        data:
-          entity_id: input_boolean.bathroom_occupied
-
-  - alias: bathroom_door_opened_after_occupied
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: binary_sensor.badevaerelse_dor
-      to: "on"
-    condition:
-      condition: state
-      entity_id: input_boolean.bathroom_occupied
-      state: "on"
-    action:
-      - service: input_boolean.turn_off
-        data:
-          entity_id: input_boolean.bathroom_occupied
-
-  - alias: bathroom_reset
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id:
-          - binary_sensor.badevaerelse_motion
-          - binary_sensor.bruseniche_vand
-        to: "off"
-        for:
-          minutes: 10
-    condition:
-      condition: and
-      conditions:
-        - condition: state
-          entity_id: input_boolean.bathroom_occupied
-          state: "on"
-        - condition: state
-          entity_id: binary_sensor.badevaerelse_motion
-          state: "off"
-        - condition: state
-          entity_id: binary_sensor.bruseniche_vand
-          state: "off"
-    action:
-      - service: input_boolean.turn_off
-        data:
-          entity_id: input_boolean.bathroom_occupied
