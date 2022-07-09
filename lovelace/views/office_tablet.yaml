@@ -16,24 +16,11 @@ cards:
     cards:
       - type: vertical-stack
         cards:
-          - !include ../cards/weather/simple_weather.yaml
+          - !include ../cards/clock.yaml
+          - !include ../cards/weather/weather_forecast.yaml
+          - !include ../cards/power_gauges.yaml
 
           - !include ../cards/conditional_timers.yaml
-
-          - type: custom:decluttering-card
-            template: room_state_and_light_profile
-            variables:
-              - room: office
-
-          - type: custom:decluttering-card
-            template: blinds
-            variables:
-              - entity: cover.kontor_rullegardin
-
-          - type: custom:decluttering-card
-            template: light_groups
-            variables:
-              - rum: kontor
 
       - type: custom:layout-break
 
@@ -71,13 +58,24 @@ cards:
 
       - type: vertical-stack
         cards:
-          - !include ../cards/power_gauges_compact.yaml
-
           - type: conditional
             conditions:
               - entity: binary_sensor.commute_soon
                 state: "on"
             card: !include /config/lovelace/cards/transport/commute.yaml
+
+          - type: custom:decluttering-card
+            template: room_state_and_light_profile
+            variables:
+              - room: office
+
+          - type: custom:mushroom-cover-card
+            entity: cover.kontor_rullegardin
+            show_position_control: true
+            show_buttons_control: true
+            hide_state: false
+            fill_container: false
+            layout: horizontal
 
           - type: entities
             title: PC
@@ -85,13 +83,8 @@ cards:
             entities:
               - switch.martin_pc
               - binary_sensor.martin_pc_activity
-              - entity: switch.pc_afbryder
-                name: PC
-                color: auto
-              - entity: switch.pc_tilbehor_afbryder
-                name: PC Tilbehør
-                color: auto
+              - switch.pc_afbryder
+              - switch.pc_tilbehor_afbryder
               - switch.printer_afbryder
-              - switch.skrivebord_blaser
               - sensor.steam_76561197970641649
               - sensor.steam_game
