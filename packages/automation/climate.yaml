@@ -26,11 +26,26 @@ binary_sensor:
       check_climate:
         value_template: >
           {{
-            states('sensor.bathroom_min_temp')|int == state_attr('climate.badevaerelse', 'temperature')|int
-            and states('sensor.office_min_temp')|int == state_attr('climate.kontor', 'temperature')|int
-            and states('sensor.living_room_min_temp')|int == state_attr('climate.stue', 'temperature')|int
-            and states('sensor.workshop_min_temp')|int == state_attr('climate.vaerksted', 'temperature')|int
-            and states('sensor.bedroom_min_temp')|int == state_attr('climate.sovevaerelse', 'temperature')|int
+            (
+              is_state('climate.badevaerelse', 'off')
+              or states('sensor.bathroom_min_temp')|int(-1) == state_attr('climate.badevaerelse', 'temperature')|int(-1)
+            )
+            and (
+              is_state('climate.kontor', 'off')
+              or states('sensor.office_min_temp')|int(-1) == state_attr('climate.kontor', 'temperature')|int(-1)
+            )
+            and (
+              is_state('climate.stue', 'off')
+              or states('sensor.living_room_min_temp')|int(-1) == state_attr('climate.stue', 'temperature')|int(-1)
+            )
+            and (
+              is_state('climate.vaerksted', 'off')
+              or states('sensor.workshop_min_temp')|int(-1) == state_attr('climate.vaerksted', 'temperature')|int(-1)
+            )
+            and (
+              is_state('climate.sovevaerelse', 'off')
+              or states('sensor.bedroom_min_temp')|int(-1) == state_attr('climate.sovevaerelse', 'temperature')|int(-1)
+            )
           }}
 
 sensor:
