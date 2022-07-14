@@ -20,6 +20,9 @@ binary_sensor:
 switch:
   - platform: rflink
     devices:
+      fa20rf_45053e_01:
+        name: Røgalarm
+        signal_repetitions: 5
       ev1527_0c0e1c_01:
         name: Projektor Lærred Op
       ev1527_0c0e1c_02:
@@ -63,3 +66,14 @@ automation:
       - service: switch.turn_off
         data_template:
           entity_id: "{{ trigger.entity_id }}"
+
+  - alias: reset_smoke_alarm_switch
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.rogalarm
+        to: "off"
+    action:
+      - service: switch.turn_off
+        data_template:
+          entity_id: "switch.rogalarm"
