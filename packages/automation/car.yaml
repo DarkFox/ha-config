@@ -36,18 +36,16 @@ binary_sensor:
       at_work_soon:
         friendly_name: "Snart På Arbejde"
         value_template: >
-          {% if is_state('sensor.next_work_at', 'rsr') %}
-            {{ states('proximity.martin_to_rsr')|float < 1500 }}
-          {% else %}
-            {{ states('proximity.martin_to_rsh')|float < 1500 }}
-          {% endif %}
+          {{ states('proximity.martin_to_rsh')|float < 2000 }}
 
 automation:
-  - id: climatise_car_for_commute_to_work
-    alias: climatise_car_for_commute_to_work
+  - id: climatise_car_for_upcoming_drive
+    alias: climatise_car_for_upcoming_drive
     trigger:
       - platform: state
-        entity_id: binary_sensor.commute_soon
+        entity_id:
+          - binary_sensor.time_to_leave_car_commute
+          - binary_sensor.martin_next_scheduled_destination_time_to_leave
         from: "off"
         to: "on"
     condition:
@@ -60,6 +58,11 @@ automation:
         service: switch.turn_on
         target:
           entity_id: switch.vw_connect_climatisation
+      - delay:
+          minutes: 5
+      - service: script.notify_everywhere
+        data:
+          message: Tid til at tage afsted!
 
   - id: climatise_car_for_commute_from_work
     alias: climatise_car_for_commute_from_work
@@ -81,55 +84,6 @@ automation:
         target:
           entity_id: switch.vw_connect_climatisation
 
-  # - id: charge_car_to_90_pct_before_going_home
-  #   alias: charge_car_to_90_pct_before_going_home
-  #   trigger:
-  #     - platform: state
-  #       entity_id: binary_sensor.going_home_early_trigger
-  #       from: "off"
-  #       to: "on"
-  #   condition:
-  #     - alias: "If at work"
-  #       condition: state
-  #       entity_id: person.martin
-  #       state:
-  #         - RSR
-  #         - RSH
-  #     - alias: "Car plugged in"
-  #       condition: state
-  #       entity_id: binary_sensor.vw_connect_plug_connected
-  #       state: "on"
-  #   action:
-  #     - alias: "Turn off slow AC charging"
-  #       service: switch.turn_off
-  #       target:
-  #         entity_id: switch.vw_connect_reduced_charge_current_ac
-  #     - alias: "Set car charge target to 90%"
-  #       service: input_number.set_value
-  #       target:
-  #         entity_id: input_number.id_3_target_soc
-  #       data:
-  #         value: 90
-
-  # - id: reset_charge_target_after_90_pct
-  #   alias: reset_charge_target_after_90_pct
-  #   trigger:
-  #     - platform: state
-  #       entity_id: sensor.vw_connect_charging_state
-  #       from: "charging"
-  #   condition:
-  #     - alias: "SoC target set to 90%"
-  #       condition: state
-  #       entity_id: input_number.id_3_target_soc
-  #       state: "90"
-  #   action:
-  #     - alias: "Set car charge target to 80%"
-  #       service: input_number.set_value
-  #       target:
-  #         entity_id: input_number.id_3_target_soc
-  #       data:
-  #         value: 80
-
   - alias: notify_car_charging
     id: notify_car_charging
     initial_state: true
@@ -141,7 +95,7 @@ automation:
       - service: notify.telegram_darkfox
         data:
           message: >
-            Opladning startet. Bilen lader op til {{ states('sensor.vw_connect_target_soc_pct') }}%.
+            Opladning startet. Bilen lader op fra {{ states('sensor.vw_connect_current_soc_pct') }} til {{ states('sensor.vw_connect_target_soc_pct') }}%.
             Færdig ca. {{ states('sensor.vw_connect_charging_complete_at') }}
 
   - alias: notify_15_minutes_till_car_charged
@@ -160,7 +114,9 @@ automation:
     action:
       - service: notify.telegram_darkfox
         data:
-          message: "Bilen er ladt op til {{ states('sensor.vw_connect_target_soc_pct') }}% om {{ states('sensor.vw_connect_remaining_charging_time_to_complete_min') }} minutter."
+          message: >-
+            Bilen er ladt op til {{ states('sensor.vw_connect_current_soc_pct') }}/{{ states('sensor.vw_connect_target_soc_pct') }}%.
+            Færdig om {{ states('sensor.vw_connect_remaining_charging_time_to_complete_min') }} minutter.
 
   - alias: notify_car_charged
     id: notify_car_charged
@@ -196,6 +152,16 @@ automation:
         entity_id: binary_sensor.at_work_soon
         to: "on"
     condition:
+      - condition: or
+        conditions:
+          - alias: "Commuting to work"
+            condition: state
+            entity_id: binary_sensor.commute_soon
+            state: "on"
+          - alias: "Late to work :P"
+            condition: state
+            entity_id: binary_sensor.scheduled_at_work
+            state: "on"
       - alias: "Car not plugged in"
         condition: state
         entity_id: binary_sensor.vw_connect_plug_connected
@@ -203,52 +169,11 @@ automation:
       - alias: "Car needs charging"
         condition: numeric_state
         entity_id: sensor.id_3_battery
-        below: 60
+        below: 40
     action:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: sensor.next_work_at
-                state: "rsr"
-            sequence:
-              - service: automation.trigger
-                target:
-                  entity_id: automation.car_chargers_rsr
-          - conditions:
-              - condition: state
-                entity_id: sensor.next_work_at
-                state: "rsh"
-            sequence:
-              - service: automation.trigger
-                target:
-                  entity_id: automation.car_chargers_rsh
-
-  - alias: notify_charger_available_rsr
-    id: notify_charger_available_rsr
-    trigger:
-      - platform: state
-        entity_id: sensor.rsr_p_hus_spirii_ladere
-    condition:
-      - alias: "Car not plugged in"
-        condition: state
-        entity_id: binary_sensor.vw_connect_plug_connected
-        state: "off"
-      - alias: "Car needs charging"
-        condition: numeric_state
-        entity_id: sensor.id_3_battery
-        below: 50
-      - alias: "Is at RSR"
-        condition: state
-        entity_id: person.martin
-        state: "RSR"
-      - alias: "Charger available"
-        condition: numeric_state
-        entity_id: sensor.rsr_p_hus_spirii_ladere
-        above: 1
-    action:
-      - service: notify.telegram_darkfox
-        data:
-          message: "En ladeplads i P-Huset er lige blevet ledig."
+      - service: automation.trigger
+        target:
+          entity_id: automation.car_chargers_rsh
 
   - id: car_menu
     initial_state: true

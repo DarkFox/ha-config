@@ -36,17 +36,9 @@ script:
 sensor:
   - platform: template
     sensors:
-      next_wfh_event:
+      next_work_event:
         value_template: >-
-          {% set time = as_timestamp(state_attr('calendar.arbejde_arbejder_hjemmefra', 'start_time')) or false %}
-          {{ time if as_timestamp(now())+(1*60*60) < time else false }}
-      next_rsr_event:
-        value_template: >-
-          {% set time = as_timestamp(state_attr('calendar.vagtplan_rsr', 'start_time')) or false %}
-          {{ time if as_timestamp(now())+(1*60*60) < time else false }}
-      next_rsh_event:
-        value_template: >-
-          {% set time = as_timestamp(state_attr('calendar.vagtplan_rsh', 'start_time')) or false %}
+          {% set time = as_timestamp(state_attr('calendar.vagtplan_arbejde', 'start_time')) or false %}
           {{ time if as_timestamp(now())+(1*60*60) < time else false }}
       next_personal_event:
         value_template: >-
@@ -74,9 +66,7 @@ sensor:
     name: next_event_for_wakeup_time
     type: min
     entity_ids:
-      - sensor.next_wfh_event
-      - sensor.next_rsr_event
-      - sensor.next_rsh_event
+      - sensor.next_work_event
       - sensor.next_personal_event
       - sensor.next_tripit_event
       - sensor.darkphone_next_alarm

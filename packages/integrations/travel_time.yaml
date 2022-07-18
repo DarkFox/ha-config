@@ -14,25 +14,25 @@ binary_sensor:
         value_template: "{{ not is_state('sensor.s_train_message', '') or not is_state('sensor.s_train_c_status', 'Til tiden') }}"
       commute_soon:
         value_template: >-
-          {%- set time_to_leave_car_commute = strptime(states('sensor.time_to_leave_car_commute'), '%Y-%m-%dT%H:%M:%S%z') -%}
-          {%- if time_to_leave_car_commute != 'unavailable' -%}
+          {%- set time_to_leave_car_commute = strptime(states('sensor.time_to_leave_car_commute'), '%Y-%m-%dT%H:%M:%S%z', '-1') -%}
+          {%- if time_to_leave_car_commute != '-1' -%}
             {{ time_to_leave_car_commute - timedelta(minutes=30) < now() and strptime(states('sensor.work_start_time'), '%Y-%m-%dT%H:%M:%S%z') > now() }}
+          {%- else -%}
+            False
+          {%- endif -%}
+      time_to_leave_car_commute:
+        value_template: >-
+          {%- set time_to_leave_car_commute = strptime(states('sensor.time_to_leave_car_commute'), '%Y-%m-%dT%H:%M:%S%z', '-1') -%}
+          {%- if time_to_leave_car_commute != '-1' -%}
+            {{ time_to_leave_car_commute - timedelta(minutes=5) < now() and strptime(states('sensor.work_start_time'), '%Y-%m-%dT%H:%M:%S%z') > now() }}
           {%- else -%}
             False
           {%- endif -%}
       going_home_soon:
         value_template: >-
-          {%- set work_end_time = strptime(states('sensor.work_end_time'), '%Y-%m-%dT%H:%M:%S%z') -%}
-          {%- if work_end_time != 'unavailable' -%}
+          {%- set work_end_time = strptime(states('sensor.work_end_time'), '%Y-%m-%dT%H:%M:%S%z', '-1') -%}
+          {%- if work_end_time != '-1' -%}
             {{ work_end_time - timedelta(minutes=15) < now() }}
-          {%- else -%}
-            False
-          {%- endif -%}
-      going_home_early_trigger:
-        value_template: >-
-          {%- set work_end_time = strptime(states('sensor.work_end_time'), '%Y-%m-%dT%H:%M:%S%z') -%}
-          {%- if work_end_time != 'unavailable' -%}
-            {{ work_end_time - timedelta(minutes=45) < now() }}
           {%- else -%}
             False
           {%- endif -%}
@@ -44,55 +44,36 @@ sensor:
         value_template: !secret google_maps_embed_key
       next_work_in:
         value_template: >
-          {{ (as_timestamp(state_attr('calendar.vagtplan_'+states('sensor.next_work_at'), 'start_time'))|int)  - as_timestamp(now()) | int }}
-      next_work_at:
+          {{ (as_timestamp(state_attr('calendar.vagtplan_arbejde' 'start_time'))|int)  - as_timestamp(now()) | int }}
+      work_url_coords:
         value_template: >
-          {% set rsr_time = as_timestamp(state_attr('calendar.vagtplan_rsr', 'start_time')) %}
-          {% set rsh_time = as_timestamp(state_attr('calendar.vagtplan_rsh', 'start_time')) %}
-          {% if not rsr_time and not rsh_time %}
-            unknown
-          {% elif not rsr_time or (rsr_time and rsh_time and (rsh_time|int) < (rsr_time|int)) %}
-            rsh
-          {% elif not rsh_time or (rsr_time and rsh_time and (rsr_time|int) < (rsh_time|int)) %}
-            rsr
-          {% endif %}
-      next_work_at_url_coords:
-        value_template: >
-          {% set zone = 'zone.'+states('sensor.next_work_at') %}
+          {% set zone = 'zone.rsh' %}
           {{ state_attr(zone, 'latitude') }}%2C{{ state_attr(zone, 'longitude') }}
       home_url_coords:
         value_template: >
           {% set zone = 'zone.home' %}
           {{ state_attr(zone, 'latitude') }}%2C{{ state_attr(zone, 'longitude') }}
       time_to_leave_car_commute:
-        value_template: "{{ ((strptime(states('sensor.work_start_time'), '%Y-%m-%dT%H:%M:%S%z') - timedelta(minutes=states('sensor.hjem_til_'+states('sensor.next_work_at'))|int+10))|as_local).isoformat() }}"
+        value_template: >-
+          {{
+            ((strptime(states('sensor.work_start_time'), '%Y-%m-%dT%H:%M:%S%z')
+            - timedelta(minutes=states('sensor.hjem_til_rsh')|int+10))|as_local).isoformat()
+          }}
         device_class: timestamp
       work_start_time:
-        value_template: "{{ (strptime(state_attr('calendar.vagtplan_'+states('sensor.next_work_at'), 'start_time'), '%Y-%m-%d %H:%M:%S')|as_local).isoformat() }}"
+        value_template: "{{ (strptime(state_attr('calendar.vagtplan_arbejde', 'start_time'), '%Y-%m-%d %H:%M:%S')|as_local).isoformat() }}"
         device_class: timestamp
       work_end_time:
-        value_template: "{{ (strptime(state_attr('calendar.vagtplan_rsr', 'end_time') if is_state('calendar.vagtplan_rsr', 'on') else state_attr('calendar.vagtplan_rsh', 'end_time'), '%Y-%m-%d %H:%M:%S')|as_local).isoformat() }}"
+        value_template: "{{ (strptime(state_attr('calendar.vagtplan_arbejde', 'end_time'), '%Y-%m-%d %H:%M:%S')|as_local).isoformat() }}"
         device_class: timestamp
       commute_status_car:
         value_template: >
-          {%- if is_state('sensor.next_work_at', 'rsr') -%}
-            {%- if states('sensor.hjem_til_rsr')|int > 50 -%}
-              bad
-            {%- elif states('sensor.hjem_til_rsr')|int > 35 -%}
-              ok
-            {%- else -%}
-              good
-            {%- endif -%}
-          {%- elif is_state('sensor.next_work_at', 'rsh') -%}
-            {%- if states('sensor.hjem_til_rsh')|int > 45 -%}
-              bad
-            {%- elif states('sensor.hjem_til_rsh')|int > 25 -%}
-              ok
-            {%- else -%}
-              good
-            {%- endif -%}
+          {%- if states('sensor.hjem_til_rsh')|int > 45 -%}
+            bad
+          {%- elif states('sensor.hjem_til_rsh')|int > 25 -%}
+            ok
           {%- else -%}
-            unknown
+            good
           {%- endif -%}
       commute_status_transit:
         value_template: >

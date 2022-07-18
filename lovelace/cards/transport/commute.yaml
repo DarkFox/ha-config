@@ -100,95 +100,20 @@ cards:
     transition_time: 250
     states:
       car:
-        type: vertical-stack
-        cards:
-          - type: horizontal-stack
-            cards:
-              - type: "custom:button-card"
-                entity: sensor.hjem_til_rsr
-                # size: 24px
-                name: RSR
-                label: "[[[ return states['sensor.hjem_til_rsr'].attributes['route']; ]]]"
-                layout: icon_name_state
-                show_state: true
-                show_label: true
-                triggers_update:
-                  - sensor.next_work_at
-                icon: >-
-                  [[[
-                    if (states['sensor.next_work_at'].state == 'rsr')
-                      return "mdi:arrow-right";
-                    else
-                      return "mdi:alpha-x-circle-outline"
-                  ]]]
-                styles:
-                  icon:
-                    - color: >-
-                        [[[
-                          if (states['sensor.next_work_at'].state == 'rsr')
-                            return "var(--primary-text-color)";
-                          else
-                            return "var(--disabled-text-color)"
-                        ]]]
-                  card:
-                    - color: >-
-                        [[[
-                          if (states['sensor.next_work_at'].state == 'rsr')
-                            return "var(--primary-text-color)";
-                          else
-                            return "var(--disabled-text-color)"
-                        ]]]
-
-              - type: "custom:button-card"
-                entity: sensor.hjem_til_rsh
-                # size: 24px
-                name: RSH
-                label: "[[[ return states['sensor.hjem_til_rsh'].attributes['route']; ]]]"
-                layout: icon_name_state
-                show_state: true
-                show_label: true
-                triggers_update:
-                  - sensor.next_work_at
-                icon: >-
-                  [[[
-                    if (states['sensor.next_work_at'].state == 'rsh')
-                      return "mdi:arrow-right";
-                    else
-                      return "mdi:alpha-x-circle-outline"
-                  ]]]
-                styles:
-                  icon:
-                    - color: >-
-                        [[[
-                          if (states['sensor.next_work_at'].state == 'rsh')
-                            return "var(--primary-text-color)";
-                          else
-                            return "var(--disabled-text-color)"
-                        ]]]
-                  card:
-                    - color: >-
-                        [[[
-                          if (states['sensor.next_work_at'].state == 'rsh')
-                            return "var(--primary-text-color)";
-                          else
-                            return "var(--disabled-text-color)"
-                        ]]]
-
-          - type: custom:config-template-card
-            variables:
-              ORIGIN: states['sensor.home_url_coords'].state
-              DESTINATION: states['sensor.next_work_at_url_coords'].state
-              KEY: states['sensor.google_maps_embed_key'].state
-            entities:
-              - sensor.home_url_coords
-              - sensor.next_work_at_url_coords
-              - sensor.google_maps_embed_key
-              - sensor.hjem_til_rsr
-              - sensor.hjem_til_rsh
-            card:
-              type: iframe
-              url: "${'https://www.google.com/maps/embed/v1/directions?origin='+ORIGIN+'&destination='+DESTINATION+'&key='+KEY}"
-              aspect_ratio: 75%
+        type: custom:config-template-card
+        variables:
+          ORIGIN: states['sensor.home_url_coords'].state
+          DESTINATION: states['sensor.work_url_coords'].state
+          KEY: states['sensor.google_maps_embed_key'].state
+        entities:
+          - sensor.home_url_coords
+          - sensor.work_url_coords
+          - sensor.google_maps_embed_key
+          - sensor.hjem_til_rsh
+        card:
+          type: iframe
+          url: "${'https://www.google.com/maps/embed/v1/directions?origin='+ORIGIN+'&destination='+DESTINATION+'&key='+KEY}"
+          aspect_ratio: 75%
 
       transit:
         type: vertical-stack

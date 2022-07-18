@@ -36,13 +36,24 @@ sensor:
     sensors:
       martin_next_scheduled_destination:
         friendly_name: "Next Scheduled Destination"
-        value_template: "{{ state_attr('calendar.personlig', 'location') }}"
+        value_template: "{{ state_attr('calendar.personlig_bil', 'location') }}"
       martin_next_scheduled_at:
         friendly_name: "Next Scheduled at"
-        value_template: "{{ (strptime(state_attr('calendar.personlig', 'start_time'), '%Y-%m-%d %H:%M:%S')).isoformat() if state_attr('calendar.personlig', 'location') else '' }}"
+        value_template: >-
+          {{
+            (strptime(state_attr('calendar.personlig_bil', 'start_time'), '%Y-%m-%d %H:%M:%S')).isoformat()
+            if state_attr('calendar.personlig_bil', 'location') else ''
+          }}
         device_class: timestamp
       time_to_leave_next_scheduled:
-        value_template: "{{ ((strptime(state_attr('calendar.personlig', 'start_time'), '%Y-%m-%d %H:%M:%S') - timedelta(minutes=states('sensor.martin_til_destination')|int+15))|as_local).isoformat() if state_attr('calendar.personlig', 'location') else '' }}"
+        value_template: >-
+          {{
+            ((
+              strptime(state_attr('calendar.personlig_bil', 'start_time'), '%Y-%m-%d %H:%M:%S')
+              - timedelta(minutes=states('sensor.martin_til_destination')|int+15)
+            )|as_local).isoformat()
+            if state_attr('calendar.personlig_bil', 'location') else ''
+          }}
         device_class: timestamp
       martin_to_home_dir_of_travel:
         friendly_name: "Direction of Travel to Home"
@@ -54,11 +65,7 @@ sensor:
       martin_to_work_distance_change:
         friendly_name: "Distance change to Work"
         value_template: >-
-          {% if is_state('sensor.next_work_at', 'rsr') %}
-            {{ state_attr('sensor.proximity_martin_to_rsr_stats', 'change') }}
-          {% else %}
-            {{ state_attr('sensor.proximity_martin_to_rsh_stats', 'change') }}
-          {% endif %}
+          {{ state_attr('sensor.proximity_martin_to_rsh_stats', 'change') }}
         unit_of_measurement: "m"
 
   - platform: derivative
@@ -118,8 +125,8 @@ binary_sensor:
           hours: 24
       martin_next_scheduled_destination_active:
         value_template: >-
-          {%- set martin_next_scheduled_at = strptime(states('sensor.martin_next_scheduled_at'), '%Y-%m-%dT%H:%M:%S%z') -%}
-          {%- if martin_next_scheduled_at != 'unavailable' -%}
+          {%- set martin_next_scheduled_at = strptime(states('sensor.martin_next_scheduled_at'), '%Y-%m-%dT%H:%M:%S%z', '-1') -%}
+          {%- if martin_next_scheduled_at != '-1' -%}
             {{ martin_next_scheduled_at - timedelta(hours=12) < now() }}
           {%- else -%}
             False
@@ -127,9 +134,18 @@ binary_sensor:
 
       martin_next_scheduled_destination_leave_soon:
         value_template: >-
-          {%- set time_to_leave_next_scheduled = strptime(states('sensor.time_to_leave_next_scheduled'), '%Y-%m-%dT%H:%M:%S%z') -%}
-          {%- if time_to_leave_next_scheduled != 'unavailable' -%}
+          {%- set time_to_leave_next_scheduled = strptime(states('sensor.time_to_leave_next_scheduled'), '%Y-%m-%dT%H:%M:%S%z', '-1') -%}
+          {%- if time_to_leave_next_scheduled != '-1' -%}
             {{ time_to_leave_next_scheduled - timedelta(minutes=30) < now() }}
+          {%- else -%}
+            False
+          {%- endif -%}
+
+      martin_next_scheduled_destination_time_to_leave:
+        value_template: >-
+          {%- set time_to_leave_next_scheduled = strptime(states('sensor.time_to_leave_next_scheduled'), '%Y-%m-%dT%H:%M:%S%z', '-1') -%}
+          {%- if time_to_leave_next_scheduled != '-1' -%}
+            {{ time_to_leave_next_scheduled - timedelta(minutes=5) < now() }}
           {%- else -%}
             False
           {%- endif -%}
@@ -147,9 +163,6 @@ automation:
     action:
       - service: homeassistant.update_entity
         target:
-          entity_id: sensor.hjem_til_rsr
-      - service: homeassistant.update_entity
-        target:
           entity_id: sensor.hjem_til_rsh
 
   - alias: "Commute - Update sensors outside commute time"
@@ -162,9 +175,6 @@ automation:
         entity_id: binary_sensor.commute_soon
         state: "off"
     action:
-      - service: homeassistant.update_entity
-        target:
-          entity_id: sensor.hjem_til_rsr
       - service: homeassistant.update_entity
         target:
           entity_id: sensor.hjem_til_rsh
@@ -196,35 +206,36 @@ automation:
       - service: homeassistant.update_entity
         target:
           entity_id: sensor.martin_til_destination
-#   ## Notifications ##
-#   - alias: presence notification
-#     trigger:
-#       - platform: state
-#         entity_id: binary_sensor.martin_presence
-#         from: "on"
-#         to: "off"
-#       - platform: state
-#         entity_id: binary_sensor.martin_presence
-#         from: "off"
-#         to: "on"
-#     action:
-#       - service: script.debug_notification
-#         data_template:
-#           message: "Presence: {{ states('binary_sensor.martin_presence') }}"
-#           title: "Presence"
 
-#   - alias: home soon notification
-#     trigger:
-#       - platform: state
-#         entity_id: binary_sensor.martin_home_soon
-#         from: "on"
-#         to: "off"
-#       - platform: state
-#         entity_id: binary_sensor.martin_home_soon
-#         from: "off"
-#         to: "on"
-#     action:
-#       - service: script.debug_notification
-#         data_template:
-#           message: "Home Soon: {{ states('binary_sensor.martin_home_soon') }}"
-#           title: "Home Soon"
+  #   ## Notifications ##
+  - alias: presence notification
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.martin_presence
+        from: "on"
+        to: "off"
+      - platform: state
+        entity_id: binary_sensor.martin_presence
+        from: "off"
+        to: "on"
+    action:
+      - service: script.debug_notification
+        data_template:
+          message: "Presence: {{ states('binary_sensor.martin_presence') }}"
+          title: "Presence"
+
+  - alias: home soon notification
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.martin_home_soon
+        from: "on"
+        to: "off"
+      - platform: state
+        entity_id: binary_sensor.martin_home_soon
+        from: "off"
+        to: "on"
+    action:
+      - service: script.debug_notification
+        data_template:
+          message: "Home Soon: {{ states('binary_sensor.martin_home_soon') }}"
+          title: "Home Soon"
