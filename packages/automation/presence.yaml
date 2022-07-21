@@ -36,23 +36,23 @@ sensor:
     sensors:
       martin_next_scheduled_destination:
         friendly_name: "Next Scheduled Destination"
-        value_template: "{{ state_attr('calendar.personlig_bil', 'location') }}"
+        value_template: "{{ state_attr('calendar.personlig', 'location') }}"
       martin_next_scheduled_at:
         friendly_name: "Next Scheduled at"
         value_template: >-
           {{
-            (strptime(state_attr('calendar.personlig_bil', 'start_time'), '%Y-%m-%d %H:%M:%S')).isoformat()
-            if state_attr('calendar.personlig_bil', 'location') else ''
+            (strptime(state_attr('calendar.personlig', 'start_time'), '%Y-%m-%d %H:%M:%S')|as_local).isoformat()
+            if state_attr('calendar.personlig', 'location') else ''
           }}
         device_class: timestamp
       time_to_leave_next_scheduled:
         value_template: >-
           {{
             ((
-              strptime(state_attr('calendar.personlig_bil', 'start_time'), '%Y-%m-%d %H:%M:%S')
-              - timedelta(minutes=states('sensor.martin_til_destination')|int+15)
+              strptime(state_attr('calendar.personlig', 'start_time'), '%Y-%m-%d %H:%M:%S')
+              - timedelta(minutes=states('sensor.martin_til_destination')|int+20)
             )|as_local).isoformat()
-            if state_attr('calendar.personlig_bil', 'location') else ''
+            if state_attr('calendar.personlig', 'location') else ''
           }}
         device_class: timestamp
       martin_to_home_dir_of_travel:
@@ -145,7 +145,7 @@ binary_sensor:
         value_template: >-
           {%- set time_to_leave_next_scheduled = strptime(states('sensor.time_to_leave_next_scheduled'), '%Y-%m-%dT%H:%M:%S%z', '-1') -%}
           {%- if time_to_leave_next_scheduled != '-1' -%}
-            {{ time_to_leave_next_scheduled - timedelta(minutes=5) < now() }}
+            {{ time_to_leave_next_scheduled < now() }}
           {%- else -%}
             False
           {%- endif -%}

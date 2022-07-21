@@ -44,10 +44,12 @@ automation:
     trigger:
       - platform: state
         entity_id:
-          - binary_sensor.time_to_leave_car_commute
-          - binary_sensor.martin_next_scheduled_destination_time_to_leave
+          - binary_sensor.commute_soon
+          - binary_sensor.martin_next_scheduled_destination_leave_soon
         from: "off"
         to: "on"
+        for:
+          minutes: 10
     condition:
       - alias: "If at home"
         condition: state
@@ -58,8 +60,22 @@ automation:
         service: switch.turn_on
         target:
           entity_id: switch.vw_connect_climatisation
-      - delay:
-          minutes: 5
+
+  - id: time_to_leave_notification
+    alias: time_to_leave_notification
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.time_to_leave_car_commute
+          - binary_sensor.martin_next_scheduled_destination_time_to_leave
+        from: "off"
+        to: "on"
+    condition:
+      - alias: "If at home"
+        condition: state
+        entity_id: person.martin
+        state: "home"
+    action:
       - service: script.notify_everywhere
         data:
           message: Tid til at tage afsted!
