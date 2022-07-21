@@ -1,3 +1,33 @@
+media_player:
+  - platform: universal
+    name: Soveværelse TV
+    children:
+      - media_player.sovevarelse_tv_dlna
+    commands:
+      turn_on:
+        service: switch.turn_on
+        data:
+          entity_id: switch.sovevaerelse_tv
+      turn_off:
+        service: switch.turn_off
+        data:
+          entity_id: switch.sovevaerelse_tv
+      volume_up:
+        service: switch.turn_on
+        data:
+          entity_id: switch.sovevaerelse_soundbar_volume_up
+      volume_down:
+        service: switch.turn_on
+        data:
+          entity_id: switch.sovevaerelse_soundbar_volume_down
+      volume_mute:
+        service: switch.turn_on
+        data:
+          entity_id: switch.sovevaerelse_soundbar_mute
+    attributes:
+      state: switch.sovevaerelse_tv
+    device_class: tv
+
 input_select:
   sovevaerelse_soundbar_volume_remote_state:
     initial: "off"
@@ -12,7 +42,7 @@ switch:
       sovevaerelse_tv:
         friendly_name: Soveværelse TV
         icon_template: mdi:television
-        value_template: "{{ not is_state('media_player.sovevarelse_tv', 'unavailable') }}"
+        value_template: "{{ not is_state('media_player.sovevarelse_tv_dlna', 'unavailable') }}"
         turn_on:
           service: script.turn_on
           data:
@@ -42,11 +72,6 @@ script:
       - service: switch.turn_on
         data:
           entity_id: switch.sovevaerelse_tv_power
-      - delay:
-          seconds: 2
-      - service: script.turn_on
-        data:
-          entity_id: script.sovevaerelse_soundbar_fix_audio_lag
 
   sovevaerelse_tv_off:
     sequence:
@@ -110,25 +135,15 @@ automation:
     initial_state: true
     trigger:
       - platform: state
-        entity_id: binary_sensor.sovevaerelse_video_out
-        to: "on"
-      - platform: state
-        entity_id: input_select.bedroom_room_state
-        to: "active"
-    condition:
-      - condition: state
-        entity_id: binary_sensor.sovevaerelse_video_out
-        state: "on"
-      - condition: state
-        entity_id: input_select.bedroom_room_state
-        state: "active"
-      - condition: state
         entity_id: switch.sovevaerelse_tv
-        state: "off"
+        from: "off"
+        to: "on"
+        for:
+          seconds: 3
     action:
-      - service: switch.turn_on
+      - service: script.turn_on
         data:
-          entity_id: switch.sovevaerelse_tv
+          entity_id: script.sovevaerelse_soundbar_fix_audio_lag
 
   - alias: sovevaerelse_tv_off
     initial_state: true
