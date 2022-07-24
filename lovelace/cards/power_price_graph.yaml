@@ -1,8 +1,7 @@
 type: "custom:apexcharts-card"
-graph_span: 48h
+graph_span: 12h
 span:
-  start: day
-  offset: +0H
+  start: hour
 header:
   title: Elpris
   show: true
@@ -36,24 +35,12 @@ now:
   label: Now
   color: red
 series:
-  - entity: sensor.nordpool_kwh_dk2_dkk
-    name: I dag
-    opacity: 0.7
-    extend_to: now
-    data_generator: |
-      var a = entity.attributes.raw_today.map((start, index) => {
-        return [new Date(start["start"]).getTime(), entity.attributes.raw_today[index]["value"]];
-      });
-      var b = [a[a.length - 1][0] + 3600000, entity.attributes.raw_tomorrow[0]["value"]];
-      a.push( b );
-      return a;
-
-  - entity: sensor.nordpool_kwh_dk2_dkk
+  - entity: sensor.el_priser
     name: I morgen
     opacity: 0.7
     data_generator: |
-      return entity.attributes.raw_tomorrow.map((start, index) => {
-        return [new Date(start["start"]).getTime(), entity.attributes.raw_tomorrow[index]["value"]];
+      return entity.attributes.prices.map((start, index) => {
+        return [new Date(start["start"]).getTime(), entity.attributes.prices[index]["value"]];
       });
 
 apex_config:
