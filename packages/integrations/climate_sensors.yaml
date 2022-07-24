@@ -1,4 +1,10 @@
 sensor:
+  - platform: statistics
+    name: "Average Balcony Brightness"
+    entity_id: sensor.altan_lysstyrke
+    state_characteristic: average_linear
+    sampling_size: 5
+
   - platform: min_max
     type: mean
     name: Stue Temperatur
@@ -200,6 +206,6 @@ sensor:
       udenfor_temperature_feels_like:
         friendly_name: Udenfor Temperatur Føles Som
         value_template: >
-          {%- set temp = states('sensor.weatherflow_air_temperature')|float -%}
+          {%- set temp = states('sensor.altan_temperatur')|float -%}
           {%- set humidity = states('sensor.weatherflow_absolute_humidity')|float -%}
           {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
