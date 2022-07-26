@@ -11,7 +11,7 @@ sensor:
     sensors:
       udenfor:
         friendly_name: Udenfor
-        temperature_sensor: sensor.altan_temperatur
+        temperature_sensor: sensor.weatherflow_air_temperature
         humidity_sensor: sensor.weatherflow_absolute_humidity
         pressure_sensor: sensor.weatherflow_barometric_pressure
 
@@ -95,114 +95,6 @@ sensor:
         device_class: pressure
         unit_of_measurement: "hPa"
 
-      dmi_vejr:
-        friendly_name: "DMI Vejr"
-        value_template: >-
-          {{ states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text | regex_findall_index("<overskriftkoebenhavnognordsjaelland.+><text>(.*?)<\/text><\/overskriftkoebenhavnognordsjaelland>", 0) }}
-        attribute_templates:
-          date: >-
-            {{ states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text | regex_findall_index("<dato.+><text>(.*?)<\/text><\/dato>", 0) }}
-          validity: >-
-            {{ states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text | regex_findall_index("<reggyld.+><text>(.*?)<\/text><\/reggyld>", 0) }}
-          content: >-
-            {{ states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text | regex_findall_index("<koebenhavnognordsjaelland.+><text>(.*?)<\/text><\/koebenhavnognordsjaelland>", 0) }}
-
-      dmi_vejr_tts:
-        value_template: "Vejrudsigt: {{ states('sensor.dmi_vejr') }}."
-        attribute_templates:
-          text: >-
-            {% if states('sensor.dmi_aktuel_varsel') %}
-              Vejr Varsel kategori {{ state_attr('sensor.dmi_aktuel_varsel', 'category') }}: {{ states('sensor.dmi_aktuel_varsel') }}.
-              {{ state_attr('sensor.dmi_aktuel_varsel', 'text') }}.
-            {% endif %}
-            {{ state_attr('sensor.dmi_vejr', 'content') | replace(' temp.', ' temperatur') | replace(' Temp.', ' Temperatur') | replace(' temp ', ' temperatur ') | replace(' Temp ', ' Temperatur ') }}
-
-      dmi_aktuel_varsel:
-        friendly_name: "DMI Aktuel Varsel"
-        value_template: >-
-          {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].warningTitle }}
-        attribute_templates:
-          text: >-
-            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].warningText }}
-          additional_text: >-
-            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].additionalText }}
-          valid_from: >-
-            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].validFromText }}
-          valid_to: >-
-            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].validToText }}
-          issued_at: >-
-            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].issuedAtText }}
-          category: >-
-            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].formattedCategory }}
-          valid_from_timestamp: >-
-            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].validFrom }}
-          valid_to_timestamp: >-
-            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].validTo }}
-          entity_picture: >-
-            /local/downloads/dmi_warning_icons/{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].icon }}
-
-  - platform: rest
-    name: dmi_weather_raw
-    resource: !secret dmi_weather_url
-    headers:
-      User-Agent: !secret user_agent
-    scan_interval: 300
-    value_template: "{{ value_json.regiondata[0].products[0].timestamp }}"
-    json_attributes:
-      - regiondata
-
-  - platform: rest
-    name: dmi_warnings_raw
-    resource: !secret dmi_warnings_url
-    headers:
-      User-Agent: !secret user_agent
-    scan_interval: 300
-    force_update: True
-    value_template: "{{ 0 if value_json.warnings|length < 1 else value_json.warnings[0].time }}"
-    json_attributes:
-      - warnings
-      - day0
-      - day1
-      - day2
-      - day3
-      - day4
-      - day5
-      - vandstand
-      - favorite
-
-  - platform: rest
-    name: dmi_warnings_specific_raw
-    resource: !secret dmi_warnings_url
-    headers:
-      User-Agent: !secret user_agent
-    scan_interval: 31536000
-    force_update: True
-    value_template: "{{ 0 if value_json.warnings|length < 1 else value_json.warnings[0].time }}"
-    json_attributes:
-      - locationWarnings
-      - actualWarnings
-      - fivedayWarnings
-
-mqtt:
-  sensor:
-    - name: "DMI Aktuelle Varsler"
-      state_topic: "dmi_current_warnings/state"
-      json_attributes_topic: "dmi_current_warnings/attributes"
-
-    - name: "DMI Kommende Varsler"
-      state_topic: "dmi_future_warnings/state"
-      json_attributes_topic: "dmi_future_warnings/attributes"
-
-binary_sensor:
-  - platform: template
-    sensors:
-      show_weather_warnings:
-        value_template: "{{ not is_state('sensor.dmi_aktuelle_varsler', '0') }}"
-  - platform: template
-    sensors:
-      show_coming_weather_warnings:
-        value_template: "{{ not is_state('sensor.dmi_kommende_varsler', '0') }}"
-
 automation:
   - alias: lightning_warning
     initial_state: true
@@ -210,9 +102,9 @@ automation:
       platform: template
       value_template: >-
         {{
-          not is_state('sensor.blitzortung_lightning_distance', 'unknown')
-          and not is_state('sensor.blitzortung_lightning_distance', 'unavailable')
-          and (states('sensor.blitzortung_lightning_distance') | int) < 20
+          not is_state('sensor.weatherflow_last_lightning_strike_distance', 'unknown')
+          and not is_state('sensor.weatherflow_last_lightning_strike_distance', 'unavailable')
+          and (states('sensor.weatherflow_last_lightning_strike_distance') | int) < 20
         }}
 
       for:
@@ -221,92 +113,4 @@ automation:
       - service: notify.telegram_darkfox
         data_template:
           title: "Vejr Varsel: Torden"
-          message: "Lynnedslag {{ states('sensor.blitzortung_lightning_distance') }} {{ state_attr('sensor.blitzortung_lightning_distance', 'unit_of_measurement') }} væk."
-
-  - alias: severe_weather_warning
-    initial_state: true
-    trigger:
-      platform: template
-      value_template: "{{ (state_attr('sensor.dmi_aktuel_varsel', 'category') | int) > 1 }}"
-    action:
-      - service: notify.telegram_darkfox
-        data_template:
-          title: "Vejr Varsel: {{ states('sensor.dmi_aktuel_varsel') }}"
-          message: "{{ state_attr('sensor.dmi_aktuel_varsel', 'text') }}"
-
-  - alias: update_dmi_warning_specific_sensor
-    trigger:
-      - platform: state
-        entity_id: sensor.dmi_warnings_raw
-      - platform: state
-        entity_id: binary_sensor.home_assistant_loaded
-        to: "on"
-    condition:
-      - condition: template
-        value_template: "{{ states.sensor.dmi_warnings_raw.attributes.warnings|length > 0 }}"
-    action:
-      service: homeassistant.update_entity
-      data:
-        entity_id: sensor.dmi_warnings_specific_raw
-
-  - alias: update_dmi_warning_sensor
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: sensor.dmi_warnings_raw
-      - platform: state
-        entity_id: binary_sensor.home_assistant_loaded
-        to: "on"
-    action:
-      - delay:
-          seconds: 10
-
-      - service: mqtt.publish
-        data_template:
-          topic: "dmi_current_warnings/state"
-          retain: True
-          payload: >-
-            {{ 0 if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings | length }}
-
-      - service: mqtt.publish
-        data_template:
-          topic: "dmi_current_warnings/attributes"
-          retain: True
-          payload: >-
-            {% if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 %}
-              {}
-            {% else %}
-              {
-              {% for warning in states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings %}
-                "{{ warning.issuedAtText }} {{warning.warningTitle}}": {{ warning | string | replace("'", '"') }}{%- if not loop.last %},{%- endif %}
-              {% endfor %}
-              }
-            {% endif %}
-
-      - service: mqtt.publish
-        data_template:
-          topic: "dmi_future_warnings/state"
-          retain: True
-          payload: >-
-            {{ 0 if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.fivedayWarnings|length }}
-
-      - service: mqtt.publish
-        data_template:
-          topic: "dmi_future_warnings/attributes"
-          retain: True
-          payload: >-
-            {% if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 %}
-              {}
-            {% else %}
-              {
-              {% for warning in states.sensor.dmi_warnings_specific_raw.attributes.fivedayWarnings %}
-                "{{ warning.issuedAtText }} {{warning.warningTitle}}": {{ warning | string | replace("'", '"') }}{%- if not loop.last %},{%- endif %}
-              {% endfor %}
-              }
-            {% endif %}
-
-      - service: downloader.download_file
-        data_template:
-          url: "https://www.dmi.dk/fileadmin/assets/Varselsikoner/{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].icon }}"
-          subdir: dmi_warning_icons
-          overwrite: true
+          message: "Lynnedslag {{ states('sensor.weatherflow_last_lightning_strike_distance') }} {{ state_attr('sensor.weatherflow_last_lightning_strike_distance', 'unit_of_measurement') }} væk."
