@@ -18,17 +18,41 @@ script:
 
   sovevaerelse_gardin:
     sequence:
-      - service: "cover.{{modus}}_cover"
-        target:
-          entity_id:
-            - cover.sovevaerelse_gardin_vindue
-            - cover.sovevaerelse_gardin_dor
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ modus == 'close' }}"
+            sequence:
+              - service: "cover.{{modus}}_cover"
+                target:
+                  entity_id:
+                    - cover.sovevaerelse_gardin_vindue
+              - delay:
+                  seconds: 30
+              - service: "cover.{{modus}}_cover"
+                target:
+                  entity_id:
+                    - cover.sovevaerelse_gardin_dor
+        default:
+          - service: "cover.{{modus}}_cover"
+            target:
+              entity_id:
+                - cover.sovevaerelse_gardin_vindue
+                - cover.sovevaerelse_gardin_dor
+
   sovevaerelse_gardin_position:
     sequence:
       - service: cover.set_cover_position
         target:
           entity_id:
             - cover.sovevaerelse_gardin_vindue
+        data:
+          position: "{{position}}"
+      - delay:
+          seconds: 30
+      - service: cover.set_cover_position
+        target:
+          entity_id:
             - cover.sovevaerelse_gardin_dor
         data:
           position: "{{position}}"
