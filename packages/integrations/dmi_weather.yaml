@@ -110,6 +110,21 @@ sensor:
       - fivedayWarnings
 
 automation:
+  - alias: update_dmi_weather_radar
+    trigger:
+      - platform: state
+        entity_id: sensor.dmi_weather_raw
+      - platform: state
+        entity_id: binary_sensor.home_assistant_loaded
+        to: "on"
+    action:
+      - service: downloader.download_file
+        data_template:
+          url: "https://www.dmi.dk/dmidk_byvejrWS/rest/image/gif/Radar/"
+          filename: radar.gif
+          subdir: dmi_weather_radar
+          overwrite: true
+
   - alias: severe_weather_warning
     initial_state: true
     trigger:
@@ -132,9 +147,9 @@ automation:
       - condition: template
         value_template: "{{ states.sensor.dmi_warnings_raw.attributes.warnings|length > 0 }}"
     action:
-      service: homeassistant.update_entity
-      data:
-        entity_id: sensor.dmi_warnings_specific_raw
+      - service: homeassistant.update_entity
+        data:
+          entity_id: sensor.dmi_warnings_specific_raw
 
   - alias: update_dmi_warning_sensor
     initial_state: true
