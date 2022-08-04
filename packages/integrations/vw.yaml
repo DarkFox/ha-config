@@ -1,906 +1,112 @@
-input_number:
-  id_3_target_soc:
-    name: Lademål
-    min: 50
-    max: 100
-    step: 10
+switch:
+  - platform: template
+    switches:
+      id3_charging:
+        friendly_name: ID3 Charging
+        value_template: "{{ not is_state('sensor.id3_charging_mode', 'off') }}"
+        icon_template: "{{ 'mdi:battery-charging' if not is_state('sensor.id3_charging_mode', 'off') else 'mdi:battery' }}"
+        turn_on:
+          service: volkswagen_we_connect_id.volkswagen_id_start_stop_charging
+          data:
+            vin: !secret vw_vin
+            start_stop: "start"
+        turn_off:
+          service: volkswagen_we_connect_id.volkswagen_id_start_stop_charging
+          data:
+            vin: !secret vw_vin
+            start_stop: "stop"
 
-mqtt:
-  climate:
-    # Send_if_off is deprecated. Don't believe the linter.
-    - name: ID.3 Klima
-      retain: true
-      current_temperature_topic: vw-connect/0/+/status/climatisationSettings/targetTemperature_C
-      mode_command_topic: virtual/id3/climatisation
-      mode_state_topic: vw-connect/0/+/remote/climatisation
-      mode_state_template: "{{ 'auto' if value == 'true' else 'off' }}"
-      modes:
-        - "off"
-        - "auto"
-      temperature_command_topic: !secret vw_connect_target_temperature_c_topic
-      temperature_state_topic: vw-connect/0/+/status/climatisationSettings/targetTemperature_C
-      action_topic: vw-connect/0/+/status/climatisationStatus/climatisationState
-      temp_step: 0.5
-      min_temp: 16
-      max_temp: 29.5
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
+      id3_climatisation:
+        friendly_name: ID3 Climatisation
+        value_template: "{{ is_state('binary_sensor.id3_climatising', 'on') }}"
+        icon_template: "{{ 'mdi:hvac' if is_state('binary_sensor.id3_climatising', 'on') else 'mdi:hvac-off' }}"
+        turn_on:
+          service: volkswagen_we_connect_id.volkswagen_id_set_climatisation
+          data:
+            vin: !secret vw_vin
+            start_stop: "start"
+        turn_off:
+          service: volkswagen_we_connect_id.volkswagen_id_set_climatisation
+          data:
+            vin: !secret vw_vin
+            start_stop: "stop"
 
-  switch:
-    - name: vw_connect_charging
-      command_topic: !secret vw_connect_charging_topic
-      state_topic: vw-connect/0/+/remote/charging
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_auto_unlock_plug_when_charged
-      command_topic: !secret vw_connect_auto_unlock_plug_when_charged_topic
-      state_topic: vw-connect/0/+/status/chargingSettings/autoUnlockPlugWhenCharged
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_reduced_charge_current_ac
-      command_topic: !secret vw_connect_reduced_charge_current_ac_topic
-      state_topic: vw-connect/0/+/status/chargingSettings/maxChargeCurrentAC
-      payload_on: "reduced"
-      payload_off: "maximum"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_climatisation
-      command_topic: !secret vw_connect_climatisation_topic
-      state_topic: vw-connect/0/+/remote/climatisation
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_climatisation_without_external_power
-      command_topic: !secret vw_connect_climatisation_without_external_power_topic
-      state_topic: vw-connect/0/+/status/climatisationSettings/climatisationWithoutExternalPower
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_climatization_at_unlock
-      command_topic: !secret vw_connect_climatization_at_unlock_topic
-      state_topic: vw-connect/0/+/status/climatisationSettings/climatizationAtUnlock
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_window_heating_enabled
-      command_topic: !secret vw_connect_window_heating_enabled_topic
-      state_topic: vw-connect/0/+/status/climatisationSettings/windowHeatingEnabled
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_climatisation_front_left
-      command_topic: !secret vw_connect_climatisation_front_left_topic
-      state_topic: vw-connect/0/+/status/climatisationSettings/zoneFrontLeftEnabled
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_climatisation_front_right
-      command_topic: !secret vw_connect_climatisation_front_right_topic
-      state_topic: vw-connect/0/+/status/climatisationSettings/zoneFrontRightEnabled
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-  binary_sensor:
-    - state_topic: vw-connect/0/+/info/connection
-      name: vw_connect_connection
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/windowHeatingStatus/windowHeatingStatus/front
-      name: vw_connect_window_heating_status_front
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/windowHeatingStatus/windowHeatingStatus/rear
-      name: vw_connect_window_heating_status_rear
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/climatisationTimer/1/enabled
-      name: vw_connect_climatisation_timer_1_enabled
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_climatisation_timer_1_recurring_on_mondays
-      state_topic: vw-connect/0/+/status/climatisationTimer/1/recurringTimer/recurringOn/mondays
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_climatisation_timer_1_recurring_on_tuesdays
-      state_topic: vw-connect/0/+/status/climatisationTimer/1/recurringTimer/recurringOn/tuesdays
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_climatisation_timer_1_recurring_on_wednesdays
-      state_topic: vw-connect/0/+/status/climatisationTimer/1/recurringTimer/recurringOn/wednesdays
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_climatisation_timer_1_recurring_on_thursdays
-      state_topic: vw-connect/0/+/status/climatisationTimer/1/recurringTimer/recurringOn/thursdays
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_climatisation_timer_1_recurring_on_fridays
-      state_topic: vw-connect/0/+/status/climatisationTimer/1/recurringTimer/recurringOn/fridays
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_climatisation_timer_1_recurring_on_saturdays
-      state_topic: vw-connect/0/+/status/climatisationTimer/1/recurringTimer/recurringOn/saturdays
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_climatisation_timer_1_recurring_on_sundays
-      state_topic: vw-connect/0/+/status/climatisationTimer/1/recurringTimer/recurringOn/sundays
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/climatisationTimer/2/enabled
-      name: vw_connect_climatisation_timer_2_enabled
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_climatisation_timer_2_recurring_on_mondays
-      state_topic: vw-connect/0/+/status/climatisationTimer/2/recurringTimer/recurringOn/mondays
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_climatisation_timer_2_recurring_on_tuesdays
-      state_topic: vw-connect/0/+/status/climatisationTimer/2/recurringTimer/recurringOn/tuesdays
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_climatisation_timer_2_recurring_on_wednesdays
-      state_topic: vw-connect/0/+/status/climatisationTimer/2/recurringTimer/recurringOn/wednesdays
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_climatisation_timer_2_recurring_on_thursdays
-      state_topic: vw-connect/0/+/status/climatisationTimer/2/recurringTimer/recurringOn/thursdays
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_climatisation_timer_2_recurring_on_fridays
-      state_topic: vw-connect/0/+/status/climatisationTimer/2/recurringTimer/recurringOn/fridays
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_climatisation_timer_2_recurring_on_saturdays
-      state_topic: vw-connect/0/+/status/climatisationTimer/2/recurringTimer/recurringOn/saturdays
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_climatisation_timer_2_recurring_on_sundays
-      state_topic: vw-connect/0/+/status/climatisationTimer/2/recurringTimer/recurringOn/sundays
-      payload_on: "true"
-      payload_off: "false"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_plug_connected
-      state_topic: vw-connect/0/+/status/plugStatus/plugConnectionState
-      payload_on: "connected"
-      payload_off: "disconnected"
-    - name: vw_connect_plug_locked
-      state_topic: vw-connect/0/+/status/plugStatus/plugLockState
-      payload_off: "locked"
-      payload_on: "unlocked"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - name: vw_connect_charging
-      state_topic: vw-connect/0/+/status/chargingStatus/chargingState
-      payload_on: "charging"
-      payload_off: "readyForCharging"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-  sensor:
-    - state_topic: vw-connect/0/+/status/batteryStatus/carCapturedTimestamp
-      name: vw_connect_car_captured_timestamp
-      value_template: "{{ value | as_timestamp | timestamp_local }}"
-      device_class: timestamp
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/climatisationStatus/climatisationState
-      name: vw_connect_climatisation_state
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/climatisationSettings/targetTemperature_C
-      name: vw_connect_target_temperature_c
-      unit_of_measurement: °C
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/climatisationStatus/remainingClimatisationTime_min
-      name: vw_connect_remaining_climatisation_time_min
-      unit_of_measurement: min
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/climatisationTimer/1/singleTimer/startDateTime
-      name: vw_connect_climatisation_timer_1_single_start_date_time
-      value_template: "{{ as_local(strptime(value, '%Y-%m-%dT%H:%M:%S%z'))}}"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/climatisationTimer/1/recurringTimer/startTime
-      name: vw_connect_climatisation_timer_1_recurring_start_time
-      value_template: >
-        {%- set schdtime = strptime((utcnow().strftime('%Y-%m-%d ') + value+'Z'), '%Y-%m-%d %H:%M%z')|as_local -%}
-        {{ schdtime.hour }}:{{ schdtime.minute }}
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/climatisationTimer/2/singleTimer/startDateTime
-      name: vw_connect_climatisation_timer_2_single_start_date_time
-      value_template: "{{ as_local(strptime(value, '%Y-%m-%dT%H:%M:%S%z'))}}"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/climatisationTimer/2/recurringTimer/startTime
-      name: vw_connect_climatisation_timer_2_recurring_start_time
-      value_template: >
-        {%- set schdtime = strptime((utcnow().strftime('%Y-%m-%d ') + value+'Z'), '%Y-%m-%d %H:%M%z')|as_local -%}
-        {{ schdtime.hour }}:{{ schdtime.minute }}
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/climatisationTimer/timeInCar
-      name: vw_connect_climatisation_timer_time_in_car
-      value_template: "{{ as_local(strptime(value, '%Y-%m-%dT%H:%M:%S%z'))}}"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/plugStatus/plugConnectionState
-      name: vw_connect_plug_connection_state
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/plugStatus/plugLockState
-      name: vw_connect_plug_lock_state
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/chargingSettings/targetSOC_pct
-      name: vw_connect_target_soc_pct
-      unit_of_measurement: "%"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/chargingStatus/chargeRate_kmph
-      name: vw_connect_charge_rate_kmph
-      unit_of_measurement: "km/t"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/chargingStatus/chargePower_kW
-      name: vw_connect_charge_power_kw
-      unit_of_measurement: "kW"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/chargingStatus/chargingState
-      name: vw_connect_charging_state
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/chargingStatus/remainingChargingTimeToComplete_min
-      name: vw_connect_remaining_charging_time_to_complete_min
-      unit_of_measurement: "min"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/chargeMode/preferredChargeMode
-      name: vw_connect_preferred_charge_mode
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/chargingStatus/chargeMode
-      name: vw_connect_charge_mode
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/batteryStatus/cruisingRangeElectric_km
-      name: vw_connect_cruising_range_electric_km
-      unit_of_measurement: "km"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/batteryStatus/currentSOC_pct
-      name: vw_connect_current_soc_pct
-      unit_of_measurement: "%"
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/climatisationRequestStatus/info
-      name: vw_connect_climatisation_request_status_info
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/climatisationRequestStatus/status
-      name: vw_connect_climatisation_request_status
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/climatisationSettingsRequestStatus/status
-      name: vw_connect_climatisation_settings_request_status
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-    - state_topic: vw-connect/0/+/status/chargingSettingsRequestStatus/status
-      name: vw_connect_charging_settings_request_status
-      availability_mode: all
-      availability:
-        - topic: "vw-connect/0/info/connection"
-          payload_available: "true"
-          payload_not_available: "false"
-        - topic: "iobroker/alive"
-          payload_available: "OK"
-          payload_not_available: "Bye"
-
-automation:
-  - alias: id3_hvac_mode_transform
-    initial_state: true
-    trigger:
-      - platform: mqtt
-        topic: virtual/id3/climatisation
-    action:
-      - service: "switch.turn_{{ 'on' if trigger.payload == 'auto' else 'off' }}"
-        data:
-          entity_id: switch.vw_connect_climatisation
-
-  - alias: "Set ID.3 target SoC slider"
-    initial_state: true
-    trigger:
-      platform: mqtt
-      topic: vw-connect/0/+/status/chargingSettings/targetSOC_pct
-    action:
-      service: input_number.set_value
-      target:
-        entity_id: input_number.id_3_target_soc
-      data:
-        value: "{{ trigger.payload }}"
-  - alias: "ID.3 target SoC slider moved"
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: input_number.id_3_target_soc
-    action:
-      service: mqtt.publish
-      data:
-        topic: !secret vw_connect_target_soc_pct_topic
-        retain: true
-        payload: "{{ states('input_number.id_3_target_soc') | int }}"
+      id3_reduced_ac_charging_speed:
+        friendly_name: ID3 Reduced AC Charging Speed
+        value_template: "{{ is_state('sensor.id3_max_charge_current_ac', 'reduced') }}"
+        icon_template: mdi:flash
+        turn_on:
+          service: volkswagen_we_connect_id.volkswagen_id_set_ac_charge_speed
+          data:
+            vin: !secret vw_vin
+            maximum_reduced: "reduced"
+        turn_off:
+          service: volkswagen_we_connect_id.volkswagen_id_set_ac_charge_speed
+          data:
+            vin: !secret vw_vin
+            maximum_reduced: "maximum"
 
 binary_sensor:
   - platform: template
     sensors:
-      id_3_climatising:
-        friendly_name: "ID.3 Klimatisering"
-        value_template: "{{ states('sensor.vw_connect_remaining_climatisation_time_min') | int > 0 }}"
-
-      id_3_timer_1:
-        friendly_name: "ID.3 Timer 1"
-        value_template: "{{ is_state('binary_sensor.vw_connect_climatisation_timer_1_enabled', 'on') }}"
-        attribute_templates:
-          recurring: "{{ is_state('group.id_3_timer_1_recurring', 'on') }}"
-          single_start_date_time: "{{ states('sensor.vw_connect_climatisation_timer_1_single_start_date_time') }}"
-          recurring_start_time: "{{ states('sensor.vw_connect_climatisation_timer_1_recurring_start_time') }}"
-          recurring_on_mondays: "{{ is_state('binary_sensor.vw_connect_climatisation_timer_1_recurring_on_mondays', 'on') }}"
-          recurring_on_tuesdays: "{{ is_state('binary_sensor.vw_connect_climatisation_timer_1_recurring_on_tuesdays', 'on') }}"
-          recurring_on_wednesdays: "{{ is_state('binary_sensor.vw_connect_climatisation_timer_1_recurring_on_wednesdays', 'on') }}"
-          recurring_on_thursdays: "{{ is_state('binary_sensor.vw_connect_climatisation_timer_1_recurring_on_thursdays', 'on') }}"
-          recurring_on_fridays: "{{ is_state('binary_sensor.vw_connect_climatisation_timer_1_recurring_on_fridays', 'on') }}"
-          recurring_on_saturdays: "{{ is_state('binary_sensor.vw_connect_climatisation_timer_1_recurring_on_saturdays', 'on') }}"
-          recurring_on_sundays: "{{ is_state('binary_sensor.vw_connect_climatisation_timer_1_recurring_on_sundays', 'on') }}"
-          description: >-
-            {% if is_state('binary_sensor.id_3_timer_1', 'on') %}
-              {% set attr = states.binary_sensor.id_3_timer_1.attributes %}
-              {% if attr.recurring %}
-                {%- set days = [
-                  'man' if attr.recurring_on_mondays,
-                  "tir" if attr.recurring_on_tuesdays,
-                  "ons" if attr.recurring_on_wednesdays,
-                  "tor" if attr.recurring_on_thursdays,
-                  "fre" if attr.recurring_on_fridays,
-                  "lør" if attr.recurring_on_saturdays,
-                  "søn" if attr.recurring_on_sundays
-                ]|select("defined")|list -%}
-                {{ attr.recurring_start_time }} - {{ days|join(', ') }}.
-              {% else %}
-                {{ attr.single_start_date_time }}
-              {% endif %}
-            {% else %}
-              Off
-            {% endif %}
-
-      id_3_timer_2:
-        friendly_name: "ID.3 Timer 2"
-        value_template: "{{ is_state('binary_sensor.vw_connect_climatisation_timer_2_enabled', 'on') }}"
-        attribute_templates:
-          recurring: "{{ is_state('group.id_3_timer_2_recurring', 'on') }}"
-          single_start_date_time: "{{ states('sensor.vw_connect_climatisation_timer_2_single_start_date_time') }}"
-          recurring_start_time: "{{ states('sensor.vw_connect_climatisation_timer_2_recurring_start_time') }}"
-          recurring_on_mondays: "{{ is_state('binary_sensor.vw_connect_climatisation_timer_2_recurring_on_mondays', 'on') }}"
-          recurring_on_tuesdays: "{{ is_state('binary_sensor.vw_connect_climatisation_timer_2_recurring_on_tuesdays', 'on') }}"
-          recurring_on_wednesdays: "{{ is_state('binary_sensor.vw_connect_climatisation_timer_2_recurring_on_wednesdays', 'on') }}"
-          recurring_on_thursdays: "{{ is_state('binary_sensor.vw_connect_climatisation_timer_2_recurring_on_thursdays', 'on') }}"
-          recurring_on_fridays: "{{ is_state('binary_sensor.vw_connect_climatisation_timer_2_recurring_on_fridays', 'on') }}"
-          recurring_on_saturdays: "{{ is_state('binary_sensor.vw_connect_climatisation_timer_2_recurring_on_saturdays', 'on') }}"
-          recurring_on_sundays: "{{ is_state('binary_sensor.vw_connect_climatisation_timer_2_recurring_on_sundays', 'on') }}"
-          description: >-
-            {% if is_state('binary_sensor.id_3_timer_2', 'on') %}
-              {% set attr = states.binary_sensor.id_3_timer_2.attributes %}
-              {% if attr.recurring %}
-                {%- set days = [
-                  'man' if attr.recurring_on_mondays,
-                  "tir" if attr.recurring_on_tuesdays,
-                  "ons" if attr.recurring_on_wednesdays,
-                  "tor" if attr.recurring_on_thursdays,
-                  "fre" if attr.recurring_on_fridays,
-                  "lør" if attr.recurring_on_saturdays,
-                  "søn" if attr.recurring_on_sundays
-                ]|select("defined")|list -%}
-                {{ attr.recurring_start_time }} - {{ days|join(', ') }}.
-              {% else %}
-                {{ attr.single_start_date_time }}
-              {% endif %}
-            {% else %}
-              Off
-            {% endif %}
+      id3_climatising:
+        friendly_name: "ID3 Klimatisering"
+        value_template: "{{ states('sensor.id3_remaining_climatisation_time') | int > 0 }}"
+        icon_template: "{{ 'mdi:hvac' if is_state('binary_sensor.id3_climatising', 'on') else 'mdi:hvac-off' }}"
+      id3_charging:
+        friendly_name: ID3 Is Charging
+        value_template: "{{ is_state('sensor.id3_charging_state', 'charging') }}"
+        icon_template: "{{ 'mdi:battery-charging' if not is_state('sensor.id3_charging', 'off') else 'mdi:battery' }}"
 
 sensor:
   - platform: template
     sensors:
-      id_3_battery:
-        friendly_name: "ID.3 Batteri"
-        unit_of_measurement: "%"
-        value_template: "{{ states('sensor.vw_connect_current_soc_pct') }}"
-        attribute_templates:
-          range_km: "{{ states('sensor.vw_connect_cruising_range_electric_km') }}"
-          target_soc_pct: "{{ states('sensor.vw_connect_target_soc_pct') }}"
-          charging_state: "{{ states('sensor.vw_connect_charging_state') }}"
-          charge_power_kw: "{{ states('sensor.vw_connect_charge_power_kw') }}"
-          charge_rate_kmph: "{{ states('sensor.vw_connect_charge_rate_kmph') }}"
-          charge_time_remaining: "{{ states('sensor.vw_connect_remaining_charging_time_to_complete') }}"
-          charge_time_remaining_min: "{{ states('sensor.vw_connect_remaining_charging_time_to_complete_min') }}"
-          charging_finished_at: "{{ states('sensor.vw_connect_charging_complete_at') }}"
-          unlock_plug_when_charged: "{{ is_state('binary_sensor.vw_connect_auto_unlock_plug_when_charged', 'on') }}"
-          plug_locked: "{{ is_state('sensor.vw_connect_plug_lock_state', 'locked') }}"
-          plug_connected: "{{ is_state('sensor.vw_connect_plug_connection_state', 'connected') }}"
-          is_charging: "{{ is_state('sensor.vw_connect_charging_state', 'charging') }}"
-          ac_current_limited: "{{ is_state('binary_sensor.vw_connect_reduced_charge_current_ac', 'on') }}"
-
-      id_3_climatisation:
-        friendly_name: "ID.3 Klimastyring"
-        unit_of_measurement: °C
-        value_template: "{{ states('sensor.vw_connect_target_temperature_c') }}"
-        attribute_templates:
-          state: "{{ states('sensor.vw_connect_climatisation_state') }}"
-          climatisation_without_external_power: "{{ is_state('switch.vw_connect_climatisation_without_external_power', 'on') }}"
-          time_in_car: "{{ states('sensor.vw_connect_climatisation_timer_time_in_car') }}"
-          window_heating_front: "{{ is_state('binary_sensor.vw_connect_window_heating_status_front', 'on') }}"
-          window_heating_rear: "{{ is_state('binary_sensor.vw_connect_window_heating_status_rear', 'on') }}"
-          target_temperature_c: "{{ states('sensor.vw_connect_target_temperature_c') }}"
-          front_left_zone_enabled: "{{ is_state('switch.vw_connect_climatisation_front_left', 'on') }}"
-          front_right_zone_enabled: "{{ is_state('switch.vw_connect_climatisation_front_right', 'on') }}"
-          remaining_climatisation_time_min: "{{ states('sensor.vw_connect_remaining_climatisation_time_min') }}"
-
-      vw_connect_remaining_charging_time_to_complete:
-        friendly_name: "Ladetid Tilbage"
-        value_template: "{{ (timedelta(minutes=states('sensor.vw_connect_remaining_charging_time_to_complete_min')|int)|string)[:-3] }}"
+      id3_remaining_charging_time_to_complete:
+        friendly_name: "ID3 Charging Time Remaining"
+        value_template: "{{ (timedelta(minutes=states('sensor.id3_remaining_charging_time')|int)|string)[:-3] }}"
         icon_template: mdi:clock-end
-      vw_connect_charging_complete_at:
-        friendly_name: Opladning færdig Tidspunkt
+      id3_charging_complete_at:
+        friendly_name: ID3 Charging Complete At
         value_template: >-
-          {%- if is_state('binary_sensor.vw_connect_charging', 'on') -%}
-            {%- set end_time = (states('sensor.vw_connect_remaining_charging_time_to_complete_min')|int*60) + (as_timestamp(now())|int) -%}
+          {%- if is_state('binary_sensor.id3_charging', 'on') -%}
+            {%- set end_time = (states('sensor.id3_remaining_charging_time')|int*60) + (as_timestamp(now())|int) -%}
             {{ end_time | timestamp_custom('%Y-%m-%d %H:%M') }}
           {%- else -%}
             unknown
           {%- endif -%}
         icon_template: mdi:clock-end
 
-group:
-  id_3_timer_1_recurring:
-    name: ID.3 Timer 1 Recurring
-    entities:
-      - binary_sensor.vw_connect_climatisation_timer_1_recurring_on_mondays
-      - binary_sensor.vw_connect_climatisation_timer_1_recurring_on_tuesdays
-      - binary_sensor.vw_connect_climatisation_timer_1_recurring_on_wednesdays
-      - binary_sensor.vw_connect_climatisation_timer_1_recurring_on_thursdays
-      - binary_sensor.vw_connect_climatisation_timer_1_recurring_on_fridays
-      - binary_sensor.vw_connect_climatisation_timer_1_recurring_on_saturdays
-      - binary_sensor.vw_connect_climatisation_timer_1_recurring_on_sundays
+rest_command:
+  update_abrp:
+    method: POST
+    headers:
+      authorization: !secret abrp_api_key
+    content_type: "charset=utf-8; application/x-www-form-urlencoded"
+    url: >
+      {% set tlm = {
+        "utc": int(as_timestamp(utcnow())),
+        "soc": int(states('sensor.id3_state_of_charge')),
+        "est_battery_range": float(states('sensor.id3_range_in_kilometers')),
+        "power": float(states('sensor.id3_charge_power')),
+        "is_charging": bool(states('binary_sensor.id3_charging')),
+        "is_dcfc": bool(is_state('sensor.id3_charge_type', 'dc'))
+      } -%}
+      https://api.iternio.com/1/tlm/send?token={{token}}&tlm={{tlm|to_json|urlencode}}
 
-  id_3_timer_2_recurring:
-    name: ID.3 Timer 2 Recurring
-    entities:
-      - binary_sensor.vw_connect_climatisation_timer_2_recurring_on_mondays
-      - binary_sensor.vw_connect_climatisation_timer_2_recurring_on_tuesdays
-      - binary_sensor.vw_connect_climatisation_timer_2_recurring_on_wednesdays
-      - binary_sensor.vw_connect_climatisation_timer_2_recurring_on_thursdays
-      - binary_sensor.vw_connect_climatisation_timer_2_recurring_on_fridays
-      - binary_sensor.vw_connect_climatisation_timer_2_recurring_on_saturdays
-      - binary_sensor.vw_connect_climatisation_timer_2_recurring_on_sundays
+automation:
+  - alias: Push car to ABRP
+    initial_state: false
+    mode: queued
+    trigger:
+      - platform: state
+        entity_id:
+          - sensor.id3_state_of_charge
+          - sensor.id3_range_in_kilometers
+          - binary_sensor.id3_charging
+          - sensor.id3_charge_type
+      - platform: time_pattern
+        minutes: "/8"
+    action:
+      - service: rest_command.update_abrp
+        data:
+          token: !secret abrp_token
