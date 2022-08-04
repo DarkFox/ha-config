@@ -25,8 +25,11 @@ script:
       - service: homeassistant.update_entity
         data:
           entity_id: sensor.tts_greeting
-      - service: tts.google_cloud_say
+      - service: tts.cloud_say
         data_template:
+          language: da-DK
+          options:
+            gender: male
           entity_id: "{{ device_entity_id }}"
           message: >
             {{ states("sensor.tts_greeting") }}. Klokken er {{ states("sensor.time") }}.
@@ -465,9 +468,6 @@ automation:
       entity_id: input_select.sleep_state
       to: "in bed"
     action:
-      - service: cover.close_cover
-        data:
-          entity_id: cover.sovevaerelse_gardin
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
@@ -492,9 +492,6 @@ automation:
       to: "sleeping"
       from: "in bed"
     action:
-      - service: cover.close_cover
-        data:
-          entity_id: cover.sovevaerelse_gardin
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
@@ -624,7 +621,7 @@ automation:
     action:
       - service: cover.set_cover_position
         data:
-          entity_id: cover.sovevaerelse_gardin_dor
+          entity_id: cover.sovevaerelse_gardin_vindue
           position: 20
 
   - alias: alarm_action_10_minutes
@@ -640,8 +637,8 @@ automation:
     action:
       - service: cover.set_cover_position
         data:
-          entity_id: cover.sovevaerelse_gardin_dor
-          position: 30
+          entity_id: cover.sovevaerelse_gardin_vindue
+          position: 10
 
   - alias: alarm_action_20_minutes
     initial_state: true
@@ -656,8 +653,8 @@ automation:
     action:
       - service: cover.set_cover_position
         data:
-          entity_id: cover.sovevaerelse_gardin_dor
-          position: 50
+          entity_id: cover.sovevaerelse_gardin_vindue
+          position: 0
 
   - alias: snoozing_action
     initial_state: true
@@ -699,6 +696,10 @@ automation:
       - service: cover.open_cover
         data:
           entity_id: cover.sovevaerelse_gardin_dor
+      - service: cover.set_cover_position
+        data:
+          entity_id: cover.sovevaerelse_gardin_vindue
+          position: 30
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
@@ -745,9 +746,6 @@ automation:
       to: "awake"
       from: "waking"
     action:
-      - service: cover.open_cover
-        data:
-          entity_id: cover.sovevaerelse_gardin_dor
       - delay:
           seconds: 1
       - service: input_number.set_value
