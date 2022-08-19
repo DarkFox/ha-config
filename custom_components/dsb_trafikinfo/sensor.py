@@ -117,5 +117,5 @@ class DsbTrafikinfoSensor(Entity):
         return ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         return self.hass.data[self._name]
