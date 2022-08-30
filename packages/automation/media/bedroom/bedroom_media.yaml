@@ -71,6 +71,11 @@ script:
     sequence:
       - service: switch.turn_on
         data:
+          entity_id: switch.sovevaerelse_tv_afbryder
+      - delay:
+          seconds: 2
+      - service: switch.turn_on
+        data:
           entity_id: switch.sovevaerelse_tv_power
 
   sovevaerelse_tv_off:
@@ -131,7 +136,45 @@ script:
           entity_id: switch.sovevaerelse_soundbar_menu
 
 automation:
-  - alias: sovevaerelse_tv_on
+  - alias: Soveværelse TV on
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.bedroom_room_state
+        to: "active"
+    action:
+      - service: switch.turn_on
+        data:
+          entity_id: switch.sovevaerelse_tv_afbryder
+
+  - alias: Soveværelse TV off
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.bedroom_room_state
+        to: "off"
+        for:
+          minutes: 1
+      - platform: state
+        entity_id: media_player.sovevaerelse_chromecast
+        from: "playing"
+        for:
+          minutes: 1
+    condition:
+      - condition: state
+        entity_id: input_select.bedroom_room_state
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: media_player.sovevaerelse_chromecast
+            state: "playing"
+    action:
+      - service: switch.turn_off
+        data:
+          entity_id: switch.sovevaerelse_tv_afbryder
+
+  - alias: sovevaerelse_tv_fix_audio_lag
     initial_state: true
     trigger:
       - platform: state
@@ -145,7 +188,7 @@ automation:
         data:
           entity_id: script.sovevaerelse_soundbar_fix_audio_lag
 
-  - alias: sovevaerelse_tv_off
+  - alias: sovevaerelse_tv_idle
     initial_state: true
     trigger:
       - platform: state

@@ -160,42 +160,6 @@ automation:
                   entity_id: input_select.kokken_soundbar_volume_remote_state
                   state: "up"
 
-  - alias: Kitchen Speaker reboot
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: media_player.kokken_soundbar
-        to: unavailable
-        for:
-          minutes: 1
-      - platform: state
-        entity_id: media_player.kokken_chromecast
-        to: "off"
-    condition:
-      - condition: state
-        entity_id: media_player.kokken_soundbar
-        state: unavailable
-        for:
-          minutes: 1
-      - condition: state
-        entity_id: media_player.kokken_chromecast
-        state: "off"
-    action:
-      - service: switch.turn_off
-        data:
-          entity_id: switch.kitchen_speaker_power
-      - delay:
-          seconds: 5
-      - wait_template: "{{ is_state('media_player.kokken_soundbar_songpal', 'unavailable') }}"
-        timeout: "00:01:00"
-        continue_on_timeout: true
-      - service: switch.turn_on
-        data:
-          entity_id: switch.kitchen_speaker_power
-      - wait_template: "{{ not is_state('media_player.kokken_soundbar_songpal', 'unavailable') }}"
-        timeout: "00:05:00"
-        continue_on_timeout: true
-
   - alias: Kitchen Speaker active trigger
     initial_state: true
     trigger:
@@ -254,66 +218,39 @@ automation:
           entity_id: media_player.kokken_soundbar_songpal
           is_volume_muted: true
 
-  - alias: kitchen_tv_chromecast_on
+  - alias: Kitchen TV on
     initial_state: true
     trigger:
       - platform: state
-        entity_id: input_select.kitchen_room_state
-        to: "active"
-      - platform: state
-        entity_id: media_player.kokken_chromecast
-    condition:
-      - condition: state
-        entity_id: input_select.kitchen_room_state
-        state: "active"
-      - condition: or
-        conditions:
-          - condition: state
-            entity_id: media_player.kokken_chromecast
-            state: "idle"
-          - condition: state
-            entity_id: media_player.kokken_chromecast
-            state: "playing"
-          - condition: state
-            entity_id: media_player.kokken_chromecast
-            state: "paused"
+        entity_id:
+          - media_player.kokken_chromecast
+          - media_player.alle_hojttalere
+        to: "playing"
     action:
       - service: switch.turn_on
         data:
           entity_id: switch.kokken_tv_afbryder
-      - service: media_player.turn_on
-        data:
-          entity_id: media_player.kokken_soundbar_songpal
-      - service: media_player.select_source
-        data:
-          entity_id: media_player.kokken_soundbar_songpal
-          source: Audio in
 
-  - alias: kitchen_tv_chromecast_off
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: media_player.kokken_chromecast
-      to: "off"
-      for:
-        minutes: 1
-    action:
-      - service: switch.turn_off
-        data:
-          entity_id: switch.kokken_tv_afbryder
-      - service: media_player.turn_off
-        data:
-          entity_id: media_player.kokken_soundbar_songpal
-
-  - alias: Kitchen TV inactive trigger
+  - alias: Kitchen TV off
     initial_state: true
     trigger:
       - platform: state
-        entity_id: input_select.kitchen_room_state
-        to: "inactive"
-      - platform: state
-        entity_id: input_select.kitchen_room_state
+        entity_id:
+          - media_player.kokken_chromecast
+          - media_player.alle_hojttalere
+          - media_player.kokken_soundbar
         to: "off"
+        for:
+          minutes: 2
+    condition:
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id:
+              - media_player.kokken_chromecast
+              - media_player.alle_hojttalere
+              - media_player.kokken_soundbar
+            state: "playing"
     action:
       service: switch.turn_off
       data:

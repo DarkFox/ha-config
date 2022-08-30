@@ -34,9 +34,8 @@ binary_sensor:
       living_room_video_out:
         value_template: >-
           {{
-            (is_state('input_select.living_room_matrix_input', 'Nvidia Shield') and is_state('binary_sensor.living_room_nvidia_shield', 'on'))
-            or (is_state('input_select.living_room_matrix_input', 'Nintendo Switch') and is_state('device_tracker.nintendo_switch_wired', 'home'))
-            or (is_state('input_select.living_room_matrix_input', 'PC') and is_state('binary_sensor.martin_pc_activity', 'on'))
+            is_state('media_player.sync_box', 'idle')
+            or is_state('media_player.sync_box', 'playing')
           }}
 
 script:
@@ -48,6 +47,72 @@ script:
           option: "{{ source }}"
 
 automation:
+  - alias: living_room_tv_on
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.living_room_video_out
+        to: "on"
+    action:
+      - service: switch.turn_on
+        data:
+          entity_id: switch.stue_tv_afbryder
+      - delay:
+          seconds: 10
+      - service: media_player.turn_on
+        data:
+          entity_id:
+            - media_player.stue_tv
+            - media_player.stue_soundbar_songpal
+
+  - alias: living_room_soundbar_on
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: media_player.alle_hojttalere
+        to: "playing"
+    action:
+      - service: switch.turn_on
+        data:
+          entity_id: switch.stue_tv_afbryder
+      - delay:
+          seconds: 10
+      - service: media_player.turn_off
+        data:
+          entity_id:
+            - media_player.stue_tv
+      - service: media_player.turn_on
+        data:
+          entity_id:
+            - media_player.stue_soundbar_songpal
+
+  - alias: living_room_tv_off
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.living_room_video_out
+          - media_player.alle_hojttalere
+          - media_player.stue_soundbar
+        to: "off"
+        for:
+          minutes: 2
+    condition:
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id:
+              - media_player.alle_hojttalere
+              - media_player.stue_soundbar
+            state: "playing"
+          - condition: state
+            entity_id: binary_sensor.living_room_video_out
+            state: "on"
+    action:
+      - service: switch.turn_off
+        data:
+          entity_id: switch.stue_tv_afbryder
+
   # - alias: living_room_nvidia_shield_on
   #   initial_state: true
   #   trigger:

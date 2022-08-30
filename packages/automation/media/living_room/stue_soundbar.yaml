@@ -29,46 +29,6 @@ switch:
               entity_id: input_boolean.living_room_soundbar_night_mode_state
 
 automation:
-  - alias: Living Room Speaker reboot
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: media_player.stue_soundbar
-        to: unavailable
-        for:
-          minutes: 5
-      - platform: state
-        entity_id: binary_sensor.living_room_video_out
-        to: "off"
-    condition:
-      - condition: state
-        entity_id: media_player.stue_soundbar
-        state: unavailable
-        for:
-          minutes: 5
-      - condition: state
-        entity_id: binary_sensor.living_room_video_out
-        state: "off"
-      - condition: state
-        entity_id: media_player.stue_tv
-        state: "off"
-      - condition: state
-        entity_id: switch.projector
-        state: "off"
-    action:
-      - service: switch.turn_off
-        data:
-          entity_id: switch.stue_soundbar_afbryder
-      - wait_template: "{{ is_state('media_player.stue_soundbar_songpal', 'unavailable') }}"
-        timeout: "00:01:00"
-        continue_on_timeout: true
-      - service: switch.turn_on
-        data:
-          entity_id: switch.stue_soundbar_afbryder
-      - wait_template: "{{ not is_state('media_player.stue_soundbar_songpal', 'unavailable') }}"
-        timeout: "00:05:00"
-        continue_on_timeout: true
-
   - alias: living_room_soundbar_night_mode
     initial_state: true
     trigger:
