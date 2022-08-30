@@ -1104,3 +1104,95 @@ automation:
             gender: male
           entity_id: media_player.badevaerelse_mini
           message: "Badeværelse separat lysstyring {{'tilkoblet' if states('input_boolean.bathroom_separate_light_profile') == 'on' else 'frakoblet'}}"
+
+  # Altan Tryk #
+  - alias: balcony_switch_on
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: altan_tryk
+          event: 1002
+    action:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.balcony_activity_override
+                state: "on"
+              - condition: state
+                entity_id: input_select.balcony_room_state
+                state: "off"
+            sequence:
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.balcony_room_state
+                  option: "active"
+        default:
+          - event: cycle_light_profile
+            event_data:
+              room: balcony
+
+  - alias: balcony_switch_off
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: altan_tryk
+          event: 2002
+    action:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.balcony_activity_override
+                state: "on"
+            sequence:
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.balcony_room_state
+                  option: "off"
+        default:
+          - event: decrease_light_profile
+            event_data:
+              room: balcony
+
+  - alias: balcony_activity_override_toggle
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: altan_tryk
+          event: 1003
+    action:
+      - service: input_boolean.toggle
+        data:
+          entity_id: input_boolean.balcony_activity_override
+      # - service: tts.cloud_say
+      #   data_template:
+      #     language: da-DK
+      #     options:
+      #       gender: male
+      #     entity_id: media_player.altan_mini
+      #     message: "Badeværelse overstyring {{'tilkoblet' if states('input_boolean.balcony_activity_override') == 'on' else 'frakoblet'}}"
+
+  - alias: balcony_separate_light_profile_toggle
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: altan_tryk
+          event: 2003
+    action:
+      - service: input_boolean.toggle
+        data:
+          entity_id: input_boolean.balcony_separate_light_profile
+      # - service: tts.cloud_say
+      #   data_template:
+      #     language: da-DK
+      #     options:
+      #       gender: male
+      #     entity_id: media_player.altan_mini
+      #     message: "Badeværelse separat lysstyring {{'tilkoblet' if states('input_boolean.balcony_separate_light_profile') == 'on' else 'frakoblet'}}"
