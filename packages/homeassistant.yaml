@@ -159,6 +159,28 @@ automation:
         data:
           message: "Ny Home Assistant opdatering! Version {{ states('sensor.docker_hub') }}"
 
+  - alias: Uncommitted Changes Notification
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: bbinary_sensor.uncommitted_changes
+        to: "on"
+        for:
+          hours: 2
+      - platform: state
+        entity_id: sun.sun
+        to: "above_horizon"
+    condition:
+      - condition: state
+        entity_id: binary_sensor.uncommitted_changes
+        state: "on"
+        for:
+          hours: 2
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Uncommitted changes!"
+
   - alias: Clear TTS Cache
     initial_state: true
     trigger:
