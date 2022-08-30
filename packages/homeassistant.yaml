@@ -58,6 +58,8 @@ rest_command:
 binary_sensor:
   - platform: template
     sensors:
+      uncommitted_changes:
+        value_template: "{{ is_state('sensor.uncommitted_changes', 'on') }}"
       home_assistant_loaded:
         value_template: >-
           {{ is_state('input_boolean.home_assistant_started', 'on') }}
@@ -65,6 +67,11 @@ binary_sensor:
           seconds: 30
 
 sensor:
+  - platform: command_line
+    name: Uncommitted Changes
+    command: 'git update-index --refresh >> /dev/null && git diff-index --quiet HEAD -- || echo "on";'
+    scan_interval: 300
+
   - platform: rest
     resource: http://ip.jsontest.com
     name: external_ip
