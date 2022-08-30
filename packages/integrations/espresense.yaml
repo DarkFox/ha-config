@@ -1,0 +1,23 @@
+sensor:
+  # One entry for each beacon you want to track
+  - platform: mqtt_room
+    device_id: "iBeacon:0741276c-4568-47cd-9775-e06c34e4a161-100-1"
+    name: "DarkPhone Room"
+    state_topic: "espresense/devices/iBeacon:0741276c-4568-47cd-9775-e06c34e4a161-100-1"
+    timeout: 10
+    away_timeout: 120
+
+automation:
+  - alias: espresense notification
+    trigger:
+      - platform: state
+        entity_id: sensor.darkphone_room
+        from: "not_home"
+    action:
+      - service: script.debug_notification
+        data_template:
+          message: "Espresense: {{ states('sensor.darkphone_room') }}"
+          title: "Espresense"
+      - service: notify.telegram_darkfox
+        data:
+          message: "Espresense: {{ states('sensor.darkphone_room') }}"
