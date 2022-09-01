@@ -21,3 +21,27 @@ automation:
       - service: notify.telegram_darkfox
         data:
           message: "Espresense: {{ states('sensor.darkphone_room') }}"
+
+  - alias: Turn off BLE transmitter
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.darkphone_beacon_used
+        to: "off"
+    action:
+      - service: notify.mobile_app_darkphone
+        data:
+          message: "command_ble_transmitter"
+          data:
+            command: "turn_off"
+
+  - alias: Turn on BLE transmitter
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.darkphone_beacon_used
+        to: "on"
+    action:
+      - service: notify.mobile_app_darkphone
+        data:
+          message: "command_ble_transmitter"
+          data:
+            command: "turn_on"
