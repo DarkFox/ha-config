@@ -157,7 +157,20 @@ automation:
           minutes: 165
         variables:
           idle_start: 180
+    condition:
+      - condition: state
+        entity_id: device_tracker.darkphone
+        state: "not_home"
     action:
+      - condition: or
+        conditions:
+          - condition: "{{ trigger.to_state.state == 'dc' }}"
+          - condition: and
+            conditions:
+              - condition: "{{ trigger.to_state.state == 'ac' }}"
+              - condition: time
+                after: "09:00:00"
+                before: "21:00:00"
       - variables:
           time_left: "{{ (trigger.for|int)-(idle_start|int) }}"
       - service: notify.telegram_darkfox
