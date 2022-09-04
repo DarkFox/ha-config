@@ -138,6 +138,39 @@ automation:
             Bilen er ladt op til {{ states('sensor.id3_state_of_charge') }}/{{ states('sensor.id3_target_state_of_charge') }}%.
             Færdig om {{ states('sensor.id3_remaining_charging_time') }} minutter.
 
+  - id: warn_charger_idle_fees
+    alias: warn_charger_idle_fees
+    initial_state: true
+    mode: restart
+    trigger:
+      - platform: state
+        entity_id: sensor.id3_charge_type
+        to: "dc"
+        for:
+          minutes: 75
+        variables:
+          idle_start: 90
+      - platform: state
+        entity_id: sensor.id3_charge_type
+        to: "ac"
+        for:
+          minutes: 165
+        variables:
+          idle_start: 180
+    action:
+      - variables:
+          time_left: "{{ (trigger.for|int)-(idle_start|int) }}"
+      - service: notify.telegram_darkfox
+        data:
+          message: Idle fees starter om {{ time_left }} minutter!
+      - wait_template: "{{ not is_state('sensor.id3_charge_type', 'invalid') }}"
+        timeout:
+          minutes: 5
+      - condition: "{{ not wait.completed }}"
+      - service: automation.trigger
+        target:
+          entity_id: automation.warn_charger_idle_fees
+
   - alias: notify_car_charged
     id: notify_car_charged
     initial_state: true
