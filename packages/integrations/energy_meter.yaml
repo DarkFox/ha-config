@@ -303,6 +303,19 @@ input_number:
     unit_of_measurement: kr
 
 automation:
+  - alias: Get Carnot Prices
+    id: get_carnot_prices
+    initial_state: true
+    trigger:
+      platform: homeassistant
+      event: start
+    action:
+      - delay:
+          seconds: 5
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.carnot_spotpris_dk2
+
   - alias: Update Energy Cost
     initial_state: true
     trigger:
@@ -355,7 +368,11 @@ template:
           {%- if p == 'unknown' -%}
             {{ p }}
           {%- else -%}
-            {{ p[0]["value"] }}
+            {% for price in p %}
+              {% if (price['start']|as_datetime) <= now() and (price['end']|as_datetime) > now() %}
+                {{ price["value"] }}
+              {% endif %}
+            {% endfor %}
           {%- endif -%}
         attributes:
           min: >-
@@ -467,45 +484,194 @@ template:
                 {% endfor %}
               ]
             {%- endif -%}
+          next_local_minimum: >-
+            {%- set p = this.attributes.local_minima | default('unknown') -%}
+            {%- if p == 'unknown' -%}
+              {{ p }}
+            {%- else -%}
+              {{ p[0] }}
+            {%- endif -%}
+          local_minima: >-
+            {%- set p = this.attributes.prices | default('unknown') -%}
+            {%- if p == 'unknown' -%}
+              {{ p }}
+            {%- else -%}
+              [
+              {%- for price in p -%}
+                {%-
+                  if not loop.first and not loop.last
+                  and (price['start']|as_datetime) > now()
+                  and p[loop.index0-1]['value'] >= price['value']
+                  and p[loop.index0+1]['value'] >= price['value']
+                -%}
+                  {
+                    'start': '{{ price["start"] }}',
+                    'end': '{{ price["end"] }}',
+                    'value': '{{ price["value"] }}'
+                  },
+                {%- endif -%}
+              {%- endfor -%}
+              ]
+            {%- endif -%}
+          next_local_minimum_3hr: >-
+            {%- set p = this.attributes.local_minima_3hr | default('unknown') -%}
+            {%- if p == 'unknown' -%}
+              {{ p }}
+            {%- else -%}
+              {{ p[0] }}
+            {%- endif -%}
+          local_minima_3hr: >-
+            {%- set p = this.attributes.three_hour_seg | default('unknown') -%}
+            {%- if p == 'unknown' -%}
+              {{ p }}
+            {%- else -%}
+              [
+              {%- for price in p -%}
+                {%-
+                  if not loop.first and not loop.last
+                  and (price['start']|as_datetime) > now()
+                  and p[loop.index0-1]['value'] >= price['value']
+                  and p[loop.index0+1]['value'] >= price['value']
+                -%}
+                  {
+                    'start': '{{ price["start"] }}',
+                    'end': '{{ price["end"] }}',
+                    'value': '{{ price["value"] }}'
+                  }, 
+                {%- endif -%}
+              {%- endfor -%}
+              ]
+            {%- endif -%}
+          next_local_minimum_6hr: >-
+            {%- set p = this.attributes.local_minima_6hr | default('unknown') -%}
+            {%- if p == 'unknown' -%}
+              {{ p }}
+            {%- else -%}
+              {{ p[0] }}
+            {%- endif -%}
+          local_minima_6hr: >-
+            {%- set p = this.attributes.six_hour_seg | default('unknown') -%}
+            {%- if p == 'unknown' -%}
+              {{ p }}
+            {%- else -%}
+              [
+              {%- for price in p -%}
+                {%-
+                  if not loop.first and not loop.last
+                  and (price['start']|as_datetime) > now()
+                  and p[loop.index0-1]['value'] >= price['value']
+                  and p[loop.index0+1]['value'] >= price['value']
+                -%}
+                  {
+                    'start': '{{ price["start"] }}',
+                    'end': '{{ price["end"] }}',
+                    'value': '{{ price["value"] }}'
+                  },
+                {%- endif -%}
+              {%- endfor -%}
+              ]
+            {%- endif -%}
+          # prices: >-
+          #   [
+          #   {%- set prices = state_attr('sensor.raw_electricity_price', 'prices') -%}
+          #   {%- for k in prices -%}
+          #     {%- if k|int(-1) > -1 -%}
+          #       {%- set s = {
+          #         "abonnement": 0.03,
+          #         "elafgift": 0.763,
+          #         "systemydelse": 0.0,
+          #         "transport_lavlast_2021": 0.2363,
+          #         "transport_spidslast_2021": 0.6307,
+          #         "transport_lavlast_2022": 0.3003,
+          #         "transport_spidslast_2022": 0.7651,
+          #       } -%}
+          #       {%- set afgiftsum = s.abonnement + s.elafgift + s.systemydelse -%}
+          #       {%- set cdt = (now().strftime('%Y-%m-%d %H:00:00.0%z') | as_datetime) + timedelta( hours = k|int ) -%}
+          #       {%- if cdt < as_datetime("2022-04-01 00:00:00.00+01:00") -%}
+          #         {%- set transport_lavlast = s.transport_lavlast_2021 -%}
+          #         {%- set transport_spidslast = s.transport_spidslast_2021 -%}
+          #       {%- else -%}
+          #         {%- set transport_lavlast = s.transport_lavlast_2022 -%}
+          #         {%- set transport_spidslast = s.transport_spidslast_2022 -%}
+          #       {%- endif -%}
+          #       {
+          #       "start": "{{ cdt }}",
+          #       "end": "{{ cdt + timedelta( hours = 1) }}",
+          #       {%- if cdt.month >= 10 or cdt.month < 4 -%}
+          #         {%- if cdt.hour >= 17 and cdt.hour < 20 -%}
+          #           "value": {{ ((prices[k] + transport_spidslast + afgiftsum) * 1.25) | round(4) }}
+          #         {%- else -%}
+          #           "value":  {{ ((prices[k] + transport_lavlast + afgiftsum) * 1.25) | round(4) }}
+          #         {%- endif -%}
+          #       {%- else -%}
+          #         "value": {{ ((prices[k] + transport_lavlast + afgiftsum) * 1.25) | round(4) }}
+          #       {%- endif -%}
+          #       },
+          #     {%- endif -%}
+          #   {%- endfor -%}
+          #   ]
           prices: >-
             [
-            {%- set prices = state_attr('sensor.raw_electricity_price', 'prices') -%}
+            {%- set prices = state_attr('sensor.carnot_spotpris_dk2', 'predictions') -%}
             {%- for k in prices -%}
-              {%- if k|int(-1) > -1 -%}
-                {%- set s = {
-                  "abonnement": 0.03,
-                  "elafgift": 0.763,
-                  "systemydelse": 0.0,
-                  "transport_lavlast_2021": 0.2363,
-                  "transport_spidslast_2021": 0.6307,
-                  "transport_lavlast_2022": 0.3003,
-                  "transport_spidslast_2022": 0.7651,
-                } -%}
-                {%- set afgiftsum = s.abonnement + s.elafgift + s.systemydelse -%}
-                {%- set cdt = (now().strftime('%Y-%m-%d %H:00:00.0%z') | as_datetime) + timedelta( hours = k|int ) -%}
-                {%- if cdt < as_datetime("2022-04-01 00:00:00.00+01:00") -%}
-                  {%- set transport_lavlast = s.transport_lavlast_2021 -%}
-                  {%- set transport_spidslast = s.transport_spidslast_2021 -%}
-                {%- else -%}
-                  {%- set transport_lavlast = s.transport_lavlast_2022 -%}
-                  {%- set transport_spidslast = s.transport_spidslast_2022 -%}
-                {%- endif -%}
-                {
-                "start": "{{ cdt }}",
-                "end": "{{ cdt + timedelta( hours = 1) }}",
-                {%- if cdt.month >= 10 or cdt.month < 4 -%}
-                  {%- if cdt.hour >= 17 and cdt.hour < 20 -%}
-                    "value": {{ ((prices[k] + transport_spidslast + afgiftsum) * 1.25) | round(4) }}
-                  {%- else -%}
-                    "value":  {{ ((prices[k] + transport_lavlast + afgiftsum) * 1.25) | round(4) }}
-                  {%- endif -%}
-                {%- else -%}
-                  "value": {{ ((prices[k] + transport_lavlast + afgiftsum) * 1.25) | round(4) }}
-                {%- endif -%}
-                },
+              {%- set price = k -%}
+              {%- set s = {
+                "abonnement": 0.03,
+                "elafgift": 0.763,
+                "systemydelse": 0.0,
+                "transport_lavlast_2021": 0.2363,
+                "transport_spidslast_2021": 0.6307,
+                "transport_lavlast_2022": 0.3003,
+                "transport_spidslast_2022": 0.7651,
+              } -%}
+              {%- set afgiftsum = s.abonnement + s.elafgift + s.systemydelse -%}
+              {%- set cdt = (price['dktime'].split('+')[0] | as_datetime | as_local) -%}
+              {%- if cdt < as_datetime("2022-04-01 00:00:00.00+01:00") -%}
+                {%- set transport_lavlast = s.transport_lavlast_2021 -%}
+                {%- set transport_spidslast = s.transport_spidslast_2021 -%}
+              {%- else -%}
+                {%- set transport_lavlast = s.transport_lavlast_2022 -%}
+                {%- set transport_spidslast = s.transport_spidslast_2022 -%}
               {%- endif -%}
+              {
+              "start": "{{ cdt }}",
+              "end": "{{ cdt + timedelta( hours = 1) }}",
+              {%- if cdt.month >= 10 or cdt.month < 4 -%}
+                {%- if cdt.hour >= 17 and cdt.hour < 20 -%}
+                  "value": {{ (((price['prediction']|float/1000.0) + transport_spidslast + afgiftsum) * 1.25) | round(4) }}
+                {%- else -%}
+                  "value":  {{ (((price['prediction']|float/1000.0) + transport_lavlast + afgiftsum) * 1.25) | round(4) }}
+                {%- endif -%}
+              {%- else -%}
+                "value": {{ (((price['prediction']|float/1000.0) + transport_lavlast + afgiftsum) * 1.25) | round(4) }}
+              {%- endif -%}
+              },
             {%- endfor -%}
             ]
+      - name: "El Næste Billige 1 Time"
+        device_class: timestamp
+        state: "{{ state_attr('sensor.el_priser', 'next_local_minimum')['start'] }}"
+        attributes:
+          start: "{{ state_attr('sensor.el_priser', 'next_local_minimum')['start'] }}"
+          end: "{{ state_attr('sensor.el_priser', 'next_local_minimum')['end'] }}"
+          value: "{{ state_attr('sensor.el_priser', 'next_local_minimum')['value'] }}"
+          icon: mdi:clock-time-one
+      - name: "El Næste Billige 3 Timer"
+        device_class: timestamp
+        state: "{{ state_attr('sensor.el_priser', 'next_local_minimum_3hr')['start'] }}"
+        attributes:
+          start: "{{ state_attr('sensor.el_priser', 'next_local_minimum_3hr')['start'] }}"
+          end: "{{ state_attr('sensor.el_priser', 'next_local_minimum_3hr')['end'] }}"
+          value: "{{ state_attr('sensor.el_priser', 'next_local_minimum_3hr')['value'] }}"
+          icon: mdi:clock-time-three
+      - name: "El Næste Billige 6 Timer"
+        device_class: timestamp
+        state: "{{ state_attr('sensor.el_priser', 'next_local_minimum_6hr')['start'] }}"
+        attributes:
+          start: "{{ state_attr('sensor.el_priser', 'next_local_minimum_6hr')['start'] }}"
+          end: "{{ state_attr('sensor.el_priser', 'next_local_minimum_6hr')['end'] }}"
+          value: "{{ state_attr('sensor.el_priser', 'next_local_minimum_6hr')['value'] }}"
+          icon: mdi:clock-time-six
       - name: "El Billigste 1 Time"
         device_class: timestamp
         state: "{{ state_attr('sensor.el_priser', 'prices')[state_attr('sensor.el_priser', 'cheapest_1_hr')|int]['start'] }}"
@@ -551,8 +717,27 @@ sensor:
     round: 3
     method: left
 
+  - platform: command_line
+    name: Carnot spotpris DK2
+    unit_of_measurement: "kr/kWh"
+    command: >
+      curl
+      --request GET "https://whale-app-dquqw.ondigitalocean.app/openapi/get_predict?energysource=spotprice&region=dk2&daysahead=7"
+      --header "accept: application/json"
+      --header "apikey: {{ states('sensor.carnot_api_key') }}"
+      --header "username: {{ states('sensor.carnot_username') }}"
+    scan_interval:
+      hours: 1
+    value_template: '{% if value_json is not none %}OK - {{value_json["predictions"][0]["addedtime"]}}{% else %}Unavailable{% endif %}'
+    json_attributes:
+      - predictions
+
   - platform: template
     sensors:
+      carnot_api_key:
+        value_template: !secret carnot_api_key
+      carnot_username:
+        value_template: !secret carnot_username
       energy_cost_hourly:
         friendly_name: "Elomkostning"
         value_template: "{{ (((states('sensor.pow_k_import_active')|float)/1000) * (states('sensor.el_priser')|float)) | round(3) }}"
