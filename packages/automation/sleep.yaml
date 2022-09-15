@@ -619,10 +619,16 @@ automation:
       for:
         minutes: 5
     action:
-      - service: cover.set_cover_position
-        data:
-          entity_id: cover.sovevaerelse_gardin_vindue
-          position: 20
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: sun.sun
+                state: "above_horizon"
+            sequence:
+              - service: cover.set_cover_position
+                data:
+                  entity_id: cover.sovevaerelse_gardin_vindue
+                  position: 20
 
   - alias: alarm_action_10_minutes
     initial_state: true
@@ -635,10 +641,16 @@ automation:
       for:
         minutes: 10
     action:
-      - service: cover.set_cover_position
-        data:
-          entity_id: cover.sovevaerelse_gardin_vindue
-          position: 10
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: sun.sun
+                state: "above_horizon"
+            sequence:
+              - service: cover.set_cover_position
+                data:
+                  entity_id: cover.sovevaerelse_gardin_vindue
+                  position: 10
 
   - alias: alarm_action_20_minutes
     initial_state: true
@@ -651,10 +663,16 @@ automation:
       for:
         minutes: 20
     action:
-      - service: cover.set_cover_position
-        data:
-          entity_id: cover.sovevaerelse_gardin_vindue
-          position: 0
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: sun.sun
+                state: "above_horizon"
+            sequence:
+              - service: cover.set_cover_position
+                data:
+                  entity_id: cover.sovevaerelse_gardin_vindue
+                  position: 0
 
   - alias: snoozing_action
     initial_state: true
@@ -693,13 +711,19 @@ automation:
       entity_id: input_select.sleep_state
       to: "waking"
     action:
-      - service: cover.open_cover
-        data:
-          entity_id: cover.sovevaerelse_gardin_dor
-      - service: cover.set_cover_position
-        data:
-          entity_id: cover.sovevaerelse_gardin_vindue
-          position: 30
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: sun.sun
+                state: "above_horizon"
+            sequence:
+              - service: cover.open_cover
+                data:
+                  entity_id: cover.sovevaerelse_gardin_dor
+              - service: cover.set_cover_position
+                data:
+                  entity_id: cover.sovevaerelse_gardin_vindue
+                  position: 30
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
@@ -809,9 +833,15 @@ automation:
           entity_id: "automation.reset_scene_transition_time"
       - delay:
           minutes: 5
-      - service: cover.open_cover
-        data:
-          entity_id: cover.sovevaerelse_gardin
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: sun.sun
+                state: "above_horizon"
+            sequence:
+              - service: cover.open_cover
+                data:
+                  entity_id: cover.sovevaerelse_gardin
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
