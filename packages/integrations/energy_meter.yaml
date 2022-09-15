@@ -430,6 +430,91 @@ template:
               {%- endfor -%}
               ]
             {%- endif -%}
+          next_local_maximum: >-
+            {%- set p = this.attributes.local_maxima | default('unknown') -%}
+            {%- if p == 'unknown' -%}
+              {{ p }}
+            {%- else -%}
+              {{ p[0] }}
+            {%- endif -%}
+          local_maxima: >-
+            {%- set p = this.attributes.prices | default('unknown') -%}
+            {%- if p == 'unknown' -%}
+              {{ p }}
+            {%- else -%}
+              [
+              {%- for price in p -%}
+                {%-
+                  if not loop.first and not loop.last
+                  and (price['start']|as_datetime) >= (now()-timedelta(hours=1))
+                  and p[loop.index0-1]['value'] <= price['value']
+                  and p[loop.index0+1]['value'] <= price['value']
+                -%}
+                  {
+                    'start': '{{ price["start"] }}',
+                    'end': '{{ price["end"] }}',
+                    'value': '{{ price["value"] }}'
+                  },
+                {%- endif -%}
+              {%- endfor -%}
+              ]
+            {%- endif -%}
+          next_local_maximum_3hr: >-
+            {%- set p = this.attributes.local_maxima_3hr | default('unknown') -%}
+            {%- if p == 'unknown' -%}
+              {{ p }}
+            {%- else -%}
+              {{ p[0] }}
+            {%- endif -%}
+          local_maxima_3hr: >-
+            {%- set p = this.attributes.three_hour_seg | default('unknown') -%}
+            {%- if p == 'unknown' -%}
+              {{ p }}
+            {%- else -%}
+              [
+              {%- for price in p -%}
+                {%-
+                  if not loop.first and not loop.last
+                  and p[loop.index0-1]['value'] <= price['value']
+                  and p[loop.index0+1]['value'] <= price['value']
+                -%}
+                  {
+                    'start': '{{ price["start"] }}',
+                    'end': '{{ price["end"] }}',
+                    'value': '{{ price["value"] }}'
+                  }, 
+                {%- endif -%}
+              {%- endfor -%}
+              ]
+            {%- endif -%}
+          next_local_maximum_6hr: >-
+            {%- set p = this.attributes.local_maxima_6hr | default('unknown') -%}
+            {%- if p == 'unknown' -%}
+              {{ p }}
+            {%- else -%}
+              {{ p[0] }}
+            {%- endif -%}
+          local_maxima_6hr: >-
+            {%- set p = this.attributes.six_hour_seg | default('unknown') -%}
+            {%- if p == 'unknown' -%}
+              {{ p }}
+            {%- else -%}
+              [
+              {%- for price in p -%}
+                {%-
+                  if not loop.first and not loop.last
+                  and p[loop.index0-1]['value'] <= price['value']
+                  and p[loop.index0+1]['value'] <= price['value']
+                -%}
+                  {
+                    'start': '{{ price["start"] }}',
+                    'end': '{{ price["end"] }}',
+                    'value': '{{ price["value"] }}'
+                  },
+                {%- endif -%}
+              {%- endfor -%}
+              ]
+            {%- endif -%}
           prices: >-
             [
             {%- set prices = state_attr('sensor.carnot_spotpris_dk2', 'predictions') -%}
