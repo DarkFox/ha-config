@@ -616,6 +616,30 @@ template:
           end: "{{ state_attr('sensor.el_priser', 'six_hour_seg')[state_attr('sensor.el_priser', 'cheapest_6_hr')|int]['end'] }}"
           value: "{{ state_attr('sensor.el_priser', 'six_hour_seg')[state_attr('sensor.el_priser', 'cheapest_6_hr')|int]['value'] }}"
           icon: mdi:clock-time-six
+      - name: "El Næste Dyre 1 Time"
+        device_class: timestamp
+        state: "{{ state_attr('sensor.el_priser', 'next_local_maximum')['start'] }}"
+        attributes:
+          start: "{{ state_attr('sensor.el_priser', 'next_local_maximum')['start'] }}"
+          end: "{{ state_attr('sensor.el_priser', 'next_local_maximum')['end'] }}"
+          value: "{{ state_attr('sensor.el_priser', 'next_local_maximum')['value'] }}"
+          icon: mdi:clock-time-one
+      - name: "El Næste Dyre 3 Timer"
+        device_class: timestamp
+        state: "{{ state_attr('sensor.el_priser', 'next_local_maximum_3hr')['start'] }}"
+        attributes:
+          start: "{{ state_attr('sensor.el_priser', 'next_local_maximum_3hr')['start'] }}"
+          end: "{{ state_attr('sensor.el_priser', 'next_local_maximum_3hr')['end'] }}"
+          value: "{{ state_attr('sensor.el_priser', 'next_local_maximum_3hr')['value'] }}"
+          icon: mdi:clock-time-three
+      - name: "El Næste Dyre 6 Timer"
+        device_class: timestamp
+        state: "{{ state_attr('sensor.el_priser', 'next_local_maximum_6hr')['start'] }}"
+        attributes:
+          start: "{{ state_attr('sensor.el_priser', 'next_local_maximum_6hr')['start'] }}"
+          end: "{{ state_attr('sensor.el_priser', 'next_local_maximum_6hr')['end'] }}"
+          value: "{{ state_attr('sensor.el_priser', 'next_local_maximum_6hr')['value'] }}"
+          icon: mdi:clock-time-six
 
 sensor:
   - platform: integration
@@ -640,7 +664,7 @@ sensor:
   - platform: command_line
     name: Carnot spotpris DK2
     unit_of_measurement: "kr/kWh"
-    command: >
+    command: >-
       curl
       --request GET "https://whale-app-dquqw.ondigitalocean.app/openapi/get_predict?energysource=spotprice&region=dk2&daysahead=7"
       --header "accept: application/json"
