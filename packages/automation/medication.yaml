@@ -1,0 +1,97 @@
+input_boolean:
+  pill_box_white_1:
+    name: Hvid Pilleæske 1
+    icon: mdi:medication
+  pill_box_white_2:
+    name: Hvid Pilleæske 2
+    icon: mdi:medication
+  pill_box_pink_1:
+    name: Pink Pilleæske 1
+    icon: mdi:medication
+  pill_box_pink_2:
+    name: Pink Pilleæske 2
+    icon: mdi:medication
+  pill_box_purple_1:
+    name: Lilla Pilleæske 1
+    icon: mdi:medication
+  pill_box_purple_2:
+    name: Lilla Pilleæske 2
+    icon: mdi:medication
+  pill_box_blue_1:
+    name: Blå Pilleæske 1
+    icon: mdi:medication
+  pill_box_blue_2:
+    name: Blå Pilleæske 2
+    icon: mdi:medication
+  pill_box_green_1:
+    name: Grøn Pilleæske 1
+    icon: mdi:medication
+  pill_box_green_2:
+    name: Grøn Pilleæske 2
+    icon: mdi:medication
+  pill_box_yellow_1:
+    name: Gul Pilleæske 1
+    icon: mdi:medication
+  pill_box_yellow_2:
+    name: Gul Pilleæske 2
+    icon: mdi:medication
+  pill_box_orange_1:
+    name: Orange Pilleæske 1
+    icon: mdi:medication
+  pill_box_orange_2:
+    name: Orange Pilleæske 2
+    icon: mdi:medication
+
+input_datetime:
+  medication_last_taken:
+    name: Medicin Sidst Taget
+    icon: mdi:medication
+    has_date: true
+    has_time: true
+
+automation:
+  - id: pill_box_scanned
+    alias: Pill Box Scanned
+    trigger:
+      - platform: event
+        event_type: tag_scanned
+    variables:
+      tags:
+        167301c1-048b-4593-9f1a-5c6796bb03e9: pill_box_orange
+        ae005951-3321-46b4-a701-100d8c10c5bc: pill_box_green
+        2b16a4ac-338d-4bac-84d9-cfcee8869d50: pill_box_yellow
+        c1c902cf-a6b2-4807-be8c-1c567cf69cb7: pill_box_purple
+        f3783e65-6280-432c-a129-6590ec52d445: pill_box_blue
+        1a29d695-aa26-4164-99eb-7a2ff1ef97ff: pill_box_pink
+        49668ae4-09bf-4f35-a498-3b98bd59ff97: pill_box_white
+    action:
+      - condition: template
+        value_template: "{{ trigger.event.data.tag_id in tags.keys() }}"
+      - variables:
+          box_id: "{{ tags[trigger.event.data.tag_id] }}"
+          target_entity: "{{ 'input_boolean.'+box_id+'_1' if is_state('input_boolean.'+box_id+'_1', 'on') else 'input_boolean.'+box_id+'_2' }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ is_state(target_entity, 'on') }}"
+            sequence:
+              - service: input_boolean.turn_off
+                target:
+                  entity_id: "{{ target_entity }}"
+              - service: input_datetime.set_datetime
+                target:
+                  entity_id: input_datetime.medication_last_taken
+                data:
+                  datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+              - service: notify.telegram_darkfox
+                data:
+                  message: "Taget piller: {{ state_attr(target_entity, 'friendly_name') }}"
+        default:
+          - service: input_boolean.turn_on
+            target:
+              entity_id:
+                - "input_boolean.{{ box_id }}_1"
+                - "input_boolean.{{ box_id }}_2"
+          - service: notify.telegram_darkfox
+            data:
+              message: "Fyldt pilleæske: {{ state_attr('input_boolean.'+box_id+'_1', 'friendly_name') }} & 2"
