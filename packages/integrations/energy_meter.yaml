@@ -537,22 +537,33 @@ template:
               {%- set price = k -%}
               {%- set s = {
                 "abonnement": 0.03,
-                "elafgift": 0.763,
+                "elafgift_2022_07": 0.763,
+                "elafgift_2022_10": 0.688,
+                "elafgift_2023_01": 0.080,
                 "systemydelse": 0.0,
                 "transport_lavlast_2021": 0.2363,
                 "transport_spidslast_2021": 0.6307,
                 "transport_lavlast_2022": 0.3003,
                 "transport_spidslast_2022": 0.7651,
               } -%}
-              {%- set afgiftsum = s.abonnement + s.elafgift + s.systemydelse -%}
               {%- set cdt = (price['dktime'].split('+')[0] | as_datetime | as_local) -%}
-              {%- if cdt < as_datetime("2022-04-01 00:00:00.00+01:00") -%}
+              {%- if cdt < as_datetime("2022-04-01 00:00:00.00+02:00") -%}
                 {%- set transport_lavlast = s.transport_lavlast_2021 -%}
                 {%- set transport_spidslast = s.transport_spidslast_2021 -%}
               {%- else -%}
                 {%- set transport_lavlast = s.transport_lavlast_2022 -%}
                 {%- set transport_spidslast = s.transport_spidslast_2022 -%}
               {%- endif -%}
+
+              {%- if cdt > as_datetime("2023-01-01 00:00:00.00+02:00") -%}
+                {%- set elafgift = s.elafgift_2023_01 -%}
+              {%- elif cdt > as_datetime("2022-10-01 00:00:00.00+01:00") -%}
+                {%- set elafgift = s.elafgift_2022_10 -%}
+              {%- else -%}
+                {%- set elafgift = s.elafgift_2022_07 -%}
+              {%- endif -%}
+
+              {%- set afgiftsum = s.abonnement + elafgift + s.systemydelse -%}
               {
               "start": "{{ cdt }}",
               "end": "{{ cdt + timedelta( hours = 1) }}",
