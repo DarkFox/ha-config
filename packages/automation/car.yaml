@@ -37,6 +37,19 @@ binary_sensor:
         friendly_name: "Snart På Arbejde"
         value_template: >
           {{ states('proximity.martin_to_rsh')|float < 2000 }}
+      car_charging_idle_dc:
+        value_template: "{{ is_state('sensor.id3_charge_type', 'dc') }}"
+      car_charging_idle_ac:
+        value_template: >
+          {% if states('device_tracker.darkphone') in ['not_home', 'RSR', 'RSH'] %}
+            {% if is_state('sensor.id3_charge_type', 'ac') %}
+              {{ ('09:00' < states('sensor.time') < '21:00') }}
+            {% else %}
+              False
+            {% endif %}
+          {% else %}
+            False
+          {% endif %}
 
 automation:
   - id: climatise_car_for_upcoming_drive
@@ -144,47 +157,32 @@ automation:
     mode: restart
     trigger:
       - platform: state
-        entity_id: sensor.id3_charge_type
-        to: "dc"
+        entity_id: binary_sensor.car_charging_idle_dc
+        to: "on"
         for:
           minutes: 75
         variables:
           idle_start: 90
       - platform: state
-        entity_id: sensor.id3_charge_type
-        to: "ac"
+        entity_id: binary_sensor.car_charging_idle_ac
+        to: "on"
         for:
           minutes: 165
         variables:
           idle_start: 180
-    condition:
-      - condition: state
-        entity_id: device_tracker.darkphone
-        state: "not_home"
     action:
-      - condition: or
-        conditions:
-          - condition: template
-            value_template: "{{ trigger.to_state.state == 'dc' }}"
-          - condition: and
-            conditions:
-              - condition: template
-                value_template: "{{ trigger.to_state.state == 'ac' }}"
-              - condition: time
-                after: "09:00:00"
-                before: "21:00:00"
       - variables:
           time_left: "{{ (trigger.for|int)-(idle_start|int) }}"
       - service: notify.telegram_darkfox
         data:
           message: Idle fees starter om {{ time_left }} minutter!
-      - wait_template: "{{ not is_state('sensor.id3_charge_type', 'invalid') }}"
+      - wait_template: "{{ is_state('binary_sensor.car_charging_idle_dc', 'on') or is_state('binary_sensor.car_charging_idle_ac', 'on') }}"
         timeout:
-          minutes: 5
+          minutes: "{{ time_left|int }}"
       - condition: "{{ not wait.completed }}"
-      - service: automation.trigger
-        target:
-          entity_id: automation.warn_charger_idle_fees
+      - service: notify.telegram_darkfox
+        data:
+          message: Idle fees starter nu!
 
   - alias: notify_car_charged
     id: notify_car_charged
