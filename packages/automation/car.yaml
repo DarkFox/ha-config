@@ -29,6 +29,32 @@
 #     entity_id: proximity.bil_to_rsh
 #     max_age:
 #       minutes: 5
+input_datetime:
+  car_charging_started:
+    has_date: true
+    has_time: true
+
+template:
+  - sensor:
+      - name: "Car Charging Idle Fee Starting In"
+        state: >-
+          {% set car_charging_started = states('input_datetime.car_charging_started') %}
+          {% set charge_type = states('sensor.id3_charge_type') %}
+          {% if car_charging_started|as_datetime %}
+            {% if charge_type == 'dc' %}
+              {{ (((car_charging_started|as_timestamp + (90*60)) - now().timestamp())/60)|int }}
+            {% elif charge_type == 'ac' %}
+              {% set fee_start_time = (car_charging_started|as_timestamp + (180*60))|as_datetime|as_local %}
+              {% if (fee_start_time.strftime('%H:%M') > '21:00') %}
+                {% set fee_start_time = (as_timestamp(fee_start_time) + (1*24*3600)) | timestamp_custom("%Y-%m-%d 09:00:00", True)|as_datetime|as_local %}
+              {% elif (fee_start_time.strftime('%H:%M') < '09:00') %}
+                {% set fee_start_time = as_timestamp(fee_start_time) | timestamp_custom("%Y-%m-%d 09:00:00", True)|as_datetime|as_local %}
+              {% endif %}
+              {{ ((fee_start_time|as_timestamp - now().timestamp())/60)|int }}
+            {% endif %}
+          {% endif %}
+        device_class: duration
+        unit_of_measurement: minutes
 
 binary_sensor:
   - platform: template
@@ -111,6 +137,37 @@ automation:
         target:
           entity_id: switch.id3_climatisation
 
+  - id: set_car_charging_started_time
+    alias: Set Car Charging Started Time
+    trigger:
+      - platform: state
+        entity_id: sensor.id3_charge_type
+        from: "invalid"
+        to:
+          - ac
+          - dc
+    action:
+      - alias: "Set Car Charging Started to now"
+        service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.car_charging_started
+        data:
+          timestamp: "{{ now().timestamp() }}"
+
+  - id: clear_car_charging_started_time
+    alias: Clear Car Charging Started Time
+    trigger:
+      - platform: state
+        entity_id: sensor.id3_charge_type
+        to: "invalid"
+    action:
+      - alias: "Clear Car Charging Started to now"
+        service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.car_charging_started
+        data:
+          timestamp: ""
+
   - alias: notify_car_charging
     id: notify_car_charging
     initial_state: true
@@ -156,33 +213,20 @@ automation:
     initial_state: true
     mode: restart
     trigger:
-      - platform: state
-        entity_id: binary_sensor.car_charging_idle_dc
-        to: "on"
-        for:
-          minutes: 75
-        variables:
-          idle_start: 90
-      - platform: state
-        entity_id: binary_sensor.car_charging_idle_ac
-        to: "on"
-        for:
-          minutes: 165
-        variables:
-          idle_start: 180
+      - platform: numeric_state
+        entity_id: sensor.car_charging_idle_fee_starting_in
+        below: 15
     action:
-      - variables:
-          time_left: "{{ (trigger.for|int)-(idle_start|int) }}"
       - service: notify.telegram_darkfox
         data:
-          message: Idle fees starter om {{ time_left }} minutter!
-      - wait_template: "{{ is_state('binary_sensor.car_charging_idle_dc', 'on') or is_state('binary_sensor.car_charging_idle_ac', 'on') }}"
+          message: Blokeringsgebyr starter om {{ states('sensor.car_charging_idle_fee_starting_in') }} minutter!
+      - wait_template: "{{ is_state('sensor.car_charging_idle_fee_starting_in', '') }}"
         timeout:
-          minutes: "{{ time_left|int }}"
+          minutes: "{{ states('sensor.car_charging_idle_fee_starting_in')|int }}"
       - condition: "{{ not wait.completed }}"
       - service: notify.telegram_darkfox
         data:
-          message: Idle fees starter nu!
+          message: Blokeringsgebyr starter nu!
 
   - alias: notify_car_charged
     id: notify_car_charged
