@@ -63,19 +63,6 @@ binary_sensor:
         friendly_name: "Snart På Arbejde"
         value_template: >
           {{ states('proximity.martin_to_rsh')|float < 2000 }}
-      car_charging_idle_dc:
-        value_template: "{{ is_state('sensor.id3_charge_type', 'dc') }}"
-      car_charging_idle_ac:
-        value_template: >
-          {% if states('device_tracker.darkphone') in ['not_home', 'RSR', 'RSH'] %}
-            {% if is_state('sensor.id3_charge_type', 'ac') %}
-              {{ ('09:00' < states('sensor.time') < '21:00') }}
-            {% else %}
-              False
-            {% endif %}
-          {% else %}
-            False
-          {% endif %}
 
 automation:
   - id: climatise_car_for_upcoming_drive
