@@ -27,7 +27,7 @@ sensor:
     scan_interval: 900
 
   - platform: scrape
-    resource: http://feeds.feedburner.com/DailyTechNewsShow
+    resource: https://feeds.acast.com/public/shows/69874998-717b-4db3-9857-c07cf9597f55
     name: podcast_daily_tech_news_show
     select: "enclosure:nth-of-type(1)"
     attribute: url
@@ -46,3 +46,43 @@ sensor:
     select: "enclosure:nth-of-type(1)"
     attribute: url
     scan_interval: 900
+
+shell_command:
+  podcast_bbc_minute_m3u: >-
+    /bin/bash -c "echo -e '#EXTM3U\n\n#EXTINF:-1,Seneste BBC Minute\n{{ states('sensor.podcast_bbc_minute') }}' > '/media/Audio/Podcasts/Seneste BBC Minute.m3u'"
+  podcast_daily_tech_news_show_m3u: >-
+    /bin/bash -c "echo -e '#EXTM3U\n\n#EXTINF:-1,Seneste Daily Tech News Show\n{{ states('sensor.podcast_daily_tech_news_show') }}' > '/media/Audio/Podcasts/Seneste Daily Tech News Show.m3u'"
+  podcast_daily_tech_headlines_m3u: >-
+    /bin/bash -c "echo -e '#EXTM3U\n\n#EXTINF:-1,Seneste Daily Tech Headlines\n{{ states('sensor.podcast_daily_tech_headlines') }}' > '/media/Audio/Podcasts/Seneste Daily Tech Headlines.m3u'"
+  podcast_radioavisen_m3u: >-
+    /bin/bash -c "echo -e '#EXTM3U\n\n#EXTINF:-1,Seneste Radioavisen\n{{ states('sensor.podcast_radioavisen') }}' > '/media/Audio/Podcasts/Seneste Radioavisen.m3u'"
+
+automation:
+  - id: update_file_podcast_bbc_minute
+    alias: Update File podcast_bbc_minute
+    trigger:
+      - platform: state
+        entity_id: sensor.podcast_bbc_minute
+    action:
+      - service: shell_command.podcast_bbc_minute_m3u
+  - id: update_file_podcast_daily_tech_news_show
+    alias: Update File podcast_daily_tech_news_show
+    trigger:
+      - platform: state
+        entity_id: sensor.podcast_daily_tech_news_show
+    action:
+      - service: shell_command.podcast_daily_tech_news_show_m3u
+  - id: update_file_podcast_daily_tech_headlines
+    alias: Update File podcast_daily_tech_headlines
+    trigger:
+      - platform: state
+        entity_id: sensor.podcast_daily_tech_headlines
+    action:
+      - service: shell_command.podcast_daily_tech_headlines_m3u
+  - id: update_file_podcast_radioavisen
+    alias: Update File podcast_radioavisen
+    trigger:
+      - platform: state
+        entity_id: sensor.podcast_radioavisen
+    action:
+      - service: shell_command.podcast_radioavisen_m3u
