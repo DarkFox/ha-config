@@ -33,26 +33,35 @@ input_datetime:
   car_charging_started:
     has_date: true
     has_time: true
+input_text:
+  car_charging_type:
 
 template:
   - sensor:
-      - name: "Car Charging Idle Fee Starting In"
+      - name: "Car Charging Idle Fee Starting At"
         state: >-
-          {% set car_charging_started = states('input_datetime.car_charging_started') %}
-          {% set charge_type = states('sensor.id3_charge_type') %}
-          {% if car_charging_started|as_datetime %}
-            {% if charge_type == 'dc' %}
-              {{ (((car_charging_started|as_timestamp + (90*60)) - now().timestamp())/60)|int }}
-            {% elif charge_type == 'ac' %}
-              {% set fee_start_time = (car_charging_started|as_timestamp + (180*60))|as_datetime|as_local %}
-              {% if (fee_start_time.strftime('%H:%M') > '21:00') %}
-                {% set fee_start_time = (as_timestamp(fee_start_time) + (1*24*3600)) | timestamp_custom("%Y-%m-%d 09:00:00", True)|as_datetime|as_local %}
-              {% elif (fee_start_time.strftime('%H:%M') < '09:00') %}
-                {% set fee_start_time = as_timestamp(fee_start_time) | timestamp_custom("%Y-%m-%d 09:00:00", True)|as_datetime|as_local %}
+          {% if is_state('binary_sensor.id3_plug_connection_state', 'on') %}
+            {% set car_charging_started = states('input_datetime.car_charging_started') %}
+            {% set charge_type = states('input_text.car_charging_type') %}
+            {% if car_charging_started|as_datetime %}
+              {% if charge_type == 'dc' %}
+                {{ (car_charging_started|as_timestamp + (90*60))|as_datetime|as_local }}
+              {% elif charge_type == 'ac' %}
+                {% set fee_start_time = (car_charging_started|as_timestamp + (180*60))|as_datetime|as_local %}
+                {% if (fee_start_time.strftime('%H:%M') > '21:00') %}
+                  {% set fee_start_time = (as_timestamp(fee_start_time) + (1*24*3600)) | timestamp_custom("%Y-%m-%d 09:00:00", True)|as_datetime|as_local %}
+                {% elif (fee_start_time.strftime('%H:%M') < '09:00') %}
+                  {% set fee_start_time = as_timestamp(fee_start_time) | timestamp_custom("%Y-%m-%d 09:00:00", True)|as_datetime|as_local %}
+                {% endif %}
+                {{ fee_start_time }}
               {% endif %}
-              {{ ((fee_start_time|as_timestamp - now().timestamp())/60)|int }}
             {% endif %}
           {% endif %}
+        device_class: timestamp
+
+      - name: "Car Charging Idle Fee Starting In"
+        state: >-
+          {{ ((states('sensor.car_charging_idle_fee_starting_at')|as_timestamp - now().timestamp())/60)|int }}
         device_class: duration
         unit_of_measurement: minutes
 
@@ -128,11 +137,9 @@ automation:
     alias: Set Car Charging Started Time
     trigger:
       - platform: state
-        entity_id: sensor.id3_charge_type
-        from: "invalid"
-        to:
-          - ac
-          - dc
+        entity_id: binary_sensor.id3_plug_connection_state
+        from: "off"
+        to: "on"
     action:
       - alias: "Set Car Charging Started to now"
         service: input_datetime.set_datetime
@@ -141,12 +148,29 @@ automation:
         data:
           timestamp: "{{ now().timestamp() }}"
 
+  - id: set_car_charging_type
+    alias: Set Car Charging Type
+    trigger:
+      - platform: state
+        entity_id: sensor.id3_charge_type
+        from: "invalid"
+        to:
+          - ac
+          - dc
+    action:
+      - alias: "Set latest charge type"
+        service: input_text.set_value
+        target:
+          entity_id: input_text.car_charging_type
+        data:
+          value: "{{ trigger.to_state.state }}"
+
   - id: clear_car_charging_started_time
     alias: Clear Car Charging Started Time
     trigger:
       - platform: state
-        entity_id: sensor.id3_charge_type
-        to: "invalid"
+        entity_id: binary_sensor.id3_plug_connection_state
+        to: "off"
     action:
       - alias: "Clear Car Charging Started to now"
         service: input_datetime.set_datetime
@@ -172,8 +196,14 @@ automation:
       - service: notify.telegram_darkfox
         data:
           message: >
-            Opladning {{ 'startet' if trigger.from_state.state == 'unknown' else 'ændret' }}. Bilen lader op fra {{ states('sensor.id3_state_of_charge') }}% til {{ states('sensor.id3_target_state_of_charge') }}%.
-            Færdig ca. {{ states('sensor.id3_charging_complete_at') }}
+            Opladning {{ 'startet' if trigger.from_state.state == 'unknown' else 'ændret' }}.
+            Bilen lader op fra {{ states('sensor.id3_state_of_charge') }}% til {{ states('sensor.id3_target_state_of_charge') }}%.
+
+            Færdig ca. {{ states('sensor.id3_charging_complete_at')|as_timestamp|timestamp_custom('%H:%M', True) }}.
+
+            {% if not is_state('sensor.sensor.car_charging_idle_fee_starting_at', '') %}
+            Blokeringsgebyr starter ca. {{ states('sensor.sensor.car_charging_idle_fee_starting_at')|as_timestamp|timestamp_custom('%H:%M', True) }}
+            {% endif %}
 
   - alias: notify_15_minutes_till_car_charged
     id: notify_15_minutes_till_car_charged
@@ -447,14 +477,6 @@ automation:
       - choose:
           - conditions:
               - condition: numeric_state
-                entity_id: sensor.rsh_p7_spirii_ladere
-                above: 0
-            sequence:
-              - service: notify.telegram_darkfox
-                data:
-                  message: "Der er {{ states('sensor.rsh_p7_spirii_ladere') }} Spirii ladestationer ledige på P7."
-          - conditions:
-              - condition: numeric_state
                 entity_id: sensor.rsh_p2_eon_ladere
                 above: 0
             sequence:
@@ -477,6 +499,22 @@ automation:
               - service: notify.telegram_darkfox
                 data:
                   message: "Der er {{ states('sensor.rsh_p4_spirii_ladere') }} Spirii ladestationer ledige på P4."
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.rsh_p4_eon_ladere
+                above: 0
+            sequence:
+              - service: notify.telegram_darkfox
+                data:
+                  message: "Der er {{ states('sensor.rsh_p4_eon_ladere') }} Eon ladestationer ledige på P4."
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.rsh_p7_spirii_ladere
+                above: 1
+            sequence:
+              - service: notify.telegram_darkfox
+                data:
+                  message: "Der er {{ states('sensor.rsh_p7_spirii_ladere') }} Spirii ladestationer ledige på P7."
 
   - id: car_chargers_rsr
     initial_state: true
