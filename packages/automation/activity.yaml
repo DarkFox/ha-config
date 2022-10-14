@@ -112,8 +112,11 @@ automation:
         value_template: "{{ is_state('binary_sensor.stue_altandor', 'on') and is_state('binary_sensor.altan_bevaegelse', 'on') }}"
     condition:
       - condition: state
-        entity_id: binary_sensor.wasp_sensor_apartment
-        state: "on"
+        entity_id: vacuum.roborock_s5
+        state: "docked"
+      - condition: state
+        entity_id: person.martin
+        state: "home"
       - condition: template
         value_template: "{{ room != 'Balcony' or is_state('binary_sensor.stue_altandor', 'on') }}"
     action:
@@ -125,6 +128,9 @@ automation:
   - alias: latest_motion_away
     initial_state: true
     trigger:
+      - platform: state
+        entity_id: person.martin
+        not_to: home
       - platform: state
         entity_id:
           - binary_sensor.activity
