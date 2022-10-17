@@ -186,8 +186,8 @@ automation:
           entities:
             light.badevaerelse_loft:
               state: on
-              brightness: 2
-              color_temp: 300
+              brightness: 60
+              hs_color: [30, 100]
       - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
@@ -253,7 +253,7 @@ automation:
             light.badevaerelse_loft:
               state: on
               brightness: 8
-              hs_color: [255, 0, 0]
+              rgb_color: [255, 0, 0]
       - service: scene.apply
         data_template:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
@@ -266,38 +266,6 @@ automation:
             light.bathroom_tablet:
               state: on
               brightness: 24
-
-  - alias: activate_light_profile_bathroom_night_brighter
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Night"
-        for:
-          minutes: 1
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Night"
-    action:
-      - service: scene.apply
-        data_template:
-          transition: 30
-          entities:
-            light.badevaerelse_lampe:
-              state: on
-              brightness: 64
-              color_temp: 370
-              effect: "None"
-      - delay:
-          seconds: 30
-      - service: scene.apply
-        data_template:
-          entities:
-            light.badevaerelse_loft:
-              state: on
-              brightness: 127
-              hs_color: [255, 0, 0]
 
   - alias: activate_light_profile_bathroom_off
     initial_state: true
