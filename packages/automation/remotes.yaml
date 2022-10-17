@@ -258,39 +258,7 @@ automation:
         event_data:
           room: bedroom
 
-  - alias: bedroom_dimmer_bedside_bright
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: sovevaerelse_fjernbetjening
-          event: 2003
-    action:
-      service: light.turn_on
-      data:
-        brightness: 255
-        color_temp: 350
-        entity_id:
-          - light.sengelampe
-
-  - alias: bedroom_dimmer_bedside_dimmed
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: sovevaerelse_fjernbetjening
-          event: 5002
-    action:
-      service: light.turn_on
-      data:
-        brightness: 32
-        color_temp: 500
-        entity_id:
-          - light.sengelampe
-
-  - alias: bedroom_dimmer_bedside_night
+  - alias: bedroom_dimmer_left
     initial_state: true
     trigger:
       - platform: event
@@ -299,14 +267,37 @@ automation:
           id: sovevaerelse_fjernbetjening
           event: 4002
     action:
-      service: light.turn_on
+      service: cover.close_cover
       data:
-        brightness: 2
-        rgb_color: [255, 0, 0]
-        entity_id:
-          - light.sengelampe
+        entity_id: cover.sovevaerelse_gardin
 
-  - alias: bedroom_dimmer_bedside_off
+  - alias: bedroom_dimmer_right
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: sovevaerelse_fjernbetjening
+          event: 5002
+    action:
+      service: cover.open_cover
+      data:
+        entity_id: cover.sovevaerelse_gardin
+
+  - alias: bedroom_dimmer_hold_right
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: sovevaerelse_fjernbetjening
+          event: 5003
+    action:
+      service: cover.toggle
+      data:
+        entity_id: cover.sovevaerelse_gardin_vindue
+
+  - alias: bedroom_dimmer_hold_left
     initial_state: true
     trigger:
       - platform: event
@@ -314,16 +305,10 @@ automation:
         event_data:
           id: sovevaerelse_fjernbetjening
           event: 4003
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: sovevaerelse_fjernbetjening
-          event: 3003
     action:
-      service: light.turn_off
+      service: cover.toggle
       data:
-        entity_id:
-          - light.sengelampe
+        entity_id: cover.sovevaerelse_gardin_dor
 
   # Soveværelse Tryk #
   - alias: bedroom_switch_on
