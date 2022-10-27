@@ -40,7 +40,7 @@ template:
   - sensor:
       - name: "Car Charging Idle Fee Starting At"
         state: >-
-          {% if is_state('binary_sensor.id3_plug_connection_state', 'on') %}
+          {% if is_state('binary_sensor.id3_plug_connection_state', 'on') and not is_state('input_text.car_charging_type', '') %}
             {% set car_charging_started = states('input_datetime.car_charging_started') %}
             {% set charge_type = states('input_text.car_charging_type') %}
             {% if car_charging_started|as_datetime %}
@@ -172,6 +172,12 @@ automation:
         entity_id: binary_sensor.id3_plug_connection_state
         to: "off"
     action:
+      - alias: "Clear charge type"
+        service: input_text.set_value
+        target:
+          entity_id: input_text.car_charging_type
+        data:
+          value: ""
       - alias: "Clear Car Charging Started to now"
         service: input_datetime.set_datetime
         target:
@@ -196,13 +202,12 @@ automation:
       - service: notify.telegram_darkfox
         data:
           message: >
-            Opladning {{ 'startet' if trigger.from_state.state == 'unknown' else 'ændret' }}.
             Bilen lader op fra {{ states('sensor.id3_state_of_charge') }}% til {{ states('sensor.id3_target_state_of_charge') }}%.
 
-            Færdig ca. {{ states('sensor.id3_charging_complete_at')|as_timestamp|timestamp_custom('%H:%M', True) }}.
+            Færdig ca. kl. {{ states('sensor.id3_charging_complete_at')|as_timestamp|timestamp_custom('%H:%M', True) }}.
 
-            {% if not is_state('sensor.sensor.car_charging_idle_fee_starting_at', '') %}
-            Blokeringsgebyr starter ca. {{ states('sensor.sensor.car_charging_idle_fee_starting_at')|as_timestamp|timestamp_custom('%H:%M', True) }}
+            {% if not is_state('sensor.car_charging_idle_fee_starting_at', '') -%}
+            Blokeringsgebyr starter kl. {{ states('sensor.car_charging_idle_fee_starting_at')|as_timestamp|timestamp_custom('%H:%M', True) }}
             {% endif %}
 
   - alias: notify_15_minutes_till_car_charged
@@ -212,8 +217,6 @@ automation:
       - platform: numeric_state
         entity_id: sensor.id3_remaining_charging_time
         below: 16
-        for:
-          minutes: 1
     condition:
       - condition: state
         entity_id: sensor.id3_charging_state
@@ -232,7 +235,7 @@ automation:
     trigger:
       - platform: numeric_state
         entity_id: sensor.car_charging_idle_fee_starting_in
-        below: 15
+        below: 16
     action:
       - service: notify.telegram_darkfox
         data:
