@@ -23,25 +23,6 @@ script:
       - event: refresh_light_profile
 
 automation:
-  - alias: kitchen_tablet_screen_webhook
-    initial_state: True
-    trigger:
-      platform: webhook
-      webhook_id: !secret kitchen_tablet_screen_webhook
-    action:
-      service: "input_boolean.turn_{{ trigger.json.state }}"
-      data:
-        entity_id: input_boolean.kitchen_tablet_screen
-  - alias: kitchen_tablet_brightness_webhook
-    initial_state: True
-    trigger:
-      platform: webhook
-      webhook_id: !secret kitchen_tablet_brightness_webhook
-    action:
-      service: input_number.set_value
-      data_template:
-        entity_id: input_number.kitchen_tablet_brightness
-        value: "{{ trigger.json.state }}"
   - alias: charge_kitchen_tablet
     trigger:
       - platform: numeric_state
@@ -74,25 +55,6 @@ automation:
         data_template:
           entity_id: switch.kitchen_tablet_charger
 
-  - alias: hallway_tablet_screen_webhook
-    initial_state: True
-    trigger:
-      platform: webhook
-      webhook_id: !secret hallway_tablet_screen_webhook
-    action:
-      service: "input_boolean.turn_{{ trigger.json.state }}"
-      data:
-        entity_id: input_boolean.hallway_tablet_screen
-  - alias: hallway_tablet_brightness_webhook
-    initial_state: True
-    trigger:
-      platform: webhook
-      webhook_id: !secret hallway_tablet_brightness_webhook
-    action:
-      service: input_number.set_value
-      data_template:
-        entity_id: input_number.hallway_tablet_brightness
-        value: "{{ trigger.json.state }}"
   - alias: charge_hallway_tablet
     trigger:
       - platform: numeric_state
@@ -135,25 +97,6 @@ automation:
       data:
         entity_id: input_text.bathroom_tablet_ip
         value: "{{ trigger.json.state }}"
-  - alias: bathroom_tablet_screen_webhook
-    initial_state: True
-    trigger:
-      platform: webhook
-      webhook_id: !secret bathroom_tablet_screen_webhook
-    action:
-      service: "input_boolean.turn_{{ trigger.json.state }}"
-      data:
-        entity_id: input_boolean.bathroom_tablet_screen
-  - alias: bathroom_tablet_brightness_webhook
-    initial_state: True
-    trigger:
-      platform: webhook
-      webhook_id: !secret bathroom_tablet_brightness_webhook
-    action:
-      service: input_number.set_value
-      data_template:
-        entity_id: input_number.bathroom_tablet_brightness
-        value: "{{ trigger.json.state }}"
 
   - alias: office_tablet_ip_webhook
     initial_state: True
@@ -165,55 +108,7 @@ automation:
       data:
         entity_id: input_text.office_tablet_ip
         value: "{{ trigger.json.state }}"
-  - alias: office_tablet_screen_webhook
-    initial_state: True
-    trigger:
-      platform: webhook
-      webhook_id: !secret office_tablet_screen_webhook
-    action:
-      service: "input_boolean.turn_{{ trigger.json.state }}"
-      data:
-        entity_id: input_boolean.office_tablet_screen
-  - alias: office_tablet_brightness_webhook
-    initial_state: True
-    trigger:
-      platform: webhook
-      webhook_id: !secret office_tablet_brightness_webhook
-    action:
-      service: input_number.set_value
-      data_template:
-        entity_id: input_number.office_tablet_brightness
-        value: "{{ trigger.json.state }}"
 
-  - alias: living_room_remote_screen_webhook
-    initial_state: True
-    trigger:
-      platform: webhook
-      webhook_id: !secret living_room_remote_screen_webhook
-    action:
-      service: "input_boolean.turn_{{ trigger.json.state }}"
-      data:
-        entity_id: input_boolean.living_room_remote_screen
-  - alias: living_room_remote_brightness_webhook
-    initial_state: True
-    trigger:
-      platform: webhook
-      webhook_id: !secret living_room_remote_brightness_webhook
-    action:
-      service: input_number.set_value
-      data_template:
-        entity_id: input_number.living_room_remote_brightness
-        value: "{{ trigger.json.state }}"
-
-  - alias: bedroom_tablet_screen_webhook
-    initial_state: True
-    trigger:
-      platform: webhook
-      webhook_id: !secret bedroom_tablet_screen_webhook
-    action:
-      service: "input_boolean.turn_{{ trigger.json.state }}"
-      data:
-        entity_id: input_boolean.bedroom_tablet_screen
   - alias: bedroom_tablet_screensaver_webhook
     initial_state: True
     trigger:
@@ -223,16 +118,6 @@ automation:
       service: "input_boolean.turn_{{ trigger.json.state }}"
       data:
         entity_id: input_boolean.bedroom_tablet_screensaver
-  - alias: bedroom_tablet_brightness_webhook
-    initial_state: True
-    trigger:
-      platform: webhook
-      webhook_id: !secret bedroom_tablet_brightness_webhook
-    action:
-      service: input_number.set_value
-      data_template:
-        entity_id: input_number.bedroom_tablet_brightness
-        value: "{{ trigger.json.state }}"
   - alias: charge_bedroom_tablet
     trigger:
       - platform: numeric_state
@@ -265,60 +150,18 @@ automation:
         data_template:
           entity_id: switch.bedroom_tablet_charger
 
-input_boolean:
-  kitchen_tablet_screen:
-    name: kitchen_tablet_screen
-  hallway_tablet_screen:
-    name: hallway_tablet_screen
-  bathroom_tablet_screen:
-    name: bathroom_tablet_screen
-  office_tablet_screen:
-    name: office_tablet_screen
-  living_room_remote_screen:
-    name: living_room_remote_screen
-  bedroom_tablet_screen:
-    name: bedroom_tablet_screen
-  bedroom_tablet_screensaver:
-    name: bedroom_tablet_screensaver
-
 input_text:
   bathroom_tablet_ip:
     name: Bathroom Tablet IP
   office_tablet_ip:
     name: Office Tablet IP
 
-input_number:
-  kitchen_tablet_brightness:
-    name: kitchen_tablet_brightness
-    min: 0
-    max: 255
-  hallway_tablet_brightness:
-    name: hallway_tablet_brightness
-    min: 0
-    max: 255
-  bathroom_tablet_brightness:
-    name: bathroom_tablet_brightness
-    min: 0
-    max: 255
-  office_tablet_brightness:
-    name: office_tablet_brightness
-    min: 0
-    max: 255
-  living_room_remote_brightness:
-    name: living_room_remote_brightness
-    min: 0
-    max: 255
-  bedroom_tablet_brightness:
-    name: bedroom_tablet_brightness
-    min: 0
-    max: 255
-
 rest_command:
   kitchen_tablet_command:
-    url: "http://{{ states('sensor.kokken_tablet_wifi_ip_adresse') }}:1817/?message={{ command }}"
+    url: "http://{{ states('sensor.kokken_tablet_wifi_ip_address') }}:1817/?message={{ command }}"
     method: GET
   hallway_tablet_command:
-    url: "http://{{ states('sensor.gang_tablet_wifi_ip_adresse') }}:1817/?message={{ command }}"
+    url: "http://{{ states('sensor.gang_tablet_wifi_ip_address') }}:1817/?message={{ command }}"
     method: GET
   bathroom_tablet_command:
     url: "http://{{ states('input_text.bathroom_tablet_ip') }}:1817/?message={{ command }}"
@@ -326,11 +169,8 @@ rest_command:
   office_tablet_command:
     url: "http://{{ states('input_text.office_tablet_ip') }}:1817/?message={{ command }}"
     method: GET
-  living_room_remote_command:
-    url: "http://{{ states('sensor.stue_fjernbetjening_wifi_ip_adresse') }}:1817/?message={{ command }}"
-    method: GET
   bedroom_tablet_command:
-    url: "http://{{ states('sensor.sovevaerelse_tablet_wifi_ip_adresse') }}:1817/?message={{ command }}"
+    url: "http://{{ states('sensor.sovevaerelse_tablet_wifi_ip_address') }}:1817/?message={{ command }}"
     method: GET
 
 light:
@@ -338,123 +178,133 @@ light:
     lights:
       kitchen_tablet:
         friendly_name: "kitchen Tablet"
-        level_template: "{{ states('input_number.kitchen_tablet_brightness')|int }}"
-        value_template: "{{ states('input_boolean.kitchen_tablet_screen') }}"
+        level_template: "{{ states('sensor.sensor.kokken_tablet_screen_brightness')|int }}"
+        value_template: "{{ states('binary_sensor.kokken_tablet_interactive') }}"
         turn_on:
-          - service: rest_command.kitchen_tablet_command
+          - service: notify.mobile_app_kokken_tablet
             data:
-              command: "screen=:=on"
+              message: "command_screen_on"
+              data:
+                command: "keep_screen_on"
         turn_off:
           - service: rest_command.kitchen_tablet_command
             data:
               command: "screen=:=off"
         set_level:
-          - service: rest_command.kitchen_tablet_command
+          - service: notify.mobile_app_kokken_tablet
             data:
-              command: "screen=:=on"
-          - service: rest_command.kitchen_tablet_command
-            data_template:
-              command: "brightness=:={{ brightness }}"
+              message: "command_screen_on"
+              data:
+                command: "keep_screen_on"
+          - service: notify.mobile_app_kokken_tablet
+            data:
+              message: "command_screen_brightness_level"
+              data:
+                command: "{{ brightness }}"
 
       hallway_tablet:
         friendly_name: "Hallway Tablet"
-        level_template: "{{ states('input_number.hallway_tablet_brightness')|int }}"
-        value_template: "{{ states('input_boolean.hallway_tablet_screen') }}"
+        level_template: "{{ states('sensor.sensor.gang_tablet_screen_brightness')|int }}"
+        value_template: "{{ states('binary_sensor.gang_tablet_interactive') }}"
         turn_on:
-          - service: rest_command.hallway_tablet_command
+          - service: notify.mobile_app_gang_tablet
             data:
-              command: "screen=:=on"
+              message: "command_screen_on"
+              data:
+                command: "keep_screen_on"
         turn_off:
           - service: rest_command.hallway_tablet_command
             data:
               command: "screen=:=off"
         set_level:
-          - service: rest_command.hallway_tablet_command
+          - service: notify.mobile_app_gang_tablet
             data:
-              command: "screen=:=on"
-          - service: rest_command.hallway_tablet_command
-            data_template:
-              command: "brightness=:={{ brightness }}"
+              message: "command_screen_on"
+              data:
+                command: "keep_screen_on"
+          - service: notify.mobile_app_gang_tablet
+            data:
+              message: "command_screen_brightness_level"
+              data:
+                command: "{{ brightness }}"
 
       bathroom_tablet:
         friendly_name: "Bathroom Tablet"
-        level_template: "{{ states('input_number.bathroom_tablet_brightness')|int }}"
-        value_template: "{{ states('input_boolean.bathroom_tablet_screen') }}"
+        level_template: "{{ states('sensor.sensor.badevaerelse_tablet_screen_brightness')|int }}"
+        value_template: "{{ states('binary_sensor.badevaerelse_tablet_interactive') }}"
         turn_on:
-          - service: rest_command.bathroom_tablet_command
+          - service: notify.mobile_app_badevaerelse_tablet
             data:
-              command: "screen=:=on"
+              message: "command_screen_on"
+              data:
+                command: "keep_screen_on"
         turn_off:
           - service: rest_command.bathroom_tablet_command
             data:
               command: "screen=:=off"
         set_level:
-          - service: rest_command.bathroom_tablet_command
+          - service: notify.mobile_app_badevaerelse_tablet
             data:
-              command: "screen=:=on"
-          - service: rest_command.bathroom_tablet_command
-            data_template:
-              command: "brightness=:={{ brightness }}"
+              message: "command_screen_on"
+              data:
+                command: "keep_screen_on"
+          - service: notify.mobile_app_badevaerelse_tablet
+            data:
+              message: "command_screen_brightness_level"
+              data:
+                command: "{{ brightness }}"
 
       office_tablet:
         friendly_name: "Office Tablet"
-        level_template: "{{ states('input_number.office_tablet_brightness')|int }}"
-        value_template: "{{ states('input_boolean.office_tablet_screen') }}"
+        level_template: "{{ states('sensor.sensor.kontor_tablet_screen_brightness')|int }}"
+        value_template: "{{ states('binary_sensor.kontor_tablet_interactive') }}"
         turn_on:
-          - service: rest_command.office_tablet_command
+          - service: notify.mobile_app_kontor_tablet
             data:
-              command: "screen=:=on"
+              message: "command_screen_on"
+              data:
+                command: "keep_screen_on"
         turn_off:
           - service: rest_command.office_tablet_command
             data:
               command: "screen=:=off"
         set_level:
-          - service: rest_command.office_tablet_command
+          - service: notify.mobile_app_kontor_tablet
             data:
-              command: "screen=:=on"
-          - service: rest_command.office_tablet_command
-            data_template:
-              command: "brightness=:={{ brightness }}"
-
-      living_room_remote:
-        friendly_name: "Stue Fjernbetjening"
-        level_template: "{{ states('input_number.living_room_remote_brightness')|int }}"
-        value_template: "{{ states('input_boolean.living_room_remote_screen') }}"
-        turn_on:
-          - service: rest_command.living_room_remote_command
+              message: "command_screen_on"
+              data:
+                command: "keep_screen_on"
+          - service: notify.mobile_app_kontor_tablet
             data:
-              command: "screen=:=on"
-        turn_off:
-          - service: rest_command.living_room_remote_command
-            data:
-              command: "screen=:=off"
-        set_level:
-          - service: rest_command.living_room_remote_command
-            data:
-              command: "screen=:=on"
-          - service: rest_command.living_room_remote_command
-            data_template:
-              command: "brightness=:={{ brightness }}"
+              message: "command_screen_brightness_level"
+              data:
+                command: "{{ brightness }}"
 
       bedroom_tablet:
         friendly_name: "Bedroom Tablet"
-        level_template: "{{ states('input_number.bedroom_tablet_brightness')|int }}"
-        value_template: "{{ states('input_boolean.bedroom_tablet_screen') }}"
+        level_template: "{{ states('sensor.sovevaerelse_tablet_screen_brightness')|int }}"
+        value_template: "{{ states('binary_sensor.sovevaerelse_tablet_interactive') }}"
         turn_on:
-          - service: rest_command.bedroom_tablet_command
+          - service: notify.mobile_app_sovevaerelse_tablet
             data:
-              command: "screen=:=on"
+              message: "command_screen_on"
+              data:
+                command: "keep_screen_on"
         turn_off:
           - service: rest_command.bedroom_tablet_command
             data:
               command: "screen=:=off"
         set_level:
-          - service: rest_command.bedroom_tablet_command
+          - service: notify.mobile_app_sovevaerelse_tablet
             data:
-              command: "screen=:=on"
-          - service: rest_command.bedroom_tablet_command
-            data_template:
-              command: "brightness=:={{ brightness }}"
+              message: "command_screen_on"
+              data:
+                command: "keep_screen_on"
+          - service: notify.mobile_app_sovevaerelse_tablet
+            data:
+              message: "command_screen_brightness_level"
+              data:
+                command: "{{ brightness }}"
 
       bedroom_tablet_screensaver:
         friendly_name: "Bedroom Tablet Screensaver"
