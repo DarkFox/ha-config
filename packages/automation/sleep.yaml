@@ -61,7 +61,7 @@ sensor:
         value_template: "{{ state_attr('sensor.next_event_for_wakeup_time', 'min_entity_id') }}"
       wake_up_time:
         friendly_name: "Opvågningstidspunkt"
-        value_template: "{{ (states('sensor.next_event_for_wakeup_time')|int - (2*60*60)) | timestamp_local() }}"
+        value_template: "{{ (states('sensor.next_event_for_wakeup_time')|int - (1.5*60*60)) | timestamp_local() }}"
       bedtime:
         friendly_name: "Sengetid"
         value_template: "{{ (states('sensor.wake_up_time')|as_timestamp() - (8*60*60)) | timestamp_local() }}"
@@ -72,7 +72,6 @@ sensor:
       - sensor.next_work_event
       - sensor.next_personal_event
       - sensor.next_tripit_event
-      - sensor.darkphone_next_alarm
       - sensor.fallback_wake_up_time
 
 binary_sensor:
@@ -215,7 +214,7 @@ automation:
       - service: input_select.select_option
         data:
           entity_id: input_select.sleep_state
-          option: bedtime
+          option: in bed
 
   - alias: sleep_state_paused_event
     initial_state: true
@@ -442,6 +441,9 @@ automation:
       entity_id: input_select.sleep_state
       to: "bedtime"
     action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Sengetid! Alarm kl. {{ (states('sensor.wake_up_time')|as_datetime).strftime('%H:%M') }}"
       - service: cover.close_cover
         data:
           entity_id: cover.sovevaerelse_gardin
@@ -467,7 +469,43 @@ automation:
       platform: state
       entity_id: input_select.sleep_state
       to: "in bed"
+    variables:
+      wake_up_time: "{{ (states('sensor.wake_up_time')|as_datetime).strftime('%H:%M') }}"
+      calendars: >-
+        {% set calendars = {
+          'sensor.next_work_event': 'calendar.vagtplan_arbejde',
+          'sensor.next_personal_event': 'calendar.personlig',
+          'sensor.next_tripit_event': 'calendar.tripit',
+          'sensor.fallback_wake_up_time': 'fallback'
+        } %}
+        {{ calendars }}
+      calendar: "{{ calendars[states('sensor.wake_up_event_source')] }}"
+      message: "{{ '' if calendar == 'fallback' else state_attr(calendar, 'message') }}"
+      event_time: "{{ '' if calendar == 'fallback' else (state_attr(calendar, 'start_time')|as_timestamp|as_datetime|as_local).strftime('%H:%M') }}"
+      source_calendar: "{{ '' if calendar == 'fallback' else state_attr(calendar, 'friendly_name') }}"
     action:
+      - service: script.turn_on
+        target:
+          entity_id: script.sleep_as_android_set_alarm
+        data:
+          variables:
+            message: HA
+            timehour: "{{ wake_up_time.split(':')[0] }}"
+            timemin: "{{ wake_up_time.split(':')[1] }}"
+      - service: tts.cloud_say
+        data:
+          language: da-DK
+          options:
+            gender: male
+          entity_id: media_player.sovevaerelse_mini
+          message: >-
+            Alarm sat til kl. {{ wake_up_time }}.
+
+            {%- if calendar == 'fallback' %}
+              Der er ingen aftaler i morgen.
+            {% else %}
+              Første aftale i morgen er "{{ message }}", Kl. {{ event_time }}, fra {{ source_calendar }} kalender.
+            {% endif %}
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
