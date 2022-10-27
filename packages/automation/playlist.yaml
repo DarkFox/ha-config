@@ -112,7 +112,7 @@ script:
     alias: Vejrudsigt
     sequence:
       - service: tts.cloud_say
-        data_template:
+        data:
           language: da-DK
           options:
             gender: male
@@ -126,7 +126,7 @@ script:
         data:
           entity_id: sensor.tts_greeting
       - service: tts.cloud_say
-        data_template:
+        data:
           language: da-DK
           options:
             gender: male
@@ -283,7 +283,7 @@ script:
     alias: BBC Minute
     sequence:
       - service: input_select.set_options
-        data_template:
+        data:
           entity_id: input_select.playlist
           options:
             - "{{ states.sensor.podcast_bbc_minute.state }}"
@@ -296,7 +296,7 @@ script:
     alias: Daily Tech News Show
     sequence:
       - service: input_select.set_options
-        data_template:
+        data:
           entity_id: input_select.playlist
           options:
             - "{{ states.sensor.podcast_daily_tech_news_show.state }}"
@@ -309,7 +309,7 @@ script:
     alias: Daily Tech Headlines
     sequence:
       - service: input_select.set_options
-        data_template:
+        data:
           entity_id: input_select.playlist
           options:
             - "{{ states.sensor.podcast_daily_tech_headlines.state }}"
@@ -322,7 +322,7 @@ script:
     alias: Radioavisen
     sequence:
       - service: input_select.set_options
-        data_template:
+        data:
           entity_id: input_select.playlist
           options:
             - "{{ states.sensor.podcast_radioavisen.state }}"
@@ -426,7 +426,7 @@ automation:
         {%- else -%}
           media_player.play_media
         {%- endif -%}
-      data_template:
+      data:
         entity_id: "{{ states('input_select.playlist_player') }}"
         media_content_id: "{{ states('input_select.playlist') }}"
         media_content_type: EPISODE
@@ -451,7 +451,7 @@ automation:
           value_template: "{{ not states('input_select.playlist') | truncate(10,true, '') == '==SWITCH==' }}"
     action:
       service: script.turn_on
-      data_template:
+      data:
         entity_id: "script.{{ states('input_select.playlist') | replace('==SCRIPT==', '') }}"
         variables:
           device_entity_id: "{{ states('input_select.playlist_player') }}"
@@ -476,7 +476,7 @@ automation:
           value_template: "{{ not states('input_select.playlist') | truncate(10,true, '') == '==SCRIPT==' }}"
     action:
       - service: input_select.select_option
-        data_template:
+        data:
           entity_id: input_select.playlist_player
           option: "media_player.{{ states('input_select.playlist') | replace('==SWITCH==', '') }}"
       - delay:
@@ -547,7 +547,7 @@ automation:
           value_template: "{{ not is_state('input_select.playlist', '==END==') }}"
     action:
       - service: input_text.set_value
-        data_template:
+        data:
           entity_id: input_text.playlist_media_position
           value: "{{ state_attr(trigger.from_state.state, 'media_position') }}"
       - service: >
@@ -556,14 +556,14 @@ automation:
           {%- else -%}
             media_player.play_media
           {%- endif -%}
-        data_template:
+        data:
           entity_id: "{{ trigger.to_state.state }}"
           media_content_id: "{{ states('input_select.playlist') }}"
           media_content_type: EPISODE
       - delay:
           seconds: 2
       - service: media_player.media_seek
-        data_template:
+        data:
           entity_id: "{{ trigger.to_state.state }}"
           seek_position: "{{ states('input_text.playlist_media_position') }}"
 
@@ -580,8 +580,8 @@ automation:
           options:
             - "==NONE=="
       - service: media_player.media_stop
-        data_template:
+        data:
           entity_id: "{{ states.input_select.playlist_player.state }}"
       - service: media_player.turn_off
-        data_template:
+        data:
           entity_id: "{{ states.input_select.playlist_player.state }}"
