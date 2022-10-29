@@ -23,18 +23,23 @@ script:
               - condition: template
                 value_template: "{{ modus == 'close' }}"
             sequence:
-              - service: "cover.{{modus}}_cover"
+              - service: "cover.close_cover"
                 target:
-                  entity_id:
-                    - cover.sovevaerelse_gardin_vindue
+                  entity_id: cover.sovevaerelse_gardin_vindue
               - delay:
-                  seconds: 30
-              - service: "cover.{{modus}}_cover"
+                  seconds: 25
+              - service: cover.set_cover_position
                 target:
-                  entity_id:
-                    - cover.sovevaerelse_gardin_dor
+                  entity_id: cover.sovevaerelse_gardin_vindue
+                data:
+                  position: 35
+              - delay:
+                  seconds: 5
+              - service: "cover.close_cover"
+                target:
+                  entity_id: cover.sovevaerelse_gardin_dor
         default:
-          - service: "cover.{{modus}}_cover"
+          - service: "cover.open_cover"
             target:
               entity_id:
                 - cover.sovevaerelse_gardin_vindue
@@ -44,16 +49,26 @@ script:
     sequence:
       - service: cover.set_cover_position
         target:
-          entity_id:
-            - cover.sovevaerelse_gardin_vindue
+          entity_id: cover.sovevaerelse_gardin_vindue
         data:
           position: "{{position}}"
       - delay:
-          seconds: 30
+          seconds: 25
       - service: cover.set_cover_position
         target:
-          entity_id:
-            - cover.sovevaerelse_gardin_dor
+          entity_id: cover.sovevaerelse_gardin_vindue
+        data:
+          position: >-
+            {% if position < 35 %}
+              35
+            {% else %}
+              {{ position }}
+            {% end %}
+      - delay:
+          seconds: 5
+      - service: cover.set_cover_position
+        target:
+          entity_id: cover.sovevaerelse_gardin_dor
         data:
           position: "{{position}}"
 
