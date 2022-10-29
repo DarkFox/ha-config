@@ -62,9 +62,15 @@ sensor:
       wake_up_time:
         friendly_name: "Opvågningstidspunkt"
         value_template: "{{ (states('sensor.next_event_for_wakeup_time')|int - (1.5*60*60)) | timestamp_local() }}"
+      minutes_to_wake_up_time:
+        friendly_name: Minutter til Opvågningstidspunkt
+        value_template: "{{ ((states('sensor.wake_up_time')|as_timestamp - now()|as_timestamp)/60)|int }}"
       bedtime:
         friendly_name: "Sengetid"
-        value_template: "{{ (states('sensor.wake_up_time')|as_timestamp() - (8*60*60)) | timestamp_local() }}"
+        value_template: "{{ (states('sensor.wake_up_time')|as_timestamp() - (8.5*60*60)) | timestamp_local() }}"
+      minutes_to_bedtime:
+        friendly_name: Minutter til Sengetid
+        value_template: "{{ ((states('sensor.bedtime')|as_timestamp - now()|as_timestamp)/60)|int }}"
   - platform: min_max
     name: next_event_for_wakeup_time
     type: min
