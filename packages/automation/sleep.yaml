@@ -542,6 +542,15 @@ automation:
       to: "sleeping"
       from: "in bed"
     action:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_select.sleep_as_android_state
+                state: "awake"
+            sequence:
+              - service: script.turn_on
+                target:
+                  entity_id: script.sleep_as_android_start_tracking
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
@@ -565,9 +574,9 @@ automation:
       entity_id: input_select.sleep_state
       to: "paused"
     action:
-      - service: joaoapps_join.phone_send_tasker
-        data:
-          command: "sleep_tracking_pause"
+      - service: script.turn_on
+        target:
+          entity_id: script.sleep_as_android_pause_tracking
       - event: set_light_profile
         event_data:
           room: bedroom
@@ -581,9 +590,9 @@ automation:
       to: "sleeping"
       from: "paused"
     action:
-      - service: joaoapps_join.phone_send_tasker
-        data:
-          command: "sleep_tracking_resume"
+      - service: script.turn_on
+        target:
+          entity_id: script.sleep_as_android_start_tracking
       - event: set_light_profile
         event_data:
           room: bedroom
@@ -836,9 +845,9 @@ automation:
         event_data:
           room: bathroom
           profile: Dimmed
-      - service: joaoapps_join.phone_send_tasker
-        data:
-          command: "sleep_tracking_stop"
+      - service: script.turn_on
+        target:
+          entity_id: script.sleep_as_android_stop_tracking
       - choose:
           - conditions:
               - condition: state
