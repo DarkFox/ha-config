@@ -687,7 +687,22 @@ automation:
               - service: cover.set_cover_position
                 data:
                   entity_id: cover.sovevaerelse_gardin_vindue
-                  position: 20
+                  position: 40
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.scene_transition_time"
+          value: 300.0
+      - delay:
+          seconds: 1
+      - event: set_light_profile
+        event_data:
+          room: bedroom
+          profile: Dimmed
+      - delay:
+          seconds: 2
+      - service: automation.trigger
+        data:
+          entity_id: "automation.reset_scene_transition_time"
 
   - alias: alarm_action_10_minutes
     initial_state: true
@@ -709,7 +724,7 @@ automation:
               - service: cover.set_cover_position
                 data:
                   entity_id: cover.sovevaerelse_gardin_vindue
-                  position: 10
+                  position: 45
 
   - alias: alarm_action_20_minutes
     initial_state: true
@@ -731,7 +746,7 @@ automation:
               - service: cover.set_cover_position
                 data:
                   entity_id: cover.sovevaerelse_gardin_vindue
-                  position: 0
+                  position: 50
 
   - alias: snoozing_action
     initial_state: true
@@ -741,7 +756,7 @@ automation:
     condition:
       condition: numeric_state
       entity_id: counter.snooze_counter
-      above: 3
+      above: 2
     action:
       - service: input_number.set_value
         data:
