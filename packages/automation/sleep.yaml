@@ -42,32 +42,33 @@ sensor:
       next_work_event:
         value_template: >-
           {% set time = as_timestamp(state_attr('calendar.vagtplan_arbejde', 'start_time')) or false %}
-          {{ time if as_timestamp(now())+(1*60*60) < time else false }}
+          {{ (time-(1.5*60*60)) if as_timestamp(now())+(1*60*60) < time else false }}
       next_personal_event:
         value_template: >-
           {% set time = as_timestamp(state_attr('calendar.personlig', 'start_time')) or false %}
-          {{ time if as_timestamp(now())+(1*60*60) < time else false }}
+          {{ (time-(2*60*60)) if as_timestamp(now())+(1*60*60) < time else false }}
       next_tripit_event:
         value_template: >-
           {% set time = as_timestamp(state_attr('calendar.tripit', 'start_time')) or false %}
-          {{ time if as_timestamp(now())+(1*60*60) < time else false }}
+          {{ (time-(4*60*60)) if as_timestamp(now())+(1*60*60) < time else false }}
       fallback_wake_up_time:
         value_template: >-
           {%- set hour = state_attr('input_datetime.fallback_wake_up_time', 'hour') -%}
           {%- set minute = state_attr('input_datetime.fallback_wake_up_time', 'minute') -%}
           {%- set days = 0 if 0 <= now().hour <= hour else 1 -%}
-          {{ as_timestamp(now().replace(hour=hour,minute=minute,second=0,microsecond=0) + timedelta(days=days)) }}
+          {%- set time = as_timestamp(now().replace(hour=hour,minute=minute,second=0,microsecond=0) + timedelta(days=days)) -%}
+          {{ time if as_timestamp(now())+(1*60*60) < time else false }}
       wake_up_event_source:
         value_template: "{{ state_attr('sensor.next_event_for_wakeup_time', 'min_entity_id') }}"
       wake_up_time:
         friendly_name: "Opvågningstidspunkt"
-        value_template: "{{ (states('sensor.next_event_for_wakeup_time')|int - (1.5*60*60)) | timestamp_local() }}"
+        value_template: "{{ states('sensor.next_event_for_wakeup_time')|int | timestamp_local() }}"
       minutes_to_wake_up_time:
         friendly_name: Minutter til Opvågningstidspunkt
         value_template: "{{ ((states('sensor.wake_up_time')|as_timestamp - now()|as_timestamp)/60)|int }}"
       bedtime:
         friendly_name: "Sengetid"
-        value_template: "{{ (states('sensor.wake_up_time')|as_timestamp() - (8.5*60*60)) | timestamp_local() }}"
+        value_template: "{{ (states('sensor.wake_up_time')|as_timestamp - (8.5*60*60)) | timestamp_local() }}"
       minutes_to_bedtime:
         friendly_name: Minutter til Sengetid
         value_template: "{{ ((states('sensor.bedtime')|as_timestamp - now()|as_timestamp)/60)|int }}"
