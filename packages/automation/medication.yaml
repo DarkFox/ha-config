@@ -1,46 +1,187 @@
-input_boolean:
-  pill_box_white_1:
-    name: Hvid Pilleæske 1
-    icon: mdi:medication
-  pill_box_white_2:
-    name: Hvid Pilleæske 2
-    icon: mdi:medication
-  pill_box_pink_1:
-    name: Pink Pilleæske 1
-    icon: mdi:medication
-  pill_box_pink_2:
-    name: Pink Pilleæske 2
-    icon: mdi:medication
-  pill_box_purple_1:
-    name: Lilla Pilleæske 1
-    icon: mdi:medication
-  pill_box_purple_2:
-    name: Lilla Pilleæske 2
-    icon: mdi:medication
-  pill_box_blue_1:
-    name: Blå Pilleæske 1
-    icon: mdi:medication
-  pill_box_blue_2:
-    name: Blå Pilleæske 2
-    icon: mdi:medication
-  pill_box_green_1:
-    name: Grøn Pilleæske 1
-    icon: mdi:medication
-  pill_box_green_2:
-    name: Grøn Pilleæske 2
-    icon: mdi:medication
-  pill_box_yellow_1:
-    name: Gul Pilleæske 1
-    icon: mdi:medication
-  pill_box_yellow_2:
-    name: Gul Pilleæske 2
-    icon: mdi:medication
-  pill_box_orange_1:
-    name: Orange Pilleæske 1
-    icon: mdi:medication
-  pill_box_orange_2:
-    name: Orange Pilleæske 2
-    icon: mdi:medication
+automation:
+  - id: take_pills
+    alias: Take Pills
+    initial_state: true
+    trigger:
+      - platform: time
+        at: input_datetime.morning_medication_time
+        variables:
+          time: morning
+      - platform: time
+        at: input_datetime.evening_medication_time
+        variables:
+          time: evening
+    action:
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.next_medication
+        data:
+          option: "{{ time }}"
+      - service: input_boolean.turn_off
+        target:
+          entity_id: "input_boolean.{{ time }}_medication_taken"
+      - service: notify.telegram_darkfox
+        data:
+          title: Tid til at tage medicin!
+          message: >
+            Tag fra {{ state_attr(states('sensor.next_'+time+'_medication'), 'friendly_name') }}.
+
+  - id: set_evening_medication_time
+    alias: Set Evening Medication Time
+    trigger:
+      - platform: state
+        entity_id: sensor.bedtime
+    action:
+      - service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.evening_medication_time
+        data:
+          time: "{{ ((states('sensor.bedtime')|as_timestamp - (1.5*60*60))|as_datetime|as_local).strftime('%H:%M:%S') }}"
+
+  - id: set_morning_medication_time
+    alias: Set Morning Medication Time
+    trigger:
+      - platform: state
+        entity_id: sensor.wake_up_time
+    action:
+      - service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.morning_medication_time
+        data:
+          time: "{{ ((states('sensor.wake_up_time')|as_timestamp + (0.5*60*60))|as_datetime|as_local).strftime('%H:%M:%S') }}"
+
+  - id: pill_box_scanned
+    alias: Pill Box Scanned
+    trigger:
+      - platform: event
+        event_type: tag_scanned
+    variables:
+      time: "{{ states('input_select.next_medication') }}"
+      next_medication: "{{ states('sensor.next_'+time+'_medication') }}"
+      next_box: "{{ next_medication|regex_findall(find='input_boolean\\.(\\S+)_\\d+', ignorecase=False)|first }}"
+      t: >-
+        {% set t = {
+          'morning': 'morgen',
+          'evening': 'aften',
+          'pill_box_white': 'Hvid',
+          'pill_box_pink': 'Pink',
+          'pill_box_purple': 'Lilla',
+          'pill_box_blue': 'Blå',
+          'pill_box_green': 'Grøn',
+          'pill_box_yellow': 'Gul',
+          'pill_box_orange': 'Orange'
+        } %}
+        {{ t }}
+      tags:
+        49668ae4-09bf-4f35-a498-3b98bd59ff97: pill_box_white
+        1a29d695-aa26-4164-99eb-7a2ff1ef97ff: pill_box_pink
+        c1c902cf-a6b2-4807-be8c-1c567cf69cb7: pill_box_purple
+        f3783e65-6280-432c-a129-6590ec52d445: pill_box_blue
+        ae005951-3321-46b4-a701-100d8c10c5bc: pill_box_green
+        2b16a4ac-338d-4bac-84d9-cfcee8869d50: pill_box_yellow
+        167301c1-048b-4593-9f1a-5c6796bb03e9: pill_box_orange
+        59854525-aa86-491b-bcda-a8c3d48f00b9: pill_box_container
+      box_id: "{{ tags[trigger.event.data.tag_id] }}"
+    action:
+      - service: script.debug_notification
+        data_template:
+          message: "box_id: {{ box_id }}"
+          title: "Medication"
+      - condition: template
+        value_template: "{{ trigger.event.data.tag_id in tags.keys() }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ box_id == 'pill_box_container' }}"
+            sequence:
+              - service: input_boolean.toggle
+                target:
+                  entity_id: input_boolean.medication_refill
+              - service: notify.telegram_darkfox
+                data:
+                  message: >-
+                    {{
+                      'Klar til at fylde pilleæsker.' if is_state('input_boolean.medication_refill', 'on')
+                      else 'Fyld pilleæsker afsluttet.'
+                    }}
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.medication_refill
+                state: "on"
+            sequence:
+              - service: input_boolean.turn_on
+                target:
+                  entity_id:
+                    - "input_boolean.{{ box_id }}_1"
+                    - "input_boolean.{{ box_id }}_2"
+                    - "input_boolean.{{ box_id }}_3"
+                    - "input_boolean.{{ box_id }}_4"
+              - service: notify.telegram_darkfox
+                data:
+                  message: "Fyldt pilleæske: {{ t[box_id] }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ box_id != next_box }}"
+            sequence:
+              - service: notify.telegram_darkfox
+                data:
+                  title: Stop! Forkert æske!
+                  message: >
+                    Tag fra {{ state_attr(states('sensor.next_'+time+'_medication'), 'friendly_name') }}.
+          - conditions:
+              - condition: template
+                value_template: "{{ is_state('input_boolean.'+time+'_medication_taken', 'on') }}"
+            sequence:
+              - service: notify.telegram_darkfox
+                data:
+                  title: Stop!
+                  message: "Du har allerede taget {{ t[time] }} piller!"
+        default:
+          - service: input_boolean.turn_off
+            target:
+              entity_id: "{{ next_medication }}"
+          - service: input_boolean.turn_on
+            target:
+              entity_id: "input_boolean.{{ time }}_medication_taken"
+          - service: input_datetime.set_datetime
+            target:
+              entity_id: input_datetime.medication_last_taken
+            data:
+              datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+          - service: notify.telegram_darkfox
+            data:
+              message: "Taget piller: {{ state_attr(next_medication, 'friendly_name') }}"
+
+template:
+  - sensor:
+      - name: Morning Medication
+        state: >-
+          {%- set m = state_attr('sensor.morning_medication', 'full_boxes') -%}
+          {{ 'unknown' if m == None else m|length }}
+        attributes:
+          full_boxes: >-
+            [{% for entity in state_attr('group.morning_medication', 'entity_id') %}
+              {{ '"'+entity+'",' if is_state(entity, 'on') }}
+            {% endfor %}]
+      - name: Next Morning Medication
+        state: "{{ state_attr('sensor.morning_medication', 'full_boxes')[0] }}"
+      - name: Evening Medication
+        state: >-
+          {%- set m = state_attr('sensor.evening_medication', 'full_boxes') -%}
+          {{ 'unknown' if m == None else m|length }}
+        attributes:
+          full_boxes: >-
+            [{% for entity in state_attr('group.evening_medication', 'entity_id') %}
+              {{ '"'+entity+'",' if is_state(entity, 'on') }}
+            {% endfor %}]
+      - name: Next Evening Medication
+        state: "{{ state_attr('sensor.evening_medication', 'full_boxes')[0] }}"
+
+input_select:
+  next_medication:
+    options:
+      - morning
+      - evening
 
 input_datetime:
   medication_last_taken:
@@ -48,50 +189,143 @@ input_datetime:
     icon: mdi:medication
     has_date: true
     has_time: true
+  morning_medication_time:
+    name: Morgen Medicin Tidspunkt
+    icon: mdi:weather-sunset-up
+    has_date: false
+    has_time: true
+  evening_medication_time:
+    name: Aften Medicin Tidspunkt
+    icon: mdi:weather-sunset-down
+    has_date: false
+    has_time: true
 
-automation:
-  - id: pill_box_scanned
-    alias: Pill Box Scanned
-    trigger:
-      - platform: event
-        event_type: tag_scanned
-    variables:
-      tags:
-        167301c1-048b-4593-9f1a-5c6796bb03e9: pill_box_orange
-        ae005951-3321-46b4-a701-100d8c10c5bc: pill_box_green
-        2b16a4ac-338d-4bac-84d9-cfcee8869d50: pill_box_yellow
-        c1c902cf-a6b2-4807-be8c-1c567cf69cb7: pill_box_purple
-        f3783e65-6280-432c-a129-6590ec52d445: pill_box_blue
-        1a29d695-aa26-4164-99eb-7a2ff1ef97ff: pill_box_pink
-        49668ae4-09bf-4f35-a498-3b98bd59ff97: pill_box_white
-    action:
-      - condition: template
-        value_template: "{{ trigger.event.data.tag_id in tags.keys() }}"
-      - variables:
-          box_id: "{{ tags[trigger.event.data.tag_id] }}"
-          target_entity: "{{ 'input_boolean.'+box_id+'_1' if is_state('input_boolean.'+box_id+'_1', 'on') else 'input_boolean.'+box_id+'_2' }}"
-      - choose:
-          - conditions:
-              - condition: template
-                value_template: "{{ is_state(target_entity, 'on') }}"
-            sequence:
-              - service: input_boolean.turn_off
-                target:
-                  entity_id: "{{ target_entity }}"
-              - service: input_datetime.set_datetime
-                target:
-                  entity_id: input_datetime.medication_last_taken
-                data:
-                  datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
-              - service: notify.telegram_darkfox
-                data:
-                  message: "Taget piller: {{ state_attr(target_entity, 'friendly_name') }}"
-        default:
-          - service: input_boolean.turn_on
-            target:
-              entity_id:
-                - "input_boolean.{{ box_id }}_1"
-                - "input_boolean.{{ box_id }}_2"
-          - service: notify.telegram_darkfox
-            data:
-              message: "Fyldt pilleæske: {{ state_attr('input_boolean.'+box_id+'_1', 'friendly_name') }} & 2"
+input_boolean:
+  medication_refill:
+    initial: off
+  morning_medication_taken:
+    name: Morgen Medicin Taget
+    icon: mdi:weather-sunset-up
+  evening_medication_taken:
+    name: Aften Medicin Taget
+    icon: mdi:weather-sunset-down
+  pill_box_white_1:
+    name: Hvid Pilleæske 1
+    icon: mdi:medication
+  pill_box_white_2:
+    name: Hvid Pilleæske 2
+    icon: mdi:medication
+  pill_box_white_3:
+    name: Hvid Pilleæske 3
+    icon: mdi:medication
+  pill_box_white_4:
+    name: Hvid Pilleæske 4
+    icon: mdi:medication
+  pill_box_pink_1:
+    name: Pink Pilleæske 1
+    icon: mdi:medication
+  pill_box_pink_2:
+    name: Pink Pilleæske 2
+    icon: mdi:medication
+  pill_box_pink_3:
+    name: Pink Pilleæske 3
+    icon: mdi:medication
+  pill_box_pink_4:
+    name: Pink Pilleæske 4
+    icon: mdi:medication
+  pill_box_purple_1:
+    name: Lilla Pilleæske 1
+    icon: mdi:medication
+  pill_box_purple_2:
+    name: Lilla Pilleæske 2
+    icon: mdi:medication
+  pill_box_purple_3:
+    name: Lilla Pilleæske 3
+    icon: mdi:medication
+  pill_box_purple_4:
+    name: Lilla Pilleæske 4
+    icon: mdi:medication
+  pill_box_blue_1:
+    name: Blå Pilleæske 1
+    icon: mdi:medication
+  pill_box_blue_2:
+    name: Blå Pilleæske 2
+    icon: mdi:medication
+  pill_box_blue_3:
+    name: Blå Pilleæske 3
+    icon: mdi:medication
+  pill_box_blue_4:
+    name: Blå Pilleæske 4
+    icon: mdi:medication
+  pill_box_green_1:
+    name: Grøn Pilleæske 1
+    icon: mdi:medication
+  pill_box_green_2:
+    name: Grøn Pilleæske 2
+    icon: mdi:medication
+  pill_box_green_3:
+    name: Grøn Pilleæske 3
+    icon: mdi:medication
+  pill_box_green_4:
+    name: Grøn Pilleæske 4
+    icon: mdi:medication
+  pill_box_yellow_1:
+    name: Gul Pilleæske 1
+    icon: mdi:medication
+  pill_box_yellow_2:
+    name: Gul Pilleæske 2
+    icon: mdi:medication
+  pill_box_yellow_3:
+    name: Gul Pilleæske 3
+    icon: mdi:medication
+  pill_box_yellow_4:
+    name: Gul Pilleæske 4
+    icon: mdi:medication
+  pill_box_orange_1:
+    name: Orange Pilleæske 1
+    icon: mdi:medication
+  pill_box_orange_2:
+    name: Orange Pilleæske 2
+    icon: mdi:medication
+  pill_box_orange_3:
+    name: Orange Pilleæske 3
+    icon: mdi:medication
+  pill_box_orange_4:
+    name: Orange Pilleæske 4
+    icon: mdi:medication
+
+group:
+  morning_medication:
+    name: Morgen Medicin
+    entities:
+      - input_boolean.pill_box_white_1
+      - input_boolean.pill_box_white_3
+      - input_boolean.pill_box_pink_1
+      - input_boolean.pill_box_pink_3
+      - input_boolean.pill_box_purple_1
+      - input_boolean.pill_box_purple_3
+      - input_boolean.pill_box_blue_1
+      - input_boolean.pill_box_blue_3
+      - input_boolean.pill_box_green_1
+      - input_boolean.pill_box_green_3
+      - input_boolean.pill_box_yellow_1
+      - input_boolean.pill_box_yellow_3
+      - input_boolean.pill_box_orange_1
+      - input_boolean.pill_box_orange_3
+  evening_medication:
+    name: Aften Medicin
+    entities:
+      - input_boolean.pill_box_white_2
+      - input_boolean.pill_box_white_4
+      - input_boolean.pill_box_pink_2
+      - input_boolean.pill_box_pink_4
+      - input_boolean.pill_box_purple_2
+      - input_boolean.pill_box_purple_4
+      - input_boolean.pill_box_blue_2
+      - input_boolean.pill_box_blue_4
+      - input_boolean.pill_box_green_2
+      - input_boolean.pill_box_green_4
+      - input_boolean.pill_box_yellow_2
+      - input_boolean.pill_box_yellow_4
+      - input_boolean.pill_box_orange_2
+      - input_boolean.pill_box_orange_4
