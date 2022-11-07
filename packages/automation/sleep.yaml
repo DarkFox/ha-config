@@ -60,6 +60,32 @@ sensor:
           {{ time if as_timestamp(now())+(1*60*60) < time else false }}
       wake_up_event_source:
         value_template: "{{ state_attr('sensor.next_event_for_wakeup_time', 'min_entity_id') }}"
+      wake_up_event_source_entity:
+        value_template: >-
+          {% set calendars = {
+            'sensor.next_work_event': 'calendar.vagtplan_arbejde',
+            'sensor.next_personal_event': 'calendar.personlig',
+            'sensor.next_tripit_event': 'calendar.tripit',
+            'sensor.fallback_wake_up_time': 'fallback'
+          } %}
+          {{ calendars[states('sensor.wake_up_event_source')] }}
+      wake_up_event_source_message:
+        value_template: "{{ state_attr(states('sensor.wake_up_event_source_entity'), 'message') }}"
+        attribute_templates:
+          icon: mdi:calendar-clock
+      wake_up_event_source_start_time:
+        value_template: "{{ (state_attr(states('sensor.wake_up_event_source_entity'), 'start_time')|as_timestamp|as_datetime|as_local).strftime('%H:%M') }}"
+      wake_up_event_source_name:
+        value_template: >-
+          {% set calendars = {
+            'sensor.next_work_event': 'Vagtplan',
+            'sensor.next_personal_event': 'Personlig Kalender',
+            'sensor.next_tripit_event': 'TripIt',
+            'sensor.fallback_wake_up_time': 'Standard'
+          } %}
+          {{ calendars[states('sensor.wake_up_event_source')] }}
+        attribute_templates:
+          icon: mdi:calendar
       wake_up_time:
         friendly_name: "Opvågningstidspunkt"
         value_template: "{{ states('sensor.next_event_for_wakeup_time')|int | timestamp_local() }}"
@@ -72,6 +98,17 @@ sensor:
       minutes_to_bedtime:
         friendly_name: Minutter til Sengetid
         value_template: "{{ ((states('sensor.bedtime')|as_timestamp - now()|as_timestamp)/60)|int }}"
+      bedtime_clock:
+        friendly_name: "Sengetid"
+        value_template: "{{ (states('sensor.bedtime')|as_datetime).strftime('%H:%M') }}"
+        attribute_templates:
+          icon: mdi:bed-clock
+      wake_up_time_clock:
+        friendly_name: "Alarm"
+        value_template: "{{ (states('sensor.wake_up_time')|as_datetime).strftime('%H:%M') }}"
+        attribute_templates:
+          icon: mdi:alarm
+
   - platform: min_max
     name: next_event_for_wakeup_time
     type: min
@@ -483,19 +520,7 @@ automation:
       entity_id: input_select.sleep_state
       to: "in bed"
     variables:
-      wake_up_time: "{{ (states('sensor.wake_up_time')|as_datetime).strftime('%H:%M') }}"
-      calendars: >-
-        {% set calendars = {
-          'sensor.next_work_event': 'calendar.vagtplan_arbejde',
-          'sensor.next_personal_event': 'calendar.personlig',
-          'sensor.next_tripit_event': 'calendar.tripit',
-          'sensor.fallback_wake_up_time': 'fallback'
-        } %}
-        {{ calendars }}
-      calendar: "{{ calendars[states('sensor.wake_up_event_source')] }}"
-      message: "{{ '' if calendar == 'fallback' else state_attr(calendar, 'message') }}"
-      event_time: "{{ '' if calendar == 'fallback' else (state_attr(calendar, 'start_time')|as_timestamp|as_datetime|as_local).strftime('%H:%M') }}"
-      source_calendar: "{{ '' if calendar == 'fallback' else state_attr(calendar, 'friendly_name') }}"
+      wake_up_time: "{{ states('sensor.wake_up_time_clock') }}"
     action:
       - service: script.turn_on
         target:
@@ -514,10 +539,10 @@ automation:
           message: >-
             Alarm sat til kl. {{ wake_up_time }}.
 
-            {%- if calendar == 'fallback' %}
+            {%- if states('sensor.wake_up_event_source_entity') == 'fallback' %}
               Der er ingen aftaler i morgen.
             {% else %}
-              Første aftale i morgen er "{{ message }}", Kl. {{ event_time }}, fra {{ source_calendar }} kalender.
+              Første aftale i morgen er "{{ states('sensor.wake_up_event_source_message') }}", Kl. {{ states('sensor.wake_up_event_source_start_time') }}, fra {{ states('sensor.wake_up_event_source_name') }} kalender.
             {% endif %}
       - service: input_number.set_value
         data:
