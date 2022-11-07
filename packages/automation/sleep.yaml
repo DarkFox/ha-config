@@ -37,20 +37,29 @@ script:
             {{ state_attr('sensor.dmi_vejr_tts', 'text') }}
 
 sensor:
+  - platform: min_max
+    name: next_event_for_wakeup_time
+    type: min
+    entity_ids:
+      - sensor.next_work_event
+      - sensor.next_personal_event
+      - sensor.next_tripit_event
+      - sensor.fallback_wake_up_time
+
   - platform: template
     sensors:
       next_work_event:
         value_template: >-
-          {% set time = as_timestamp(state_attr('calendar.vagtplan_arbejde', 'start_time')) or false %}
-          {{ (time-(1.5*60*60)) if as_timestamp(now())+(1*60*60) < time else false }}
+          {% set time = as_timestamp(state_attr('calendar.vagtplan_arbejde', 'start_time')) or 4294967295 %}
+          {{ (time-(1.5*60*60)) if as_timestamp(now())+(1*60*60) < time else 4294967295 }}
       next_personal_event:
         value_template: >-
-          {% set time = as_timestamp(state_attr('calendar.personlig', 'start_time')) or false %}
-          {{ (time-(2*60*60)) if as_timestamp(now())+(1*60*60) < time else false }}
+          {% set time = as_timestamp(state_attr('calendar.personlig', 'start_time')) or 4294967295 %}
+          {{ (time-(2*60*60)) if as_timestamp(now())+(1*60*60) < time else 4294967295 }}
       next_tripit_event:
         value_template: >-
-          {% set time = as_timestamp(state_attr('calendar.tripit', 'start_time')) or false %}
-          {{ (time-(4*60*60)) if as_timestamp(now())+(1*60*60) < time else false }}
+          {% set time = as_timestamp(state_attr('calendar.tripit', 'start_time')) or 4294967295 %}
+          {{ (time-(4*60*60)) if as_timestamp(now())+(1*60*60) < time else 4294967295 }}
       fallback_wake_up_time:
         value_template: >-
           {%- set hour = state_attr('input_datetime.fallback_wake_up_time', 'hour') -%}
@@ -108,15 +117,6 @@ sensor:
         value_template: "{{ (states('sensor.wake_up_time')|as_datetime).strftime('%H:%M') }}"
         attribute_templates:
           icon: mdi:alarm
-
-  - platform: min_max
-    name: next_event_for_wakeup_time
-    type: min
-    entity_ids:
-      - sensor.next_work_event
-      - sensor.next_personal_event
-      - sensor.next_tripit_event
-      - sensor.fallback_wake_up_time
 
 binary_sensor:
   - platform: template
