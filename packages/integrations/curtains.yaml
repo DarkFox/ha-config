@@ -26,15 +26,17 @@ script:
               - service: "cover.close_cover"
                 target:
                   entity_id: cover.sovevaerelse_gardin_vindue
-              - delay:
-                  seconds: 25
+              - wait_template: "{{ is_state('cover.sovevaerelse_gardin_vindue', 'closed') }}"
+                timeout: "00:02:00"
+                continue_on_timeout: false
               - service: cover.set_cover_position
                 target:
                   entity_id: cover.sovevaerelse_gardin_vindue
                 data:
                   position: 35
-              - delay:
-                  seconds: 5
+              - wait_template: "{{ is_state('cover.sovevaerelse_gardin_vindue', 'opening') or is_state('cover.sovevaerelse_gardin_vindue', 'open') }}"
+                timeout: "00:02:00"
+                continue_on_timeout: false
               - service: "cover.close_cover"
                 target:
                   entity_id: cover.sovevaerelse_gardin_dor
@@ -52,20 +54,28 @@ script:
           entity_id: cover.sovevaerelse_gardin_vindue
         data:
           position: "{{position}}"
-      - delay:
-          seconds: 25
-      - service: cover.set_cover_position
-        target:
-          entity_id: cover.sovevaerelse_gardin_vindue
-        data:
-          position: >-
+      - wait_template: >-
+          {%- set current_pos = state_attr('cover.sovevaerelse_gardin_vindue', 'current_position') -%}
+          {{ position-5 < current_pos < position+5 }}
+        timeout: "00:02:00"
+        continue_on_timeout: false
+      - variables:
+          final_pos: >-
             {% if position < 35 %}
               35
             {% else %}
               {{ position }}
             {% endif %}
-      - delay:
-          seconds: 5
+      - service: cover.set_cover_position
+        target:
+          entity_id: cover.sovevaerelse_gardin_vindue
+        data:
+          position: "{{ final_pos }}"
+      - wait_template: >-
+          {%- set current_pos = state_attr('cover.sovevaerelse_gardin_vindue', 'current_position') -%}
+          {{ final_pos-5 < current_pos < final_pos+5 }}
+        timeout: "00:02:00"
+        continue_on_timeout: false
       - service: cover.set_cover_position
         target:
           entity_id: cover.sovevaerelse_gardin_dor
