@@ -65,13 +65,11 @@ template:
         device_class: duration
         unit_of_measurement: minutes
 
-binary_sensor:
-  - platform: template
-    sensors:
-      at_work_soon:
-        friendly_name: "Snart På Arbejde"
-        value_template: >
-          {{ states('proximity.martin_to_rsh')|float < 2000 }}
+  - binary_sensor:
+      - name: "In Car"
+        state: "{{'18:48:CA:15:9C:66 (VW Fox)' in state_attr('sensor.darkphone_bluetooth_connection', 'connected_paired_devices') }}"
+      - name: At Work Soon
+        state: "{{ states('proximity.martin_to_rsh')|float < 2000 }}"
 
 automation:
   - id: climatise_car_for_upcoming_drive
@@ -191,6 +189,7 @@ automation:
     trigger:
       - platform: state
         entity_id: sensor.id3_remaining_charging_time
+        not_from: "unavailable"
     condition:
       - alias: "Estimated charging time remaining changed by more than 5 minutes"
         condition: template
@@ -255,6 +254,12 @@ automation:
       - platform: state
         entity_id: sensor.id3_charging_state
         from: "charging"
+    condition:
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: sensor.id3_charging_state
+            state: "unavailable"
     action:
       - service: notify.telegram_darkfox
         data:
