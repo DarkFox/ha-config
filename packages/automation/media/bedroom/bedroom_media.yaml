@@ -140,8 +140,11 @@ automation:
     initial_state: true
     trigger:
       - platform: state
-        entity_id: input_select.bedroom_room_state
-        to: "active"
+        entity_id: media_player.sovevaerelse_chromecast
+        from:
+          - "off"
+          - "unavailable"
+          - "unknown"
     action:
       - service: switch.turn_on
         data:
@@ -151,24 +154,10 @@ automation:
     initial_state: true
     trigger:
       - platform: state
-        entity_id: input_select.bedroom_room_state
-        to: "off"
-        for:
-          minutes: 1
-      - platform: state
         entity_id: media_player.sovevaerelse_chromecast
         from: "playing"
         for:
           minutes: 1
-    condition:
-      - condition: state
-        entity_id: input_select.bedroom_room_state
-        state: "off"
-      - condition: not
-        conditions:
-          - condition: state
-            entity_id: media_player.sovevaerelse_chromecast
-            state: "playing"
     action:
       - service: switch.turn_off
         data:
