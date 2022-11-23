@@ -1,0 +1,139 @@
+substitutions:
+  devicename: hobbybord_lys
+  upper_devicename: Hobbybord Lys
+
+esphome:
+  name: $devicename
+  platform: ESP8266
+  board: huzzah
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+  fast_connect: true
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret api_pass
+
+ota:
+  password: !secret ota_pass
+
+status_led:
+  pin:
+    number: GPIO5
+    inverted: true
+  #   pin: GPIO05
+  #   id: status_red_pwm
+  #   pin: GPIO01
+  #   id: status_green_pwm
+
+output: !include shared/h801_pwm.yaml
+
+light:
+  - platform: monochromatic
+    id: hobbybord_bord
+    name: Hobbybord Bord
+    output: red_pwm
+    gamma_correct: 1.8
+    default_transition_length: 250ms
+    effects:
+      - strobe:
+      - flicker:
+      - lambda:
+          name: Fade
+          update_interval: 1s
+          lambda: |-
+            static bool state = false;
+            auto call = id(hobbybord_bord).turn_on();
+            // Transtion of 1000ms = 1s
+            call.set_transition_length(1000);
+            if (state == false) {
+              call.set_brightness(1.0);
+              state = true;
+            } else {
+              call.set_brightness(0.01);
+              state = false;
+            }
+            call.perform();
+
+  - platform: monochromatic
+    id: hobbybord_vaerktoejsskab
+    name: Hobbybord Værktøjsskab
+    output: green_pwm
+    gamma_correct: 1.8
+    default_transition_length: 250ms
+    effects:
+      - strobe:
+      - flicker:
+      - lambda:
+          name: Fade
+          update_interval: 1s
+          lambda: |-
+            static bool state = false;
+            auto call = id(hobbybord_vaerktoejsskab).turn_on();
+            // Transtion of 1000ms = 1s
+            call.set_transition_length(1000);
+            if (state == false) {
+              call.set_brightness(1.0);
+              state = true;
+            } else {
+              call.set_brightness(0.01);
+              state = false;
+            }
+            call.perform();
+
+  #- platform: monochromatic
+  #  id: klaedeskab_t_shirts
+  #  name: Klædeskab T-shirts
+  #  output: blue_pwm
+  #  gamma_correct: 1.8
+  #  default_transition_length: 250ms
+  #  effects:
+  #    - strobe:
+  #    - flicker:
+  #    - lambda:
+  #        name: Fade
+  #        update_interval: 1s
+  #        lambda: |-
+  #          static bool state = false;
+  #          auto call = id(klaedeskab_t_shirts).turn_on();
+  #          // Transtion of 1000ms = 1s
+  #          call.set_transition_length(1000);
+  #          if (state == false) {
+  #            call.set_brightness(1.0);
+  #            state = true;
+  #          } else {
+  #            call.set_brightness(0.01);
+  #            state = false;
+  #          }
+  #          call.perform();
+
+  #- platform: monochromatic
+  #  id: klaedeskab_spejl
+  #  name: Klædeskab Spejl
+  #  output: w1_pwm
+  #  gamma_correct: 1.8
+  #  default_transition_length: 250ms
+  #  effects:
+  #    - strobe:
+  #    - flicker:
+  #    - lambda:
+  #        name: Fade
+  #        update_interval: 1s
+  #        lambda: |-
+  #          static bool state = false;
+  #          auto call = id(klaedeskab_spejl).turn_on();
+  #          // Transtion of 1000ms = 1s
+  #          call.set_transition_length(1000);
+  #          if (state == false) {
+  #            call.set_brightness(1.0);
+  #            state = true;
+  #          } else {
+  #            call.set_brightness(0.01);
+  #            state = false;
+  #          }
+  #          call.perform();
