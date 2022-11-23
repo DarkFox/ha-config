@@ -1,13 +1,12 @@
 input_boolean:
   force_on_call:
 
-binary_sensor:
-  - platform: template
-    sensors:
-      working_from_home:
-        value_template: "{{ is_state('calendar.arbejde_arbejder_hjemmefra', 'on') }}"
-      on_call:
-        value_template: >-
+template:
+  - binary_sensor:
+      - name: Working From Home
+        state: "{{ is_state('calendar.arbejde_arbejder_hjemmefra', 'on') }}"
+      - name: On Call
+        state: >-
           {{
             is_state('calendar.vagtplan_vagt', 'on')
             or (
@@ -16,27 +15,42 @@ binary_sensor:
             )
             or is_state('input_boolean.force_on_call', 'on')
           }}
-      scheduled_on_call:
-        value_template: "{{ is_state('calendar.vagtplan_vagt', 'on') or is_state('input_boolean.force_on_call', 'on') }}"
-      scheduled_at_work:
-        value_template: >
+      - name: Scheduled On Call
+        state: >-
           {{
-            is_state('calendar.vagtplan_arbejde', 'on')
+            is_state('input_boolean.force_on_call', 'on')
+            or (
+              is_state('calendar.vagtplan_vagt', 'on')
+              and is_state('binary_sensor.scheduled_at_work', 'off')
+            )
           }}
-      location_at_work:
-        value_template: >
+      - name: Scheduled At Work
+        state: >
+          {{
+            is_state('calendar.vagtplan_arbejde', 'on') and
+            (states('sensor.at_work_end_time')|as_timestamp) > (now()|as_timestamp)
+          }}
+      - name: Location At Work
+        state: >
           {{
             is_state('device_tracker.arbejdstelefon', 'RSR')
             or is_state('device_tracker.arbejdstelefon', 'RSH')
           }}
-      working:
-        value_template: >
+      - name: Working
+        state: >
           {{
             is_state('binary_sensor.scheduled_at_work', 'on')
             or is_state('binary_sensor.scheduled_on_call', 'on')
             or is_state('binary_sensor.location_at_work', 'on')
             or is_state('binary_sensor.working_from_home', 'on')
           }}
+  - sensor:
+      - name: At work end time
+        state: >-
+          {% set hours = (state_attr('calendar.vagtplan_arbejde', 'message') | regex_findall(find='^(\d+)-(\d+).+'))[0] %}
+          {% set start_time = state_attr('calendar.vagtplan_arbejde', 'start_time')|as_timestamp %}
+          {% set end_time = (start_time) + (((hours[1]|int)-(hours[0]|int))*3600) %}
+          {{ end_time|as_datetime|as_local }}
 
 automation:
   - id: puzzel_menu
