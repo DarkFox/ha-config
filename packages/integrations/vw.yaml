@@ -2,7 +2,7 @@ switch:
   - platform: template
     switches:
       id3_charging:
-        friendly_name: ID3 Charging
+        friendly_name: ID.3 Charging
         value_template: "{{ not is_state('sensor.id3_charging_mode', 'off') }}"
         icon_template: "{{ 'mdi:battery-charging' if not is_state('sensor.id3_charging_mode', 'off') else 'mdi:battery' }}"
         turn_on:
@@ -17,7 +17,7 @@ switch:
             start_stop: "stop"
 
       id3_climatisation:
-        friendly_name: ID3 Climatisation
+        friendly_name: ID.3 Climatisation
         value_template: "{{ is_state('binary_sensor.id3_climatising', 'on') }}"
         icon_template: "{{ 'mdi:hvac' if is_state('binary_sensor.id3_climatising', 'on') else 'mdi:hvac-off' }}"
         turn_on:
@@ -32,7 +32,7 @@ switch:
             start_stop: "stop"
 
       id3_reduced_ac_charging_speed:
-        friendly_name: ID3 Reduced AC Charging Speed
+        friendly_name: ID.3 Reduced AC Charging Speed
         value_template: "{{ is_state('sensor.id3_max_charge_current_ac', 'reduced') }}"
         icon_template: mdi:flash
         turn_on:
@@ -50,11 +50,11 @@ binary_sensor:
   - platform: template
     sensors:
       id3_climatising:
-        friendly_name: "ID3 Klimatisering"
+        friendly_name: "ID.3 Klimatisering"
         value_template: "{{ states('sensor.id3_remaining_climatisation_time') | int > 0 }}"
         icon_template: "{{ 'mdi:hvac' if is_state('binary_sensor.id3_climatising', 'on') else 'mdi:hvac-off' }}"
       id3_charging:
-        friendly_name: ID3 Is Charging
+        friendly_name: ID.3 Is Charging
         value_template: "{{ is_state('sensor.id3_charging_state', 'charging') }}"
         icon_template: "{{ 'mdi:battery-charging' if not is_state('sensor.id3_charging', 'off') else 'mdi:battery' }}"
 
@@ -62,11 +62,11 @@ sensor:
   - platform: template
     sensors:
       id3_remaining_charging_time_to_complete:
-        friendly_name: "ID3 Charging Time Remaining"
+        friendly_name: "ID.3 Charging Time Remaining"
         value_template: "{{ (timedelta(minutes=states('sensor.id3_remaining_charging_time')|int)|string)[:-3] }}"
         icon_template: mdi:clock-end
       id3_charging_complete_at:
-        friendly_name: ID3 Charging Complete At
+        friendly_name: ID.3 Charging Complete At
         value_template: >-
           {%- if is_state('binary_sensor.id3_charging', 'on') -%}
             {%- set end_time = (states('sensor.id3_remaining_charging_time')|int*60) + (as_timestamp(now())|int) -%}
@@ -75,6 +75,9 @@ sensor:
             unknown
           {%- endif -%}
         icon_template: mdi:clock-end
+      id3_direction:
+        friendly_name: ID.3 Direction
+        value_template: "{{ states('sensor.volkswagen_id_3_speed') }}"
 
 rest_command:
   update_abrp:
@@ -86,10 +89,16 @@ rest_command:
       {% set tlm = {
         "utc": int(as_timestamp(utcnow())),
         "soc": int(states('sensor.id3_state_of_charge')),
-        "est_battery_range": float(states('sensor.id3_range')),
+        "est_battery_range": int(states('sensor.id3_range_in_kilometers')),
         "power": float(states('sensor.id3_charge_power')),
         "is_charging": bool(states('binary_sensor.id3_charging')),
-        "is_dcfc": bool(is_state('sensor.id3_charge_type', 'dc'))
+        "is_dcfc": bool(is_state('sensor.id3_charge_type', 'dc')),
+        "is_parked": not bool(states('binary_sensor.volkswagen_id_3_ignition')),
+        "speed": int(states('sensor.volkswagen_id_3_speed')),
+        "lat": float(state_attr('device_tracker.volkswagen_id_3_geolocation', 'latitude')),
+        "lon": float(state_attr('device_tracker.volkswagen_id_3_geolocation', 'longitude')),
+        "ext_temp": int(states('sensor.volkswagen_id_3_outdoortemperature')),
+        "odometer": int(states('sensor.volkswagen_id_3_odometer'))
       } -%}
       https://api.iternio.com/1/tlm/send?token={{token}}&tlm={{tlm|to_json|urlencode}}
 
@@ -100,10 +109,16 @@ automation:
     trigger:
       - platform: state
         entity_id:
-          - sensor.id3_state_of_charge
-          - sensor.id3_range
           - binary_sensor.id3_charging
+          - binary_sensor.volkswagen_id_3_ignition
+          - device_tracker.volkswagen_id_3_geolocation
+          - sensor.id3_charge_power
           - sensor.id3_charge_type
+          - sensor.id3_range_in_kilometers
+          - sensor.id3_state_of_charge
+          - sensor.volkswagen_id_3_odometer
+          - sensor.volkswagen_id_3_outdoortemperature
+          - sensor.volkswagen_id_3_speed
       - platform: time_pattern
         minutes: "/8"
     action:

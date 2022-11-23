@@ -1,34 +1,41 @@
-# proximity:
-#   bil_to_home:
-#     zone: home
-#     devices: device_tracker.bil
-#     unit_of_measurement: m
-#     tolerance: 100
+proximity:
+  bil_to_home:
+    zone: home
+    devices: device_tracker.volkswagen_id_3_geolocation
+    unit_of_measurement: m
+    tolerance: 100
 
-#   bil_to_rsr:
-#     zone: rsr
-#     devices: device_tracker.bil
-#     unit_of_measurement: m
-#     tolerance: 100
+  # bil_to_rsr:
+  #   zone: rsr
+  #   devices: device_tracker.volkswagen_id_3_geolocation
+  #   unit_of_measurement: m
+  #   tolerance: 100
+  #   state_characteristic: mean
+  #   sampling_size: 20
 
-#   bil_to_rsh:
-#     zone: rsh
-#     devices: device_tracker.bil
-#     unit_of_measurement: m
-#     tolerance: 100
+  bil_to_rsh:
+    zone: rsh
+    devices: device_tracker.volkswagen_id_3_geolocation
+    unit_of_measurement: m
+    tolerance: 100
 
-# sensor:
-#   - platform: statistics
-#     name: proximity_bil_to_rsr_stats
-#     entity_id: proximity.bil_to_rsr
-#     max_age:
-#       minutes: 5
+sensor:
+  - platform: statistics
+    name: proximity_bil_to_rsr_stats
+    entity_id: proximity.bil_to_rsr
+    state_characteristic: mean
+    sampling_size: 20
+    max_age:
+      minutes: 5
 
-#   - platform: statistics
-#     name: proximity_bil_to_rsh_stats
-#     entity_id: proximity.bil_to_rsh
-#     max_age:
-#       minutes: 5
+  - platform: statistics
+    name: proximity_bil_to_rsh_stats
+    entity_id: proximity.bil_to_rsh
+    state_characteristic: mean
+    sampling_size: 20
+    max_age:
+      minutes: 5
+
 input_datetime:
   car_charging_started:
     has_date: true
@@ -40,7 +47,11 @@ template:
   - sensor:
       - name: "Car Charging Idle Fee Starting At"
         state: >-
-          {% if is_state('binary_sensor.id3_plug_connection_state', 'on') and not is_state('input_text.car_charging_type', '') %}
+          {%
+            if is_state('binary_sensor.id3_plug_connection_state', 'on')
+            and not is_state('input_text.car_charging_type', '')
+            and states('device_tracker.volkswagen_id_3_geolocation') in ['away', 'RSH', 'RSR']
+          %}
             {% set car_charging_started = states('input_datetime.car_charging_started') %}
             {% set charge_type = states('input_text.car_charging_type') %}
             {% if car_charging_started|as_datetime %}
@@ -69,7 +80,7 @@ template:
       - name: "In Car"
         state: "{{'18:48:CA:15:9C:66 (VW Fox)' in state_attr('sensor.darkphone_bluetooth_connection', 'connected_paired_devices') }}"
       - name: At Work Soon
-        state: "{{ states('proximity.martin_to_rsh')|float < 2000 }}"
+        state: "{{ states('proximity.bil_to_rsh')|float < 2000 }}"
 
 automation:
   - id: climatise_car_for_upcoming_drive
@@ -205,10 +216,6 @@ automation:
 
             Færdig ca. kl. {{ states('sensor.id3_charging_complete_at')|as_timestamp|timestamp_custom('%H:%M', True) }}.
 
-            {% if not is_state('sensor.car_charging_idle_fee_starting_at', '') -%}
-            Blokeringsgebyr starter kl. {{ states('sensor.car_charging_idle_fee_starting_at')|as_timestamp|timestamp_custom('%H:%M', True) }}
-            {% endif %}
-
   - alias: notify_15_minutes_till_car_charged
     id: notify_15_minutes_till_car_charged
     initial_state: true
@@ -226,6 +233,17 @@ automation:
           message: >-
             Bilen er ladt op til {{ states('sensor.id3_state_of_charge') }}/{{ states('sensor.id3_target_state_of_charge') }}%.
             Færdig om {{ states('sensor.id3_remaining_charging_time') }} minutter.
+
+  - alias: notify_idle_fee_time
+    id: notify_idle_fee_time
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: sensor.car_charging_idle_fee_starting_at
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Blokeringsgebyr starter kl. {{ states('sensor.car_charging_idle_fee_starting_at')|as_timestamp|timestamp_custom('%H:%M', True) }}"
 
   - id: warn_charger_idle_fees
     alias: warn_charger_idle_fees
