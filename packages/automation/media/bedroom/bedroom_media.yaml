@@ -44,13 +44,13 @@ switch:
         icon_template: mdi:television
         value_template: "{{ not is_state('media_player.sovevarelse_tv_dlna', 'unavailable') }}"
         turn_on:
-          service: script.turn_on
+          service: switch.turn_on
           data:
-            entity_id: script.sovevaerelse_tv_on
+            entity_id: switch.sovevaerelse_tv_power
         turn_off:
-          service: script.turn_on
+          service: switch.turn_off
           data:
-            entity_id: script.sovevaerelse_tv_off
+            entity_id: switch.sovevaerelse_tv_power
 
 binary_sensor:
   - platform: template
@@ -67,23 +67,6 @@ binary_sensor:
           }}
 
 script:
-  sovevaerelse_tv_on:
-    sequence:
-      - service: switch.turn_on
-        data:
-          entity_id: switch.sovevaerelse_tv_afbryder
-      - delay:
-          seconds: 2
-      - service: switch.turn_on
-        data:
-          entity_id: switch.sovevaerelse_tv_power
-
-  sovevaerelse_tv_off:
-    sequence:
-      - service: switch.turn_off
-        data:
-          entity_id: switch.sovevaerelse_tv_power
-
   sovevaerelse_soundbar_fix_audio_lag:
     sequence:
       - service: switch.turn_on
@@ -148,20 +131,23 @@ automation:
     action:
       - service: switch.turn_on
         data:
-          entity_id: switch.sovevaerelse_tv_afbryder
+          entity_id: switch.sovevaerelse_tv
 
   - alias: Soveværelse TV off
     initial_state: true
     trigger:
       - platform: state
         entity_id: media_player.sovevaerelse_chromecast
-        from: "playing"
+        to:
+          - "off"
+          - "unavailable"
+          - "unknown"
         for:
           minutes: 1
     action:
       - service: switch.turn_off
         data:
-          entity_id: switch.sovevaerelse_tv_afbryder
+          entity_id: switch.sovevaerelse_tv
 
   - alias: sovevaerelse_tv_fix_audio_lag
     initial_state: true
@@ -171,7 +157,7 @@ automation:
         from: "off"
         to: "on"
         for:
-          seconds: 3
+          seconds: 5
     action:
       - service: script.turn_on
         data:
