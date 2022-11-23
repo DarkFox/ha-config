@@ -1,0 +1,50 @@
+decluttering_templates: !include_dir_named lovelace/decluttering_templates
+
+kiosk_mode:
+  non_admin_settings:
+    kiosk: true
+    ignore_entity_settings: true
+
+title: Android Auto
+icon: mdi:car
+views:
+  - icon: mdi:menu
+    title: Menu
+    path: menu
+    type: panel
+    cards:
+      - type: grid
+        columns: 4
+        square: false
+        cards:
+          - type: custom:button-card
+            name: Bil
+            icon: mdi:car
+            show_state: false
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-android-auto/car
+          - type: custom:button-card
+            name: Ladere
+            icon: mdi:ev-station
+            show_state: false
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-android-auto/ladere
+          - type: custom:button-card
+            color_type: blank-card
+          - type: custom:button-card
+            color_type: blank-card
+
+          - type: "custom:button-card"
+            entity: input_boolean.vacation_mode
+            tap_action:
+              action: call-service
+              service: input_boolean.toggle
+              service_data:
+                entity_id: input_boolean.vacation_mode
+          - !include lovelace/cards/icemachine.yaml
+          - !include lovelace/cards/hoveddor_laas.yaml
+
+  - !include lovelace/views/ev_charger_status.yaml
+  - !include lovelace/views/car.yaml

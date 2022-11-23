@@ -1,0 +1,193 @@
+title: Bil
+path: car
+type: panel
+layout:
+  max_cols: 2
+icon: mdi:car
+badges: []
+cards:
+  - type: custom:layout-card
+    layout_type: custom:horizontal-layout
+    layout:
+      max_cols: 3
+    cards:
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.id3_state_of_charge
+            min: 0
+            max: 100
+            severity:
+              green: 40
+              yellow: 20
+              red: 0
+            name: Batteri
+          - type: gauge
+            entity: sensor.id3_charge_power
+            max: 100
+            name: Batterieffekt
+            severity:
+              green: 50
+              yellow: 10
+              red: 0
+            needle: true
+            min: 0
+          - type: entity
+            entity: sensor.id3_range_in_kilometers
+            name: Rækkevidde
+            icon: mdi:road
+            unit: Km
+      - show_name: true
+        show_icon: true
+        show_state: true
+        type: glance
+        entities:
+          - entity: sensor.id3_remaining_charging_time_to_complete
+            name: Charge Time Remaining
+          - entity: binary_sensor.id3_charging
+            name: Charging
+          - entity: binary_sensor.id3_plug_connection_state
+            name: Plug Connection
+          - entity: binary_sensor.id3_plug_lock_state
+            name: Plug Lock
+          - entity: sensor.id3_charge_type
+            name: Charge Type
+          - entity: sensor.car_charging_idle_fee_starting_at
+            name: Idle Fee Starting
+          - entity: sensor.volkswagen_id_3_batteryvoltage
+            name: 12V Battery
+          - entity: sensor.volkswagen_id_3_odometer
+            name: Odometer
+          - entity: sensor.volkswagen_id_3_outdoortemperature
+            name: Outdoor Temp
+          - entity: sensor.volkswagen_id_3_speed
+            name: Speed
+          - entity: sensor.id3_direction
+            name: Direction
+          - entity: binary_sensor.volkswagen_id_3_ignition
+            name: Ignition
+        state_color: true
+        columns: 3
+      - type: custom:mini-graph-card
+        entities:
+          - entity: sensor.id3_state_of_charge
+            color: green
+            show_fill: false
+            name: SoC
+          - entity: sensor.id3_target_state_of_charge
+            color: lightblue
+            show_fill: false
+            name: Lademål
+          - entity: sensor.id3_charge_power
+            color: DarkOrange
+            show_fill: false
+            name: Batteri kW
+        icon: mdi:flash
+        line_width: 3
+        hours_to_show: 12
+        points_per_hour: 4
+        lower_bound: 0
+        upper_bound: 100
+        height: 200
+        show:
+          labels: true
+      - type: vertical-stack
+        cards:
+          - type: entities
+            entities:
+              - entity: number.id3_target_state_of_charge
+                type: custom:slider-entity-row
+                full_row: true
+            show_header_toggle: false
+            state_color: false
+          - square: true
+            columns: 3
+            type: grid
+            cards:
+              - show_name: true
+                show_icon: true
+                type: button
+                tap_action:
+                  action: toggle
+                entity: switch.id3_charging
+                show_state: false
+              - show_name: true
+                show_icon: true
+                type: button
+                tap_action:
+                  action: toggle
+                entity: binary_sensor.id3_auto_unlock_plug_when_charged
+              - type: button
+                tap_action:
+                  action: toggle
+                entity: switch.id3_reduced_ac_charging_speed
+      - type: vertical-stack
+        cards:
+          - type: entities
+            entities:
+              - entity: switch.id3_climatisation
+              - entity: number.id3_target_climate_temperature
+                type: custom:slider-entity-row
+                full_row: true
+            show_header_toggle: false
+            state_color: false
+          - type: conditional
+            conditions:
+              - entity: switch.id3_climatisation
+                state_not: "off"
+            card:
+              type: horizontal-stack
+              cards:
+                - type: entity
+                  entity: sensor.id3_climatisation_state
+                - type: entity
+                  entity: sensor.id3_remaining_climatisation_time
+                  name: Tid tilbage
+                  unit: min
+                - type: entity
+                  entity: binary_sensor.id3_front_window_heating_state
+                - type: entity
+                  entity: binary_sensor.id3_rear_window_heating_state
+          - type: grid
+            cards:
+              - type: button
+                tap_action:
+                  action: toggle
+                entity: binary_sensor.id3_zone_front_left_enabled
+              - type: button
+                tap_action:
+                  action: toggle
+                entity: binary_sensor.id3_zone_front_right_enabled
+              - type: button
+                tap_action:
+                  action: toggle
+                entity: binary_sensor.id3_window_heating_enabled
+      - type: entities
+        show_header_toggle: false
+        entities:
+          - entity: binary_sensor.id3_car_is_active
+            name: ID.3 Data Aktiv
+          - binary_sensor.id3_car_is_online
+
+      - type: vertical-stack
+        cards:
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.dark_mode
+                state: "on"
+            card:
+              type: map
+              entities:
+                - entity: device_tracker.volkswagen_id_3_geolocation
+              hours_to_show: 6
+              dark_mode: "True"
+
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.dark_mode
+                state: "off"
+            card:
+              type: map
+              entities:
+                - entity: device_tracker.volkswagen_id_3_geolocation
+              hours_to_show: 6
