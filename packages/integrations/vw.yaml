@@ -75,53 +75,72 @@ sensor:
             unknown
           {%- endif -%}
         icon_template: mdi:clock-end
-      id3_direction:
-        friendly_name: ID.3 Direction
-        value_template: "{{ states('sensor.volkswagen_id_3_speed') }}"
+      abrp_url_data:
+        friendly_name: ABRP URL data
+        value_template: "OK"
+        attribute_templates:
+          url_data: >-
+            {
+              "soc": {{int(states('sensor.id3_state_of_charge'))}},
+              "est_battery_range": {{int(states('sensor.id3_range'))}},
+              {% if is_state('binary_sensor.id3_charging', 'on') %}
+                "power": {{-float(states('sensor.id3_charge_power'))}},
+              {% endif %}
+              "is_charging": {{bool(states('binary_sensor.id3_charging'))}},
+              "is_dcfc": {{bool(is_state('sensor.id3_charge_type', 'dc'))}},
+              "is_parked": {{not bool(states('binary_sensor.volkswagen_id_3_ignition'))}},
+              "ext_temp": {{int(states('sensor.volkswagen_id_3_outdoortemperature'))}},
+              "odometer": {{int(states('sensor.volkswagen_id_3_odometer'))}},
+              {% if is_state('binary_sensor.darkphone_high_accuracy_mode', 'on') %}
+                "speed": {{int(state_attr('device_tracker.darkphone', 'speed'))}},
+                "lat": {{float(state_attr('device_tracker.darkphone', 'latitude'))}},
+                "lon": {{float(state_attr('device_tracker.darkphone', 'longitude'))}},
+                "heading": {{int(state_attr('device_tracker.darkphone', 'course'), 0)}},
+                "elevation": {{float(state_attr('device_tracker.darkphone', 'altitude'))}}
+              {% else %}
+                "speed": {{int(states('sensor.volkswagen_id_3_speed'))}},
+                "lat": {{float(state_attr('device_tracker.volkswagen_id_3_geolocation', 'latitude'))}},
+                "lon": {{float(state_attr('device_tracker.volkswagen_id_3_geolocation', 'longitude'))}},
+                "heading": {{int(state_attr('sensor.volkswagen_id_3_speed', 'direction'), 0)}}
+              {% endif %}
+            }
+      abrp_url_params:
+        friendly_name: ABRP URL params
+        value_template: "OK"
+        attribute_templates:
+          url_params: >-
+            {%- set p = state_attr('sensor.abrp_url_data', 'url_data') -%}
+            {%- if p == None -%}
+              unknown
+            {%- else -%}
+              {
+                "utc": {{int(as_timestamp(utcnow()))}},
+                {%- for k in p -%}
+                  "{{k}}": {{p[k]}},
+                {%- endfor -%}
+              }
+            {%- endif -%}
 
 rest_command:
   update_abrp:
     method: POST
-    headers:
-      authorization: !secret abrp_api_key
     content_type: "charset=utf-8; application/x-www-form-urlencoded"
-    url: >
-      {% set tlm = {
-        "utc": int(as_timestamp(utcnow())),
-        "soc": int(states('sensor.id3_state_of_charge')),
-        "est_battery_range": int(states('sensor.id3_range_in_kilometers')),
-        "power": float(states('sensor.id3_charge_power')),
-        "is_charging": bool(states('binary_sensor.id3_charging')),
-        "is_dcfc": bool(is_state('sensor.id3_charge_type', 'dc')),
-        "is_parked": not bool(states('binary_sensor.volkswagen_id_3_ignition')),
-        "speed": int(states('sensor.volkswagen_id_3_speed')),
-        "lat": float(state_attr('device_tracker.volkswagen_id_3_geolocation', 'latitude')),
-        "lon": float(state_attr('device_tracker.volkswagen_id_3_geolocation', 'longitude')),
-        "ext_temp": int(states('sensor.volkswagen_id_3_outdoortemperature')),
-        "odometer": int(states('sensor.volkswagen_id_3_odometer'))
-      } -%}
-      https://api.iternio.com/1/tlm/send?token={{token}}&tlm={{tlm|to_json|urlencode}}
+    url: "https://api.iternio.com/1/tlm/send?api_key={{api_key}}&token={{token}}&tlm={{state_attr('sensor.abrp_url_params', 'url_params')|to_json|urlencode}}"
 
 automation:
   - alias: Push car to ABRP
-    initial_state: false
-    mode: queued
+    initial_state: true
+    mode: single
     trigger:
       - platform: state
-        entity_id:
-          - binary_sensor.id3_charging
-          - binary_sensor.volkswagen_id_3_ignition
-          - device_tracker.volkswagen_id_3_geolocation
-          - sensor.id3_charge_power
-          - sensor.id3_charge_type
-          - sensor.id3_range_in_kilometers
-          - sensor.id3_state_of_charge
-          - sensor.volkswagen_id_3_odometer
-          - sensor.volkswagen_id_3_outdoortemperature
-          - sensor.volkswagen_id_3_speed
+        entity_id: sensor.abrp_url_data
+        attribute: url_data
       - platform: time_pattern
         minutes: "/8"
     action:
       - service: rest_command.update_abrp
         data:
           token: !secret abrp_token
+          api_key: !secret abrp_api_key
+      - delay:
+          seconds: 1
