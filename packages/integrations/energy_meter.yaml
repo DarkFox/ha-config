@@ -259,19 +259,35 @@ template:
               {%- set price = k -%}
               {%- set s = {
                 "abonnement": 0.03,
-                "elafgift_2022_07": 0.763,
                 "elafgift_2022_10": 0.688,
                 "elafgift_2023_01": 0.080,
                 "systemydelse": 0.0,
-                "transport_lavlast_2021": 0.2363,
-                "transport_spidslast_2021": 0.6307,
                 "transport_lavlast_2022": 0.3003,
                 "transport_spidslast_2022": 0.7651,
+                "transport_vinter_2023": {
+                  "lavlast": 0.2127,
+                  "hoejlast": 0.6379,
+                  "spidslast": 1.9135
+                },
+                "transport_sommer_2023": {
+                  "lavlast": 0.2127,
+                  "hoejlast": 0.3189,
+                  "spidslast": 0.8292
+                }
               } -%}
               {%- set cdt = (price['dktime'].split('+')[0] | as_datetime | as_local) -%}
-              {%- if cdt < as_datetime("2022-04-01 00:00:00.00+02:00") -%}
-                {%- set transport_lavlast = s.transport_lavlast_2021 -%}
-                {%- set transport_spidslast = s.transport_spidslast_2021 -%}
+              {%- if cdt > as_datetime("2023-10-01 00:00:00.00+02:00") -%}
+                {%- set transport_lavlast = s.transport_vinter_2023.lavlast -%}
+                {%- set transport_hoejlast = s.transport_vinter_2023.hoejlast -%}
+                {%- set transport_spidslast = s.transport_vinter_2023.spidslast -%}
+              {%- elif cdt > as_datetime("2023-04-01 00:00:00.00+02:00") -%}
+                {%- set transport_lavlast = s.transport_sommer_2023.lavlast -%}
+                {%- set transport_hoejlast = s.transport_sommer_2023.hoejlast -%}
+                {%- set transport_spidslast = s.transport_sommer_2023.spidslast -%}
+              {%- elif cdt > as_datetime("2023-01-01 00:00:00.00+02:00") -%}
+                {%- set transport_lavlast = s.transport_vinter_2023.lavlast -%}
+                {%- set transport_hoejlast = s.transport_vinter_2023.hoejlast -%}
+                {%- set transport_spidslast = s.transport_vinter_2023.spidslast -%}
               {%- else -%}
                 {%- set transport_lavlast = s.transport_lavlast_2022 -%}
                 {%- set transport_spidslast = s.transport_spidslast_2022 -%}
@@ -279,24 +295,32 @@ template:
 
               {%- if cdt > as_datetime("2023-01-01 00:00:00.00+02:00") -%}
                 {%- set elafgift = s.elafgift_2023_01 -%}
-              {%- elif cdt > as_datetime("2022-10-01 00:00:00.00+01:00") -%}
-                {%- set elafgift = s.elafgift_2022_10 -%}
               {%- else -%}
-                {%- set elafgift = s.elafgift_2022_07 -%}
+                {%- set elafgift = s.elafgift_2022_10 -%}
               {%- endif -%}
 
               {%- set afgiftsum = s.abonnement + elafgift + s.systemydelse -%}
               {
               "start": "{{ cdt }}",
               "end": "{{ cdt + timedelta( hours = 1) }}",
-              {%- if cdt.month >= 10 or cdt.month < 4 -%}
-                {%- if cdt.hour >= 17 and cdt.hour < 20 -%}
-                  "value": {{ (((price['prediction']|float/1000.0) + transport_spidslast + afgiftsum) * 1.25) | round(4) }}
+              {%- if cdt > as_datetime("2023-01-01 00:00:00.00+02:00") -%}
+                  {%- if cdt.hour >= 18 and cdt.hour <= 21 -%}
+                    "value": {{ (((price['prediction']|float/1000.0) + transport_spidslast + afgiftsum) * 1.25) | round(4) }}
+                  {%- elif (cdt.hour >= 7 and cdt.hour <= 17) or (cdt.hour >= 22 and cdt.hour <= 23) -%}
+                    "value": {{ (((price['prediction']|float/1000.0) + transport_hoejlast + afgiftsum) * 1.25) | round(4) }}
+                  {%- else -%}
+                    "value": {{ (((price['prediction']|float/1000.0) + transport_lavlast + afgiftsum) * 1.25) | round(4) }}
+                  {%- endif -%}
+              {%- else -%}
+                {%- if cdt.month >= 10 or cdt.month < 4 -%}
+                  {%- if cdt.hour >= 17 and cdt.hour < 20 -%}
+                    "value": {{ (((price['prediction']|float/1000.0) + transport_spidslast + afgiftsum) * 1.25) | round(4) }}
+                  {%- else -%}
+                    "value": {{ (((price['prediction']|float/1000.0) + transport_lavlast + afgiftsum) * 1.25) | round(4) }}
+                  {%- endif -%}
                 {%- else -%}
                   "value": {{ (((price['prediction']|float/1000.0) + transport_lavlast + afgiftsum) * 1.25) | round(4) }}
                 {%- endif -%}
-              {%- else -%}
-                "value": {{ (((price['prediction']|float/1000.0) + transport_lavlast + afgiftsum) * 1.25) | round(4) }}
               {%- endif -%}
               },
             {%- endfor -%}
