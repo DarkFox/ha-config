@@ -48,7 +48,7 @@ template:
       - name: "Car Charging Idle Fee Starting At"
         state: >-
           {%
-            if is_state('binary_sensor.id3_plug_connection_state', 'on')
+            if is_state('sensor.id3_plug_connection_state', 'connected')
             and not is_state('input_text.car_charging_type', '')
             and states('device_tracker.volkswagen_id_3_geolocation') in ['away', 'RSH', 'RSR']
           %}
@@ -78,7 +78,7 @@ template:
 
   - binary_sensor:
       - name: "In Car"
-        state: "{{'18:48:CA:15:9C:66 (VW Fox)' in state_attr('sensor.darkphone_bluetooth_connection', 'connected_paired_devices') }}"
+        state: "{{'VW Fox' in (state_attr('sensor.darkphone_bluetooth_connection', 'connected_paired_devices')|join(', ')) }}"
       - name: At Work Soon
         state: "{{ states('proximity.bil_to_rsh')|float < 2000 }}"
 
@@ -146,9 +146,9 @@ automation:
     alias: Set Car Charging Started Time
     trigger:
       - platform: state
-        entity_id: binary_sensor.id3_plug_connection_state
-        from: "off"
-        to: "on"
+        entity_id: sensor.id3_plug_connection_state
+        from: "disconnected"
+        to: "connected"
     action:
       - alias: "Set Car Charging Started to now"
         service: input_datetime.set_datetime
@@ -178,8 +178,8 @@ automation:
     alias: Clear Car Charging Started Time
     trigger:
       - platform: state
-        entity_id: binary_sensor.id3_plug_connection_state
-        to: "off"
+        entity_id: sensor.id3_plug_connection_state
+        to: "disconnected"
     action:
       - alias: "Clear charge type"
         service: input_text.set_value
@@ -239,8 +239,10 @@ automation:
     initial_state: true
     trigger:
       - platform: state
-        entity_id: sensor.car_charging_idle_fee_starting_at
+        entity_id: input_datetime.car_charging_started
     action:
+      - delay:
+          seconds: 5
       - service: notify.telegram_darkfox
         data:
           message: "Blokeringsgebyr starter kl. {{ states('sensor.car_charging_idle_fee_starting_at')|as_timestamp|timestamp_custom('%H:%M', True) }}"
@@ -335,8 +337,8 @@ automation:
             state: "on"
       - alias: "Car not plugged in"
         condition: state
-        entity_id: binary_sensor.id3_plug_connection_state
-        state: "off"
+        entity_id: sensor.id3_plug_connection_state
+        state: "disconnected"
       - alias: "Car needs charging"
         condition: numeric_state
         entity_id: sensor.id3_state_of_charge
