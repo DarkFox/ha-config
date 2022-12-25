@@ -1,7 +1,5 @@
 homeassistant:
   customize:
-    sensor.podcast_bbc_minute:
-      friendly_name: Seneste BBC Minute
     sensor.podcast_daily_tech_news_show:
       friendly_name: Seneste Daily Tech News Show
     sensor.podcast_daily_tech_headlines:
@@ -13,19 +11,11 @@ group:
   podcasts:
     name: Podcasts
     entities:
-      - sensor.podcast_bbc_minute
       - sensor.podcast_daily_tech_news_show
       - sensor.podcast_daily_tech_headlines
       - sensor.podcast_radioavisen
 
 # sensor:
-#   - platform: scrape
-#     resource: http://wsrss.bbc.co.uk/bizdev/bbcminute/bbcminute.rss
-#     name: podcast_bbc_minute
-#     select: "enclosure:nth-of-type(1)"
-#     attribute: url
-#     scan_interval: 900
-
 #   - platform: scrape
 #     resource: https://feeds.acast.com/public/shows/69874998-717b-4db3-9857-c07cf9597f55
 #     name: podcast_daily_tech_news_show
@@ -48,8 +38,6 @@ group:
 #     scan_interval: 900
 
 shell_command:
-  podcast_bbc_minute_m3u: >-
-    /bin/bash -c "echo -e '#EXTM3U\n\n#EXTINF:-1,Seneste BBC Minute\n{{ states('sensor.podcast_bbc_minute') }}' > '/media/Audio/Podcasts/Seneste BBC Minute.m3u'"
   podcast_daily_tech_news_show_m3u: >-
     /bin/bash -c "echo -e '#EXTM3U\n\n#EXTINF:-1,Seneste Daily Tech News Show\n{{ states('sensor.podcast_daily_tech_news_show') }}' > '/media/Audio/Podcasts/Seneste Daily Tech News Show.m3u'"
   podcast_daily_tech_headlines_m3u: >-
@@ -58,13 +46,6 @@ shell_command:
     /bin/bash -c "echo -e '#EXTM3U\n\n#EXTINF:-1,Seneste Radioavisen\n{{ states('sensor.podcast_radioavisen') }}' > '/media/Audio/Podcasts/Seneste Radioavisen.m3u'"
 
 automation:
-  - id: update_file_podcast_bbc_minute
-    alias: Update File podcast_bbc_minute
-    trigger:
-      - platform: state
-        entity_id: sensor.podcast_bbc_minute
-    action:
-      - service: shell_command.podcast_bbc_minute_m3u
   - id: update_file_podcast_daily_tech_news_show
     alias: Update File podcast_daily_tech_news_show
     trigger:
