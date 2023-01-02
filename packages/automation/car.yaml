@@ -81,6 +81,16 @@ template:
         state: "{{'VW Fox' in (state_attr('sensor.darkphone_bluetooth_connection', 'connected_paired_devices')|join(', ')) }}"
       - name: At Work Soon
         state: "{{ states('proximity.bil_to_rsh')|float < 2000 }}"
+      - name: ID3 Locked
+        state: >-
+          {{
+            is_state('sensor.id3_door_front_left_lock_status', 'unlocked') or
+            is_state('sensor.id3_door_front_right_lock_status', 'unlocked') or
+            is_state('sensor.id3_door_rear_left_lock_status', 'unlocked') or
+            is_state('sensor.id3_door_rear_right_lock_status', 'unlocked') or
+            is_state('sensor.id3_trunk_lock_status', 'unlocked')
+          }}
+        device_class: lock
 
 automation:
   - id: climatise_car_for_upcoming_drive
@@ -298,7 +308,7 @@ automation:
     action:
       - service: notify.telegram_darkfox
         data:
-          message: "Klimatiserer bilen til {{ states('sensor.id3_target_temperature_c') }}°. {{ states('sensor.id3_remaining_climatisation_time') }} minutter tilbage."
+          message: "Klimatiserer bilen til {{ states('sensor.id3_target_temperature') }}°. {{ states('sensor.id3_remaining_climatisation_time') }} minutter tilbage."
       - service: automation.turn_on
         target:
           entity_id: automation.notify_car_climatisation_end
@@ -371,7 +381,7 @@ automation:
               Oplading afsluttet. Bilen er ladt op til {{ states('sensor.id3_state_of_charge') }}%.
             {%- endif %}
             {%- if states('sensor.id3_remaining_climatisation_time')|int > 0 -%}
-              Klimatiserer bilen til {{ states('sensor.id3_target_temperature_c') }}°. {{ states('sensor.id3_remaining_climatisation_time') }} minutter tilbage.
+              Klimatiserer bilen til {{ states('sensor.id3_target_temperature') }}°. {{ states('sensor.id3_remaining_climatisation_time') }} minutter tilbage.
             {%- else -%}
               Klimatisering afsluttet.
             {%- endif -%}
@@ -395,7 +405,7 @@ automation:
         event_data:
           command: "/car_climatisation"
     variables:
-      temp: "{{ states('sensor.id3_target_temperature_c')|int }}"
+      temp: "{{ states('sensor.id3_target_temperature')|int }}"
     action:
       - service: notify.telegram_darkfox
         data:
