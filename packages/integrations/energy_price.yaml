@@ -1,0 +1,511 @@
+input_number:
+  energy_cost:
+    name: Energy Cost
+    mode: box
+    min: 0
+    max: 100000
+    step: 0.001
+    unit_of_measurement: kr
+
+automation:
+  - alias: Get Carnot Prices
+    id: get_carnot_prices
+    initial_state: true
+    trigger:
+      platform: homeassistant
+      event: start
+    action:
+      - delay:
+          seconds: 5
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.carnot_spotpris_dk2
+
+  - alias: Update Energy Cost
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: sensor.energy_cost_this_hour
+    condition:
+      - condition: template
+        value_template: "{{ (trigger.from_state.state|float) > (trigger.to_state.state|float) }}"
+    action:
+      - service: input_number.set_value
+        data:
+          entity_id: input_number.energy_cost
+          value: "{{ (state('input_number.energy_cost')|float) + (trigger.from_state.state|float) }}"
+
+sensor:
+  - platform: command_line
+    name: Carnot spotpris DK2
+    command: >-
+      curl
+      --request GET "https://whale-app-dquqw.ondigitalocean.app/openapi/get_predict?energysource=spotprice&region=dk2&daysahead=7"
+      --header "accept: application/json"
+      --header "apikey: {{ states('sensor.carnot_api_key') }}"
+      --header "username: {{ states('sensor.carnot_username') }}"
+    scan_interval:
+      hours: 1
+    value_template: '{% if value_json is not none %}OK - {{value_json["predictions"][0]["addedtime"]}}{% else %}Unavailable{% endif %}'
+    json_attributes:
+      - predictions
+
+  - platform: template
+    sensors:
+      carnot_api_key:
+        value_template: !secret carnot_api_key
+      carnot_username:
+        value_template: !secret carnot_username
+
+template:
+  - sensor:
+      - name: "El Priser"
+        device_class: monetary
+        unit_of_measurement: "DKK/kWh"
+        state: >-
+          {%- set p = state_attr('sensor.el_priser', 'prices') -%}
+          {%- if p == None -%}
+            unknown
+          {%- else -%}
+            {% for price in p %}
+              {% if (price['start']|as_datetime) <= now() and (price['end']|as_datetime) > now() %}
+                {{ price["value"] }}
+              {% endif %}
+            {% endfor %}
+          {%- endif -%}
+        attributes:
+          prices: >-
+            [
+            {%- set prices = state_attr('sensor.carnot_spotpris_dk2', 'predictions') -%}
+            {%- for k in prices -%}
+              {%- set price = k -%}
+              {%- set s = {
+                "abonnement": 0.0,
+                "elafgift_2023_01": 0.080,
+                "systemydelse": 0.0,
+                "transport_vinter_2023": {
+                  "lavlast": 0.2127,
+                  "hoejlast": 0.6379,
+                  "spidslast": 1.9135
+                },
+                "transport_sommer_2023": {
+                  "lavlast": 0.2127,
+                  "hoejlast": 0.3189,
+                  "spidslast": 0.8292
+                }
+              } -%}
+              {%- set cdt = (price['dktime'].split('+')[0] | as_datetime | as_local) -%}
+              {%- if cdt > as_datetime("2023-10-01 00:00:00.00+02:00") -%}
+                {%- set transport_lavlast = s.transport_vinter_2023.lavlast -%}
+                {%- set transport_hoejlast = s.transport_vinter_2023.hoejlast -%}
+                {%- set transport_spidslast = s.transport_vinter_2023.spidslast -%}
+              {%- elif cdt > as_datetime("2023-04-01 00:00:00.00+02:00") -%}
+                {%- set transport_lavlast = s.transport_sommer_2023.lavlast -%}
+                {%- set transport_hoejlast = s.transport_sommer_2023.hoejlast -%}
+                {%- set transport_spidslast = s.transport_sommer_2023.spidslast -%}
+              {%- elif cdt > as_datetime("2023-01-01 00:00:00.00+02:00") -%}
+                {%- set transport_lavlast = s.transport_vinter_2023.lavlast -%}
+                {%- set transport_hoejlast = s.transport_vinter_2023.hoejlast -%}
+                {%- set transport_spidslast = s.transport_vinter_2023.spidslast -%}
+              {%- endif -%}
+
+              {%- set elafgift = s.elafgift_2023_01 -%}
+
+              {%- set afgiftsum = s.abonnement + elafgift + s.systemydelse -%}
+              {
+                "start": "{{ cdt }}",
+                "end": "{{ cdt + timedelta( hours = 1) }}",
+                {%- if cdt.hour >= 18 and cdt.hour <= 21 -%}
+                  "value": {{ (((price['prediction']|float/1000.0) + transport_spidslast + afgiftsum) * 1.25) | round(4) }}
+                {%- elif cdt.hour >= 7 and cdt.hour <= 23 -%}
+                  "value": {{ (((price['prediction']|float/1000.0) + transport_hoejlast + afgiftsum) * 1.25) | round(4) }}
+                {%- else -%}
+                  "value": {{ (((price['prediction']|float/1000.0) + transport_lavlast + afgiftsum) * 1.25) | round(4) }}
+                {%- endif -%}
+              },
+            {%- endfor -%}
+            ]
+          just_prices: >-
+            {%- set p = state_attr('sensor.el_priser', 'prices') -%}
+            {%- if p == None -%}
+              unknown
+            {%- else -%}
+              [{% for x in (p|list) %}{{ x.value }},{% endfor %}]
+            {%- endif -%}
+
+      - name: "El Priser Min"
+        device_class: monetary
+        unit_of_measurement: "DKK/kWh"
+        state: >-
+          {%- set p = state_attr('sensor.el_priser', 'just_prices') -%}
+          {{ 'unknown' if p == None else p|max }}
+
+      - name: "El Priser Max"
+        device_class: monetary
+        unit_of_measurement: "DKK/kWh"
+        state: >-
+          {%- set p = state_attr('sensor.el_priser', 'just_prices') -%}
+          {{ 'unknown' if p == None else p|min }}
+
+      - name: "El Billigste 1 Time"
+        device_class: timestamp
+        state: >-
+          {%- set p = state_attr('sensor.el_billigste_1_time', 'cheapest_1_hr') -%}
+          {{ 'unknown' if p == None else p['start'] }}
+        attributes:
+          icon: mdi:clock-time-one
+          cheapest_1_hr: >-
+            {%- set p = state_attr('sensor.el_priser', 'just_prices') -%}
+            {{ 'unknown' if p == None else state_attr('sensor.el_priser', 'prices')[p.index(p|min)] }}
+          start: >-
+            {%- set p = state_attr('sensor.el_billigste_1_time', 'cheapest_1_hr') -%}
+            {{ 'unknown' if p == None else p['start'] }}
+          end: >-
+            {%- set p = state_attr('sensor.el_billigste_1_time', 'cheapest_1_hr') -%}
+            {{ 'unknown' if p == None else p['end'] }}
+          value: >-
+            {%- set p = state_attr('sensor.el_billigste_1_time', 'cheapest_1_hr') -%}
+            {{ 'unknown' if p == None else p['value'] }}
+
+      - name: "El Billigste 3 Timer"
+        device_class: timestamp
+        state: >-
+          {%- set p = state_attr('sensor.el_billigste_3_timer', 'cheapest_3_hr') -%}
+          {{ 'unknown' if p == None else p['start'] }}
+        attributes:
+          icon: mdi:clock-time-three
+          three_hour_seg: >-
+            {%- set p = state_attr('sensor.el_priser', 'prices') -%}
+            {%- if p == None -%}
+              unknown
+            {%- else -%}
+            [
+              {%- for i in range(p|length-2) -%}
+                {
+                  "start": "{{ p[i]["start"] }}",
+                  "end": "{{ p[i+2]["end"] }}",
+                  "value": {{
+                    ((p[i]['value']
+                    + p[i+1]['value']
+                    + p[i+2]['value'])/3.0) | round(4)
+                  }}
+                },
+              {%- endfor -%}
+            ]
+            {% endif %}
+          three_hour_seg_prices: >-
+            {%- set p = state_attr('sensor.el_billigste_3_timer', 'three_hour_seg') -%}
+            {%- if p == None -%}
+              unknown
+            {%- else -%}
+              [{% for x in (p|list) %}{{ x.value }},{% endfor %}]
+            {%- endif -%}
+          cheapest_3_hr: >-
+            {%- set p = state_attr('sensor.el_billigste_3_timer', 'three_hour_seg_prices') -%}
+            {{ 'unknown' if p == None else state_attr('sensor.el_priser', 'prices')[p.index(p|min)] }}
+          start: >-
+            {%- set p = state_attr('sensor.el_billigste_3_timer', 'cheapest_3_hr') -%}
+            {{ 'unknown' if p == None else p['start'] }}
+          end: >-
+            {%- set p = state_attr('sensor.el_billigste_3_timer', 'cheapest_3_hr') -%}
+            {{ 'unknown' if p == None else p['end'] }}
+          value: >-
+            {%- set p = state_attr('sensor.el_billigste_3_timer', 'cheapest_3_hr') -%}
+            {{ 'unknown' if p == None else p['value'] }}
+
+      - name: "El Billigste 6 Timer"
+        device_class: timestamp
+        state: >-
+          {%- set p = state_attr('sensor.el_billigste_6_timer', 'cheapest_6_hr') -%}
+          {{ 'unknown' if p == None else p['start'] }}
+        attributes:
+          icon: mdi:clock-time-six
+          six_hour_seg: >-
+            {%- set p = state_attr('sensor.el_priser', 'prices') -%}
+            {%- if p == None -%}
+              unknown
+            {%- else -%}
+            [
+              {%- for i in range(p|length-5) -%}
+                {
+                  "start": "{{ p[i]["start"] }}",
+                  "end": "{{ p[i+5]["end"] }}",
+                  "value": {{
+                    ((p[i]['value']
+                    + p[i+1]['value']
+                    + p[i+2]['value']
+                    + p[i+3]['value']
+                    + p[i+4]['value']
+                    + p[i+5]['value'])/6.0) | round(4)
+                  }}
+                },
+              {%- endfor -%}
+            ]
+            {% endif %}
+          six_hour_seg_prices: >-
+            {%- set p = state_attr('sensor.el_billigste_6_timer', 'six_hour_seg') -%}
+            {%- if p == None -%}
+              unknown
+            {%- else -%}
+              [{% for x in (p|list) %}{{ x.value }},{% endfor %}]
+            {%- endif -%}
+          cheapest_6_hr: >-
+            {%- set p = state_attr('sensor.el_billigste_6_timer', 'six_hour_seg_prices') -%}
+            {{ 'unknown' if p == None else state_attr('sensor.el_priser', 'prices')[p.index(p|min)] }}
+          start: >-
+            {%- set p = state_attr('sensor.el_billigste_6_timer', 'cheapest_6_hr') -%}
+            {{ 'unknown' if p == None else p['start'] }}
+          end: >-
+            {%- set p = state_attr('sensor.el_billigste_6_timer', 'cheapest_6_hr') -%}
+            {{ 'unknown' if p == None else p['end'] }}
+          value: >-
+            {%- set p = state_attr('sensor.el_billigste_6_timer', 'cheapest_6_hr') -%}
+            {{ 'unknown' if p == None else p['value'] }}
+
+      - name: "El Næste Billige 1 Time"
+        device_class: timestamp
+        state: >-
+          {%- set p = state_attr('sensor.el_naeste_billige_1_time', 'next_local_minimum') -%}
+          {{ 'unknown' if p == None else p['start'] }}
+        attributes:
+          icon: mdi:clock-time-one
+          local_minima: >-
+            {%- set p = state_attr('sensor.el_priser', 'prices') -%}
+            {%- if p == None -%}
+              unknown
+            {%- else -%}
+              [
+              {%- for price in p -%}
+                {%-
+                  if not loop.first and not loop.last
+                  and (price['start']|as_datetime) >= (now()-timedelta(hours=1))
+                  and p[loop.index0-1]['value'] >= price['value']
+                  and p[loop.index0+1]['value'] >= price['value']
+                -%}
+                  {
+                    'start': '{{ price["start"] }}',
+                    'end': '{{ price["end"] }}',
+                    'value': '{{ price["value"] }}'
+                  },
+                {%- endif -%}
+              {%- endfor -%}
+              ]
+            {%- endif -%}
+          next_local_minimum: >-
+            {%- set p = state_attr('sensor.el_naeste_billige_1_time', 'local_minima') -%}
+            {{ 'unknown' if p == None else p[0] }}
+          start: >-
+            {%- set p = state_attr('sensor.el_naeste_billige_1_time', 'next_local_minimum') -%}
+            {{ 'unknown' if p == None else p['start'] }}
+          end: >-
+            {%- set p = state_attr('sensor.el_naeste_billige_1_time', 'next_local_minimum') -%}
+            {{ 'unknown' if p == None else p['end'] }}
+          value: >-
+            {%- set p = state_attr('sensor.el_naeste_billige_1_time', 'next_local_minimum') -%}
+            {{ 'unknown' if p == None else p['value'] }}
+
+      - name: "El Næste Billige 3 Timer"
+        device_class: timestamp
+        state: >-
+          {%- set p = state_attr('sensor.el_naeste_billige_3_timer', 'next_local_minimum') -%}
+          {{ 'unknown' if p == None else p['start'] }}
+        attributes:
+          icon: mdi:clock-time-three
+          local_minima: >-
+            {%- set p = state_attr('sensor.el_billigste_3_timer', 'three_hour_seg') -%}
+            {%- if p == None -%}
+              unknown
+            {%- else -%}
+              [
+              {%- for price in p -%}
+                {%-
+                  if not loop.first and not loop.last
+                  and p[loop.index0-1]['value'] >= price['value']
+                  and p[loop.index0+1]['value'] >= price['value']
+                -%}
+                  {
+                    'start': '{{ price["start"] }}',
+                    'end': '{{ price["end"] }}',
+                    'value': '{{ price["value"] }}'
+                  },
+                {%- endif -%}
+              {%- endfor -%}
+              ]
+            {%- endif -%}
+          next_local_minimum: >-
+            {%- set p = state_attr('sensor.el_naeste_billige_3_timer', 'local_minima') -%}
+            {{ 'unknown' if p == None else p[0] }}
+          start: >-
+            {%- set p = state_attr('sensor.el_naeste_billige_3_timer', 'next_local_minimum') -%}
+            {{ 'unknown' if p == None else p['start'] }}
+          end: >-
+            {%- set p = state_attr('sensor.el_naeste_billige_3_timer', 'next_local_minimum') -%}
+            {{ 'unknown' if p == None else p['end'] }}
+          value: >-
+            {%- set p = state_attr('sensor.el_naeste_billige_3_timer', 'next_local_minimum') -%}
+            {{ 'unknown' if p == None else p['value'] }}
+
+      - name: "El Næste Billige 6 Timer"
+        device_class: timestamp
+        state: >-
+          {%- set p = state_attr('sensor.el_naeste_billige_3_timer', 'next_local_minimum') -%}
+          {{ 'unknown' if p == None else p['start'] }}
+        attributes:
+          icon: mdi:clock-time-six
+          local_minima_6hr: >-
+            {%- set p = state_attr('sensor.el_billigste_3_timer', 'six_hour_seg') -%}
+            {%- if p == None -%}
+              unknown
+            {%- else -%}
+              [
+              {%- for price in p -%}
+                {%-
+                  if not loop.first and not loop.last
+                  and p[loop.index0-1]['value'] >= price['value']
+                  and p[loop.index0+1]['value'] >= price['value']
+                -%}
+                  {
+                    'start': '{{ price["start"] }}',
+                    'end': '{{ price["end"] }}',
+                    'value': '{{ price["value"] }}'
+                  },
+                {%- endif -%}
+              {%- endfor -%}
+              ]
+            {%- endif -%}
+          next_local_minimum: >-
+            {%- set p = state_attr('sensor.el_naeste_billige_6_timer', 'local_minima') -%}
+            {{ 'unknown' if p == None else p[0] }}
+          start: >-
+            {%- set p = state_attr('sensor.el_naeste_billige_6_timer', 'next_local_minimum') -%}
+            {{ 'unknown' if p == None else p['start'] }}
+          end: >-
+            {%- set p = state_attr('sensor.el_naeste_billige_6_timer', 'next_local_minimum') -%}
+            {{ 'unknown' if p == None else p['end'] }}
+          value: >-
+            {%- set p = state_attr('sensor.el_naeste_billige_6_timer', 'next_local_minimum') -%}
+            {{ 'unknown' if p == None else p['value'] }}
+
+      - name: "El Næste Dyre 1 Time"
+        device_class: timestamp
+        state: >-
+          {%- set p = state_attr('sensor.el_naeste_dyre_1_time', 'next_local_maximum') -%}
+          {{ 'unknown' if p == None else p['start'] }}
+        attributes:
+          icon: mdi:clock-time-one
+          local_maxima: >-
+            {%- set p = state_attr('sensor.el_priser', 'prices') -%}
+            {%- if p == None -%}
+              unknown
+            {%- else -%}
+              [
+              {%- for price in p -%}
+                {%-
+                  if not loop.first and not loop.last
+                  and (price['start']|as_datetime) >= (now()-timedelta(hours=1))
+                  and p[loop.index0-1]['value'] <= price['value']
+                  and p[loop.index0+1]['value'] <= price['value']
+                -%}
+                  {
+                    'start': '{{ price["start"] }}',
+                    'end': '{{ price["end"] }}',
+                    'value': '{{ price["value"] }}'
+                  },
+                {%- endif -%}
+              {%- endfor -%}
+              ]
+            {%- endif -%}
+          next_local_maximum: >-
+            {%- set p = state_attr('sensor.el_naeste_dyre_1_time', 'local_maxima') -%}
+            {{ 'unknown' if p == None else p[0] }}
+          start: >-
+            {%- set p = state_attr('sensor.el_naeste_dyre_1_time', 'next_local_maximum') -%}
+            {{ 'unknown' if p == None else p['start'] }}
+          end: >-
+            {%- set p = state_attr('sensor.el_naeste_dyre_1_time', 'next_local_maximum') -%}
+            {{ 'unknown' if p == None else p['end'] }}
+          value: >-
+            {%- set p = state_attr('sensor.el_naeste_dyre_1_time', 'next_local_maximum') -%}
+            {{ 'unknown' if p == None else p['value'] }}
+
+      - name: "El Næste Dyre 3 Timer"
+        device_class: timestamp
+        state: >-
+          {%- set p = state_attr('sensor.el_naeste_dyre_3_timer', 'next_local_maximum') -%}
+          {{ 'unknown' if p == None else p['start'] }}
+        attributes:
+          icon: mdi:clock-time-three
+          local_maxima: >-
+            {%- set p = state_attr('sensor.el_billigste_3_timer', 'three_hour_seg') -%}
+            {%- if p == None -%}
+              unknown
+            {%- else -%}
+              [
+              {%- for price in p -%}
+                {%-
+                  if not loop.first and not loop.last
+                  and p[loop.index0-1]['value'] <= price['value']
+                  and p[loop.index0+1]['value'] <= price['value']
+                -%}
+                  {
+                    'start': '{{ price["start"] }}',
+                    'end': '{{ price["end"] }}',
+                    'value': '{{ price["value"] }}'
+                  },
+                {%- endif -%}
+              {%- endfor -%}
+              ]
+            {%- endif -%}
+          next_local_maximum: >-
+            {%- set p = state_attr('sensor.el_naeste_dyre_3_timer', 'local_maxima') -%}
+            {{ 'unknown' if p == None else p[0] }}
+          start: >-
+            {%- set p = state_attr('sensor.el_naeste_dyre_3_timer', 'next_local_maximum') -%}
+            {{ 'unknown' if p == None else p['start'] }}
+          end: >-
+            {%- set p = state_attr('sensor.el_naeste_dyre_3_timer', 'next_local_maximum') -%}
+            {{ 'unknown' if p == None else p['end'] }}
+          value: >-
+            {%- set p = state_attr('sensor.el_naeste_dyre_3_timer', 'next_local_maximum') -%}
+            {{ 'unknown' if p == None else p['value'] }}
+
+      - name: "El Næste Dyre 6 Timer"
+        device_class: timestamp
+        state: >-
+          {%- set p = state_attr('sensor.el_naeste_dyre_6_timer', 'next_local_maximum') -%}
+          {{ 'unknown' if p == None else p['start'] }}
+        attributes:
+          icon: mdi:clock-time-six
+          local_maxima: >-
+            {%- set p = state_attr('sensor.el_billigste_6_timer', 'six_hour_seg') -%}
+            {%- if p == None -%}
+              unknown
+            {%- else -%}
+              [
+              {%- for price in p -%}
+                {%-
+                  if not loop.first and not loop.last
+                  and p[loop.index0-1]['value'] <= price['value']
+                  and p[loop.index0+1]['value'] <= price['value']
+                -%}
+                  {
+                    'start': '{{ price["start"] }}',
+                    'end': '{{ price["end"] }}',
+                    'value': '{{ price["value"] }}'
+                  },
+                {%- endif -%}
+              {%- endfor -%}
+              ]
+            {%- endif -%}
+          next_local_maximum: >-
+            {%- set p = state_attr('sensor.el_naeste_dyre_6_timer', 'local_maxima') -%}
+            {{ 'unknown' if p == None else p[0] }}
+          start: >-
+            {%- set p = state_attr('sensor.el_naeste_dyre_6_timer', 'next_local_maximum') -%}
+            {{ 'unknown' if p == None else p['start'] }}
+          end: >-
+            {%- set p = state_attr('sensor.el_naeste_dyre_6_timer', 'next_local_maximum') -%}
+            {{ 'unknown' if p == None else p['end'] }}
+          value: >-
+            {%- set p = state_attr('sensor.el_naeste_dyre_6_timer', 'next_local_maximum') -%}
+            {{ 'unknown' if p == None else p['value'] }}
