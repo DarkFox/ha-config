@@ -7,6 +7,9 @@ sensor:
       {{ backups[0].name }}
     scan_interval: 60
 
+shell_command:
+  prune_backups: cd /config/backups/ && ls -A1t | tail -n +8 | xargs rm -v
+
 automation:
   - alias: Backup and Dropbox upload
     initial_state: true
@@ -38,3 +41,4 @@ automation:
         data_template:
           addon: 7be23ff5_dropbox_sync
           input: { "command": "upload" }
+      - service: command_line.prune_backups
