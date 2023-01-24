@@ -14,7 +14,10 @@ automation:
         entity_id:
           - sensor.arbejdstelefon_phone_state
           - sensor.darkphone_phone_state
-        to: offhook
+        to:
+          - ringing
+          - offhook
+        from: idle
     condition:
       - condition: state
         entity_id: binary_sensor.martin_presence
@@ -30,7 +33,7 @@ automation:
         entity_id:
           - sensor.arbejdstelefon_phone_state
           - sensor.darkphone_phone_state
-        from: offhook
+        to: idle
     condition:
       - condition: state
         entity_id: binary_sensor.martin_presence
@@ -39,12 +42,12 @@ automation:
       - service: script.turn_on
         entity_id: script.resume_all_media
 
-  - alias: on_call_ringing
+  - alias: on_call_ringing_while_sleeping
     initial_state: true
     trigger:
       - platform: state
-        entity_id: input_boolean.work_phone_ringing
-        to: "on"
+        entity_id: sensor.arbejdstelefon_phone_state
+        to: ringing
     condition:
       - condition: state
         entity_id: binary_sensor.martin_presence
@@ -83,29 +86,26 @@ automation:
       - condition: state
         entity_id: binary_sensor.on_call
         state: "on"
+      - condition: state
+        entity_id: input_select.sleep_state
+        state:
+          - "sleeping"
+          - "smart wake"
+          - "paused"
     action:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: input_select.sleep_state
-                state:
-                  - "sleeping"
-                  - "smart wake"
-                  - "paused"
-            sequence:
-              - event: set_light_profile
-                event_data:
-                  room: bedroom
-                  profile: Ambient
-              - delay:
-                  seconds: 30
-              - condition: state
-                entity_id: sensor.arbejdstelefon_phone_state
-                state: offhook
-              - event: set_light_profile
-                event_data:
-                  room: bedroom
-                  profile: Dimmed
+      - event: set_light_profile
+        event_data:
+          room: bedroom
+          profile: Ambient
+      - delay:
+          seconds: 30
+      - condition: state
+        entity_id: sensor.arbejdstelefon_phone_state
+        state: offhook
+      - event: set_light_profile
+        event_data:
+          room: bedroom
+          profile: Dimmed
 
   - alias: on_call_done
     initial_state: true
