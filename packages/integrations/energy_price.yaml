@@ -83,30 +83,48 @@ template:
                 "abonnement": 0.0,
                 "elafgift_2023_01": 0.080,
                 "systemydelse": 0.0,
-                "transport_vinter_2023": {
+                "transport_vinter_2023_01": {
                   "lavlast": 0.2127,
                   "hoejlast": 0.6379,
                   "spidslast": 1.9135
                 },
+                "transport_vinter_2023_02": {
+                  "lavlast": 0.1837,
+                  "hoejlast": 0.5511,
+                  "spidslast": 1.6533
+                },
+                "transport_vinter_2023_03": {
+                  "lavlast": 0.1509,
+                  "hoejlast": 0.4528,
+                  "spidslast": 1.3584
+                },
                 "transport_sommer_2023": {
-                  "lavlast": 0.2127,
-                  "hoejlast": 0.3189,
-                  "spidslast": 0.8292
+                  "lavlast": 0.1509,
+                  "hoejlast": 0.2264,
+                  "spidslast": 0.5887
                 }
               } -%}
               {%- set cdt = (price['dktime'].split('+')[0] | as_datetime | as_local) -%}
               {%- if cdt > as_datetime("2023-10-01 00:00:00.00+02:00") -%}
-                {%- set transport_lavlast = s.transport_vinter_2023.lavlast -%}
-                {%- set transport_hoejlast = s.transport_vinter_2023.hoejlast -%}
-                {%- set transport_spidslast = s.transport_vinter_2023.spidslast -%}
+                {%- set transport_lavlast = s.transport_vinter_2023_03.lavlast -%}
+                {%- set transport_hoejlast = s.transport_vinter_2023_03.hoejlast -%}
+                {%- set transport_spidslast = s.transport_vinter_2023_03.spidslast -%}
               {%- elif cdt > as_datetime("2023-04-01 00:00:00.00+02:00") -%}
                 {%- set transport_lavlast = s.transport_sommer_2023.lavlast -%}
                 {%- set transport_hoejlast = s.transport_sommer_2023.hoejlast -%}
                 {%- set transport_spidslast = s.transport_sommer_2023.spidslast -%}
+              {%- elif cdt > as_datetime("2023-03-01 00:00:00.00+02:00") -%}
+                {%- set transport_lavlast = s.transport_vinter_2023_03.lavlast -%}
+                {%- set transport_hoejlast = s.transport_vinter_2023_03.hoejlast -%}
+                {%- set transport_spidslast = s.transport_vinter_2023_03.spidslast -%}
+              {%- elif cdt > as_datetime("2023-02-01 00:00:00.00+02:00") -%}
+                {%- set transport_lavlast = s.transport_vinter_2023_02.lavlast -%}
+                {%- set transport_hoejlast = s.transport_vinter_2023_02.hoejlast -%}
+                {%- set transport_spidslast = s.transport_vinter_2023_02.spidslast -%}
               {%- elif cdt > as_datetime("2023-01-01 00:00:00.00+02:00") -%}
-                {%- set transport_lavlast = s.transport_vinter_2023.lavlast -%}
-                {%- set transport_hoejlast = s.transport_vinter_2023.hoejlast -%}
-                {%- set transport_spidslast = s.transport_vinter_2023.spidslast -%}
+                {%- set transport_lavlast = s.transport_vinter_2023_01.lavlast -%}
+                {%- set transport_hoejlast = s.transport_vinter_2023_01.hoejlast -%}
+                {%- set transport_spidslast = s.transport_vinter_2023_01.spidslast -%}
               {%- endif -%}
 
               {%- set elafgift = s.elafgift_2023_01 -%}
