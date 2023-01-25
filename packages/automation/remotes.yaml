@@ -207,6 +207,98 @@ automation:
           entity_id: media_player.kontor_mini
           message: "Kontor separat lysstyring {{'tilkoblet' if states('input_boolean.office_separate_light_profile') == 'on' else 'frakoblet'}}"
 
+  # Kontor Tryk #
+  - alias: kitchen_switch_on
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: kokken_tryk
+          event: 1002
+    action:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.kitchen_activity_override
+                state: "on"
+              - condition: state
+                entity_id: input_select.kitchen_room_state
+                state: "off"
+            sequence:
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.kitchen_room_state
+                  option: "active"
+        default:
+          - event: cycle_light_profile
+            event_data:
+              room: kitchen
+
+  - alias: kitchen_switch_off
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: kokken_tryk
+          event: 2002
+    action:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.kitchen_activity_override
+                state: "on"
+            sequence:
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.kitchen_room_state
+                  option: "off"
+        default:
+          - event: decrease_light_profile
+            event_data:
+              room: kitchen
+
+  - alias: kitchen_activity_override_toggle
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: kokken_tryk
+          event: 1003
+    action:
+      - service: input_boolean.toggle
+        data:
+          entity_id: input_boolean.kitchen_activity_override
+      - service: tts.cloud_say
+        data_template:
+          language: da-DK
+          options:
+            gender: male
+          entity_id: media_player.kokken_mini
+          message: "Kontor overstyring {{'tilkoblet' if states('input_boolean.kitchen_activity_override') == 'on' else 'frakoblet'}}"
+
+  - alias: kitchen_separate_light_profile_toggle
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: kokken_tryk
+          event: 2003
+    action:
+      - service: input_boolean.toggle
+        data:
+          entity_id: input_boolean.kitchen_separate_light_profile
+      - service: tts.cloud_say
+        data_template:
+          language: da-DK
+          options:
+            gender: male
+          entity_id: media_player.kokken_mini
+          message: "Kontor separat lysstyring {{'tilkoblet' if states('input_boolean.kitchen_separate_light_profile') == 'on' else 'frakoblet'}}"
+
   # Bedroom Remote, ID: sovevaerelse_fjernbetjening #
   - alias: bedroom_dimmer_on
     initial_state: true
