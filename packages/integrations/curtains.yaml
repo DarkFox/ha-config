@@ -23,12 +23,15 @@ script:
               - condition: template
                 value_template: "{{ modus == 'close' }}"
             sequence:
+              - service: "cover.open_cover"
+                target:
+                  entity_id: cover.sovevaerelse_gardin_dor
               - service: "cover.close_cover"
                 target:
                   entity_id: cover.sovevaerelse_gardin_vindue
               - wait_template: "{{ is_state('cover.sovevaerelse_gardin_vindue', 'closed') }}"
                 timeout: "00:02:00"
-                continue_on_timeout: false
+                continue_on_timeout: true
               - service: cover.set_cover_position
                 target:
                   entity_id: cover.sovevaerelse_gardin_vindue
@@ -36,7 +39,7 @@ script:
                   position: 35
               - wait_template: "{{ is_state('cover.sovevaerelse_gardin_vindue', 'opening') or is_state('cover.sovevaerelse_gardin_vindue', 'open') }}"
                 timeout: "00:02:00"
-                continue_on_timeout: false
+                continue_on_timeout: true
               - service: "cover.close_cover"
                 target:
                   entity_id: cover.sovevaerelse_gardin_dor
@@ -58,7 +61,7 @@ script:
           {%- set current_pos = state_attr('cover.sovevaerelse_gardin_vindue', 'current_position') -%}
           {{ position-5 < current_pos < position+5 }}
         timeout: "00:02:00"
-        continue_on_timeout: false
+        continue_on_timeout: true
       - variables:
           final_pos: >-
             {% if position < 35 %}
@@ -75,7 +78,7 @@ script:
           {%- set current_pos = state_attr('cover.sovevaerelse_gardin_vindue', 'current_position') -%}
           {{ final_pos-5 < current_pos < final_pos+5 }}
         timeout: "00:02:00"
-        continue_on_timeout: false
+        continue_on_timeout: true
       - service: cover.set_cover_position
         target:
           entity_id: cover.sovevaerelse_gardin_dor
