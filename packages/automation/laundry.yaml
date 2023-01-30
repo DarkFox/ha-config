@@ -13,12 +13,13 @@ template:
         device_class: temperature
   - binary_sensor:
       - name: Tørretumbler
-        state: "{{ states('sensor.dryer_temp_delta')|int > 10 }}"
+        state: "{{ states('sensor.dryer_temp_delta')|int > 10 and states('sensor.pow_k_l2_power')|int > 900 }}"
         device_class: running
         attributes:
           icon: "{{ 'mdi:tumble-dryer' if this.state == 'on' else 'mdi:tumble-dryer-off' }}"
           temperature: "{{ states('sensor.torretumbler_temperature') }}"
           temperature_derivative: "{{ states('sensor.sensor_torretumbler_temperature_derivative') }}"
+          l2_power: "{{ states('sensor.pow_k_l2_power') }}"
       - name: laundry
         state: >-
           {{
@@ -79,9 +80,11 @@ automation:
     initial_state: true
     trigger:
       - platform: state
-        entity_id: sensor.torretumbler
+        entity_id: binary_sensor.torretumbler
         from: "on"
         to: "off"
+        for:
+          minutes: 5
     action:
       - service: script.notify_everywhere
         data:
