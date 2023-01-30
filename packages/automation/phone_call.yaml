@@ -201,12 +201,12 @@ automation:
                 value_template: "{{ trigger.json.state }}"
             sequence:
               - service: input_text.set_value
-                data_template:
+                data:
                   entity_id: input_text.work_phone_caller
                   value: "{{ trigger.json.caller }}"
         default:
           - service: input_text.set_value
-            data_template:
+            data:
               entity_id: input_text.work_phone_caller
               value: ""
 
@@ -215,11 +215,11 @@ script:
     alias: "Sæt afspilning på pause"
     sequence:
       - service: input_text.set_value
-        data_template:
+        data:
           entity_id: input_text.active_media_player
           value: "{{ states('sensor.active_media_player') }}"
       - service: input_text.set_value
-        data_template:
+        data:
           entity_id: input_text.active_media_type
           value: "{{ 'file' if state_attr(states('sensor.active_media_player'), 'media_duration') else 'stream' }}"
       - choose:
@@ -229,7 +229,7 @@ script:
                 state: "file"
             sequence:
               - service: "media_player.media_pause"
-                data_template:
+                data:
                   entity_id: "{{ states('input_text.active_media_player') }}"
           - conditions:
               - condition: state
@@ -237,7 +237,7 @@ script:
                 state: "stream"
             sequence:
               - service: "media_player.volume_mute"
-                data_template:
+                data:
                   entity_id: "{{ states('input_text.active_media_player') }}"
                   is_volume_muted: true
 
@@ -251,7 +251,7 @@ script:
                 state: "file"
             sequence:
               - service: "media_player.media_play"
-                data_template:
+                data:
                   entity_id: "{{ states('input_text.active_media_player') }}"
           - conditions:
               - condition: state
@@ -259,6 +259,6 @@ script:
                 state: "stream"
             sequence:
               - service: "media_player.volume_mute"
-                data_template:
+                data:
                   entity_id: "{{ states('input_text.active_media_player') }}"
                   is_volume_muted: false

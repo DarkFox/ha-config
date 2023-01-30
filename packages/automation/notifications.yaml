@@ -3,10 +3,23 @@ script:
     alias: Send notification everywhere
     sequence:
       - service: notify.telegram_darkfox
-        data_template:
+        data:
           message: "{{ message }}"
       - service: script.popup_notification
-        data_template:
+        data:
+          message: "{{ message }}"
+      - service: script.voice_broadcast
+        data:
+          message: "{{ message }}"
+
+  voice_broadcast:
+    alias: Broadcast message on all Google Homes if home
+    sequence:
+      - condition: state
+        entity_id: binary_sensor.martin_presence
+        state: "on"
+      - service: notify.google_assistant_sdk
+        data:
           message: "{{ message }}"
 
   popup_notification:
@@ -58,7 +71,7 @@ automation:
         minutes: 3
     action:
       - service: script.notify_everywhere
-        data_template:
+        data:
           message: "Hoveddøren er ikke låst!"
 
   - alias: Freezer Door Open Notification
@@ -71,7 +84,7 @@ automation:
         minutes: 3
     action:
       - service: script.notify_everywhere
-        data_template:
+        data:
           message: "Fryseren står åben!"
 
   - alias: Fridge Door Open Notification
@@ -84,5 +97,5 @@ automation:
         minutes: 3
     action:
       - service: script.notify_everywhere
-        data_template:
+        data:
           message: "Køleskabet står åben!"

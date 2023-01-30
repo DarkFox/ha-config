@@ -119,7 +119,7 @@ automation:
   #       to: "on"
   #   action:
   #     - service: downloader.download_file
-  #       data_template:
+  #       data:
   #         url: "https://www.dmi.dk/dmidk_byvejrWS/rest/image/gif/Radar/"
   #         filename: radar.gif
   #         subdir: dmi_weather_radar
@@ -132,7 +132,7 @@ automation:
       value_template: "{{ (state_attr('sensor.dmi_aktuel_varsel', 'category') | int) > 1 }}"
     action:
       - service: notify.telegram_darkfox
-        data_template:
+        data:
           title: "Vejr Varsel: {{ states('sensor.dmi_aktuel_varsel') }}"
           message: "{{ state_attr('sensor.dmi_aktuel_varsel', 'text') }}"
 
@@ -164,14 +164,14 @@ automation:
           seconds: 10
 
       - service: mqtt.publish
-        data_template:
+        data:
           topic: "dmi_current_warnings/state"
           retain: True
           payload: >-
             {{ 0 if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings | length }}
 
       - service: mqtt.publish
-        data_template:
+        data:
           topic: "dmi_current_warnings/attributes"
           retain: True
           payload: >-
@@ -186,14 +186,14 @@ automation:
             {% endif %}
 
       - service: mqtt.publish
-        data_template:
+        data:
           topic: "dmi_future_warnings/state"
           retain: True
           payload: >-
             {{ 0 if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.fivedayWarnings|length }}
 
       - service: mqtt.publish
-        data_template:
+        data:
           topic: "dmi_future_warnings/attributes"
           retain: True
           payload: >-
@@ -208,7 +208,7 @@ automation:
             {% endif %}
 
       - service: downloader.download_file
-        data_template:
+        data:
           url: "https://www.dmi.dk/fileadmin/assets/Varselsikoner/{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].icon }}"
           subdir: dmi_warning_icons
           overwrite: true

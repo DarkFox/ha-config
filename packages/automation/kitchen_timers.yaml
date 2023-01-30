@@ -3,10 +3,10 @@ script:
     alias: Add time to a timer
     sequence:
       - service: timer.pause
-        data_template:
+        data:
           entity_id: "{{ entity_id }}"
       - service: script.start_timer_with_duration
-        data_template:
+        data:
           entity_id: "{{ entity_id }}"
           duration: >
             {% set hours = hours or "0" %}
@@ -22,10 +22,10 @@ script:
     alias: Start or restart a timer with a new time
     sequence:
       - service: timer.cancel
-        data_template:
+        data:
           entity_id: "{{ entity_id }}"
       - service: timer.start
-        data_template:
+        data:
           entity_id: "{{ entity_id }}"
           duration: "{{ duration }}"
 
@@ -125,10 +125,10 @@ automation:
           entity_id: timer.kitchen_3
     action:
       - service: input_boolean.turn_on
-        data_template:
+        data:
           entity_id: "input_boolean.timer_{{ trigger.event.data.entity_id | replace('timer.', '') }}_finished"
       - service: script.notify_everywhere
-        data_template:
+        data:
           message: "{{ state_attr(trigger.event.data.entity_id, 'friendly_name') }} er færdig!"
 
   - alias: kitchen_timer_finished

@@ -25,20 +25,20 @@ automation:
       name: "Automated Backup {{ now().strftime('%Y-%m-%d') }}"
     action:
       - service: persistent_notification.create
-        data_template:
+        data:
           message: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}: Starting backup"
           title: "{{ name }}"
       - service: hassio.backup_full
-        data_template:
+        data:
           name: "{{ name }}"
       - wait_template: "{{ states('sensor.latest_backup') == name }}"
         timeout: "02:00:00"
       - service: persistent_notification.create
-        data_template:
+        data:
           message: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}: Backup done. Syncing to Dropbox"
           title: "{{ name }}"
       - service: hassio.addon_stdin
-        data_template:
+        data:
           addon: 7be23ff5_dropbox_sync
           input: { "command": "upload" }
       - service: shell_command.prune_backups
