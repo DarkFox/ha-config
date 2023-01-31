@@ -2,6 +2,11 @@ template:
   - sensor:
       - name: ID.3 Battery
         state: >-
-          {{ states('sensor.id3_state_of_charge') }}{{ '/'~states('sensor.id3_remaining_charging_time_to_complete') if is_state('binary_sensor.id3_charging', 'on') else '%' }}
+          {{ states('sensor.id3_state_of_charge') }}{{ '/'~states('sensor.charging_complete_or_idle_fee_time') if is_state('binary_sensor.id3_charging', 'on') else '%' }}
         attributes:
-          icon: "{{ 'mdi:car-electric' if is_state('binary_sensor.id3_charging', 'on') else 'mdi:car' }}"
+          icon: >-
+            {{
+              'mdi:car-clock' if is_state('binary_sensor.id3_charging', 'on') and is_state('binary_sensor.car_charging_done_before_idle_fee', 'off')
+              'mdi:car-electric' if is_state('binary_sensor.id3_charging', 'on')
+              else 'mdi:car'
+            }}

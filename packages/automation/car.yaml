@@ -76,7 +76,17 @@ template:
         device_class: duration
         unit_of_measurement: minutes
 
+      - name: "Car Charging Complete or Idle Fee Time"
+        state: >-
+          {% set ct = (states('sensor.id3_remaining_charging_time') if is_state('binary_sensor.car_charging_done_before_idle_fee', 'on') else states('sensor.car_charging_idle_fee_starting_in'))|int %}
+          {% if ct > 60 %}{{ ct // 60 }}:{{ '{:0>2d}'.format(ct%60) }}{% else %}{{ct}}{% endif %}
+        device_class: duration
+
   - binary_sensor:
+      - name: "Car charging done before idle fee"
+        state: "{{ states('sensor.id3_remaining_charging_time') < states('sensor.car_charging_idle_fee_starting_in') }}"
+        attributes:
+          icon: mdi:car-clock
       - name: "In Car"
         state: "{{'VW Fox' in (state_attr('sensor.darkphone_bluetooth_connection', 'connected_paired_devices')|join(', ')) }}"
       - name: At Work Soon
@@ -255,7 +265,9 @@ automation:
           seconds: 5
       - service: notify.telegram_darkfox
         data:
-          message: "Blokeringsgebyr starter kl. {{ states('sensor.car_charging_idle_fee_starting_at')|as_timestamp|timestamp_custom('%H:%M', True) }}"
+          message: >-
+            Blokeringsgebyr starter kl. {{ states('sensor.car_charging_idle_fee_starting_at')|as_timestamp|timestamp_custom('%H:%M', True) }}.
+            {{ 'Opladning bliver ikke færdig inden.' if is_state('binary_sensor.car_charging_done_before_idle_fee', 'off') }}
 
   - id: warn_charger_idle_fees
     alias: warn_charger_idle_fees
