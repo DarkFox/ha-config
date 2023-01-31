@@ -5,8 +5,10 @@ template:
           {{ states('sensor.id3_state_of_charge') }}{{ '/'~states('sensor.charging_complete_or_idle_fee_time') if is_state('binary_sensor.id3_charging', 'on') else '%' }}
         attributes:
           icon: >-
-            {{
-              'mdi:car-clock' if is_state('binary_sensor.id3_charging', 'on') and is_state('binary_sensor.car_charging_done_before_idle_fee', 'off')
-              'mdi:car-electric' if is_state('binary_sensor.id3_charging', 'on')
-              else 'mdi:car'
-            }}
+            {%- if is_state('binary_sensor.id3_charging', 'on') and is_state('binary_sensor.car_charging_done_before_idle_fee', 'off') -%}
+                'mdi:car-clock'
+            {%- elif is_state('binary_sensor.id3_charging', 'on') -%}
+                'mdi:car-electric'
+            {%- else -%}
+                'mdi:car'
+            {%- endif -%}
