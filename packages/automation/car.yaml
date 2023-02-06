@@ -36,12 +36,9 @@ sensor:
     max_age:
       minutes: 5
 
-input_datetime:
-  car_charging_started:
-    has_date: true
-    has_time: true
 input_text:
   car_charging_type:
+  car_charging_started:
 
 template:
   - sensor:
@@ -52,7 +49,7 @@ template:
             and not is_state('input_text.car_charging_type', '')
             and states('device_tracker.volkswagen_id_3_geolocation') in ['not_home', 'RSH', 'RSR']
           %}
-            {% set car_charging_started = states('input_datetime.car_charging_started') %}
+            {% set car_charging_started = states('input_text.car_charging_started') %}
             {% set charge_type = states('input_text.car_charging_type') %}
             {% if car_charging_started|as_datetime %}
               {% if charge_type == 'dc' %}
@@ -173,9 +170,9 @@ automation:
       - alias: "Set Car Charging Started to now"
         service: input_datetime.set_datetime
         target:
-          entity_id: input_datetime.car_charging_started
+          entity_id: input_text.car_charging_started
         data:
-          timestamp: "{{ now().timestamp() }}"
+          value: "{{ now().timestamp() }}"
 
   - id: set_car_charging_type
     alias: Set Car Charging Type
@@ -210,9 +207,9 @@ automation:
       - alias: "Clear Car Charging Started to now"
         service: input_datetime.set_datetime
         target:
-          entity_id: input_datetime.car_charging_started
+          entity_id: input_text.car_charging_started
         data:
-          timestamp: ""
+          value: ""
 
   - alias: notify_car_charging
     id: notify_car_charging
@@ -259,7 +256,7 @@ automation:
     initial_state: true
     trigger:
       - platform: state
-        entity_id: input_datetime.car_charging_started
+        entity_id: input_text.car_charging_started
     action:
       - delay:
           seconds: 5
