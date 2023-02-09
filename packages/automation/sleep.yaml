@@ -693,27 +693,14 @@ automation:
           entity_id: "media_player.sovevaerelse_mini"
           volume_level: 0.2
 
-  - alias: alarm_action_5_minutes
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: input_select.sleep_state
-      to:
-        - "alarm"
-        - "snoozing"
-      for:
-        minutes: 5
-    action:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: sun.sun
-                state: "above_horizon"
-            sequence:
-              - service: cover.set_cover_position
-                data:
-                  entity_id: cover.sovevaerelse_gardin_vindue
-                  position: 40
+      - delay:
+          minutes: 5
+      - condition: state
+        entity_id: input_select.sleep_state
+        state:
+          - "alarm"
+          - "snoozing"
+          - "waking"
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
@@ -729,18 +716,29 @@ automation:
       - service: automation.trigger
         data:
           entity_id: "automation.reset_scene_transition_time"
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: sun.sun
+                state: "above_horizon"
+            sequence:
+              - service: cover.set_cover_position
+                data:
+                  entity_id: cover.sovevaerelse_gardin_vindue
+                  position: 40
 
-  - alias: alarm_action_10_minutes
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: input_select.sleep_state
-      to:
-        - "alarm"
-        - "snoozing"
-      for:
-        minutes: 10
-    action:
+      - delay:
+          minutes: 5
+      - condition: state
+        entity_id: input_select.sleep_state
+        state:
+          - "alarm"
+          - "snoozing"
+          - "waking"
+      - service: media_player.volume_set
+        data:
+          entity_id: "media_player.sovevaerelse_mini"
+          volume_level: 0.25
       - choose:
           - conditions:
               - condition: state
@@ -752,17 +750,14 @@ automation:
                   entity_id: cover.sovevaerelse_gardin_vindue
                   position: 45
 
-  - alias: alarm_action_20_minutes
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: input_select.sleep_state
-      to:
-        - "alarm"
-        - "snoozing"
-      for:
-        minutes: 20
-    action:
+      - delay:
+          minutes: 10
+      - condition: state
+        entity_id: input_select.sleep_state
+        state:
+          - "alarm"
+          - "snoozing"
+          - "waking"
       - choose:
           - conditions:
               - condition: state
@@ -773,36 +768,6 @@ automation:
                 data:
                   entity_id: cover.sovevaerelse_gardin_vindue
                   position: 50
-
-  - alias: snoozing_action
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: counter.snooze_counter
-    condition:
-      condition: numeric_state
-      entity_id: counter.snooze_counter
-      above: 2
-    action:
-      - service: input_number.set_value
-        data:
-          entity_id: "input_number.scene_transition_time"
-          value: 120.0
-      - delay:
-          seconds: 1
-      - event: set_light_profile
-        event_data:
-          room: bedroom
-          profile: Dimmed
-      - delay:
-          seconds: 2
-      - service: automation.trigger
-        data:
-          entity_id: "automation.reset_scene_transition_time"
-      - service: media_player.volume_set
-        data:
-          entity_id: "media_player.sovevaerelse_mini"
-          volume_level: 0.25
 
   - alias: waking_action
     initial_state: true
