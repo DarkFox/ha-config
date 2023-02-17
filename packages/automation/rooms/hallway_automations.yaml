@@ -1,38 +1,22 @@
 automation:
-  - id: doorbell_speaker_announcement
-    alias: Doorbell Speaker Announcement
-    mode: single
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.dorklokke
-        from: "on"
-        to: "off"
-    action:
-      - service: media_player.play_media
-        target:
-          entity_id: media_player.minis
-        data:
-          media_content_type: "audio/mp4"
-          media_content_id: "media-source://media_source/local/Doorbellinator.m4a"
-      - service: media_player.volume_set
-        data:
-          volume_level: 1
-        target:
-          entity_id: media_player.gang_mini
-      - delay:
-          seconds: 5
-
   - id: doorbell_notification
     alias: Doorbell Notification
     mode: single
     trigger:
       - platform: state
-        entity_id: binary_sensor.dorklokke
-        from: "on"
-        to: "off"
+        entity_id: binary_sensor.dorklokke_knap
+        from: "off"
+        to: "on"
     action:
-      - service: script.notify_everywhere
+      - service: notify.telegram_darkfox
         data:
           message: "Ding dong!"
-      - delay:
-          seconds: 30
+      - service: script.popup_notification
+        data:
+          message: "Ding dong!"
+      - condition: state
+        entity_id: switch.dorklokke_forstyr_ikke
+        state: "off"
+      - service: script.voice_broadcast
+        data:
+          message: "Ding dong!"
