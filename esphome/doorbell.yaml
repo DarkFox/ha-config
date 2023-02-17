@@ -1,0 +1,86 @@
+substitutions:
+  devicename: doorbell
+  upper_devicename: Dørklokke
+
+esphome:
+  name: $devicename
+  platform: ESP8266
+  board: d1_mini
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret encryption_key
+
+ota:
+  password: !secret ota_pass
+
+status_led:
+  pin:
+    number: GPIO2
+    inverted: true
+
+globals:
+  - id: do_not_disturb
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: D2
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+    id: ${devicename}_button
+    name: ${upper_devicename} Knap
+    filters:
+      - delayed_on: 50ms
+      - delayed_off: 3000ms # prevents from re-ringing within 3 seconds
+    on_press:
+      then:
+        if:
+          condition:
+            - switch.is_off: do_not_disturb_active
+          then:
+            - switch.turn_on: bell_relay
+            - delay: 400ms
+            - switch.turn_off: bell_relay
+            - delay: 400ms
+            - switch.turn_on: bell_relay
+            - delay: 400ms
+            - switch.turn_off: bell_relay
+            - delay: 400ms
+            - switch.turn_on: bell_relay
+            - delay: 400ms
+            - switch.turn_off: bell_relay  
+
+switch:
+  - platform: template
+    id: do_not_disturb_active
+    name: ${upper_devicename} Forstyr Ikke
+    restore_state: false
+    turn_on_action:
+      - globals.set:
+          id: do_not_disturb
+          value: 'true'
+    turn_off_action:
+      - globals.set:
+          id: do_not_disturb
+          value: 'false'
+    lambda: |-
+      return id(do_not_disturb);
+
+  - platform: gpio
+    id: bell_relay
+    name: ${upper_devicename} Klokke
+    pin: D7
