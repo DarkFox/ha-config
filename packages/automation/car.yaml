@@ -49,19 +49,19 @@ template:
             and not is_state('input_text.car_charging_type', '')
             and states('device_tracker.volkswagen_id_3_geolocation') in ['not_home', 'RSH', 'RSR']
           %}
-            {% set car_charging_started = states('input_text.car_charging_started') %}
+            {% set car_charging_started = states('input_text.car_charging_started')|int %}
             {% set charge_type = states('input_text.car_charging_type') %}
             {% if car_charging_started|as_datetime %}
-              {% if charge_type == 'dc' %}
-                {{ (car_charging_started|as_timestamp + (90*60))|as_datetime|as_local }}
-              {% elif charge_type == 'ac' %}
-                {% set fee_start_time = (car_charging_started|as_timestamp + (180*60))|as_datetime|as_local %}
+              {% if charge_type == 'ac' %}
+                {% set fee_start_time = (car_charging_started + (180*60))|as_datetime|as_local %}
                 {% if (fee_start_time.strftime('%H:%M') > '21:00') %}
                   {% set fee_start_time = (as_timestamp(fee_start_time) + (1*24*3600)) | timestamp_custom("%Y-%m-%d 09:00:00", True)|as_datetime|as_local %}
                 {% elif (fee_start_time.strftime('%H:%M') < '09:00') %}
                   {% set fee_start_time = as_timestamp(fee_start_time) | timestamp_custom("%Y-%m-%d 09:00:00", True)|as_datetime|as_local %}
                 {% endif %}
                 {{ fee_start_time }}
+              {% else %}
+                {{ (car_charging_started + (90*60))|as_datetime|as_local }}
               {% endif %}
             {% endif %}
           {% endif %}
@@ -75,7 +75,7 @@ template:
 
       - name: "Car Charging Complete or Idle Fee Time"
         state: >-
-          {% set ct = (states('sensor.id3_remaining_charging_time') if is_state('binary_sensor.car_charging_done_before_idle_fee', 'on') else states('sensor.car_charging_idle_fee_starting_in'))|int %}
+          {%- set ct = (states('sensor.id3_remaining_charging_time') if is_state('binary_sensor.car_charging_done_before_idle_fee', 'on') else states('sensor.car_charging_idle_fee_starting_in'))|int -%}
           {% if ct > 60 %}{{ ct // 60 }}:{{ '{:0>2d}'.format(ct%60) }}{% else %}{{ct}}{% endif %}
         device_class: duration
 
@@ -91,11 +91,11 @@ template:
       - name: ID3 Locked
         state: >-
           {{
-            is_state('sensor.id3_door_front_left_lock_status', 'unlocked') or
-            is_state('sensor.id3_door_front_right_lock_status', 'unlocked') or
-            is_state('sensor.id3_door_rear_left_lock_status', 'unlocked') or
-            is_state('sensor.id3_door_rear_right_lock_status', 'unlocked') or
-            is_state('sensor.id3_trunk_lock_status', 'unlocked')
+            is_state('sensor.id3_door_front_left_lock_status', 'unlocked')
+            or is_state('sensor.id3_door_front_right_lock_status', 'unlocked')
+            or is_state('sensor.id3_door_rear_left_lock_status', 'unlocked')
+            or is_state('sensor.id3_door_rear_right_lock_status', 'unlocked')
+            or is_state('sensor.id3_trunk_lock_status', 'unlocked')
           }}
         device_class: lock
 
@@ -168,11 +168,11 @@ automation:
         to: "connected"
     action:
       - alias: "Set Car Charging Started to now"
-        service: input_datetime.set_datetime
+        service: input_text.set_value
         target:
           entity_id: input_text.car_charging_started
         data:
-          value: "{{ now().timestamp() }}"
+          value: "{{ now().timestamp()|int }}"
 
   - id: set_car_charging_type
     alias: Set Car Charging Type
