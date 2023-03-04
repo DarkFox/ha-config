@@ -3,6 +3,10 @@ sensor:
     source: sensor.torretumbler_temperature
     unit_time: min
 
+input_boolean:
+  washing_machine_finished:
+  dryer_finished:
+
 template:
   - sensor:
       - name: "Washing Machine Finished At"
@@ -63,20 +67,23 @@ automation:
         data:
           message: "Vaskemaskine færdig om 10 minutter."
 
-  - id: notify_washing_machine_finished
-    alias: Notify Washing Machine Finished
+  - id: washing_machine_finished
+    alias: Washing Machine Finished
     initial_state: true
     trigger:
       - platform: state
         entity_id: sensor.washing_machine
         to: "Finished"
     action:
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.washing_machine_finished
       - service: script.notify_everywhere
         data:
           message: "Vaskemaskine Færdig"
 
-  - id: notify_dryer_finished
-    alias: Notify Dryer Finished
+  - id: dryer_finished
+    alias: Dryer Finished
     initial_state: true
     trigger:
       - platform: state
@@ -86,6 +93,9 @@ automation:
         for:
           minutes: 5
     action:
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.dryer_finished
       - service: script.notify_everywhere
         data:
           message: "Tørretumbleren er færdig."
