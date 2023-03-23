@@ -42,6 +42,10 @@ input_text:
 
 template:
   - sensor:
+      - name: "Car Distance to Martin"
+        state: "{{ distance('device_tracker.volkswagen_id_3_geolocation', 'person.martin') }}"
+        device_class: distance
+        unit_of_measurement: km
       - name: "Car Charging Idle Fee Starting At"
         state: >-
           {%
@@ -100,6 +104,34 @@ template:
         device_class: lock
 
 automation:
+  - id: alert_car_unlocked
+    alias: Alert car unlocked
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.car_distance_to_martin
+        above: 0.1
+        for:
+          seconds: 30
+      - platform: state
+        entity_id: binary_sensor.id3_locked
+        to: "off"
+        for:
+          minutes: 5
+    condition:
+      - alias: "Car unlocked"
+        condition: state
+        entity_id: binary_sensor.id3_locked
+        state: "off"
+      - alias: "Car parked"
+        condition: state
+        entity_id: binary_sensor.volkswagen_id_3_ignition
+        state: "off"
+    action:
+      - service: script.notify_everywhere
+        data:
+          message: Bilen er ikke låst!
+          severity: 2
+
   - id: climatise_car_for_upcoming_drive
     alias: climatise_car_for_upcoming_drive
     trigger:
