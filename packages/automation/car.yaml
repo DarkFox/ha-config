@@ -350,6 +350,9 @@ automation:
       - service: notify.telegram_darkfox
         data:
           message: "Klimatiserer bilen til {{ states('sensor.id3_target_temperature') }}°. {{ states('sensor.id3_remaining_climatisation_time') }} minutter tilbage."
+          data:
+            inline_keyboard:
+              - "Stop klimatisering:/car_climatisation_off"
       - service: automation.turn_on
         target:
           entity_id: automation.notify_car_climatisation_end
@@ -494,8 +497,6 @@ automation:
           command: "/car_climatisation_on"
     action:
       - service: switch.turn_on
-        data:
-          hvac_mode: auto
         target:
           entity_id: switch.id3_climatisation
 
@@ -513,8 +514,6 @@ automation:
           command: "/car_climatisation_off"
     action:
       - service: switch.turn_off
-        data:
-          hvac_mode: auto
         target:
           entity_id: switch.id3_climatisation
 
