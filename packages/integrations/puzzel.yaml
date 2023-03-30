@@ -111,6 +111,46 @@ script:
         target:
           entity_id: automation.update_puzzel_user_info
 
+  puzzel_pause_on:
+    alias: "Puzzel Pause On"
+    variables:
+      pause_type_id: "{{ (state_attr('sensor.puzzel_user', 'result').pauseTypes | selectattr('description', 'equalto', pause_type) | first).id }}"
+    sequence:
+      - alias: "ensure all variables"
+        condition: template
+        value_template: "{{ not not (pause_type_id) }}"
+      - service: shell_command.curl
+        data:
+          url: "https://agent.puzzel.com/contactcentre5/{{ state_attr('sensor.puzzel_user', 'result').customerKey }}/users/{{ state_attr('sensor.puzzel_user', 'result').userId }}/pauseon"
+          method: post
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ state_attr('sensor.puzzel_login', 'accessToken') }}"
+          payload:
+            pauseTypeId: "{{ pause_type_id|int }}"
+      - delay:
+          seconds: 1
+      - service: automation.trigger
+        target:
+          entity_id: automation.update_puzzel_user_info
+
+  puzzel_pause_off:
+    alias: "Puzzel Pause Off"
+    sequence:
+      - service: shell_command.curl
+        data:
+          url: "https://agent.puzzel.com/contactcentre5/{{ state_attr('sensor.puzzel_user', 'result').customerKey }}/users/{{ state_attr('sensor.puzzel_user', 'result').userId }}/pauseoff"
+          method: post
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ state_attr('sensor.puzzel_login', 'accessToken') }}"
+          payload_string: "{}"
+      - delay:
+          seconds: 1
+      - service: automation.trigger
+        target:
+          entity_id: automation.update_puzzel_user_info
+
 automation:
   - id: update_puzzel_user_info
     alias: Update Puzzel user info
@@ -130,3 +170,372 @@ automation:
       - service: homeassistant.update_entity
         target:
           entity_id: sensor.puzzel_status
+
+  - id: puzzel_state_confirmation
+    alias: Puzzel state confirmation
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: sensor.puzzel_profil
+      - platform: state
+        entity_id: binary_sensor.puzzel_status
+        attribute: state
+    condition:
+      - condition: template
+        value_template: "{{ trigger.from_state.state != 'unknown' and trigger.from_state.state != '' }}"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: sensor.puzzel_profil
+            state: "unknown"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: >-
+            {% if is_state('sensor.puzzel_profil', 'Logget af') %}
+              Logget af Puzzel
+            {% else %}
+              Logget på Puzzel - {{ states('sensor.puzzel_profil') }}. Status: {{ state_attr('binary_sensor.puzzel_status', 'state') }}
+            {% endif %}
+
+  - id: puzzel_state_notification
+    alias: Puzzel State Notification
+    mode: queued
+    trigger:
+      - platform: state
+        entity_id: sensor.puzzel_profil
+      - platform: state
+        entity_id: binary_sensor.puzzel_status
+        attribute: state
+    action:
+      - service: notify.mobile_app_arbejdstelefon
+        data:
+          title: "Puzzel Status: {{ 'Logget af' if is_state('sensor.puzzel_profil', 'Logget af') else 'Logget på' }}"
+          message: "Profil: {{ states('sensor.puzzel_profil') }}. Status: {{ state_attr('binary_sensor.puzzel_status', 'state') }}"
+          data:
+            tag: "puzzel_status"
+            channel: "Puzzel Status"
+            importance: low
+            persistent: true
+            clickAction: noAction
+            notification_icon: >-
+              {%- if is_state('sensor.puzzel_profil', 'Logget af') -%}
+                mdi:phone-classic-off
+              {%- elif is_state('sensor.puzzel_status', 'Pause') -%}
+                mdi:pause-circle-outline
+              {%- else -%}
+                mdi:phone-classic
+              {%- endif -%}
+            actions:
+              - action: "puzzel_switch_profile_menu"
+                title: "{{ 'Log på' if is_state('sensor.puzzel_profil', 'Logget af') else 'Skift kø' }}"
+              - action: "puzzel_log_off"
+                title: "Log af"
+              - action: "{{ 'puzzel_pause_off' if is_state('sensor.puzzel_status', 'Pause') else 'puzzel_pause_menu' }}"
+                title: "{{ 'Ledig' if is_state('sensor.puzzel_status', 'Pause') else 'Pause' }}"
+
+  - id: notification_action_log_off_puzzel
+    alias: Notification Action Log Off Puzzel
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: "puzzel_log_off"
+    action:
+      - service: automation.trigger
+        target:
+          entity_id: automation.puzzel_state_notification
+      - service: script.puzzel_log_off
+
+  - id: notification_action_puzzel_pause_off
+    alias: Notification Action Puzzel Pause Off
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: "puzzel_pause_off"
+    action:
+      - service: automation.trigger
+        target:
+          entity_id: automation.puzzel_state_notification
+      - service: script.puzzel_pause_off
+
+  - id: notification_action_switch_puzzel_queue_menu
+    alias: Notification Action Switch Puzzel Queue Menu
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: "puzzel_switch_profile_menu"
+    action:
+      - service: automation.trigger
+        target:
+          entity_id: automation.puzzel_state_notification
+      - repeat:
+          for_each: >-
+            {{ (
+              state_attr('sensor.puzzel_status', 'result').profiles
+              | map(attribute='name')
+              | list
+            ) }}
+          sequence:
+            - service: notify.mobile_app_arbejdstelefon
+              data:
+                title: "Log på Puzzel kø"
+                message: "{{ repeat.item }}"
+                data:
+                  tag: "puzzel_queue_menu_{{ repeat.index }}"
+                  channel: "Puzzel Menu"
+                  notification_icon: mdi:phone-classic
+                  importance: low
+                  sticky: true
+                  clickAction: noAction
+                  actions:
+                    - action: "puzzel_switch_profile {{ repeat.item }}"
+                      title: "Log på denne kø"
+
+  - id: notification_action_switch_puzzel_queue
+    alias: Notification Action Switch Puzzel Queue
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: mobile_app_notification_action
+    condition: "{{ 'puzzel_switch_profile ' in trigger.event.data['action'] }}"
+    action:
+      - service: automation.trigger
+        target:
+          entity_id: automation.puzzel_state_notification
+      - repeat:
+          for_each: >-
+            {{ (
+              state_attr('sensor.puzzel_status', 'result').profiles
+              | map(attribute='name')
+              | list
+            ) }}
+          sequence:
+            - service: notify.mobile_app_arbejdstelefon
+              data:
+                message: "clear_notification"
+                data:
+                  tag: "puzzel_queue_menu_{{ repeat.index }}"
+      - service: script.puzzel_log_on
+        data:
+          queue: "{{ trigger.event.data['action']|replace('puzzel_switch_profile ', '') }}"
+
+  - id: notification_action_puzzel_pause_menu
+    alias: Notification Action Puzzel Pause Menu
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: "puzzel_pause_menu"
+    action:
+      - service: automation.trigger
+        target:
+          entity_id: automation.puzzel_state_notification
+      - repeat:
+          for_each: >-
+            {{ (
+              state_attr('sensor.puzzel_user', 'result').pauseTypes
+              | map(attribute='description')
+              | list
+            ) }}
+          sequence:
+            - service: notify.mobile_app_arbejdstelefon
+              data:
+                title: "Sæt Puzzle Pause"
+                message: "{{ repeat.item }}"
+                data:
+                  tag: "puzzel_pause_menu_{{ repeat.index }}"
+                  channel: "Puzzel Menu"
+                  notification_icon: mdi:pause-circle-outline
+                  importance: low
+                  sticky: true
+                  clickAction: noAction
+                  actions:
+                    - action: "puzzel_pause {{ repeat.item }}"
+                      title: "Sæt på pause"
+
+  - id: notification_action_puzzel_pause
+    alias: Notification Action Puzzel Pause
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: mobile_app_notification_action
+    condition: "{{ 'puzzel_pause ' in trigger.event.data['action'] }}"
+    action:
+      - service: automation.trigger
+        target:
+          entity_id: automation.puzzel_state_notification
+      - repeat:
+          for_each: >-
+            {{ (
+              state_attr('sensor.puzzel_user', 'result').pauseTypes
+              | map(attribute='description')
+              | list
+            ) }}
+          sequence:
+            - service: notify.mobile_app_arbejdstelefon
+              data:
+                message: "clear_notification"
+                data:
+                  tag: "puzzel_pause_menu_{{ repeat.index }}"
+      - service: script.puzzel_pause_on
+        data:
+          pause_type: "{{ trigger.event.data['action']|replace('puzzel_pause ', '') }}"
+
+  - id: telegram_bot_puzzel_menu
+    initial_state: true
+    alias: Puzzel menu
+    trigger:
+      - platform: event
+        event_type: telegram_callback
+        event_data:
+          command: "/puzzel"
+      - platform: event
+        event_type: telegram_command
+        event_data:
+          command: "/puzzel"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: >-
+            {% if is_state('sensor.puzzel_profil', 'Logget af') %}
+              Logget af Puzzel
+            {% else %}
+              Logget på Puzzel - {{ states('sensor.puzzel_profil') }}. Status: {{ state_attr('binary_sensor.puzzel_status', 'state') }}
+            {% endif %}
+            Menu:
+          data:
+            inline_keyboard: >-
+              {% if is_state('sensor.puzzel_profil', 'Logget af') %}
+                {{ (
+                  state_attr('sensor.puzzel_status', 'result').profiles
+                  | map(attribute='name')
+                  | map('regex_replace', '\A(.*)\Z', '\\1:/puzzel_login \\1')
+                  | list
+                ) }}
+              {% else %}
+                {{ ['Log af:/puzzel_log_off']
+                + ['Skift kø:/puzzel_login']
+                + ['Ledig:/puzzel_pause off']
+                + (
+                  state_attr('sensor.puzzel_user', 'result').pauseTypes
+                  | map(attribute='description')
+                  | map('regex_replace', '\A(.*)\Z', '\\1:/puzzel_pause \\1')
+                  | list
+                ) }}
+              {% endif %}
+
+  - id: telegram_bot_puzzel_log_on_menu
+    initial_state: true
+    alias: Puzzel log on menu
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.working
+        to: "on"
+        for:
+          minutes: 5
+    condition:
+      - alias: "Not logged into an on call queue"
+        condition: template
+        value_template: "{{ is_state('sensor.puzzel_profil', 'Logget af') }}"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Log på Puzzel?"
+          data:
+            inline_keyboard: >-
+              {{ state_attr('sensor.puzzel_status', 'result').profiles | map(attribute='name') | map('regex_replace', '\A(.*)\Z', '\\1:/puzzel_login \\1') | list }}
+
+  - id: telegram_bot_log_off_puzzel
+    alias: "Telegram bot log off puzzel"
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: telegram_callback
+        event_data:
+          command: "/puzzel_log_off"
+      - platform: event
+        event_type: telegram_command
+        event_data:
+          command: "/puzzel_log_off"
+    action:
+      - service: telegram_bot.answer_callback_query
+        data:
+          callback_query_id: "{{ trigger.event.data.id }}"
+          message: "Logger af Puzzel..."
+      - service: script.puzzel_log_off
+
+  - id: telegram_bot_log_on_puzzel
+    alias: "Telegram bot log on Puzzel"
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: telegram_callback
+        event_data:
+          command: "/puzzel_login"
+      - platform: event
+        event_type: telegram_command
+        event_data:
+          command: "/puzzel_login"
+    action:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ not trigger.event.data['args'] }}"
+            sequence:
+              - service: automation.trigger
+                target:
+                  entity_id: automation.puzzel_log_on_menu
+        default:
+          - service: telegram_bot.answer_callback_query
+            data:
+              callback_query_id: "{{ trigger.event.data.id }}"
+              message: "Logger på {{ trigger.event.data['args'] | join(' ') }}..."
+          - service: script.puzzel_log_on
+            data:
+              queue: "{{ trigger.event.data['args'] | join(' ') }}"
+
+  - id: telegram_bot_pause_puzzel
+    alias: "Telegram bot pause Puzzel"
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: telegram_callback
+        event_data:
+          command: "/puzzel_pause"
+      - platform: event
+        event_type: telegram_command
+        event_data:
+          command: "/puzzel_pause"
+    action:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ not trigger.event.data['args'] }}"
+            sequence:
+              - service: automation.trigger
+                target:
+                  entity_id: automation.puzzel_menu
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.event.data['args'][0] == 'off' }}"
+            sequence:
+              - service: telegram_bot.answer_callback_query
+                data:
+                  callback_query_id: "{{ trigger.event.data.id }}"
+                  message: "Sætter ledig..."
+              - service: script.puzzel_pause_off
+        default:
+          - service: telegram_bot.answer_callback_query
+            data:
+              callback_query_id: "{{ trigger.event.data.id }}"
+              message: "Sætter pause type {{ trigger.event.data['args'] | join(' ') }}..."
+          - service: script.puzzel_pause_on
+            data:
+              pause_type: "{{ trigger.event.data['args'] | join(' ') }}"
