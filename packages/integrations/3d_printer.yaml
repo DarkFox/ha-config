@@ -1,35 +1,35 @@
-# binary_sensor:
-#   - platform: template
-#     sensors:
-#       3d_printer_running:
-#         value_template: "{{ states('sensor.3d_printer_afbryder_forbrug')|float > 0.01 }}"
+binary_sensor:
+  - platform: template
+    sensors:
+      3d_printer_running:
+        value_template: "{{ states('sensor.3d_printer_afbryder_forbrug')|float > 0.01 }}"
 
-# sensor:
-#   - platform: template
-#     sensors:
-#       3d_printer_finish_time:
-#         icon_template: mdi:clock-outline
-#         friendly_name: 3D Printer Finish Time
-#         value_template: >-
-#           {%- if is_state('sensor.octoprint_print_time_left', 'None') -%}
-#             None
-#           {%- else -%}
-#             {%- set time_left = states('sensor.octoprint_print_time_left').split(':') -%}
-#             {{ (timedelta(hours = time_left[0]|int, minutes = time_left[1]|int, seconds = time_left[2]|int) + utcnow()) | as_timestamp | timestamp_custom('%Y-%M-%d %H:%M') }}
-#           {%- endif -%}
+sensor:
+  - platform: template
+    sensors:
+      3d_printer_finish_time:
+        icon_template: mdi:clock-outline
+        friendly_name: 3D Printer Finish Time
+        value_template: >-
+          {%- if is_state('sensor.octoprint_print_time_left', 'None') -%}
+            None
+          {%- else -%}
+            {%- set time_left = states('sensor.octoprint_print_time_left').split(':') -%}
+            {{ (timedelta(hours = time_left[0]|int, minutes = time_left[1]|int, seconds = time_left[2]|int) + utcnow()) | as_timestamp | timestamp_custom('%Y-%M-%d %H:%M') }}
+          {%- endif -%}
 
-# octoprint:
-#   host: octopi.local
-#   port: 5000
-#   api_key: !secret octoprint_key
-#   bed: true
-#   number_of_tools: 1
+octoprint:
+  host: octopi.local
+  port: 5000
+  api_key: !secret octoprint_key
+  bed: true
+  number_of_tools: 1
 
-# switch:
-#   - platform: command_line
-#     switches:
-#       3d_printer_screen:
-#         command_on: ssh -i /config/id_rsa -o 'StrictHostKeyChecking=no' pi@octopi.local vcgencmd display_power 1
-#         command_off: ssh -i /config/id_rsa -o 'StrictHostKeyChecking=no' pi@octopi.local vcgencmd display_power 0
-#         command_state: ssh -i /config/id_rsa -o 'StrictHostKeyChecking=no' pi@octopi.local vcgencmd display_power
-#         value_template: "{{ value.split('=')[1] == '1' }}"
+switch:
+  - platform: command_line
+    switches:
+      3d_printer_screen:
+        command_on: ssh -i /config/id_rsa -o 'StrictHostKeyChecking=no' pi@octopi.local vcgencmd display_power 1
+        command_off: ssh -i /config/id_rsa -o 'StrictHostKeyChecking=no' pi@octopi.local vcgencmd display_power 0
+        command_state: ssh -i /config/id_rsa -o 'StrictHostKeyChecking=no' pi@octopi.local vcgencmd display_power
+        value_template: "{{ value.split('=')[1] == '1' }}"
