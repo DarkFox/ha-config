@@ -65,16 +65,18 @@ sensor:
         friendly_name: "ID.3 Charging Time Remaining"
         value_template: "{{ (timedelta(minutes=states('sensor.id3_remaining_charging_time')|int)|string)[:-3] }}"
         icon_template: mdi:clock-end
+        device_class: duration
       id3_charging_complete_at:
         friendly_name: ID.3 Charging Complete At
         value_template: >-
           {%- if is_state('binary_sensor.id3_charging', 'on') -%}
             {%- set end_time = (states('sensor.id3_remaining_charging_time')|int*60) + (as_timestamp(now())|int) -%}
-            {{ end_time | timestamp_custom('%Y-%m-%d %H:%M') }}
+            {{ end_time | timestamp_local }}
           {%- else -%}
             unknown
           {%- endif -%}
         icon_template: mdi:clock-end
+        device_class: timestamp
       abrp_url_data:
         friendly_name: ABRP URL data
         value_template: "OK"
