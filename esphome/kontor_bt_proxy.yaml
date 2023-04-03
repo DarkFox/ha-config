@@ -1,0 +1,40 @@
+substitutions:
+  devicename: kontor_bt_proxy
+  upper_devicename: Kontor Bluetooth Proxy
+
+esphome:
+  name: ${devicename}
+  board: esp-wrover-kit
+  platform: esp32
+
+wifi:
+  ssid: !secret main_wifi_ssid
+  password: !secret main_wifi_pass
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret encryption_key
+
+ota:
+  password: !secret ota_pass
+
+status_led:
+  pin:
+    number: GPIO2
+    inverted: true
+
+esp32_ble_tracker:
+  scan_parameters:
+    interval: 1100ms
+    window: 1100ms
+
+bluetooth_proxy:
+
+button:
+  - platform: wake_on_lan
+    name: "Martin PC WoL"
+    target_mac_address: !secret martin_pc_mac
