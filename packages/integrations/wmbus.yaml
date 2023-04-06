@@ -3,15 +3,17 @@ mqtt:
     - name: "Koldt Vand"
       state_topic: "wmbusmeters/52593137"
       json_attributes_topic: "wmbusmeters/52593137"
-      value_template: '{{ value_json["total_m3"] }}'
-      unit_of_measurement: "m3"
+      value_template: '{{ value_json["total_m3"] | float * 1000 }}'
+      unit_of_measurement: "L"
+      device_class: water
       state_class: total_increasing
 
     - name: "Varmt Vand"
       state_topic: "wmbusmeters/52085016"
       json_attributes_topic: "wmbusmeters/52085016"
-      value_template: '{{ value_json["total_m3"] }}'
-      unit_of_measurement: "m3"
+      value_template: '{{ value_json["total_m3"] | float * 1000 }}'
+      unit_of_measurement: "L"
+      device_class: water
       state_class: total_increasing
 
     - name: "Soveværelse Radiator"
@@ -50,6 +52,14 @@ mqtt:
       state_class: total_increasing
 
 sensor:
+  - platform: derivative
+    name: Koldt Vand Forbrug
+    source: sensor.koldt_vand
+
+  - platform: derivative
+    name: Varmt Vand Forbrug
+    source: sensor.varmt_vand
+
   - platform: template
     sensors:
       sovevaerelse_radiator_temp:
