@@ -39,16 +39,18 @@ sensor:
 template:
   - sensor:
       - name: "Puzzel Profil"
-        state: "{{ 'Logget af' if is_state('sensor.puzzel_status', 'LoggedOff') else state_attr('binary_sensor.puzzel_status', 'profil') }}"
+        state: "{{ 'Logget af' if is_state('sensor.puzzel_status_temp', 'LoggedOff') else state_attr('binary_sensor.puzzel_status', 'profil') }}"
+      - name: "Puzzel Status Temp"
+        state: "{{ state_attr('sensor.puzzel_status', 'result').contactCentreStatus }}"
   - binary_sensor:
       - name: "Puzzel Status"
-        state: "{{ is_state('sensor.puzzel_status', 'LoggedOn') }}"
+        state: "{{ is_state('sensor.puzzel_status_temp', 'LoggedOn') }}"
         attributes:
           profil: "{{ (state_attr('sensor.puzzel_status', 'result').profiles | selectattr('id', 'equalto', state_attr('sensor.puzzel_status', 'result').currentProfileId) | first).name }}"
           state: >-
-            {% if is_state('sensor.puzzel_status', 'Pause') %}
+            {% if is_state('sensor.puzzel_status_temp', 'Pause') %}
               {{ (state_attr('sensor.puzzel_user', 'result').pauseTypes | selectattr('id', 'equalto', state_attr('sensor.puzzel_status', 'result').pauseTypeId) | first).description }}
-            {% elif is_state('sensor.puzzel_status', 'LoggedOff') %}
+            {% elif is_state('sensor.puzzel_status_temp', 'LoggedOff') %}
               Logget af
             {% else %}
               Ledig
@@ -69,7 +71,7 @@ script:
         choose:
           - conditions:
               - condition: state
-                entity_id: sensor.puzzel_status
+                entity_id: sensor.puzzel_status_temp
                 state:
                   - "LoggedOn"
                   - "Pause"
@@ -221,7 +223,7 @@ automation:
             notification_icon: >-
               {%- if is_state('sensor.puzzel_profil', 'Logget af') -%}
                 mdi:phone-classic-off
-              {%- elif is_state('sensor.puzzel_status', 'Pause') -%}
+              {%- elif is_state('sensor.puzzel_status_temp', 'Pause') -%}
                 mdi:pause-circle-outline
               {%- else -%}
                 mdi:phone-classic
@@ -231,8 +233,8 @@ automation:
                 title: "{{ 'Log på' if is_state('sensor.puzzel_profil', 'Logget af') else 'Skift kø' }}"
               - action: "puzzel_log_off"
                 title: "Log af"
-              - action: "{{ 'puzzel_pause_off' if is_state('sensor.puzzel_status', 'Pause') else 'puzzel_pause_menu' }}"
-                title: "{{ 'Ledig' if is_state('sensor.puzzel_status', 'Pause') else 'Pause' }}"
+              - action: "{{ 'puzzel_pause_off' if is_state('sensor.puzzel_status_temp', 'Pause') else 'puzzel_pause_menu' }}"
+                title: "{{ 'Ledig' if is_state('sensor.puzzel_status_temp', 'Pause') else 'Pause' }}"
 
   - id: notification_action_log_off_puzzel
     alias: Notification Action Log Off Puzzel
