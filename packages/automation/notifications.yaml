@@ -47,6 +47,34 @@ script:
             content: "{{ message }}"
 
 automation:
+  - alias: Cold water leak warning
+    initial_state: true
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.koldt_vand_forbrug
+        above: 200
+        for:
+          minutes: 10
+    action:
+      - service: script.notify_everywhere
+        data:
+          message: "Koldt vand løber!"
+          severity: 2
+
+  - alias: Warm water leak warning
+    initial_state: true
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.varmt_vand_forbrug
+        above: 200
+        for:
+          minutes: 10
+    action:
+      - service: script.notify_everywhere
+        data:
+          message: "Varmt vand løber!"
+          severity: 2
+
   - alias: Dishwasher leak warning
     initial_state: true
     trigger:
