@@ -1,150 +1,126 @@
-input_number:
-  energy_cost:
-    name: Energy Cost
-    mode: box
-    min: 0
-    max: 100000
-    step: 0.001
-    unit_of_measurement: kr
-
-automation:
-  - alias: Get Carnot Prices
-    id: get_carnot_prices
-    initial_state: true
-    trigger:
-      platform: homeassistant
-      event: start
-    action:
-      - delay:
-          seconds: 5
-      - service: homeassistant.update_entity
-        target:
-          entity_id: sensor.carnot_spotpris_dk2
-
-  - alias: Update Energy Cost
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: sensor.energy_cost_this_hour
-    condition:
-      - condition: template
-        value_template: "{{ (trigger.from_state.state|float) > (trigger.to_state.state|float) }}"
-    action:
-      - service: input_number.set_value
-        data:
-          entity_id: input_number.energy_cost
-          value: "{{ (state('input_number.energy_cost')|float) + (trigger.from_state.state|float) }}"
-
 sensor:
-  - platform: command_line
-    name: Carnot spotpris DK2
-    command: >-
-      curl
-      --request GET "https://openapi.carnot.dk/openapi/get_predict?energysource=spotprice&region=dk2&daysahead=7"
-      --header "accept: application/json"
-      --header "apikey: {{ states('sensor.carnot_api_key') }}"
-      --header "username: {{ states('sensor.carnot_username') }}"
-    scan_interval:
-      hours: 1
-    value_template: '{% if value_json is not none %}OK - {{value_json["predictions"][0]["addedtime"]}}{% else %}Unavailable{% endif %}'
-    json_attributes:
-      - predictions
+  - platform: statistics
+    name: Average energy price last 30d mean
+    entity_id: sensor.energi_data_service
+    state_characteristic: mean
+    sampling_size: 760
+    max_age:
+      days: 30
 
-  - platform: template
-    sensors:
-      carnot_api_key:
-        value_template: !secret carnot_api_key
-      carnot_username:
-        value_template: !secret carnot_username
+  - platform: statistics
+    name: Energy price last 30d (std)
+    entity_id: sensor.energi_data_service
+    state_characteristic: standard_deviation
+    sampling_size: 512
+    max_age:
+      days: 30
+
+  - platform: statistics
+    name: Energy price last 30d (mean)
+    entity_id: sensor.energi_data_service
+    state_characteristic: mean
+    sampling_size: 512
+    max_age:
+      days: 30
 
 template:
   - sensor:
+      - name: Historic Energy Price Percentiles
+        unique_id: historic_energy_price_percentiles
+        state: OK
+        attributes:
+          25th: "{{ states('sensor.average_energy_price_last_30d_mean') | float(0) + states('sensor.energy_price_last_30d_std') | float(0) * -0.63 }}"
+          50th: "{{ states('sensor.average_energy_price_last_30d_mean') | float(0) + states('sensor.energy_price_last_30d_std') | float(0) * 0 }}"
+          75th: "{{ states('sensor.average_energy_price_last_30d_mean') | float(0) + states('sensor.energy_price_last_30d_std') | float(0) * 0.57 }}"
+          90th: "{{ states('sensor.average_energy_price_last_30d_mean') | float(0) + states('sensor.energy_price_last_30d_std') | float(0) * 1.29 }}"
+          95th: "{{ states('sensor.average_energy_price_last_30d_mean') | float(0) + states('sensor.energy_price_last_30d_std') | float(0) * 1.65 }}"
+          99th: "{{ states('sensor.average_energy_price_last_30d_mean') | float(0) + states('sensor.energy_price_last_30d_std') | float(0) * 2.33 }}"
+          100th: "{{ states('sensor.average_energy_price_last_30d_mean') | float(0) + states('sensor.energy_price_last_30d_std') | float(0) * 3.9 }}"
+
       - name: "El Priser"
         device_class: monetary
         unit_of_measurement: "DKK/kWh"
-        state: >-
-          {%- set p = state_attr('sensor.el_priser', 'prices') -%}
-          {%- if p == None -%}
-            unknown
-          {%- else -%}
-            {% for price in p %}
-              {% if (price['start']|as_datetime) <= now() and (price['end']|as_datetime) > now() %}
-                {{ price["value"] }}
-              {% endif %}
-            {% endfor %}
-          {%- endif -%}
+        state: "{{ states('sensor.energi_data_service')|float|round(2) }}"
         attributes:
           prices: >-
-            [
-            {%- set prices = state_attr('sensor.carnot_spotpris_dk2', 'predictions') -%}
-            {%- for k in prices -%}
-              {%- set price = k -%}
-              {%- set s = {
-                "abonnement": 0.0,
-                "elafgift_2023_01": 0.080,
-                "systemydelse": 0.0,
-                "transport_vinter_2023_01": {
-                  "lavlast": 0.2127,
-                  "hoejlast": 0.6379,
-                  "spidslast": 1.9135
-                },
-                "transport_vinter_2023_02": {
-                  "lavlast": 0.1837,
-                  "hoejlast": 0.5511,
-                  "spidslast": 1.6533
-                },
-                "transport_vinter_2023_03": {
-                  "lavlast": 0.1509,
-                  "hoejlast": 0.4528,
-                  "spidslast": 1.3584
-                },
-                "transport_sommer_2023": {
-                  "lavlast": 0.1509,
-                  "hoejlast": 0.2264,
-                  "spidslast": 0.5887
-                }
-              } -%}
-              {%- set cdt = (price['dktime'].split('+')[0] | as_datetime | as_local) -%}
-              {%- if cdt > as_datetime("2023-10-01 00:00:00.00+02:00") -%}
-                {%- set transport_lavlast = s.transport_vinter_2023_03.lavlast -%}
-                {%- set transport_hoejlast = s.transport_vinter_2023_03.hoejlast -%}
-                {%- set transport_spidslast = s.transport_vinter_2023_03.spidslast -%}
-              {%- elif cdt > as_datetime("2023-04-01 00:00:00.00+02:00") -%}
-                {%- set transport_lavlast = s.transport_sommer_2023.lavlast -%}
-                {%- set transport_hoejlast = s.transport_sommer_2023.hoejlast -%}
-                {%- set transport_spidslast = s.transport_sommer_2023.spidslast -%}
-              {%- elif cdt > as_datetime("2023-03-01 00:00:00.00+02:00") -%}
-                {%- set transport_lavlast = s.transport_vinter_2023_03.lavlast -%}
-                {%- set transport_hoejlast = s.transport_vinter_2023_03.hoejlast -%}
-                {%- set transport_spidslast = s.transport_vinter_2023_03.spidslast -%}
-              {%- elif cdt > as_datetime("2023-02-01 00:00:00.00+02:00") -%}
-                {%- set transport_lavlast = s.transport_vinter_2023_02.lavlast -%}
-                {%- set transport_hoejlast = s.transport_vinter_2023_02.hoejlast -%}
-                {%- set transport_spidslast = s.transport_vinter_2023_02.spidslast -%}
-              {%- elif cdt > as_datetime("2023-01-01 00:00:00.00+02:00") -%}
-                {%- set transport_lavlast = s.transport_vinter_2023_01.lavlast -%}
-                {%- set transport_hoejlast = s.transport_vinter_2023_01.hoejlast -%}
-                {%- set transport_spidslast = s.transport_vinter_2023_01.spidslast -%}
-              {%- endif -%}
-
-              {%- set elafgift = s.elafgift_2023_01 -%}
-
-              {%- set afgiftsum = s.abonnement + elafgift + s.systemydelse -%}
-              {
-                "start": "{{ cdt }}",
-                "end": "{{ cdt + timedelta( hours = 1) }}",
-                {%- if cdt.hour >= 18 and cdt.hour <= 21 -%}
-                  "value": {{ (((price['prediction']|float/1000.0) + transport_spidslast + afgiftsum) * 1.25) | round(4) }}
-                {%- elif cdt.hour >= 7 and cdt.hour <= 23 -%}
-                  "value": {{ (((price['prediction']|float/1000.0) + transport_hoejlast + afgiftsum) * 1.25) | round(4) }}
-                {%- else -%}
-                  "value": {{ (((price['prediction']|float/1000.0) + transport_lavlast + afgiftsum) * 1.25) | round(4) }}
-                {%- endif -%}
-              },
-            {%- endfor -%}
-            ]
+            {%- set energyPriceSensor = "sensor.energi_data_service" -%}
+            {%- set p = state_attr(energyPriceSensor, 'raw_today') -%}
+            {%- if p == None -%}
+              unknown
+            {%- else -%}
+              [
+                {%- for i in range(p|length) %}
+                  {
+                    "start": "{{ p[i]["hour"] }}",
+                    "end": "{{ ((p[i]["hour"]|as_timestamp)+3600)|as_datetime|as_local }}",
+                    "value": {{ p[i]['price'] }}
+                  },
+                {%- endfor -%}
+                {%- set rt = iif(state_attr(energyPriceSensor, 'raw_tomorrow'), state_attr(energyPriceSensor, 'raw_tomorrow'), []) -%}
+                {%- for i in range(rt|length) %}
+                  {
+                    "start": "{{ rt[i]["hour"] }}",
+                    "end": "{{ ((rt[i]["hour"]|as_timestamp)+3600)|as_datetime|as_local }}",
+                    "value": {{ rt[i]['price'] }}
+                  },
+                {%- endfor -%}
+                {%- set f = state_attr(energyPriceSensor, 'forecast') -%}
+                {%- for i in range(rt|length,f|length) %}
+                  {
+                    "start": "{{ f[i]["hour"] }}",
+                    "end": "{{ ((f[i]["hour"]|as_timestamp)+3600)|as_datetime|as_local }}",
+                    "value": {{ f[i]['price'] }}
+                  },
+                {%- endfor -%}
+              ]
+            {%- endif -%}
           just_prices: >-
             {%- set p = state_attr('sensor.el_priser', 'prices') -%}
+            {%- if p == None -%}
+              unknown
+            {%- else -%}
+              [{% for x in (p|list) %}{{ x.value }},{% endfor %}]
+            {%- endif -%}
+
+      - name: "El Spotpriser"
+        device_class: monetary
+        unit_of_measurement: "DKK/kWh"
+        state: "{{ states('sensor.energi_data_service')|float|round(2) }}"
+        attributes:
+          prices: >-
+            {%- set energyPriceSensor = "sensor.energi_data_service_spotpriser" -%}
+            {%- set p = state_attr(energyPriceSensor, 'raw_today') -%}
+            {%- if p == None -%}
+              unknown
+            {%- else -%}
+              [
+                {%- for i in range(p|length) %}
+                  {
+                    "start": "{{ p[i]["hour"] }}",
+                    "end": "{{ ((p[i]["hour"]|as_timestamp)+3600)|as_datetime|as_local }}",
+                    "value": {{ p[i]['price'] }}
+                  },
+                {%- endfor -%}
+                {%- set rt = iif(state_attr(energyPriceSensor, 'raw_tomorrow'), state_attr(energyPriceSensor, 'raw_tomorrow'), []) -%}
+                {%- for i in range(rt|length) %}
+                  {
+                    "start": "{{ rt[i]["hour"] }}",
+                    "end": "{{ ((rt[i]["hour"]|as_timestamp)+3600)|as_datetime|as_local }}",
+                    "value": {{ rt[i]['price'] }}
+                  },
+                {%- endfor -%}
+                {%- set f = state_attr(energyPriceSensor, 'forecast') -%}
+                {%- for i in range(rt|length,f|length) %}
+                  {
+                    "start": "{{ f[i]["hour"] }}",
+                    "end": "{{ ((f[i]["hour"]|as_timestamp)+3600)|as_datetime|as_local }}",
+                    "value": {{ f[i]['price'] }}
+                  },
+                {%- endfor -%}
+              ]
+            {%- endif -%}
+          just_prices: >-
+            {%- set p = state_attr('sensor.el_spotpriser', 'prices') -%}
             {%- if p == None -%}
               unknown
             {%- else -%}
