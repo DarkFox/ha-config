@@ -24,8 +24,8 @@ card:
   type: custom:apexcharts-card
   graph_span: 132h
   span:
-    end: day
-    offset: +108h
+    start: hour
+    offset: -2h
   apex_config:
     stroke:
       show: true
@@ -92,7 +92,7 @@ card:
       show:
         in_chart: false
 
-    - name: Current
+    - name: Totalpris
       entity: sensor.el_priser
       stroke_width: 3
       float_precision: 2
@@ -104,8 +104,8 @@ card:
         in_header: false
         extremas: true
       data_generator: |
-        var prices = entity.attributes.prices.map((start, index) => {
-          return [new Date(start["start"]).getTime(), entity.attributes.prices[index]["value"]];
+        var prices = entity.attributes.prices.map((price, index) => {
+          return [new Date(price["start"]).getTime(), price["value"]];
         });
 
         return prices
@@ -121,8 +121,140 @@ card:
       show:
         in_header: false
       data_generator: |
-        var prices = entity.attributes.prices.map((start, index) => {
-          return [new Date(start["start"]).getTime(), entity.attributes.prices[index]["value"]];
+        var prices = entity.attributes.prices.map((price, index) => {
+          return [new Date(price["start"]).getTime(), price["value"]];
         });
 
-        return prices
+        return prices;
+
+    - name: 1 time minima
+      entity: sensor.el_naeste_billige_1_time
+      stroke_width: 0
+      float_precision: 2
+      type: area
+      color: rgb(37, 243, 33)
+      opacity: 0.2
+      extend_to: false
+      show:
+        in_header: false
+        datalabels: false
+        legend_value: false
+      data_generator: |
+        var prices = entity.attributes.local_minima.map((price, index) => {
+          return [
+            [new Date(price["start"]).getTime(), price["value"]],
+            [new Date(price["end"]).getTime(), 0]
+          ];
+        });
+
+        return prices.flat();
+
+    - name: 3 timer minima
+      entity: sensor.el_naeste_billige_3_timer
+      stroke_width: 0
+      float_precision: 2
+      type: area
+      color: rgb(37, 243, 33)
+      opacity: 0.2
+      extend_to: false
+      show:
+        in_header: false
+        datalabels: false
+        legend_value: false
+      data_generator: |
+        var prices = entity.attributes.local_minima.map((price, index) => {
+          return [
+            [new Date(price["start"]).getTime(), price["value"]],
+            [new Date(price["end"]).getTime(), 0]
+          ];
+        });
+
+        return prices.flat();
+
+    - name: 6 timer minima
+      entity: sensor.el_naeste_billige_6_timer
+      stroke_width: 0
+      float_precision: 2
+      type: area
+      color: rgb(37, 243, 33)
+      opacity: 0.2
+      extend_to: false
+      show:
+        in_header: false
+        datalabels: false
+        legend_value: false
+      data_generator: |
+        var prices = entity.attributes.local_minima.map((price, index) => {
+          return [
+            [new Date(price["start"]).getTime(), price["value"]],
+            [new Date(price["end"]).getTime(), 0]
+          ];
+        });
+
+        return prices.flat();
+
+    - name: 1 time maxima
+      entity: sensor.el_naeste_dyre_1_time
+      stroke_width: 0
+      float_precision: 2
+      type: area
+      color: rgb(243, 33, 33)
+      opacity: 0.2
+      extend_to: false
+      show:
+        in_header: false
+        datalabels: false
+        legend_value: false
+      data_generator: |
+        var prices = entity.attributes.local_maxima.map((price, index) => {
+          return [
+            [new Date(price["start"]).getTime(), price["value"]],
+            [new Date(price["end"]).getTime(), 0]
+          ];
+        });
+
+        return prices.flat();
+
+    - name: 3 timer maxima
+      entity: sensor.el_naeste_dyre_3_timer
+      stroke_width: 0
+      float_precision: 2
+      type: area
+      color: rgb(243, 33, 33)
+      opacity: 0.2
+      extend_to: false
+      show:
+        in_header: false
+        datalabels: false
+        legend_value: false
+      data_generator: |
+        var prices = entity.attributes.local_maxima.map((price, index) => {
+          return [
+            [new Date(price["start"]).getTime(), price["value"]],
+            [new Date(price["end"]).getTime(), 0]
+          ];
+        });
+
+        return prices.flat();
+
+    - name: 6 timer maxima
+      entity: sensor.el_naeste_dyre_6_timer
+      stroke_width: 0
+      float_precision: 2
+      type: area
+      color: rgb(243, 33, 33)
+      opacity: 0.2
+      extend_to: false
+      show:
+        in_header: false
+        datalabels: false
+        legend_value: false
+      data_generator: |
+        var prices = entity.attributes.local_maxima.map((price, index) => {
+          return [
+            [new Date(price["start"]).getTime(), price["value"]],
+            [new Date(price["end"]).getTime(), 0]
+          ];
+        });
+
+        return prices.flat();
