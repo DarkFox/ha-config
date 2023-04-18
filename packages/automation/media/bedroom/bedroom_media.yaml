@@ -36,6 +36,9 @@ input_select:
       - up
       - down
 
+input_boolean:
+  sovevaerelse_tv_night_mode_state:
+
 switch:
   - platform: template
     switches:
@@ -45,12 +48,24 @@ switch:
         value_template: "{{ not is_state('media_player.sovevarelse_tv_dlna', 'unavailable') }}"
         turn_on:
           service: switch.turn_on
-          data:
+          target:
             entity_id: switch.sovevaerelse_tv_power
         turn_off:
           service: switch.turn_off
-          data:
+          target:
             entity_id: switch.sovevaerelse_tv_power
+      sovevaerelse_tv_night_mode:
+        friendly_name: Soveværelse TV Night Mode
+        icon_template: mdi:weather-night
+        value_template: "{{ is_state('input_boolean.sovevaerelse_tv_night_mode_state', 'on') }}"
+        turn_on:
+          service: script.turn_on
+          target:
+            entity_id: script.sovevaerelse_tv_enable_night_mode
+        turn_off:
+          service: script.turn_on
+          target:
+            entity_id: script.sovevaerelse_tv_disable_night_mode
 
 binary_sensor:
   - platform: template
@@ -67,6 +82,132 @@ binary_sensor:
           }}
 
 script:
+  sovevaerelse_tv_enable_night_mode:
+    sequence:
+      - condition: state
+        entity_id: switch.sovevaerelse_tv
+        state: "on"
+      - service: remote.send_command
+        target:
+          entity_id: remote.sovevarelse_ir_remote
+        data:
+          device: Soveværelse TV
+          command: Options
+      - delay:
+          milliseconds: 500
+      - service: remote.send_command
+        target:
+          entity_id: remote.sovevarelse_ir_remote
+        data:
+          device: Soveværelse TV
+          command: OK
+      - delay:
+          milliseconds: 2500
+      - service: remote.send_command
+        target:
+          entity_id: remote.sovevarelse_ir_remote
+        data:
+          device: Soveværelse TV
+          command: Down
+      - delay:
+          milliseconds: 500
+      - service: remote.send_command
+        target:
+          entity_id: remote.sovevarelse_ir_remote
+        data:
+          device: Soveværelse TV
+          command: OK
+      - delay:
+          milliseconds: 1000
+      - service: remote.send_command
+        target:
+          entity_id: remote.sovevarelse_ir_remote
+        data:
+          device: Soveværelse TV
+          command: Up
+      - delay:
+          milliseconds: 500
+      - service: remote.send_command
+        target:
+          entity_id: remote.sovevarelse_ir_remote
+        data:
+          device: Soveværelse TV
+          command: Return
+      - delay:
+          milliseconds: 250
+      - service: remote.send_command
+        target:
+          entity_id: remote.sovevarelse_ir_remote
+        data:
+          device: Soveværelse TV
+          command: Return
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.sovevaerelse_tv_night_mode_state
+
+  sovevaerelse_tv_disable_night_mode:
+    sequence:
+      - condition: state
+        entity_id: switch.sovevaerelse_tv
+        state: "on"
+      - service: remote.send_command
+        target:
+          entity_id: remote.sovevarelse_ir_remote
+        data:
+          device: Soveværelse TV
+          command: Options
+      - delay:
+          milliseconds: 500
+      - service: remote.send_command
+        target:
+          entity_id: remote.sovevarelse_ir_remote
+        data:
+          device: Soveværelse TV
+          command: OK
+      - delay:
+          milliseconds: 2500
+      - service: remote.send_command
+        target:
+          entity_id: remote.sovevarelse_ir_remote
+        data:
+          device: Soveværelse TV
+          command: Down
+      - delay:
+          milliseconds: 500
+      - service: remote.send_command
+        target:
+          entity_id: remote.sovevarelse_ir_remote
+        data:
+          device: Soveværelse TV
+          command: OK
+      - delay:
+          milliseconds: 1000
+      - service: remote.send_command
+        target:
+          entity_id: remote.sovevarelse_ir_remote
+        data:
+          device: Soveværelse TV
+          command: Down
+      - delay:
+          milliseconds: 500
+      - service: remote.send_command
+        target:
+          entity_id: remote.sovevarelse_ir_remote
+        data:
+          device: Soveværelse TV
+          command: Return
+      - delay:
+          milliseconds: 250
+      - service: remote.send_command
+        target:
+          entity_id: remote.sovevarelse_ir_remote
+        data:
+          device: Soveværelse TV
+          command: Return
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.sovevaerelse_tv_night_mode_state
+
   sovevaerelse_soundbar_fix_audio_lag:
     sequence:
       - service: switch.turn_on
