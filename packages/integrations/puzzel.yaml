@@ -5,6 +5,7 @@ sensor:
     resource: https://auth.puzzel.com/api/Authenticate/LogIn
     method: POST
     payload: !secret puzzel_login
+    # {"CustomerKey":"12345","UserName":"xxx","Password":"xxx","ClientName":"Agent","ClientVersion":"0.26.0-69185"}
     headers:
       Content-Type: application/json
     value_template: "{{ value_json.refreshToken.sessionId }}"
@@ -184,7 +185,7 @@ automation:
         attribute: state
     condition:
       - condition: template
-        value_template: "{{ trigger.from_state.state != 'unknown' and trigger.from_state.state != '' }}"
+        value_template: "{{ trigger.from_state.state != 'unknown' and trigger.from_state.state != '' and trigger.from_state.state != 'unavailable' }}"
       - condition: not
         conditions:
           - condition: state
