@@ -88,7 +88,7 @@ binary_sensor:
           {%- if is_state('input_boolean.bedroom_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.bedroom_room_state', 'active') else 'false' }}
           {%- elif is_state('binary_sensor.sovevaerelse_any', 'on')
-          or is_state('binary_sensor.seng_bevaegelse', 'on')
+          or is_state('binary_sensor.sovevaerelse_gulv', 'on')
           or is_state('input_select.latest_motion', 'Bedroom')
           or is_state('media_player.sovevaerelse_chromecast', 'playing')
           or states('media_player.sovevaerelse_tv_dlna') not in ['unknown', 'unavailable']
@@ -115,7 +115,7 @@ group:
       - input_boolean.bedroom_activity_override
       - input_select.bedroom_room_state
       - binary_sensor.sovevaerelse_any
-      - binary_sensor.seng_bevaegelse
+      - binary_sensor.sovevaerelse_gulv
       - binary_sensor.bedroom_door_activity
       - input_select.latest_motion
       - media_player.sovevaerelse_chromecast
@@ -150,7 +150,11 @@ automation:
               brightness: 255
               color_temp: 370
               effect: "None"
-            light.bedroom_shelf_strip:
+            light.seng_spots_over:
+              state: on
+              brightness: 255
+              effect: "None"
+            light.seng_spots_under:
               state: on
               brightness: 255
               effect: "None"
@@ -158,29 +162,26 @@ automation:
               state: on
               brightness: 255
               effect: "None"
-            light.bedroom_shelf_spots:
+            light.seng_hylde_over:
               state: on
               brightness: 255
               hs_color: [29, 15]
-              effect: "None"
-            light.bedroom_floor:
+              effect: "Solid"
+            light.seng_hylde_under:
               state: on
               brightness: 255
               hs_color: [29, 15]
-              effect: "None"
+              effect: "Solid"
             light.blyant:
               state: on
               brightness: 255
               hs_color: [29, 15]
               effect: "None"
-            light.luftfugter_lampe:
-              state: on
-              brightness: 255
-              hs_color: [29, 15]
-              effect: "None"
-            light.bedroom_tablet:
-              state: on
-              brightness: 255
+      - service: light.turn_on
+        target:
+          entity_id: light.bedroom_tablet
+        data:
+          brightness: 255
 
   - alias: activate_light_profile_bedroom_default
     initial_state: true
@@ -209,7 +210,11 @@ automation:
               brightness: 200
               color_temp: 370
               effect: "None"
-            light.bedroom_shelf_strip:
+            light.seng_spots_over:
+              state: on
+              brightness: 200
+              effect: "None"
+            light.seng_spots_under:
               state: on
               brightness: 200
               effect: "None"
@@ -217,29 +222,26 @@ automation:
               state: on
               brightness: 200
               effect: "None"
-            light.bedroom_shelf_spots:
+            light.seng_hylde_over:
               state: on
               brightness: 255
               hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
-              effect: "None"
-            light.luftfugter_lampe:
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
-              effect: "None"
-            light.bedroom_floor:
+              effect: "Solid"
+            light.seng_hylde_under:
               state: on
               brightness: 255
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "None"
+              effect: "Solid"
             light.blyant:
               state: on
               brightness: 255
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
               effect: "None"
-            light.bedroom_tablet:
-              state: on
-              brightness: 172
+      - service: light.turn_on
+        target:
+          entity_id: light.bedroom_tablet
+        data:
+          brightness: 172
 
   - alias: activate_light_profile_bedroom_dimmed
     initial_state: true
@@ -263,7 +265,11 @@ automation:
               brightness: 172
               color_temp: 460
               effect: "None"
-            light.bedroom_shelf_strip:
+            light.seng_spots_over:
+              state: on
+              brightness: 32
+              effect: "None"
+            light.seng_spots_under:
               state: on
               brightness: 32
               effect: "None"
@@ -271,34 +277,31 @@ automation:
               state: on
               brightness: 64
               effect: "None"
-            light.bedroom_shelf_spots:
+            light.seng_hylde_over:
               state: on
-              brightness: 86
+              brightness: 32
               hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
-              effect: "None"
-            light.luftfugter_lampe:
+              effect: "Solid"
+            light.seng_hylde_under:
               state: on
-              brightness: 172
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
-              effect: "None"
+              brightness: 32
+              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+              effect: "Solid"
             light.sky:
               state: on
               brightness: 124
               hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-              effect: "None"
-            light.bedroom_floor:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
               effect: "None"
             light.blyant:
               state: on
               brightness: 96
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
               effect: "None"
-            light.bedroom_tablet:
-              state: on
-              brightness: 127
+      - service: light.turn_on
+        target:
+          entity_id: light.bedroom_tablet
+        data:
+          brightness: 127
 
   - alias: activate_light_profile_bedroom_ambient
     initial_state: true
@@ -317,22 +320,24 @@ automation:
         data:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
-            light.bedroom_shelf_strip:
+            light.seng_spots_over:
+              state: off
+            light.seng_spots_under:
               state: off
             light.sovevaerelse_reol_spots:
               state: on
+              brightness: 32
+              effect: "None"
+            light.seng_hylde_over:
+              state: on
               brightness: 8
-              effect: "None"
-            light.bedroom_shelf_spots:
-              state: on
-              brightness: 64
               hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
-              effect: "None"
-            light.luftfugter_lampe:
+              effect: "Solid"
+            light.seng_hylde_under:
               state: on
-              brightness: 128
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
-              effect: "None"
+              brightness: 8
+              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+              effect: "Solid"
             light.seng_laeselampe:
               state: on
               brightness: 2
@@ -348,14 +353,11 @@ automation:
               brightness: 32
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
               effect: "None"
-            light.bedroom_floor:
-              state: on
-              brightness: 64
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "None"
-            light.bedroom_tablet:
-              state: on
-              brightness: 72
+      - service: light.turn_on
+        target:
+          entity_id: light.bedroom_tablet
+        data:
+          brightness: 72
 
   - alias: activate_light_profile_bedroom_night
     initial_state: true
@@ -375,37 +377,39 @@ automation:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
             light.sky:
-              state: on
-              brightness: 2
-              hs_color: [20, 100]
+              state: off
+            light.seng_spots_over:
+              state: off
+            light.seng_spots_under:
+              state: off
             light.sovevaerelse_reol_spots:
-              state: off
-            light.bedroom_shelf_strip:
-              state: off
-            light.luftfugter_lampe:
-              state: off
+              state: on
+              brightness: 8
+              effect: "None"
             light.seng_laeselampe:
               state: on
               brightness: 2
-              hs_color: [20, 100]
-            light.blyant:
-              state: on
-              brightness: 16
               rgb_color: [255, 0, 0]
-              effect: "None"
-            light.bedroom_shelf_spots:
+            light.seng_hylde_over:
+              state: on
+              brightness: 2
+              rgb_color: [255, 0, 0]
+              effect: "Solid"
+            light.seng_hylde_under:
+              state: on
+              brightness: 2
+              rgb_color: [255, 0, 0]
+              effect: "Solid"
+            light.blyant:
               state: on
               brightness: 24
               rgb_color: [255, 0, 0]
               effect: "None"
-            light.bedroom_floor:
-              state: on
-              brightness: 64
-              rgb_color: [255, 0, 0]
-              effect: "None"
-            light.bedroom_tablet:
-              state: on
-              brightness: 1
+      - service: light.turn_on
+        target:
+          entity_id: light.bedroom_tablet
+        data:
+          brightness: 1
 
   - alias: activate_light_profile_bedroom_off
     initial_state: true
@@ -443,15 +447,17 @@ automation:
         data:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
-            light.bedroom_shelf_strip:
+            light.seng_spots_over:
+              state: off
+            light.seng_spots_under:
               state: off
             light.sky:
               state: off
-            light.bedroom_shelf_spots:
+            light.seng_hylde_over:
               state: on
               effect: "Rainbow"
               brightness: 127
-            light.bedroom_floor:
+            light.seng_hylde_under:
               state: on
               effect: "Rainbow"
               brightness: 127
@@ -459,17 +465,15 @@ automation:
               state: on
               effect: "Rainbow"
               brightness: 127
-            light.luftfugter_lampe:
-              state: on
-              effect: "Rainbow"
-              brightness: 127
             light.seng_laeselampe:
               state: on
               effect: "colorloop"
               brightness: 32
-            light.bedroom_tablet:
-              state: on
-              brightness: 1
+      - service: light.turn_on
+        target:
+          entity_id: light.bedroom_tablet
+        data:
+          brightness: 1
 
 input_boolean:
   bedroom_activity_override:

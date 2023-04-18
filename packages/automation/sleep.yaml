@@ -171,10 +171,7 @@ automation:
         entity_id: input_select.sleep_state
         to: "bedtime"
       - platform: state
-        entity_id: binary_sensor.seng_bevaegelse
-        to: "on"
-      - platform: state
-        entity_id: binary_sensor.sovevaerelse_dor
+        entity_id: binary_sensor.sovevaerelse_gulv
         to: "off"
     condition:
       condition: and
@@ -183,7 +180,10 @@ automation:
           entity_id: input_select.sleep_state
           state: "bedtime"
         - condition: state
-          entity_id: binary_sensor.seng_bevaegelse
+          entity_id: binary_sensor.sovevaerelse_gulv
+          state: "off"
+        - condition: state
+          entity_id: binary_sensor.sovevaerelse_any
           state: "on"
         - condition: state
           entity_id: binary_sensor.sovevaerelse_dor
@@ -293,14 +293,9 @@ automation:
     trigger:
       - platform: state
         entity_id:
-          - binary_sensor.sovevaerelse_dor
-          - binary_sensor.gang_entre_bevaegelse
-          - binary_sensor.gang_badevaerelse_bevaegelse
+          - binary_sensor.sovevaerelse_gulv
         to: "on"
     condition:
-      - condition: state
-        entity_id: binary_sensor.sovevaerelse_dor
-        state: "on"
       - condition: state
         entity_id: binary_sensor.martin_presence_delayed
         state: "on"
@@ -317,18 +312,15 @@ automation:
     initial_state: true
     trigger:
       - platform: state
-        entity_id: binary_sensor.seng_bevaegelse
-        to: "on"
-      - platform: state
-        entity_id: binary_sensor.sovevaerelse_dor
+        entity_id: binary_sensor.sovevaerelse_gulv
         to: "off"
     condition:
       - condition: state
-        entity_id: binary_sensor.seng_bevaegelse
-        state: "on"
-      - condition: state
         entity_id: input_select.sleep_state
         state: "paused"
+      - condition: state
+        entity_id: binary_sensor.sovevaerelse_any
+        state: "on"
       - condition: state
         entity_id: binary_sensor.sovevaerelse_dor
         state: "off"
@@ -736,7 +728,7 @@ automation:
               - service: cover.set_cover_position
                 data:
                   entity_id: cover.sovevaerelse_gardin_vindue
-                  position: 40
+                  position: 30
 
       - delay:
           minutes: 5
@@ -759,7 +751,7 @@ automation:
               - service: cover.set_cover_position
                 data:
                   entity_id: cover.sovevaerelse_gardin_vindue
-                  position: 45
+                  position: 25
 
       - delay:
           minutes: 10
@@ -778,7 +770,7 @@ automation:
               - service: cover.set_cover_position
                 data:
                   entity_id: cover.sovevaerelse_gardin_vindue
-                  position: 50
+                  position: 20
 
   - alias: waking_action
     initial_state: true
