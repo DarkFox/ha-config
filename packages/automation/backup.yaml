@@ -1,17 +1,5 @@
-sensor:
-  - platform: command_line
-    command: 'curl http://supervisor/backups -H "Authorization: Bearer $(printenv SUPERVISOR_TOKEN)"'
-    name: Latest Backup
-    value_template: >
-      {% set backups = value_json.data.backups|sort(attribute='date', reverse=True) %}
-      {{ backups[0].name }}
-    scan_interval: 60
-
-shell_command:
-  prune_backups: cd /config/backups/ && ls -A1t | tail -n +8 | xargs rm -v
-
 automation:
-  - alias: Backup and Dropbox upload
+  - alias: Automatic Backup
     initial_state: true
     trigger:
       platform: time
@@ -21,24 +9,51 @@ automation:
       weekday:
         - sun
         - wed
-    variables:
-      name: "Automated Backup {{ now().strftime('%Y-%m-%d') }}"
+    action:
+      - service: auto_backup.backup
+        data:
+          name: "Automated Backup {{ now().strftime('%Y-%m-%d') }}"
+          keep_days: 7
+          exclude:
+            folders:
+              - media
+
+  - alias: "Notify Backup Started"
+    trigger:
+      platform: event
+      event_type: auto_backup.backup_start
+    action:
+      service: persistent_notification.create
+      data:
+        title: "Backup Started."
+        message: |-
+          Name: {{ trigger.event.data.name }}
+
+  - alias: "Notify Backup Completed"
+    trigger:
+      platform: event
+      event_type: auto_backup.backup_successful
     action:
       - service: persistent_notification.create
         data:
-          message: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}: Starting backup"
-          title: "{{ name }}"
-      - service: hassio.backup_full
-        data:
-          name: "{{ name }}"
-      - wait_template: "{{ states('sensor.latest_backup') == name }}"
-        timeout: "02:00:00"
-      - service: persistent_notification.create
-        data:
-          message: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}: Backup done. Syncing to Dropbox"
-          title: "{{ name }}"
+          title: "Backup Complete. Syncing to Dropbox"
+          message: |-
+            Name: {{ trigger.event.data.name }}
+            Slug: {{ trigger.event.data.slug }}
       - service: hassio.addon_stdin
         data:
-          addon: 7be23ff5_dropbox_sync
-          input: { "command": "upload" }
-      - service: shell_command.prune_backups
+          addon: 782428ea_dropbox-backup
+          input:
+            command: upload
+
+  - alias: "Notify Backup Failure"
+    trigger:
+      platform: event
+      event_type: auto_backup.backup_failed
+    action:
+      service: persistent_notification.create
+      data:
+        title: "Backup Failed."
+        message: |-
+          Name: {{ trigger.event.data.name }}
+          Error: {{ trigger.event.data.error }}
