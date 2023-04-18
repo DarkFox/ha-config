@@ -3,6 +3,26 @@ input_boolean:
     initial: off
     name: Kontor Dør Aktivitet
 
+switch:
+  - platform: template
+    switches:
+      office_curtain_automations:
+        friendly_name: Kontor Gardiner Automatisering
+        icon_template: mdi:blinds
+        value_template: "{{ is_state('automation.office_blinds_open_at_sunup', 'on') or is_state('automation.office_blinds_close_at_sundown', 'on') }}"
+        turn_on:
+          service: automation.turn_on
+          target:
+            entity_id:
+              - automation.office_blinds_open_at_sunup
+              - automation.office_blinds_close_at_sundown
+        turn_off:
+          service: automation.turn_off
+          target:
+            entity_id:
+              - automation.office_blinds_open_at_sunup
+              - automation.office_blinds_close_at_sundown
+
 binary_sensor:
   - platform: template
     sensors:
