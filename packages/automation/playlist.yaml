@@ -104,9 +104,33 @@ group:
       - script.playlist_play_dr1
       - script.playlist_play_dr2
       - script.playlist_play_youtube
-      - script.playlist_play_isolation_station
+      - script.playlist_play_chillhop
 
 script:
+  playlist_play_media:
+    sequence:
+      - service: media_player.play_media
+        data:
+          entity_id: "{{ entity_id }}"
+          media_content_id: >
+            {%- if 'youtube' in url -%}
+              {% set param_str = url.split('?')[1] %}
+              {% set ns = namespace(params={}) %}
+              {% for p in param_str.split('&') %}
+                {% set param = p.split('=') %}
+                {% set ns.params = dict(ns.params, **{param[0]: param[1]}) %}
+              {% endfor %}
+              { "app_name": "youtube", "media_id": "{{ ns.params['v'] }}" }
+            {%- else -%}
+              {{ url }}
+            {%- endif -%}
+          media_content_type: >
+            {%- if 'youtube' in url -%}
+              cast
+            {%- else -%}
+              EPISODE
+            {%- endif -%}
+
   weather_report:
     alias: Vejrudsigt
     sequence:
@@ -247,14 +271,14 @@ script:
         target:
           entity_id: input_select.playlist
 
-  playlist_play_isolation_station:
-    alias: Isolation Station
+  playlist_play_chillhop:
+    alias: Chillhop
     sequence:
       - service: input_select.set_options
         data:
           entity_id: input_select.playlist
           options:
-            - https://isolation-station.palion.net:8443/isolation-station.webm
+            - https://www.youtube.com/watch?v=7NOSDKb0HlU
             - "==END=="
       - service: input_select.select_first
         target:
@@ -406,16 +430,13 @@ automation:
         - condition: template
           value_template: "{{ not states('input_select.playlist') | truncate(10,true, '') == '==SWITCH==' }}"
     action:
-      service: >
-        {%- if 'youtube' in states('input_select.playlist') -%}
-          media_extractor.play_media
-        {%- else -%}
-          media_player.play_media
-        {%- endif -%}
+      service: script.turn_on
+      target:
+        entity_id: script.playlist_play_media
       data:
-        entity_id: "{{ states('input_select.playlist_player') }}"
-        media_content_id: "{{ states('input_select.playlist') }}"
-        media_content_type: EPISODE
+        variables:
+          entity_id: "{{ states('input_select.playlist_player') }}"
+          url: "{{ states('input_select.playlist') }}"
 
   - alias: playlist_script
     initial_state: true
@@ -536,16 +557,13 @@ automation:
         data:
           entity_id: input_text.playlist_media_position
           value: "{{ state_attr(trigger.from_state.state, 'media_position') }}"
-      - service: >
-          {%- if 'youtube' in states('input_select.playlist') -%}
-            media_extractor.play_media
-          {%- else -%}
-            media_player.play_media
-          {%- endif -%}
+      - service: script.turn_on
+        target:
+          entity_id: script.playlist_play_media
         data:
-          entity_id: "{{ trigger.to_state.state }}"
-          media_content_id: "{{ states('input_select.playlist') }}"
-          media_content_type: EPISODE
+          variables:
+            entity_id: "{{ states('input_select.playlist_player') }}"
+            url: "{{ states('input_select.playlist') }}"
       - delay:
           seconds: 2
       - service: media_player.media_seek
