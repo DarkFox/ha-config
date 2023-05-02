@@ -38,6 +38,7 @@ input_select:
 
 input_boolean:
   sovevaerelse_tv_night_mode_state:
+  sovevaerelse_soundbar_night_mode_state:
 
 switch:
   - platform: template
@@ -66,6 +67,18 @@ switch:
           service: script.turn_on
           target:
             entity_id: script.sovevaerelse_tv_disable_night_mode
+      sovevaerelse_soundbar_night_mode:
+        friendly_name: Soveværelse Soundbar Night Mode
+        icon_template: mdi:weather-night-partly-cloudy
+        value_template: "{{ is_state('input_boolean.sovevaerelse_soundbar_night_mode_state', 'on') }}"
+        turn_on:
+          service: script.turn_on
+          target:
+            entity_id: script.sovevaerelse_soundbar_enable_night_mode
+        turn_off:
+          service: script.turn_on
+          target:
+            entity_id: script.sovevaerelse_soundbar_disable_night_mode
 
 binary_sensor:
   - platform: template
@@ -102,7 +115,7 @@ script:
           device: Soveværelse TV
           command: OK
       - delay:
-          milliseconds: 2500
+          milliseconds: 3000
       - service: remote.send_command
         target:
           entity_id: remote.sovevarelse_ir_remote
@@ -165,7 +178,7 @@ script:
           device: Soveværelse TV
           command: OK
       - delay:
-          milliseconds: 2500
+          milliseconds: 3000
       - service: remote.send_command
         target:
           entity_id: remote.sovevarelse_ir_remote
@@ -207,6 +220,24 @@ script:
       - service: input_boolean.turn_off
         target:
           entity_id: input_boolean.sovevaerelse_tv_night_mode_state
+
+  sovevaerelse_soundbar_enable_night_mode:
+    sequence:
+      - service: switch.turn_on
+        target:
+          entity_id: switch.sovevaerelse_soundbar_night
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.sovevaerelse_soundbar_night_mode_state
+
+  sovevaerelse_soundbar_disable_night_mode:
+    sequence:
+      - service: switch.turn_on
+        target:
+          entity_id: switch.sovevaerelse_soundbar_night
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.sovevaerelse_soundbar_night_mode_state
 
   sovevaerelse_soundbar_fix_audio_lag:
     sequence:

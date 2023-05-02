@@ -38,6 +38,11 @@ cards:
                     # type: "custom:slider-entity-row"
                     name: Vindue
 
+              - type: custom:decluttering-card
+                template: light_groups
+                variables:
+                  - rum: sovevaerelse
+
           - type: vertical-stack
             cards:
               - type: conditional
@@ -58,31 +63,40 @@ cards:
                 conditions:
                   - entity: input_boolean.guests
                     state: "off"
-                card: !include ../cards/calendar.yaml
+                card: !include ../cards/calendar_compact.yaml
 
-              - type: custom:mini-media-player
-                artwork: cover
-                entity: media_player.sovevaerelse_tv
-                toggle_power: false
-                volume_stateless: true
-                shortcuts:
-                  hide_when_off: true
-                  buttons:
-                    - name: Night Mode
-                      icon: mdi:moon-and-stars
-                      type: service
-                      id: switch.turn_on
-                      data:
-                        entity_id: switch.sovevaerelse_soundbar_night
-                    - name: Fix Audio Delay
-                      icon: mdi:speaker-notes
-                      type: script
-                      id: script.sovevaerelse_soundbar_fix_audio_lag
-
-              - type: custom:mini-media-player
-                artwork: cover
+              - type: media-control
                 entity: media_player.sovevaerelse_chromecast
 
-              - type: custom:mini-media-player
-                artwork: cover
+              - type: custom:mushroom-media-player-card
+                entity: media_player.sovevaerelse_tv
+                name: TV
+                layout: horizontal
+                secondary_info: none
+                volume_controls:
+                  - volume_buttons
+                  - volume_mute
+                tap_action:
+                  action: toggle
+
+              - type: grid
+                cards:
+                  - type: button
+                    entity: switch.sovevaerelse_soundbar_night_mode
+                    name: Sound Night
+                    tap_action:
+                      action: toggle
+                  - type: button
+                    entity: switch.sovevaerelse_tv_night_mode
+                    name: TV Night
+                    tap_action:
+                      action: toggle
+                  - type: button
+                    entity: script.sovevaerelse_soundbar_fix_audio_lag
+                    name: Fix Lag
+                    icon: mdi:speaker-wireless
+                    tap_action:
+                      action: toggle
+
+              - type: media-control
                 entity: media_player.sovevaerelse_mini
