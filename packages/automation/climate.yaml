@@ -62,8 +62,6 @@ sensor:
           {% if on %}
             {% if active %}
               {{ states('input_number.target_temperature')|int }}
-            {% elif night %}
-              {{ states('input_number.target_temperature')|int - 4 }}
             {% else %}
               {{ states('input_number.target_temperature')|int - 2 }}
             {% endif %}
@@ -87,8 +85,6 @@ sensor:
           {% if on %}
             {% if active %}
               {{ states('input_number.target_temperature')|int }}
-            {% elif night or summer %}
-              {{ states('input_number.target_temperature')|int -4 }}
             {% else %}
               {{ states('input_number.target_temperature')|int- 2 }}
             {% endif %}
@@ -108,9 +104,7 @@ sensor:
           {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
           {%- set active = is_state('binary_sensor.living_room_activity', 'on') -%}
           {% if on %}
-            {% if night or summer %}
-              {{ states('input_number.target_temperature')|int - 4 }}
-            {% elif active %}
+            {% if active %}
               {{ states('input_number.target_temperature')|int }}
             {% else %}
               {{ states('input_number.target_temperature')|int - 2 }}
@@ -131,9 +125,7 @@ sensor:
           {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
           {%- set active = is_state('binary_sensor.workshop_activity', 'on') -%}
           {% if on %}
-            {% if night or summer %}
-              {{ states('input_number.target_temperature')|int - 4 }}
-            {% elif active %}
+            {% if active %}
               {{ states('input_number.target_temperature')|int }}
             {% else %}
               {{ states('input_number.target_temperature')|int - 2 }}
@@ -161,9 +153,8 @@ sensor:
           {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
           {%- set summer = is_state('sensor.season', 'summer') -%}
           {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
-          {%- set sleeping = is_state('input_select.sleep_state', 'sleeping') -%}
           {% if on %}
-            {% if sleeping or summer %}
+            {% if summer or night %}
               {{ states('input_number.target_temperature')|int - 2 }}
             {% else %}
               {{ states('input_number.target_temperature')|int }}
