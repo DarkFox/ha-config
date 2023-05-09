@@ -25,16 +25,13 @@ script:
       - service: homeassistant.update_entity
         data:
           entity_id: sensor.tts_greeting
-      - service: tts.cloud_say
+      - service: tts.speak
+        target:
+          entity_id: tts.piper
         data:
-          language: da-DK
-          options:
-            gender: male
-          entity_id: "{{ device_entity_id }}"
-          message: >
-            {{ states("sensor.tts_greeting") }}. Klokken er {{ states("sensor.time") }}.
-            {{ states("sensor.dmi_vejr_tts") }}
-            {{ state_attr('sensor.dmi_vejr_tts', 'text') }}
+          cache: false
+          media_player_entity_id: "{{ device_entity_id }}"
+          message: "{{ states('sensor.tts_greeting') }}. Klokken er {{ states('sensor.time') }}. {{ states('sensor.dmi_vejr_tts') }} {{ state_attr('sensor.dmi_vejr_tts', 'text') }}"
 
 sensor:
   - platform: min_max
@@ -524,20 +521,19 @@ automation:
             message: HA
             timehour: "{{ wake_up_time.split(':')[0] }}"
             timemin: "{{ wake_up_time.split(':')[1] }}"
-      - service: tts.cloud_say
+      - service: tts.speak
+        target:
+          entity_id: tts.piper
         data:
-          language: da-DK
-          options:
-            gender: male
-          entity_id: media_player.sovevaerelse_mini
+          cache: false
+          media_player_entity_id: media_player.sovevaerelse_mini
           message: >-
-            Alarm sat til kl. {{ wake_up_time }}.
-
-            {%- if states('sensor.wake_up_event_source_entity') == 'fallback' %}
+            Alarm sat til klokken {{ wake_up_time }}.
+            {%- if states('sensor.wake_up_event_source_entity') == 'fallback' -%}
               Der er ingen aftaler i morgen.
-            {% else %}
-              Første aftale i morgen er "{{ states('sensor.wake_up_event_source_message') }}", Kl. {{ states('sensor.wake_up_event_source_start_time') }}, fra {{ states('sensor.wake_up_event_source_name') }} kalender.
-            {% endif %}
+            {%- else -%}
+              Første aftale i morgen er "{{ states('sensor.wake_up_event_source_message') }}", klokken {{ states('sensor.wake_up_event_source_start_time') }}, fra {{ states('sensor.wake_up_event_source_name') }}.
+            {%- endif -%}
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
