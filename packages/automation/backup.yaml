@@ -49,9 +49,38 @@ automation:
             Slug: {{ trigger.event.data.slug }}
       - service: hassio.addon_stdin
         data:
-          addon: 782428ea_dropbox-backup
-          input:
-            command: upload
+          addon: 719b45ef_dropback
+          input: sync
+
+  - alias: "Notify Backup Sync Started"
+    trigger:
+      platform: state
+      entity_id: sensor.dropback_sync
+      not_to:
+        - "unknown"
+        - "unavailable"
+        - ""
+    action:
+      service: persistent_notification.create
+      data:
+        title: "Backup Sync started."
+        message: |-
+          Name: {{ trigger.to_state.state }}
+
+  - alias: "Notify Backup Sync Complete"
+    trigger:
+      platform: state
+      entity_id: sensor.dropback_sync
+      not_from:
+        - "unknown"
+        - "unavailable"
+        - ""
+    action:
+      service: persistent_notification.create
+      data:
+        title: "Backup Synced."
+        message: |-
+          Name: {{ trigger.from_state.state }}
 
   - alias: "Notify Backup Failure"
     trigger:
@@ -64,3 +93,15 @@ automation:
         message: |-
           Name: {{ trigger.event.data.name }}
           Error: {{ trigger.event.data.error }}
+
+  - alias: "Notify Backup Sync Failed"
+    trigger:
+      platform: state
+      entity_id: sensor.dropback_status
+      to: "Error"
+    action:
+      service: persistent_notification.create
+      data:
+        title: "Backup Sync error."
+        message: |-
+          Dropback failed to sync backup.
