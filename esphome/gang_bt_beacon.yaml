@@ -31,8 +31,20 @@ status_led:
     number: GPIO2
     inverted: true
 
-esp32_ble_beacon:
-  type: iBeacon
-  uuid: !secret gang_btle_beacon_uuid
-  major: 43710
-  minor: 28644
+esp32_ble_tracker:
+  scan_parameters:
+    interval: 1100ms
+    window: 1100ms
+
+bluetooth_proxy:
+  active: true
+
+binary_sensor:
+  - platform: ble_presence
+    ibeacon_uuid: !secret darkphone_uuid
+    name: "Gang BLE Presence Darkphone"
+
+sensor:
+  - platform: ble_rssi
+    ibeacon_uuid: !secret darkphone_uuid
+    name: "Gang BLE Darkphone RSSI value"
