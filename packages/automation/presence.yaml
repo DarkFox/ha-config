@@ -34,27 +34,6 @@ proximity:
 sensor:
   - platform: template
     sensors:
-      martin_next_scheduled_destination:
-        friendly_name: "Next Scheduled Destination"
-        value_template: "{{ state_attr('calendar.personlig', 'location') }}"
-      martin_next_scheduled_at:
-        friendly_name: "Next Scheduled at"
-        value_template: >-
-          {{
-            (strptime(state_attr('calendar.personlig', 'start_time'), '%Y-%m-%d %H:%M:%S')|as_local).isoformat()
-            if state_attr('calendar.personlig', 'location') else ''
-          }}
-        device_class: timestamp
-      time_to_leave_next_scheduled:
-        value_template: >-
-          {{
-            ((
-              strptime(state_attr('calendar.personlig', 'start_time'), '%Y-%m-%d %H:%M:%S')
-              - timedelta(minutes=states('sensor.martin_til_destination')|int+20)
-            )|as_local).isoformat()
-            if state_attr('calendar.personlig', 'location') else ''
-          }}
-        device_class: timestamp
       martin_to_home_dir_of_travel:
         friendly_name: "Direction of Travel to Home"
         value_template: "{{ state_attr('proximity.martin_to_home', 'dir_of_travel') }}"
@@ -152,62 +131,6 @@ binary_sensor:
           {%- endif -%}
 
 automation:
-  - alias: "Commute - Update sensors before commute"
-    initial_state: true
-    trigger:
-      - platform: time_pattern
-        minutes: "/5"
-    condition:
-      - condition: state
-        entity_id: binary_sensor.commute_soon
-        state: "on"
-    action:
-      - service: homeassistant.update_entity
-        target:
-          entity_id: sensor.hjem_til_rsh
-
-  - alias: "Commute - Update sensors outside commute time"
-    initial_state: true
-    trigger:
-      - platform: time_pattern
-        minutes: "/20"
-    condition:
-      - condition: state
-        entity_id: binary_sensor.commute_soon
-        state: "off"
-    action:
-      - service: homeassistant.update_entity
-        target:
-          entity_id: sensor.hjem_til_rsh
-
-  - alias: "Next destination - Update sensors with high frequency when close to leave time"
-    initial_state: true
-    trigger:
-      - platform: time_pattern
-        minutes: "/5"
-    condition:
-      - condition: state
-        entity_id: binary_sensor.martin_next_scheduled_destination_leave_soon
-        state: "on"
-    action:
-      - service: homeassistant.update_entity
-        target:
-          entity_id: sensor.martin_til_destination
-
-  - alias: "Next destination - Update sensors slowly 12 hours before"
-    initial_state: true
-    trigger:
-      - platform: time_pattern
-        minutes: "/20"
-    condition:
-      - condition: state
-        entity_id: binary_sensor.martin_next_scheduled_destination_active
-        state: "on"
-    action:
-      - service: homeassistant.update_entity
-        target:
-          entity_id: sensor.martin_til_destination
-
   #   ## Notifications ##
   - alias: presence notification
     trigger:

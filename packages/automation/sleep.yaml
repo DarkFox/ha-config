@@ -4,6 +4,9 @@ input_datetime:
     has_date: false
     has_time: true
 
+input_text:
+  last_wake_up_time:
+
 input_select:
   sleep_state:
     icon: mdi:sleep
@@ -49,19 +52,21 @@ sensor:
           {{ (time-(1.5*60*60)) if as_timestamp(now())+(1*60*60) < time else 4294967295 }}
       next_personal_event:
         value_template: >-
-          {% set time = as_timestamp(state_attr('calendar.personlig', 'start_time')) or 4294967295 %}
+          {% set time = as_timestamp(states('sensor.time_to_leave_next_scheduled')) if has_value('sensor.time_to_leave_next_scheduled')
+              else as_timestamp(state_attr('calendar.personlig', 'start_time')) if has_value('calendar.personlig')
+              else 4294967295 %}
           {{ (time-(2*60*60)) if as_timestamp(now())+(1*60*60) < time else 4294967295 }}
       next_tripit_event:
         value_template: >-
           {% set time = as_timestamp(state_attr('calendar.tripit', 'start_time')) or 4294967295 %}
-          {{ (time-(4*60*60)) if as_timestamp(now())+(1*60*60) < time else 4294967295 }}
+          {{ (time-(2*60*60)) if as_timestamp(now())+(1*60*60) < time else 4294967295 }}
       fallback_wake_up_time:
         value_template: >-
           {%- set hour = state_attr('input_datetime.fallback_wake_up_time', 'hour') -%}
           {%- set minute = state_attr('input_datetime.fallback_wake_up_time', 'minute') -%}
           {%- set days = 0 if 0 <= now().hour <= hour else 1 -%}
           {%- set time = as_timestamp(now().replace(hour=hour,minute=minute,second=0,microsecond=0) + timedelta(days=days)) -%}
-          {{ time if as_timestamp(now())+(1*60*60) < time else false }}
+          {{ time if as_timestamp(now())+(1*60*60) < time else 4294967295 }}
       wake_up_event_source:
         value_template: "{{ state_attr('sensor.next_event_for_wakeup_time', 'min_entity_id') }}"
       wake_up_event_source_entity:
@@ -92,7 +97,10 @@ sensor:
           icon: mdi:calendar
       wake_up_time:
         friendly_name: "Opvågningstidspunkt"
-        value_template: "{{ states('sensor.next_event_for_wakeup_time')|int | timestamp_local() }}"
+        value_template: >-
+          {% set limit = (states('input_text.last_wake_up_time')|int(0)) + (8*60*60) %}
+          {% set wake_up_time = states('sensor.next_event_for_wakeup_time')|int %}
+          {{ (wake_up_time if limit < wake_up_time else 4294967295) | timestamp_local() }}
       minutes_to_wake_up_time:
         friendly_name: Minutter til Opvågningstidspunkt
         value_template: "{{ ((states('sensor.wake_up_time')|as_timestamp - now()|as_timestamp)/60)|int }}"
@@ -646,6 +654,11 @@ automation:
       entity_id: input_select.sleep_state
       to: "alarm"
     action:
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.last_wake_up_time
+        data:
+          value: "{{ as_timestamp(now())|int }}"
       - service: switch.turn_off
         target:
           entity_id: switch.dorklokke_forstyr_ikke
