@@ -5,6 +5,28 @@
 # 21: "Køkken",
 # 22: "Stue"
 
+script:
+  toggle_vacuum:
+    alias: "Toggle Vacuum"
+    sequence:
+      - alias: "Start if docked, otherwise go back to dock"
+        choose:
+          - conditions:
+              - alias: "Is vacuum docked"
+                condition: state
+                entity_id: vacuum.roborock_s5
+                state: "docked"
+            sequence:
+              - alias: "Start cleaning"
+                service: vacuum.start
+                target:
+                  entity_id: vacuum.roborock_s5
+        default:
+          - alias: "Back to dock"
+            service: vacuum.return_to_base
+            target:
+              entity_id: vacuum.roborock_s5
+
 automation:
   - id: vacuum_while_away
     alias: Vacuum While Away
