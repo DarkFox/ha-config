@@ -31,6 +31,8 @@ binary_sensor:
       living_room_door_activity:
         friendly_name: Stue Dør Aktivitet
         device_class: motion
+        delay_off:
+          seconds: 30
         value_template: "{{ is_state('input_boolean.living_room_door_activity', 'on') }}"
       living_room_occupied:
         friendly_name: Stue Optaget
@@ -75,15 +77,15 @@ automation:
         entity_id: sun.sun
         to: below_horizon
       - platform: numeric_state
-        entity_id: sensor.altan_lysstyrke
-        below: 3
+        entity_id: sensor.average_balcony_brightness
+        below: 5
     condition:
       - condition: state
         entity_id: sun.sun
         state: below_horizon
       - condition: numeric_state
-        entity_id: sensor.altan_lysstyrke
-        below: 3
+        entity_id: sensor.average_balcony_brightness
+        below: 5
     action:
       - alias: "Don't close curtain on open balcony door"
         choose:
