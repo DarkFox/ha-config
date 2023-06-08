@@ -1,0 +1,103 @@
+type: "custom:button-card"
+name: "Bil"
+entity: sensor.id3_state_of_charge
+hold_action:
+  action: call-service
+  service: switch.toggle
+  service_data:
+    entity_id: switch.id3_climatisation
+layout: icon_state_name2nd
+icon: >
+  [[[
+    if (states['sensor.id3_charging_state'].state == 'charging')
+      return 'mdi:car-electric';
+    else
+      return 'mdi:car';
+  ]]]
+color_type: icon
+size: 24px
+show_state: true
+show_name: true
+show_units: false
+show_label: true
+label: >
+  [[[
+    if (states['sensor.id3_charging_state'].state == 'charging')
+      return 'Lader: ' + states['sensor.id3_charge_power'].state + ' kW - ' + states['sensor.id3_remaining_charging_time_to_complete'].state;
+    else
+      return '&nbsp;';
+  ]]]
+custom_fields:
+  unit: >
+    [[[
+      return '/ ' + states['sensor.id3_target_state_of_charge'].state + ' % (' + states['sensor.id3_range'].state + ' km)';
+    ]]]
+  climate: >
+    [[[
+      if (states['binary_sensor.id3_climatising'].state == 'on')
+        return states['sensor.id3_remaining_climatisation_time'].state + ' min';
+      else
+        return '';
+    ]]]
+styles:
+  card:
+    - height: 105px
+    - padding-top: 0
+  grid:
+    - grid-template-areas: '"n climate i" "s unit unit" "l l l"'
+    - grid-template-columns: min-content 1fr 50px
+    - grid-template-rows: min-content 1fr min-content
+  img_cell:
+    - align-self: start
+    - text-align: left
+    - padding-top: 4px
+  icon:
+    - color: >
+        [[[
+          if (states['binary_sensor.id3_climatising'].state == 'on')
+            return "darkorange";
+          else if (states['sensor.id3_charging_state'].state == 'charging')
+            return "limegreen";
+          else
+            return "var(--state-icon-color, #44739e)";
+        ]]]
+  name:
+    - justify-self: start
+    - padding-left: 10px
+    - font-weight: bold
+    - color: var(--secondary-text-color)
+    - line-height: 40px
+    - font-weight: 500
+    - font-size: 16px
+    - overflow: hidden
+    - white-space: nowrap
+    - text-overflow: ellipsis
+  state:
+    - justify-self: start
+    - padding-left: 10px
+    - font-size: 28px
+    - margin-right: 4px
+  label:
+    - justify-self: start
+    - padding-left: 10px
+    - color: var(--secondary-text-color)
+  custom_fields:
+    unit:
+      - align-self: end
+      - justify-self: start
+      - text-align: left
+      - padding-bottom: 2px
+      - font-size: 18px
+      - color: var(--secondary-text-color)
+      - font-weight: 300
+    climate:
+      - justify-self: end
+      - padding-left: 10px
+      - font-weight: bold
+      - color: var(--secondary-text-color)
+      - line-height: 40px
+      - font-weight: 500
+      - font-size: 16px
+      - overflow: hidden
+      - white-space: nowrap
+      - text-overflow: ellipsis
