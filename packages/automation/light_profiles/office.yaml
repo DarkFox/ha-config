@@ -13,14 +13,16 @@ sensor:
       office_auto_light_profile:
         friendly_name: Office Auto Light Profile
         value_template: >-
-          {% set outside_lux = states('sensor.average_outside_brightness')|int %}
+          {% set outside_lux = states('sensor.average_small_balcony_brightness')|int %}
           {% set profile = states('sensor.office_selected_light_profile') %}
           {% set profiles = state_attr('input_select.light_profile', 'options') %}
           {% if profile == 'Bright' %}
             Bright
-          {% elif outside_lux > 20000 %}
+          {% elif state_attr('cover.kontor_rullegardin', 'current_position')|int < 40 %}
+            {{ profile }}
+          {% elif outside_lux > 2000 %}
             {{ profiles[profiles.index(profile)+2] or 'Off' }}
-          {% elif outside_lux > 10000 %}
+          {% elif outside_lux > 1000 %}
             {{ profiles[profiles.index(profile)+1] or 'Off' }}
           {% else %}
             {{ profile }}
@@ -177,9 +179,6 @@ automation:
               state: on
               brightness: 255
               hs_color: [15, 43]
-            light.office_tablet:
-              state: on
-              brightness: 255
             light.spogelse:
               state: on
               brightness: 255
@@ -264,9 +263,6 @@ automation:
               state: on
               brightness: 255
               effect: "None"
-            light.office_tablet:
-              state: on
-              brightness: 255
 
   - alias: activate_light_profile_office_dimmed
     initial_state: true
@@ -344,9 +340,6 @@ automation:
               state: on
               brightness: 127
               effect: "None"
-            light.office_tablet:
-              state: on
-              brightness: 127
 
   - alias: activate_light_profile_office_ambient
     initial_state: true
@@ -424,9 +417,6 @@ automation:
               state: on
               brightness: 96
               effect: "None"
-            light.office_tablet:
-              state: on
-              brightness: 64
 
   - alias: activate_light_profile_office_night
     initial_state: true
@@ -499,9 +489,6 @@ automation:
               effect: "None"
             light.spogelse_ojne:
               state: off
-            light.office_tablet:
-              state: on
-              brightness: 24
 
   - alias: activate_light_profile_office_off
     initial_state: true
@@ -522,7 +509,6 @@ automation:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entity_id:
             - group.office_lights
-            - light.office_tablet
 
   - alias: activate_light_profile_office_party
     initial_state: true
@@ -585,9 +571,6 @@ automation:
               state: on
               brightness: 255
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-            light.office_tablet:
-              state: on
-              brightness: _hue127
 
   - alias: refresh_lights_after_openrgb_becomes_available
     initial_state: true

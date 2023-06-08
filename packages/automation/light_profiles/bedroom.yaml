@@ -13,16 +13,16 @@ sensor:
       bedroom_auto_light_profile:
         friendly_name: Bedroom Auto Light Profile
         value_template: >-
-          {% set outside_lux = states('sensor.average_outside_brightness')|int %}
+          {% set outside_lux = states('sensor.average_small_balcony_brightness')|int %}
           {% set profile = states('sensor.bedroom_selected_light_profile') %}
           {% set profiles = state_attr('input_select.light_profile', 'options') %}
           {% if profile == 'Bright' %}
             Bright
           {% elif states('sensor.sovevaerelse_gardin_position')|int < 40 %}
             {{ profile }}
-          {% elif outside_lux > 20000 %}
+          {% elif outside_lux > 2000 %}
             {{ profiles[profiles.index(profile)+2] or 'Off' }}
-          {% elif outside_lux > 10000 %}
+          {% elif outside_lux > 1000 %}
             {{ profiles[profiles.index(profile)+1] or 'Off' }}
           {% else %}
             {{ profile }}

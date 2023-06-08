@@ -29,6 +29,8 @@ binary_sensor:
       office_door_activity:
         friendly_name: Kontor Dør Aktivitet
         device_class: motion
+        delay_off:
+          seconds: 30
         value_template: "{{ is_state('input_boolean.office_door_activity', 'on') }}"
       office_occupied:
         friendly_name: Kontor Optaget
@@ -62,6 +64,16 @@ automation:
       - platform: state
         entity_id: sun.sun
         to: below_horizon
+      - platform: numeric_state
+        entity_id: sensor.average_small_balcony_brightness
+        below: 5
+    condition:
+      - condition: state
+        entity_id: sun.sun
+        state: below_horizon
+      - condition: numeric_state
+        entity_id: sensor.average_small_balcony_brightness
+        below: 5
     action:
       - service: cover.close_cover
         entity_id: cover.kontor_rullegardin
@@ -81,7 +93,7 @@ automation:
         state: "on"
       - alias: "Outside temp below 18"
         condition: numeric_state
-        entity_id: sensor.altan_temperatur
+        entity_id: sensor.lille_altan_temperatur
         below: 18
     action:
       - service: script.notify_everywhere
