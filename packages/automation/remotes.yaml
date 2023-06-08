@@ -43,77 +43,90 @@ automation:
       data:
         entity_id: input_number.tradfri_dimmer
 
-  # kontor_fjernbetjening #
-  - alias: office_dimmer_on
+  # gang_fjernbetjening #
+  - alias: hallway_dimmer_on
     initial_state: true
     trigger:
       - platform: event
         event_type: deconz_event
         event_data:
-          id: kontor_fjernbetjening
+          id: gang_fjernbetjening
           event: 1002
     action:
       - event: set_light_profile
         event_data:
-          room: office
+          room: hallway
           profile: |
-            {% if is_state('sensor.office_light_profile', 'Off') %}
+            {% if is_state('sensor.hallway_light_profile', 'Off') %}
               Default
             {% else %}
               Off
             {% endif %}
 
-  - alias: office_dimmer_up
+  - alias: hallway_dimmer_up
     initial_state: true
     trigger:
       - platform: event
         event_type: deconz_event
         event_data:
-          id: kontor_fjernbetjening
+          id: gang_fjernbetjening
           event: 2002
     action:
       - event: increase_light_profile
         event_data:
-          room: office
+          room: hallway
 
-  - alias: office_dimmer_down
+  - alias: hallway_dimmer_down
     initial_state: true
     trigger:
       - platform: event
         event_type: deconz_event
         event_data:
-          id: kontor_fjernbetjening
+          id: gang_fjernbetjening
           event: 3002
     action:
       - event: decrease_light_profile
         event_data:
-          room: office
+          room: hallway
 
-  - alias: office_dimmer_left
+  - alias: hallway_dimmer_left
     initial_state: true
     trigger:
       - platform: event
         event_type: deconz_event
         event_data:
-          id: kontor_fjernbetjening
+          id: gang_fjernbetjening
           event: 4002
     action:
-      service: input_select.select_previous
+      service: switch.toggle
       data:
-        entity_id: input_select.theme
+        entity_id: switch.dorklokke_forstyr_ikke
 
-  - alias: office_dimmer_right
+  - alias: hallway_dimmer_right
     initial_state: true
     trigger:
       - platform: event
         event_type: deconz_event
         event_data:
-          id: kontor_fjernbetjening
+          id: gang_fjernbetjening
           event: 5002
     action:
-      service: input_select.select_next
-      data:
-        entity_id: input_select.theme
+      service: lock.lock
+      target:
+        entity_id: lock.hoveddor_las
+
+  - alias: hallway_dimmer_right
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: gang_fjernbetjening
+          event: 5003
+    action:
+      service: lock.unlock
+      target:
+        entity_id: lock.hoveddor_las
 
   # Kontor Tryk #
   - alias: office_switch_on

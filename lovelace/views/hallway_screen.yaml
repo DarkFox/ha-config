@@ -1,0 +1,164 @@
+title: Gang Skærm
+path: kiosk
+icon: "mdi:devices"
+panel: true
+cards:
+  - type: horizontal-stack
+    cards:
+      - type: vertical-stack
+        cards:
+          - !include ../cards/clock.yaml
+          - !include ../cards/weekday.yaml
+
+          - type: conditional
+            conditions:
+              - entity: input_boolean.guests
+                state: "off"
+            card: !include ../cards/calendar.yaml
+
+          - type: conditional
+            conditions:
+              - entity: input_boolean.guests
+                state: "on"
+            card:
+              type: vertical-stack
+              cards:
+                - type: custom:html-card
+                  content: !secret ui_wifi_content
+
+          - !include ../cards/power_gauges.yaml
+
+          - type: conditional
+            conditions:
+              - entity: input_boolean.guests
+                state: "off"
+            card:
+              type: horizontal-stack
+              cards:
+                - !include ../cards/bathroom_occupied.yaml
+                - !include ../cards/hoveddor_laas.yaml
+
+      - type: vertical-stack
+        cards:
+          - !include ../cards/transport/car_card.yaml
+
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.commute_soon
+                state: "on"
+            card: !include /config/lovelace/cards/transport/commute.yaml
+
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.s_train_message_present
+                state: "on"
+            card: !include /config/lovelace/cards/s_train_status.yaml
+          - type: custom:rejseplanen-stog-card
+            entity: sensor.s_tog_malov
+            title: " "
+            max_entries: 4
+
+          - type: conditional
+            conditions:
+              - entity: input_boolean.guests
+                state: "on"
+            card:
+              type: horizontal-stack
+              cards:
+                - !include ../cards/bathroom_occupied.yaml
+                - !include ../cards/hoveddor_laas.yaml
+
+          - !include ../cards/conditional_timers.yaml
+
+          - type: iframe
+            url: >-
+              https://www.rainviewer.com/map.html?loc=55.9738,11.0852,6&oFa=0&oC=1&oU=0&oCS=1&oF=0&oAP=1&c=5&o=90&lm=1&layer=radar&sm=1&sn=1&hu=0
+            aspect_ratio: 60%
+            style:
+              .: |
+                ha-card {
+                  background-color: transparent;
+                  box-shadow: none;
+                  padding-left: 1px;
+                  padding-right: 1px;
+                }
+
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.octoprint_printing
+                state: "on"
+            card: !include ../cards/3d_printer_preview.yaml
+
+          - !include ../cards/low_battery.yaml
+
+      - type: vertical-stack
+        cards:
+          - type: custom:stack-in-card
+            mode: vertical
+            cards:
+              - type: "custom:config-template-card"
+                variables:
+                  - states['sensor.translated_weather_title'].state
+                entities:
+                  - sensor.translated_weather_title
+                card:
+                  type: custom:weather-card
+                  entity: weather.weatherflow_day_based_forecast
+                  name: "${vars[0]}"
+                  # hourly_forecast: true
+                  forecast: false
+                  details: true
+                  current: true
+                  style:
+                    .: |
+                      ha-card {
+                        background-color: transparent;
+                        box-shadow: none;
+                      }
+                      span.title {
+                        left: 4em;
+                        font-size: 2em;
+                      }
+
+              - type: custom:hourly-weather
+                entity: weather.weatherflow_hourly_based_forecast
+                name: " "
+                icons: true
+                style:
+                  .: |
+                    ha-card {
+                      background-color: transparent;
+                      box-shadow: none;
+                    }
+
+              - type: custom:weather-card
+                entity: weather.weatherflow_day_based_forecast
+                number_of_forecasts: "6"
+                forecast: true
+                details: false
+                current: false
+                style:
+                  .: |
+                    ha-card {
+                      background-color: transparent;
+                      box-shadow: none;
+                    }
+                    span.title {
+                      left: 4em;
+                      font-size: 2em;
+                    }
+
+              - !include ../cards/weather/dmi_weather_warnings.yaml
+
+              - type: custom:mod-card
+                style: |
+                  #htmlCard {
+                    font-size: 120%;
+                    background: inherit;
+                    border: 0px;
+                  }
+                card: !include ../cards/weather/dmi_weather_report.yaml
+
+              # - type: iframe
+              #   url: https://dv.lzd.dk/local/downloads/dmi_weather_radar/radar.gif
+              #   aspect_ratio: 100%
