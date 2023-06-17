@@ -33,66 +33,78 @@ automation:
   - alias: charge_kitchen_tablet
     trigger:
       - platform: numeric_state
-        entity_id: sensor.kokken_tablet_batteriniveau
+        entity_id: sensor.kokken_tablet_battery_level
         below: 60
       - platform: state
-        entity_id: binary_sensor.kitchen_activity
+        entity_id: sensor.kokken_tablet_battery_level
+        to:
+          - "unknown"
+          - "unavailable"
+      - platform: state
+        entity_id: binary_sensor.home_assistant_loaded
         to: "on"
+    condition:
+      - condition: numeric_state
+        entity_id: sensor.kokken_tablet_battery_level
+        below: 60
     action:
       - service: switch.turn_on
         data:
-          entity_id: switch.kokken_tablet_charger
+          entity_id: switch.kokken_tablet_lader
   - alias: discharge_kokken_tablet
     trigger:
       - platform: numeric_state
-        entity_id: sensor.kokken_tablet_batteriniveau
+        entity_id: sensor.kokken_tablet_battery_level
         above: 80
       - platform: state
-        entity_id: binary_sensor.kitchen_activity
-        to: "off"
+        entity_id: binary_sensor.home_assistant_loaded
+        to: "on"
     condition:
       - condition: numeric_state
-        entity_id: sensor.kokken_tablet_batteriniveau
+        entity_id: sensor.kokken_tablet_battery_level
         above: 80
-      - condition: state
-        entity_id: binary_sensor.kitchen_activity
-        state: "off"
     action:
       - service: switch.turn_off
         data:
-          entity_id: switch.kokken_tablet_charger
+          entity_id: switch.kokken_tablet_lader
 
   - alias: charge_gang_tablet
     trigger:
       - platform: numeric_state
-        entity_id: sensor.gang_tablet_batteriniveau
+        entity_id: sensor.gang_tablet_battery_level
         below: 60
       - platform: state
-        entity_id: binary_sensor.hallway_activity
+        entity_id: sensor.gang_tablet_battery_level
+        to:
+          - "unknown"
+          - "unavailable"
+      - platform: state
+        entity_id: binary_sensor.home_assistant_loaded
         to: "on"
+    condition:
+      - condition: numeric_state
+        entity_id: sensor.gang_tablet_battery_level
+        below: 60
     action:
       - service: switch.turn_on
         data:
-          entity_id: switch.gang_tablet_charger
+          entity_id: switch.gang_tablet_lader
   - alias: discharge_gang_tablet
     trigger:
       - platform: numeric_state
-        entity_id: sensor.gang_tablet_batteriniveau
+        entity_id: sensor.gang_tablet_battery_level
         above: 80
       - platform: state
-        entity_id: binary_sensor.hallway_activity
-        to: "off"
+        entity_id: binary_sensor.home_assistant_loaded
+        to: "on"
     condition:
       - condition: numeric_state
-        entity_id: sensor.gang_tablet_batteriniveau
+        entity_id: sensor.gang_tablet_battery_level
         above: 80
-      - condition: state
-        entity_id: binary_sensor.hallway_activity
-        state: "off"
     action:
       - service: switch.turn_off
         data:
-          entity_id: switch.gang_tablet_charger
+          entity_id: switch.gang_tablet_lader
 
   - alias: hallway_tablet_ip_webhook
     initial_state: True
@@ -120,7 +132,7 @@ automation:
   - alias: charge_bedroom_tablet
     trigger:
       - platform: numeric_state
-        entity_id: sensor.sovevaerelse_tablet_batteriniveau
+        entity_id: sensor.sovevaerelse_tablet_battery_level
         below: 60
       - platform: state
         entity_id: binary_sensor.bedroom_activity
@@ -133,14 +145,14 @@ automation:
   - alias: discharge_bedroom_tablet
     trigger:
       - platform: numeric_state
-        entity_id: sensor.sovevaerelse_tablet_batteriniveau
+        entity_id: sensor.sovevaerelse_tablet_battery_level
         above: 80
       - platform: state
         entity_id: binary_sensor.bedroom_activity
         to: "off"
     condition:
       - condition: numeric_state
-        entity_id: sensor.sovevaerelse_tablet_batteriniveau
+        entity_id: sensor.sovevaerelse_tablet_battery_level
         above: 80
       - condition: state
         entity_id: binary_sensor.bedroom_activity
