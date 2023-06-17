@@ -91,19 +91,19 @@ sensor:
 automation:
   - alias: lightning_warning
     initial_state: true
+    mode: single
     trigger:
       platform: template
       value_template: >-
         {{
-          not is_state('sensor.weatherflow_last_lightning_strike_distance', 'unknown')
-          and not is_state('sensor.weatherflow_last_lightning_strike_distance', 'unavailable')
-          and (states('sensor.weatherflow_last_lightning_strike_distance') | int) < 20
+          not is_state('sensor.blitzortung_lightning_distance', 'unknown')
+          and not is_state('sensor.blitzortung_lightning_distance', 'unavailable')
+          and (states('sensor.blitzortung_lightning_distance') | int) < 10
         }}
-
-      for:
-        minutes: 5
     action:
       - service: notify.telegram_darkfox
         data:
           title: "Vejr Varsel: Torden"
-          message: "Lynnedslag {{ states('sensor.weatherflow_last_lightning_strike_distance') }} {{ state_attr('sensor.weatherflow_last_lightning_strike_distance', 'unit_of_measurement') }} væk."
+          message: "Lynnedslag {{ states('sensor.blitzortung_lightning_distance') }} {{ state_attr('sensor.blitzortung_lightning_distance', 'unit_of_measurement') }} væk."
+      - delay:
+          minutes: 10
