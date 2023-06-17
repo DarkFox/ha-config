@@ -15,7 +15,6 @@ input_select:
       - Bedroom
       - Living Room
       - Office
-      - Balcony
 
 binary_sensor:
   - platform: template
@@ -87,11 +86,6 @@ automation:
         entity_id:
           - binary_sensor.kontor_any
         to: "on"
-
-      - platform: template
-        variables:
-          room: "Balcony"
-        value_template: "{{ is_state('binary_sensor.stue_altandor', 'on') and is_state('binary_sensor.altan_bevaegelse', 'on') }}"
     condition:
       - condition: state
         entity_id: vacuum.roborock_s5
@@ -99,8 +93,6 @@ automation:
       - condition: state
         entity_id: person.martin
         state: "home"
-      - condition: template
-        value_template: "{{ room != 'Balcony' or is_state('binary_sensor.stue_altandor', 'on') }}"
     action:
       service: input_select.select_option
       data:
