@@ -97,9 +97,26 @@ cover:
           data:
             modus: "open"
         close_cover:
-          service: script.stue_gardin
-          data:
-            modus: "close"
+          - alias: "Don't close curtain on open balcony door"
+            choose:
+              - conditions:
+                  - alias: "Balcony Door Open"
+                    condition: state
+                    entity_id: binary_sensor.stue_altandor
+                    state: "on"
+                sequence:
+                  - service: cover.close_cover
+                    entity_id: cover.stue_gardin_hojre
+                  - service: cover.set_cover_position
+                    target:
+                      entity_id: cover.stue_gardin_venstre
+                    data:
+                      position: 55
+            default:
+              - service: cover.close_cover
+                entity_id: cover.stue_gardin_hojre
+              - service: cover.close_cover
+                entity_id: cover.stue_gardin_venstre
         stop_cover:
           service: script.stue_gardin
           data:
