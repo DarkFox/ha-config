@@ -70,18 +70,7 @@ cards:
 
           - !include ../cards/conditional_timers.yaml
 
-          - type: iframe
-            url: >-
-              https://www.rainviewer.com/map.html?loc=55.9738,11.0852,6&oFa=0&oC=1&oU=0&oCS=1&oF=0&oAP=1&c=5&o=90&lm=1&layer=radar&sm=1&sn=1&hu=0
-            aspect_ratio: 60%
-            style:
-              .: |
-                ha-card {
-                  background-color: transparent;
-                  box-shadow: none;
-                  padding-left: 1px;
-                  padding-right: 1px;
-                }
+          - !include ../cards/weather/weather_radar.yaml
 
           - type: conditional
             conditions:
@@ -93,72 +82,4 @@ cards:
 
       - type: vertical-stack
         cards:
-          - type: custom:stack-in-card
-            mode: vertical
-            cards:
-              - type: "custom:config-template-card"
-                variables:
-                  - states['sensor.translated_weather_title'].state
-                entities:
-                  - sensor.translated_weather_title
-                card:
-                  type: custom:weather-card
-                  entity: weather.weatherflow_day_based_forecast
-                  name: "${vars[0]}"
-                  # hourly_forecast: true
-                  forecast: false
-                  details: true
-                  current: true
-                  style:
-                    .: |
-                      ha-card {
-                        background-color: transparent;
-                        box-shadow: none;
-                      }
-                      span.title {
-                        left: 4em;
-                        font-size: 2em;
-                      }
-
-              - type: custom:hourly-weather
-                entity: weather.weatherflow_hourly_based_forecast
-                name: " "
-                icons: true
-                style:
-                  .: |
-                    ha-card {
-                      background-color: transparent;
-                      box-shadow: none;
-                    }
-
-              - type: custom:weather-card
-                entity: weather.weatherflow_day_based_forecast
-                number_of_forecasts: "6"
-                forecast: true
-                details: false
-                current: false
-                style:
-                  .: |
-                    ha-card {
-                      background-color: transparent;
-                      box-shadow: none;
-                    }
-                    span.title {
-                      left: 4em;
-                      font-size: 2em;
-                    }
-
-              - !include ../cards/weather/dmi_weather_warnings.yaml
-
-              - type: custom:mod-card
-                style: |
-                  #htmlCard {
-                    font-size: 120%;
-                    background: inherit;
-                    border: 0px;
-                  }
-                card: !include ../cards/weather/dmi_weather_report.yaml
-
-              # - type: iframe
-              #   url: https://dv.lzd.dk/local/downloads/dmi_weather_radar/radar.gif
-              #   aspect_ratio: 100%
+          - !include ../cards/weather/weather_forecast.yaml

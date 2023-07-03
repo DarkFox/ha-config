@@ -3,21 +3,26 @@ mode: vertical
 cards:
   - type: "custom:config-template-card"
     variables:
-      - states['sensor.weather_card_name_text'].state
+      - states['sensor.translated_weather_title'].state
     entities:
-      - sensor.weather_card_name_text
+      - sensor.translated_weather_title
     card:
-      type: weather-forecast
+      type: custom:weather-card
       entity: weather.weatherflow_day_based_forecast
       name: "${vars[0]}"
-      show_forecast: false
+      forecast: false
+      details: true
+      current: true
       style:
         .: |
           ha-card {
             background-color: transparent;
+            box-shadow: none;
+            padding-bottom: 0 !important;
           }
-          .name, .state {
-            overflow: visible !important;
+          span.title {
+            left: 4em;
+            font-size: 2em;
           }
 
   - type: custom:hourly-weather
@@ -29,6 +34,9 @@ cards:
         ha-card {
           background-color: transparent;
           box-shadow: none;
+        }
+        .card-content {
+          padding-bottom: 0 !important;
         }
 
   - type: custom:weather-card
@@ -42,19 +50,22 @@ cards:
         ha-card {
           background-color: transparent;
           box-shadow: none;
+          padding-top: 0 !important;
+          padding-bottom: 0 !important;
+        }
+        .day {
+          border-top: 0.1em solid rgb(217, 217, 217);
         }
         span.title {
           left: 4em;
           font-size: 2em;
         }
-
   - !include dmi_weather_warnings.yaml
-  - type: custom:popup-card
-    entity: weather.weatherflow_day_based_forecast
-    title: Vejr
-    size: wide
-    card:
-      type: vertical-stack
-      cards:
-        - !include weather.yaml
-        - !include temp_graph.yaml
+  - type: custom:mod-card
+    style: |
+      #htmlCard {
+        font-size: 120%;
+        background: inherit;
+        border: 0px;
+      }
+    card: !include dmi_weather_report.yaml
