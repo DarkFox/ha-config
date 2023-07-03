@@ -1,0 +1,55 @@
+template:
+  - sensor:
+      - name: GPT API Key
+        state: !secret writesonic_api_key
+      - name: GPT Prompt
+        state: "{{ now() }}"
+        attributes:
+          prompt: >-
+            {% from 'easy_time.jinja' import weekday, month %}
+            Funger som en personlig assistent. Du er vittig og taler samtaleagtigt.
+            Hils på mig på en venlig måde, sig hvad klokken er, hvad mine planer er i dag,
+            kommenter på vejret (husk at fortælle mig temperaturen), og giv en kort anbefaling om påklædning.
+            Den aktuelle tid er {{ states('sensor.day_name') }} den {{ now().day }}.
+            {{ states('sensor.month_name') }}, klokken {{ states('sensor.time') }}.
+            {% if has_value('sensor.days_to_next_work') and states('sensor.days_to_next_work')|int < 2 %}
+              Jeg har {{ 'dagvagt' if is_state('binary_sensor.morning_shift', 'on') }}
+              i {{ 'dag' if is_state('sensor.days_to_next_work', '0') else 'morgen' }},
+              og skal møde på arbejde klokken {{ states('sensor.next_work_start_clock') }}.
+              {% if is_state('sensor.days_to_next_work', '0') and is_state('binary_sensor.on_call_today') %}
+                {% set end_time = state_attr('calendar.arbejdskalender', 'end_time') | as_datetime %}
+                Efter arbejde har jeg tilkaldevagt indtil
+                {{ weekday(end_time.weekday) }} klokken. {{ end_time | as_timestamp | timestamp_custom("%H:%M")}}
+              {% endif %}
+            {% else %}
+              Jeg har fri i dag og i morgen.
+            {% endif %}
+            {% if has_value('sensor.days_to_next_personal_event') and states('sensor.days_to_next_personal_event')|int < 2 %}
+              Jeg har en aftale i min kalender i {{ 'dag' if is_state('sensor.days_to_next_personal_event', '0') else 'morgen' }},
+              titlen er "{{ state_attr('calendar.personlig', 'message') }}"
+              og det starter klokken {{ states('sensor.next_personal_event_start_clock') }}.
+            {% else %}
+              Jeg har ingen aftaler i kalenderen i dag eller i morgen.
+            {% endif %}
+
+            Vejrudsigten siger {{ states('sensor.dmi_vejr') }} Temperaturen bliver {{ states('sensor.temp_range') }} grader celcius.
+            {{ state_attr('sensor.dmi_vejr_tts', 'text') }}
+
+command_line:
+  - sensor:
+      name: GPT Briefing
+      scan_interval: 2629743
+      value_template: "{{ now() }}: {{ value | truncate(100) }}"
+      json_attributes:
+        - message
+      command: >
+        curl
+        --request POST "https://api.writesonic.com/v2/business/content/chatsonic?engine=premium&language=da"
+        --header "X-API-KEY: {{ states('sensor.gpt_api_key') }}"
+        --header "accept: application/json"
+        --header "content-type: application/json"
+        --data '{
+                  "enable_google_results": false,
+                  "enable_memory": false,
+                  "input_text": {{ state_attr('sensor.gpt_prompt', 'prompt') | replace("\n"," ") | tojson }}
+                }'

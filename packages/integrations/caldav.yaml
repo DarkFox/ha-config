@@ -50,3 +50,23 @@ calendar:
       - Tripit
       - Vagtplan
       - Arbejdskalender
+
+template:
+  - sensor:
+      - name: Next personal event start clock
+        unique_id: next_personal_event_start_clock
+        state: >-
+          {% if has_value('calendar.personlig') and 'start_time' in states.calendar.personlig.attributes %}
+            {{ state_attr('calendar.personlig', 'start_time').split(' ')[1][:-3] }}
+          {% else %}
+            unknown
+          {% endif %}
+      - name: Days to next personal event
+        state: >-
+          {% from 'easy_time.jinja' import count_the_days %}
+          {% if has_value('calendar.personlig') and 'start_time' in states.calendar.personlig.attributes %}
+            {% set start_time = state_attr('calendar.personlig', 'start_time') | as_datetime | as_local %}
+            {{ count_the_days(start_time) }}
+          {% else %}
+            unknown
+          {% endif %}

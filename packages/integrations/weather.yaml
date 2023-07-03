@@ -87,6 +87,21 @@ sensor:
         value_template: "{{ states('sensor.weatherflow_barometric_pressure') | float + 6 }}"
         device_class: pressure
         unit_of_measurement: "hPa"
+      temp_range:
+        friendly_name: Temperaturer
+        value_template: "{{ (this.attributes.min) | default('unknown') }}-{{ (this.attributes.max) | default('unknown') }}"
+        attribute_templates:
+          list: >
+            {% set forecast = state_attr('weather.weatherflow_hourly_based_forecast', 'forecast') %}
+            [
+            {% for hour in forecast[0:24] %}
+              {% if 6 < (hour['datetime'][11:13] | int) < 22 %}
+                {{ hour['temperature']|int }},
+              {% endif %}
+            {% endfor %}
+            ]
+          min: "{{ (this.attributes.list|min) | default('unknown') }}"
+          max: "{{ (this.attributes.list|max) | default('unknown') }}"
 
 automation:
   - alias: lightning_warning

@@ -27,12 +27,13 @@ script:
     sequence:
       - service: homeassistant.update_entity
         data:
-          entity_id: sensor.tts_greeting
+          entity_id: sensor.gpt_briefing
       - service: script.tts_speak
         data:
           cache: false
           media_player_entity_id: "{{ device_entity_id }}"
-          message: "{{ states('sensor.tts_greeting') }}. Klokken er {{ states('sensor.time') }}. {{ states('sensor.dmi_vejr_tts') }} {{ state_attr('sensor.dmi_vejr_tts', 'text') }}"
+          message: >-
+            {{ state_attr('sensor.gpt_briefing', 'message') }}
 
 sensor:
   - platform: min_max
@@ -687,7 +688,6 @@ automation:
         data:
           entity_id: input_select.playlist
           options:
-            - "==SCRIPT==morning_briefing"
             - "{{ states('sensor.podcast_radioavisen') }}"
             - "http://live-icy.gss.dr.dk:8000/A/A05H.mp3"
             - "==END=="
@@ -699,7 +699,7 @@ automation:
       - service: media_player.volume_set
         data:
           entity_id: "media_player.sovevaerelse_mini"
-          volume_level: 0.2
+          volume_level: 0.3
 
       - delay:
           minutes: 5
@@ -746,7 +746,7 @@ automation:
       - service: media_player.volume_set
         data:
           entity_id: "media_player.sovevaerelse_mini"
-          volume_level: 0.25
+          volume_level: 0.4
       - choose:
           - conditions:
               - condition: state
@@ -830,7 +830,7 @@ automation:
       - service: media_player.volume_set
         data:
           entity_id: "media_player.sovevaerelse_mini"
-          volume_level: 0.25
+          volume_level: 0.4
       - delay:
           seconds: 2
       - service: automation.trigger
@@ -902,7 +902,7 @@ automation:
       - service: media_player.volume_set
         data:
           entity_id: "group.minis"
-          volume_level: 0.4
+          volume_level: 0.5
       - delay:
           seconds: 2
       - service: automation.trigger

@@ -2,7 +2,51 @@ input_boolean:
   force_on_call:
 
 template:
+  - sensor:
+      - name: Next work start clock
+        unique_id: next_work_start_clock
+        state: >-
+          {% if has_value('calendar.arbejdskalender_arbejde') and 'start_time' in states.calendar.arbejdskalender_arbejde.attributes %}
+            {{ state_attr('calendar.arbejdskalender_arbejde', 'start_time').split(' ')[1][:-3] }}
+          {% else %}
+            unknown
+          {% endif %}
+      - name: Days to next work
+        state: >-
+          {% from 'easy_time.jinja' import count_the_days %}
+          {% if has_value('calendar.arbejdskalender_arbejde') and 'start_time' in states.calendar.arbejdskalender_arbejde.attributes %}
+            {% set start_time = state_attr('calendar.arbejdskalender_arbejde', 'start_time') | as_datetime | as_local %}
+            {{ count_the_days(start_time) }}
+          {% else %}
+            unavailable
+          {% endif %}
   - binary_sensor:
+      - name: On call today
+        state: >-
+          {% from 'easy_time.jinja' import count_the_days %}
+          {% if has_value('calendar.arbejdskalender_vagt') and 'start_time' in states.calendar.arbejdskalender_vagt.attributes %}
+            {% set start_time = state_attr('calendar.arbejdskalender_vagt', 'start_time') | as_datetime | as_local %}
+            {{ count_the_days(start_time)|int < 1 }}
+          {% else %}
+            false
+          {% endif %}
+      - name: Morning shift
+        state: >-
+          {% if has_value('calendar.arbejdskalender_arbejde') and 'start_time' in states.calendar.arbejdskalender_arbejde.attributes %}
+            {% set start_time = state_attr('calendar.arbejdskalender_arbejde', 'start_time') | as_datetime | as_local %}
+            {{ start_time.hour < 12 }}
+          {% else %}
+            false
+          {% endif %}
+      - name: Evening shift
+        state: >-
+          {% if has_value('calendar.arbejdskalender_arbejde') and 'start_time' in states.calendar.arbejdskalender_arbejde.attributes %}
+            {% set start_time = state_attr('calendar.arbejdskalender_arbejde', 'start_time') | as_datetime | as_local %}
+            {{ start_time.hour > 11 }}
+          {% else %}
+            false
+          {% endif %}
+
       - name: Working From Home
         state: "{{ is_state('calendar.arbejde_arbejder_hjemmefra', 'on') }}"
       - name: On Call
