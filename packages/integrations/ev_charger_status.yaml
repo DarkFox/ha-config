@@ -1,3 +1,32 @@
+# RIP Elli Search&Find API
+template:
+  - sensor:
+      - name: TomTom API Key
+        state: !secret tomtom_api_key
+
+command_line:
+  - sensor:
+      name: RSH P2 Clever Ladere (TomTom)
+      scan_interval: 120
+      command: >-
+        curl -X GET
+        "https://api.tomtom.com/search/2/chargingAvailability.json?chargingAvailability=208009007218354&key={{ states('sensor.tomtom_api_key') }}"
+      value_template: "{{ value_json.connectors[0].availability.current.available }}"
+      json_attributes:
+        - connectors
+
+  - sensor:
+      name: RSH P7 Spirii Ladere (TomTom)
+      scan_interval: 120
+      command: >-
+        curl -X GET
+        "https://api.tomtom.com/search/2/chargingAvailability.json?chargingAvailability=208009007228971&key={{ states('sensor.tomtom_api_key') }}"
+      value_template: "{{ value_json.connectors[0].availability.current.available }}"
+      json_attributes:
+        - connectors
+
+  # Spirii P4: 208009007229648
+
 sensor:
   # RSR
 
