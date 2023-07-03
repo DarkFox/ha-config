@@ -21,6 +21,32 @@ binary_sensor:
           {{ states('sensor.elkedel_forbrug')|float > 0.5 }}
 
 automation:
+  - id: kettle_turn_off_when_not_brewing
+    alias: Sluk elkedel hvis taendt uden at brygge
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: switch.elkedel
+        to: "on"
+        for:
+          seconds: 5
+      - platform: state
+        entity_id: binary_sensor.kettle_brewing
+        to: "off"
+        for:
+          seconds: 5
+    condition:
+      - condition: state
+        entity_id: switch.elkedel
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.kettle_brewing
+        state: "off"
+    action:
+      - service: switch.turn_off
+        data:
+          entity_id: switch.elkedel
+
   # Notifications
   - id: kettle_brewing_notification
     alias: Elkedel Brygger Notifikation
@@ -44,9 +70,6 @@ automation:
       from: "on"
       to: "off"
     action:
-      - service: switch.turn_off
-        data:
-          entity_id: switch.elkedel
       - service: script.notify_everywhere
         data:
           message: Te tid!
