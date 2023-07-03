@@ -66,12 +66,13 @@ binary_sensor:
         delay_on:
           seconds: 30
 
-sensor:
-  - platform: command_line
-    name: Uncommitted Changes
-    command: 'git update-index --refresh >> /dev/null && git diff-index --quiet HEAD -- || echo "on";'
-    scan_interval: 300
+command_line:
+  - sensor:
+      name: Uncommitted Changes
+      command: 'git update-index --refresh >> /dev/null && git diff-index --quiet HEAD -- || echo "on";'
+      scan_interval: 300
 
+sensor:
   - platform: rest
     resource: http://ip.jsontest.com
     name: external_ip
