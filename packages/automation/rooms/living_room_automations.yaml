@@ -50,6 +50,18 @@ script:
           position: 55
 
 automation:
+  - alias: set living room mini dnd
+    id: set_living_room_mini_dnd
+    mode: queued
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.living_room_room_state
+    action:
+      - service: "switch.turn_{{ 'off' if trigger.to_state.state == 'active' else 'on' }}"
+        target:
+          entity_id: switch.stue_mini_do_not_disturb
+
   - id: living_room_curtains_open
     alias: living_room_curtains_open
     trigger:
