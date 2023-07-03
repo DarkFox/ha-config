@@ -1,13 +1,15 @@
 system_health:
 
-sensor:
-  - platform: command_line
-    name: CPU Temperature Raw
-    command: "cat /sys/class/thermal/thermal_zone2/temp"
-    unit_of_measurement: "°C"
-    value_template: "{{ value | float | multiply(0.001) | int }}"
-    scan_interval: 30
+command_line:
+  - sensor:
+      name: CPU Temperature Raw
+      unique_id: cpu_temperature_raw
+      command: "cat /sys/class/thermal/thermal_zone2/temp"
+      unit_of_measurement: "°C"
+      value_template: "{{ value | float | multiply(0.001) | int }}"
+      scan_interval: 30
 
+sensor:
   - platform: statistics
     name: CPU Temperature
     entity_id: sensor.cpu_temperature_raw

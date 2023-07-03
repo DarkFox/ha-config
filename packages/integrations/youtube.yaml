@@ -1,9 +1,10 @@
-sensor:
-  - platform: command_line
-    name: Youtube Watch Later
-    value_template: "{{ as_timestamp(now()) }}"
-    json_attributes:
-      - list
-    command: youtube-dl --restrict-filenames --cookies /share/youtube-cookies.txt -j --flat-playlist "https://www.youtube.com/playlist?list=WL" | jq -r '.id' | sed 's/^/https:\/\/www.youtube.com\/watch?v=/' | jq -R -s -c '{ list:split("\n")}'
-    scan_interval:
-      minutes: 30
+command_line:
+  - sensor:
+      name: Youtube Watch Later
+      unique_id: youtube_watch_later
+      value_template: "{{ as_timestamp(now()) }}"
+      json_attributes:
+        - list
+      command: youtube-dl --restrict-filenames --cookies /share/youtube-cookies.txt -j --flat-playlist "https://www.youtube.com/playlist?list=WL" | jq -r '.id' | sed 's/^/https:\/\/www.youtube.com\/watch?v=/' | jq -R -s -c '{ list:split("\n")}'
+      scan_interval:
+        minutes: 30

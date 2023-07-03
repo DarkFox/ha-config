@@ -13,29 +13,29 @@ sensor:
       - accessToken
       - refreshToken
 
-  - platform: command_line
-    name: puzzel_user
-    scan_interval: 86400
-    command: >
-      curl
-      --request GET "https://agent.puzzel.com/contactcentre5/accessTokenExtendedInformation"
-      --header "Authorization: Bearer {{ state_attr('sensor.puzzel_login', 'accessToken') }}"
-      --header "Content-Type: application/json"
-    value_template: "{{ value_json.result.accessTokenExpiryIso }}"
-    json_attributes:
-      - result
-
-  - platform: command_line
-    name: puzzel_status
-    scan_interval: 30
-    command: >
-      curl
-      --request GET "https://agent.puzzel.com/contactcentre5/{{ state_attr('sensor.puzzel_user', 'result').customerKey }}/users/{{ state_attr('sensor.puzzel_user', 'result').userId }}"
-      --header "Authorization: Bearer {{ state_attr('sensor.puzzel_login', 'accessToken') }}"
-      --header "Content-Type: application/json"
-    value_template: "{{ value_json.result.contactCentreStatus }}"
-    json_attributes:
-      - result
+command_line:
+  - sensor:
+      name: puzzel_user
+      scan_interval: 86400
+      command: >
+        curl
+        --request GET "https://agent.puzzel.com/contactcentre5/accessTokenExtendedInformation"
+        --header "Authorization: Bearer {{ state_attr('sensor.puzzel_login', 'accessToken') }}"
+        --header "Content-Type: application/json"
+      value_template: "{{ value_json.result.accessTokenExpiryIso }}"
+      json_attributes:
+        - result
+  - sensor:
+      name: puzzel_status
+      scan_interval: 30
+      command: >
+        curl
+        --request GET "https://agent.puzzel.com/contactcentre5/{{ state_attr('sensor.puzzel_user', 'result').customerKey }}/users/{{ state_attr('sensor.puzzel_user', 'result').userId }}"
+        --header "Authorization: Bearer {{ state_attr('sensor.puzzel_login', 'accessToken') }}"
+        --header "Content-Type: application/json"
+      value_template: "{{ value_json.result.contactCentreStatus }}"
+      json_attributes:
+        - result
 
 template:
   - sensor:

@@ -1,9 +1,12 @@
-switch:
-  - platform: command_line
-    switches:
-      gang_skaerm:
-        command_on: ssh martin@gang-skaerm.local -i /config/ssh/id_rsa 'DISPLAY=:0 xset dpms force on'
-        command_off: ssh martin@gang-skaerm.local -i /config/ssh/id_rsa 'DISPLAY=:0 xset dpms force off'
+command_line:
+  - switch:
+      name: Gang Skærm
+      unique_id: gang_skaerm_switch
+      icon: mdi:image-frame
+      command_on: ssh -i /config/ssh/id_rsa -o 'StrictHostKeyChecking=no' martin@gang-skaerm.local 'export DISPLAY=:0 && xset dpms force on && xset -q'
+      command_off: ssh -i /config/ssh/id_rsa -o 'StrictHostKeyChecking=no' martin@gang-skaerm.local 'export DISPLAY=:0 && xset dpms force off && xset -q'
+      command_state: ssh -i /config/ssh/id_rsa -o 'StrictHostKeyChecking=no' martin@gang-skaerm.local 'DISPLAY=:0 xset -q'
+      value_template: "{{ 'Monitor is On' in value }}"
 
 script:
   reload_lovelace_on_tablets:
