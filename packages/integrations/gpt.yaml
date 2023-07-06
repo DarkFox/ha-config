@@ -12,27 +12,23 @@ template:
             kommenter på vejret (husk at fortælle mig temperaturen), og giv en kort anbefaling om påklædning.
             Den aktuelle tid er {{ states('sensor.day_name') }} den {{ now().day }}.
             {{ states('sensor.month_name') }}, klokken {{ states('sensor.time') }}.
-            {% if has_value('sensor.days_to_next_work') and states('sensor.days_to_next_work')|int < 2 %}
-              Jeg har {{ 'dagvagt' if is_state('binary_sensor.morning_shift', 'on') }}
-              i {{ 'dag' if is_state('sensor.days_to_next_work', '0') else 'morgen' }},
-              og skal møde på arbejde klokken {{ states('sensor.next_work_start_clock') }}.
-              {% if is_state('sensor.days_to_next_work', '0') and is_state('binary_sensor.on_call_today') %}
+            {% if is_state('sensor.days_to_next_work', '0') %}
+              I dag skal jeg skal møde på arbejde klokken {{ states('sensor.next_work_start_clock') }}.
+              {% if is_state('binary_sensor.on_call_today', 'on') %}
                 {% set end_time = state_attr('calendar.arbejdskalender', 'end_time') | as_datetime %}
-                Efter arbejde har jeg tilkaldevagt indtil
-                {{ weekday(end_time.weekday) }} klokken. {{ end_time | as_timestamp | timestamp_custom("%H:%M")}}
+                Efter arbejde har jeg tilkaldevagt indtil {{ weekday(end_time.weekday) }} klokken. {{ end_time | as_timestamp | timestamp_custom("%H:%M")}}
               {% endif %}
             {% else %}
-              Jeg har fri i dag og i morgen.
+              Jeg har fri i dag.
             {% endif %}
-            {% if has_value('sensor.days_to_next_personal_event') and states('sensor.days_to_next_personal_event')|int < 2 %}
-              Jeg har en aftale i min kalender i {{ 'dag' if is_state('sensor.days_to_next_personal_event', '0') else 'morgen' }},
-              titlen er "{{ state_attr('calendar.personlig', 'message') }}"
-              og det starter klokken {{ states('sensor.next_personal_event_start_clock') }}.
+            {% if is_state('sensor.days_to_next_personal_event', '0') %}
+              Den første aftale i min kalender i dag er "{{ state_attr('calendar.personlig', 'message') }}".
+              Det starter klokken {{ states('sensor.next_personal_event_start_clock') }}.
             {% else %}
-              Jeg har ingen aftaler i kalenderen i dag eller i morgen.
+              Jeg har ingen aftaler i kalenderen i dag
             {% endif %}
-
-            Vejrudsigten siger {{ states('sensor.dmi_vejr') }} Temperaturen bliver {{ states('sensor.temp_range') }} grader celcius.
+            Temperaturen udenfor lige nu er {{ states('sensor.weatherflow_air_temperature') }} °C.
+            Her er dagens vejrudsigt: {{ states('sensor.dmi_vejr') }}.
             {{ state_attr('sensor.dmi_vejr_tts', 'text') }}
 
 command_line:
@@ -51,5 +47,5 @@ command_line:
         --data '{
                   "enable_google_results": false,
                   "enable_memory": false,
-                  "input_text": {{ state_attr('sensor.gpt_prompt', 'prompt') | replace("\n"," ") | tojson }}
+                  "input_text": {{ state_attr('sensor.gpt_prompt', 'prompt') | replace("\n"," ") | regex_replace("  +", ' ') | tojson }}
                 }'
