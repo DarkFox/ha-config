@@ -528,17 +528,15 @@ automation:
             message: HA
             timehour: "{{ wake_up_time.split(':')[0] }}"
             timemin: "{{ wake_up_time.split(':')[1] }}"
-      - service: script.tts_speak
+      - service: script.voice_broadcast
         data:
-          cache: false
-          media_player_entity_id: media_player.sovevaerelse_mini
           message: >-
             Alarm sat til klokken {{ wake_up_time }}.
-            {%- if states('sensor.wake_up_event_source_entity') == 'fallback' -%}
+            {% if states('sensor.wake_up_event_source_entity') == 'fallback' %}
               Der er ingen aftaler i morgen.
-            {%- else -%}
+            {% else %}
               Første aftale i morgen er "{{ states('sensor.wake_up_event_source_message') }}", klokken {{ states('sensor.wake_up_event_source_start_time') }}, fra {{ states('sensor.wake_up_event_source_name') }}.
-            {%- endif -%}
+            {% endif %}
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
