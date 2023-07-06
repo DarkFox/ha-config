@@ -85,6 +85,7 @@ group:
       - script.playlist_play_daily_tech_news_show
       - script.playlist_play_daily_tech_headlines
       - script.playlist_play_radioavisen
+      - script.playlist_play_bbc_news
       - script.playlist_play_briefing
       - script.playlist_play_morning_briefing
       - script.playlist_play_weather_report
@@ -332,6 +333,19 @@ script:
           entity_id: input_select.playlist
           options:
             - "{{ states.sensor.podcast_radioavisen.state }}"
+            - "==END=="
+      - service: input_select.select_first
+        target:
+          entity_id: input_select.playlist
+
+  playlist_play_bbc_news:
+    alias: BBC News
+    sequence:
+      - service: input_select.set_options
+        data:
+          entity_id: input_select.playlist
+          options:
+            - "{{ states.sensor.podcast_bbc_news.state }}"
             - "==END=="
       - service: input_select.select_first
         target:
