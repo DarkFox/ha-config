@@ -5,7 +5,6 @@ group:
       - sensor.podcast_daily_tech_news_show
       - sensor.podcast_daily_tech_headlines
       - sensor.podcast_radioavisen
-      - sensor.podcast_bbc_news
 
 # sensor:
 #   - platform: scrape
@@ -36,8 +35,6 @@ shell_command:
     /bin/bash -c "echo -e '#EXTM3U\n\n#EXTINF:-1,Seneste Daily Tech Headlines\n{{ states('sensor.podcast_daily_tech_headlines') }}' > '/media/Audio/Podcasts/Seneste Daily Tech Headlines.m3u'"
   podcast_radioavisen_m3u: >-
     /bin/bash -c "echo -e '#EXTM3U\n\n#EXTINF:-1,Seneste Radioavisen\n{{ states('sensor.podcast_radioavisen') }}' > '/media/Audio/Podcasts/Seneste Radioavisen.m3u'"
-  podcast_bbc_news_m3u: >-
-    /bin/bash -c "echo -e '#EXTM3U\n\n#EXTINF:-1,Seneste Radioavisen\n{{ states('sensor.podcast_bbc_news') }}' > '/media/Audio/Podcasts/Seneste BBC News.m3u'"
 
 automation:
   - id: update_file_podcast_daily_tech_news_show
@@ -61,10 +58,3 @@ automation:
         entity_id: sensor.podcast_radioavisen
     action:
       - service: shell_command.podcast_radioavisen_m3u
-  - id: update_file_podcast_bbc_news
-    alias: Update File podcast_bbc_news
-    trigger:
-      - platform: state
-        entity_id: sensor.podcast_bbc_news
-    action:
-      - service: shell_command.podcast_bbc_news_m3u

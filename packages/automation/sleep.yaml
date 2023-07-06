@@ -21,20 +21,6 @@ input_select:
       - snoozing
       - waking
 
-script:
-  morning_briefing:
-    alias: Morning Briefing
-    sequence:
-      - service: homeassistant.update_entity
-        data:
-          entity_id: sensor.gpt_briefing
-      - service: script.tts_speak
-        data:
-          cache: false
-          media_player_entity_id: "{{ device_entity_id }}"
-          message: >-
-            {{ state_attr('sensor.gpt_briefing', 'message') }}
-
 sensor:
   - platform: min_max
     name: next_event_for_wakeup_time
@@ -678,21 +664,27 @@ automation:
         data:
           entity_id: "automation.reset_scene_transition_time"
 
-      - service: input_select.select_option
+      # - service: input_select.select_option
+      #   data:
+      #     entity_id: input_select.playlist_player
+      #     option: "media_player.sovevaerelse_mini"
+      # - service: input_select.set_options
+      #   data:
+      #     entity_id: input_select.playlist
+      #     options:
+      #       - "{{ states('sensor.podcast_radioavisen') }}"
+      #       - "{{ states('sensor.podcast_bbc_news') }}"
+      #       - "http://live-icy.gss.dr.dk:8000/A/A05H.mp3"
+      #       - "==END=="
+      # - service: input_select.select_first
+      #   target:
+      #     entity_id: input_select.playlist
+      - service: script.mass_playlist
         data:
-          entity_id: input_select.playlist_player
-          option: "media_player.sovevaerelse_mini"
-      - service: input_select.set_options
-        data:
-          entity_id: input_select.playlist
-          options:
-            - "{{ states('sensor.podcast_radioavisen') }}"
-            - "{{ states('sensor.podcast_bbc_news') }}"
-            - "http://live-icy.gss.dr.dk:8000/A/A05H.mp3"
-            - "==END=="
-      - service: input_select.select_first
-        target:
-          entity_id: input_select.playlist
+          device_entity_id: media_player.sovevaerelse_mini_mass
+          playlist:
+            - database://playlist/29
+            - database://radio/1
       - wait_template: "{{ is_state('media_player.sovevaerelse_mini', 'playing') }}"
         timeout: "00:00:30"
       - service: media_player.volume_set
@@ -809,22 +801,27 @@ automation:
         event_data:
           room: bedroom
           profile: Dimmed
-      - service: input_select.select_option
+      # - service: input_select.select_option
+      #   data:
+      #     entity_id: input_select.playlist_player
+      #     option: "media_player.sovevaerelse_mini"
+      # - service: input_select.set_options
+      #   data:
+      #     entity_id: input_select.playlist
+      #     options:
+      #       - "==SCRIPT==briefing"
+      #       - "{{ states('sensor.podcast_radioavisen') }}"
+      #       - "{{ states('sensor.podcast_bbc_news') }}"
+      #       - "http://live-icy.gss.dr.dk:8000/A/A05H.mp3"
+      #       - "==END=="
+      # - service: input_select.select_first
+      #   target:
+      #     entity_id: input_select.playlist
+      - service: script.mass_briefing_playlist
         data:
-          entity_id: input_select.playlist_player
-          option: "media_player.sovevaerelse_mini"
-      - service: input_select.set_options
-        data:
-          entity_id: input_select.playlist
-          options:
-            - "==SCRIPT==morning_briefing"
-            - "{{ states('sensor.podcast_radioavisen') }}"
-            - "{{ states('sensor.podcast_bbc_news') }}"
-            - "http://live-icy.gss.dr.dk:8000/A/A05H.mp3"
-            - "==END=="
-      - service: input_select.select_first
-        target:
-          entity_id: input_select.playlist
+          device_entity_id: media_player.sovevaerelse_mini_mass
+          playlist:
+            - database://radio/1
       - wait_template: "{{ is_state('media_player.sovevaerelse_mini', 'playing') }}"
         timeout: "00:00:30"
       - service: media_player.volume_set
@@ -870,38 +867,49 @@ automation:
       - service: script.turn_on
         target:
           entity_id: script.sleep_as_android_stop_tracking
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: input_boolean.guests
-                state: "on"
-            sequence:
-              - service: input_select.select_option
-                data:
-                  entity_id: input_select.playlist_player
-                  option: "media_player.badevaerelse_mini"
-        default:
-          - service: input_select.select_option
-            data:
-              entity_id: input_select.playlist_player
-              option: "media_player.minis"
-      - delay:
-          seconds: 1
-      - service: input_select.set_options
-        data:
-          entity_id: input_select.playlist
-          options:
-            - "==SCRIPT==morning_briefing"
-            - "{{ states('sensor.podcast_radioavisen') }}"
-            - "{{ states('sensor.podcast_bbc_news') }}"
-            - "{{ states('sensor.podcast_daily_tech_headlines') }}"
-            - "{{ states('sensor.podcast_daily_tech_news_show') }}"
-            - "http://live-icy.gss.dr.dk:8000/A/A05H.mp3"
-            - "==END=="
-      - service: input_select.select_first
+      # - choose:
+      #     - conditions:
+      #         - condition: state
+      #           entity_id: input_boolean.guests
+      #           state: "on"
+      #       sequence:
+      #         - service: input_select.select_option
+      #           data:
+      #             entity_id: input_select.playlist_player
+      #             option: "media_player.badevaerelse_mini"
+      #   default:
+      #     - service: input_select.select_option
+      #       data:
+      #         entity_id: input_select.playlist_player
+      #         option: "media_player.minis"
+      # - delay:
+      #     seconds: 1
+      # - service: input_select.set_options
+      #   data:
+      #     entity_id: input_select.playlist
+      #     options:
+      #       - "==SCRIPT==briefing"
+      #       - "{{ states('sensor.podcast_radioavisen') }}"
+      #       - "{{ states('sensor.podcast_bbc_news') }}"
+      #       - "{{ states('sensor.podcast_daily_tech_headlines') }}"
+      #       - "{{ states('sensor.podcast_daily_tech_news_show') }}"
+      #       - "http://live-icy.gss.dr.dk:8000/A/A05H.mp3"
+      #       - "==END=="
+      # - service: input_select.select_first
+      #   target:
+      #     entity_id: input_select.playlist
+      - service: media_player.media_stop
         target:
-          entity_id: input_select.playlist
-      - wait_template: "{{ is_state('media_player.minis', 'playing') }}"
+          entity_id: media_player.sovevaerelse_mini_mass
+      - service: script.mass_briefing_playlist
+        data:
+          device_entity_id: "{{ 'media_player.minis_mass' if is_state('input_boolean.guests', 'off') else 'media_player.badevaerelse_mini_mass' }}"
+          playlist:
+            - database://playlist/29
+            - database://playlist/27
+            - database://playlist/26
+            - database://radio/1
+      - wait_template: "{{ is_state('media_player.minis', 'playing') or is_state('media_player.badevaerelse_mini', 'playing') }}"
         timeout: "00:00:30"
       - service: media_player.volume_set
         data:
