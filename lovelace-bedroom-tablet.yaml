@@ -2,9 +2,43 @@ decluttering_templates: !include_dir_named lovelace/decluttering_templates
 
 kiosk_mode:
   non_admin_settings:
-    kiosk: true
-    ignore_entity_settings: true
+    hide_account: true
 
-title: Soveværelse Tablet
+header_cards:
+  replace_tabs: true
+  justify_content: center
+  cards:
+    - type: "custom:config-template-card"
+      variables:
+        - states['sensor.weather_card_name_text'].state
+      entities:
+        - sensor.weather_card_name_text
+      card:
+        type: weather-forecast
+        entity: weather.weatherflow_day_based_forecast
+        show_forecast: false
+        name: "${vars[0]}"
+        style:
+          .: |
+            ha-card {
+              background-color: transparent;
+              box-shadow: none;
+              padding: 0 !important;
+              width: 80vw;
+            }
+            .name, .state {
+              overflow: visible !important;
+            }
+
+    - type: custom:popup-card
+      entity: weather.weatherflow_day_based_forecast
+      title: Vejr
+      size: wide
+      card:
+        type: vertical-stack
+        cards:
+          - !include lovelace/cards/weather/weather.yaml
+          - !include lovelace/cards/weather/temp_graph.yaml
+
 views:
   - !include lovelace/views/bedroom_tablet.yaml
