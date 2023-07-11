@@ -7,26 +7,31 @@ template:
         attributes:
           prompt: >-
             {% from 'easy_time.jinja' import weekday, month %}
-            Funger som en personlig assistent. Du er vittig og taler samtaleagtigt.
+            Funger som en personlig assistent for Martin. Du er vittig og taler samtaleagtigt.
             Hils på mig på en venlig måde, sig hvad klokken er, hvad mine planer er i dag,
             kommenter på vejret (husk at fortælle mig temperaturen), og giv en kort anbefaling om påklædning.
+
+            Hold dig til oplysningerne i denne besked.
+
             Den aktuelle tid er {{ states('sensor.day_name') }} den {{ now().day }}.
             {{ states('sensor.month_name') }}, klokken {{ states('sensor.time') }}.
-            {% if is_state('sensor.days_to_next_work', '0') %}
-              I dag skal jeg skal møde på arbejde klokken {{ states('sensor.next_work_start_clock') }}.
-              {% if is_state('binary_sensor.on_call_today', 'on') %}
-                {% set end_time = state_attr('calendar.arbejdskalender', 'end_time') | as_datetime %}
-                Efter arbejde har jeg tilkaldevagt indtil {{ weekday(end_time.weekday) }} klokken. {{ end_time | as_timestamp | timestamp_custom("%H:%M")}}
-              {% endif %}
+
+            {% if not is_state('sensor.vagtplan_agenda', '0') %}
+            Her er min vagtplan:
+            {{ state_attr('sensor.vagtplan_agenda', 'agenda') }}
             {% else %}
-              Jeg har fri i dag.
+            Jeg har fri i dag
             {% endif %}
-            {% if is_state('sensor.days_to_next_personal_event', '0') %}
-              Den første aftale i min kalender i dag er "{{ state_attr('calendar.personlig', 'message') }}".
-              Det starter klokken {{ states('sensor.next_personal_event_start_clock') }}.
-            {% else %}
-              Jeg har ingen aftaler i kalenderen i dag
+            {% if not is_state('sensor.personlig_agenda', '0') %}
+
+            Her er min personlige kalender:
+            {{ state_attr('sensor.personlig_agenda', 'agenda') }}
             {% endif %}
+            {% if not is_state('sensor.tripit_agenda', '0') %}
+            Mine rejseplaner fra tripit er:
+            {{ state_attr('sensor.tripit_agenda', 'agenda') }}[
+            {% endif %}
+
             Temperaturen udenfor lige nu er {{ states('sensor.weatherflow_air_temperature') }} °C.
             Her er dagens vejrudsigt: {{ states('sensor.dmi_vejr') }}.
             {{ state_attr('sensor.dmi_vejr_tts', 'text') }}
