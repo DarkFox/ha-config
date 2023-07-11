@@ -70,3 +70,142 @@ template:
           {% else %}
             unknown
           {% endif %}
+
+mqtt:
+  sensor:
+    - name: Vagtplan Agenda
+      state_topic: virtual/agenda/vagtplan/state
+      json_attributes_topic: virtual/agenda/vagtplan/events
+    - name: Personlig Agenda
+      state_topic: virtual/agenda/personlig/state
+      json_attributes_topic: virtual/agenda/personlig/events
+    - name: Tripit Agenda
+      state_topic: virtual/agenda/tripit/state
+      json_attributes_topic: virtual/agenda/tripit/events
+
+automation:
+  - id: update_vagtplan_agenda
+    alias: Update Vagtplan Agenda
+    initial_state: true
+    trigger:
+      - platform: time_pattern
+        hours: "*"
+        minutes: "/5"
+        seconds: "0"
+      - platform: state
+        entity_id: binary_sensor.home_assistant_loaded
+        to: "on"
+    action:
+      - service: calendar.list_events
+        data:
+          start_date_time: "{{ now().strftime('%Y-%m-%d') }} 00:00:00"
+          end_date_time: "{{ now().strftime('%Y-%m-%d') }} 23:59:59"
+        target:
+          entity_id: calendar.vagtplan
+        response_variable: agenda
+      - service: mqtt.publish
+        data:
+          payload: "{{ agenda.events|length }}"
+          topic: virtual/agenda/vagtplan/state
+          retain: true
+      - service: mqtt.publish
+        data:
+          topic: virtual/agenda/vagtplan/events
+          retain: true
+          payload: >
+            {% from 'easy_time.jinja' import month %}
+            { "agenda": "
+            {%- set remove_string = ' - Regional sterilcentral RSR it-support (d) (7869)' -%}
+            {% for event in agenda.events|sort(attribute='start') | list -%}
+                {%- set start = (event.start | as_datetime) -%}
+                {%- set end = (event.end | as_datetime) -%}
+                {{ start.strftime('%H:%M') }} - {{ end.strftime('%H:%M') }}:\n
+                {%- if event.summary|regex_match('^(.*)(\d+)-(\d+)R.+') -%}
+                  Arbejde, derefter tilkaldevagt
+                {%- elif event.summary|regex_match('^(.*)(\d+)-(\d+).+') -%}
+                  Arbejde
+                {%- elif event.summary|regex_match('^RW.+') -%}
+                  Tilkaldevagt
+                {%- else -%}
+                  {{ event.summary | replace(remove_string, '')|title }}
+                {%- endif -%}.\n
+            {%- endfor -%}
+            "}
+
+  - id: update_personlig_agenda
+    alias: Update Personlig Agenda
+    initial_state: true
+    trigger:
+      - platform: time_pattern
+        hours: "*"
+        minutes: "/5"
+        seconds: "0"
+      - platform: state
+        entity_id: binary_sensor.home_assistant_loaded
+        to: "on"
+    action:
+      - service: calendar.list_events
+        data:
+          start_date_time: "{{ now().strftime('%Y-%m-%d') }} 00:00:00"
+          end_date_time: "{{ now().strftime('%Y-%m-%d') }} 23:59:59"
+        target:
+          entity_id: calendar.personlig
+        response_variable: agenda
+      - service: mqtt.publish
+        data:
+          payload: "{{ agenda.events|length }}"
+          topic: virtual/agenda/personlig/state
+          retain: true
+      - service: mqtt.publish
+        data:
+          topic: virtual/agenda/personlig/events
+          retain: true
+          payload: >
+            {% from 'easy_time.jinja' import month %}
+            { "agenda": "
+            {%- set remove_string = ' #bil' -%}
+            {% for event in agenda.events|sort(attribute='start') | list -%}
+                {%- set start = (event.start | as_datetime) -%}
+                {%- set end = (event.end | as_datetime) -%}
+                {{ start.strftime('%H:%M') }} - {{ end.strftime('%H:%M') }}: {{ event.summary | replace(remove_string, '')|title }}.\n
+            {%- endfor -%}
+            "}
+
+  - id: update_tripit_agenda
+    alias: Update Tripit Agenda
+    initial_state: true
+    trigger:
+      - platform: time_pattern
+        hours: "*"
+        minutes: "/5"
+        seconds: "0"
+      - platform: state
+        entity_id: binary_sensor.home_assistant_loaded
+        to: "on"
+    action:
+      - service: calendar.list_events
+        data:
+          start_date_time: "{{ now().strftime('%Y-%m-%d') }} 00:00:00"
+          end_date_time: "{{ now().strftime('%Y-%m-%d') }} 23:59:59"
+        target:
+          entity_id: calendar.tripit
+        response_variable: agenda
+      - service: mqtt.publish
+        data:
+          payload: "{{ agenda.events|length }}"
+          topic: virtual/agenda/tripit/state
+          retain: true
+      - service: mqtt.publish
+        data:
+          topic: virtual/agenda/tripit/events
+          retain: true
+          payload: >
+            {% from 'easy_time.jinja' import month %}
+            { "agenda": "
+            {%- set remove_string = ' #bil' -%}
+            {% for event in agenda.events|sort(attribute='start') | list -%}
+                {%- set start = (event.start | as_datetime) -%}
+                {%- set end = (event.end | as_datetime) -%}
+                {{ start.strftime('%H:%M') }} - {{ end.strftime('%H:%M') }}: {{ event.summary | replace(remove_string, '')|title }}.\n
+            {%- endfor -%}
+            "}
