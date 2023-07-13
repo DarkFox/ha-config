@@ -6,6 +6,28 @@ template:
 
 command_line:
   - sensor:
+      name: TomTom Chargers near RSH
+      scan_interval: 86400
+      command: >-
+        curl -X GET
+        "https://api.tomtom.com/search/2/poiSearch/EV%20charger.json?lat=55.7317342&lon=12.4423714&radius=500&view=Unified&key={{ states('sensor.tomtom_api_key') }}"
+      value_template: "{{ value_json.results|map(attribute='dataSources', default={'chargingAvailability':'x'})|rejectattr('chargingAvailability','equalto', 'x')|list|length }}"
+      json_attributes:
+        - summary
+        - results
+
+  - sensor:
+      name: TomTom Chargers near RSR
+      scan_interval: 86400
+      command: >-
+        curl -X GET
+        "https://api.tomtom.com/search/2/poiSearch/EV%20charger.json?lat=55.6970473&lon=12.5664525&radius=250&view=Unified&key={{ states('sensor.tomtom_api_key') }}"
+      value_template: "{{ value_json.results|map(attribute='dataSources', default={'chargingAvailability':'x'})|rejectattr('chargingAvailability','equalto', 'x')|list|length }}"
+      json_attributes:
+        - summary
+        - results
+
+  - sensor:
       name: RSH P2 Clever Ladere (TomTom)
       scan_interval: 120
       command: >-
@@ -21,6 +43,16 @@ command_line:
       command: >-
         curl -X GET
         "https://api.tomtom.com/search/2/chargingAvailability.json?chargingAvailability=208009007228971&key={{ states('sensor.tomtom_api_key') }}"
+      value_template: "{{ value_json.connectors[0].availability.current.available }}"
+      json_attributes:
+        - connectors
+
+  - sensor:
+      name: RSH P9 E.On Ladere (TomTom)
+      scan_interval: 120
+      command: >-
+        curl -X GET
+        "https://api.tomtom.com/search/2/chargingAvailability.json?chargingAvailability=208008000012562&key={{ states('sensor.tomtom_api_key') }}"
       value_template: "{{ value_json.connectors[0].availability.current.available }}"
       json_attributes:
         - connectors
