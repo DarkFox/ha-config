@@ -12,9 +12,9 @@ sensor:
     sensors:
       udenfor:
         friendly_name: Udenfor
-        temperature_sensor: sensor.weatherflow_air_temperature
-        humidity_sensor: sensor.weatherflow_absolute_humidity
-        pressure_sensor: sensor.weatherflow_barometric_pressure
+        temperature_sensor: sensor.temperature
+        humidity_sensor: sensor.humidity
+        pressure_sensor: sensor.pressure
 
   - platform: template
     sensors:
@@ -37,15 +37,18 @@ sensor:
             "windy": "Bl\u00e6sende",
             "windy-variant": "Bl\u00e6sende"
           } %}
-          {{ translations[states('weather.weatherflow_day_based_forecast')] }}
+          {{ translations[states('weather.forecast_home')] }}
 
       weather_card_secondary_info:
-        value_template: "({{ states('sensor.weatherflow_heat_index')|round(1) }}°) {{ state_attr('weather.weatherflow_day_based_forecast', 'forecast')[0].temperature|round }}°/{{ state_attr('weather.weatherflow_day_based_forecast', 'forecast')[0].templow|round }}°"
+        value_template: "{{ state_attr('sensor.temp_range', 'min')|round }}°/{{ state_attr('sensor.temp_range', 'max')|round }}°"
       weather_card_name_text:
-        value_template: "{{ states('sensor.weatherflow_precipitation_today')+' mm. ' if states('sensor.weatherflow_precipitation_today') != 'None' }}{{ states('sensor.wind_text') }}"
+        value_template: "{{ (states('sensor.precip_today')|replace('.',','))+' mm. ' if states('sensor.precip_today') != 'None' and states('sensor.precip_today')|float > 0.0 }}{{ states('sensor.wind_text') }}"
       wind_text:
         friendly_name: Vind
-        value_template: "{{ states('sensor.wind_speed_description') }}{{ ' fra '+states('sensor.weatherflow_wind_cardinal') if states('sensor.weatherflow_beaufort')|int > 1 }}"
+        value_template: >-
+          {{ states('sensor.beaufort_beskrivelse') }}
+          {{ '(' + states('sensor.beaufort_vindstod_beskrivelse') + ')' if states('sensor.beaufort_beskrivelse') != states('sensor.beaufort_vindstod_beskrivelse') }}
+          {{ 'fra '+states('sensor.vindretning') if states('sensor.beaufort')|int > 1 }}
       wind_speed_description:
         value_template: >-
           {% set translations = {
@@ -63,10 +66,10 @@ sensor:
             "violent_storm": "Stærk storm",
             "hurricane": "Orkan"
           } %}
-          {{ translations[states('sensor.weatherflow_beaufort_description')] }}
+          {{ translations[states('sensor.beaufort')] }}
       precip_today:
         friendly_name: Nedbør
-        value_template: "{{ state_attr('weather.weatherflow_day_based_forecast', 'forecast')[0].precipitation }}"
+        value_template: "{{ state_attr('weather.forecast_home', 'forecast')[0].precipitation }}"
         unit_of_measurement: mm
       sun_elevation:
         friendly_name: "Sol Højde"
@@ -81,18 +84,12 @@ sensor:
         friendly_name: "Sol Retning"
         value_template: "{{ state_attr('sun.sun', 'azimuth') }}"
         unit_of_measurement: "°"
-      sealevel_pressure:
-        friendly_name: "Lufttryk (Havniveau)"
-        # Calculated as 0.125 per meter above sea level
-        value_template: "{{ states('sensor.weatherflow_barometric_pressure') | float + 6 }}"
-        device_class: pressure
-        unit_of_measurement: "hPa"
       temp_range:
         friendly_name: Temperaturer
         value_template: "{{ (this.attributes.min) | default('unknown') }}-{{ (this.attributes.max) | default('unknown') }}"
         attribute_templates:
           list: >
-            {% set forecast = state_attr('weather.weatherflow_hourly_based_forecast', 'forecast') %}
+            {% set forecast = state_attr('weather.forecast_home_hourly', 'forecast') %}
             [
             {% for hour in forecast[0:24] %}
               {% if 6 < (hour['datetime'][11:13] | int) < 22 %}
@@ -102,6 +99,103 @@ sensor:
             ]
           min: "{{ (this.attributes.list|min) | default('unknown') }}"
           max: "{{ (this.attributes.list|max) | default('unknown') }}"
+
+template:
+  - sensor:
+      - name: temperature
+        state: "{{ state_attr('weather.forecast_home', 'temperature') }}"
+      - name: humidity
+        state: "{{ state_attr('weather.forecast_home', 'humidity') }}"
+      - name: pressure
+        state: "{{ state_attr('weather.forecast_home', 'pressure') }}"
+      - name: Vindretning
+        state: >-
+          {% set dir = state_attr('weather.forecast_home', 'wind_bearing')|float %}
+          {% if 11.25 < dir <= 33.75 %} NNØ
+          {% elif 33.75 < dir <= 56.25 %} NØ
+          {% elif 56.25 < dir <= 78.75 %} ØNØ
+          {% elif 78.75 < dir <= 101.25 %} Ø
+          {% elif 101.25 < dir <= 123.75 %} ØSØ
+          {% elif 123.75 < dir <= 146.25 %} SØ
+          {% elif 146.25 < dir <= 168.75 %} SSØ
+          {% elif 168.75 < dir <= 191.25 %} S
+          {% elif 191.25 < dir <= 213.75 %} SSV
+          {% elif 213.75 < dir <= 236.25 %} SV
+          {% elif 236.25 < dir <= 258.75 %} VSV
+          {% elif 258.75 < dir <= 281.25 %} V
+          {% elif 281.25 < dir <= 303.75 %} VNV
+          {% elif 303.75 < dir <= 326.25 %} NV
+          {% elif 326.25 < dir <= 348.75 %} NNV
+          {% else %} N
+          {% endif %}
+      - name: Beaufort
+        state: >-
+          {% set ms = (state_attr('weather.forecast_home', 'wind_speed')|float)*0.2777778 %}
+          {% if ms <= 0.2 %}0
+          {% elif 0.2 < ms <= 1.5 %}1
+          {% elif 1.5 < ms <= 3.3 %}2
+          {% elif 3.3 < ms <= 5.4 %}3
+          {% elif 5.4 < ms <= 7.9 %}4
+          {% elif 7.9 < ms <= 10.7 %}5
+          {% elif 10.7 < ms <= 13.8 %}6
+          {% elif 13.8 < ms <= 17.1 %}7
+          {% elif 17.1 < ms <= 20.7 %}8
+          {% elif 20.7 < ms <= 24.4 %}9
+          {% elif 24.4 < ms <= 28.4 %}10
+          {% elif 28.4 < ms <= 32.6 %}11
+          {% elif 32.6 < ms %}12
+          {% endif %}
+      - name: Beaufort Beskrivelse
+        state: >-
+          {% set ms = (state_attr('weather.forecast_home', 'wind_speed')|float)*0.2777778 %}
+          {% if ms <= 0.2 %}Stille
+          {% elif 0.2 < ms <= 1.5 %}Næsten stille
+          {% elif 1.5 < ms <= 3.3 %}Svag vind
+          {% elif 3.3 < ms <= 5.4 %}Let vind
+          {% elif 5.4 < ms <= 7.9 %}Jævn vind
+          {% elif 7.9 < ms <= 10.7 %}Frisk vind
+          {% elif 10.7 < ms <= 13.8 %}Hård vind
+          {% elif 13.8 < ms <= 17.1 %}Stiv kuling
+          {% elif 17.1 < ms <= 20.7 %}Hård kuling
+          {% elif 20.7 < ms <= 24.4 %}Stormende kuling
+          {% elif 24.4 < ms <= 28.4 %}Storm
+          {% elif 28.4 < ms <= 32.6 %}Stærk storm
+          {% elif 32.6 < ms %}Orkan
+          {% endif %}
+      - name: Beaufort Vindstød
+        state: >-
+          {% set ms = (state_attr('weather.forecast_home', 'wind_gust_speed')|float)*0.2777778 %}
+          {% if ms <= 0.2 %}0
+          {% elif 0.2 < ms <= 1.5 %}1
+          {% elif 1.5 < ms <= 3.3 %}2
+          {% elif 3.3 < ms <= 5.4 %}3
+          {% elif 5.4 < ms <= 7.9 %}4
+          {% elif 7.9 < ms <= 10.7 %}5
+          {% elif 10.7 < ms <= 13.8 %}6
+          {% elif 13.8 < ms <= 17.1 %}7
+          {% elif 17.1 < ms <= 20.7 %}8
+          {% elif 20.7 < ms <= 24.4 %}9
+          {% elif 24.4 < ms <= 28.4 %}10
+          {% elif 28.4 < ms <= 32.6 %}11
+          {% elif 32.6 < ms %}12
+          {% endif %}
+      - name: Beaufort Vindstød Beskrivelse
+        state: >-
+          {% set ms = (state_attr('weather.forecast_home', 'wind_gust_speed')|float)*0.2777778 %}
+          {% if ms <= 0.2 %}Stille
+          {% elif 0.2 < ms <= 1.5 %}Næsten stille
+          {% elif 1.5 < ms <= 3.3 %}Svag vind
+          {% elif 3.3 < ms <= 5.4 %}Let vind
+          {% elif 5.4 < ms <= 7.9 %}Jævn vind
+          {% elif 7.9 < ms <= 10.7 %}Frisk vind
+          {% elif 10.7 < ms <= 13.8 %}Hård vind
+          {% elif 13.8 < ms <= 17.1 %}Stiv kuling
+          {% elif 17.1 < ms <= 20.7 %}Hård kuling
+          {% elif 20.7 < ms <= 24.4 %}Stormende kuling
+          {% elif 24.4 < ms <= 28.4 %}Storm
+          {% elif 28.4 < ms <= 32.6 %}Stærk storm
+          {% elif 32.6 < ms %}Orkan
+          {% endif %}
 
 automation:
   - alias: lightning_warning
