@@ -39,7 +39,7 @@ sensor:
           {{ (time-(1.5*60*60)) if as_timestamp(now())+(1*60*60) < time else 4294967295 }}
       next_personal_event:
         value_template: >-
-          {% set time = as_timestamp(states('sensor.time_to_leave_next_scheduled')) if has_value('sensor.time_to_leave_next_scheduled')
+          {% set time = as_timestamp(states('sensor.next_scheduled_leave_at')) if has_value('sensor.next_scheduled_leave_at')
               else as_timestamp(state_attr('calendar.personlig', 'start_time')) if has_value('calendar.personlig')
               else 4294967295 %}
           {{ (time-(2*60*60)) if as_timestamp(now())+(1*60*60) < time else 4294967295 }}
@@ -193,11 +193,11 @@ automation:
       - platform: event
         event_type: sleep_as_android
         event_data:
-          value: sleep_tracking_started
+          event: sleep_tracking_started
       - platform: event
         event_type: sleep_as_android
         event_data:
-          value: sleep_tracking_resumed
+          event: sleep_tracking_resumed
     condition:
       condition: and
       conditions:
@@ -234,7 +234,7 @@ automation:
       platform: event
       event_type: sleep_as_android
       event_data:
-        value: sleep_tracking_stopped
+        event: sleep_tracking_stopped
     condition:
       condition: and
       conditions:
@@ -264,7 +264,7 @@ automation:
       - platform: event
         event_type: sleep_as_android
         event_data:
-          value: sleep_tracking_paused
+          event: sleep_tracking_paused
     condition:
       - condition: state
         entity_id: binary_sensor.martin_presence_delayed
@@ -326,7 +326,7 @@ automation:
       platform: event
       event_type: sleep_as_android
       event_data:
-        value: smart_period
+        event: smart_period
     condition:
       condition: and
       conditions:
@@ -356,7 +356,7 @@ automation:
       platform: event
       event_type: sleep_as_android
       event_data:
-        value: alarm_alert_start
+        event: alarm_alert_start
     condition:
       condition: and
       conditions:
@@ -389,7 +389,7 @@ automation:
       platform: event
       event_type: sleep_as_android
       event_data:
-        value: alarm_snooze_clicked
+        event: alarm_snooze_clicked
     action:
       - condition: state
         entity_id: binary_sensor.martin_presence_delayed
@@ -408,15 +408,15 @@ automation:
       - platform: event
         event_type: sleep_as_android
         event_data:
-          value: alarm_alert_dismiss
+          event: alarm_alert_dismiss
       - platform: event
         event_type: sleep_as_android
         event_data:
-          value: alarm_snooze_cancelled
+          event: alarm_snooze_cancelled
       - platform: event
         event_type: sleep_as_android
         event_data:
-          value: sleep_tracking_stopped
+          event: sleep_tracking_stopped
     condition:
       condition: or
       conditions:
@@ -947,3 +947,42 @@ automation:
       - service: automation.trigger
         data:
           entity_id: "automation.reset_scene_transition_time"
+
+  ########################
+  # Sleep Event Triggers #
+  ########################
+
+  - id: pause_tablet_on_sleep
+    alias: Pause Tablet On Sleep
+    trigger:
+      - platform: event
+        event_type: sleep_as_android
+        event_data:
+          event: light_sleep
+      - platform: event
+        event_type: sleep_as_android
+        event_data:
+          event: deep_sleep
+      - platform: event
+        event_type: sleep_as_android
+        event_data:
+          event: rem
+    condition:
+      - alias: "Media is playing on tablet"
+        condition: state
+        entity_id: binary_sensor.foxtablet_music_active
+        state: "on"
+    action:
+      - service: notify.mobile_app_foxtablet
+        data:
+          message: "command_media"
+          data:
+            media_command: "pause"
+            media_package_name: >-
+              {% set found = false %}
+              {% for key, value in states.sensor.foxtablet_media_session.attributes.items() %}
+                  {% if not found and key.startswith('playback_state_') and value == 'Playing' %}
+                      {{ key | replace('playback_state_', '') }}
+                      {% set found = true %}
+                  {% endif %}
+              {% endfor %}

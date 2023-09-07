@@ -104,27 +104,78 @@ automation:
   # SLEEP AS ANDROID EVENTS #
   ###########################
 
+  # https://docs.sleep.urbandroid.org/services/automation.html#events
+
   ## Possible Sleep as Android events
-  # - sleep_tracking_started
-  # - sleep_tracking_stopped
-  # - sleep_tracking_paused
-  # - sleep_tracking_resumed
-  # - alarm_snooze_clicked
-  # - alarm_snooze_cancelled
-  #     Only from Tasker! - When cancelled from snooze notification
-  # - time_to_bed_alarm_alert
-  #     fires when you get a bedtime notification
-  # - alarm_alert_start
-  # - alarm_alert_dismiss
-  #     fires when you dismiss alarm (after you solve CAPTCHA, if it’s set)
-  # - rem
-  #     fires when we estimate the start of REM phase
-  # - antisnoring
-  #     fires when we detect snoring
-  # - smart_period
-  #     fires 45 minutes before the smart wakeup period starts
-  # - lullaby
-  #     Only from Tasker!
+  # sleep_tracking_started: …​
+  # sleep_tracking_stopped: …​
+  # sleep_tracking_paused: …​
+  # sleep_tracking_resumed: …​
+  # alarm_snooze_clicked: You have snoozed a ringing alarm.
+  # We are sending the following values:
+
+  #     value1: UNIX timestamp of the alarm start time, example: "1582719660934"
+
+  #     value2: alarm label, example: "label" (Any tabs and newline characters in the label will be removed before sending)
+
+  # alarm_snooze_canceled: You have a canceled an alarm that is currently snoozed.
+  # We are sending the following values:
+
+  #     value1: UNIX timestamp of the alarm start time, example: "1582719660934"
+
+  #     value2: alarm label, example: "label" (Any tabs and newline characters in the label will be removed before sending)
+
+  # time_to_bed_alarm_alert: Fires when you get a bedtime notification.
+  # We are sending the following values:
+
+  #     value1: UNIX timestamp of the alarm start time (the alarm which triggered the bedtime notification, based on your ideal daily sleep target), example: "1582719660934"
+
+  # alarm_alert_start: Fires when alarm starts.
+  # We are sending the following values:
+
+  #     value1: UNIX timestamp of the alarm start time, example: "1582719660934"
+
+  #     value2: alarm label, example: "label" (Any tabs and newline characters in the label will be removed before sending)
+
+  # alarm_alert_dismiss: Fires when you dismiss alarm (after you solve CAPTCHA, if it’s set).
+  # We are sending the following values:
+
+  #     value1: UNIX timestamp of the alarm start time, example: "1582719660934"
+
+  #     value2: alarm label, example: "label" (Any tabs and newline characters in the label will be removed before sending)
+
+  # alarm_skip_next: Fires when you tap dismiss an alarm from notification before it actually rings.
+  # We are sending the following values:
+
+  #     value1: UNIX timestamp of the alarm start time, example: "1582719660934"
+
+  #     value2: alarm label, example: "label" (Any tabs and newline characters in the label will be removed before sending)
+
+  # show_skip_next_alarm: Fires exactly 1 hour before the next alarm is triggered.
+
+  #     value1: UNIX timestamp of the alarm start time, example: "1582719660934"
+
+  # rem: Fires when we estimate the start of REM phase.
+  # smart_period: Fires at the start of the smart period.
+  # before_smart_period: Fires 45 minutes before the start of smart period.
+  # We are sending the following value:
+
+  #     value: alarm label, example: "label" (Any tabs and newline characters in the label will be removed before sending)
+
+  # lullaby_start: Fires when lullaby starts playing.
+  # lullaby_stop: Fires when lullaby is stopped (either manually or automatically).
+  # lullaby_volume_down: Fires when we detect you fell asleep and starting lowering the volume of lullabies.
+  # deep_sleep: Fires when we detect you going into deep sleep phase. Warning: This may result in lots of events during the night and may not exactly fit the resulting sleep graph as we can only detect phases reliably from whole-night data.
+  # light_sleep: Fires when we detect you going into light sleep phase. Warning: This may result in lots of events during the night and may not exactly fit the resulting sleep graph as we can only detect phases reliably from whole-night data.
+  # awake: Fires when we detect you woke up.
+  # not_awake: Fires when we detect you fell asleep.
+  # apnea_alarm: Fires when we detect a significant dip in your oxygen levels.
+  # antisnoring: Fires when antisnoring is triggered.
+  # sound_event_snore: Fires when we detect snoring.
+  # sound_event_talk: Fires when we detect talking.
+  # sound_event_cough: Fires when we detect coughing.
+  # sound_event_baby: Fires when we detect baby cry.
+  # sound_event_laugh: Fires when we detect laughter.
 
   # - alias: Sleep as Android event
   #   initial_state: True
@@ -150,10 +201,13 @@ automation:
     action:
       - event: sleep_as_android
         event_data:
-          value: "{{ trigger.payload_json.event }}"
+          event: "{{ trigger.payload_json.event }}"
+          value1: "{{ trigger.payload_json.value1 if 'value1' in trigger.payload_json }}"
+          value2: "{{ trigger.payload_json.value2 if 'value2' in trigger.payload_json }}"
       # - service: script.debug_notification
       #   data:
-      #     message: "{{ trigger.payload_json.event }}"
+      #     message: >-
+      #       payload: "{{ trigger.payload_json }}"
       #     title: "Sleep As Android MQTT Event"
 
   - alias: sleep_as_android_state_bedtime
@@ -162,7 +216,7 @@ automation:
       - platform: event
         event_type: sleep_as_android
         event_data:
-          value: time_to_bed_alarm_alert
+          event: time_to_bed_alarm_alert
     condition:
       condition: and
       conditions:
@@ -184,11 +238,11 @@ automation:
       - platform: event
         event_type: sleep_as_android
         event_data:
-          value: sleep_tracking_started
+          event: sleep_tracking_started
       - platform: event
         event_type: sleep_as_android
         event_data:
-          value: sleep_tracking_resumed
+          event: sleep_tracking_resumed
     condition:
       - condition: or
         conditions:
@@ -210,7 +264,7 @@ automation:
       platform: event
       event_type: sleep_as_android
       event_data:
-        value: sleep_tracking_stopped
+        event: sleep_tracking_stopped
     condition:
       condition: and
       conditions:
@@ -237,7 +291,7 @@ automation:
       - platform: event
         event_type: sleep_as_android
         event_data:
-          value: sleep_tracking_paused
+          event: sleep_tracking_paused
     condition:
       - condition: state
         entity_id: input_select.sleep_as_android_state
@@ -254,7 +308,7 @@ automation:
       platform: event
       event_type: sleep_as_android
       event_data:
-        value: smart_period
+        event: smart_period
     condition:
       - condition: or
         conditions:
@@ -276,7 +330,7 @@ automation:
       platform: event
       event_type: sleep_as_android
       event_data:
-        value: alarm_alert_start
+        event: alarm_alert_start
     condition:
       - condition: or
         conditions:
@@ -301,7 +355,7 @@ automation:
       platform: event
       event_type: sleep_as_android
       event_data:
-        value: alarm_snooze_clicked
+        event: alarm_snooze_clicked
     condition:
       - condition: state
         entity_id: input_select.sleep_as_android_state
@@ -318,15 +372,15 @@ automation:
       - platform: event
         event_type: sleep_as_android
         event_data:
-          value: alarm_alert_dismiss
+          event: alarm_alert_dismiss
       - platform: event
         event_type: sleep_as_android
         event_data:
-          value: alarm_snooze_cancelled
+          event: alarm_snooze_cancelled
       - platform: event
         event_type: sleep_as_android
         event_data:
-          value: sleep_tracking_stopped
+          event: sleep_tracking_stopped
     condition:
       condition: or
       conditions:
@@ -352,7 +406,7 @@ automation:
       - platform: event
         event_type: sleep_as_android
         event_data:
-          value: alarm_snooze_clicked
+          event: alarm_snooze_clicked
     action:
       - service: counter.reset
         data:
@@ -364,7 +418,7 @@ automation:
       - platform: event
         event_type: sleep_as_android
         event_data:
-          value: sleep_tracking_started
+          event: sleep_tracking_started
     action:
       - service: counter.increment
         data:
