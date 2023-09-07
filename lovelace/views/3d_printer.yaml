@@ -156,31 +156,19 @@ cards:
             show_icon: true
             show_name: true
             size: 25px
-  - type: vertical-stack
+  - type: horizontal-stack
     cards:
-      - type: horizontal-stack
+      - type: vertical-stack
         cards:
           - type: custom:button-card
             tap_action:
               action: none
             hold_action:
-              action: toggle
+              action: turn_on
             name: Pause Print
-            entity: switch.octoprint_pause_print
+            entity: button.octoprint_pause_job
             size: 60px
-          - type: custom:button-card
-            tap_action:
-              action: none
-            hold_action:
-              action: toggle
-            name: Emergency Stop
-            entity: switch.octoprint_emergency_stop
-            styles:
-              icon:
-                - color: "#D00"
-            size: 60px
-      - type: horizontal-stack
-        cards:
+
           - type: custom:button-card
             tap_action:
               action: none
@@ -188,6 +176,42 @@ cards:
               action: toggle
             entity: switch.3d_printer_afbryder
             size: 60px
+
+          - type: custom:mushroom-light-card
+            entity: light.3d_printer_enclosure_light
+            fill_container: true
+            name: Printer Lys
+            layout: horizontal
+            show_brightness_control: true
+            secondary_info: none
+            primary_info: none
+            icon_type: icon
+            icon: mdi:printer-3d
+            collapsible_controls: true
+
+          - type: custom:mushroom-fan-card
+            entity: fan.3d_printer_enclosure_ind
+            fill_container: true
+            show_percentage_control: true
+            primary_info: none
+            secondary_info: none
+            layout: horizontal
+            icon: mdi:fan-chevron-up
+
+      - type: vertical-stack
+        cards:
+          - type: custom:button-card
+            tap_action:
+              action: none
+            hold_action:
+              action: turn_on
+            name: Emergency Stop
+            entity: button.octoprint_emergency_stop
+            styles:
+              icon:
+                - color: "#D00"
+            size: 60px
+
           - type: custom:button-card
             tap_action:
               action: none
@@ -196,14 +220,32 @@ cards:
             name: Connect to Printer
             entity: switch.octoprint_connect_to_printer
             size: 60px
-      - type: entities
-        entities:
-          - entity: fan.3d_printer_enclosure_ind
-            name: Ventilation Ind
-            type: custom:slider-entity-row
-          - entity: fan.3d_printer_enclosure_ud
-            name: Ventilation Ud
-            type: custom:slider-entity-row
-          - entity: light.3d_printer_enclosure_light
-            name: Lys
-            type: custom:slider-entity-row
+
+          - type: custom:mushroom-light-card
+            entity: switch.3d_printer_filament_torch
+            fill_container: true
+            name: Printer Lys
+            layout: horizontal
+            show_brightness_control: false
+            secondary_info: none
+            primary_info: none
+            icon_type: icon
+            icon: mdi:movie-roll
+            collapsible_controls: false
+
+          - type: custom:mushroom-fan-card
+            entity: fan.3d_printer_enclosure_ud
+            fill_container: true
+            show_percentage_control: true
+            primary_info: none
+            secondary_info: none
+            layout: horizontal
+            icon: mdi:fan-chevron-down
+
+      - type: picture-entity
+        entity: camera.3d_printer_filament
+        camera_image: camera.3d_printer_filament
+        camera_view: live
+        aspect_ratio: "9:16"
+        show_name: false
+        show_state: false

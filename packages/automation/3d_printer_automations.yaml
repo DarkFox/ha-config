@@ -69,29 +69,45 @@ automation:
     alias: 3D Print status notification
     trigger:
       - platform: state
-        entity_id: binary_sensor.3d_printer_running
-        to: "on"
+        entity_id: sensor.octoprint_current_state
+        to: "Printing"
       - platform: time_pattern
         minutes: "/5"
         seconds: "0"
     condition:
       - alias: "Print active"
         condition: state
-        entity_id: binary_sensor.3d_printer_running
-        state: "on"
-      - condition: not
-        conditions:
-          - alias: "Print active"
-            condition: state
-            entity_id: sensor.octoprint_print_progress
-            state: "unavailable"
+        entity_id: sensor.octoprint_current_state
+        state: "Printing"
     action:
       - service: notify.mobile_app_darkphone
         data:
-          title: "3D Print Progress {{ states('sensor.octoprint_print_progress') }}%"
-          message: "Time left: {{ states('sensor.octoprint_print_time_left') }}"
+          title: "3D Print Progress {{ states('sensor.octoprint_print_progress') }}% - {{ states('sensor.octoprint_current_state') }}"
+          message: >-
+            {% set seconds = states('sensor.octoprint_print_time_left') | int %}
+            {% set hours = seconds // 3600 %}
+            {% set minutes = (seconds % 3600) // 60 %}
+            {% set remaining_seconds = seconds % 60 %}
+            Time left: {{ '%02d:%02d:%02d' | format(hours, minutes, remaining_seconds) }}
           data:
             tag: "3d_print_status_notification"
             channel: "3D Printer Status"
             importance: low
             image: /api/camera_proxy/camera.3d_printer_head
+
+  - id: 3d_print_stopped_notification
+    alias: 3D Print stopped notification
+    trigger:
+      - platform: state
+        entity_id: sensor.octoprint_current_state
+        from: "Printing"
+    action:
+      - service: notify.mobile_app_darkphone
+        data:
+          title: "3D Print Finished - {{ states('sensor.octoprint_current_state') }}"
+          message: ""
+          data:
+            tag: "3d_print_status_notification"
+            channel: "3D Printer Status"
+            importance: low
+            image: /api/camera_proxy/camera.3d_printer
