@@ -1,0 +1,90 @@
+automation:
+  - id: proxy_miband_sensor
+    alias: Proxy Mi Band Sensor
+    initial_state: true
+    mode: parallel
+    max: 20
+    trigger:
+      - platform: state
+        entity_id:
+          - sensor.raw_miband_connected
+          - sensor.raw_miband_battery
+          - sensor.raw_miband_steps
+          - sensor.raw_miband_heartrate
+          - sensor.raw_miband_sleepduration
+          - sensor.raw_miband_spo2
+          - sensor.raw_miband_stress
+          - sensor.raw_miband_as
+          - sensor.raw_miband_trigger_1
+          - sensor.raw_miband_trigger_2
+          - sensor.raw_miband_trigger_3
+          - sensor.raw_miband_trigger_4
+          - sensor.raw_miband_trigger_5
+          - sensor.raw_miband_trigger_6
+          - sensor.raw_miband_trigger_7
+          - sensor.raw_miband_trigger_8
+          - sensor.raw_miband_trigger_9
+    action:
+      - alias: "Send To MQTT"
+        service: mqtt.publish
+        data:
+          retain: false
+          topic: "miband/state/{{ trigger.entity_id.split('.')[1]|replace('raw_','') }}"
+          payload: "{{ trigger.to_state.state }}"
+
+mqtt:
+  binary_sensor:
+    - name: Mi Band Connected
+      device_class: connectivity
+      state_topic: "miband/state/miband_connected"
+      payload_on: "1"
+      payload_off: "0"
+  sensor:
+    - name: Mi Band Battery
+      device_class: battery
+      unit_of_measurement: "%"
+      state_topic: "miband/state/miband_battery"
+    - name: Mi Band Steps
+      state_topic: "miband/state/miband_steps"
+      unit_of_measurement: steps
+    - name: Mi Band Heart Rate
+      unit_of_measurement: "bpm"
+      state_topic: "miband/state/miband_heartrate"
+    - name: Mi Band Sleep Duration
+      state_topic: "miband/state/miband_sleepduration"
+      unit_of_measurement: m
+      device_class: duration
+    - name: Mi Band SpO2
+      state_topic: "miband/state/miband_spo2"
+      unit_of_measurement: "%"
+    - name: Mi Band Stress
+      state_topic: "miband/state/miband_stress"
+    - name: Mi Band Activity Score
+      state_topic: "miband/state/miband_as"
+    - name: Mi Band Not Wearing
+      device_class: timestamp
+      state_topic: "miband/state/miband_trigger_1"
+    - name: Mi Band Fell Asleep
+      device_class: timestamp
+      state_topic: "miband/state/miband_trigger_2"
+    - name: Mi Band Woke Up
+      device_class: timestamp
+      state_topic: "miband/state/miband_trigger_3"
+    - name: Mi Band Steps Goal
+      device_class: timestamp
+      state_topic: "miband/state/miband_trigger_4"
+    - name: Mi Band Early Bird Alarm
+      device_class: timestamp
+      state_topic: "miband/state/miband_trigger_5"
+    - name: Mi Band Band Connected
+      device_class: timestamp
+      state_topic: "miband/state/miband_trigger_6"
+    - name: Mi Band Band Disconnected
+      device_class: timestamp
+      state_topic: "miband/state/miband_trigger_7"
+    - name: Mi Band Workout Started From Notify App
+      device_class: timestamp
+      state_topic: "miband/state/miband_trigger_8"
+    - name: Mi Band Workout Stopped On Notify App
+      device_class: timestamp
+      state_topic: "miband/state/miband_trigger_9"
