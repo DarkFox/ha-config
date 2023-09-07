@@ -6,29 +6,49 @@ kiosk_mode:
 
 header_cards:
   replace_tabs: true
-  justify_content: center
+  justify_content: right
   cards:
-    - type: "custom:config-template-card"
-      variables:
-        - states['sensor.weather_card_name_text'].state
-      entities:
-        - sensor.weather_card_name_text
-      card:
-        type: weather-forecast
-        entity: weather.forecast_home
-        show_forecast: false
-        name: "${vars[0]}"
-        style:
-          .: |
-            ha-card {
-              background-color: transparent;
-              box-shadow: none;
-              padding: 0 !important;
-              width: 80vw;
-            }
-            .name, .state {
-              overflow: visible !important;
-            }
+    - type: custom:simple-weather-card
+      entity: weather.forecast_home
+      name: " "
+      primary_info:
+        - extrema
+        - wind_speed
+      secondary_info:
+        - humidity
+        - precipitation
+      style:
+        .: |
+          ha-card {
+            background-color: transparent;
+            box-shadow: none;
+            padding: 0 !important;
+            width: 80vw;
+          }
+          .name, .state {
+            overflow: visible !important;
+          }
+    # - type: "custom:config-template-card"
+    #   variables:
+    #     - states['sensor.weather_card_name_text'].state
+    #   entities:
+    #     - sensor.weather_card_name_text
+    #   card:
+    #     type: weather-forecast
+    #     entity: weather.forecast_home
+    #     show_forecast: false
+    #     name: "${vars[0]}"
+    #     style:
+    #       .: |
+    #         ha-card {
+    #           background-color: transparent;
+    #           box-shadow: none;
+    #           padding: 0 !important;
+    #           width: 80vw;
+    #         }
+    #         .name, .state {
+    #           overflow: visible !important;
+    #         }
 
     - type: custom:popup-card
       entity: weather.forecast_home
