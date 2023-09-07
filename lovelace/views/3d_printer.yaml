@@ -1,251 +1,257 @@
 title: Home
 icon: mdi:printer-3d
-panel: false
-type: custom:grid-layout
-layout:
-  grid-template-columns: 50% 50%
-  grid-template-rows: auto
-  mediaquery:
-    "(max-width: 800px)":
-      grid-template-columns: 100%
+panel: true
 path: home
 cards:
-  - type: picture-entity
-    entity: camera.3d_printer
-    camera_image: camera.3d_printer
-    camera_view: live
-    aspect_ratio: "4:3"
-    show_name: false
-    show_state: false
-  - type: picture-entity
-    entity: camera.3d_printer_head
-    camera_image: camera.3d_printer_head
-    camera_view: live
-    aspect_ratio: "4:3"
-    show_name: false
-    show_state: false
-  - type: horizontal-stack
+  - type: vertical-stack
     cards:
-      - type: vertical-stack
+      - type: custom:layout-card
+        layout_type: custom:grid-layout
+        layout:
+          grid-template-columns: 50% 50%
+          grid-template-rows: auto
+          mediaquery:
+            "(max-width: 800px)":
+              grid-template-columns: 100%
         cards:
-          - type: custom:button-card
-            tap_action:
-              action: more-info
-            name: |
-              [[[
-                return states['sensor.octoprint_print_file'].state
-              ]]]
-            entity: sensor.octoprint_print_progress
-            layout: icon_name_state2nd
-            show_state: true
-            show_icon: true
-            show_name: true
-            size: 25px
-          - type: custom:button-card
-            tap_action:
-              action: more-info
-            entity: sensor.octoprint_print_time
-            name: Tid Brugt
-            layout: icon_name_state2nd
-            show_state: true
-            show_icon: true
-            show_name: true
-            size: 25px
-          - type: custom:button-card
-            tap_action:
-              action: more-info
-            entity: sensor.octoprint_print_time_left
-            name: Tid Tilbage
-            layout: icon_name_state2nd
-            show_state: true
-            show_icon: true
-            show_name: true
-            size: 25px
-          - type: custom:button-card
-            tap_action:
-              action: more-info
-            entity: sensor.3d_printer_finish_time
-            name: Sluttid
-            layout: icon_name_state2nd
-            show_state: true
-            show_icon: true
-            show_name: true
-            size: 25px
-          - type: custom:button-card
-            tap_action:
-              action: more-info
-            entity: sensor.octoprint_current_z
-            name: Z-Højde
-            layout: icon_name_state2nd
-            show_state: true
-            show_icon: true
-            show_name: true
-            size: 25px
-      - type: vertical-stack
+          - type: custom:webrtc-camera
+            entity: camera.3d_printer
+            style: ".mode {display: none}"
+
+          - type: custom:webrtc-camera
+            entity: camera.3d_printer_head
+            style: ".mode {display: none}"
+
+      - type: custom:layout-card
+        layout_type: custom:grid-layout
+        layout:
+          grid-template-columns: 80% 20%
+          grid-template-rows: auto
+          mediaquery:
+            "(max-width: 800px)":
+              grid-template-columns: 100%
         cards:
-          - type: custom:button-card
-            entity: sensor.octoprint_print_status
-            name: |
-              [[[
-                return states['sensor.3d_printer_afbryder_forbrug'].state +
-                ' W'
-              ]]]
-            icon: mdi:printer-3d
-            layout: icon_name_state2nd
-            show_state: true
-            show_name: true
-            size: 25px
-            tap_action:
-              action: more-info
-              entity: sensor.3d_printer_afbryder_forbrug
-          - type: custom:button-card
-            entity: sensor.octoprint_tool_0_target
-            name: |
-              [[[
-                return states['sensor.octoprint_tool_0_temperature'].state +
-                ' °C /'
-              ]]]
-            icon: mdi:printer-3d-nozzle
-            layout: icon_name_state2nd
-            show_state: true
-            show_name: true
-            show_label: true
-            size: 25px
-            tap_action:
-              action: more-info
-              entity: sensor.octoprint_tool_0_temperature
-          - type: custom:button-card
-            entity: sensor.octoprint_bed_target
-            name: |
-              [[[
-                return states['sensor.octoprint_bed_temperature'].state +
-                ' °C /'
-              ]]]
-            icon: mdi:radiator
-            layout: icon_name_state2nd
-            show_state: true
-            show_name: true
-            show_label: true
-            size: 25px
-            tap_action:
-              action: more-info
-              entity: sensor.octoprint_bed_temperature
-          - type: custom:button-card
-            entity: sensor.3d_printer_humidity
-            name: |
-              [[[
-                return states['sensor.3d_printer_temperature'].state +
-                ' °C'
-              ]]]
-            icon: mdi:cube-scan
-            layout: icon_name_state2nd
-            show_state: true
-            show_name: true
-            show_label: true
-            size: 25px
-            tap_action:
-              action: more-info
-              entity: sensor.3d_printer_temperature
-          - type: custom:button-card
-            tap_action:
-              action: more-info
-            entity: sensor.octoprint_soc_temperature
-            name: SoC
-            layout: icon_name_state2nd
-            show_state: true
-            show_icon: true
-            show_name: true
-            size: 25px
-  - type: horizontal-stack
-    cards:
-      - type: vertical-stack
-        cards:
-          - type: custom:button-card
-            tap_action:
-              action: none
-            hold_action:
-              action: turn_on
-            name: Pause Print
-            entity: button.octoprint_pause_job
-            size: 60px
+          - type: vertical-stack
+            cards:
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    tap_action:
+                      action: more-info
+                    name: |
+                      [[[
+                        return states['sensor.octoprint_print_file'].state
+                      ]]]
+                    entity: sensor.octoprint_print_progress
+                    layout: icon_name_state2nd
+                    show_state: true
+                    show_icon: true
+                    show_name: true
+                    size: 25px
+                  - type: custom:button-card
+                    entity: sensor.octoprint_print_status
+                    name: |
+                      [[[
+                        return states['sensor.3d_printer_afbryder_forbrug'].state +
+                        ' W'
+                      ]]]
+                    icon: mdi:printer-3d
+                    layout: icon_name_state2nd
+                    show_state: true
+                    show_name: true
+                    size: 25px
+                    tap_action:
+                      action: more-info
+                      entity: sensor.3d_printer_afbryder_forbrug
+                  - type: custom:button-card
+                    tap_action:
+                      action: more-info
+                    entity: sensor.octoprint_current_z
+                    name: Z-Højde
+                    layout: icon_name_state2nd
+                    show_state: true
+                    show_icon: true
+                    show_name: true
+                    size: 25px
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    tap_action:
+                      action: more-info
+                    entity: sensor.octoprint_print_time
+                    name: Tid Brugt
+                    layout: icon_name_state2nd
+                    show_state: true
+                    show_icon: true
+                    show_name: true
+                    size: 25px
+                  - type: custom:button-card
+                    tap_action:
+                      action: more-info
+                    entity: sensor.octoprint_print_time_left
+                    name: Tid Tilbage
+                    layout: icon_name_state2nd
+                    show_state: true
+                    show_icon: true
+                    show_name: true
+                    size: 25px
+                  - type: custom:button-card
+                    tap_action:
+                      action: more-info
+                    entity: sensor.3d_printer_finish_time
+                    name: Sluttid
+                    layout: icon_name_state2nd
+                    show_state: true
+                    show_icon: true
+                    show_name: true
+                    size: 25px
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    entity: sensor.octoprint_tool_0_target
+                    name: |
+                      [[[
+                        return states['sensor.octoprint_tool_0_temperature'].state +
+                        ' °C /'
+                      ]]]
+                    icon: mdi:printer-3d-nozzle
+                    layout: icon_name_state2nd
+                    show_state: true
+                    show_name: true
+                    show_label: true
+                    size: 25px
+                    tap_action:
+                      action: more-info
+                      entity: sensor.octoprint_tool_0_temperature
+                  - type: custom:button-card
+                    entity: sensor.octoprint_bed_target
+                    name: |
+                      [[[
+                        return states['sensor.octoprint_bed_temperature'].state +
+                        ' °C /'
+                      ]]]
+                    icon: mdi:radiator
+                    layout: icon_name_state2nd
+                    show_state: true
+                    show_name: true
+                    show_label: true
+                    size: 25px
+                    tap_action:
+                      action: more-info
+                      entity: sensor.octoprint_bed_temperature
+                  - type: custom:button-card
+                    entity: sensor.3d_printer_humidity
+                    name: |
+                      [[[
+                        return states['sensor.3d_printer_temperature'].state +
+                        ' °C'
+                      ]]]
+                    icon: mdi:cube-scan
+                    layout: icon_name_state2nd
+                    show_state: true
+                    show_name: true
+                    show_label: true
+                    size: 25px
+                    tap_action:
+                      action: more-info
+                      entity: sensor.3d_printer_temperature
+                  - type: custom:button-card
+                    tap_action:
+                      action: more-info
+                    entity: sensor.octoprint_soc_temperature
+                    name: SoC
+                    layout: icon_name_state2nd
+                    show_state: true
+                    show_icon: true
+                    show_name: true
+                    size: 25px
 
-          - type: custom:button-card
-            tap_action:
-              action: none
-            hold_action:
-              action: toggle
-            entity: switch.3d_printer_afbryder
-            size: 60px
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    tap_action:
+                      action: none
+                    hold_action:
+                      action: turn_on
+                    name: Pause Print
+                    entity: button.octoprint_pause_job
+                    size: 60px
 
-          - type: custom:mushroom-light-card
-            entity: light.3d_printer_enclosure_light
-            fill_container: true
-            name: Printer Lys
-            layout: horizontal
-            show_brightness_control: true
-            secondary_info: none
-            primary_info: none
-            icon_type: icon
-            icon: mdi:printer-3d
-            collapsible_controls: true
+                  - type: custom:button-card
+                    tap_action:
+                      action: none
+                    hold_action:
+                      action: turn_on
+                    name: Emergency Stop
+                    entity: button.octoprint_emergency_stop
+                    styles:
+                      icon:
+                        - color: "#D00"
+                    size: 60px
 
-          - type: custom:mushroom-fan-card
-            entity: fan.3d_printer_enclosure_ind
-            fill_container: true
-            show_percentage_control: true
-            primary_info: none
-            secondary_info: none
-            layout: horizontal
-            icon: mdi:fan-chevron-up
+                  - type: custom:button-card
+                    tap_action:
+                      action: none
+                    hold_action:
+                      action: toggle
+                    entity: switch.3d_printer_afbryder
+                    size: 60px
 
-      - type: vertical-stack
-        cards:
-          - type: custom:button-card
-            tap_action:
-              action: none
-            hold_action:
-              action: turn_on
-            name: Emergency Stop
-            entity: button.octoprint_emergency_stop
-            styles:
-              icon:
-                - color: "#D00"
-            size: 60px
+                  - type: custom:button-card
+                    tap_action:
+                      action: none
+                    hold_action:
+                      action: toggle
+                    name: Connect to Printer
+                    entity: switch.octoprint_connect_to_printer
+                    size: 60px
 
-          - type: custom:button-card
-            tap_action:
-              action: none
-            hold_action:
-              action: toggle
-            name: Connect to Printer
-            entity: switch.octoprint_connect_to_printer
-            size: 60px
+              - type: horizontal-stack
+                cards:
+                  - type: custom:mushroom-light-card
+                    entity: light.3d_printer_enclosure_light
+                    fill_container: true
+                    name: Printer Lys
+                    layout: horizontal
+                    show_brightness_control: true
+                    secondary_info: none
+                    primary_info: none
+                    icon_type: icon
+                    icon: mdi:printer-3d
+                    collapsible_controls: true
 
-          - type: custom:mushroom-light-card
-            entity: switch.3d_printer_filament_torch
-            fill_container: true
-            name: Printer Lys
-            layout: horizontal
-            show_brightness_control: false
-            secondary_info: none
-            primary_info: none
-            icon_type: icon
-            icon: mdi:movie-roll
-            collapsible_controls: false
+                  - type: custom:mushroom-light-card
+                    entity: switch.3d_printer_filament_torch
+                    fill_container: true
+                    name: Printer Lys
+                    layout: horizontal
+                    show_brightness_control: false
+                    secondary_info: none
+                    primary_info: none
+                    icon_type: icon
+                    icon: mdi:movie-roll
+                    collapsible_controls: false
 
-          - type: custom:mushroom-fan-card
-            entity: fan.3d_printer_enclosure_ud
-            fill_container: true
-            show_percentage_control: true
-            primary_info: none
-            secondary_info: none
-            layout: horizontal
-            icon: mdi:fan-chevron-down
+              - type: horizontal-stack
+                cards:
+                  - type: custom:mushroom-fan-card
+                    entity: fan.3d_printer_enclosure_ind
+                    fill_container: true
+                    show_percentage_control: true
+                    primary_info: none
+                    secondary_info: none
+                    layout: horizontal
+                    icon: mdi:fan-chevron-up
 
-      - type: picture-entity
-        entity: camera.3d_printer_filament
-        camera_image: camera.3d_printer_filament
-        camera_view: live
-        aspect_ratio: "9:16"
-        show_name: false
-        show_state: false
+                  - type: custom:mushroom-fan-card
+                    entity: fan.3d_printer_enclosure_ud
+                    fill_container: true
+                    show_percentage_control: true
+                    primary_info: none
+                    secondary_info: none
+                    layout: horizontal
+                    icon: mdi:fan-chevron-down
+
+          - type: custom:webrtc-camera
+            entity: camera.3d_printer_filament
+            style: ".mode {display: none}"
