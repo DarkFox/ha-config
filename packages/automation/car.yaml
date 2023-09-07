@@ -156,13 +156,29 @@ automation:
 
   - id: time_to_leave_notification
     alias: time_to_leave_notification
+    initial_state: true
+    mode: single
     trigger:
-      - platform: state
+      - platform: numeric_state
         entity_id:
-          - binary_sensor.time_to_leave_car_commute
-          - binary_sensor.martin_next_scheduled_destination_time_to_leave
-        from: "off"
-        to: "on"
+          - sensor.car_commute_leave_in
+          - sensor.next_scheduled_leave_in
+        below: 31
+      - platform: numeric_state
+        entity_id:
+          - sensor.car_commute_leave_in
+          - sensor.next_scheduled_leave_in
+        below: 16
+      - platform: numeric_state
+        entity_id:
+          - sensor.car_commute_leave_in
+          - sensor.next_scheduled_leave_in
+        below: 6
+      - platform: numeric_state
+        entity_id:
+          - sensor.car_commute_leave_in
+          - sensor.next_scheduled_leave_in
+        below: 1
     condition:
       - alias: "If at home"
         condition: state
@@ -171,7 +187,12 @@ automation:
     action:
       - service: script.notify_everywhere
         data:
-          message: Tid til at tage afsted!
+          message: >-
+            {% if trigger.to_state.state|int(-1) == 0 %}
+              Tid til at tage afsted.
+            {% else %}
+              Tag afsted om {{ trigger.to_state.state|int(-1) }} minutter.
+            {% endif %}
 
   - id: climatise_car_for_commute_from_work
     alias: climatise_car_for_commute_from_work
