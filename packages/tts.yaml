@@ -2,14 +2,21 @@ script:
   tts_speak:
     alias: "Wrapper for TTS service"
     sequence:
-      - service: tts.cloud_say
+      - service: tts.speak
         data:
-          cache: "{{ cache }}"
-          entity_id: "{{ media_player_entity_id }}"
+          cache: "{{ cache or 'false' }}"
+          media_player_entity_id: "{{ media_player_entity_id }}"
           message: "{{ message | replace('\n', ' ') }}"
-          language: da-DK
-          options:
-            gender: male
+        target:
+          entity_id: tts.piper
+      # - service: tts.cloud_say
+      #   data:
+      #     cache: "{{ cache }}"
+      #     entity_id: "{{ media_player_entity_id }}"
+      #     message: "{{ message | replace('\n', ' ') }}"
+      #     language: da-DK
+      #     options:
+      #       gender: male
 
 sensor:
   - platform: template
