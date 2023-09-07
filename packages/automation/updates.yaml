@@ -1,0 +1,13 @@
+script:
+  update_all_esphome_devices:
+    alias: "Update All ESPHome Devices"
+    sequence:
+      - alias: "Call update.install on all ESPHome devices with available updates"
+        service: update.install
+        target:
+          entity_id: >
+            [{% for entity in states.update %}
+              {% if entity.state == 'on' and entity.attributes.title == 'ESPHome' -%}
+                "{{ entity.entity_id }}",
+              {%- endif -%}
+            {%- endfor -%}]
