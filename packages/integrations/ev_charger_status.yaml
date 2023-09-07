@@ -1,64 +1,3 @@
-# RIP Elli Search&Find API
-template:
-  - sensor:
-      - name: TomTom API Key
-        state: !secret tomtom_api_key
-
-command_line:
-  - sensor:
-      name: TomTom Chargers near RSH
-      scan_interval: 86400
-      command: >-
-        curl -X GET
-        "https://api.tomtom.com/search/2/poiSearch/EV%20charger.json?lat=55.7317342&lon=12.4423714&radius=500&view=Unified&key={{ states('sensor.tomtom_api_key') }}"
-      value_template: "{{ value_json.results|map(attribute='dataSources', default={'chargingAvailability':'x'})|rejectattr('chargingAvailability','equalto', 'x')|list|length }}"
-      json_attributes:
-        - summary
-        - results
-
-  - sensor:
-      name: TomTom Chargers near RSR
-      scan_interval: 86400
-      command: >-
-        curl -X GET
-        "https://api.tomtom.com/search/2/poiSearch/EV%20charger.json?lat=55.6970473&lon=12.5664525&radius=250&view=Unified&key={{ states('sensor.tomtom_api_key') }}"
-      value_template: "{{ value_json.results|map(attribute='dataSources', default={'chargingAvailability':'x'})|rejectattr('chargingAvailability','equalto', 'x')|list|length }}"
-      json_attributes:
-        - summary
-        - results
-
-  - sensor:
-      name: RSH P2 Clever Ladere (TomTom)
-      scan_interval: 120
-      command: >-
-        curl -X GET
-        "https://api.tomtom.com/search/2/chargingAvailability.json?chargingAvailability=208009007218354&key={{ states('sensor.tomtom_api_key') }}"
-      value_template: "{{ value_json.connectors[0].availability.current.available }}"
-      json_attributes:
-        - connectors
-
-  - sensor:
-      name: RSH P7 Spirii Ladere (TomTom)
-      scan_interval: 120
-      command: >-
-        curl -X GET
-        "https://api.tomtom.com/search/2/chargingAvailability.json?chargingAvailability=208009007228971&key={{ states('sensor.tomtom_api_key') }}"
-      value_template: "{{ value_json.connectors[0].availability.current.available }}"
-      json_attributes:
-        - connectors
-
-  - sensor:
-      name: RSH P9 E.On Ladere (TomTom)
-      scan_interval: 120
-      command: >-
-        curl -X GET
-        "https://api.tomtom.com/search/2/chargingAvailability.json?chargingAvailability=208008000012562&key={{ states('sensor.tomtom_api_key') }}"
-      value_template: "{{ value_json.connectors[0].availability.current.available }}"
-      json_attributes:
-        - connectors
-
-  # Spirii P4: 208009007229648
-
 sensor:
   # RSR
 
@@ -95,6 +34,7 @@ sensor:
     json_attributes_path: $[0]
     json_attributes:
       - charging_spots
+      
 
   # Clever
   - platform: rest
