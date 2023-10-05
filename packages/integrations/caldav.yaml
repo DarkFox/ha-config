@@ -32,6 +32,9 @@ calendar:
       - name: WFH
         calendar: Arbejdskalender
         search: "WFH"
+      - name: Vagtskema
+        calendar: Arbejdskalender
+        search: "(På RSH|På RSR|Vagt|WFH|Kursus)"
       - name: Ferie
         calendar: Arbejdskalender
         search: "^(Ferie).+"
@@ -98,10 +101,10 @@ automation:
     action:
       - service: calendar.list_events
         data:
-          start_date_time: "{{ now().strftime('%Y-%m-%d') }} 00:00:00"
+          start_date_time: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
           end_date_time: "{{ now().strftime('%Y-%m-%d') }} 23:59:59"
         target:
-          entity_id: calendar.vagtplan
+          entity_id: calendar.arbejdskalender_vagtskema
         response_variable: agenda
       - service: mqtt.publish
         data:
@@ -115,19 +118,16 @@ automation:
           payload: >
             {% from 'easy_time.jinja' import month %}
             { "agenda": "
-            {%- set remove_string = ' - Regional sterilcentral RSR it-support (d) (7869)' -%}
             {% for event in agenda.events|sort(attribute='start') | list -%}
                 {%- set start = (event.start | as_datetime) -%}
                 {%- set end = (event.end | as_datetime) -%}
                 {{ start.strftime('%H:%M') }} - {{ end.strftime('%H:%M') }}:\n
-                {%- if event.summary|regex_match('^(.*)(\d+)-(\d+)R.+') -%}
-                  Arbejde, derefter tilkaldevagt
-                {%- elif event.summary|regex_match('^(.*)(\d+)-(\d+).+') -%}
-                  Arbejde
-                {%- elif event.summary|regex_match('^RW.+') -%}
+                {%- if event.summary|regex_match('På (RSR|RSH)') -%}
+                  Arbejde - {{ event.summary | replace('På ', '') | replace('RSH', 'Herlev') | replace('RSR', 'Rigshospitalet') }}
+                {%- elif event.summary|regex_match('Vagt') -%}
                   Tilkaldevagt
                 {%- else -%}
-                  {{ event.summary | replace(remove_string, '')|title }}
+                  {{ event.summary }}
                 {%- endif -%}.\n
             {%- endfor -%}
             "}
