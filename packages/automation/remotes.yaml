@@ -1137,6 +1137,111 @@ automation:
         data:
           message: "Badeværelse separat lysstyring {{'tilkoblet' if states('input_boolean.bathroom_separate_light_profile') == 'on' else 'frakoblet'}}"
 
+  # Badevaerelse yderside tryk #
+
+  - alias: bathroom_outside_switch_on
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: badevaerelse_yderside_tryk
+          event: 1002
+    condition:
+      - alias: "Guest Mode Off"
+        condition: state
+        entity_id: input_boolean.guests
+        state: "off"
+    action:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.bathroom_activity_override
+                state: "on"
+              - condition: state
+                entity_id: input_select.bathroom_room_state
+                state: "off"
+            sequence:
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.bathroom_room_state
+                  option: "active"
+        default:
+          - event: cycle_light_profile
+            event_data:
+              room: bathroom
+
+  - alias: bathroom_outside_switch_off
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: badevaerelse_yderside_tryk
+          event: 2002
+    condition:
+      - alias: "Guest Mode Off"
+        condition: state
+        entity_id: input_boolean.guests
+        state: "off"
+    action:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.bathroom_activity_override
+                state: "on"
+            sequence:
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.bathroom_room_state
+                  option: "off"
+        default:
+          - event: decrease_light_profile
+            event_data:
+              room: bathroom
+
+  - alias: bathroom_outside_switch_on_guest_mode
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: badevaerelse_yderside_tryk
+          event: 1002
+    condition:
+      - alias: "Guest Mode On"
+        condition: state
+        entity_id: input_boolean.guests
+        state: "on"
+    action:
+      - alias: "Flip bathroom state to on"
+        service: input_select.select_option
+        target:
+          entity_id: input_select.bathroom_room_state
+        data:
+          option: "active"
+
+  - alias: bathroom_outside_switch_off_guest_mode
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: deconz_event
+        event_data:
+          id: badevaerelse_yderside_tryk
+          event: 2002
+    condition:
+      - alias: "Guest Mode On"
+        condition: state
+        entity_id: input_boolean.guests
+        state: "on"
+    action:
+      - alias: "Flip bathroom state to off"
+        service: input_select.select_option
+        target:
+          entity_id: input_select.bathroom_room_state
+        data:
+          option: "off"
+
   # Altan Tryk #
   - alias: balcony_switch_on
     initial_state: true
