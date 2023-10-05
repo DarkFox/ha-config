@@ -986,3 +986,24 @@ automation:
                       {% set found = true %}
                   {% endif %}
               {% endfor %}
+
+  - id: turn_off_fan_on_sleep
+    alias: turn_off_fan_on_sleep
+    trigger:
+      - platform: event
+        event_type: sleep_as_android
+        event_data:
+          event: light_sleep
+      - platform: event
+        event_type: sleep_as_android
+        event_data:
+          event: deep_sleep
+      - platform: event
+        event_type: sleep_as_android
+        event_data:
+          event: rem
+    action:
+      - alias: "turn off fan"
+        service: fan.turn_off
+        target:
+          entity_id: fan.sovevaerelse_blaeser
