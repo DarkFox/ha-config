@@ -2,144 +2,46 @@ type: vertical-stack
 cards:
   - !include media_shortcuts.yaml
 
-  - type: horizontal-stack
-    cards:
-      - type: "custom:button-card"
-        entity: binary_sensor.living_room_video_out
-        icon: mdi:import
-        show_name: false
-        color: auto
-        tap_action:
-          action: none
-        style:
-          .: |
-            #icon {
-              border-right: 2px solid var(--border-color);
-            }
-      - type: "custom:button-card"
-        entity: input_select.living_room_video_output
-        icon: mdi:television
-        show_name: false
-        tap_action:
-          action: call-service
-          service: input_select.select_option
-          service_data:
-            entity_id: input_select.living_room_video_output
-            option: TV
-        state:
-          - value: "Projektor"
-            color: var(--paper-item-icon-color)
-          - value: "TV"
-            color: var(--paper-item-icon-active-color)
-      - type: "custom:button-card"
-        entity: input_select.living_room_video_output
-        icon: mdi:projector
-        show_name: false
-        tap_action:
-          action: call-service
-          service: input_select.select_option
-          service_data:
-            entity_id: input_select.living_room_video_output
-            option: Projektor
-        extra_styles: |
-          @keyframes fade1 {
-            0% {
-              filter: saturate(1.0);
-            }
-            50% {
-              filter: saturate(0);
-            }
-            100% {
-              filter: saturate(1.0);
-            }
-          }
-        state:
-          - value: "TV"
-            color: var(--paper-item-icon-color)
-          - operator: template
-            value: >
-              [[[
-                return states['binary_sensor.projector_power'].state == 'off'
-              ]]]
-            color: var(--paper-item-icon-active-color)
-            styles:
-              icon:
-                - animation: fade1 4s linear infinite
-          - value: "Projektor"
-            color: var(--paper-item-icon-active-color)
-
   - type: vertical-stack
     cards:
       - type: horizontal-stack
         cards:
           - type: "custom:button-card"
+            name: "Power"
+            icon: mdi:power
+            entity: switch.hue_sync_box
+          - type: "custom:button-card"
             name: Nvidia Shield
             icon: si:nvidia
             tap_action:
               action: call-service
-              service: script.turn_on
+              service: select.select_option
               service_data:
-                entity_id: script.change_living_room_media_source
-                variables:
-                  source: "Nvidia Shield"
+                entity_id: select.sync_box_hdmi_input
+                option: "Nvidia Shield"
             state:
               - operator: template
                 value: >
                   [[[
-                    return (states['input_select.living_room_matrix_input'].state == 'Nvidia Shield')
+                    return (states['select.sync_box_hdmi_input'].state == 'Nvidia Shield')
                   ]]]
-                color: var(--paper-item-icon-active-color)
+                color: "#76B900"
           - type: "custom:button-card"
             name: Nintendo Switch
             icon: mdi:nintendo-switch
             tap_action:
               action: call-service
-              service: script.turn_on
+              service: select.select_option
               service_data:
-                entity_id: script.change_living_room_media_source
-                variables:
-                  source: "Nintendo Switch"
+                entity_id: select.sync_box_hdmi_input
+                option: "Nintendo Switch"
             state:
               - operator: template
                 value: >
                   [[[
-                    return (states['input_select.living_room_matrix_input'].state == 'Nintendo Switch')
+                    return (states['select.sync_box_hdmi_input'].state == 'Nintendo Switch')
                   ]]]
-                color: var(--paper-item-icon-active-color)
-          - type: "custom:button-card"
-            name: PC
-            icon: mdi:desktop-tower-monitor
-            tap_action:
-              action: call-service
-              service: script.turn_on
-              service_data:
-                entity_id: script.change_living_room_media_source
-                variables:
-                  source: "PC"
-            state:
-              - operator: template
-                value: >
-                  [[[
-                    return (states['input_select.living_room_matrix_input'].state == 'PC')
-                  ]]]
-                color: var(--paper-item-icon-active-color)
-          - type: "custom:button-card"
-            name: "Off"
-            icon: mdi:power
-            tap_action:
-              action: call-service
-              service: script.turn_on
-              service_data:
-                entity_id: script.change_living_room_media_source
-                variables:
-                  source: "Off"
-            state:
-              - operator: template
-                value: >
-                  [[[
-                    return (states['input_select.living_room_matrix_input'].state == 'Off')
-                  ]]]
-                color: var(--paper-item-icon-active-color)
+                color: "#E60012"
 
   - type: custom:mini-media-player
     name: Soundbar

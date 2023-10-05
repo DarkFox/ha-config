@@ -60,58 +60,62 @@ cards:
 
   - type: custom:layout-break
 
-  - type: custom:mini-media-player
-    entity: media_player.sync_box
-    # artwork: cover
-    # sound_mode: icon
-    hide:
-      icon: true
-      # info: true
-      prev: true
-      next: true
-      source: true
-      sound_mode: false
-      power: true
-    shortcuts:
-      columns: 4 # Max buttons per row
-      attribute: source
-      buttons:
-        - icon: si:nvidia
-          type: source
-          id: Nvidia Shield
-        - icon: mdi:nintendo-switch
-          type: source
-          id: Nintendo Switch
-        - icon: mdi:desktop-tower-monitor
-          type: source
-          id: PC
-        - icon: mdi:numeric-3-circle-outline
-          type: source
-          id: HDMI 3
-        - icon: mdi:television
-          type: service
-          id: huesyncbox.set_entertainment_area
-          data:
-            entity_id: media_player.sync_box
-            entertainment_area: Stue TV Ambilight
-        - icon: mdi:sofa
-          type: service
-          id: huesyncbox.set_entertainment_area
-          data:
-            entity_id: media_player.sync_box
-            entertainment_area: Stue Gruppe
-        - icon: mdi:chevron-left
-          type: service
-          id: huesyncbox.set_sync_state
-          data:
-            entity_id: media_player.sync_box
-            mode_prev: true
-        - icon: mdi:chevron-right
-          type: service
-          id: huesyncbox.set_sync_state
-          data:
-            entity_id: media_player.sync_box
-            mode_next: true
+  - type: vertical-stack
+    cards:
+      - type: horizontal-stack
+        cards:
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: switch.sync_box_power
+            name: Sync Box
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: switch.sync_box_light_sync
+            name: Light Sync
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: call-service
+              service: select.select_option
+              target:
+                entity_id: select.sync_box_entertainment_area
+              data:
+                option: Stue TV Ambilight
+            entity: select.sync_box_entertainment_area
+            show_state: false
+            name: "Gruppe: TV"
+            icon: mdi:television
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: call-service
+              service: select.select_option
+              target:
+                entity_id: select.sync_box_entertainment_area
+              data:
+                option: Stue Gruppe
+            entity: select.sync_box_entertainment_area
+            show_state: false
+            name: "Gruppe: Stue"
+            icon: ""
+      - type: entities
+        entities:
+          - type: custom:slider-entity-row
+            entity: number.sync_box_brightness
+            name: Brightness
+            show_icon: true
+            full_row: true
+          - entity: select.sync_box_hdmi_input
+          - entity: select.sync_box_sync_mode
+          - entity: select.sync_box_intensity
 
   - type: custom:mini-media-player
     entity: media_player.stue_tv
@@ -126,19 +130,13 @@ cards:
       icon: true
 
   - type: custom:mini-media-player
-    entity: media_player.stue_soundbar
-    artwork: cover
-    hide:
-      icon: true
-
-  - type: custom:mini-media-player
     entity: media_player.stue_shield
     artwork: cover
     hide:
       icon: true
 
   - type: custom:mini-media-player
-    entity: media_player.bar_skaerm
+    entity: media_player.stue_soundbar
     artwork: cover
     hide:
       icon: true

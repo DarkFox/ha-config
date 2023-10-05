@@ -1,10 +1,4 @@
 input_select:
-  living_room_video_output:
-    name: Video Udgang
-    options:
-      - TV
-      - Projektor
-
   stue_soundbar_volume_remote_state:
     initial: "off"
     options:
@@ -12,30 +6,17 @@ input_select:
       - up
       - down
 
-  living_room_matrix_input:
-    name: Video Indgang
-    options:
-      - "Off"
-      - Nvidia Shield
-      - Nintendo Switch
-      - PC
-
 binary_sensor:
   - platform: template
     sensors:
-      living_room_nvidia_shield:
-        value_template: >-
-          {{
-            is_state('media_player.stue_shield', 'playing')
-            or is_state('media_player.stue_shield', 'paused')
-            or is_state('media_player.stue_shield', 'idle')
-            or is_state_attr('media_player.stue_shield', 'app_name', 'Netflix')
-          }}
       living_room_video_out:
         value_template: >-
           {{
-            is_state('media_player.sync_box', 'idle')
-            or is_state('media_player.sync_box', 'playing')
+            is_state('switch.sync_box_power', 'on')
+            and (
+              states('sensor.sync_box_nvidia_shield_status') in ['linked', 'plugged']
+              or states('sensor.sync_box_nintendo_switch_status') in ['linked', 'plugged']
+            )
           }}
 
 script:
@@ -54,11 +35,6 @@ automation:
         entity_id: binary_sensor.living_room_video_out
         to: "on"
     action:
-      - service: switch.turn_on
-        data:
-          entity_id: switch.stue_tv_afbryder
-      - delay:
-          seconds: 10
       - service: media_player.turn_on
         data:
           entity_id:
@@ -72,11 +48,6 @@ automation:
         entity_id: media_player.alle_hojttalere
         to: "playing"
     action:
-      - service: switch.turn_on
-        data:
-          entity_id: switch.stue_tv_afbryder
-      - delay:
-          seconds: 10
       - service: media_player.turn_off
         data:
           entity_id:
@@ -109,43 +80,11 @@ automation:
             entity_id: binary_sensor.living_room_video_out
             state: "on"
     action:
-      - service: switch.turn_off
+      - service: media_player.turn_off
         data:
-          entity_id: switch.stue_tv_afbryder
-
-  # - alias: living_room_nvidia_shield_on
-  #   initial_state: true
-  #   trigger:
-  #     - platform: state
-  #       entity_id: media_player.nvidia_shield_adb
-  #       from: "off"
-  #   action:
-  #     - service: input_select.select_option
-  #       data:
-  #         entity_id: input_select.living_room_matrix_input
-  #         option: "Nvidia Shield"
-
-  - alias: living_room_video_switch_input
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: input_select.living_room_matrix_input
-    action:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: input_select.living_room_matrix_input
-                state: "Off"
-            sequence:
-              - service: media_player.turn_off
-                data:
-                  entity_id: media_player.sync_box
-        default:
-          - service: script.turn_on
-            data:
-              entity_id: script.change_living_room_media_source
-              variables:
-                source: "{{ states('input_select.living_room_matrix_input') }}"
+          entity_id:
+            - media_player.stue_tv
+            - media_player.stue_soundbar_songpal
 
   - alias: stue_soundbar_volume_remote_state_up
     initial_state: true
@@ -268,127 +207,6 @@ automation:
                 - condition: state
                   entity_id: input_select.stue_soundbar_volume_remote_state
                   state: "up"
-
-  # - id: set_hue_sync_box_mode_from_source
-  #   alias: Set Hue Sync Box Mode From Source
-  #   trigger:
-  #     - platform: state
-  #       entity_id: media_player.sync_box
-  #       from: "off"
-  #     - platform: template
-  #       value_template: "{{ state_attr('media_player.sync_box', 'source') }}"
-  #     - platform: template
-  #       value_template: "{{ state_attr('media_player.stue_shield', 'app_name') }}"
-  #   variables:
-  #     source: "{{ state_attr('media_player.sync_box', 'source') }}"
-  #     mode: >-
-  #       {% if source == 'Nvidia Shield' %}
-  #         video
-  #       {% elif source == 'Nintendo Switch' or source == 'PC' %}
-  #         game
-  #       {% endif %}
-  #   action:
-  #     - service: huesyncbox.set_sync_mode
-  #       target:
-  #         entity_id: media_player.sync_box
-  #       data:
-  #         mode: "{{ mode }}"
-
-  # - alias: living_room_tv_on
-  #   initial_state: true
-  #   trigger:
-  #     - platform: state
-  #       entity_id: binary_sensor.living_room_video_out
-  #       to: "on"
-  #     - platform: state
-  #       entity_id: input_select.living_room_video_output
-  #       to: "TV"
-  #   condition:
-  #     - condition: state
-  #       entity_id: binary_sensor.living_room_video_out
-  #       state: "on"
-  #     - condition: state
-  #       entity_id: input_select.living_room_video_output
-  #       state: "TV"
-  #   action:
-  #     - choose:
-  #         - conditions:
-  #             - condition: template
-  #               value_template: "{{ trigger.from_state.state == 'Projektor' }}"
-  #           sequence:
-  #             - delay:
-  #                 seconds: 10
-  #     - service: media_player.turn_on
-  #       data:
-  #         entity_id:
-  #           - media_player.sync_box
-  #           - media_player.stue_tv
-
-  # - alias: living_room_tv_off
-  #   initial_state: true
-  #   trigger:
-  #     - platform: state
-  #       entity_id: binary_sensor.living_room_video_out
-  #       to: "off"
-  #       for:
-  #         minutes: 5
-  #     - platform: state
-  #       entity_id: input_select.living_room_matrix_input
-  #       to: "Off"
-  #       for:
-  #         seconds: 5
-  #     - platform: state
-  #       entity_id: input_select.living_room_video_output
-  #       from: "TV"
-  #   action:
-  #     - service: media_player.turn_off
-  #       data:
-  #         entity_id: media_player.stue_tv
-
-  # - alias: living_room_projector_on
-  #   initial_state: true
-  #   trigger:
-  #     - platform: state
-  #       entity_id: binary_sensor.living_room_video_out
-  #       to: "on"
-  #     - platform: state
-  #       entity_id: input_select.living_room_video_output
-  #       to: "Projektor"
-  #   condition:
-  #     - condition: state
-  #       entity_id: binary_sensor.living_room_video_out
-  #       state: "on"
-  #     - condition: state
-  #       entity_id: input_select.living_room_video_output
-  #       state: "Projektor"
-  #   action:
-  #     - service: media_player.turn_on
-  #       data:
-  #         entity_id: media_player.sync_box
-  #     - service: switch.turn_on
-  #       data:
-  #         entity_id: switch.projector
-
-  # - alias: living_room_projector_off
-  #   initial_state: true
-  #   trigger:
-  #     - platform: state
-  #       entity_id: binary_sensor.living_room_video_out
-  #       to: "off"
-  #       for:
-  #         minutes: 5
-  #     - platform: state
-  #       entity_id: input_select.living_room_matrix_input
-  #       to: "Off"
-  #       for:
-  #         seconds: 5
-  #     - platform: state
-  #       entity_id: input_select.living_room_video_output
-  #       from: "Projektor"
-  #   action:
-  #     - service: switch.turn_off
-  #       data:
-  #         entity_id: switch.projector
 
   - alias: living_room_media_unmute
     initial_state: true
