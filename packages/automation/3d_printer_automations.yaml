@@ -93,6 +93,7 @@ automation:
             tag: "3d_print_status_notification"
             channel: "3D Printer Status"
             importance: low
+            persistent: true
             image: /api/camera_proxy/camera.3d_printer_head
 
   - id: 3d_print_stopped_notification
@@ -104,10 +105,19 @@ automation:
     action:
       - service: notify.mobile_app_darkphone
         data:
-          title: "3D Print Finished - {{ states('sensor.octoprint_current_state') }}"
-          message: ""
+          message: "clear_notification"
           data:
             tag: "3d_print_status_notification"
             channel: "3D Printer Status"
-            importance: low
+      - service: notify.mobile_app_darkphone
+        data:
+          title: "3D Printer {{ states('sensor.octoprint_current_state') }}"
+          message: ""
+          data:
+            tag: "3d_print_alert_notification"
+            channel: "3D Printer Alerts"
+            importance: high
             image: /api/camera_proxy/camera.3d_printer
+      - service: script.voice_broadcast
+        data:
+          message: "3D Printer {{ states('sensor.octoprint_current_state') }}"
