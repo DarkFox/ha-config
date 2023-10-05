@@ -1,0 +1,78 @@
+substitutions:
+  devicename: terapilampe
+  upper_devicename: Terapilampe
+
+esphome:
+  name: $devicename
+  platform: ESP8266
+  board: huzzah
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret encryption_key
+
+ota:
+  password: !secret ota_pass
+
+status_led:
+  pin:
+    number: GPIO5
+    inverted: true
+  #   pin: GPIO05
+  #   id: status_red_pwm
+  #   pin: GPIO01
+  #   id: status_green_pwm
+
+output:
+  - platform: esp8266_pwm
+    frequency: 200 Hz
+    pin: GPIO15
+    id: red_pwm
+    max_power: 0.8
+
+light:
+  - platform: monochromatic
+    id: terapilampe
+    name: Terapilampe
+    output: red_pwm
+    # gamma_correct: 1.8
+    default_transition_length: 250ms
+    restore_mode: ALWAYS_OFF
+    effects:
+      - strobe:
+      - strobe:
+          name: Stroboscope (Slow)
+          colors:
+            - state: true
+              brightness: 100%
+              duration: 100ms
+            - state: false
+              duration: 100ms
+      - strobe:
+          name: Stroboscope (Fast)
+          colors:
+            - state: true
+              brightness: 100%
+              duration: 25ms
+            - state: false
+              duration: 25ms
+      - flicker:
+      - pulse:
+      - pulse:
+          name: "Fast Pulse"
+          transition_length: 0.5s
+          update_interval: 0.5s
+          min_brightness: 0%
+          max_brightness: 100%
+      - pulse:
+          name: "Slow Pulse"
+          # transition_length: 1s      # defaults to 1s
+          update_interval: 2s
