@@ -6,12 +6,21 @@ sensor:
       - sensor.octoprint_tool_0_temperature
       - sensor.octoprint_bed_temperature
 
+template:
+  - binary_sensor:
+      - name: 3D Printer Lys
+        state: >-
+          {{
+            is_state('switch.3d_printer_afbryder', 'on')
+            or is_state('binary_sensor.3d_printer_skab', 'on')
+          }}
+
 automation:
   - id: toggle_3d_printer_light
     alias: Toggle 3D printer light
     trigger:
       - platform: state
-        entity_id: switch.3d_printer_afbryder
+        entity_id: binary_sensor.3d_printer_lys
         from:
           - "on"
           - "off"
@@ -19,7 +28,7 @@ automation:
           - "on"
           - "off"
     action:
-      service: "light.turn_{{ states('switch.3d_printer_afbryder') }}"
+      service: "light.turn_{{ states('binary_sensor.3d_printer_lys') }}"
       target:
         entity_id: light.3d_printer_enclosure_light
 

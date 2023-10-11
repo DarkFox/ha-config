@@ -16,7 +16,7 @@ cards:
         cards:
           - type: custom:webrtc-camera
             entity: camera.3d_printer
-            style: ".mode {display: none}"
+            style: ".mode {display: none;} .screenshot {display: none;}"
             intersection: 0.25
             ui: true
             digital_ptz:
@@ -29,7 +29,7 @@ cards:
 
           - type: custom:webrtc-camera
             entity: camera.3d_printer_head
-            style: ".mode {display: none}"
+            style: ".mode {display: none;} .screenshot {display: none;}"
             intersection: 0.25
             ui: true
             digital_ptz:
@@ -369,17 +369,18 @@ cards:
                 show_name: true
                 size: 25px
 
-              - show_state: false
-                show_name: false
-                camera_view: auto
-                type: picture-entity
-                entity: camera.3d_printer_filament_snapshot
-                camera_image: camera.3d_printer_filament_snapshot
-                tap_action:
-                  action: call-service
-                  service: script.turn_on
-                  service_data:
-                    entity_id: script.take_filament_snapshot
+              - type: custom:webrtc-camera
+                entity: camera.3d_printer_filament
+                style: ".mode {display: none;} .screenshot {display: none;}"
+                intersection: 0.25
+                ui: true
+                digital_ptz:
+                  mouse_drag_pan: true
+                  mouse_wheel_zoom: true
+                  mouse_double_click_zoom: true
+                  touch_drag_pan: true
+                  touch_pinch_zoom: true
+                  touch_tap_drag_zoom: true
 
       - type: vertical-stack
         cards:
@@ -397,20 +398,6 @@ cards:
                 icon: mdi:printer-3d
                 collapsible_controls: true
 
-              - type: custom:mushroom-light-card
-                entity: light.3d_printer_filament_camera_light
-                fill_container: true
-                name: Filament Lys
-                layout: horizontal
-                show_brightness_control: true
-                secondary_info: none
-                primary_info: none
-                icon_type: icon
-                icon: mdi:movie-roll
-                collapsible_controls: false
-
-          - type: horizontal-stack
-            cards:
               - type: custom:mushroom-fan-card
                 entity: fan.3d_printer_enclosure_ind
                 fill_container: true

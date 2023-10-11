@@ -1,9 +1,5 @@
 camera:
   - platform: local_file
-    file_path: /media/camera/3d_printer_filament.jpg
-    name: "3D Printer Filament Snapshot"
-
-  - platform: local_file
     file_path: /config/www/downloads/3d_printer/model.jpg
     name: "3D Printer Model Image"
 
@@ -31,27 +27,6 @@ sensor:
           }}
 
 script:
-  take_filament_snapshot:
-    alias: "Take Filament Snapshot"
-    sequence:
-      - service: light.turn_on
-        target:
-          entity_id: light.3d_printer_filament_camera_light
-        data:
-          brightness: 255
-      - delay:
-          seconds: 10
-      - service: camera.snapshot
-        data:
-          filename: /media/camera/3d_printer_filament.jpg
-        target:
-          entity_id: camera.3d_printer_filament
-      - delay:
-          seconds: 10
-      - service: light.turn_off
-        target:
-          entity_id: light.3d_printer_filament_camera_light
-
   update_model_image:
     alias: Update 3D Printer model image file
     sequence:
@@ -63,42 +38,6 @@ script:
           overwrite: true
 
 automation:
-  - id: take_filament_snapshot_while_printing
-    alias: Take Filament Snapshot While Printing
-    trigger:
-      - platform: time_pattern
-        hours: "*"
-        minutes: "/5"
-        seconds: "0"
-    condition:
-      - alias: "Print active"
-        condition: state
-        entity_id: sensor.octoprint_current_state
-        state: "Printing"
-    action:
-      - service: script.turn_on
-        target:
-          entity_id: script.take_filament_snapshot
-
-  - id: take_filament_snapshot_while_not_printing
-    alias: Take Filament Snapshot While Not Printing
-    trigger:
-      - platform: time_pattern
-        hours: "/6"
-        minutes: "0"
-        seconds: "0"
-    condition:
-      - condition: not
-        conditions:
-          - alias: "Print not active"
-            condition: state
-            entity_id: sensor.octoprint_current_state
-            state: "Printing"
-    action:
-      - service: script.turn_on
-        target:
-          entity_id: script.take_filament_snapshot
-
   - id: update_3d_printer_model_image_on_file_change
     alias: Update 3D Printer Model Image On File Change
     trigger:
