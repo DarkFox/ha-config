@@ -84,8 +84,7 @@ binary_sensor:
           {%- if is_state('input_boolean.living_room_activity_override', 'on') -%}
             {{ 'true' if is_state('input_select.living_room_room_state', 'active') else 'false' }}
           {%- elif is_state('binary_sensor.stue_any', 'on')
-          or is_state('binary_sensor.spisebord_bevaegelse', 'on')
-          or is_state('binary_sensor.sofagruppe_bevaegelse', 'on')
+          or is_state('binary_sensor.stue_tilstedevarelse_alle_zoner', 'on')
           or is_state('media_player.stue_shield', 'playing')
           or is_state('media_player.stue_shield', 'paused')
           or is_state('input_select.latest_motion', 'Living Room') -%}
@@ -115,8 +114,10 @@ group:
       - input_select.living_room_state
       - input_select.latest_motion
       - binary_sensor.stue_any
-      - binary_sensor.spisebord_bevaegelse
-      - binary_sensor.sofagruppe_bevaegelse
+      - binary_sensor.stue_tilstedevarelse_alle_zoner
+      - binary_sensor.stue_tilstedevarelse_bar
+      - binary_sensor.stue_tilstedevarelse_spisebord
+      - binary_sensor.stue_tilstedevarelse_sofa
       - media_player.stue_shield
 
 automation:
@@ -178,11 +179,6 @@ automation:
               color_temp: 430
               effect: "None"
             light.skaenk_lampe:
-              state: on
-              brightness: 128
-              color_temp: 430
-              effect: "None"
-            light.spisebord:
               state: on
               brightness: 128
               color_temp: 430
@@ -268,11 +264,6 @@ automation:
         data:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
-            light.spisebord:
-              state: on
-              brightness: 76
-              color_temp: 500
-              effect: "None"
             light.globe:
               state: on
               brightness: 127
@@ -410,11 +401,6 @@ automation:
               brightness: 32
               hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
               effect: "None"
-            light.spisebord:
-              state: on
-              brightness: 32
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-              effect: "None"
             light.stue_tv_bund:
               state: on
               brightness: 32
@@ -481,11 +467,6 @@ automation:
         data:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entities:
-            light.spisebord:
-              state: on
-              brightness: 12
-              rgb_color: [255, 0, 0]
-              effect: "None"
             light.globe:
               state: on
               brightness: 12
@@ -632,11 +613,6 @@ automation:
               brightness: 32
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
               effect: "None"
-            light.spisebord:
-              state: on
-              brightness: 32
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-              effect: "None"
             light.stue_tv_bund:
               state: on
               brightness: 32
@@ -676,7 +652,131 @@ automation:
         target:
           entity_id: "script.bar_lights_{{ 'open' if is_state('input_boolean.bar_open', 'on') else 'party' }}"
 
+  - alias: activate_light_profile_living_room_dining_table
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+      - platform: state
+        entity_id: binary_sensor.stue_tilstedevarelse_spisebord
+        to:
+          - "on"
+          - "off"
+        for:
+          seconds: 10
+      - platform: event
+        event_type: refresh_light_profile
+    action:
+      - service: script.turn_on
+        target:
+          entity_id: >-
+            script.dining_table_lights_{{
+              'active' if is_state('binary_sensor.stue_tilstedevarelse_spisebord', 'on')
+              else (states('sensor.living_room_active_light_profile')|lower)
+            }}
+
+  - alias: activate_light_profile_living_room_bar
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+      - platform: state
+        entity_id: binary_sensor.stue_tilstedevarelse_bar
+        to:
+          - "on"
+          - "off"
+        for:
+          seconds: 10
+      - platform: event
+        event_type: refresh_light_profile
+    action:
+      - service: script.turn_on
+        target:
+          entity_id: >-
+            script.bar_lights_{{
+              'open' if is_state('binary_sensor.stue_tilstedevarelse_bar', 'on')
+              else (states('sensor.living_room_active_light_profile')|lower)
+            }}
+
 script:
+  dining_table_lights_active:
+    alias: "Dining Table Lights Active"
+    sequence:
+      - service: scene.apply
+        data:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          entities:
+            light.spisebord:
+              state: on
+              brightness: 128
+              color_temp: 430
+              effect: "None"
+
+  dining_table_lights_default:
+    alias: "Dining Table Lights Default"
+    sequence:
+      - service: scene.apply
+        data:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          entities:
+            light.spisebord:
+              state: on
+              brightness: 128
+              color_temp: 430
+              effect: "None"
+
+  dining_table_lights_dimmed:
+    alias: "Dining Table Lights Dimmed"
+    sequence:
+      - service: scene.apply
+        data:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          entities:
+            light.spisebord:
+              state: on
+              brightness: 76
+              color_temp: 500
+              effect: "None"
+
+  dining_table_lights_ambient:
+    alias: "Dining Table Lights Ambient"
+    sequence:
+      - service: scene.apply
+        data:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          entities:
+            light.spisebord:
+              state: on
+              brightness: 32
+              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+              effect: "None"
+
+  dining_table_lights_night:
+    alias: "Dining Table Lights Night"
+    sequence:
+      - service: scene.apply
+        data:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          entities:
+            light.spisebord:
+              state: on
+              brightness: 12
+              rgb_color: [255, 0, 0]
+              effect: "None"
+
+  dining_table_lights_party:
+    alias: "Dining Table Lights Party"
+    sequence:
+      - service: scene.apply
+        data:
+          transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
+          entities:
+            light.spisebord:
+              state: on
+              brightness: 32
+              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+              effect: "None"
+
   bar_lights_open:
     alias: "Bar Lights Open"
     sequence:
