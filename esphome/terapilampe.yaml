@@ -10,12 +10,14 @@ esphome:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_pass
+  reboot_timeout: 0s
 
 # Enable logging
 logger:
 
 # Enable Home Assistant API
 api:
+  reboot_timeout: 0s
   encryption:
     key: !secret encryption_key
 
@@ -31,9 +33,47 @@ status_led:
   #   pin: GPIO01
   #   id: status_green_pwm
 
+sensor:
+  - platform: rotary_encoder
+    name: "Rotary Encoder"
+    pin_a: 
+      number: GPIO2
+      mode:
+        input: true
+        pullup: true
+    pin_b: 
+      number: GPIO0
+      mode:
+        input: true
+        pullup: true
+    on_clockwise:
+      then:
+        - light.dim_relative:
+            id: terapilampe
+            relative_brightness: 5%
+    on_anticlockwise:
+      then:
+        - light.dim_relative:
+            id: terapilampe
+            relative_brightness: -5%
+
+binary_sensor:
+  - platform: gpio
+    name: "Encoder Push"
+    pin:
+      number: GPIO3
+      mode:
+        input: true
+        pullup: true
+    filters:
+      - delayed_off: 10ms
+    on_press:
+      then:
+        - light.toggle: terapilampe
+
 output:
   - platform: esp8266_pwm
-    frequency: 200 Hz
+    frequency: 1000 Hz
     pin: GPIO15
     id: red_pwm
     max_power: 0.8
