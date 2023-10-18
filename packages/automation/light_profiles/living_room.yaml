@@ -85,6 +85,7 @@ binary_sensor:
             {{ 'true' if is_state('input_select.living_room_room_state', 'active') else 'false' }}
           {%- elif is_state('binary_sensor.stue_any', 'on')
           or is_state('binary_sensor.stue_tilstedevarelse_alle_zoner', 'on')
+          or is_state('input_boolean.bar_open', 'on')
           or is_state('media_player.stue_shield', 'playing')
           or is_state('media_player.stue_shield', 'paused')
           or is_state('input_select.latest_motion', 'Living Room') -%}
@@ -118,6 +119,7 @@ group:
       - binary_sensor.stue_tilstedevarelse_bar
       - binary_sensor.stue_tilstedevarelse_spisebord
       - binary_sensor.stue_tilstedevarelse_sofa
+      - input_boolean.bar_open
       - media_player.stue_shield
 
 automation:
@@ -648,7 +650,7 @@ automation:
           - "on"
           - "off"
         for:
-          seconds: 10
+          seconds: 2
       - platform: event
         event_type: refresh_light_profile
     action:
@@ -666,12 +668,14 @@ automation:
       - platform: state
         entity_id: *room_light_profile
       - platform: state
+        entity_id: input_boolean.bar_open
+      - platform: state
         entity_id: binary_sensor.stue_tilstedevarelse_bar
         to:
           - "on"
           - "off"
         for:
-          seconds: 10
+          seconds: 2
       - platform: event
         event_type: refresh_light_profile
     action:
@@ -680,6 +684,7 @@ automation:
           entity_id: >-
             script.bar_lights_{{
               'open' if is_state('binary_sensor.stue_tilstedevarelse_bar', 'on')
+              or is_state('input_boolean.bar_open', 'on')
               else (states('sensor.living_room_active_light_profile')|lower)
             }}
 
