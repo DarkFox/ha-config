@@ -16,6 +16,15 @@ script:
         data:
           position: "{{position}}"
 
+  stue_gardin_aabn_dor:
+    alias: "Åbn stue gardin ved dør"
+    sequence:
+      - service: cover.set_cover_position
+        target:
+          entity_id: cover.stue_gardin_venstre
+        data:
+          position: 55
+
   sovevaerelse_gardin:
     sequence:
       - choose:
@@ -107,11 +116,9 @@ cover:
                 sequence:
                   - service: cover.close_cover
                     entity_id: cover.stue_gardin_hojre
-                  - service: cover.set_cover_position
+                  - service: script.turn_on
                     target:
-                      entity_id: cover.stue_gardin_venstre
-                    data:
-                      position: 55
+                      entity_id: script.stue_gardin_aabn_dor
             default:
               - service: cover.close_cover
                 entity_id: cover.stue_gardin_hojre
