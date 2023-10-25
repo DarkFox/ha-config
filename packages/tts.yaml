@@ -18,9 +18,20 @@ script:
       #     options:
       #       gender: male
 
+command_line:
+  - sensor:
+      name: Latest TTS
+      command: "ls -t /config/tts | head -n 1"
+  - sensor:
+      name: Latest TTS FFMPEG Info
+      command: "/usr/bin/ffmpeg -i /config/tts/{{ states('sensor.latest_tts') }} 2>&1 | grep Duration"
+
 sensor:
   - platform: template
     sensors:
+      latest_tts_duration:
+        value_template: >-
+          {{ states('sensor.latest_tts_ffmpeg_info').split(', ')[0].split(': ')[1].split('.')[0] }}
       tts_greeting:
         value_template: >-
           {%- if now().hour < 4 -%}

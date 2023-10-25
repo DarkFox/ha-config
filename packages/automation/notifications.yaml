@@ -18,9 +18,22 @@ script:
       - condition: state
         entity_id: binary_sensor.martin_presence
         state: "on"
-      - service: notify.google_assistant_sdk
+      - service: media_player.play_media
+        target:
+          entity_id:
+            - media_player.kokken
+            - media_player.badevaerelse
+            - media_player.sovevaerelse
         data:
-          message: "{{ message }}"
+          announce: true
+          media_content_id: >
+            media-source://tts/tts.piper?language=da_DK&voice=da_DK-talesyntese-medium&message="{{ message }}"
+          media_content_type: "music"
+          extra:
+            volume: 60
+      # - service: notify.google_assistant_sdk
+      #   data:
+      #     message: "{{ message }}"
 
   popup_notification:
     alias: Popup Notification using Browser Mod

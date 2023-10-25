@@ -111,24 +111,43 @@ script:
   mass_briefing_playlist:
     alias: MASS Briefing playlist
     sequence:
+      - variables:
+          old_tts_file: "{{ states('sensor.latest_tts') }}"
       - service: homeassistant.update_entity
         data:
           entity_id: sensor.gpt_briefing
+      - delay:
+          seconds: 1
+      - service: media_player.play_media
+        target:
+          entity_id: "{{ announcement_entities }}"
+        data:
+          announce: true
+          media_content_id: >
+            media-source://tts/tts.piper?language=da_DK&voice=da_DK-talesyntese-medium&message="{{ state_attr('sensor.gpt_briefing', 'message') | replace('\n', ' ') }}"
+          media_content_type: "music"
+          extra:
+            volume: 40
+      - repeat:
+          until: "{{ states('sensor.latest_tts') != old_tts_file }}"
+          sequence:
+            - service: homeassistant.update_entity
+              target:
+                entity_id: sensor.latest_tts
+            - delay:
+                milliseconds: 200
       - wait_for_trigger:
           - platform: state
-            entity_id: sensor.gpt_briefing
+            entity_id: sensor.latest_tts_duration
+      - delay:
+          minutes: "{{ states('sensor.latest_tts_duration').split(':')[1] }}"
+          seconds: "{{ states('sensor.latest_tts_duration').split(':')[2] }}"
       - service: script.mass_playlist
         data:
           device_entity_id: "{{ device_entity_id }}"
           repeat: "off"
           shuffle: false
           playlist: "{{ playlist }}"
-      - service: script.tts_speak
-        data:
-          cache: false
-          media_player_entity_id: "{{ device_entity_id }}"
-          message: >-
-            {{ state_attr('sensor.gpt_briefing', 'message') }}
 
   mass_playlist:
     alias: MASS Playlist
