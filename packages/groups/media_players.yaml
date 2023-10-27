@@ -13,7 +13,17 @@ script:
 
 template:
   - binary_sensor:
-      - name: Kokken Group Leader
+      - name: Stue Group Leader
+        state: >-
+          {% set entity = 'media_player.stue' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {% if (group_members|length) > 1 %}
+            {{ group_members[0] == entity }}
+          {% else %}
+            {{ is_state(entity, 'playing') }}
+          {% endif %}
+
+      - name: Køkken Group Leader
         state: >-
           {% set entity = 'media_player.kokken' %}
           {% set group_members = state_attr(entity, 'group_members') %}
@@ -44,7 +54,13 @@ template:
           {% endif %}
 
   - sensor:
-      - name: Kokken Speaker Lead By
+      - name: Stue Speaker Lead By
+        state: >-
+          {% set entity = 'media_player.stue' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {{ group_members[0] }}
+
+      - name: Køkken Speaker Lead By
         state: >-
           {% set entity = 'media_player.kokken' %}
           {% set group_members = state_attr(entity, 'group_members') %}
@@ -77,6 +93,7 @@ group:
   sonos:
     name: Sonos Højttalere
     entities:
+      - media_player.stue
       - media_player.sovevaerelse
       - media_player.kokken
       - media_player.badevaerelse
