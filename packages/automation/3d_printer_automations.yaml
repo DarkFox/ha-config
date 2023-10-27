@@ -1,3 +1,17 @@
+input_boolean:
+  3d_printer_cooling:
+
+climate:
+  - platform: generic_thermostat
+    name: 3D Printer
+    heater: input_boolean.3d_printer_cooling
+    target_sensor: sensor.3d_printer_temperature
+    min_temp: 15
+    max_temp: 60
+    target_temp: 25
+    ac_mode: true
+    target_temp_step: 1
+
 sensor:
   - platform: min_max
     name: 3d_printer_max_temp
@@ -14,10 +28,26 @@ template:
             is_state('switch.3d_printer_afbryder', 'on')
             or is_state('binary_sensor.3d_printer_skab', 'on')
           }}
+  - sensor:
+      - name: 3D Printer Materiale
+        state: >-
+          {% set temp = (states('sensor.octoprint_bed_target')|int) %}
+          {% if is_state('switch.3d_printer_afbryder', 'off') %}
+            off
+          {% elif temp < 15 %}
+            none
+          {% elif temp >= 15 and temp < 61 %}
+            PLA
+          {% elif temp >= 61 and temp < 81 %}
+            PETG
+          {% elif temp >= 81 %}
+            ABS
+          {% endif %}
 
 automation:
   - id: toggle_3d_printer_light
     alias: Toggle 3D printer light
+    initial_state: true
     trigger:
       - platform: state
         entity_id: binary_sensor.3d_printer_lys
@@ -32,41 +62,52 @@ automation:
       target:
         entity_id: light.3d_printer_enclosure_light
 
-  - id: turn_on_3d_printer_ventilation
-    alias: Turn on 3D printer ventilation
+  - id: 3d_printer_set_thermostat
+    alias: 3d Printer Set Thermostat
+    initial_state: true
     trigger:
-      - platform: numeric_state
-        entity_id: sensor.3d_printer_max_temp
-        above: 50
+      - platform: state
+        entity_id: sensor.3d_printer_materiale
     action:
-      service: fan.set_percentage
-      target:
-        entity_id:
-          - fan.3d_printer_enclosure_ind
-          - fan.3d_printer_enclosure_ud
-      data:
-        percentage: 100
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: sensor.3d_printer_materiale
+                state:
+                  - "none"
+                  - "PLA"
+                  - "PETG"
+            sequence:
+              - service: scene.apply
+                data:
+                  entities:
+                    climate.3d_printer:
+                      state: "cool"
+                      temperature: 20
+          - conditions:
+              - condition: state
+                entity_id: sensor.3d_printer_materiale
+                state: "ABS"
+            sequence:
+              - service: scene.apply
+                data:
+                  entities:
+                    climate.3d_printer:
+                      state: "cool"
+                      temperature: 40
+        default:
+          - service: climate.turn_off
+            target:
+              entity_id: climate.3d_printer
 
-  - id: lower_3d_printer_ventilation_for_abs
-    alias: Turn on 3D printer ventilation
+  - id: 3d_printer_ventilation_off
+    alias: 3d Printer Ventilation Off
+    initial_state: true
     trigger:
-      - platform: numeric_state
-        entity_id: sensor.octoprint_bed_temperature
-        above: 80
-    action:
-      service: fan.set_percentage
-      target:
-        entity_id:
-          - fan.3d_printer_enclosure_ind
-      data:
-        percentage: 25
-
-  - id: turn_off_3d_printer_ventilation
-    alias: Turn off 3D printer ventilation
-    trigger:
-      - platform: numeric_state
-        entity_id: sensor.3d_printer_max_temp
-        below: 40
+      - platform: state
+        entity_id: climate.3d_printer
+        attribute: hvac_action
+        to: "off"
     action:
       service: fan.turn_off
       target:
@@ -74,8 +115,58 @@ automation:
           - fan.3d_printer_enclosure_ind
           - fan.3d_printer_enclosure_ud
 
+  - id: 3d_printer_ventilation_low
+    alias: 3d Printer Ventilation Low
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: climate.3d_printer
+        attribute: hvac_action
+        to: "idle"
+    action:
+      - service: fan.turn_on
+        target:
+          entity_id:
+            - fan.3d_printer_enclosure_ind
+            - fan.3d_printer_enclosure_ud
+      - service: fan.set_percentage
+        target:
+          entity_id:
+            - fan.3d_printer_enclosure_ind
+        data:
+          percentage: 5
+      - service: fan.set_percentage
+        target:
+          entity_id:
+            - fan.3d_printer_enclosure_ud
+        data:
+          percentage: 25
+
+  - id: 3d_printer_ventilation_high
+    alias: 3d Printer Ventilation High
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: climate.3d_printer
+        attribute: hvac_action
+        to: "cooling"
+    action:
+      - service: fan.turn_on
+        target:
+          entity_id:
+            - fan.3d_printer_enclosure_ind
+            - fan.3d_printer_enclosure_ud
+      - service: fan.set_percentage
+        target:
+          entity_id:
+            - fan.3d_printer_enclosure_ind
+            - fan.3d_printer_enclosure_ud
+        data:
+          percentage: 100
+
   - id: 3d_print_status_notification
     alias: 3D Print status notification
+    initial_state: true
     trigger:
       - platform: state
         entity_id: sensor.octoprint_current_state
@@ -107,6 +198,7 @@ automation:
 
   - id: 3d_print_stopped_notification
     alias: 3D Print stopped notification
+    initial_state: true
     trigger:
       - platform: state
         entity_id: sensor.octoprint_current_state
