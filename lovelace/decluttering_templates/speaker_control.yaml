@@ -28,39 +28,47 @@ card:
             name: Badeværelse
           - entity_id: media_player.kokken
             name: Køkken
-
-    - type: entities
-      entities:
-        - type: custom:auto-entities
-          card:
-            type: custom:fold-entity-row
-            head:
-              type: custom:slider-entity-row
-              entity: "[[entity]]"
-              toggle: true
-              full_row: true
-              grow: true
-              show_icon: false
-          filter:
-            template: |
-              {% set group_members = state_attr('[[entity]]', 'group_members') %}
-              {% set ns = namespace(ret=[]) %}
-              {% for member in group_members %}
-                {% if member != '[[entity]]' %}
-                  {% set ns.ret = ns.ret + [
-                    {
-                        "type": "section",
-                        "label": state_attr(member, 'friendly_name')
-                    },
-                    {
-                      "type": "custom:slider-entity-row",
-                      "entity": member,
-                      "toggle": true,
-                      "full_row": true,
-                      "grow": true,
-                      "show_icon": false
-                    }
-                  ] %}
-                {% endif %}
-              {% endfor %}
-              {{ ns.ret }}
+    - type: conditional
+      conditions:
+        - entity: "[[entity]]"
+          state_not: "off"
+        - entity: "[[entity]]"
+          state_not: "idle"
+        - entity: "[[entity]]"
+          state_not: "paused"
+      card:
+        type: entities
+        entities:
+          - type: custom:auto-entities
+            card:
+              type: custom:fold-entity-row
+              head:
+                type: custom:slider-entity-row
+                entity: "[[entity]]"
+                toggle: true
+                full_row: true
+                grow: true
+                show_icon: false
+            filter:
+              template: |
+                {% set group_members = state_attr('[[entity]]', 'group_members') %}
+                {% set ns = namespace(ret=[]) %}
+                {% for member in group_members %}
+                  {% if member != '[[entity]]' %}
+                    {% set ns.ret = ns.ret + [
+                      {
+                          "type": "section",
+                          "label": state_attr(member, 'friendly_name')
+                      },
+                      {
+                        "type": "custom:slider-entity-row",
+                        "entity": member,
+                        "toggle": true,
+                        "full_row": true,
+                        "grow": true,
+                        "show_icon": false
+                      }
+                    ] %}
+                  {% endif %}
+                {% endfor %}
+                {{ ns.ret }}
