@@ -1,21 +1,69 @@
-binary_sensor:
-  - platform: template
-    sensors:
-      alle_hojttalere_playing:
-        value_template: "{{ not is_state('media_player.alle_hojttalere', 'off') }}"
-        friendly_name: Alle Højttalere Spiller
-        device_class: sound
+script:
+  toggle_mute:
+    fields:
+      media_player:
+        description: Media Player that will be mute or unmuted
+        example: media_player.media_room
+    sequence:
+      - service: media_player.volume_mute
+        target:
+          entity_id: "{{ media_player }}"
+        data:
+          is_volume_muted: "{{ not state_attr(media_player , 'is_volume_muted') }}"
 
-      minis_playing:
-        value_template: "{{ not is_state('media_player.minis', 'off') }}"
-        friendly_name: Minis Spiller
-        device_class: sound
+template:
+  - binary_sensor:
+      - name: Kokken Group Leader
+        state: >-
+          {% set entity = 'media_player.kokken' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {% if (group_members|length) > 1 %}
+            {{ group_members[0] == entity }}
+          {% else %}
+            {{ is_state(entity, 'playing') }}
+          {% endif %}
 
-sensor:
-  - platform: template
-    sensors:
-      active_media_player:
-        value_template: >
+      - name: Sovevaerelse Group Leader
+        state: >-
+          {% set entity = 'media_player.sovevaerelse' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {% if (group_members|length) > 1 %}
+            {{ group_members[0] == entity }}
+          {% else %}
+            {{ is_state(entity, 'playing') }}
+          {% endif %}
+
+      - name: Badevaerelse Group Leader
+        state: >-
+          {% set entity = 'media_player.badevaerelse' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {% if (group_members|length) > 1 %}
+            {{ group_members[0] == entity }}
+          {% else %}
+            {{ is_state(entity, 'playing') }}
+          {% endif %}
+
+  - sensor:
+      - name: Kokken Speaker Lead By
+        state: >-
+          {% set entity = 'media_player.kokken' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {{ group_members[0] }}
+
+      - name: Sovevaerelse Speaker Lead By
+        state: >-
+          {% set entity = 'media_player.sovevaerelse' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {{ group_members[0] }}
+
+      - name: Badevaerelse Speaker Lead By
+        state: >-
+          {% set entity = 'media_player.badevaerelse' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {{ group_members[0] }}
+
+      - name: Active Media Player
+        state: >
           {% set dev = namespace(active_player='') %}
           {% for item in states.group.all_media.attributes.entity_id if is_state(item, 'playing') %}
             {% if dev.active_player == '' %}
@@ -26,15 +74,18 @@ sensor:
           {{ dev.active_player }}
 
 group:
+  sonos:
+    name: Sonos Højttalere
+    entities:
+      - media_player.sovevaerelse
+      - media_player.kokken
+      - media_player.badevaerelse
   all_media:
     name: All Media
     entities:
       - media_player.sovevaerelse
       - media_player.kokken
       - media_player.badevaerelse
-
-      - media_player.alle_hojttalere
-      - media_player.minis
 
       - media_player.stue_shield
       - media_player.kokken_chromecast
@@ -46,16 +97,6 @@ group:
       - media_player.stue_soundbar
 
       - media_player.sovevaerelse_tv_dlna
-
-      - media_player.hallway_tablet
-      - media_player.kitchen_tablet
-
-      - media_player.badevaerelse_mini
-      - media_player.gang_mini
-      - media_player.kokken_mini
-      - media_player.kontor_mini
-      - media_player.sovevaerelse_mini
-      - media_player.stue_mini
 
       - media_player.kokken_soundbar_songpal
       - media_player.stue_soundbar_songpal

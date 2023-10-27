@@ -1,0 +1,66 @@
+card:
+  type: custom:stack-in-card
+  mode: vertical
+  cards:
+    - type: custom:mini-media-player
+      entity: "[[entity]]"
+      artwork: full-cover
+      idle_view:
+        when_idle: true
+        when_paused: true
+        when_standby: true
+      volume_stateless: true
+      replace_mute: stop
+      hide:
+        icon: true
+        source: true
+        power: true
+        runtime: false
+        shuffle: false
+        repeat: false
+        jump: false
+      speaker_group:
+        platform: sonos
+        entities:
+          - entity_id: media_player.sovevaerelse
+            name: Soveværelse
+          - entity_id: media_player.badevaerelse
+            name: Badeværelse
+          - entity_id: media_player.kokken
+            name: Køkken
+
+    - type: entities
+      entities:
+        - type: custom:auto-entities
+          card:
+            type: custom:fold-entity-row
+            head:
+              type: custom:slider-entity-row
+              entity: "[[entity]]"
+              toggle: true
+              full_row: true
+              grow: true
+              show_icon: false
+          filter:
+            template: |
+              {% set group_members = state_attr('[[entity]]', 'group_members') %}
+              {% set ns = namespace(ret=[]) %}
+              {% for member in group_members %}
+                {% if member != '[[entity]]' %}
+                  {% set ns.ret = ns.ret + [
+                    {
+                        "type": "section",
+                        "label": state_attr(member, 'friendly_name')
+                    },
+                    {
+                      "type": "custom:slider-entity-row",
+                      "entity": member,
+                      "toggle": true,
+                      "full_row": true,
+                      "grow": true,
+                      "show_icon": false
+                    }
+                  ] %}
+                {% endif %}
+              {% endfor %}
+              {{ ns.ret }}
