@@ -12,10 +12,15 @@ binary_sensor:
       living_room_video_out:
         value_template: >-
           {{
-            is_state('switch.sync_box_power', 'on')
-            and (
-              states('sensor.sync_box_nvidia_shield_status') in ['linked', 'plugged']
-              or states('sensor.sync_box_nintendo_switch_status') in ['linked', 'plugged']
+            (
+              is_state('switch.sync_box_power', 'on')
+              and (
+                states('sensor.sync_box_nvidia_shield_status') in ['linked', 'plugged']
+                or states('sensor.sync_box_nintendo_switch_status') in ['linked', 'plugged']
+              )
+            ) or (
+              is_state('media_player.stue_tv', 'on')
+              and state_attr('media_player.stue_tv', 'source') not in ['HDMI 1', 'HDMI 2']
             )
           }}
 
@@ -39,43 +44,18 @@ automation:
         data:
           entity_id:
             - media_player.stue_tv
-            - media_player.stue_soundbar_songpal
-
-  - alias: living_room_soundbar_on
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: media_player.alle_hojttalere
-        to: "playing"
-    action:
-      - service: media_player.turn_off
-        data:
-          entity_id:
-            - media_player.stue_tv
-      - service: media_player.turn_on
-        data:
-          entity_id:
-            - media_player.stue_soundbar_songpal
 
   - alias: living_room_tv_off
     initial_state: true
     trigger:
       - platform: state
-        entity_id:
-          - binary_sensor.living_room_video_out
-          - media_player.alle_hojttalere
-          - media_player.stue_soundbar
+        entity_id: binary_sensor.living_room_video_out
         to: "off"
         for:
           minutes: 2
     condition:
       - condition: not
         conditions:
-          - condition: state
-            entity_id:
-              - media_player.alle_hojttalere
-              - media_player.stue_soundbar
-            state: "playing"
           - condition: state
             entity_id: binary_sensor.living_room_video_out
             state: "on"
@@ -84,7 +64,6 @@ automation:
         data:
           entity_id:
             - media_player.stue_tv
-            - media_player.stue_soundbar_songpal
 
   - alias: stue_soundbar_volume_remote_state_up
     initial_state: true
@@ -151,8 +130,8 @@ automation:
     action:
       service: media_player.volume_mute
       data:
-        entity_id: media_player.stue_soundbar_songpal
-        is_volume_muted: "{{ not state_attr('media_player.stue_soundbar_songpal', 'is_volume_muted') }}"
+        entity_id: media_player.stue
+        is_volume_muted: "{{ not state_attr('media_player.stue', 'is_volume_muted') }}"
 
   - alias: stue_soundbar_volume_remote_up
     initial_state: true
@@ -168,7 +147,7 @@ automation:
           sequence:
             - service: media_player.volume_up
               data:
-                entity_id: media_player.stue_soundbar_songpal
+                entity_id: media_player.stue
             - delay:
                 milliseconds: 75
           until:
@@ -195,7 +174,7 @@ automation:
           sequence:
             - service: media_player.volume_down
               data:
-                entity_id: media_player.stue_soundbar_songpal
+                entity_id: media_player.stue
             - delay:
                 milliseconds: 75
           until:
@@ -215,19 +194,19 @@ automation:
         entity_id: input_select.living_room_room_state
         to: "active"
       - platform: state
-        entity_id: media_player.stue_soundbar_songpal
+        entity_id: media_player.stue
         to: "on"
     condition:
       - condition: state
         entity_id: input_select.living_room_room_state
         state: "active"
       - condition: state
-        entity_id: media_player.stue_soundbar_songpal
+        entity_id: media_player.stue
         state: "on"
     action:
       - service: media_player.volume_mute
         data:
-          entity_id: media_player.stue_soundbar_songpal
+          entity_id: media_player.stue
           is_volume_muted: false
 
   - alias: living_room_media_mute
@@ -237,17 +216,17 @@ automation:
         entity_id: input_select.living_room_room_state
         to: "off"
       - platform: state
-        entity_id: media_player.stue_soundbar_songpal
+        entity_id: media_player.stue
         to: "on"
     condition:
       - condition: state
         entity_id: input_select.living_room_room_state
         state: "off"
       - condition: state
-        entity_id: media_player.stue_soundbar_songpal
+        entity_id: media_player.stue
         state: "on"
     action:
       - service: media_player.volume_mute
         data:
-          entity_id: media_player.stue_soundbar_songpal
+          entity_id: media_player.stue
           is_volume_muted: true
