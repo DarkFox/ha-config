@@ -18,16 +18,20 @@ card:
         runtime: false
         shuffle: false
         repeat: false
-        jump: false
+      tap_action:
+        action: navigate
+        navigation_path: /d5369777_music_assistant_beta/ingress
       speaker_group:
         platform: sonos
         entities:
+          - entity_id: media_player.stue
+            name: Stue
           - entity_id: media_player.sovevaerelse
             name: Soveværelse
-          - entity_id: media_player.badevaerelse
-            name: Badeværelse
           - entity_id: media_player.kokken
             name: Køkken
+          - entity_id: media_player.badevaerelse
+            name: Badeværelse
     - type: conditional
       conditions:
         - entity: "[[entity]]"
@@ -43,32 +47,65 @@ card:
             card:
               type: custom:fold-entity-row
               head:
-                type: custom:slider-entity-row
+                type: custom:bubble-card
+                card_type: button
                 entity: "[[entity]]"
-                toggle: true
-                full_row: true
-                grow: true
-                show_icon: false
+                name: " "
+                icon: mdi:volume-high
+                button_type: slider
+                show_state: false
+                tap_action:
+                  action: call-service
+                  service: script.toggle_mute
+                  service_data:
+                    entity_id: "[[entity]]"
             filter:
               template: |
                 {% set group_members = state_attr('[[entity]]', 'group_members') %}
-                {% set ns = namespace(ret=[]) %}
+                {% set ns = namespace(ret=[{
+                  "type": "section",
+                  "label": "Grupperede"
+                }]) %}
                 {% for member in group_members %}
-                  {% if member != '[[entity]]' %}
-                    {% set ns.ret = ns.ret + [
-                      {
-                          "type": "section",
-                          "label": state_attr(member, 'friendly_name')
-                      },
-                      {
-                        "type": "custom:slider-entity-row",
-                        "entity": member,
-                        "toggle": true,
-                        "full_row": true,
-                        "grow": true,
-                        "show_icon": false
+                  {% set ns.ret = ns.ret + [
+                    {
+                      "type": "custom:bubble-card",
+                      "card_type": "button",
+                      "entity": member,
+                      "icon": "mdi:volume-high",
+                      "button_type": "slider",
+                      "show_state": false,
+                      "tap_action": {
+                        "action": "call-service",
+                        "service": "script.toggle_mute",
+                        "service_data": {
+                          "media_player": member
+                        }
                       }
-                    ] %}
-                  {% endif %}
+                    }
+                  ] %}
                 {% endfor %}
                 {{ ns.ret }}
+
+              # template: |
+              #   {% set group_members = state_attr('[[entity]]', 'group_members') %}
+              #   {% set ns = namespace(ret=[]) %}
+              #   {% for member in group_members %}
+              #     {% if member != '[[entity]]' %}
+              #       {% set ns.ret = ns.ret + [
+              #         {
+              #             "type": "section",
+              #             "label": state_attr(member, 'friendly_name')
+              #         },
+              #         {
+              #           "type": "custom:slider-entity-row",
+              #           "entity": member,
+              #           "toggle": true,
+              #           "full_row": true,
+              #           "grow": true,
+              #           "show_icon": false
+              #         }
+              #       ] %}
+              #     {% endif %}
+              #   {% endfor %}
+              #   {{ ns.ret }}

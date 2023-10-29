@@ -2,6 +2,26 @@ type: vertical-stack
 cards:
   - type: conditional
     conditions:
+      - entity: binary_sensor.stue_group_leader
+        state: "on"
+    card:
+      type: custom:decluttering-card
+      template: speaker_control
+      variables:
+        - entity: media_player.stue
+
+  - type: conditional
+    conditions:
+      - entity: binary_sensor.kokken_group_leader
+        state: "on"
+    card:
+      type: custom:decluttering-card
+      template: speaker_control
+      variables:
+        - entity: media_player.kokken
+
+  - type: conditional
+    conditions:
       - entity: binary_sensor.sovevaerelse_group_leader
         state: "on"
     card:
@@ -20,12 +40,19 @@ cards:
       variables:
         - entity: media_player.badevaerelse
 
+  # Default to Stue
   - type: conditional
     conditions:
+      - entity: binary_sensor.stue_group_leader
+        state: "off"
       - entity: binary_sensor.kokken_group_leader
-        state: "on"
+        state: "off"
+      - entity: binary_sensor.sovevaerelse_group_leader
+        state: "off"
+      - entity: binary_sensor.badevaerelse_group_leader
+        state: "off"
     card:
       type: custom:decluttering-card
       template: speaker_control
       variables:
-        - entity: media_player.kokken
+        - entity: media_player.stue
