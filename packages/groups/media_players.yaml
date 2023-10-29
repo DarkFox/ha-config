@@ -1,15 +1,57 @@
 script:
   toggle_mute:
     fields:
-      media_player:
+      entity_id:
         description: Media Player that will be mute or unmuted
         example: media_player.media_room
     sequence:
       - service: media_player.volume_mute
         target:
-          entity_id: "{{ media_player }}"
+          entity_id: "{{ entity_id }}"
         data:
-          is_volume_muted: "{{ not state_attr(media_player , 'is_volume_muted') }}"
+          is_volume_muted: "{{ not state_attr(entity_id , 'is_volume_muted') }}"
+
+automation:
+  - id: adjust_speaker_group_volume
+    alias: Adjust Speaker Group Volume
+    trigger:
+      - platform: state
+        entity_id:
+          - input_number.stue_group_volume
+          - input_number.kokken_group_volume
+          - input_number.sovevaerelse_group_volume
+          - input_number.badevaerelse_group_volume
+    action:
+      repeat:
+        for_each: "{{ state_attr(trigger.entity_id, 'group_members') }}"
+        sequence:
+          - service: media_player.volume_set
+            target:
+              entity_id: "{{ repeat.item }}"
+            data:
+              volume: "{{ '' }}"
+
+input_number:
+  stue_group_volume:
+    name: Stue Gruppe Lydstyrke
+    min: 0
+    max: 100
+    step: 1
+  kokken_group_volume:
+    name: Køkken Gruppe Lydstyrke
+    min: 0
+    max: 100
+    step: 1
+  sovevaerelse_group_volume:
+    name: Sovevaerelse Gruppe Lydstyrke
+    min: 0
+    max: 100
+    step: 1
+  badevaerelse_group_volume:
+    name: Badevaerelse Gruppe Lydstyrke
+    min: 0
+    max: 100
+    step: 1
 
 template:
   - binary_sensor:
@@ -60,11 +102,49 @@ template:
           {% set group_members = state_attr(entity, 'group_members') %}
           {{ group_members[0] }}
 
+      - name: Stue Speaker Group Max Volume
+        state: >-
+          {% set group_members = state_attr('media_player.stue', 'group_members') %}
+          {% set ns = namespace(ret=[]) %}
+          {% for member in group_members %}
+            {% set ns.ret = ns.ret + [state_attr(member, 'volume_level')] %}
+          {% endfor %}
+          {{ ns.ret|average }}
+
+      - name: Stue Speaker Distance to Group Max Volume
+        state: >-
+          {{ (state_attr('media_player.stue', 'volume_level')|float) - (states('sensor.stue_speaker_group_max_volume')|float)  }}
+
+      - name: Stue Speaker Volume Exponent
+        state: >-
+          {% set group_max = (states('sensor.stue_speaker_group_max_volume')|float) %}
+          {% set distance = (states('sensor.stue_speaker_distance_to_group_max_volume')|float)%}
+          {{ 1-(distance + group_max) }}
+
       - name: Køkken Speaker Lead By
         state: >-
           {% set entity = 'media_player.kokken' %}
           {% set group_members = state_attr(entity, 'group_members') %}
           {{ group_members[0] }}
+
+      - name: Køkken Speaker Group Max Volume
+        state: >-
+          {% set group_members = state_attr('media_player.kokken', 'group_members') %}
+          {% set ns = namespace(ret=[]) %}
+          {% for member in group_members %}
+            {% set ns.ret = ns.ret + [state_attr(member, 'volume_level')] %}
+          {% endfor %}
+          {{ ns.ret|average }}
+
+      - name: Køkken Speaker Distance to Group Max Volume
+        state: >-
+          {{ (state_attr('media_player.kokken', 'volume_level')|float) - (states('sensor.kokken_speaker_group_max_volume')|float)  }}
+
+      - name: Køkken Speaker Volume Exponent
+        state: >-
+          {% set group_max = (states('sensor.kokken_speaker_group_max_volume')|float) %}
+          {% set distance = (states('sensor.kokken_speaker_distance_to_group_max_volume')|float)%}
+          {{ 1-(distance + group_max) }}
 
       - name: Sovevaerelse Speaker Lead By
         state: >-
@@ -72,11 +152,49 @@ template:
           {% set group_members = state_attr(entity, 'group_members') %}
           {{ group_members[0] }}
 
+      - name: Sovevaerelse Speaker Group Max Volume
+        state: >-
+          {% set group_members = state_attr('media_player.sovevaerelse', 'group_members') %}
+          {% set ns = namespace(ret=[]) %}
+          {% for member in group_members %}
+            {% set ns.ret = ns.ret + [state_attr(member, 'volume_level')] %}
+          {% endfor %}
+          {{ ns.ret|average }}
+
+      - name: Sovevaerelse Speaker Distance to Group Max Volume
+        state: >-
+          {{ (state_attr('media_player.sovevaerelse', 'volume_level')|float) - (states('sensor.sovevaerelse_speaker_group_max_volume')|float)  }}
+
+      - name: Sovevaerelse Speaker Volume Exponent
+        state: >-
+          {% set group_max = (states('sensor.sovevaerelse_speaker_group_max_volume')|float) %}
+          {% set distance = (states('sensor.sovevaerelse_speaker_distance_to_group_max_volume')|float)%}
+          {{ 1-(distance + group_max) }}
+
       - name: Badevaerelse Speaker Lead By
         state: >-
           {% set entity = 'media_player.badevaerelse' %}
           {% set group_members = state_attr(entity, 'group_members') %}
           {{ group_members[0] }}
+
+      - name: Badevaerelse Speaker Group Max Volume
+        state: >-
+          {% set group_members = state_attr('media_player.badevaerelse', 'group_members') %}
+          {% set ns = namespace(ret=[]) %}
+          {% for member in group_members %}
+            {% set ns.ret = ns.ret + [state_attr(member, 'volume_level')] %}
+          {% endfor %}
+          {{ ns.ret|average }}
+
+      - name: Badevaerelse Speaker Distance to Group Max Volume
+        state: >-
+          {{ (state_attr('media_player.badevaerelse', 'volume_level')|float) - (states('sensor.badevaerelse_speaker_group_max_volume')|float)  }}
+
+      - name: Badevaerelse Speaker Volume Exponent
+        state: >-
+          {% set group_max = (states('sensor.badevaerelse_speaker_group_max_volume')|float) %}
+          {% set distance = (states('sensor.badevaerelse_speaker_distance_to_group_max_volume')|float)%}
+          {{ 1-(distance + group_max) }}
 
       - name: Active Media Player
         state: >
@@ -103,17 +221,12 @@ group:
       - media_player.sovevaerelse
       - media_player.kokken
       - media_player.badevaerelse
+      - media_player.stue
 
       - media_player.stue_shield
       - media_player.kokken_chromecast
-      - media_player.kontor_chromecast
       - media_player.sovevaerelse_chromecast
-      - media_player.bar_skaerm
 
       - media_player.kokken_soundbar
-      - media_player.stue_soundbar
 
       - media_player.sovevaerelse_tv_dlna
-
-      - media_player.kokken_soundbar_songpal
-      - media_player.stue_soundbar_songpal
