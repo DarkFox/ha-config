@@ -222,3 +222,17 @@ automation:
       - service: script.voice_broadcast
         data:
           message: "3D Printer {{ states('sensor.octoprint_current_state') }}"
+
+  - id: 3d_printer_auto_shutdown
+    alias: 3d Printer Auto Shutdown
+    trigger:
+      - platform: state
+        entity_id: sensor.octoprint_current_state
+        from: "Printing"
+        to: "Operational"
+        for:
+          minutes: 15
+    action:
+      - service: switch.turn_off
+        target:
+          entity_id: switch.3d_printer_afbryder
