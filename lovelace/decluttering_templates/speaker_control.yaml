@@ -3,7 +3,7 @@ card:
   mode: vertical
   cards:
     - type: custom:mini-media-player
-      entity: "[[entity]]"
+      entity: "media_player.[[room]]"
       artwork: cover
       idle_view:
         when_idle: true
@@ -34,11 +34,11 @@ card:
             name: Badeværelse
     - type: conditional
       conditions:
-        - entity: "[[entity]]"
+        - entity: "media_player.[[room]]"
           state_not: "off"
-        - entity: "[[entity]]"
+        - entity: "media_player.[[room]]"
           state_not: "idle"
-        - entity: "[[entity]]"
+        - entity: "media_player.[[room]]"
           state_not: "paused"
       card:
         type: entities
@@ -49,7 +49,7 @@ card:
               head:
                 type: custom:bubble-card
                 card_type: button
-                entity: "[[entity]]"
+                entity: "media_player.[[room]]"
                 name: " "
                 icon: mdi:volume-high
                 button_type: slider
@@ -58,10 +58,10 @@ card:
                   action: call-service
                   service: script.toggle_mute
                   service_data:
-                    entity_id: "[[entity]]"
+                    entity_id: "media_player.[[room]]"
             filter:
               template: |
-                {% set group_members = state_attr('[[entity]]', 'group_members') %}
+                {% set group_members = state_attr('media_player.[[room]]', 'group_members') %}
                 {% set ns = namespace(ret=[{
                   "type": "section",
                   "label": "Grupperede"
@@ -86,26 +86,3 @@ card:
                   ] %}
                 {% endfor %}
                 {{ ns.ret }}
-
-              # template: |
-              #   {% set group_members = state_attr('[[entity]]', 'group_members') %}
-              #   {% set ns = namespace(ret=[]) %}
-              #   {% for member in group_members %}
-              #     {% if member != '[[entity]]' %}
-              #       {% set ns.ret = ns.ret + [
-              #         {
-              #             "type": "section",
-              #             "label": state_attr(member, 'friendly_name')
-              #         },
-              #         {
-              #           "type": "custom:slider-entity-row",
-              #           "entity": member,
-              #           "toggle": true,
-              #           "full_row": true,
-              #           "grow": true,
-              #           "show_icon": false
-              #         }
-              #       ] %}
-              #     {% endif %}
-              #   {% endfor %}
-              #   {{ ns.ret }}

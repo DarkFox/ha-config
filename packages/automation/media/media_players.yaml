@@ -1,4 +1,31 @@
 script:
+  join_unjoin_sonos_group:
+    fields:
+      entity_id:
+        description: Media Player that will be joined or unjoined
+        example: media_player.media_room
+    variables:
+      group_leader_entity: "{{ states('sensor.sonos_group_leader') }}"
+    sequence:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ (state_attr(entity_id, 'group_members')|length) > 1 }}"
+            sequence:
+              - service: media_player.unjoin
+                target:
+                  entity_id: "{{ entity_id }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ not not group_leader_entity }}"
+            sequence:
+              - service: media_player.join
+                target:
+                  entity_id: "{{ group_leader_entity }}"
+                data:
+                  group_members: >-
+                    {{ [entity_id] + state_attr(group_leader_entity, 'group_members') }}
+
   toggle_mute:
     fields:
       entity_id:
@@ -10,6 +37,114 @@ script:
           entity_id: "{{ entity_id }}"
         data:
           is_volume_muted: "{{ not state_attr(entity_id , 'is_volume_muted') }}"
+
+  mass_briefing_playlist:
+    alias: MASS Briefing playlist
+    sequence:
+      - variables:
+          old_tts_file: "{{ states('sensor.latest_tts') }}"
+      - service: homeassistant.update_entity
+        data:
+          entity_id: sensor.gpt_briefing
+      - delay:
+          seconds: 1
+      - service: media_player.play_media
+        target:
+          entity_id: "{{ announcement_entities }}"
+        data:
+          announce: true
+          media_content_id: >
+            media-source://tts/tts.piper?language=da_DK&voice=da_DK-talesyntese-medium&message="{{ state_attr('sensor.gpt_briefing', 'message') | replace('\n', ' ') }}"
+          media_content_type: "music"
+          extra:
+            volume: 40
+      - repeat:
+          until: "{{ states('sensor.latest_tts') != old_tts_file }}"
+          sequence:
+            - service: homeassistant.update_entity
+              target:
+                entity_id: sensor.latest_tts
+            - delay:
+                milliseconds: 200
+      - wait_for_trigger:
+          - platform: state
+            entity_id: sensor.latest_tts_duration
+      - delay:
+          minutes: "{{ states('sensor.latest_tts_duration').split(':')[1] }}"
+          seconds: "{{ states('sensor.latest_tts_duration').split(':')[2] }}"
+      - service: script.mass_playlist
+        data:
+          device_entity_id: "{{ device_entity_id }}"
+          repeat: "off"
+          shuffle: false
+          playlist: "{{ playlist }}"
+
+  mass_playlist:
+    alias: MASS Playlist
+    sequence:
+      - service: media_player.repeat_set
+        target:
+          entity_id: "{{ device_entity_id }}"
+        data:
+          repeat: "{{ repeat | default('off') }}"
+      - service: media_player.shuffle_set
+        target:
+          entity_id: "{{ device_entity_id }}"
+        data:
+          shuffle: "{{ shuffle | default(false) }}"
+      - service: mass.queue_command
+        data:
+          player_id: "{{ device_entity_id }}"
+          command: play_media
+          enqueue_mode: replace
+          repeat_mode: "{{ repeat | default('off') }}"
+          uri: "{{ playlist }}"
+
+  playlist_play_media:
+    sequence:
+      - service: media_player.play_media
+        data:
+          entity_id: "{{ entity_id }}"
+          media_content_id: >
+            {%- if 'youtube' in url -%}
+              {% set param_str = url.split('?')[1] %}
+              {% set ns = namespace(params={}) %}
+              {% for p in param_str.split('&') %}
+                {% set param = p.split('=') %}
+                {% set ns.params = dict(ns.params, **{param[0]: param[1]}) %}
+              {% endfor %}
+              { "app_name": "youtube", "media_id": "{{ ns.params['v'] }}" }
+            {%- else -%}
+              {{ url }}
+            {%- endif -%}
+          media_content_type: >
+            {%- if 'youtube' in url -%}
+              cast
+            {%- else -%}
+              EPISODE
+            {%- endif -%}
+
+  weather_report:
+    alias: Vejrudsigt
+    sequence:
+      - service: script.tts_speak
+        data:
+          cache: false
+          media_player_entity_id: "{{ device_entity_id }}"
+          message: "{{ states('sensor.dmi_vejr_tts') }} {{ state_attr('sensor.dmi_vejr_tts', 'text') }}"
+
+  briefing:
+    alias: Rapport
+    sequence:
+      - service: homeassistant.update_entity
+        data:
+          entity_id: sensor.gpt_briefing
+      - service: script.tts_speak
+        data:
+          cache: false
+          media_player_entity_id: "{{ device_entity_id }}"
+          message: >-
+            {{ state_attr('sensor.gpt_briefing', 'message') }}
 
 automation:
   - id: adjust_speaker_group_volume
@@ -96,6 +231,24 @@ template:
           {% endif %}
 
   - sensor:
+      - name: Sonos Group Leader
+        state: >-
+          {% set entity = 'group.sonos_group_leaders' %}
+          {% set group_members = state_attr(entity, 'entity_id') %}
+          {% set ns = namespace(grouped=[],playing=[]) %}
+          {% for entity_id in group_members %}
+            {% set media_player_entity_id = 'media_player.'+entity_id|replace('binary_sensor.', '')|replace('_group_leader','') %}
+            {% if is_state(entity_id, 'on') %}
+              {% set ns.grouped = ns.grouped + [media_player_entity_id] %}
+            {% endif %}
+          {% endfor %}
+          {% for media_player_entity_id in ns.grouped %}
+            {% if is_state(media_player_entity_id, 'playing') %}
+              {% set ns.playing = ns.playing + [media_player_entity_id] %}
+            {% endif %}
+          {% endfor %}
+          {{ ns.playing[0] if (ns.playing|length) > 0 else ns.grouped[0] }}
+
       - name: Stue Speaker Lead By
         state: >-
           {% set entity = 'media_player.stue' %}
@@ -208,6 +361,12 @@ template:
           {{ dev.active_player }}
 
 group:
+  sonos_group_leaders:
+    entities:
+      - binary_sensor.stue_group_leader
+      - binary_sensor.sovevaerelse_group_leader
+      - binary_sensor.kokken_group_leader
+      - binary_sensor.badevaerelse_group_leader
   sonos:
     name: Sonos Højttalere
     entities:

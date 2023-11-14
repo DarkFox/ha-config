@@ -669,19 +669,17 @@ automation:
             - media_player.sovevaerelse
             - media_player.badevaerelse
             - media_player.kokken
+            - media_player.stue
+      - service: media_player.volume_set
+        data:
+          entity_id: "media_player.sovevaerelse"
+          volume_level: 0.2
       - service: script.mass_playlist
         data:
           device_entity_id: media_player.sovevaerelse_mass
           playlist:
             - "{{ states('sensor.podcast_radioavisen') }}"
             - database://radio/1
-      - wait_template: "{{ is_state('media_player.sovevaerelse', 'playing') }}"
-        timeout: "00:00:30"
-      - service: media_player.volume_set
-        data:
-          entity_id: "media_player.sovevaerelse"
-          volume_level: 0.2
-
       - delay:
           minutes: 5
       - condition: state
@@ -715,7 +713,6 @@ automation:
                 data:
                   entity_id: cover.sovevaerelse_gardin_vindue
                   position: 30
-
       - delay:
           minutes: 5
       - condition: state
@@ -726,7 +723,7 @@ automation:
           - "waking"
       - service: media_player.volume_set
         data:
-          entity_id: "media_player.sovevaerelse_mini"
+          entity_id: "media_player.sovevaerelse"
           volume_level: 0.25
       - choose:
           - conditions:

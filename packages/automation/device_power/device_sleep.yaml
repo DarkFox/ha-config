@@ -6,13 +6,16 @@ automation:
       platform: state
       entity_id: binary_sensor.martin_presence_delayed
       to: "off"
+    condition:
+      - alias: "Not in guest mode"
+        condition: state
+        entity_id: input_boolean.guests
+        state: "off"
     action:
-      - service: script.playlist_end
-      - service: switch.turn_off
-        data:
-          entity_id:
-            - switch.sovevaerelse_tv_power
-            - switch.tv_soundbar_soundpal
+      - service: homeassistant.turn_off
+        target:
+          entity_id: group.all_media
+      - service: script.stop_all_media
 
   # Bathroom #
   - alias: Bathroom Speaker active trigger
