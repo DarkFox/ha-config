@@ -187,6 +187,11 @@ automation:
               brightness: 255
               hs_color: [29, 15]
               effect: "None"
+            light.sovevaerelse_skuffer:
+              state: on
+              brightness: 255
+              hs_color: [29, 15]
+              effect: "None"
       - service: light.turn_on
         target:
           entity_id: light.bedroom_tablet
@@ -256,6 +261,11 @@ automation:
               state: on
               brightness: 255
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+              effect: "None"
+            light.sovevaerelse_skuffer:
+              state: on
+              brightness: 255
+              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
               effect: "None"
       - service: light.turn_on
         target:
@@ -332,6 +342,11 @@ automation:
               brightness: 96
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
               effect: "None"
+            light.sovevaerelse_skuffer:
+              state: on
+              brightness: 96
+              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+              effect: "None"
       - service: light.turn_on
         target:
           entity_id: light.bedroom_tablet
@@ -402,6 +417,11 @@ automation:
               state: on
               brightness: 32
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+              effect: "None"
+            light.sovevaerelse_skuffer:
+              state: on
+              brightness: 32
+              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
               effect: "None"
       - service: light.turn_on
         target:
@@ -486,6 +506,11 @@ automation:
               brightness: 24
               rgb_color: [255, 0, 0]
               effect: "None"
+            light.sovevaerelse_skuffer:
+              state: on
+              brightness: 24
+              rgb_color: [255, 0, 0]
+              effect: "None"
       - service: light.turn_on
         target:
           entity_id: light.bedroom_tablet
@@ -539,6 +564,24 @@ automation:
         data:
           transition: "{{ (states('input_number.scene_transition_time') or 0.5) | float }}"
           entity_id: light.sovevaerelse_lys
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: sensor.bedroom_activity_state
+                state: "on"
+            sequence:
+              - service: light.turn_on
+                target:
+                  entity_id: light.bedroom_tablet
+                data:
+                  brightness: 1
+              - service: light.turn_on
+                target:
+                  entity_id: light.bedroom_tablet_screensaver
+        default:
+          - service: light.turn_off
+            target:
+              entity_id: light.bedroom_tablet
 
   - alias: activate_light_profile_bedroom_party
     initial_state: true
@@ -586,6 +629,10 @@ automation:
               effect: "Rainbow"
               brightness: 127
             light.seng_laeselampe:
+              state: on
+              effect: "colorloop"
+              brightness: 32
+            light.sovevaerelse_skuffer:
               state: on
               effect: "colorloop"
               brightness: 32
