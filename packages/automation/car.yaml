@@ -92,16 +92,6 @@ template:
         state: "{{'VW Fox' in (state_attr('sensor.darkphone_bluetooth_connection', 'connected_paired_devices')|join(', ')) }}"
       - name: At Work Soon
         state: "{{ states('proximity.bil_to_rsh')|float < 2000 }}"
-      - name: ID3 Locked
-        state: >-
-          {{
-            is_state('sensor.id3_door_front_left_lock_status', 'unlocked')
-            or is_state('sensor.id3_door_front_right_lock_status', 'unlocked')
-            or is_state('sensor.id3_door_rear_left_lock_status', 'unlocked')
-            or is_state('sensor.id3_door_rear_right_lock_status', 'unlocked')
-            or is_state('sensor.id3_trunk_lock_status', 'unlocked')
-          }}
-        device_class: lock
 
 automation:
   - id: alert_car_unlocked
@@ -366,7 +356,7 @@ automation:
     id: notify_car_climatising
     trigger:
       - platform: state
-        entity_id: binary_sensor.id3_climatising
+        entity_id: binary_sensor.id3_klimatisering
         to: "on"
     condition:
       - condition: numeric_state
@@ -388,7 +378,7 @@ automation:
     initial_state: false
     trigger:
       - platform: state
-        entity_id: binary_sensor.id3_climatising
+        entity_id: binary_sensor.id3_klimatisering
         to: "off"
     action:
       - service: notify.telegram_darkfox
