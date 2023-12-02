@@ -2,21 +2,16 @@ script:
   tts_speak:
     alias: "Wrapper for TTS service"
     sequence:
-      - service: tts.speak
-        data:
-          cache: "{{ cache or 'false' }}"
-          media_player_entity_id: "{{ media_player_entity_id }}"
-          message: "{{ message | replace('\n', ' ') }}"
+      - service: chime_tts.say
         target:
-          entity_id: tts.piper
-      # - service: tts.cloud_say
-      #   data:
-      #     cache: "{{ cache }}"
-      #     entity_id: "{{ media_player_entity_id }}"
-      #     message: "{{ message | replace('\n', ' ') }}"
-      #     language: da-DK
-      #     options:
-      #       gender: male
+          entity_id: "{{ media_player_entity_id }}"
+        data:
+          message: "{{ message | replace('\n', ' ') }}"
+          volume_level: "{{ volume_level or 0.6 }}"
+          cache: "{{ cache or 'false' }}"
+          tts_platform: tts.piper
+          chime_path: mp3_path_placeholder-bells
+          announce: true
 
 command_line:
   - sensor:
