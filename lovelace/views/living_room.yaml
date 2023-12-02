@@ -11,6 +11,11 @@ cards:
       - room: living_room
 
   - type: custom:decluttering-card
+    template: speaker_control
+    variables:
+      - room: stue
+
+  - type: custom:decluttering-card
     template: room_climate_with_thermostat
     variables:
       - rum: stue
@@ -22,11 +27,6 @@ cards:
       - rum: stue
 
   - type: custom:layout-break
-
-  - type: custom:decluttering-card
-    template: speaker_control
-    variables:
-      - room: stue
 
   - !include ../cards/media_players/living_room_media.yaml
 
@@ -131,3 +131,87 @@ cards:
     artwork: cover
     hide:
       icon: true
+
+  - type: custom:android-tv-card
+    remote_id: remote.stue_shield
+    slider_id: media_player.stue_soundbar
+    keyboard_id: media_player.stue_shield_adb
+    custom_keys:
+      smarttube:
+        icon: mdi:youtube
+        source: https://www.youtube.com
+    rows:
+      - - power
+        - info
+        - plex
+        - smarttube
+      - - back
+        - home
+        - keyboard
+      - - dpad
+      - - rewind
+        - previous
+        - play_pause
+        - next
+        - fast_forward
+      - - slider
+
+  - type: custom:plex-meets-homeassistant
+    title: Watch Next
+    token: !secret plex_token
+    ip: !secret plex_addr
+    protocol: https
+    port: 32400
+    libraryName: Watch Next
+    entity:
+      - androidtv | media_player.stue_shield_adb
+      - cast | media_player.stue_shield
+    sort: lastViewedAt:desc
+    playTrailer: false
+    showExtras: false
+    showSearch: false
+    maxRows: 1
+    useHorizontalScroll: "Yes"
+    useShuffle: "No"
+    displayTitleMain: "Yes"
+    displaySubtitleMain: "Yes"
+
+  - type: custom:plex-meets-homeassistant
+    title: Movies
+    token: !secret plex_token
+    ip: !secret plex_addr
+    protocol: https
+    port: 32400
+    libraryName: Movies
+    entity:
+      - androidtv | media_player.stue_shield_adb
+      - cast | media_player.stue_shield
+    sort: addedAt:desc
+    playTrailer: false
+    showExtras: false
+    showSearch: false
+    maxRows: 1
+    useHorizontalScroll: "Yes"
+    useShuffle: "No"
+    displayTitleMain: "Yes"
+    displaySubtitleMain: "Yes"
+
+  - type: custom:plex-meets-homeassistant
+    title: TV Shows
+    token: !secret plex_token
+    ip: !secret plex_addr
+    protocol: https
+    port: 32400
+    libraryName: TV Shows
+    entity:
+      - androidtv | media_player.stue_shield_adb
+      - cast | media_player.stue_shield
+    sort: addedAt:desc
+    playTrailer: false
+    showExtras: false
+    showSearch: false
+    maxRows: 1
+    useHorizontalScroll: "Yes"
+    useShuffle: "No"
+    displayTitleMain: "Yes"
+    displaySubtitleMain: "Yes"

@@ -13,32 +13,71 @@ switch:
           service: button.press
           target:
             entity_id: button.martin_pc_shutdown
-
-script:
-  toggle_pc_soundbar:
-    sequence:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: media_player.kontor_soundbar_songpal
-                state: "on"
-            sequence:
-              - service: media_player.turn_off
-                target:
-                  entity_id: media_player.kontor_soundbar_songpal
-        default:
-          - service: media_player.turn_on
-            target:
-              entity_id: media_player.kontor_soundbar_songpal
-          - wait_for_trigger:
-              - platform: state
-                entity_id: media_player.kontor_soundbar_songpal
-                to: "on"
+      kontor_soundbar_pc_output:
+        friendly_name: Kontor Soundbar PC Output
+        icon_template: mdi:soundbar
+        value_template: "{{ is_state('media_player.kontor_soundbar_songpal', 'on') and state_attr('media_player.kontor_soundbar_songpal', 'source') == 'TV' }}"
+        turn_on:
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: media_player.kontor_soundbar_songpal
+                    state: "off"
+                sequence:
+                  - service: media_player.turn_on
+                    target:
+                      entity_id: media_player.kontor_soundbar_songpal
+                  - wait_for_trigger:
+                      - platform: state
+                        entity_id: media_player.kontor_soundbar_songpal
+                        to: "on"
           - service: media_player.select_source
             target:
               entity_id: media_player.kontor_soundbar_songpal
             data:
-              source: Analog
+              source: TV
+        turn_off:
+          service: media_player.turn_off
+          target:
+            entity_id: media_player.kontor_soundbar_songpal
+
+      kontor_shield_previous:
+        turn_off:
+          - delay:
+              seconds: 0
+        turn_on:
+          - service: media_player.media_previous_track
+            target:
+              entity_id: media_player.kontor_shield_remote
+
+      kontor_shield_next:
+        turn_off:
+          - delay:
+              seconds: 0
+        turn_on:
+          - service: media_player.media_next_track
+            target:
+              entity_id: media_player.kontor_shield_remote
+
+      kontor_shield_stop:
+        turn_off:
+          - delay:
+              seconds: 0
+        turn_on:
+          - service: remote.send_command
+            data:
+              command: DPAD_CENTER
+            target:
+              entity_id: remote.kontor_shield
+
+      kontor_shield_play_pause:
+        turn_off:
+          - delay:
+              seconds: 0
+        turn_on:
+          - service: media_player.media_play_pause
+            target:
+              entity_id: media_player.kontor_shield_remote
 
 automation:
   # Office #
@@ -117,11 +156,100 @@ automation:
     id: pc_speaker_output
     initial_state: true
     trigger:
-      platform: webhook
-      webhook_id: !secret pc_speaker_output_webhook
-      local_only: true
-      allowed_methods:
-        - GET
-        - POST
+      - platform: webhook
+        webhook_id: !secret pc_speaker_output_webhook
+        local_only: true
+        allowed_methods:
+          - GET
+          - POST
     action:
-      - service: script.toggle_pc_soundbar
+      - service: "switch.{{ trigger.query.action }}"
+        target:
+          entity_id: switch.kontor_soundbar_pc_output
+
+  - alias: pc_media_control
+    id: pc_media_control
+    initial_state: true
+    trigger:
+      - platform: webhook
+        webhook_id: !secret pc_media_control_webhook
+        local_only: true
+        allowed_methods:
+          - GET
+          - POST
+    action:
+      - service: "media_player.{{ trigger.query.action }}"
+        target:
+          entity_id: media_player.kontor_shield_remote
+
+  - alias: Mute PC TV line in on Office TV off
+    id: mute_pc_tv_line_in_on_office_tv_off
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id:
+          - media_player.kontor_tv
+          - media_player.kontor_shield_remote
+        to: "off"
+    action:
+      - service: button.press
+        target:
+          entity_id: button.martin_pc_mute_tv
+
+  - alias: Unute PC TV line in on Office TV on
+    id: unute_pc_tv_line_in_on_office_tv_on
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: media_player.kontor_tv
+        to: "on"
+    action:
+      - service: button.press
+        target:
+          entity_id: button.martin_pc_unmute_tv
+
+  - alias: Switch Office TV speaker output to internal when PC off
+    id: switch_office_tv_speaker_output_to_internal_when_pc_off
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: switch.martin_pc
+        to: "off"
+      - platform: state
+        entity_id: media_player.kontor_tv
+        to: "on"
+    condition:
+      - condition: state
+        entity_id: media_player.kontor_tv
+        state: "on"
+      - condition: state
+        entity_id: switch.martin_pc
+        state: "off"
+    action:
+      - service: webostv.select_sound_output
+        data:
+          entity_id: media_player.kontor_tv
+          sound_output: "tv_speaker"
+
+  - alias: Switch Office TV Speaker Output to optical when PC on
+    id: switch_office_tv_speaker_output_to_optical_when_pc_on
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: switch.martin_pc
+        to: "on"
+      - platform: state
+        entity_id: media_player.kontor_tv
+        to: "on"
+    condition:
+      - condition: state
+        entity_id: media_player.kontor_tv
+        state: "on"
+      - condition: state
+        entity_id: switch.martin_pc
+        state: "on"
+    action:
+      - service: webostv.select_sound_output
+        data:
+          entity_id: media_player.kontor_tv
+          sound_output: "external_optical"

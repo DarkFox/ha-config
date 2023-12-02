@@ -3,6 +3,7 @@ media_player:
     name: Soveværelse TV
     children:
       - media_player.sovevarelse_tv_dlna
+      - media_player.sovevarelse_soundbar_songpal
     commands:
       turn_on:
         service: switch.turn_on
@@ -13,17 +14,17 @@ media_player:
         data:
           entity_id: switch.sovevaerelse_tv
       volume_up:
-        service: switch.turn_on
+        service: media_player.volume_up
         data:
-          entity_id: switch.sovevaerelse_soundbar_volume_up
+          entity_id: media_player.sovevarelse_soundbar_songpal
       volume_down:
-        service: switch.turn_on
+        service: media_player.volume_down
         data:
-          entity_id: switch.sovevaerelse_soundbar_volume_down
+          entity_id: media_player.sovevarelse_soundbar_songpal
       volume_mute:
-        service: switch.turn_on
+        service: media_player.volume_mute
         data:
-          entity_id: switch.sovevaerelse_soundbar_mute
+          entity_id: media_player.sovevarelse_soundbar_songpal
     attributes:
       state: switch.sovevaerelse_tv
     device_class: tv
@@ -72,13 +73,19 @@ switch:
         icon_template: mdi:weather-night-partly-cloudy
         value_template: "{{ is_state('input_boolean.sovevaerelse_soundbar_night_mode_state', 'on') }}"
         turn_on:
-          service: script.turn_on
+          service: songpal.set_sound_setting
           target:
-            entity_id: script.sovevaerelse_soundbar_enable_night_mode
+            entity_id: media_player.sovevarelse_soundbar_songpal
+          data:
+            name: nightMode
+            value: "on"
         turn_off:
-          service: script.turn_on
+          service: songpal.set_sound_setting
           target:
-            entity_id: script.sovevaerelse_soundbar_disable_night_mode
+            entity_id: media_player.sovevarelse_soundbar_songpal
+          data:
+            name: nightMode
+            value: "off"
 
 binary_sensor:
   - platform: template
@@ -89,9 +96,6 @@ binary_sensor:
             is_state('media_player.sovevaerelse_chromecast', 'playing')
             or is_state('media_player.sovevaerelse_chromecast', 'paused')
             or is_state('media_player.sovevaerelse_chromecast', 'idle')
-            or is_state('media_player.alle_hojttalere', 'playing')
-            or is_state('media_player.alle_hojttalere', 'paused')
-            or is_state('media_player.alle_hojttalere', 'idle')
           }}
 
 script:
@@ -221,75 +225,6 @@ script:
         target:
           entity_id: input_boolean.sovevaerelse_tv_night_mode_state
 
-  sovevaerelse_soundbar_enable_night_mode:
-    sequence:
-      - service: switch.turn_on
-        target:
-          entity_id: switch.sovevaerelse_soundbar_night
-      - service: input_boolean.turn_on
-        target:
-          entity_id: input_boolean.sovevaerelse_soundbar_night_mode_state
-
-  sovevaerelse_soundbar_disable_night_mode:
-    sequence:
-      - service: switch.turn_on
-        target:
-          entity_id: switch.sovevaerelse_soundbar_night
-      - service: input_boolean.turn_off
-        target:
-          entity_id: input_boolean.sovevaerelse_soundbar_night_mode_state
-
-  sovevaerelse_soundbar_fix_audio_lag:
-    sequence:
-      - service: switch.turn_on
-        data:
-          entity_id: switch.sovevaerelse_soundbar_menu
-      - delay:
-          milliseconds: 250
-      - service: switch.turn_on
-        data:
-          entity_id: switch.sovevaerelse_soundbar_down
-      - delay:
-          milliseconds: 250
-      - service: switch.turn_on
-        data:
-          entity_id: switch.sovevaerelse_soundbar_down
-      - delay:
-          milliseconds: 250
-      - service: switch.turn_on
-        data:
-          entity_id: switch.sovevaerelse_soundbar_ok
-      - delay:
-          milliseconds: 250
-      - service: switch.turn_on
-        data:
-          entity_id: switch.sovevaerelse_soundbar_down
-      - delay:
-          milliseconds: 250
-      - service: switch.turn_on
-        data:
-          entity_id: switch.sovevaerelse_soundbar_down
-      - delay:
-          milliseconds: 250
-      - service: switch.turn_on
-        data:
-          entity_id: switch.sovevaerelse_soundbar_ok
-      - delay:
-          milliseconds: 250
-      - service: switch.turn_on
-        data:
-          entity_id: switch.sovevaerelse_soundbar_down
-      - delay:
-          milliseconds: 250
-      - service: switch.turn_on
-        data:
-          entity_id: switch.sovevaerelse_soundbar_up
-      - delay:
-          milliseconds: 250
-      - service: switch.turn_on
-        data:
-          entity_id: switch.sovevaerelse_soundbar_menu
-
 automation:
   - alias: Soveværelse TV on
     initial_state: true
@@ -320,20 +255,6 @@ automation:
         data:
           entity_id: switch.sovevaerelse_tv
 
-  - alias: sovevaerelse_tv_fix_audio_lag
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: switch.sovevaerelse_tv
-        from: "off"
-        to: "on"
-        for:
-          seconds: 10
-    action:
-      - service: script.turn_on
-        data:
-          entity_id: script.sovevaerelse_soundbar_fix_audio_lag
-
   - alias: bedroom_media_mute
     initial_state: true
     trigger:
@@ -345,9 +266,10 @@ automation:
         entity_id: binary_sensor.sovevaerelse_video_out
         state: "on"
     action:
-      - service: switch.turn_on
+      - service: media_player.volume_mute
         data:
-          entity_id: switch.sovevaerelse_soundbar_mute
+          entity_id: media_player.sovevarelse_soundbar_songpal
+          is_volume_muted: true
 
   - alias: bedroom_media_unmute
     initial_state: true
@@ -360,14 +282,10 @@ automation:
         entity_id: binary_sensor.sovevaerelse_video_out
         state: "on"
     action:
-      - service: switch.turn_on
+      - service: media_player.volume_mute
         data:
-          entity_id: switch.sovevaerelse_soundbar_volume_down
-      - delay:
-          milliseconds: 250
-      - service: switch.turn_on
-        data:
-          entity_id: switch.sovevaerelse_soundbar_volume_up
+          entity_id: media_player.sovevarelse_soundbar_songpal
+          is_volume_muted: false
 
   - alias: sovevaerelse_soundbar_volume_remote_state_up
     initial_state: true
