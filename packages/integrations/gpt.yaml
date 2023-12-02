@@ -1,40 +1,72 @@
+intent_script:
+  AskNabu:
+    action:
+      - service: conversation.process
+        data:
+          text: "{{query}}"
+          language: "da"
+          agent_id: 4e0a875b09f8a19a405e1bf3e5c4adac
+        response_variable: agent
+      - event: openai_response_received
+        event_data:
+          full_response: "{{ agent.response.speech.plain.speech }}"
+    speech:
+      text: "{{ states['sensor.openai_query_response'].attributes.full_response }}"
+
 template:
+  - trigger:
+      platform: event
+      event_type: openai_response_received
+    sensor:
+      - name: "OpenAI query response"
+        state: "{{now()}}"
+        attributes:
+          full_response: "{{ trigger.event.data.full_response }}"
+
   - sensor:
       - name: GPT API Key
         state: !secret writesonic_api_key
+
       - name: GPT Prompt
         state: "{{ now() }}"
         attributes:
           prompt: >-
             {% from 'easy_time.jinja' import weekday, month %}
-            Funger som en personlig assistent for Martin. Du er vittig og taler samtaleagtigt.
-            Hils på mig på en venlig måde, sig hvad klokken er, hvad mine planer er i dag,
-            kommenter på vejret (husk at fortælle mig temperaturen), og giv en kort anbefaling om påklædning.
-
-            Hold dig til oplysningerne i denne besked.
-
-            Den aktuelle tid er {{ states('sensor.day_name') }} den {{ now().day }}.
-            {{ states('sensor.month_name') }}, klokken {{ states('sensor.time') }}.
+            Start med en venlig hilsen, informer mig om den aktuelle dag og tid, og gennemgå min daglige plan punkt for punkt. 
 
             {% if not is_state('sensor.vagtplan_agenda', '0') %}
-            Her er min vagtplan:
-            {{ state_attr('sensor.vagtplan_agenda', 'agenda') }}
+            Min vagtplan er som følger: 
+            {% for event in state_attr('sensor.vagtplan_agenda', 'agenda') %}
+              {{event }}.
+            {% endfor %}
+
+            {% if not is_state('sensor.vagtplan_agenda', '0') %}
+            Der er følgende aftaler i minarbejdskalender:
+            {% for event in state_attr('sensor.arbejde_agenda', 'agenda') %}
+              {{event }}.
+            {% endfor %}
+            {% endif %}
             {% else %}
-            Jeg har fri i dag
+            Jeg har fri i dag.
             {% endif %}
+
             {% if not is_state('sensor.personlig_agenda', '0') %}
-
-            Her er min personlige kalender:
-            {{ state_attr('sensor.personlig_agenda', 'agenda') }}
+            Min personlige kalender: 
+            {% for event in state_attr('sensor.personlig_agenda', 'agenda') %}
+              {{event }}.
+            {% endfor %}
             {% endif %}
+
             {% if not is_state('sensor.tripit_agenda', '0') %}
-            Mine rejseplaner fra tripit er:
-            {{ state_attr('sensor.tripit_agenda', 'agenda') }}[
+            Mine rejseplaner: 
+            {% for event in state_attr('sensor.tripit_agenda', 'agenda') %}
+              {{event }}.
+            {% endfor %}
             {% endif %}
 
-            Temperaturen udenfor lige nu er {{ states('sensor.temperature')|replace('.',',') }} °C.
-            Her er dagens vejrudsigt: {{ states('sensor.dmi_vejr') }}.
-            {{ state_attr('sensor.dmi_vejr_tts', 'text') }}
+            Gennemgå de seneste overskrifter fra DR nyheder.
+            Kommenter på dagens vejr, og husk at inkludere temperaturen.
+            Afslut med en anbefaling om hvilken påklædning der ville være passende i dag.
 
 command_line:
   - sensor:

@@ -79,6 +79,9 @@ mqtt:
     - name: Vagtplan Agenda
       state_topic: virtual/agenda/vagtplan/state
       json_attributes_topic: virtual/agenda/vagtplan/events
+    - name: Arbejde Agenda
+      state_topic: virtual/agenda/arbejde/state
+      json_attributes_topic: virtual/agenda/arbejde/events
     - name: Personlig Agenda
       state_topic: virtual/agenda/personlig/state
       json_attributes_topic: virtual/agenda/personlig/events
@@ -108,29 +111,92 @@ automation:
         response_variable: agenda
       - service: mqtt.publish
         data:
-          payload: "{{ agenda.events|length }}"
-          topic: virtual/agenda/vagtplan/state
-          retain: true
-      - service: mqtt.publish
-        data:
           topic: virtual/agenda/vagtplan/events
           retain: true
           payload: >
-            {% from 'easy_time.jinja' import month %}
-            { "agenda": "
+            { "agenda": [
             {% for event in agenda.events|sort(attribute='start') | list -%}
                 {%- set start = (event.start | as_datetime) -%}
                 {%- set end = (event.end | as_datetime) -%}
-                {{ start.strftime('%H:%M') }} - {{ end.strftime('%H:%M') }}:\n
                 {%- if event.summary|regex_match('På (RSR|RSH)') -%}
-                  Arbejde - {{ event.summary | replace('På ', '') | replace('RSH', 'Herlev') | replace('RSR', 'Rigshospitalet') }}
+                  "{{ start.strftime('%H:%M') }} - {{ end.strftime('%H:%M') }}: Arbejde - {{ event.summary | replace('På ', '') | replace('RSH', 'Herlev') | replace('RSR', 'Rigshospitalet') }}"
                 {%- elif event.summary|regex_match('Vagt') -%}
-                  Tilkaldevagt
+                  "{{ start.strftime('%H:%M') }} - {{ end.strftime('%H:%M') }}: Tilkaldevagt"
                 {%- else -%}
-                  {{ event.summary }}
-                {%- endif -%}.\n
+                  "{{ start.strftime('%H:%M') }} - {{ end.strftime('%H:%M') }}: {{ event.summary }}"
+                {%- endif -%}
+                {%- if not loop.last %},{% endif %}
             {%- endfor -%}
-            "}
+            ]}
+
+  - id: update_vagtplan_agenda_state
+    alias: Update Vagtplan Agenda State
+    initial_state: true
+    trigger:
+      - platform: mqtt
+        topic: virtual/agenda/vagtplan/events
+    action:
+      - service: mqtt.publish
+        data:
+          topic: virtual/agenda/vagtplan/state
+          retain: true
+          payload: "{{ trigger.payload_json.agenda | length }}"
+
+  - id: update_arbejde_agenda
+    alias: Update Arbejde Agenda
+    initial_state: true
+    trigger:
+      - platform: time_pattern
+        hours: "*"
+        minutes: "/5"
+        seconds: "0"
+      - platform: state
+        entity_id: binary_sensor.home_assistant_loaded
+        to: "on"
+    action:
+      - service: calendar.list_events
+        data:
+          start_date_time: "{{ state_attr('calendar.vagtplan_arbejde', 'start_time') }}"
+          end_date_time: "{{ state_attr('calendar.vagtplan_arbejde', 'end_time') }}"
+        target:
+          entity_id: calendar.arbejdskalender
+        response_variable: agenda
+      - service: mqtt.publish
+        data:
+          payload: "{{ agenda.events|length }}"
+          topic: virtual/agenda/arbejde/state
+          retain: true
+      - service: mqtt.publish
+        data:
+          topic: virtual/agenda/arbejde/events
+          retain: true
+          payload: >
+            {%- set ns = namespace(events=[]) -%}
+            {%- for event in agenda.events|sort(attribute='start') | list -%}
+                {%- if not (event.summary|regex_match('På (RSR|RSH)|Frokost|Aftensmad|Vagt')) -%}
+                  {%- set ns.events = ns.events + [event] -%}
+                {%- endif -%}
+            {%- endfor -%}
+            { "agenda": [
+              {% for event in ns.events -%}
+                  {%- set start = (event.start | as_datetime) -%}
+                  {%- set end = (event.end | as_datetime) -%}
+                  "{{ start.strftime('%H:%M') }} - {{ end.strftime('%H:%M') }}: {{ event.summary }}"{{ ',' if not loop.last }}
+              {%- endfor -%}
+            ]}
+
+  - id: update_arbejde_agenda_state
+    alias: Update Arbejde Agenda State
+    initial_state: true
+    trigger:
+      - platform: mqtt
+        topic: virtual/agenda/arbejde/events
+    action:
+      - service: mqtt.publish
+        data:
+          topic: virtual/agenda/arbejde/state
+          retain: true
+          payload: "{{ trigger.payload_json.agenda | length }}"
 
   - id: update_personlig_agenda
     alias: Update Personlig Agenda
@@ -161,15 +227,27 @@ automation:
           topic: virtual/agenda/personlig/events
           retain: true
           payload: >
-            {% from 'easy_time.jinja' import month %}
-            { "agenda": "
+            { "agenda": [
             {%- set remove_string = ' #bil' -%}
             {% for event in agenda.events|sort(attribute='start') | list -%}
                 {%- set start = (event.start | as_datetime) -%}
                 {%- set end = (event.end | as_datetime) -%}
-                {{ start.strftime('%H:%M') }} - {{ end.strftime('%H:%M') }}: {{ event.summary | replace(remove_string, '')|title }}.\n
+                "{{ start.strftime('%H:%M') }} - {{ end.strftime('%H:%M') }}: {{ event.summary | replace(remove_string, '')|title }}"{{ ',' if not loop.last }}
             {%- endfor -%}
-            "}
+            ]}
+
+  - id: update_personlig_agenda_state
+    alias: Update Personlig Agenda State
+    initial_state: true
+    trigger:
+      - platform: mqtt
+        topic: virtual/agenda/personlig/events
+    action:
+      - service: mqtt.publish
+        data:
+          topic: virtual/agenda/personlig/state
+          retain: true
+          payload: "{{ trigger.payload_json.agenda | length }}"
 
   - id: update_tripit_agenda
     alias: Update Tripit Agenda
@@ -200,12 +278,23 @@ automation:
           topic: virtual/agenda/tripit/events
           retain: true
           payload: >
-            {% from 'easy_time.jinja' import month %}
-            { "agenda": "
-            {%- set remove_string = ' #bil' -%}
+            { "agenda": [
             {% for event in agenda.events|sort(attribute='start') | list -%}
                 {%- set start = (event.start | as_datetime) -%}
                 {%- set end = (event.end | as_datetime) -%}
-                {{ start.strftime('%H:%M') }} - {{ end.strftime('%H:%M') }}: {{ event.summary | replace(remove_string, '')|title }}.\n
+                "{{ start.strftime('%H:%M') }} - {{ end.strftime('%H:%M') }}: {{ event.summary |title }}"{{ ',' if not loop.last }}
             {%- endfor -%}
-            "}
+            ]}
+
+  - id: update_tripit_agenda_state
+    alias: Update Tripit Agenda State
+    initial_state: true
+    trigger:
+      - platform: mqtt
+        topic: virtual/agenda/tripit/events
+    action:
+      - service: mqtt.publish
+        data:
+          topic: virtual/agenda/tripit/state
+          retain: true
+          payload: "{{ trigger.payload_json.agenda | length }}"

@@ -38,40 +38,33 @@ script:
         data:
           is_volume_muted: "{{ not state_attr(entity_id , 'is_volume_muted') }}"
 
+  briefing_announcement:
+    alias: Briefing Announcement
+    sequence:
+      - service: conversation.process
+        data:
+          text: >-
+            {{ state_attr('sensor.gpt_prompt', 'prompt') | regex_replace("  +", ' ') }}
+          language: DA
+          agent_id: 4e0a875b09f8a19a405e1bf3e5c4adac
+        response_variable: agent
+      - service: script.tts_speak
+        data:
+          cache: false
+          media_player_entity_id: "{{ announcement_entities }}"
+          volume_level: "{{ volume_level }}"
+          message: >-
+            {{ agent.response.speech.plain.speech }}
+
   mass_briefing_playlist:
     alias: MASS Briefing playlist
     sequence:
-      - variables:
-          old_tts_file: "{{ states('sensor.latest_tts') }}"
-      - service: homeassistant.update_entity
+      - service: script.briefing_announcement
         data:
-          entity_id: sensor.gpt_briefing
+          announcement_entities: "{{ announcement_entities }}"
+          volume_level: "{{ volume_level }}"
       - delay:
-          seconds: 1
-      - service: media_player.play_media
-        target:
-          entity_id: "{{ announcement_entities }}"
-        data:
-          announce: true
-          media_content_id: >
-            media-source://tts/tts.piper?language=da_DK&voice=da_DK-talesyntese-medium&message="{{ state_attr('sensor.gpt_briefing', 'message') | replace('\n', ' ') }}"
-          media_content_type: "music"
-          extra:
-            volume: 40
-      - repeat:
-          until: "{{ states('sensor.latest_tts') != old_tts_file }}"
-          sequence:
-            - service: homeassistant.update_entity
-              target:
-                entity_id: sensor.latest_tts
-            - delay:
-                milliseconds: 200
-      - wait_for_trigger:
-          - platform: state
-            entity_id: sensor.latest_tts_duration
-      - delay:
-          minutes: "{{ states('sensor.latest_tts_duration').split(':')[1] }}"
-          seconds: "{{ states('sensor.latest_tts_duration').split(':')[2] }}"
+          seconds: 10
       - service: script.mass_playlist
         data:
           device_entity_id: "{{ device_entity_id }}"
@@ -136,15 +129,19 @@ script:
   briefing:
     alias: Rapport
     sequence:
-      - service: homeassistant.update_entity
+      - service: conversation.process
         data:
-          entity_id: sensor.gpt_briefing
+          text: >-
+            {{ state_attr('sensor.gpt_prompt', 'prompt') | regex_replace("  +", ' ') }}
+          language: DA
+          agent_id: 4e0a875b09f8a19a405e1bf3e5c4adac
+        response_variable: agent
       - service: script.tts_speak
         data:
           cache: false
           media_player_entity_id: "{{ device_entity_id }}"
           message: >-
-            {{ state_attr('sensor.gpt_briefing', 'message') }}
+            {{ agent.response.speech.plain.speech }}
 
 automation:
   - id: adjust_speaker_group_volume
@@ -187,6 +184,11 @@ input_number:
     min: 0
     max: 100
     step: 1
+  roam_group_volume:
+    name: Roam Gruppe Lydstyrke
+    min: 0
+    max: 100
+    step: 1
 
 template:
   - binary_sensor:
@@ -223,6 +225,16 @@ template:
       - name: Badevaerelse Group Leader
         state: >-
           {% set entity = 'media_player.badevaerelse' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {% if (group_members|length) > 1 %}
+            {{ group_members[0] == entity }}
+          {% else %}
+            {{ is_state(entity, 'playing') }}
+          {% endif %}
+
+      - name: Roam Group Leader
+        state: >-
+          {% set entity = 'media_player.roam' %}
           {% set group_members = state_attr(entity, 'group_members') %}
           {% if (group_members|length) > 1 %}
             {{ group_members[0] == entity }}
@@ -349,6 +361,31 @@ template:
           {% set distance = (states('sensor.badevaerelse_speaker_distance_to_group_max_volume')|float)%}
           {{ 1-(distance + group_max) }}
 
+      - name: Roam Speaker Lead By
+        state: >-
+          {% set entity = 'media_player.roam' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {{ group_members[0] }}
+
+      - name: Roam Speaker Group Max Volume
+        state: >-
+          {% set group_members = state_attr('media_player.roam', 'group_members') %}
+          {% set ns = namespace(ret=[]) %}
+          {% for member in group_members %}
+            {% set ns.ret = ns.ret + [state_attr(member, 'volume_level')] %}
+          {% endfor %}
+          {{ ns.ret|average }}
+
+      - name: Roam Speaker Distance to Group Max Volume
+        state: >-
+          {{ (state_attr('media_player.roam', 'volume_level')|float) - (states('sensor.roam_speaker_group_max_volume')|float)  }}
+
+      - name: Roam Speaker Volume Exponent
+        state: >-
+          {% set group_max = (states('sensor.roam_speaker_group_max_volume')|float) %}
+          {% set distance = (states('sensor.roam_speaker_distance_to_group_max_volume')|float)%}
+          {{ 1-(distance + group_max) }}
+
       - name: Active Media Player
         state: >
           {% set dev = namespace(active_player='') %}
@@ -367,6 +404,7 @@ group:
       - binary_sensor.sovevaerelse_group_leader
       - binary_sensor.kokken_group_leader
       - binary_sensor.badevaerelse_group_leader
+      - binary_sensor.roam_group_leader
   sonos:
     name: Sonos Højttalere
     entities:
@@ -374,6 +412,7 @@ group:
       - media_player.sovevaerelse
       - media_player.kokken
       - media_player.badevaerelse
+      - media_player.roam
   all_media:
     name: All Media
     entities:
@@ -381,11 +420,12 @@ group:
       - media_player.kokken
       - media_player.badevaerelse
       - media_player.stue
+      - media_player.roam
 
       - media_player.stue_shield
-      - media_player.kokken_chromecast
+      - media_player.kontor_shield
       - media_player.sovevaerelse_chromecast
 
-      - media_player.kokken_soundbar
+      - media_player.kontor_soundbar
 
       - media_player.sovevaerelse_tv_dlna

@@ -1,0 +1,20 @@
+feedreader:
+  urls:
+    - https://www.dr.dk/nyheder/service/feeds/senestenyt
+  scan_interval:
+    minutes: 5
+  max_entries: 5
+
+template:
+  - trigger:
+      - platform: event
+        event_type: feedreader
+        event_data:
+          feed_url: "https://www.dr.dk/nyheder/service/feeds/senestenyt"
+    sensor:
+      - name: "DR Seneste Nyt"
+        state: "{{ as_timestamp(now()) | timestamp_custom('%H:%M:%S %d %b %Y', true) }}"
+        attributes:
+          latest: >-
+            {% set old_stories = state_attr('sensor.dr_seneste_nyt', 'latest') or [] %}
+            {{ ([trigger.event.data.title] + old_stories)[0:5] }}

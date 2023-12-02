@@ -670,6 +670,7 @@ automation:
             - media_player.badevaerelse
             - media_player.kokken
             - media_player.stue
+            - media_player.roam
       - service: media_player.volume_set
         data:
           entity_id: "media_player.sovevaerelse"
@@ -790,9 +791,10 @@ automation:
           profile: Dimmed
       - service: script.mass_briefing_playlist
         data:
-          announcement_entities: >-
-            ["media_player.sovevaerelse", "media_player.badevaerelse" {{ ', "media_player.kokken"' if is_state('input_boolean.guests', 'off') }}]
+          announcement_entities:
+            - media_player.sovevaerelse
           device_entity_id: media_player.sovevaerelse_mass
+          volume_level: 0.3
           playlist:
             - "{{ states('sensor.podcast_radioavisen') }}"
             - database://radio/1
@@ -846,12 +848,13 @@ automation:
           entity_id: media_player.sovevaerelse
         data:
           group_members: >-
-            ["media_player.badevaerelse" {{ ', "media_player.kokken"' if is_state('input_boolean.guests', 'off') }}]
+            ["media_player.badevaerelse" {{ ', "media_player.kokken", "media_player.roam"' if is_state('input_boolean.guests', 'off') }}]
       - service: script.mass_briefing_playlist
         data:
           announcement_entities: >-
-            ["media_player.sovevaerelse", "media_player.badevaerelse" {{ ', "media_player.kokken"' if is_state('input_boolean.guests', 'off') }}]
+            ["media_player.sovevaerelse", "media_player.badevaerelse" {{ ', "media_player.kokken", "media_player.roam"' if is_state('input_boolean.guests', 'off') }}]
           device_entity_id: media_player.sovevaerelse_mass
+          volume_level: 0.5
           playlist:
             - "{{ states('sensor.podcast_radioavisen') }}"
             - "{{ states('sensor.podcast_daily_tech_headlines') }}"
@@ -862,8 +865,8 @@ automation:
       - service: media_player.volume_set
         data:
           entity_id: >-
-            ["media_player.sovevaerelse", "media_player.badevaerelse" {{ ', "media_player.kokken"' if is_state('input_boolean.guests', 'off') }}]
-          volume_level: 0.40
+            ["media_player.sovevaerelse", "media_player.badevaerelse" {{ ', "media_player.kokken", "media_player.roam"' if is_state('input_boolean.guests', 'off') }}]
+          volume_level: 0.5
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
@@ -931,8 +934,8 @@ automation:
       - service: media_player.volume_set
         data:
           entity_id: >-
-            ["media_player.sovevaerelse", "media_player.badevaerelse" {{ ', "media_player.kokken"' if is_state('input_boolean.guests', 'off') }}]
-          volume_level: 0.40
+            ["media_player.sovevaerelse", "media_player.badevaerelse" {{ ', "media_player.kokken", "media_player.roam"' if is_state('input_boolean.guests', 'off') }}]
+          volume_level: 0.60
       - delay:
           minutes: 5
       - choose:
