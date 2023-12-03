@@ -1,3 +1,22 @@
+template:
+  - sensor:
+      - name: Room Announcement Speakers
+        state: "{{ (state_attr('sensor.room_announcement_speakers', 'entities') or []) | length }}"
+        attributes:
+          entities: >-
+            {%- if state_attr('sensor.active_rooms', 'entities') -%}
+              {%- set ns = namespace(ret=[]) %}
+              {%- for entity in state_attr('sensor.active_rooms', 'entities') -%}
+                {%- set speaker_group = 'group.'+entity.replace('binary_sensor.','').replace('_activity','')+'_speakers' -%}
+                {%- if state_attr(speaker_group, 'entity_id') -%}
+                  {%- set ns.ret = ns.ret + (state_attr(speaker_group, 'entity_id')|list) -%}
+                {%- endif -%}
+              {%- endfor %}
+              {{ ns.ret | unique | list }}
+            {%- else -%}
+            []
+            {%- endif -%}
+
 script:
   notify_everywhere:
     alias: Send notification everywhere
@@ -14,6 +33,13 @@ script:
 
   voice_broadcast:
     alias: Broadcast message on all speakers if home
+    fields:
+      message:
+        description: The message to broadcast
+        example: "Hello, this is a test"
+      entity_id:
+        description: The entity_id of the speaker(s) to broadcast to (defaults to all speakers in active rooms)
+        example: "media_player.kitchen_speaker"
     sequence:
       - condition: state
         entity_id: binary_sensor.martin_presence
@@ -22,12 +48,7 @@ script:
       - service: script.tts_speak
         data:
           cache: false
-          media_player_entity_id:
-            - media_player.stue
-            - media_player.kokken
-            - media_player.badevaerelse
-            - media_player.sovevaerelse
-            - media_player.roam
+          entity_id: "{{ entity_id or state_attr('sensor.room_announcement_speakers' , 'entities') }}"
           volume_level: "{{ 0.35 if states('input_select.sleep_state') in ['alarm', 'soozing', 'waking'] else 0.60 }}"
           message: >-
             {{ message }}

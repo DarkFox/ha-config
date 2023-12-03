@@ -1,16 +1,29 @@
 script:
   tts_speak:
     alias: "Wrapper for TTS service"
+    fields:
+      message:
+        description: "The message to speak"
+        example: "Hello world"
+      volume_level:
+        description: "The volume level to use (Default 0.6))"
+        example: "0.6"
+      cache:
+        description: "Whether to cache the TTS file (Default false)"
+        example: "false"
+      entity_id:
+        description: "The media player(s) to use"
+        example: "media_player.speaker"
     sequence:
       - service: chime_tts.say
         target:
-          entity_id: "{{ media_player_entity_id }}"
+          entity_id: "{{ entity_id }}"
         data:
           message: "{{ message | replace('\n', ' ') }}"
           volume_level: "{{ volume_level or 0.6 }}"
           cache: "{{ cache or 'false' }}"
           tts_platform: tts.piper
-          chime_path: mp3_path_placeholder-bells
+          chime_path: /media/Notifications/Seasonal Celebrations/Sleigh Bells.mp3
           announce: true
 
 command_line:

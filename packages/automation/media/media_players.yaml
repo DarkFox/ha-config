@@ -51,7 +51,7 @@ script:
       - service: script.tts_speak
         data:
           cache: false
-          media_player_entity_id: "{{ announcement_entities }}"
+          entity_id: "{{ announcement_entities }}"
           volume_level: "{{ volume_level }}"
           message: >-
             {{ agent.response.speech.plain.speech }}
@@ -67,7 +67,7 @@ script:
           seconds: 10
       - service: script.mass_playlist
         data:
-          device_entity_id: "{{ device_entity_id }}"
+          entity_id: "{{ entity_id }}"
           repeat: "off"
           shuffle: false
           playlist: "{{ playlist }}"
@@ -77,17 +77,17 @@ script:
     sequence:
       - service: media_player.repeat_set
         target:
-          entity_id: "{{ device_entity_id }}"
+          entity_id: "{{ entity_id }}"
         data:
           repeat: "{{ repeat | default('off') }}"
       - service: media_player.shuffle_set
         target:
-          entity_id: "{{ device_entity_id }}"
+          entity_id: "{{ entity_id }}"
         data:
           shuffle: "{{ shuffle | default(false) }}"
       - service: mass.queue_command
         data:
-          player_id: "{{ device_entity_id }}"
+          player_id: "{{ entity_id }}"
           command: play_media
           enqueue_mode: replace
           repeat_mode: "{{ repeat | default('off') }}"
@@ -123,7 +123,7 @@ script:
       - service: script.tts_speak
         data:
           cache: false
-          media_player_entity_id: "{{ device_entity_id }}"
+          entity_id: "{{ entity_id }}"
           message: "{{ states('sensor.dmi_vejr_tts') }} {{ state_attr('sensor.dmi_vejr_tts', 'text') }}"
 
   briefing:
@@ -139,7 +139,7 @@ script:
       - service: script.tts_speak
         data:
           cache: false
-          media_player_entity_id: "{{ device_entity_id }}"
+          entity_id: "{{ entity_id }}"
           message: >-
             {{ agent.response.speech.plain.speech }}
 
@@ -398,6 +398,23 @@ template:
           {{ dev.active_player }}
 
 group:
+  kitchen_speakers:
+    - media_player.kokken
+  bathroom_speakers:
+    - media_player.badevaerelse
+  bedroom_speakers:
+    - media_player.sovevaerelse
+  living_room_speakers:
+    - media_player.stue
+  office_speakers:
+    - media_player.kitchen
+  hallway_speakers:
+    - media_player.roam
+  balcony_speakers:
+    - media_player.roam
+  workshop_speakers:
+    - media_player.roam
+
   sonos_group_leaders:
     entities:
       - binary_sensor.stue_group_leader

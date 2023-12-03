@@ -16,6 +16,22 @@ input_select:
       - Living Room
       - Office
 
+template:
+  - sensor:
+      - name: Active Rooms
+        state: "{{ (state_attr('sensor.active_rooms', 'entities') or []) | length }}"
+        attributes:
+          entities: >-
+            {%- set ns = namespace(ret=[]) %}
+            {%- if states.binary_sensor is defined -%}
+              {%- for item in states.binary_sensor -%}
+                {%- if item.entity_id.endswith('_activity') and item.state == 'on' -%}
+                  {%- set ns.ret = ns.ret + [item.entity_id] -%}
+                {%- endif -%}
+              {%- endfor %}
+            {%- endif -%}
+            {{ ns.ret }}
+
 binary_sensor:
   - platform: template
     sensors:
@@ -77,6 +93,10 @@ automation:
         entity_id:
           - binary_sensor.stue_any
           - binary_sensor.stue_tilstedevarelse_alle_zoner
+          - binary_sensor.stue_tilstedevarelse_altandor
+          - binary_sensor.stue_tilstedevarelse_sofa
+          - binary_sensor.stue_tilstedevarelse_spisebord
+          - binary_sensor.stue_tilstedevarelse_bar
         to: "on"
 
       - platform: state
