@@ -1,0 +1,43 @@
+substitutions:
+  devicename: lyskaede
+  upper_devicename: Lyskæde
+
+esphome:
+  name: ${devicename}
+  platform: ESP8266
+  board: huzzah
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret encryption_key
+
+ota:
+  password: !secret ota_pass
+
+status_led:
+  pin:
+    number: GPIO5
+    inverted: true
+  #   pin: GPIO05
+  #   id: status_red_pwm
+  #   pin: GPIO01
+  #   id: status_green_pwm
+
+output: !include shared/h801_pwm.yaml
+
+light:
+  - platform: monochromatic
+    id: lyskaede
+    name: Lyskæde
+    output: red_pwm
+    gamma_correct: 1.8
+    default_transition_length: 250ms
+    effects: !include shared/monochromatic_effects.yaml
