@@ -13,28 +13,24 @@ script:
           message: "{{ message }}"
 
   voice_broadcast:
-    alias: Broadcast message on all Google Homes if home
+    alias: Broadcast message on all speakers if home
     sequence:
       - condition: state
         entity_id: binary_sensor.martin_presence
         state: "on"
       - condition: "{{ states('input_select.sleep_state') not in ['sleeping', 'paused', 'smart wake'] }}"
-      - service: media_player.play_media
-        target:
-          entity_id:
+      - service: script.tts_speak
+        data:
+          cache: false
+          media_player_entity_id:
             - media_player.stue
             - media_player.kokken
             - media_player.badevaerelse
             - media_player.sovevaerelse
-        data:
-          - service: script.tts_speak
-            data:
-              cache: false
-              media_player_entity_id:
-                - group.sonos
-              volume_level: "{{ 0.35 if states('input_select.sleep_state') in ['alarm', 'soozing', 'waking'] else 0.60 }}"
-              message: >-
-                {{ message }}
+            - media_player.roam
+          volume_level: "{{ 0.35 if states('input_select.sleep_state') in ['alarm', 'soozing', 'waking'] else 0.60 }}"
+          message: >-
+            {{ message }}
 
   popup_notification:
     alias: Popup Notification using Browser Mod
