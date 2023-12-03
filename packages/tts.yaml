@@ -75,7 +75,7 @@ script:
           volume_level: "{{ volume_level or 0.6 }}"
           cache: "{{ cache or 'false' }}"
           tts_platform: tts.piper
-          chime_path: "{{ states('input_text.notification_sound') }}"
+          chime_path: "{{ states('input_text.notification_sound').split(': ')[1] }}"
           announce: true
 
 automation:
@@ -97,10 +97,12 @@ automation:
           options: >
             {% set ns = namespace(ret=[]) %}
             {%- for file in state_attr('sensor.chime_tts_sounds', 'files') -%}
-              {% set ns.ret = ns.ret + [file] %}
+              {% set title = (file.replace('/config/custom_components/chime_tts/mp3s/','').replace('.mp3', '').replace('_', ' ')|title) %}
+              {% set ns.ret = ns.ret + [title+': '+file] %}
             {%- endfor -%}
             {%- for file in state_attr('sensor.notification_sounds', 'files') -%}
-              {% set ns.ret = ns.ret + [file] %}
+              {% set title = file.replace('/media/Notifications/','').replace('.mp3', '').replace('/', ' - ') %}
+              {% set ns.ret = ns.ret + [title+': '+file] %}
             {%- endfor -%}
             {{ ns.ret }}
       - service: input_select.select_option
