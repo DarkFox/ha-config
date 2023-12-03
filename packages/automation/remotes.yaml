@@ -5,6 +5,50 @@ input_number:
     max: 100
     step: 10
 
+script:
+  toggle_activity_override:
+    fields:
+      room:
+        description: "Room to toggle activity override for"
+        example: "living_room"
+    variables:
+      room_name_translation:
+        "living_room": "stue"
+        "kitchen": "køkken"
+        "bedroom": "soveværelse"
+        "bathroom": "badeværelse"
+        "office": "kontor"
+        "workshop": "værksted"
+        "hallway": "gang"
+    sequence:
+      - service: input_boolean.toggle
+        data:
+          entity_id: "input_boolean.{{ room }}_activity_override"
+      - service: script.voice_broadcast
+        data:
+          message: "{{ room_name_translation[room] }} overstyring {{'tilkoblet' if states('input_boolean.' ~ room ~ '_activity_override') == 'on' else 'frakoblet'}}"
+  toggle_separate_light_profile:
+    fields:
+      room:
+        description: "Room to toggle separate light profile for"
+        example: "living_room"
+    variables:
+      room_name_translation:
+        "living_room": "stue"
+        "kitchen": "køkken"
+        "bedroom": "soveværelse"
+        "bathroom": "badeværelse"
+        "office": "kontor"
+        "workshop": "værksted"
+        "hallway": "gang"
+    sequence:
+      - service: input_boolean.toggle
+        data:
+          entity_id: "input_boolean.{{ room }}_separate_light_profile"
+      - service: script.voice_broadcast
+        data:
+          message: "{{ room_name_translation[room] }} separat lysstyring {{'tilkoblet' if states('input_boolean.' ~ room ~ '_separate_light_profile') == 'on' else 'frakoblet'}}"
+
 automation:
   # Trådfri Dimmer, ID: tradfri_wireless_dimmer #
   - alias: tradfri_dimmer_cw
@@ -189,12 +233,10 @@ automation:
           id: kontor_tryk
           event: 1003
     action:
-      - service: input_boolean.toggle
+      - service: script.turn_on
+        entity_id: script.toggle_activity_override
         data:
-          entity_id: input_boolean.office_activity_override
-      - service: script.voice_broadcast
-        data:
-          message: "Kontor overstyring {{'tilkoblet' if states('input_boolean.office_activity_override') == 'on' else 'frakoblet'}}"
+          room: office
 
   - alias: office_separate_light_profile_toggle
     initial_state: true
@@ -205,96 +247,10 @@ automation:
           id: kontor_tryk
           event: 2003
     action:
-      - service: input_boolean.toggle
+      - service: script.turn_on
+        entity_id: script.toggle_separate_light_profile
         data:
-          entity_id: input_boolean.office_separate_light_profile
-      - service: script.voice_broadcast
-        data:
-          message: "Kontor separat lysstyring {{'tilkoblet' if states('input_boolean.office_separate_light_profile') == 'on' else 'frakoblet'}}"
-
-  # Kontor Tryk #
-  - alias: kitchen_switch_on
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: kokken_tryk
-          event: 1002
-    action:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: input_boolean.kitchen_activity_override
-                state: "on"
-              - condition: state
-                entity_id: input_select.kitchen_room_state
-                state: "off"
-            sequence:
-              - service: input_select.select_option
-                data:
-                  entity_id: input_select.kitchen_room_state
-                  option: "active"
-        default:
-          - event: cycle_light_profile
-            event_data:
-              room: kitchen
-
-  - alias: kitchen_switch_off
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: kokken_tryk
-          event: 2002
-    action:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: input_boolean.kitchen_activity_override
-                state: "on"
-            sequence:
-              - service: input_select.select_option
-                data:
-                  entity_id: input_select.kitchen_room_state
-                  option: "off"
-        default:
-          - event: decrease_light_profile
-            event_data:
-              room: kitchen
-
-  - alias: kitchen_activity_override_toggle
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: kokken_tryk
-          event: 1003
-    action:
-      - service: input_boolean.toggle
-        data:
-          entity_id: input_boolean.kitchen_activity_override
-      - service: script.voice_broadcast
-        data:
-          message: "Kontor overstyring {{'tilkoblet' if states('input_boolean.kitchen_activity_override') == 'on' else 'frakoblet'}}"
-
-  - alias: kitchen_separate_light_profile_toggle
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: kokken_tryk
-          event: 2003
-    action:
-      - service: input_boolean.toggle
-        data:
-          entity_id: input_boolean.kitchen_separate_light_profile
-      - service: script.voice_broadcast
-        data:
-          message: "Kontor separat lysstyring {{'tilkoblet' if states('input_boolean.kitchen_separate_light_profile') == 'on' else 'frakoblet'}}"
+          room: office
 
   # Bedroom Remote, ID: sovevaerelse_fjernbetjening #
   - alias: bedroom_dimmer_on
@@ -460,12 +416,10 @@ automation:
           id: sovevaerelse_tryk
           event: 1003
     action:
-      - service: input_boolean.toggle
+      - service: script.turn_on
+        entity_id: script.toggle_activity_override
         data:
-          entity_id: input_boolean.bedroom_activity_override
-      - service: script.voice_broadcast
-        data:
-          message: "Soveværelse overstyring {{'tilkoblet' if states('input_boolean.bedroom_activity_override') == 'on' else 'frakoblet'}}"
+          room: bedroom
 
   - alias: bedroom_separate_light_profile_toggle
     initial_state: true
@@ -476,12 +430,10 @@ automation:
           id: sovevaerelse_tryk
           event: 2003
     action:
-      - service: input_boolean.toggle
+      - service: script.turn_on
+        entity_id: script.toggle_separate_light_profile
         data:
-          entity_id: input_boolean.bedroom_separate_light_profile
-      - service: script.voice_broadcast
-        data:
-          message: "Soveværelse separat lysstyring {{'tilkoblet' if states('input_boolean.bedroom_separate_light_profile') == 'on' else 'frakoblet'}}"
+          room: bedroom
 
   # Office Blind Remote kontor_gardin_fjernbetjening #
   - alias: kontor_gardin_fjernbetjening_up
@@ -573,12 +525,10 @@ automation:
           id: vaerksted_fjernbetjening
           event: 1003
     action:
-      - service: input_boolean.toggle
+      - service: script.turn_on
+        entity_id: script.toggle_activity_override
         data:
-          entity_id: input_boolean.workshp_activity_override
-      - service: script.voice_broadcast
-        data:
-          message: "Værksted overstyring {{'tilkoblet' if states('input_boolean.workshp_activity_override') == 'on' else 'frakoblet'}}"
+          room: workshop
 
   - alias: vaerksted_fjernbetjening_up
     initial_state: true
@@ -650,12 +600,10 @@ automation:
           id: vaerksted_fjernbetjening
           event: 4003
     action:
-      - service: input_boolean.toggle
+      - service: script.turn_on
+        entity_id: script.toggle_separate_light_profile
         data:
-          entity_id: input_boolean.workshop_separate_light_profile
-      - service: script.voice_broadcast
-        data:
-          message: "Værksted separat lysstyring {{'tilkoblet' if states('input_boolean.workshop_separate_light_profile') == 'on' else 'frakoblet'}}"
+          room: workshop
 
   # Living room IKEA remote, ID: stue_fjernbetjening #
   - alias: living_room_dimmer_on
@@ -816,12 +764,10 @@ automation:
           id: stue_tryk
           event: 1003
     action:
-      - service: input_boolean.toggle
+      - service: script.turn_on
+        entity_id: script.toggle_activity_override
         data:
-          entity_id: input_boolean.living_room_activity_override
-      - service: script.voice_broadcast
-        data:
-          message: "Stue overstyring {{'tilkoblet' if states('input_boolean.living_room_activity_override') == 'on' else 'frakoblet'}}"
+          room: living_room
 
   - alias: living_room_separate_light_profile_toggle
     initial_state: true
@@ -832,12 +778,10 @@ automation:
           id: stue_tryk
           event: 2003
     action:
-      - service: input_boolean.toggle
+      - service: script.turn_on
+        entity_id: script.toggle_separate_light_profile
         data:
-          entity_id: input_boolean.living_room_separate_light_profile
-      - service: script.voice_broadcast
-        data:
-          message: "Stue separat lysstyring {{'tilkoblet' if states('input_boolean.living_room_separate_light_profile') == 'on' else 'frakoblet'}}"
+          room: living_room
 
   # Kitchen IKEA remote, ID: kokken_fjernbetjening #
   - alias: kokken_dimmer_on
@@ -920,12 +864,10 @@ automation:
           id: kokken_fjernbetjening
           event: 2003
     action:
-      - service: input_boolean.toggle
+      - service: script.turn_on
+        entity_id: script.toggle_activity_override
         data:
-          entity_id: input_boolean.kitchen_activity_override
-      - service: script.voice_broadcast
-        data:
-          message: "Køkken overstyring {{'tilkoblet' if states('input_boolean.kitchen_activity_override') == 'on' else 'frakoblet'}}"
+          room: kitchen
 
   - alias: kokken_dimmer_hold_down
     initial_state: true
@@ -936,12 +878,10 @@ automation:
           id: kokken_fjernbetjening
           event: 3003
     action:
-      - service: input_boolean.toggle
+      - service: script.turn_on
+        entity_id: script.toggle_separate_light_profile
         data:
-          entity_id: input_boolean.kitchen_separate_light_profile
-      - service: script.voice_broadcast
-        data:
-          message: "Køkken separat lysstyring {{'tilkoblet' if states('input_boolean.kitchen_separate_light_profile') == 'on' else 'frakoblet'}}"
+          room: kitchen
 
   - alias: kokken_dimmer_hold_left
     initial_state: true
@@ -1029,12 +969,10 @@ automation:
           id: kokken_tryk
           event: 1003
     action:
-      - service: input_boolean.toggle
+      - service: script.turn_on
+        entity_id: script.toggle_activity_override
         data:
-          entity_id: input_boolean.kitchen_activity_override
-      - service: script.voice_broadcast
-        data:
-          message: "Køkken overstyring {{'tilkoblet' if states('input_boolean.kitchen_activity_override') == 'on' else 'frakoblet'}}"
+          room: kitchen
 
   - alias: kitchen_separate_light_profile_toggle
     initial_state: true
@@ -1045,12 +983,10 @@ automation:
           id: kokken_tryk
           event: 2003
     action:
-      - service: input_boolean.toggle
+      - service: script.turn_on
+        entity_id: script.toggle_separate_light_profile
         data:
-          entity_id: input_boolean.kitchen_separate_light_profile
-      - service: script.voice_broadcast
-        data:
-          message: "Køkken separat lysstyring {{'tilkoblet' if states('input_boolean.kitchen_separate_light_profile') == 'on' else 'frakoblet'}}"
+          room: kitchen
 
   # Badeværelse Tryk #
   - alias: bathroom_switch_on
@@ -1113,12 +1049,10 @@ automation:
           id: badevaerelse_tryk
           event: 1003
     action:
-      - service: input_boolean.toggle
+      - service: script.turn_on
+        entity_id: script.toggle_activity_override
         data:
-          entity_id: input_boolean.bathroom_activity_override
-      - service: script.voice_broadcast
-        data:
-          message: "Badeværelse overstyring {{'tilkoblet' if states('input_boolean.bathroom_activity_override') == 'on' else 'frakoblet'}}"
+          room: bathroom
 
   - alias: bathroom_separate_light_profile_toggle
     initial_state: true
@@ -1129,12 +1063,10 @@ automation:
           id: badevaerelse_tryk
           event: 2003
     action:
-      - service: input_boolean.toggle
+      - service: script.turn_on
+        entity_id: script.toggle_separate_light_profile
         data:
-          entity_id: input_boolean.bathroom_separate_light_profile
-      - service: script.voice_broadcast
-        data:
-          message: "Badeværelse separat lysstyring {{'tilkoblet' if states('input_boolean.bathroom_separate_light_profile') == 'on' else 'frakoblet'}}"
+          room: bathroom
 
   # Badevaerelse yderside tryk #
 
@@ -1302,12 +1234,10 @@ automation:
           id: altan_tryk
           event: 1003
     action:
-      - service: input_boolean.toggle
+      - service: script.turn_on
+        entity_id: script.toggle_activity_override
         data:
-          entity_id: input_boolean.balcony_activity_override
-      - service: script.voice_broadcast
-        data:
-          message: "Altan overstyring {{'tilkoblet' if states('input_boolean.balcony_activity_override') == 'on' else 'frakoblet'}}"
+          room: balcony
 
   - alias: balcony_separate_light_profile_toggle
     initial_state: true
@@ -1318,9 +1248,7 @@ automation:
           id: altan_tryk
           event: 2003
     action:
-      - service: input_boolean.toggle
+      - service: script.turn_on
+        entity_id: script.toggle_separate_light_profile
         data:
-          entity_id: input_boolean.balcony_separate_light_profile
-      - service: script.voice_broadcast
-        data:
-          message: "Altan separat lysstyring {{'tilkoblet' if states('input_boolean.balcony_separate_light_profile') == 'on' else 'frakoblet'}}"
+          room: balcony
