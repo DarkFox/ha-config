@@ -73,19 +73,25 @@ switch:
         icon_template: mdi:weather-night-partly-cloudy
         value_template: "{{ is_state('input_boolean.sovevaerelse_soundbar_night_mode_state', 'on') }}"
         turn_on:
-          service: songpal.set_sound_setting
-          target:
-            entity_id: media_player.sovevarelse_soundbar_songpal
-          data:
-            name: nightMode
-            value: "on"
+          - service: songpal.set_sound_setting
+            target:
+              entity_id: media_player.sovevarelse_soundbar_songpal
+            data:
+              name: nightMode
+              value: "on"
+          - service: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.sovevaerelse_soundbar_night_mode_state
         turn_off:
-          service: songpal.set_sound_setting
-          target:
-            entity_id: media_player.sovevarelse_soundbar_songpal
-          data:
-            name: nightMode
-            value: "off"
+          - service: songpal.set_sound_setting
+            target:
+              entity_id: media_player.sovevarelse_soundbar_songpal
+            data:
+              name: nightMode
+              value: "off"
+          - service: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.sovevaerelse_soundbar_night_mode_state
 
 binary_sensor:
   - platform: template
