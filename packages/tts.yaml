@@ -1,3 +1,55 @@
+sensor:
+  - platform: template
+    sensors:
+      latest_tts_duration:
+        value_template: >-
+          {{ states('sensor.latest_tts_ffmpeg_info').split(', ')[0].split(': ')[1].split('.')[0] }}
+      tts_greeting:
+        value_template: >-
+          {%- if now().hour < 4 -%}
+            Godnat
+          {%- elif now().hour < 10 -%}
+            Godmorgen
+          {%- elif now().hour < 14 -%}
+            Goddag
+          {%- elif now().hour < 17 -%}
+            God eftermiddag
+          {%- elif now().hour < 24 -%}
+            Godaften
+          {%- endif -%}
+
+command_line:
+  - sensor:
+      name: Latest TTS
+      command: "ls -t /config/tts | head -n 1"
+  - sensor:
+      name: Latest TTS FFMPEG Info
+      command: "/usr/bin/ffmpeg -i /config/tts/{{ states('sensor.latest_tts') }} 2>&1 | grep Duration"
+  - sensor:
+      name: Notification Sounds
+      command: >-
+        find /media/Notifications -type f -name '*.mp3' -print | jq -R -n -c '{"files": [inputs]}'
+      json_attributes:
+        - files
+  - sensor:
+      name: Chime TTS Sounds
+      command: >-
+        find /config/custom_components/chime_tts -type f -name '*.mp3' -print | jq -R -n -c '{"files": [inputs]}'
+      json_attributes:
+        - files
+
+input_select:
+  notification_sound:
+    name: Notification Sound
+    options:
+      - unknown
+    icon: mdi:music-note
+
+input_text:
+  notification_sound:
+    name: Notification Sound
+    icon: mdi:music-note
+
 script:
   tts_speak:
     alias: "Wrapper for TTS service"
@@ -23,33 +75,63 @@ script:
           volume_level: "{{ volume_level or 0.6 }}"
           cache: "{{ cache or 'false' }}"
           tts_platform: tts.piper
-          chime_path: /media/Notifications/Seasonal Celebrations/Sleigh Bells.mp3
+          chime_path: "{{ states('input_text.notification_sound') }}"
           announce: true
 
-command_line:
-  - sensor:
-      name: Latest TTS
-      command: "ls -t /config/tts | head -n 1"
-  - sensor:
-      name: Latest TTS FFMPEG Info
-      command: "/usr/bin/ffmpeg -i /config/tts/{{ states('sensor.latest_tts') }} 2>&1 | grep Duration"
+automation:
+  - alias: "Set notification sounds options"
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id:
+          - sensor.chime_tts_sounds
+          - sensor.notification_sounds
+      - platform: state
+        entity_id: binary_sensor.home_assistant_loaded
+        to: "on"
+    action:
+      - variables:
+          saved_option: "{{ states('input_text.notification_sound') }}"
+      - service: input_select.set_options
+        data_template:
+          entity_id: input_select.notification_sound
+          options: >
+            {% set ns = namespace(ret=[]) %}
+            {%- for file in state_attr('sensor.chime_tts_sounds', 'files') -%}
+              {% set ns.ret = ns.ret + [file] %}
+            {%- endfor -%}
+            {%- for file in state_attr('sensor.notification_sounds', 'files') -%}
+              {% set ns.ret = ns.ret + [file] %}
+            {%- endfor -%}
+            {{ ns.ret }}
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.notification_sound
+          option: "{{ saved_option }}"
 
-sensor:
-  - platform: template
-    sensors:
-      latest_tts_duration:
-        value_template: >-
-          {{ states('sensor.latest_tts_ffmpeg_info').split(', ')[0].split(': ')[1].split('.')[0] }}
-      tts_greeting:
-        value_template: >-
-          {%- if now().hour < 4 -%}
-            Godnat
-          {%- elif now().hour < 10 -%}
-            Godmorgen
-          {%- elif now().hour < 14 -%}
-            Goddag
-          {%- elif now().hour < 17 -%}
-            God eftermiddag
-          {%- elif now().hour < 24 -%}
-            Godaften
-          {%- endif -%}
+  - alias: "Save new notification sound"
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_select.notification_sound
+      for:
+        seconds: 1
+    condition:
+      - condition: state
+        entity_id: binary_sensor.home_assistant_loaded
+        state: "on"
+    action:
+      - service: input_text.set_value
+        data_template:
+          entity_id: input_text.notification_sound
+          value: "{{ states('input_select.notification_sound') }}"
+
+  - alias: "Announce notification sound changed"
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_text.notification_sound
+    action:
+      - service: script.voice_broadcast
+        data:
+          message: "Notifikationslyd ændret"
