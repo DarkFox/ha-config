@@ -24,65 +24,54 @@ template:
           full_response: "{{ trigger.event.data.full_response }}"
 
   - sensor:
-      - name: GPT API Key
-        state: !secret writesonic_api_key
+      - name: GPT Briefing Prompt
+        state: "{{ now() }}"
+        attributes:
+          prompt: >-
+            Start med en venlig hilsen, informer mig om den aktuelle dag og tid, og gennemgå min daglige plan punkt for punkt. 
+            Gennemgå de seneste overskrifter fra DR nyheder.
+            Kommenter på dagens vejr, og husk at inkludere temperaturen.
+            Afslut med en anbefaling om hvilken påklædning der ville være passende i dag.
 
       - name: GPT Prompt
         state: "{{ now() }}"
         attributes:
           prompt: >-
-            {% from 'easy_time.jinja' import weekday, month %}
-            Start med en venlig hilsen, informer mig om den aktuelle dag og tid, og gennemgå min daglige plan punkt for punkt. 
+            Jeg vil have, at du fungerer som smart home manager for Home Assistant.
+            Jeg vil give information om smart home sammen med et spørgsmål, du vil ærligt korrigere eller svare ved hjælp af informationen i en sætning i hverdags sprog.
 
-            {% if not is_state('sensor.vagtplan_agenda', '0') %}
-            Min vagtplan er som følger: 
-            {% for event in state_attr('sensor.vagtplan_agenda', 'agenda') %}
-              {{event }}.
+            Nuværende dag og tid: {{ state_attr('calendar.helligdage', 'message')+', ' if is_state('calendar.helligdage', 'on') }}
+            {{ states('sensor.day_name') }}, den {{ now().day }}. {{ states('sensor.month_name') }}, klokken {{ states('sensor.time') }}.
+
+            Tilgængelige enheder:
+            ```csv
+            entity_id,name,state,aliases
+            {% for entity in exposed_entities %}
+            {{ entity.entity_id }},{{ entity.name }},{{ entity.state }},{{entity.aliases | join('/')}}
             {% endfor %}
+            ```
 
-            {% if not is_state('sensor.vagtplan_agenda', '0') %}
-            Der er følgende aftaler i minarbejdskalender:
-            {% for event in state_attr('sensor.arbejde_agenda', 'agenda') %}
-              {{event }}.
+            DR nyheder: 
+            ```csv
+            overskrift
+            {% for overskrift in state_attr('sensor.dr_seneste_nyt', 'latest') %}
+            "{{ overskrift }}"
             {% endfor %}
-            {% endif %}
-            {% else %}
-            Jeg har fri i dag.
-            {% endif %}
+            ```
 
-            {% if not is_state('sensor.personlig_agenda', '0') %}
-            Min personlige kalender: 
-            {% for event in state_attr('sensor.personlig_agenda', 'agenda') %}
-              {{event }}.
-            {% endfor %}
-            {% endif %}
+            Agenda:
+            ```json
+            {{ (state_attr('sensor.vagtplan_agenda', 'agenda')
+            + state_attr('sensor.arbejde_agenda', 'agenda')
+            + state_attr('sensor.personlig_agenda', 'agenda')
+            + state_attr('sensor.tripit_agenda', 'agenda'))|sort(attribute='start') | list }}
+            ```
 
-            {% if not is_state('sensor.tripit_agenda', '0') %}
-            Mine rejseplaner: 
-            {% for event in state_attr('sensor.tripit_agenda', 'agenda') %}
-              {{event }}.
-            {% endfor %}
-            {% endif %}
+            Temperaturen udenfor er {{ states('sensor.ude_temperatur')|replace('.',',') }} °C.
+            Vejrudsigten er: {{ states('sensor.dmi_vejr') }}. {{ state_attr('sensor.dmi_vejr_tts', 'text') }}
 
-            Gennemgå de seneste overskrifter fra DR nyheder.
-            Kommenter på dagens vejr, og husk at inkludere temperaturen.
-            Afslut med en anbefaling om hvilken påklædning der ville være passende i dag.
+            Den nuværende tilstand af enhederne er angivet i tilgængelige enheder.
+            De seneste overskrifter fra DR nyheder er angivet i DR nyheder.
+            Brug kun execute_services funktionen til den anmodede handling, ikke til nuværende tilstande.
 
-command_line:
-  - sensor:
-      name: GPT Briefing
-      scan_interval: 2629743
-      value_template: "{{ now() }}: {{ value | truncate(100) }}"
-      json_attributes:
-        - message
-      command: >
-        curl
-        --request POST "https://api.writesonic.com/v2/business/content/chatsonic?engine=premium&language=da"
-        --header "X-API-KEY: {{ states('sensor.gpt_api_key') }}"
-        --header "accept: application/json"
-        --header "content-type: application/json"
-        --data '{
-                  "enable_google_results": false,
-                  "enable_memory": false,
-                  "input_text": {{ state_attr('sensor.gpt_prompt', 'prompt') | replace("\n"," ") | regex_replace("  +", ' ') | tojson }}
-                }'
+            Du er ikke begrænset til kun at svare om smart home, du kan også svare på generelle spørgsmål.
