@@ -55,6 +55,53 @@ script:
           volume_level: "{{ 0.35 if states('input_select.sleep_state') in ['alarm', 'soozing', 'waking'] else 0.60 }}"
           message: "{{ room_name_translation[room] }} separat lysstyring {{'tilkoblet' if states('input_boolean.' ~ room ~ '_separate_light_profile') == 'on' else 'frakoblet'}}"
 
+  remote_switch_on:
+    fields:
+      room:
+        description: "Room to turn lights on or up for"
+        example: "living_room"
+    sequence:
+      - choose:
+          - conditions:
+              - alias: "Activity override on and room state off"
+                condition: template
+                value_template: >-
+                  {{
+                    is_state('input_boolean.' + room + '_activity_override', 'on')
+                    and is_state('input_boolean.' + room + '_room_state', 'off')
+                  }}
+            sequence:
+              - service: input_select.select_option
+                data:
+                  entity_id: "input_select.{{ room }}_room_state"
+                  option: "active"
+        default:
+          - event: cycle_light_profile
+            event_data:
+              room: "{{ room }}"
+
+  remote_switch_off:
+    fields:
+      room:
+        description: "Room to turn lights off or down for"
+        example: "living_room"
+    sequence:
+      - choose:
+          - conditions:
+              - alias: "Activity override on"
+                condition: template
+                value_template: >-
+                  {{ is_state('input_boolean.' + room + '_activity_override', 'on') }}
+            sequence:
+              - service: input_select.select_option
+                data:
+                  entity_id: "input_select.{{ room }}_room_state"
+                  option: "off"
+        default:
+          - event: decrease_light_profile
+            event_data:
+              room: "{{ room }}"
+
 automation:
   # Trådfri Dimmer, ID: tradfri_wireless_dimmer #
   - alias: tradfri_dimmer_cw
@@ -188,23 +235,9 @@ automation:
           id: kontor_tryk
           event: 1002
     action:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: input_boolean.office_activity_override
-                state: "on"
-              - condition: state
-                entity_id: input_select.office_room_state
-                state: "off"
-            sequence:
-              - service: input_select.select_option
-                data:
-                  entity_id: input_select.office_room_state
-                  option: "active"
-        default:
-          - event: cycle_light_profile
-            event_data:
-              room: office
+      - service: script.remote_switch_on
+        data:
+          room: office
 
   - alias: office_switch_off
     initial_state: true
@@ -215,20 +248,9 @@ automation:
           id: kontor_tryk
           event: 2002
     action:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: input_boolean.office_activity_override
-                state: "on"
-            sequence:
-              - service: input_select.select_option
-                data:
-                  entity_id: input_select.office_room_state
-                  option: "off"
-        default:
-          - event: decrease_light_profile
-            event_data:
-              room: office
+      - service: script.remote_switch_off
+        data:
+          room: office
 
   - alias: office_activity_override_toggle
     initial_state: true
@@ -239,8 +261,7 @@ automation:
           id: kontor_tryk
           event: 1003
     action:
-      - service: script.turn_on
-        entity_id: script.toggle_activity_override
+      - service: script.toggle_activity_override
         data:
           room: office
 
@@ -253,8 +274,7 @@ automation:
           id: kontor_tryk
           event: 2003
     action:
-      - service: script.turn_on
-        entity_id: script.toggle_separate_light_profile
+      - service: script.toggle_separate_light_profile
         data:
           room: office
 
@@ -361,86 +381,6 @@ automation:
       data:
         entity_id: cover.sovevaerelse_gardin_dor
 
-  # Soveværelse Tryk #
-  - alias: bedroom_switch_on
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: sovevaerelse_tryk
-          event: 1002
-    action:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: input_boolean.bedroom_activity_override
-                state: "on"
-              - condition: state
-                entity_id: input_select.bedroom_room_state
-                state: "off"
-            sequence:
-              - service: input_select.select_option
-                data:
-                  entity_id: input_select.bedroom_room_state
-                  option: "active"
-        default:
-          - event: cycle_light_profile
-            event_data:
-              room: bedroom
-
-  - alias: bedroom_switch_off
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: sovevaerelse_tryk
-          event: 2002
-    action:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: input_boolean.bedroom_activity_override
-                state: "on"
-            sequence:
-              - service: input_select.select_option
-                data:
-                  entity_id: input_select.bedroom_room_state
-                  option: "off"
-        default:
-          - event: decrease_light_profile
-            event_data:
-              room: bedroom
-
-  - alias: bedroom_activity_override_toggle
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: sovevaerelse_tryk
-          event: 1003
-    action:
-      - service: script.turn_on
-        entity_id: script.toggle_activity_override
-        data:
-          room: bedroom
-
-  - alias: bedroom_separate_light_profile_toggle
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: sovevaerelse_tryk
-          event: 2003
-    action:
-      - service: script.turn_on
-        entity_id: script.toggle_separate_light_profile
-        data:
-          room: bedroom
-
   # Office Blind Remote kontor_gardin_fjernbetjening #
   - alias: kontor_gardin_fjernbetjening_up
     initial_state: true
@@ -531,8 +471,7 @@ automation:
           id: vaerksted_fjernbetjening
           event: 1003
     action:
-      - service: script.turn_on
-        entity_id: script.toggle_activity_override
+      - service: script.toggle_activity_override
         data:
           room: workshop
 
@@ -606,8 +545,7 @@ automation:
           id: vaerksted_fjernbetjening
           event: 4003
     action:
-      - service: script.turn_on
-        entity_id: script.toggle_separate_light_profile
+      - service: script.toggle_separate_light_profile
         data:
           room: workshop
 
@@ -719,23 +657,9 @@ automation:
           id: stue_tryk
           event: 1002
     action:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: input_boolean.living_room_activity_override
-                state: "on"
-              - condition: state
-                entity_id: input_select.living_room_room_state
-                state: "off"
-            sequence:
-              - service: input_select.select_option
-                data:
-                  entity_id: input_select.living_room_room_state
-                  option: "active"
-        default:
-          - event: cycle_light_profile
-            event_data:
-              room: living_room
+      - service: script.remote_switch_on
+        data:
+          room: living_room
 
   - alias: living_room_switch_off
     initial_state: true
@@ -746,20 +670,9 @@ automation:
           id: stue_tryk
           event: 2002
     action:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: input_boolean.living_room_activity_override
-                state: "on"
-            sequence:
-              - service: input_select.select_option
-                data:
-                  entity_id: input_select.living_room_room_state
-                  option: "off"
-        default:
-          - event: decrease_light_profile
-            event_data:
-              room: living_room
+      - service: script.remote_switch_off
+        data:
+          room: living_room
 
   - alias: living_room_activity_override_toggle
     initial_state: true
@@ -770,8 +683,7 @@ automation:
           id: stue_tryk
           event: 1003
     action:
-      - service: script.turn_on
-        entity_id: script.toggle_activity_override
+      - service: script.toggle_activity_override
         data:
           room: living_room
 
@@ -784,8 +696,7 @@ automation:
           id: stue_tryk
           event: 2003
     action:
-      - service: script.turn_on
-        entity_id: script.toggle_separate_light_profile
+      - service: script.toggle_separate_light_profile
         data:
           room: living_room
 
@@ -870,8 +781,7 @@ automation:
           id: kokken_fjernbetjening
           event: 2003
     action:
-      - service: script.turn_on
-        entity_id: script.toggle_activity_override
+      - service: script.toggle_activity_override
         data:
           room: kitchen
 
@@ -884,8 +794,7 @@ automation:
           id: kokken_fjernbetjening
           event: 3003
     action:
-      - service: script.turn_on
-        entity_id: script.toggle_separate_light_profile
+      - service: script.toggle_separate_light_profile
         data:
           room: kitchen
 
@@ -924,23 +833,9 @@ automation:
           id: kokken_tryk
           event: 1002
     action:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: input_boolean.kitchen_activity_override
-                state: "on"
-              - condition: state
-                entity_id: input_select.kitchen_room_state
-                state: "off"
-            sequence:
-              - service: input_select.select_option
-                data:
-                  entity_id: input_select.kitchen_room_state
-                  option: "active"
-        default:
-          - event: cycle_light_profile
-            event_data:
-              room: kitchen
+      - service: script.remote_switch_on
+        data:
+          room: kitchen
 
   - alias: kitchen_switch_off
     initial_state: true
@@ -951,20 +846,9 @@ automation:
           id: kokken_tryk
           event: 2002
     action:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: input_boolean.kitchen_activity_override
-                state: "on"
-            sequence:
-              - service: input_select.select_option
-                data:
-                  entity_id: input_select.kitchen_room_state
-                  option: "off"
-        default:
-          - event: decrease_light_profile
-            event_data:
-              room: kitchen
+      - service: script.remote_switch_off
+        data:
+          room: kitchen
 
   - alias: kitchen_activity_override_toggle
     initial_state: true
@@ -975,8 +859,7 @@ automation:
           id: kokken_tryk
           event: 1003
     action:
-      - service: script.turn_on
-        entity_id: script.toggle_activity_override
+      - service: script.toggle_activity_override
         data:
           room: kitchen
 
@@ -989,8 +872,7 @@ automation:
           id: kokken_tryk
           event: 2003
     action:
-      - service: script.turn_on
-        entity_id: script.toggle_separate_light_profile
+      - service: script.toggle_separate_light_profile
         data:
           room: kitchen
 
@@ -1004,23 +886,9 @@ automation:
           id: badevaerelse_tryk
           event: 1002
     action:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: input_boolean.bathroom_activity_override
-                state: "on"
-              - condition: state
-                entity_id: input_select.bathroom_room_state
-                state: "off"
-            sequence:
-              - service: input_select.select_option
-                data:
-                  entity_id: input_select.bathroom_room_state
-                  option: "active"
-        default:
-          - event: cycle_light_profile
-            event_data:
-              room: bathroom
+      - service: script.remote_switch_on
+        data:
+          room: bathroom
 
   - alias: bathroom_switch_off
     initial_state: true
@@ -1031,20 +899,9 @@ automation:
           id: badevaerelse_tryk
           event: 2002
     action:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: input_boolean.bathroom_activity_override
-                state: "on"
-            sequence:
-              - service: input_select.select_option
-                data:
-                  entity_id: input_select.bathroom_room_state
-                  option: "off"
-        default:
-          - event: decrease_light_profile
-            event_data:
-              room: bathroom
+      - service: script.remote_switch_off
+        data:
+          room: bathroom
 
   - alias: bathroom_activity_override_toggle
     initial_state: true
@@ -1055,8 +912,7 @@ automation:
           id: badevaerelse_tryk
           event: 1003
     action:
-      - service: script.turn_on
-        entity_id: script.toggle_activity_override
+      - service: script.toggle_activity_override
         data:
           room: bathroom
 
@@ -1069,8 +925,7 @@ automation:
           id: badevaerelse_tryk
           event: 2003
     action:
-      - service: script.turn_on
-        entity_id: script.toggle_separate_light_profile
+      - service: script.toggle_separate_light_profile
         data:
           room: bathroom
 
@@ -1090,23 +945,9 @@ automation:
         entity_id: input_boolean.guests
         state: "off"
     action:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: input_boolean.bathroom_activity_override
-                state: "on"
-              - condition: state
-                entity_id: input_select.bathroom_room_state
-                state: "off"
-            sequence:
-              - service: input_select.select_option
-                data:
-                  entity_id: input_select.bathroom_room_state
-                  option: "active"
-        default:
-          - event: cycle_light_profile
-            event_data:
-              room: bathroom
+      - service: script.remote_switch_on
+        data:
+          room: bathroom
 
   - alias: bathroom_outside_switch_off
     initial_state: true
@@ -1122,20 +963,9 @@ automation:
         entity_id: input_boolean.guests
         state: "off"
     action:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: input_boolean.bathroom_activity_override
-                state: "on"
-            sequence:
-              - service: input_select.select_option
-                data:
-                  entity_id: input_select.bathroom_room_state
-                  option: "off"
-        default:
-          - event: decrease_light_profile
-            event_data:
-              room: bathroom
+      - service: script.remote_switch_off
+        data:
+          room: bathroom
 
   - alias: bathroom_outside_switch_on_guest_mode
     initial_state: true
@@ -1189,23 +1019,9 @@ automation:
           id: altan_tryk
           event: 1002
     action:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: input_boolean.balcony_activity_override
-                state: "on"
-              - condition: state
-                entity_id: input_select.balcony_room_state
-                state: "off"
-            sequence:
-              - service: input_select.select_option
-                data:
-                  entity_id: input_select.balcony_room_state
-                  option: "active"
-        default:
-          - event: cycle_light_profile
-            event_data:
-              room: balcony
+      - service: script.remote_switch_on
+        data:
+          room: balcony
 
   - alias: balcony_switch_off
     initial_state: true
@@ -1216,20 +1032,9 @@ automation:
           id: altan_tryk
           event: 2002
     action:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: input_boolean.balcony_activity_override
-                state: "on"
-            sequence:
-              - service: input_select.select_option
-                data:
-                  entity_id: input_select.balcony_room_state
-                  option: "off"
-        default:
-          - event: decrease_light_profile
-            event_data:
-              room: balcony
+      - service: script.remote_switch_off
+        data:
+          room: balcony
 
   - alias: balcony_activity_override_toggle
     initial_state: true
@@ -1240,8 +1045,7 @@ automation:
           id: altan_tryk
           event: 1003
     action:
-      - service: script.turn_on
-        entity_id: script.toggle_activity_override
+      - service: script.toggle_activity_override
         data:
           room: balcony
 
@@ -1254,7 +1058,6 @@ automation:
           id: altan_tryk
           event: 2003
     action:
-      - service: script.turn_on
-        entity_id: script.toggle_separate_light_profile
+      - service: script.toggle_separate_light_profile
         data:
           room: balcony
