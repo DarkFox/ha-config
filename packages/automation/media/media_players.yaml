@@ -212,6 +212,16 @@ template:
             {{ is_state(entity, 'playing') }}
           {% endif %}
 
+      - name: Kontor Group Leader
+        state: >-
+          {% set entity = 'media_player.kontor' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {% if (group_members|length) > 1 %}
+            {{ group_members[0] == entity }}
+          {% else %}
+            {{ is_state(entity, 'playing') }}
+          {% endif %}
+
       - name: Sovevaerelse Group Leader
         state: >-
           {% set entity = 'media_player.sovevaerelse' %}
@@ -311,6 +321,31 @@ template:
           {% set distance = (states('sensor.kokken_speaker_distance_to_group_max_volume')|float)%}
           {{ 1-(distance + group_max) }}
 
+      - name: Kontor Speaker Lead By
+        state: >-
+          {% set entity = 'media_player.kontor' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {{ group_members[0] }}
+
+      - name: Kontor Speaker Group Max Volume
+        state: >-
+          {% set group_members = state_attr('media_player.kontor', 'group_members') %}
+          {% set ns = namespace(ret=[]) %}
+          {% for member in group_members %}
+            {% set ns.ret = ns.ret + [state_attr(member, 'volume_level')] %}
+          {% endfor %}
+          {{ ns.ret|average }}
+
+      - name: Kontor Speaker Distance to Group Max Volume
+        state: >-
+          {{ (state_attr('media_player.kontor', 'volume_level')|float) - (states('sensor.kontor_speaker_group_max_volume')|float)  }}
+
+      - name: Kontor Speaker Volume Exponent
+        state: >-
+          {% set group_max = (states('sensor.kontor_speaker_group_max_volume')|float) %}
+          {% set distance = (states('sensor.kontor_speaker_distance_to_group_max_volume')|float)%}
+          {{ 1-(distance + group_max) }}
+
       - name: Sovevaerelse Speaker Lead By
         state: >-
           {% set entity = 'media_player.sovevaerelse' %}
@@ -407,7 +442,7 @@ group:
   living_room_speakers:
     - media_player.stue
   office_speakers:
-    - media_player.kitchen
+    - media_player.kontor
   hallway_speakers:
     - media_player.roam
   balcony_speakers:
@@ -417,32 +452,33 @@ group:
 
   sonos_group_leaders:
     entities:
-      - binary_sensor.stue_group_leader
-      - binary_sensor.sovevaerelse_group_leader
-      - binary_sensor.kokken_group_leader
       - binary_sensor.badevaerelse_group_leader
+      - binary_sensor.kokken_group_leader
+      - binary_sensor.kontor_group_leader
       - binary_sensor.roam_group_leader
+      - binary_sensor.sovevaerelse_group_leader
+      - binary_sensor.stue_group_leader
   sonos:
     name: Sonos Højttalere
     entities:
-      - media_player.stue
-      - media_player.sovevaerelse
-      - media_player.kokken
       - media_player.badevaerelse
+      - media_player.kokken
+      - media_player.kontor
       - media_player.roam
+      - media_player.sovevaerelse
+      - media_player.stue
   all_media:
     name: All Media
     entities:
-      - media_player.sovevaerelse
-      - media_player.kokken
       - media_player.badevaerelse
-      - media_player.stue
+      - media_player.kokken
+      - media_player.kontor
       - media_player.roam
+      - media_player.sovevaerelse
+      - media_player.stue
 
       - media_player.stue_shield
       - media_player.kontor_shield
       - media_player.sovevaerelse_chromecast
-
-      - media_player.kontor_soundbar
 
       - media_player.sovevaerelse_tv_dlna
