@@ -96,6 +96,95 @@ script:
               room: "{{ room }}"
 
 automation:
+  - alias: Tryk
+    initial_state: true
+    mode: parallel
+    trigger:
+      - platform: event
+        event_type: deconz_event
+    condition:
+      - condition: template
+        value_template: >-
+          {{
+            trigger.event.data.id in [
+              'stue_tryk',
+              'kokken_tryk',
+              'kontor_tryk',
+              'badevaerelse_tryk',
+              'badevaerelse_yderside_tryk',
+              'altan_tryk'
+            ]
+          }}
+    variables:
+      room_remote_mapping:
+        stue_tryk: living_room
+        kokken_tryk: kitchen
+        kontor_tryk: office
+        badevaerelse_tryk: bathroom
+        badevaerelse_yderside_tryk: bathroom
+        altan_tryk: balcony
+    action:
+      - alias: "Guest more or regular"
+        choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.guests
+                state: "on"
+            sequence:
+              - alias: "Button action"
+                choose:
+                  - alias: "On button click/hold"
+                    conditions:
+                      - condition: template
+                        value_template: "{{ trigger.event.data.event in [ 1002, 1003 ] }}"
+                    sequence:
+                      - service: script.remote_switch_on
+                        data_template:
+                          room: "{{ room_remote_mapping[trigger.event.data.id] }}"
+                  - alias: "Off button click/hold"
+                    conditions:
+                      - condition: template
+                        value_template: "{{ trigger.event.data.event in [ 2002, 2003 ] }}"
+                    sequence:
+                      - service: script.remote_switch_off
+                        data_template:
+                          room: "{{ room_remote_mapping[trigger.event.data.id] }}"
+        default:
+          - alias: "Button action"
+            choose:
+              - alias: "On button click"
+                conditions:
+                  - condition: template
+                    value_template: "{{ trigger.event.data.event == 1002 }}"
+                sequence:
+                  - service: script.remote_switch_on
+                    data_template:
+                      room: "{{ room_remote_mapping[trigger.event.data.id] }}"
+              - alias: "Off button click"
+                conditions:
+                  - condition: template
+                    value_template: "{{ trigger.event.data.event == 2002 }}"
+                sequence:
+                  - service: script.remote_switch_off
+                    data_template:
+                      room: "{{ room_remote_mapping[trigger.event.data.id] }}"
+              - alias: "On button hold"
+                conditions:
+                  - condition: template
+                    value_template: "{{ trigger.event.data.event == 1003 }}"
+                sequence:
+                  - service: script.toggle_activity_override
+                    data_template:
+                      room: "{{ room_remote_mapping[trigger.event.data.id] }}"
+              - alias: "Off button hold"
+                conditions:
+                  - condition: template
+                    value_template: "{{ trigger.event.data.event == 2003 }}"
+                sequence:
+                  - service: script.toggle_separate_light_profile
+                    data_template:
+                      room: "{{ room_remote_mapping[trigger.event.data.id] }}"
+
   # gang_fjernbetjening #
   - alias: hallway_dimmer_on
     initial_state: true
@@ -180,59 +269,6 @@ automation:
       service: lock.unlock
       target:
         entity_id: lock.hoveddor_las
-
-  # Kontor Tryk #
-  - alias: office_switch_on
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: kontor_tryk
-          event: 1002
-    action:
-      - service: script.remote_switch_on
-        data:
-          room: office
-
-  - alias: office_switch_off
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: kontor_tryk
-          event: 2002
-    action:
-      - service: script.remote_switch_off
-        data:
-          room: office
-
-  - alias: office_activity_override_toggle
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: kontor_tryk
-          event: 1003
-    action:
-      - service: script.toggle_activity_override
-        data:
-          room: office
-
-  - alias: office_separate_light_profile_toggle
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: kontor_tryk
-          event: 2003
-    action:
-      - service: script.toggle_separate_light_profile
-        data:
-          room: office
 
   # Bedroom Remote, ID: sovevaerelse_fjernbetjening #
   - alias: bedroom_dimmer_on
@@ -603,59 +639,6 @@ automation:
       data:
         entity_id: cover.stue_gardin_venstre
 
-  # Stue Tryk #
-  - alias: living_room_switch_on
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: stue_tryk
-          event: 1002
-    action:
-      - service: script.remote_switch_on
-        data:
-          room: living_room
-
-  - alias: living_room_switch_off
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: stue_tryk
-          event: 2002
-    action:
-      - service: script.remote_switch_off
-        data:
-          room: living_room
-
-  - alias: living_room_activity_override_toggle
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: stue_tryk
-          event: 1003
-    action:
-      - service: script.toggle_activity_override
-        data:
-          room: living_room
-
-  - alias: living_room_separate_light_profile_toggle
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: stue_tryk
-          event: 2003
-    action:
-      - service: script.toggle_separate_light_profile
-        data:
-          room: living_room
-
   # Kitchen IKEA remote, ID: kokken_fjernbetjening #
   - alias: kokken_dimmer_on
     initial_state: true
@@ -778,242 +761,3 @@ automation:
       service: switch.toggle
       data:
         entity_id: switch.elkedel
-
-  # Køkken Tryk #
-  - alias: kitchen_switch_on
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: kokken_tryk
-          event: 1002
-    action:
-      - service: script.remote_switch_on
-        data:
-          room: kitchen
-
-  - alias: kitchen_switch_off
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: kokken_tryk
-          event: 2002
-    action:
-      - service: script.remote_switch_off
-        data:
-          room: kitchen
-
-  - alias: kitchen_activity_override_toggle
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: kokken_tryk
-          event: 1003
-    action:
-      - service: script.toggle_activity_override
-        data:
-          room: kitchen
-
-  - alias: kitchen_separate_light_profile_toggle
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: kokken_tryk
-          event: 2003
-    action:
-      - service: script.toggle_separate_light_profile
-        data:
-          room: kitchen
-
-  # Badeværelse Tryk #
-  - alias: bathroom_switch_on
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: badevaerelse_tryk
-          event: 1002
-    action:
-      - service: script.remote_switch_on
-        data:
-          room: bathroom
-
-  - alias: bathroom_switch_off
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: badevaerelse_tryk
-          event: 2002
-    action:
-      - service: script.remote_switch_off
-        data:
-          room: bathroom
-
-  - alias: bathroom_activity_override_toggle
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: badevaerelse_tryk
-          event: 1003
-    action:
-      - service: script.toggle_activity_override
-        data:
-          room: bathroom
-
-  - alias: bathroom_separate_light_profile_toggle
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: badevaerelse_tryk
-          event: 2003
-    action:
-      - service: script.toggle_separate_light_profile
-        data:
-          room: bathroom
-
-  # Badevaerelse yderside tryk #
-
-  - alias: bathroom_outside_switch_on
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: badevaerelse_yderside_tryk
-          event: 1002
-    condition:
-      - alias: "Guest Mode Off"
-        condition: state
-        entity_id: input_boolean.guests
-        state: "off"
-    action:
-      - service: script.remote_switch_on
-        data:
-          room: bathroom
-
-  - alias: bathroom_outside_switch_off
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: badevaerelse_yderside_tryk
-          event: 2002
-    condition:
-      - alias: "Guest Mode Off"
-        condition: state
-        entity_id: input_boolean.guests
-        state: "off"
-    action:
-      - service: script.remote_switch_off
-        data:
-          room: bathroom
-
-  - alias: bathroom_outside_switch_on_guest_mode
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: badevaerelse_yderside_tryk
-          event: 1002
-    condition:
-      - alias: "Guest Mode On"
-        condition: state
-        entity_id: input_boolean.guests
-        state: "on"
-    action:
-      - alias: "Flip bathroom state to on"
-        service: input_select.select_option
-        target:
-          entity_id: input_select.bathroom_room_state
-        data:
-          option: "active"
-
-  - alias: bathroom_outside_switch_off_guest_mode
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: badevaerelse_yderside_tryk
-          event: 2002
-    condition:
-      - alias: "Guest Mode On"
-        condition: state
-        entity_id: input_boolean.guests
-        state: "on"
-    action:
-      - alias: "Flip bathroom state to off"
-        service: input_select.select_option
-        target:
-          entity_id: input_select.bathroom_room_state
-        data:
-          option: "off"
-
-  # Altan Tryk #
-  - alias: balcony_switch_on
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: altan_tryk
-          event: 1002
-    action:
-      - service: script.remote_switch_on
-        data:
-          room: balcony
-
-  - alias: balcony_switch_off
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: altan_tryk
-          event: 2002
-    action:
-      - service: script.remote_switch_off
-        data:
-          room: balcony
-
-  - alias: balcony_activity_override_toggle
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: altan_tryk
-          event: 1003
-    action:
-      - service: script.toggle_activity_override
-        data:
-          room: balcony
-
-  - alias: balcony_separate_light_profile_toggle
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: deconz_event
-        event_data:
-          id: altan_tryk
-          event: 2003
-    action:
-      - service: script.toggle_separate_light_profile
-        data:
-          room: balcony
