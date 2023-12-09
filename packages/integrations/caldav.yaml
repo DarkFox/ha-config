@@ -106,7 +106,7 @@ automation:
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
     action:
-      - service: calendar.list_events
+      - service: calendar.get_events
         data:
           start_date_time: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
           end_date_time: "{{ now().strftime('%Y-%m-%d') }} 23:59:59"
@@ -119,7 +119,7 @@ automation:
           retain: true
           payload: >
             { "agenda": [
-            {% for event in agenda.events|sort(attribute='start') | list -%}
+            {% for event in agenda['calendar.arbejdskalender_vagtskema'].events|sort(attribute='start') | list -%}
               {
                 "calendar": "Vagtplan",
                 {%- set start = (event.start | as_datetime) -%}
@@ -133,8 +133,6 @@ automation:
                 {%- else -%}
                   "summary": "{{ event.summary }}"
                 {%- endif -%}
-                {% if 'description' in event %}, "description": "{{ event.description if 'description' in event }}"{% endif %}
-                {% if 'location' in event %}, "location": "{{ event.location if 'location' in event }}"{% endif %}
               }{%- if not loop.last %},{% endif %}
             {%- endfor -%}
             ]}
@@ -169,8 +167,11 @@ automation:
               - alias: "Upcoming shift in Arbejdskalender"
                 condition: template
                 value_template: "{{ 'true' if state_attr('calendar.vagtplan_arbejde', 'start_time') else 'false' }}"
+              - alias: "Shift is today"
+                condition: template
+                value_template: "{{ (state_attr('calendar.vagtplan_arbejde', 'start_time') | as_datetime).strftime('%Y-%m-%d') == now().strftime('%Y-%m-%d') }}"
             sequence:
-              - service: calendar.list_events
+              - service: calendar.get_events
                 data:
                   start_date_time: "{{ state_attr('calendar.vagtplan_arbejde', 'start_time') }}"
                   end_date_time: "{{ state_attr('calendar.vagtplan_arbejde', 'end_time') }}"
@@ -183,7 +184,7 @@ automation:
                   retain: true
                   payload: >
                     {%- set ns = namespace(events=[]) -%}
-                    {%- for event in agenda.events|sort(attribute='start') | list -%}
+                    {%- for event in agenda['calendar.vagtplan_arbejde'].events|sort(attribute='start') | list -%}
                         {%- if not (event.summary|regex_match('På (RSR|RSH)|Frokost|Aftensmad|Vagt')) -%}
                           {%- set ns.events = ns.events + [event] -%}
                         {%- endif -%}
@@ -197,8 +198,6 @@ automation:
                           "start": "{{ start.strftime('%d. %b %H:%M') }}",
                           "end": "{{ end.strftime('%d. %b %H:%M') }}",
                           "summary": "{{ event.summary | title }}"
-                          {% if 'description' in event %}, "description": "{{ event.description if 'description' in event }}"{% endif %}
-                          {% if 'location' in event %}, "location": "{{ event.location if 'location' in event }}"{% endif %}
                         }{{ ',' if not loop.last }}
                       {% endfor %}
                     ]}
@@ -235,7 +234,7 @@ automation:
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
     action:
-      - service: calendar.list_events
+      - service: calendar.get_events
         data:
           start_date_time: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
           end_date_time: "{{ now().strftime('%Y-%m-%d') }} 23:59:59"
@@ -249,7 +248,7 @@ automation:
           payload: >
             { "agenda": [
             {%- set remove_string = ' #bil' -%}
-            {% for event in agenda.events|sort(attribute='start') | list -%}
+            {% for event in agenda['calendar.vagtplan_arbejde'].events|sort(attribute='start') | list -%}
               {
                 "calendar": "Personlig kalender",
                 {%- set start = (event.start | as_datetime) -%}
@@ -257,8 +256,6 @@ automation:
                 "start": "{{ start.strftime('%d. %b %H:%M') }}",
                 "end": "{{ end.strftime('%d. %b %H:%M') }}",
                 "summary": "{{ event.summary | replace(remove_string, '')|title }}"
-                {% if 'description' in event %}, "description": "{{ event.description if 'description' in event }}"{% endif %}
-                {% if 'location' in event %}, "location": "{{ event.location if 'location' in event }}"{% endif %}
               }{{ ',' if not loop.last }}
             {%- endfor -%}
             ]}
@@ -288,7 +285,7 @@ automation:
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
     action:
-      - service: calendar.list_events
+      - service: calendar.get_events
         data:
           start_date_time: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
           end_date_time: "{{ now().strftime('%Y-%m-%d') }} 23:59:59"
@@ -301,6 +298,7 @@ automation:
           retain: true
           payload: >
             { "agenda": [
+            {% for event in agenda['calendar.vagtplan_arbejde'].events|sort(attribute='start') | list -%}
               {
                 "calendar": "Tripit Kalender",
                 {%- set start = (event.start | as_datetime) -%}
@@ -308,9 +306,8 @@ automation:
                 "start": "{{ start.strftime('%d. %b %H:%M') }}",
                 "end": "{{ end.strftime('%d. %b %H:%M') }}",
                 "summary": "{{ event.summary | title }}"
-                {% if 'description' in event %}, "description": "{{ event.description if 'description' in event }}"{% endif %}
-                {% if 'location' in event %}, "location": "{{ event.location if 'location' in event }}"{% endif %}
               }{{ ',' if not loop.last }}
+            {%- endfor -%}
             ]}
 
   - id: update_tripit_agenda_state
