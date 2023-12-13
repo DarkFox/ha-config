@@ -90,6 +90,142 @@ script:
               room: "{{ room }}"
 
 automation:
+  - alias: Medie Fjernbetjening
+    initial_state: true
+    mode: parallel
+    trigger:
+      - platform: event
+        event_type: deconz_event
+    condition:
+      - condition: template
+        value_template: >-
+          {{
+            trigger.event.data.id in [
+              'stue_medie_fjernbetjening'
+            ]
+          }}
+    variables:
+      room: "{{ trigger.event.data.id | replace('_medie_fjernbetjening', '') }}"
+    action:
+      # Button | Action | Event (firmware 1.0.35) | Desired result (service call)
+      # -- | -- | -- | --
+      # Play | press | 1002 | media_player.play_pause
+      # Next Track | press | 5002 | media_player.media_next_track
+      # Previous Track | press | 4002 | media_player.media_previous_track
+      # \+ (Volume up) | press | 2002 | media_player.volume_up
+      # \+ (Volume up) | hold | 2001 (Repeats at about 3 events/second) | media_player.volume_up
+      # \- (Volume down) | press | 3002 | media_player.volume_down
+      # \- (Volume down) | hold | 3001 (Repeats at about 3 events/second) | media_player.volume_down
+      # ----- | ----- | ----- | -----
+      # Dot 1 | press | 6000 | Nothing
+      # Dot 1 | press | 6002 | Play DR P3 (media_player.play_media)
+      # Dot 1 | double press | 6004 | Play briefing (script.briefing_announcement)
+      # Dot 1 | hold | 6001 | Play briefing, podcasts and radio (script.mass_briefing_playlist)
+      # Dot 1 | hold release | 6003 |
+      # ----- | ----- | ----- | -----
+      # Dot 2 | press | 7000 | Nothing
+      # Dot 2 | press release | 7002 | Play Chillhop Radio (media_player.play_media)
+      # Dot 2 | double press | 7004 | Play some heavy stuff (media_player.play_media)
+      # Dot 2 | hold | 7001 | Play seasonal playlist (media_player.play_media)
+      # Dot 2 | hold release | 7003 |
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.event.data.event == 1002 }}"
+            sequence:
+              - service: media_player.media_play_pause
+                data:
+                  entity_id: "media_player.{{ room }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.event.data.event == 5002 }}"
+            sequence:
+              - service: media_player.media_next_track
+                data:
+                  entity_id: "media_player.{{ room }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.event.data.event == 4002 }}"
+            sequence:
+              - service: media_player.media_previous_track
+                data:
+                  entity_id: "media_player.{{ room }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.event.data.event == 2002 }}"
+            sequence:
+              - service: media_player.volume_up
+                data:
+                  entity_id: "media_player.{{ room }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.event.data.event == 2001 }}"
+            sequence:
+              - service: media_player.volume_up
+                data:
+                  entity_id: "media_player.{{ room }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.event.data.event == 3002 }}"
+            sequence:
+              - service: media_player.volume_down
+                data:
+                  entity_id: "media_player.{{ room }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.event.data.event == 3001 }}"
+            sequence:
+              - service: media_player.volume_down
+                data:
+                  entity_id: "media_player.{{ room }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.event.data.event == 6002 }}"
+            sequence:
+              - service: script.play_dr_p3
+                data:
+                  entity_id: "media_player.{{ room }}_mass"
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.event.data.event == 6004 }}"
+            sequence:
+              - service: script.briefing_announcement
+                data:
+                  entity_id: "media_player.{{ room }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.event.data.event == 6001 }}"
+            sequence:
+              - service: script.mass_playlist
+                data:
+                  entity_id: "media_player.{{ room }}_mass"
+                  playlist:
+                    - "{{ states('sensor.podcast_radioavisen') }}"
+                    - "{{ states('sensor.podcast_daily_tech_headlines') }}"
+                    - "{{ states('sensor.podcast_daily_tech_news_show') }}"
+                    - library://radio/1
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.event.data.event == 7002 }}"
+            sequence:
+              - service: script.play_chillhop_playlist
+                data:
+                  entity_id: "media_player.{{ room }}_mass"
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.event.data.event == 7004 }}"
+            sequence:
+              - service: script.play_hardstyle_playlist
+                data:
+                  entity_id: "media_player.{{ room }}_mass"
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.event.data.event == 7001 }}"
+            sequence:
+              - service: script.play_seasonal_playlist
+                data:
+                  entity_id: "media_player.{{ room }}_mass"
+
   - alias: Tryk
     initial_state: true
     mode: parallel

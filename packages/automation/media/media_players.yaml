@@ -51,8 +51,8 @@ script:
       - service: script.tts_speak
         data:
           cache: false
-          entity_id: "{{ announcement_entities }}"
-          volume_level: "{{ volume_level }}"
+          entity_id: "{{ entity_id }}"
+          volume_level: "{{ volume_level | default(0.5) }}"
           message: >-
             {{ agent.response.speech.plain.speech }}
 
@@ -61,8 +61,8 @@ script:
     sequence:
       - service: script.briefing_announcement
         data:
-          announcement_entities: "{{ announcement_entities }}"
-          volume_level: "{{ volume_level }}"
+          entity_id: "{{ announcement_entities | default(entity_id|replace('_mass','')) }}"
+          volume_level: "{{ volume_level | default(0.5) }}"
       - delay:
           seconds: 10
       - service: script.mass_playlist
@@ -85,7 +85,7 @@ script:
         description: Shuffle mode
         example: false
       playlist:
-        description: Playlist URI
+        description: Playlist URIs
         example: "library://radio/1"
     sequence:
       - service: media_player.repeat_set
@@ -105,6 +105,47 @@ script:
           enqueue_mode: replace
           repeat_mode: "{{ repeat | default('off') }}"
           uri: "{{ playlist }}"
+
+  play_dr_p3:
+    alias: Play DR P3
+    sequence:
+      - service: script.mass_playlist
+        data:
+          entity_id: "{{ entity_id }}"
+          playlist:
+            - library://radio/1
+
+  play_chillhop_playlist:
+    alias: Play Chillhop Playlist
+    sequence:
+      - service: script.mass_playlist
+        data:
+          entity_id: "{{ entity_id }}"
+          shuffle: true
+          playlist:
+            - library://playlist/13
+
+  play_hardstyle_playlist:
+    alias: Play Hardstyle Playlist
+    sequence:
+      - service: script.mass_playlist
+        data:
+          entity_id: "{{ entity_id }}"
+          shuffle: true
+          playlist:
+            - library://playlist/8
+
+  play_seasonal_playlist:
+    alias: Play Seasonal Playlist
+    sequence:
+      # TODO: Script to select playlist based on season
+      # Should have music for: Christmas, Halloween, Easter, Summer, Winter, New Years
+      - service: script.mass_playlist
+        data:
+          entity_id: "{{ entity_id }}"
+          shuffle: true
+          playlist:
+            - library://playlist/5
 
   playlist_play_media:
     sequence:
