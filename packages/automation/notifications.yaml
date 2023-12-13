@@ -30,6 +30,27 @@ script:
       - service: script.voice_broadcast
         data:
           message: "{{ message }}"
+      - service: script.darkphone_tts
+        data:
+          message: "{{ message }}"
+
+  darkphone_tts:
+    alias: Read message on Darkphone if headset connected
+    sequence:
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: binary_sensor.darkphone_headphones
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.darkphone_bluetooth_headphones_connected
+            state: "on"
+      - service: notify.mobile_app_darkphone
+        data:
+          message: "TTS"
+          data:
+            media_stream: "media_stream"
+            tts_text: "{{ message }}"
 
   voice_broadcast:
     alias: Broadcast message on all speakers if home
