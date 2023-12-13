@@ -2,3 +2,22 @@ template:
   - sensor:
       - name: Darkphone Last Notification Post Time
         state: "{{ state_attr('sensor.darkphone_last_notification', 'post_time') }}"
+  - binary_sensor:
+      - name: Darkphone Bluetooth Headphones Connected
+        state: >-
+          {% set headsets = [
+            'VW Fox',
+            'Soundcore Space A40',
+            'DarkPhones',
+            'musiCozy'
+          ] %}
+          {% set connected_devices_list = state_attr('sensor.darkphone_bluetooth_connection', 'connected_paired_devices') %}
+          {%- set ns = namespace(ret=false) %}
+          {% for device in connected_devices_list %}
+            {% for bssid in headsets %}
+              {% if bssid in device %}
+                {% set ns.ret = true %}
+              {% endif %}
+            {% endfor %}
+          {% endfor %}
+          {{ ns.ret }}
