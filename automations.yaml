@@ -82,27 +82,77 @@
       helper_last_controller_event: input_text.sovevaerelse_volumeknap_sidste_event
       helper_debounce_delay: 100
       action_rotate_left:
-      - service: media_player.volume_down
-        data: {}
-        target:
-          entity_id: media_player.sovevaerelse
+      - if:
+        - condition: state
+          entity_id: media_player.sovevaerelse_soundbar_songpal
+          state: 'on'
+        then:
+        - service: media_player.volume_down
+          data: {}
+          target:
+            entity_id: media_player.sovevaerelse_soundbar_songpal
+        else:
+        - service: media_player.volume_down
+          data: {}
+          target:
+            entity_id: media_player.sovevaerelse
       rotate_left_loop: true
       rotate_right_loop: true
       action_rotate_right:
-      - service: media_player.volume_up
-        data: {}
-        target:
-          entity_id: media_player.sovevaerelse
+      - if:
+        - condition: state
+          entity_id: media_player.sovevaerelse_soundbar_songpal
+          state: 'on'
+        then:
+        - service: media_player.volume_up
+          data: {}
+          target:
+            entity_id: media_player.sovevaerelse_soundbar_songpal
+        else:
+        - service: media_player.volume_up
+          data: {}
+          target:
+            entity_id: media_player.sovevaerelse
       action_click_short:
-      - service: media_player.media_play_pause
-        data: {}
-        target:
-          entity_id: media_player.sovevaerelse
+      - if:
+        - condition: or
+          conditions:
+          - condition: state
+            entity_id: media_player.sovevaerelse_chromecast
+            state: playing
+          - condition: state
+            entity_id: media_player.sovevaerelse_chromecast
+            state: paused
+        then:
+        - service: media_player.media_play_pause
+          data: {}
+          target:
+            entity_id: media_player.sovevaerelse_chromecast
+        else:
+        - service: media_player.media_play_pause
+          data: {}
+          target:
+            entity_id: media_player.sovevaerelse
       action_click_double:
-      - service: media_player.media_next_track
-        data: {}
-        target:
-          entity_id: media_player.sovevaerelse
+      - if:
+        - condition: or
+          conditions:
+          - condition: state
+            entity_id: media_player.sovevaerelse_chromecast
+            state: playing
+          - condition: state
+            entity_id: media_player.sovevaerelse_chromecast
+            state: paused
+        then:
+        - service: media_player.media_next_track
+          data: {}
+          target:
+            entity_id: media_player.sovevaerelse_chromecast
+        else:
+        - service: media_player.media_next_track
+          data: {}
+          target:
+            entity_id: media_player.sovevaerelse
       action_click_triple:
       - service: script.join_unjoin_sonos_group
         data:
