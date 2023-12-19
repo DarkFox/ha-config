@@ -35,3 +35,22 @@ automation:
             keyboard:
               - "/puzzel" # work.yaml
               - "/bil" # car.yaml
+
+  - alias: "Handle Telegram Message"
+    id: handle_telegram_message
+    trigger:
+      - platform: event
+        event_type: telegram_text
+        event_data:
+          chat_id: !secret telegram_darkfox_id
+    action:
+      - service: conversation.process
+        data:
+          text: "{{ trigger.event.data.text }}"
+          language: "da"
+          agent_id: 4e0a875b09f8a19a405e1bf3e5c4adac
+        response_variable: agent
+      - service: telegram_bot.send_message
+        data:
+          target: "{{ trigger.event.data.chat_id }}"
+          message: "{{ agent.response.speech.plain.speech }}"
