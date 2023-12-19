@@ -61,6 +61,10 @@ template:
 script:
   puzzel_log_on:
     alias: "Log onto Puzzel queue"
+    fields:
+      queue:
+        description: "Queue to log on to"
+        example: "LSS Sekundær"
     variables:
       profile_id: "{{ (state_attr('sensor.puzzel_status', 'result').profiles | selectattr('name', 'equalto', queue) | first).id }}"
       phone_number: !secret work_phone_number
@@ -80,6 +84,8 @@ script:
               - service: script.turn_on
                 target:
                   entity_id: script.puzzel_log_off
+              - delay:
+                  seconds: 2
       - service: shell_command.curl
         data:
           url: "https://agent.puzzel.com/contactcentre5/{{ state_attr('sensor.puzzel_user', 'result').customerKey }}/users/{{ state_attr('sensor.puzzel_user', 'result').userId|string }}/logon"
@@ -116,6 +122,10 @@ script:
 
   puzzel_pause_on:
     alias: "Puzzel Pause On"
+    fields:
+      pause_type:
+        description: "Pause type to set"
+        example: "Pause"
     variables:
       pause_type_id: "{{ (state_attr('sensor.puzzel_user', 'result').pauseTypes | selectattr('description', 'equalto', pause_type) | first).id }}"
     sequence:
