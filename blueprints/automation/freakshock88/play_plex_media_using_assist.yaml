@@ -1,0 +1,67 @@
+blueprint:
+  name: Play Plex media using Assist
+  description: 'Play any Plex media on a media player of your choice. The media player
+    has to support this action.
+
+    '
+  domain: automation
+  input:
+    media_player:
+      name: Media player
+      description: Media player on which to start Plex playback
+      selector:
+        entity:
+          domain:
+          - media_player
+          multiple: false
+    media_player_friendly_name:
+      name: Media player friendly name.
+      description: The name of the media player you want the automation to trigger
+        on. E.g. 'bedroom TV'
+      default: plex
+    movies_library_name:
+      name: Movies library name
+      description: The name of your Plex Movies library
+      default: []
+    tvshows_library_name:
+      name: TV Shows library name
+      description: The name of your Plex TV Shows library
+      default: []
+  source_url: https://gist.github.com/freakshock88/833c9f15bb82a68fba251dd6c1325d75
+mode: restart
+max_exceeded: silent
+variables:
+  target_media_player: !input media_player
+  target_movies_library: !input movies_library_name
+  target_tvshows_library: !input tvshows_library_name
+trigger:
+- platform: conversation
+  command:
+  - Play {plex_media_name} on {media_player_assist_name}
+action:
+- alias: Check if friendly media player name is used
+  condition: template
+  value_template: '{{ media_player_friendly_name == media_player_assist_name}}'
+- service: media_player.play_media
+  continue_on_error: true
+  target:
+    entity_id: !input media_player
+  data:
+    media_content_type: tvshow
+    media_content_id: 'plex://{"library_name": "{{target_tvshows_library}}", "show.title":
+      "{{ trigger.slots.plex_media_name}}", "episode.unwatched": true, "allow_multiple":
+      1 }'
+- wait_template: '{{ is_state(target_media_player, ''playing'') }}'
+  timeout: 00:00:10
+  continue_on_timeout: true
+- if:
+  - '{{ not wait.completed }}'
+  then:
+  - service: media_player.play_media
+    continue_on_error: true
+    target:
+      entity_id: !input media_player
+    data:
+      media_content_type: movie
+      media_content_id: 'plex://{"library_name": "{{target_movies_library}}", "movie.title":
+        "{{ trigger.slots.plex_media_name}}" }'

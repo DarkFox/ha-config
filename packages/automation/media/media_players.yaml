@@ -148,6 +148,13 @@ script:
             - library://playlist/5
 
   playlist_play_media:
+    fields:
+      entity_id:
+        description: Media Player that will play the playlist
+        example: media_player.media_room
+      url:
+        description: URL to play
+        example: "https://www.youtube.com/watch?v=5qap5aO4i9A"
     sequence:
       - service: media_player.play_media
         data:
@@ -170,6 +177,47 @@ script:
             {%- else -%}
               EPISODE
             {%- endif -%}
+
+  play_plex:
+    alias: "Play the requested media from Plex"
+    fields:
+      entity_id:
+        description: Media Player that will play the media
+        example: media_player.media_room
+      query:
+        description: Query to search for
+        example: "The Office"
+    sequence:
+      - service: media_player.play_media
+        continue_on_error: true
+        target:
+          entity_id: "{{entity_id}}"
+        data:
+          media_content_type: tvshow
+          media_content_id: >-
+            plex://{
+              "library_name": "TV Shows",
+              "show.title": "{{ query }}",
+              "episode.unwatched": true,
+              "allow_multiple": 1
+            }
+      - wait_template: "{{ is_state(entity_id, 'playing') }}"
+        timeout: 00:00:10
+        continue_on_timeout: true
+      - if:
+          - "{{ not wait.completed }}"
+        then:
+          - service: media_player.play_media
+            continue_on_error: true
+            target:
+              entity_id: "{{entity_id}}"
+            data:
+              media_content_type: movie
+              media_content_id: >-
+                plex://{
+                  "library_name": "Movies",
+                  "movie.title": "{{ query }}"
+                }
 
   weather_report:
     alias: Vejrudsigt
