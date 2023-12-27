@@ -63,10 +63,13 @@ script:
     alias: "Log onto Puzzel queue"
     fields:
       queue:
-        description: "Queue to log on to"
+        description: "Name of queue to log on to (case sensitive)"
         example: "LSS Sekundær"
+      queue_id:
+        description: "ID of queue to log on to (overrides queue name)"
+        example: 12345
     variables:
-      profile_id: "{{ (state_attr('sensor.puzzel_status', 'result').profiles | selectattr('name', 'equalto', queue) | first).id }}"
+      profile_id: "{{ (queue_id|int) or (state_attr('sensor.puzzel_status', 'result').profiles | selectattr('name', 'equalto', queue) | first).id }}"
       phone_number: !secret work_phone_number
     sequence:
       - alias: "ensure all variables"
