@@ -446,6 +446,201 @@ script:
       event_data:
         profile: "Off"
 
+  hue_scene_or_light_profile:
+    mode: parallel
+    # Apply Hue Scene if available, otherwise apply fallback scene data
+    alias: Hue Scene or Light Profile
+    fields:
+      room:
+        description: The room to set the scene in
+        example: "Stue"
+      scene:
+        description: The scene to check for
+        example: "Party"
+      fallback_scene:
+        description: Fallback scene to apply, if the scene is not found
+        example: >-
+          {
+            "transition": "0.5",
+            "entities": {
+              "light.spisebord": {
+                "state": "on",
+                "brightness": 128,
+                "color_temp": 430,
+                "effect": "None"
+              }
+            }
+          }
+    variables:
+      room_entity: "{{ 'light.'+(room|lower|replace(' ','_')|replace('æ','ae'))+'_room' }}"
+      hue_scene_states: >-
+        {
+        {% for id in fallback_scene.entities %}
+          {% set entity = fallback_scene.entities[id] %}
+            "{{id}}": {
+              "state": {{entity.state}}
+              {% if entity.state %}
+              ,"brightness": {{entity.brightness}}
+              {% endif %}
+            }{{ ',' if not loop.last }}
+        {% endfor %}
+        }
+    sequence:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ states(room_entity) != 'unknown' and scene in state_attr(room_entity, 'hue_scenes') }}"
+            sequence:
+              - service: hue.hue_activate_scene
+                data:
+                  group_name: "{{ room }}"
+                  scene_name: "{{ scene }}"
+                  dynamic: true
+              - delay:
+                  seconds: 1
+              - service: scene.apply
+                data:
+                  entities: "{{ hue_scene_states }}"
+        default:
+          - service: scene.apply
+            data:
+              transition: "{{ fallback_scene.transition }}"
+              entities: "{{ fallback_scene.entities }}"
+
+  wled_preset_or_light_profile:
+    mode: parallel
+    # Apply WLED Preset if available, otherwise apply fallback scene data
+    alias: WLED Preset or Light Profile
+    fields:
+      preset:
+        description: The preset to check for
+        example: "Party"
+      entities:
+        description: Fallback scene to apply, if the preset is not found
+        example: >-
+          {
+            "light.stue_gardinstang": {
+              "state": True,
+              "brightness": 128,
+              "color_temp": 430,
+              "effect": "None"
+            }
+          }
+    variables:
+      preset_entities: >-
+        {% set ns = namespace(ret={}) %}
+        {% for entity in entities.keys()|list %}
+          {% set device_id = device_id(entity) %}
+          {% set device_entities = device_entities(device_id) %}
+          {% set preset_select_entity = namespace(entity_id='') %}
+          {% for entity_id in device_entities %}
+            {% if entity_id.startswith('select.') and entity_id.endswith('_preset') %}
+              {% set preset_select_entity.entity_id = entity_id %}
+              {% break %}
+            {% endif %}
+          {% endfor %}
+          {% if preset_select_entity.entity_id and preset in state_attr(preset_select_entity.entity_id, 'options') %}
+            {% if preset_select_entity.entity_id in ns.ret.keys()|list %}
+              {% set ns.ret = dict(ns.ret, **{preset_select_entity.entity_id: (ns.ret[preset_select_entity.entity_id]+[entity])}) %}
+            {% else %}
+              {% set ns.ret = dict(ns.ret, **{preset_select_entity.entity_id: [entity]}) %}
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.ret }}
+      scene_entities: >-
+        [
+        {% for entity in entities.keys()|list -%}
+          {% set device_id = device_id(entity) %}
+          {% set device_entities = device_entities(device_id) %}
+          {% set preset_select_entity = namespace(entity_id='') %}
+          {% for entity_id in device_entities %}
+            {% if entity_id.startswith('select.') and entity_id.endswith('_preset') %}
+              {% set preset_select_entity.entity_id = entity_id %}
+              {% break %}
+            {% endif %}
+          {% endfor %}
+          {%- if preset_select_entity.entity_id and preset not in state_attr(preset_select_entity.entity_id, 'options') -%}
+          "{{ entity }}",
+          {%- endif%}
+        {% endfor %}
+        ]
+    sequence:
+      - repeat:
+          for_each: "{{ preset_entities.keys()|unique|list }}"
+          sequence:
+            - service: script.turn_on
+              target:
+                entity_id: script.wled_preset
+              data:
+                variables:
+                  preset: "{{ preset }}"
+                  preset_select_entity: "{{ repeat.item }}"
+                  entities: >-
+                    {
+                      {% for entity_id in preset_entities[repeat.item]|unique|list %}
+                        {% set scene = entities[entity_id] %}
+                        "{{ entity_id }}": {
+                          {% for item in scene %}
+                            {% set value = scene[item] %}
+                            "{{ item }}": {{ '"' if value is string }}{{ value }}{{ '"' if value is string }}{{ ',' if not loop.last }}
+                          {% endfor %}
+                        }{{ ',' if not loop.last }}
+                      {% endfor %}
+                    }
+      - service: scene.apply
+        data:
+          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+          entities: >-
+            {
+              {% for entity_id in scene_entities|unique|list %}
+                {% set scene = entities[entity_id] %}
+                "{{ entity_id }}": {{scene}}{{ ',' if not loop.last }}
+              {% endfor %}
+            }
+
+  wled_preset:
+    mode: parallel
+    # Apply WLED Preset
+    fields:
+      preset:
+        description: The preset to check for
+        example: "Party"
+      preset_select_entity:
+        description: The preset select entity to set
+        example: "input_select.stue_gardinstang_preset"
+      entities:
+        description: Scene to apply on top of preset
+        example: >-
+          light.tv_mobel_hojre_hylde: {
+            "state": True,
+            "brightness": 128,
+            "color_temp": 430,
+            "effect": "None"
+          }
+    sequence:
+      - service: select.select_option
+        data:
+          entity_id: "{{ preset_select_entity }}"
+          option: "{{ preset }}"
+      - delay:
+          seconds: 1
+      - service: scene.apply
+        data:
+          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+          entities: >-
+            {
+              {% for entity_id in entities|unique|list %}
+                {% set scene = entities[entity_id] %}
+                "{{ entity_id }}": {
+                  "state": {{ scene.state }}
+                  {% if scene.state %}
+                  ,"brightness": {{ scene.brightness }}
+                  {% endif %}
+                }{{ ',' if not loop.last }}
+              {% endfor %}
+            }
+
 automation:
   - alias: Reset Scene Transition Time
     initial_state: true
