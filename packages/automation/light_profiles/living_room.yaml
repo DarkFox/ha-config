@@ -161,80 +161,99 @@ automation:
         entity_id: *room_light_profile
         state: "Default"
     action:
+      - service: script.turn_on
+        target:
+          entity_id: script.hue_scene_or_light_profile
+        data:
+          variables:
+            room: Stue
+            scene: "{{ states('sensor.theme') }}"
+            fallback_scene:
+              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+              entities:
+                light.stue_spots:
+                  state: on
+                  brightness: 128
+                  color_temp: 430
+                  effect: "None"
+                light.sofa_laeselampe:
+                  state: on
+                  brightness: 172
+                  color_temp: 390
+                  effect: "None"
+                light.sofalampe:
+                  state: on
+                  brightness: 128
+                  color_temp: 430
+                  effect: "None"
+                light.skaenk_lampe:
+                  state: on
+                  brightness: 128
+                  color_temp: 430
+                  effect: "None"
+                light.sofa_uplight:
+                  state: on
+                  brightness: 255
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                  effect: "None"
+                light.globe:
+                  state: on
+                  brightness: 192
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+                  effect: "None"
+                light.stue_tv:
+                  state: on
+                  brightness: 192
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                  effect: "None"
+                light.stue_tv_bund:
+                  state: on
+                  brightness: 255
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+                  effect: "None"
+
+      - service: script.turn_on
+        target:
+          entity_id: script.wled_preset_or_light_profile
+        data:
+          variables:
+            preset: "{{ states('sensor.theme') }}"
+            entities:
+              light.stue_gardinstang:
+                state: on
+                brightness: 96
+                hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
+                effect: "Solid"
+              light.tv_mobel_hojre_hylde:
+                state: on
+                brightness: 127
+                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                effect: "Solid"
+              light.tv_mobel_hojre_skuffe:
+                state: on
+                brightness: 127
+                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                effect: "Solid"
+              light.tv_mobel_venstre_hylde:
+                state: on
+                brightness: 127
+                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                effect: "Solid"
+              light.tv_mobel_venstre_skuffe:
+                state: on
+                brightness: 127
+                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                effect: "Solid"
+              light.stue_skaenk_gulv:
+                state: on
+                brightness: 127
+                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                effect: "Solid"
+
       - service: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
-            light.stue_spots:
-              state: on
-              brightness: 128
-              color_temp: 430
-              effect: "None"
-            light.sofa_laeselampe:
-              state: on
-              brightness: 172
-              color_temp: 390
-              effect: "None"
-            light.sofalampe:
-              state: on
-              brightness: 128
-              color_temp: 430
-              effect: "None"
-            light.skaenk_lampe:
-              state: on
-              brightness: 128
-              color_temp: 430
-              effect: "None"
-            light.sofa_uplight:
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-              effect: "None"
-            light.globe:
-              state: on
-              brightness: 192
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-              effect: "None"
-            light.stue_tv:
-              state: on
-              brightness: 192
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-              effect: "None"
-            light.stue_tv_bund:
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-              effect: "None"
-            light.stue_gardinstang:
-              state: on
-              brightness: 96
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
-              effect: "Solid"
-            light.tv_mobel_hojre_hylde:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.tv_mobel_hojre_skuffe:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.tv_mobel_venstre_hylde:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.tv_mobel_venstre_skuffe:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.stue_skaenk_gulv:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
             light.stue_tablet:
               state: on
             light.stue_skaenk:
@@ -256,90 +275,109 @@ automation:
         entity_id: *room_light_profile
         state: "Dimmed"
     action:
+      - service: script.turn_on
+        target:
+          entity_id: script.hue_scene_or_light_profile
+        data:
+          variables:
+            room: Stue
+            scene: "{{ states('sensor.theme') }}"
+            fallback_scene:
+              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+              entities:
+                light.globe:
+                  state: on
+                  brightness: 127
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+                  effect: "None"
+                light.sofa_laeselampe:
+                  state: on
+                  brightness: 76
+                  color_temp: 454
+                  effect: "None"
+                light.sofa_uplight:
+                  state: on
+                  brightness: 172
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                  effect: "None"
+                light.sofalampe:
+                  state: on
+                  brightness: 76
+                  color_temp: 454
+                  effect: "None"
+                light.skaenk_lampe:
+                  state: on
+                  brightness: 76
+                  color_temp: 454
+                  effect: "None"
+                light.stue_spot_1:
+                  state: on
+                  brightness: 127
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+                  effect: "None"
+                light.stue_spot_2:
+                  state: on
+                  brightness: 127
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+                  effect: "None"
+                light.stue_spot_3:
+                  state: on
+                  brightness: 76
+                  color_temp: 454
+                  effect: "None"
+                light.stue_tv:
+                  state: on
+                  brightness: 127
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                  effect: "None"
+                light.stue_tv_bund:
+                  state: on
+                  brightness: 127
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+                  effect: "None"
+
+      - service: script.turn_on
+        target:
+          entity_id: script.wled_preset_or_light_profile
+        data:
+          variables:
+            preset: "{{ states('sensor.theme') }}"
+            entities:
+              light.stue_gardinstang:
+                state: on
+                brightness: 48
+                hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
+                effect: "Solid"
+              light.tv_mobel_hojre_hylde:
+                state: on
+                brightness: 48
+                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                effect: "Solid"
+              light.tv_mobel_hojre_skuffe:
+                state: on
+                brightness: 48
+                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                effect: "Solid"
+              light.tv_mobel_venstre_hylde:
+                state: on
+                brightness: 48
+                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                effect: "Solid"
+              light.tv_mobel_venstre_skuffe:
+                state: on
+                brightness: 48
+                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                effect: "Solid"
+              light.stue_skaenk_gulv:
+                state: on
+                brightness: 64
+                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                effect: "Solid"
+
       - service: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
-            light.globe:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-              effect: "None"
-            light.sofa_laeselampe:
-              state: on
-              brightness: 76
-              color_temp: 454
-              effect: "None"
-            light.sofa_uplight:
-              state: on
-              brightness: 172
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-              effect: "None"
-            light.sofalampe:
-              state: on
-              brightness: 76
-              color_temp: 454
-              effect: "None"
-            light.skaenk_lampe:
-              state: on
-              brightness: 76
-              color_temp: 454
-              effect: "None"
-            light.stue_spot_1:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-              effect: "None"
-            light.stue_spot_2:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-              effect: "None"
-            light.stue_spot_3:
-              state: on
-              brightness: 76
-              color_temp: 454
-              effect: "None"
-            light.stue_tv:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-              effect: "None"
-            light.stue_tv_bund:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-              effect: "None"
-            light.stue_gardinstang:
-              state: on
-              brightness: 48
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
-              effect: "Solid"
-            light.tv_mobel_hojre_hylde:
-              state: on
-              brightness: 48
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.tv_mobel_hojre_skuffe:
-              state: on
-              brightness: 48
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.tv_mobel_venstre_hylde:
-              state: on
-              brightness: 48
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.tv_mobel_venstre_skuffe:
-              state: on
-              brightness: 48
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.stue_skaenk_gulv:
-              state: on
-              brightness: 64
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
             light.stue_tablet:
               state: on
             light.stue_skaenk:
@@ -361,77 +399,96 @@ automation:
         entity_id: *room_light_profile
         state: "Ambient"
     action:
+      - service: script.turn_on
+        target:
+          entity_id: script.hue_scene_or_light_profile
+        data:
+          variables:
+            room: Stue
+            scene: "{{ states('sensor.theme') }}"
+            fallback_scene:
+              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+              entities:
+                light.stue_spots:
+                  state: off
+                light.sofa_laeselampe:
+                  state: on
+                  brightness: 32
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+                  effect: "None"
+                light.sofa_uplight:
+                  state: on
+                  brightness: 86
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                  effect: "None"
+                light.sofalampe:
+                  state: on
+                  brightness: 32
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+                  effect: "None"
+                light.skaenk_lampe:
+                  state: on
+                  brightness: 32
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                  effect: "None"
+                light.globe:
+                  state: on
+                  brightness: 32
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+                  effect: "None"
+                light.stue_tv:
+                  state: on
+                  brightness: 32
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                  effect: "None"
+                light.stue_tv_bund:
+                  state: on
+                  brightness: 32
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+                  effect: "None"
+
+      - service: script.turn_on
+        target:
+          entity_id: script.wled_preset_or_light_profile
+        data:
+          variables:
+            preset: "{{ states('sensor.theme') }}"
+            entities:
+              light.stue_gardinstang:
+                state: on
+                brightness: 16
+                hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
+                effect: "Solid"
+              light.tv_mobel_hojre_hylde:
+                state: on
+                brightness: 8
+                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                effect: "Solid"
+              light.tv_mobel_hojre_skuffe:
+                state: on
+                brightness: 8
+                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                effect: "Solid"
+              light.tv_mobel_venstre_hylde:
+                state: on
+                brightness: 8
+                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                effect: "Solid"
+              light.tv_mobel_venstre_skuffe:
+                state: on
+                brightness: 8
+                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                effect: "Solid"
+              light.stue_skaenk_gulv:
+                state: on
+                brightness: 8
+                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                effect: "Solid"
+
       - service: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
-            light.stue_spots:
-              state: off
-            light.sofa_laeselampe:
-              state: on
-              brightness: 32
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-              effect: "None"
-            light.sofa_uplight:
-              state: on
-              brightness: 86
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-              effect: "None"
-            light.sofalampe:
-              state: on
-              brightness: 32
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-              effect: "None"
-            light.skaenk_lampe:
-              state: on
-              brightness: 32
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-              effect: "None"
-            light.globe:
-              state: on
-              brightness: 32
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-              effect: "None"
-            light.stue_tv:
-              state: on
-              brightness: 32
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-              effect: "None"
-            light.stue_tv_bund:
-              state: on
-              brightness: 32
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-              effect: "None"
-            light.stue_gardinstang:
-              state: on
-              brightness: 16
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
-              effect: "Solid"
-            light.tv_mobel_hojre_hylde:
-              state: on
-              brightness: 8
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.tv_mobel_hojre_skuffe:
-              state: on
-              brightness: 8
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.tv_mobel_venstre_hylde:
-              state: on
-              brightness: 8
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.tv_mobel_venstre_skuffe:
-              state: on
-              brightness: 8
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.stue_skaenk_gulv:
-              state: on
-              brightness: 8
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
             light.stue_tablet:
               state: on
             light.stue_skaenk:
@@ -782,6 +839,24 @@ script:
   bar_lights_open:
     alias: "Bar Lights Open"
     sequence:
+      - service: script.turn_on
+        target:
+          entity_id: script.wled_preset_or_light_profile
+        data:
+          variables:
+            preset: "{{ states('sensor.theme') }}"
+            entities:
+              light.bar:
+                state: on
+                brightness: 255
+                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                effect: "Solid"
+              light.barbord:
+                state: on
+                brightness: 255
+                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                effect: "Solid"
+
       - service: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
@@ -810,20 +885,28 @@ script:
               state: on
               brightness: 255
               effect: "None"
-            light.bar:
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.barbord:
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
 
   bar_lights_default:
     alias: "Bar Lights Default"
     sequence:
+      - service: script.turn_on
+        target:
+          entity_id: script.wled_preset_or_light_profile
+        data:
+          variables:
+            preset: "{{ states('sensor.theme') }}"
+            entities:
+              light.bar:
+                state: on
+                brightness: 127
+                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                effect: "Solid"
+              light.barbord:
+                state: on
+                brightness: 172
+                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                effect: "Solid"
+
       - service: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
@@ -850,20 +933,28 @@ script:
               effect: "None"
             light.bar_skuffer:
               state: off
-            light.bar:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.barbord:
-              state: on
-              brightness: 172
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
 
   bar_lights_dimmed:
     alias: "Bar Lights Dimmed"
     sequence:
+      - service: script.turn_on
+        target:
+          entity_id: script.wled_preset_or_light_profile
+        data:
+          variables:
+            preset: "{{ states('sensor.theme') }}"
+            entities:
+              light.bar:
+                state: on
+                brightness: 64
+                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                effect: "Solid"
+              light.barbord:
+                state: on
+                brightness: 72
+                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                effect: "Solid"
+
       - service: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
@@ -885,20 +976,28 @@ script:
               brightness: 32
             light.bar_skuffer:
               state: off
-            light.bar:
-              state: on
-              brightness: 64
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.barbord:
-              state: on
-              brightness: 72
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
 
   bar_lights_ambient:
     alias: "Bar Lights Ambient"
     sequence:
+      - service: script.turn_on
+        target:
+          entity_id: script.wled_preset_or_light_profile
+        data:
+          variables:
+            preset: "{{ states('sensor.theme') }}"
+            entities:
+              light.bar:
+                state: on
+                brightness: 8
+                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                effect: "Solid"
+              light.barbord:
+                state: on
+                brightness: 26
+                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                effect: "Solid"
+
       - service: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
@@ -915,16 +1014,6 @@ script:
               state: off
             light.bar_skuffer:
               state: off
-            light.bar:
-              state: on
-              brightness: 8
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.barbord:
-              state: on
-              brightness: 26
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
 
   bar_lights_night:
     alias: "Bar Lights Night"
