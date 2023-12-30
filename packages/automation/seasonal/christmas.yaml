@@ -1,79 +1,81 @@
-switch:
-  - platform: template
-    switches:
-      julekugler:
-        friendly_name: "Julekugler"
-        turn_on:
-          - service: remote.send_command
-            data:
-              command: julekugler_on
-              device: EC:0B:AE:A3:62:1A
-              num_repeats: 15
-            target:
-              entity_id: remote.stue_universal_remote
-          - service: remote.send_command
-            data:
-              command: julekugler_on
-              device: 34:EA:34:B2:EC:C3
-              num_repeats: 15
-            target:
-              entity_id: remote.kontor_ir_remote
-        turn_off:
-          - service: remote.send_command
-            data:
-              command: julekugler_off
-              device: EC:0B:AE:A3:62:1A
-              num_repeats: 15
-            target:
-              entity_id: remote.stue_universal_remote
-          - service: remote.send_command
-            data:
-              command: julekugler_off
-              device: 34:EA:34:B2:EC:C3
-              num_repeats: 15
-            target:
-              entity_id: remote.kontor_ir_remote
+# switch:
+#   - platform: template
+#     switches:
+#       julekugler:
+#         friendly_name: "Julekugler"
+#         turn_on:
+#           - service: remote.send_command
+#             data:
+#               command: julekugler_on
+#               device: EC:0B:AE:A3:62:1A
+#               num_repeats: 15
+#             target:
+#               entity_id: remote.stue_universal_remote
+#           - service: remote.send_command
+#             data:
+#               command: julekugler_on
+#               device: 34:EA:34:B2:EC:C3
+#               num_repeats: 15
+#             target:
+#               entity_id: remote.kontor_ir_remote
+#         turn_off:
+#           - service: remote.send_command
+#             data:
+#               command: julekugler_off
+#               device: EC:0B:AE:A3:62:1A
+#               num_repeats: 15
+#             target:
+#               entity_id: remote.stue_universal_remote
+#           - service: remote.send_command
+#             data:
+#               command: julekugler_off
+#               device: 34:EA:34:B2:EC:C3
+#               num_repeats: 15
+#             target:
+#               entity_id: remote.kontor_ir_remote
 
-automation:
-  - alias: "Julekugler on"
-    trigger:
-      - platform: sun
-        event: sunset
-        offset: "00:00:00"
-    action:
-      - variables:
-          curtain_state: "{{ states('cover.stue_gardin') }}"
-      - service: cover.open_cover
-        target:
-          entity_id: cover.stue_gardin
-      - delay: "00:00:30"
-      - service: switch.turn_on
-        target:
-          entity_id: switch.julekugler
-      - delay: "00:00:30"
-      - condition: template
-        value_template: "{{ curtain_state == 'closed' }}"
-      - service: cover.close_cover
-        target:
-          entity_id: cover.stue_gardin
+# automation:
+#   - alias: "Julekugler on"
+#     initial_state: true
+#     trigger:
+#       - platform: sun
+#         event: sunset
+#         offset: "00:00:00"
+#     action:
+#       - variables:
+#           curtain_state: "{{ states('cover.stue_gardin') }}"
+#       - service: cover.open_cover
+#         target:
+#           entity_id: cover.stue_gardin
+#       - delay: "00:00:30"
+#       - service: switch.turn_on
+#         target:
+#           entity_id: switch.julekugler
+#       - delay: "00:00:30"
+#       - condition: template
+#         value_template: "{{ curtain_state == 'closed' }}"
+#       - service: cover.close_cover
+#         target:
+#           entity_id: cover.stue_gardin
 
-  - alias: "Julekugler off"
-    trigger:
-      - platform: time
-        at: "00:00:00"
-    action:
-      - variables:
-          curtain_state: "{{ states('cover.stue_gardin') }}"
-      - service: cover.open_cover
-        target:
-          entity_id: cover.stue_gardin
-      - delay: "00:00:30"
-      - service: switch.turn_off
-        target:
-          entity_id: switch.julekugler
-      - delay: "00:00:30"
-      - condition: template
-        value_template: "{{ curtain_state == 'closed' }}"
-      - service: cover.close_cover
-        target:
-          entity_id: cover.stue_gardin
+#   - alias: "Julekugler off"
+#     initial_state: true
+#     trigger:
+#       - platform: time
+#         at: "00:00:00"
+#     action:
+#       - variables:
+#           curtain_state: "{{ states('cover.stue_gardin') }}"
+#       - service: cover.open_cover
+#         target:
+#           entity_id: cover.stue_gardin
+#       - delay: "00:00:30"
+#       - service: switch.turn_off
+#         target:
+#           entity_id: switch.julekugler
+#       - delay: "00:00:30"
+#       - condition: template
+#         value_template: "{{ curtain_state == 'closed' }}"
+#       - service: cover.close_cover
+#         target:
+#           entity_id: cover.stue_gardin
