@@ -91,6 +91,7 @@ script:
 
 automation:
   - alias: Medie Fjernbetjening
+    id: medie_fjernbetjening
     initial_state: true
     mode: parallel
     trigger:
@@ -120,14 +121,14 @@ automation:
       # Dot 1 | press | 6000 | Nothing
       # Dot 1 | press | 6002 | Play DR P3 (media_player.play_media)
       # Dot 1 | double press | 6004 | Play briefing (script.briefing_announcement)
-      # Dot 1 | hold | 6001 | Play briefing, podcasts and radio (script.mass_briefing_playlist)
-      # Dot 1 | hold release | 6003 |
+      # Dot 1 | hold | 6001 | Nothing
+      # Dot 1 | hold release | 6003 | Play briefing, podcasts and radio (script.mass_briefing_playlist)
       # ----- | ----- | ----- | -----
       # Dot 2 | press | 7000 | Nothing
       # Dot 2 | press release | 7002 | Play Chillhop Radio (media_player.play_media)
       # Dot 2 | double press | 7004 | Play some heavy stuff (media_player.play_media)
-      # Dot 2 | hold | 7001 | Play seasonal playlist (media_player.play_media)
-      # Dot 2 | hold release | 7003 |
+      # Dot 2 | hold | 7001 | Nothing
+      # Dot 2 | hold release | 7003 | Play seasonal playlist (media_player.play_media)
       - choose:
           - conditions:
               - condition: template
@@ -194,7 +195,7 @@ automation:
                   entity_id: "media_player.{{ room }}"
           - conditions:
               - condition: template
-                value_template: "{{ trigger.event.data.event == 6001 }}"
+                value_template: "{{ trigger.event.data.event == 6003 }}"
             sequence:
               - service: script.mass_playlist
                 data:
@@ -220,7 +221,7 @@ automation:
                   entity_id: "media_player.{{ room }}_mass"
           - conditions:
               - condition: template
-                value_template: "{{ trigger.event.data.event == 7001 }}"
+                value_template: "{{ trigger.event.data.event == 7003 }}"
             sequence:
               - service: script.play_seasonal_playlist
                 data:
