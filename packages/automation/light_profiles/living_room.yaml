@@ -715,10 +715,11 @@ automation:
       - service: script.turn_on
         target:
           entity_id: >-
-            script.dining_table_lights_{{
-              'active' if is_state('binary_sensor.stue_tilstedevarelse_spisebord', 'on')
-              else (states('sensor.living_room_active_light_profile')|lower)
-            }}
+            {% if (states('sensor.living_room_selected_light_profile')|lower) not in ['night', 'off'] and is_state('binary_sensor.stue_tilstedevarelse_spisebord', 'on') %}
+              script.dining_table_lights_active
+            {% else %}
+              script.dining_table_lights_{{ (states('sensor.living_room_active_light_profile')|lower) }}
+            {% endif %}
 
   - alias: activate_light_profile_living_room_bar
     initial_state: true
@@ -741,11 +742,17 @@ automation:
       - service: script.turn_on
         target:
           entity_id: >-
-            script.bar_lights_{{
-              'open' if is_state('binary_sensor.stue_tilstedevarelse_bar', 'on')
-              or is_state('input_boolean.bar_open', 'on')
-              else (states('sensor.living_room_active_light_profile')|lower)
-            }}
+            {% 
+              if (states('sensor.living_room_selected_light_profile')|lower) not in ['night', 'off']
+              and (
+                is_state('binary_sensor.stue_tilstedevarelse_bar', 'on')
+                or is_state('input_boolean.bar_open', 'on')
+              )
+            %}
+              script.bar_lights_active
+            {% else %}
+              script.bar_lights_{{ (states('sensor.living_room_active_light_profile')|lower) }}
+            {% endif %}
 
 script:
   dining_table_lights_active:
