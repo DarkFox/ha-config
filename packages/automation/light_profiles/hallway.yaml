@@ -129,11 +129,6 @@ automation:
               brightness: 255
               color_temp: 256
               effect: "None"
-            light.lysestager:
-              state: on
-              brightness: 255
-              color_temp: 250
-              effect: "None"
             light.skoskab:
               state: on
               brightness: 255
@@ -181,11 +176,6 @@ automation:
               state: on
               brightness: 255
               color_temp: 330
-              effect: "None"
-            light.lysestager:
-              state: on
-              brightness: 150
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
               effect: "None"
             light.skoskab:
               state: on
@@ -235,11 +225,6 @@ automation:
               brightness: 127
               color_temp: 330
               effect: "None"
-            light.lysestager:
-              state: on
-              brightness: 48
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-              effect: "None"
             light.skoskab:
               state: on
               brightness: 127
@@ -288,11 +273,6 @@ automation:
               brightness: 46
               hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
               effect: "None"
-            light.lysestager:
-              state: on
-              brightness: 18
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-              effect: "None"
             light.skoskab:
               state: on
               brightness: 42
@@ -334,8 +314,6 @@ automation:
             light.gang_loftlampe:
               state: off
             light.gang_spots:
-              state: off
-            light.lysestager:
               state: off
             light.skoskab:
               state: on
@@ -379,8 +357,6 @@ automation:
               state: off
             light.gang_loftlampe:
               state: off
-            light.lysestager:
-              state: off
             light.skoskab:
               state: off
             light.gang_kommode:
@@ -417,10 +393,6 @@ automation:
               state: on
               effect: "colorloop"
               brightness: 127
-            light.lysestager:
-              state: on
-              effect: "colorloop"
-              brightness: 127
             light.skoskab:
               state: on
               effect: "Twinklefox"
@@ -438,6 +410,136 @@ automation:
               brightness: 25
             switch.gang_skaerm:
               state: on
+
+  - alias: activate_light_profile_hallway_candle_lights
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *room_light_profile
+      - platform: state
+        entity_id: binary_sensor.badevarelse_las
+      - platform: event
+        event_type: refresh_light_profile
+    action:
+      - service: script.turn_on
+        target:
+          entity_id: >-
+            {% if is_state('input_boolean.guests', 'on') and (states('sensor.hallway_active_light_profile')|lower) not in ['night', 'off'] %}
+              script.hallway_candle_lights_{{ 'occupied' if is_state('binary_sensor.badevarelse_las', 'off') else 'free' }}
+            {% else %}
+              script.hallway_candle_lights_{{ (states('sensor.hallway_active_light_profile')|lower) }}
+            {% endif %}
+
+script:
+  hallway_candle_lights_occupied:
+    alias: "Hallway Candle Lights Occupied"
+    sequence:
+      - service: scene.apply
+        data:
+          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+          entities:
+            light.lysestager:
+              state: on
+              brightness: 128
+              rgb_color: [255, 0, 0]
+              effect: "None"
+
+  hallway_candle_lights_free:
+    alias: "Hallway Candle Lights Free"
+    sequence:
+      - service: scene.apply
+        data:
+          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+          entities:
+            light.lysestager:
+              state: on
+              brightness: 128
+              rgb_color: [0, 255, 0]
+              effect: "None"
+
+  hallway_candle_lights_bright:
+    alias: "Hallway Candle Lights Bright"
+    sequence:
+      - service: scene.apply
+        data:
+          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+          entities:
+            light.lysestager:
+              state: on
+              brightness: 255
+              color_temp: 250
+              effect: "None"
+
+  hallway_candle_lights_default:
+    alias: "Hallway Candle Lights Default"
+    sequence:
+      - service: scene.apply
+        data:
+          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+          entities:
+            light.lysestager:
+              state: on
+              brightness: 150
+              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+              effect: "None"
+
+  hallway_candle_lights_dimmed:
+    alias: "Hallway Candle Lights Dimmed"
+    sequence:
+      - service: scene.apply
+        data:
+          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+          entities:
+            light.lysestager:
+              state: on
+              brightness: 48
+              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+              effect: "None"
+
+  hallway_candle_lights_ambient:
+    alias: "Hallway Candle Lights Ambient"
+    sequence:
+      - service: scene.apply
+        data:
+          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+          entities:
+            light.lysestager:
+              state: on
+              brightness: 18
+              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+              effect: "None"
+
+  hallway_candle_lights_night:
+    alias: "Hallway Candle Lights Night"
+    sequence:
+      - service: scene.apply
+        data:
+          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+          entities:
+            light.lysestager:
+              state: off
+
+  hallway_candle_lights_off:
+    alias: "Hallway Candle Lights Off"
+    sequence:
+      - service: scene.apply
+        data:
+          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+          entities:
+            light.lysestager:
+              state: off
+
+  hallway_candle_lights_party:
+    alias: "Hallway Candle Lights Party"
+    sequence:
+      - service: scene.apply
+        data:
+          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+          entities:
+            light.lysestager:
+              state: on
+              effect: "colorloop"
+              brightness: 127
 
 input_boolean:
   hallway_activity_override:
