@@ -138,13 +138,42 @@ script:
     alias: Play Seasonal Playlist
     sequence:
       # TODO: Script to select playlist based on season
-      # Should have music for: Christmas, Halloween, Easter, Summer, Winter, New Years
+      # Should have music for: Winter, Spring, Summer, Autumn, Halloween, Christmas, New Years
+      - variables:
+          # Winter: 2. Januar - 31. Marts, 1. November - 30. November
+          # Spring: 1. April - 30. Juni
+          # Summer: 1. Juli - 30. September
+          # Autumn: 1. Oktober - 26. Oktober
+          # Halloween: 27. Oktober - 31. Oktober
+          # Christmas: 1. December - 27. December
+          # New Years: 28. December - 1. Januar
+          playlist: >-
+            {% set month = now().month %}
+            {% set day = now().day %}
+            {% if (month == 1 and day < 1) or month == 2 or month == 3 or month == 11 or (month == 10 and day < 27) %}
+              {# winter #}
+              
+            {% elif month == 4 or month == 5 or month == 6 %}
+              {# spring #}
+
+            {% elif month == 7 or month == 8 or month == 9 %}
+              {# summer #}
+
+            {% elif month == 10 and day >= 27 %}
+              {# halloween #}
+
+            {% elif (month == 12 and day >= 28) or month == 1 %}
+              {# new_years #}
+              library://playlist/65
+            {% else %}
+              {# christmas #}
+              library://playlist/5
+            {% endif %}
       - service: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
           shuffle: true
-          playlist:
-            - library://playlist/5
+          playlist: "{{ playlist }}"
 
   playlist_play_media:
     fields:
