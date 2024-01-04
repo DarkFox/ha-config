@@ -113,29 +113,56 @@ automation:
         target:
           entity_id: calendar.arbejdskalender_vagtskema
         response_variable: agenda
+      - service: calendar.get_events
+        data:
+          start_date_time: "{{ (now() + timedelta(days=1)).strftime('%Y-%m-%d') }} 00:00:00"
+          end_date_time: "{{ (now() + timedelta(days=1)).strftime('%Y-%m-%d') }} 23:59:59"
+        target:
+          entity_id: calendar.arbejdskalender_vagtskema
+        response_variable: tomorrow
       - service: mqtt.publish
         data:
           topic: virtual/agenda/vagtplan/events
           retain: true
           payload: >
-            { "agenda": [
-            {% for event in agenda['calendar.arbejdskalender_vagtskema'].events|sort(attribute='start') | list -%}
-              {
-                "calendar": "Vagtplan",
-                {%- set start = (event.start | as_datetime) -%}
-                {%- set end = (event.end | as_datetime) -%}
-                "start": "{{ start.strftime('%d. %b %H:%M') }}",
-                "end": "{{ end.strftime('%d. %b %H:%M') }}",
-                {%- if event.summary|regex_match('På (RSR|RSH)') -%}
-                  "summary": "Arbejde - {{ event.summary | replace('På ', '') | replace('RSH', 'Herlev Hospital') | replace('RSR', 'Rigshospitalet') }}"
-                {%- elif event.summary|regex_match('Vagt') -%}
-                  "summary": "Tilkaldevagt"
-                {%- else -%}
-                  "summary": "{{ event.summary }}"
-                {%- endif -%}
-              }{%- if not loop.last %},{% endif %}
-            {%- endfor -%}
-            ]}
+            {
+              "agenda": [
+                {% for event in agenda['calendar.arbejdskalender_vagtskema'].events|sort(attribute='start') | list -%}
+                  {
+                    "calendar": "Vagtplan",
+                    {%- set start = (event.start | as_datetime) -%}
+                    {%- set end = (event.end | as_datetime) -%}
+                    "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    {%- if event.summary|regex_match('På (RSR|RSH)') -%}
+                      "summary": "Arbejde - {{ event.summary | replace('På ', '') | replace('RSH', 'Herlev Hospital') | replace('RSR', 'Rigshospitalet') }}"
+                    {%- elif event.summary|regex_match('Vagt') -%}
+                      "summary": "Tilkaldevagt"
+                    {%- else -%}
+                      "summary": "{{ event.summary }}"
+                    {%- endif -%}
+                  }{%- if not loop.last %},{% endif %}
+                {%- endfor -%}
+              ],
+              "tomorrow": [
+                {% for event in tomorrow['calendar.arbejdskalender_vagtskema'].events|sort(attribute='start') | list -%}
+                  {
+                    "calendar": "Vagtplan",
+                    {%- set start = (event.start | as_datetime) -%}
+                    {%- set end = (event.end | as_datetime) -%}
+                    "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    {%- if event.summary|regex_match('På (RSR|RSH)') -%}
+                      "summary": "Arbejde - {{ event.summary | replace('På ', '') | replace('RSH', 'Herlev Hospital') | replace('RSR', 'Rigshospitalet') }}"
+                    {%- elif event.summary|regex_match('Vagt') -%}
+                      "summary": "Tilkaldevagt"
+                    {%- else -%}
+                      "summary": "{{ event.summary }}"
+                    {%- endif -%}
+                  }{%- if not loop.last %},{% endif %}
+                {%- endfor -%}
+              ]
+            }
 
   - id: update_vagtplan_agenda_state
     alias: Update Vagtplan Agenda State
@@ -154,60 +181,67 @@ automation:
     alias: Update Arbejde Agenda
     initial_state: true
     trigger:
-      - platform: time_pattern
-        hours: "*"
-        minutes: "/5"
-        seconds: "0"
-      - platform: state
-        entity_id: binary_sensor.home_assistant_loaded
-        to: "on"
+      - platform: mqtt
+        topic: virtual/agenda/vagtplan/events
     action:
-      - choose:
-          - conditions:
-              - alias: "Upcoming shift in Arbejdskalender"
-                condition: template
-                value_template: "{{ 'true' if state_attr('calendar.vagtplan_arbejde', 'start_time') else 'false' }}"
-              - alias: "Shift is today"
-                condition: template
-                value_template: "{{ (state_attr('calendar.vagtplan_arbejde', 'start_time') | as_datetime).strftime('%Y-%m-%d') == now().strftime('%Y-%m-%d') }}"
-            sequence:
-              - service: calendar.get_events
-                data:
-                  start_date_time: "{{ state_attr('calendar.vagtplan_arbejde', 'start_time') }}"
-                  end_date_time: "{{ state_attr('calendar.vagtplan_arbejde', 'end_time') }}"
-                target:
-                  entity_id: calendar.arbejdskalender
-                response_variable: agenda
-              - service: mqtt.publish
-                data:
-                  topic: virtual/agenda/arbejde/events
-                  retain: true
-                  payload: >
-                    {%- set ns = namespace(events=[]) -%}
-                    {%- for event in agenda['calendar.vagtplan_arbejde'].events|sort(attribute='start') | list -%}
-                        {%- if not (event.summary|regex_match('På (RSR|RSH)|Frokost|Aftensmad|Vagt')) -%}
-                          {%- set ns.events = ns.events + [event] -%}
-                        {%- endif -%}
-                    {%- endfor -%}
-                    { "agenda": [
-                      {% for event in ns.events %}
-                        {
-                          "calendar": "Arbejdskalender",
-                          {%- set start = (event.start | as_datetime) -%}
-                          {%- set end = (event.end | as_datetime) -%}
-                          "start": "{{ start.strftime('%d. %b %H:%M') }}",
-                          "end": "{{ end.strftime('%d. %b %H:%M') }}",
-                          "summary": "{{ event.summary | title }}"
-                        }{{ ',' if not loop.last }}
-                      {% endfor %}
-                    ]}
-        default:
-          - service: mqtt.publish
-            data:
-              topic: virtual/agenda/arbejde/events
-              retain: true
-              payload: >
-                { "agenda": []}
+      - delay:
+          seconds: 5
+      - service: calendar.get_events
+        data:
+          start_date_time: "{{ state_attr('sensor.vagtplan_agenda', 'agenda')[0]['start'] if state_attr('sensor.vagtplan_agenda', 'agenda') else '1970-01-01 00:00:00' }}"
+          end_date_time: "{{ state_attr('sensor.vagtplan_agenda', 'agenda')[0]['end'] if state_attr('sensor.vagtplan_agenda', 'agenda') else '1970-01-01 00:00:00' }}"
+        target:
+          entity_id: calendar.arbejdskalender
+        response_variable: agenda
+      - service: calendar.get_events
+        data:
+          start_date_time: "{{ state_attr('sensor.vagtplan_agenda', 'tomorrow')[0]['start'] if state_attr('sensor.vagtplan_agenda', 'tomorrow') else '1970-01-01 00:00:00' }}"
+          end_date_time: "{{ state_attr('sensor.vagtplan_agenda', 'tomorrow')[0]['end'] if state_attr('sensor.vagtplan_agenda', 'tomorrow') else '1970-01-01 00:00:00' }}"
+        target:
+          entity_id: calendar.arbejdskalender
+        response_variable: tomorrow
+      - service: mqtt.publish
+        data:
+          topic: virtual/agenda/arbejde/events
+          retain: true
+          payload: >
+            {%- set ns = namespace(events=[],tomorrow=[]) -%}
+            {%- for event in agenda['calendar.arbejdskalender'].events|sort(attribute='start') | list -%}
+                {%- if not (event.summary|regex_match('På (RSR|RSH)|Frokost|Aftensmad|Vagt|Fri')) -%}
+                  {%- set ns.events = ns.events + [event] -%}
+                {%- endif -%}
+            {%- endfor -%}
+            {%- for event in tomorrow['calendar.arbejdskalender'].events|sort(attribute='start') | list -%}
+                {%- if not (event.summary|regex_match('På (RSR|RSH)|Frokost|Aftensmad|Vagt|Fri')) -%}
+                  {%- set ns.tomorrow = ns.tomorrow + [event] -%}
+                {%- endif -%}
+            {%- endfor -%}
+            {
+              "agenda": [
+                {% for event in ns.events %}
+                  {
+                    "calendar": "Arbejdskalender",
+                    {%- set start = (event.start | as_datetime) -%}
+                    {%- set end = (event.end | as_datetime) -%}
+                    "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    "summary": "{{ event.summary }}"
+                  }{{ ',' if not loop.last }}
+                {% endfor %}
+              ],
+              "tomorrow": [
+                {% for event in ns.tomorrow %}
+                  {
+                    "calendar": "Arbejdskalender",
+                    {%- set start = (event.start | as_datetime) -%}
+                    {%- set end = (event.end | as_datetime) -%}
+                    "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    "summary": "{{ event.summary }}"
+                  }{{ ',' if not loop.last }}
+                {% endfor %}
+              ]
+            }
 
   - id: update_arbejde_agenda_state
     alias: Update Arbejde Agenda State
@@ -241,24 +275,46 @@ automation:
         target:
           entity_id: calendar.personlig
         response_variable: agenda
+      - service: calendar.get_events
+        data:
+          start_date_time: "{{ (now() + timedelta(days=1)).strftime('%Y-%m-%d') }} 00:00:00"
+          end_date_time: "{{ (now() + timedelta(days=1)).strftime('%Y-%m-%d') }} 23:59:59"
+        target:
+          entity_id: calendar.personlig
+        response_variable: tomorrow
       - service: mqtt.publish
         data:
           topic: virtual/agenda/personlig/events
           retain: true
           payload: >
-            { "agenda": [
-            {%- set remove_string = ' #bil' -%}
-            {% for event in agenda['calendar.vagtplan_arbejde'].events|sort(attribute='start') | list -%}
-              {
-                "calendar": "Personlig kalender",
-                {%- set start = (event.start | as_datetime) -%}
-                {%- set end = (event.end | as_datetime) -%}
-                "start": "{{ start.strftime('%d. %b %H:%M') }}",
-                "end": "{{ end.strftime('%d. %b %H:%M') }}",
-                "summary": "{{ event.summary | replace(remove_string, '')|title }}"
-              }{{ ',' if not loop.last }}
-            {%- endfor -%}
-            ]}
+            {
+              "agenda": [
+                {%- set remove_string = ' #bil' -%}
+                {% for event in agenda['calendar.personlig'].events|sort(attribute='start') | list -%}
+                  {
+                    "calendar": "Personlig kalender",
+                    {%- set start = (event.start | as_datetime) -%}
+                    {%- set end = (event.end | as_datetime) -%}
+                    "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    "summary": "{{ event.summary | replace(remove_string, '')|title }}"
+                  }{{ ',' if not loop.last }}
+                {%- endfor -%}
+              ],
+              "tomorrow": [
+                {%- set remove_string = ' #bil' -%}
+                {% for event in tomorrow['calendar.personlig'].events|sort(attribute='start') | list -%}
+                  {
+                    "calendar": "Personlig kalender",
+                    {%- set start = (event.start | as_datetime) -%}
+                    {%- set end = (event.end | as_datetime) -%}
+                    "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    "summary": "{{ event.summary | replace(remove_string, '')|title }}"
+                  }{{ ',' if not loop.last }}
+                {%- endfor -%}
+              ]
+            }
 
   - id: update_personlig_agenda_state
     alias: Update Personlig Agenda State
@@ -292,23 +348,44 @@ automation:
         target:
           entity_id: calendar.tripit
         response_variable: agenda
+      - service: calendar.get_events
+        data:
+          start_date_time: "{{ (now() + timedelta(days=1)).strftime('%Y-%m-%d') }} 00:00:00"
+          end_date_time: "{{ (now() + timedelta(days=1)).strftime('%Y-%m-%d') }} 23:59:59"
+        target:
+          entity_id: calendar.tripit
+        response_variable: tomorrow
       - service: mqtt.publish
         data:
           topic: virtual/agenda/tripit/events
           retain: true
           payload: >
-            { "agenda": [
-            {% for event in agenda['calendar.vagtplan_arbejde'].events|sort(attribute='start') | list -%}
-              {
-                "calendar": "Tripit Kalender",
-                {%- set start = (event.start | as_datetime) -%}
-                {%- set end = (event.end | as_datetime) -%}
-                "start": "{{ start.strftime('%d. %b %H:%M') }}",
-                "end": "{{ end.strftime('%d. %b %H:%M') }}",
-                "summary": "{{ event.summary | title }}"
-              }{{ ',' if not loop.last }}
-            {%- endfor -%}
-            ]}
+            {
+              "agenda": [
+                {% for event in agenda['calendar.tripit'].events|sort(attribute='start') | list -%}
+                  {
+                    "calendar": "Tripit Kalender",
+                    {%- set start = (event.start | as_datetime) -%}
+                    {%- set end = (event.end | as_datetime) -%}
+                    "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    "summary": "{{ event.summary }}"
+                  }{{ ',' if not loop.last }}
+                {%- endfor -%}
+              ],
+              "tomorrow": [
+                {% for event in tomorrow['calendar.tripit'].events|sort(attribute='start') | list -%}
+                  {
+                    "calendar": "Tripit Kalender",
+                    {%- set start = (event.start | as_datetime) -%}
+                    {%- set end = (event.end | as_datetime) -%}
+                    "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    "summary": "{{ event.summary }}"
+                  }{{ ',' if not loop.last }}
+                {%- endfor -%}
+              ]
+            }
 
   - id: update_tripit_agenda_state
     alias: Update Tripit Agenda State
