@@ -1,11 +1,11 @@
 switch:
   - platform: template
     switches:
-      id3_charging:
-        friendly_name: ID.3 Charging
-        unique_id: id_3_charging
-        value_template: "{{ not is_state('sensor.id3_charging_mode', 'off') }}"
-        icon_template: "{{ 'mdi:battery-charging' if not is_state('sensor.id3_charging_mode', 'off') else 'mdi:battery' }}"
+      id_3_pro_charging:
+        friendly_name: ID.3 Pro Charging
+        unique_id: id_3_pro_charging
+        value_template: "{{ not is_state('sensor.id_3_pro_charging_mode', 'off') }}"
+        icon_template: "{{ 'mdi:battery-charging' if not is_state('sensor.id_3_pro_charging_mode', 'off') else 'mdi:battery' }}"
         turn_on:
           service: volkswagen_we_connect_id.volkswagen_id_start_stop_charging
           data:
@@ -17,11 +17,11 @@ switch:
             vin: !secret vw_vin
             start_stop: "stop"
 
-      id3_climatisation:
-        friendly_name: ID.3 Climatisation
-        unique_id: id_3_climatisation
-        value_template: "{{ is_state('binary_sensor.id3_klimatisering', 'on') }}"
-        icon_template: "{{ 'mdi:hvac' if is_state('binary_sensor.id3_klimatisering', 'on') else 'mdi:hvac-off' }}"
+      id_3_pro_climatisation:
+        friendly_name: ID.3 Pro Climatisation
+        unique_id: id_3_pro_climatisation
+        value_template: "{{ is_state('binary_sensor.id_3_pro_klimatisering', 'on') }}"
+        icon_template: "{{ 'mdi:hvac' if is_state('binary_sensor.id_3_pro_klimatisering', 'on') else 'mdi:hvac-off' }}"
         turn_on:
           service: volkswagen_we_connect_id.volkswagen_id_set_climatisation
           data:
@@ -33,10 +33,10 @@ switch:
             vin: !secret vw_vin
             start_stop: "stop"
 
-      id3_reduced_ac_charging_speed:
-        friendly_name: ID.3 Reduced AC Charging Speed
-        unique_id: id_3_reduced_ac_charging_speed
-        value_template: "{{ is_state('sensor.id3_max_charge_current_ac', 'reduced') }}"
+      id_3_pro_reduced_ac_charging_speed:
+        friendly_name: ID.3 Pro Reduced AC Charging Speed
+        unique_id: id_3_pro_reduced_ac_charging_speed
+        value_template: "{{ is_state('sensor.id_3_pro_max_charge_current_ac', 'reduced') }}"
         icon_template: mdi:flash
         turn_on:
           service: volkswagen_we_connect_id.volkswagen_id_set_ac_charge_speed
@@ -51,40 +51,40 @@ switch:
 
 template:
   - binary_sensor:
-      - name: ID.3 Locked
-        unique_id: id3_locked
+      - name: ID.3 Pro Locked
+        unique_id: id_3_pro_locked
         state: >-
           {{
-            is_state('sensor.id3_door_front_left_lock_status', 'unlocked')
-            or is_state('sensor.id3_door_front_right_lock_status', 'unlocked')
-            or is_state('sensor.id3_door_rear_left_lock_status', 'unlocked')
-            or is_state('sensor.id3_door_rear_right_lock_status', 'unlocked')
-            or is_state('sensor.id3_trunk_lock_status', 'unlocked')
+            is_state('sensor.id_3_pro_door_front_left_lock_status', 'unlocked')
+            or is_state('sensor.id_3_pro_door_front_right_lock_status', 'unlocked')
+            or is_state('sensor.id_3_pro_door_rear_left_lock_status', 'unlocked')
+            or is_state('sensor.id_3_pro_door_rear_right_lock_status', 'unlocked')
+            or is_state('sensor.id_3_pro_trunk_lock_status', 'unlocked')
           }}
         device_class: lock
-      - name: "ID.3 Klimatisering"
-        unique_id: id3_climatising
-        state: "{{ states('sensor.id3_remaining_climatisation_time') | int > 0 }}"
+      - name: "ID.3 Pro Klimatisering"
+        unique_id: id_3_pro_climatising
+        state: "{{ states('sensor.id_3_pro_remaining_climatisation_time') | int > 0 }}"
         attributes:
-          icon: "{{ 'mdi:hvac' if is_state('binary_sensor.id3_klimatisering', 'on') else 'mdi:hvac-off' }}"
-      - name: ID.3 Is Charging
-        unique_id: id3_charging
-        state: "{{ is_state('sensor.id3_charging_state', 'charging') }}"
+          icon: "{{ 'mdi:hvac' if is_state('binary_sensor.id_3_pro_klimatisering', 'on') else 'mdi:hvac-off' }}"
+      - name: ID.3 Pro Is Charging
+        unique_id: id_3_pro_charging
+        state: "{{ is_state('sensor.id_3_pro_charging_state', 'charging') }}"
         attributes:
-          icon: "{{ 'mdi:battery-charging' if not is_state('sensor.id3_charging', 'off') else 'mdi:battery' }}"
+          icon: "{{ 'mdi:battery-charging' if not is_state('sensor.id_3_pro_charging', 'off') else 'mdi:battery' }}"
 
   - sensor:
-      - name: "ID.3 Charging Time Remaining"
-        unique_id: id3_remaining_charging_time_to_complete
-        state: "{{ (timedelta(minutes=states('sensor.id3_remaining_charging_time')|int)|string)[:-3] }}"
+      - name: "ID.3 Pro Charging Time Remaining"
+        unique_id: id_3_pro_remaining_charging_time_to_complete
+        state: "{{ (timedelta(minutes=states('sensor.id_3_pro_remaining_charging_time')|int)|string)[:-3] }}"
         attributes:
           icon: mdi:clock-end
 
-      - name: ID.3 Charging Complete At
-        unique_id: id3_charging_complete_at
+      - name: ID.3 Pro Charging Complete At
+        unique_id: id_3_pro_charging_complete_at
         state: >-
-          {%- if is_state('binary_sensor.id3_is_charging', 'on') -%}
-            {%- set end_time = (states('sensor.id3_remaining_charging_time')|int*60) + (as_timestamp(now())|int) -%}
+          {%- if is_state('binary_sensor.id_3_pro_is_charging', 'on') -%}
+            {%- set end_time = (states('sensor.id_3_pro_remaining_charging_time')|int*60) + (as_timestamp(now())|int) -%}
             {{ end_time | timestamp_local }}
           {%- else -%}
             unknown
@@ -92,59 +92,6 @@ template:
         attributes:
           icon: mdi:clock-end
         device_class: timestamp
-
-      - name: ABRP URL data
-        unique_id: abrp_url_data
-        state: "OK"
-        attributes:
-          url_data: >-
-            {
-              "soc": {{int(states('sensor.id3_state_of_charge'))}},
-              "est_battery_range": {{int(states('sensor.id3_range'))}},
-              {% if is_state('binary_sensor.id3_is_charging', 'on') %}
-                "power": {{-float(states('sensor.id3_charge_power'))}},
-              {% endif %}
-              "is_charging": {{bool(states('binary_sensor.id3_is_charging'))}},
-              "is_dcfc": {{bool(is_state('sensor.id3_charge_type', 'dc'))}},
-              "is_parked": {{not bool(states('binary_sensor.volkswagen_id_3_ignition'))}},
-              "ext_temp": {{int(states('sensor.volkswagen_id_3_outdoortemperature'))}},
-              "odometer": {{int(states('sensor.volkswagen_id_3_odometer'))}},
-              {% if is_state('binary_sensor.darkphone_high_accuracy_mode', 'on') %}
-                "speed": {{int(state_attr('device_tracker.darkphone', 'speed'))}},
-                "lat": {{float(state_attr('device_tracker.darkphone', 'latitude'))}},
-                "lon": {{float(state_attr('device_tracker.darkphone', 'longitude'))}},
-                "heading": {{int(state_attr('device_tracker.darkphone', 'course'), 0)}},
-                "elevation": {{float(state_attr('device_tracker.darkphone', 'altitude'))}}
-              {% else %}
-                "speed": {{int(states('sensor.volkswagen_id_3_speed'))}},
-                "lat": {{float(state_attr('device_tracker.volkswagen_id_3_geolocation', 'latitude'))}},
-                "lon": {{float(state_attr('device_tracker.volkswagen_id_3_geolocation', 'longitude'))}},
-                "heading": {{int(state_attr('sensor.volkswagen_id_3_speed', 'direction'), 0)}}
-              {% endif %}
-            }
-
-      - name: ABRP URL params
-        unique_id: abrp_url_params
-        state: "OK"
-        attributes:
-          url_params: >-
-            {%- set p = state_attr('sensor.abrp_url_data', 'url_data') -%}
-            {%- if p == None -%}
-              unknown
-            {%- else -%}
-              {
-                "utc": {{int(as_timestamp(utcnow()))}},
-                {%- for k in p -%}
-                  "{{k}}": {{p[k]}},
-                {%- endfor -%}
-              }
-            {%- endif -%}
-
-rest_command:
-  update_abrp:
-    method: POST
-    content_type: "charset=utf-8; application/x-www-form-urlencoded"
-    url: "https://api.iternio.com/1/tlm/send?api_key={{api_key}}&token={{token}}&tlm={{state_attr('sensor.abrp_url_params', 'url_params')|to_json|urlencode}}"
 
 automation:
   - alias: Force VW data update on phone notification
@@ -160,21 +107,4 @@ automation:
     action:
       - service: homeassistant.update_entity
         target:
-          entity_id: sensor.id3_charging_mode
-
-  - alias: Push car to ABRP
-    initial_state: true
-    mode: single
-    trigger:
-      - platform: state
-        entity_id: sensor.abrp_url_data
-        attribute: url_data
-      - platform: time_pattern
-        minutes: "/8"
-    action:
-      - service: rest_command.update_abrp
-        data:
-          token: !secret abrp_token
-          api_key: !secret abrp_api_key
-      - delay:
-          seconds: 1
+          entity_id: sensor.id_3_pro_charging_mode
