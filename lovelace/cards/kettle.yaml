@@ -1,0 +1,48 @@
+type: vertical-stack
+cards:
+  - type: custom:button-card
+    entity: sensor.elkedel_status
+    show_state: true
+    show_label: true
+    triggers_update: all
+    name: "[[[ return states['sensor.elkedel_temperatur'].state + ' / ' + states['number.elkedel_temperatur'].state + ' °C' ]]]"
+    label: >
+      [[[
+        if (states['switch.elkedel_varmholdning'].state == 'on')
+          return 'Varmholdning: ' + states['number.elkedel_varmholdningstid'].state + ' min tilbage';
+        else
+          return 'Varmholdning slukket';
+      ]]]
+    layout: icon_state_name2nd
+    tap_action:
+      action: call-service
+      service: switch.toggle
+      service_data:
+        entity_id: switch.elkedel
+    hold_action:
+      action: call-service
+      service: switch.toggle
+      service_data:
+        entity_id: switch.elkedel_varmholdning
+
+  - type: entities
+    show_header_toggle: false
+    entities:
+      - type: custom:slider-entity-row
+        entity: number.elkedel_temperatur
+        full_row: true
+      - type: custom:slider-entity-row
+        entity: number.elkedel_varmholdningstid
+        full_row: true
+      - entity: select.elkedel_program
+        name: Vælg program
+
+  - type: history-graph
+    title: Temperaturhistorik
+    hours_to_show: 2
+    refresh_interval: 60
+    entities:
+      - entity: sensor.elkedel_temperatur
+        name: Temperatur
+      - entity: number.elkedel_temperatur
+        name: Ønsket temperatur

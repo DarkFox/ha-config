@@ -1,59 +1,45 @@
-sensor:
-  - platform: template
-    sensors:
-      kettle_state:
-        friendly_name: "Elkedel Status"
-        value_template: >-
-          {% if is_state('binary_sensor.kettle_brewing', 'on') %}
-            Brygger
-          {% elif is_state('switch.elkedel', 'on') %}
-            Tændt
-          {% else %}
-            Slukket
-          {% endif %}
-
-binary_sensor:
-  - platform: template
-    sensors:
-      kettle_brewing:
-        friendly_name: "Elkedel Brygger"
-        value_template: >-
-          {{ states('sensor.elkedel_forbrug')|float > 0.5 }}
+template:
+  - sensor:
+      - name: Elkedel Status
+        state: >-
+          {% set statuses = {
+            '0': 'Slukket',
+            '1': 'Fejl',
+            '2': 'Fjernet fra base',
+            '3': 'Varmer',
+            '4': 'Holder varm',
+            '5': 'Færdig'
+          } %}
+          {% set status_id = states('sensor.elkedel_status_id') %}
+          {{ statuses[status_id] }}
+        attributes:
+          icon: >-
+            {% set icons = {
+              '0': 'mdi:kettle-outline',
+              '1': 'mdi:kettle-alert-outline',
+              '2': 'mdi:kettle-off-outline',
+              '3': 'mdi:kettle-steam-outline',
+              '4': 'mdi:kettle-steam',
+              '5': 'mdi:kettle-alert'
+            } %}
+            {% set status_id = states('sensor.elkedel_status_id') %}
+            {{ icons[status_id] }}
+  - binary_sensor:
+      - name: Elkedel Brygger
+        state: >-
+          {{ states('sensor.elkedel_status') == 'Varmer' }}
+        attributes:
+          icon: mdi:kettle-steam
+          device_class: power
 
 automation:
-  - id: kettle_turn_off_when_not_brewing
-    alias: Sluk elkedel hvis taendt uden at brygge
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: switch.elkedel
-        to: "on"
-        for:
-          seconds: 5
-      - platform: state
-        entity_id: binary_sensor.kettle_brewing
-        to: "off"
-        for:
-          seconds: 5
-    condition:
-      - condition: state
-        entity_id: switch.elkedel
-        state: "on"
-      - condition: state
-        entity_id: binary_sensor.kettle_brewing
-        state: "off"
-    action:
-      - service: switch.turn_off
-        data:
-          entity_id: switch.elkedel
-
   # Notifications
   - id: kettle_brewing_notification
     alias: Elkedel Brygger Notifikation
     initial_state: true
     trigger:
       platform: state
-      entity_id: binary_sensor.kettle_brewing
+      entity_id: binary_sensor.elkedel_brygger
       from: "off"
       to: "on"
     action:
@@ -66,10 +52,11 @@ automation:
     initial_state: true
     trigger:
       platform: state
-      entity_id: binary_sensor.kettle_brewing
+      entity_id: binary_sensor.elkedel_brygger
       from: "on"
       to: "off"
     action:
       - service: script.notify_everywhere
         data:
-          message: Te tid!
+          message: >-
+            Elkedel færdig{{ ' og holder varm i ' + states('number.elkedel_varmholdningstid') + ' minutter' if states('sensor.elkedel_status') == 'Holder varm' else '' }}.
