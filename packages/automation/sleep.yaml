@@ -791,12 +791,9 @@ automation:
         event_data:
           room: bedroom
           profile: Dimmed
-      - service: script.mass_briefing_playlist
+      - service: script.mass_playlist
         data:
-          announcement_entities:
-            - media_player.sovevaerelse
           entity_id: media_player.sovevaerelse_mass
-          volume_level: 0.3
           playlist:
             - "{{ states('sensor.podcast_radioavisen') }}"
             - library://radio/1
@@ -823,11 +820,6 @@ automation:
       - service: switch.turn_off
         target:
           entity_id: switch.dorklokke_forstyr_ikke
-      - service: switch.turn_on
-        target:
-          entity_id: switch.elkedel
-      - delay:
-          seconds: 1
       - service: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
@@ -867,7 +859,7 @@ automation:
       - service: media_player.volume_set
         data:
           entity_id: >-
-            ["media_player.sovevaerelse", "media_player.badevaerelse"]
+            ["media_player.sovevaerelse", "media_player.badevaerelse" {{ ', "media_player.kokken"' if is_state('input_boolean.guests', 'off') }}]
           volume_level: 0.5
       - service: input_number.set_value
         data:
@@ -880,44 +872,21 @@ automation:
               - condition: state
                 entity_id: input_boolean.bedroom_separate_light_profile
                 state: "on"
-              - condition: state
-                entity_id: input_boolean.bathroom_separate_light_profile
-                state: "on"
             sequence:
               - event: set_light_profile
                 event_data:
                   room: bedroom
                   profile: Default
-              - event: set_light_profile
-                event_data:
-                  room: bathroom
-                  profile: Default
+        default:
+          - event: set_light_profile
+            event_data:
+              profile: Default
+      - choose:
           - conditions:
-              - condition: state
-                entity_id: input_boolean.bedroom_separate_light_profile
-                state: "on"
-              - condition: state
-                entity_id: input_boolean.bathroom_separate_light_profile
-                state: "off"
-            sequence:
-              - event: set_light_profile
-                event_data:
-                  room: bedroom
-                  profile: Default
-              - event: set_light_profile
-                event_data:
-                  profile: Default
-          - conditions:
-              - condition: state
-                entity_id: input_boolean.bedroom_separate_light_profile
-                state: "off"
               - condition: state
                 entity_id: input_boolean.bathroom_separate_light_profile
                 state: "on"
             sequence:
-              - event: set_light_profile
-                event_data:
-                  profile: Default
               - event: set_light_profile
                 event_data:
                   room: bathroom
@@ -937,18 +906,12 @@ automation:
         data:
           entity_id: >-
             ["media_player.sovevaerelse", "media_player.badevaerelse" {{ ', "media_player.kokken"' if is_state('input_boolean.guests', 'off') }}]
-          volume_level: 0.50
+          volume_level: 0.6
       - delay:
           minutes: 5
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: sun.sun
-                state: "above_horizon"
-            sequence:
-              - service: cover.open_cover
-                data:
-                  entity_id: cover.sovevaerelse_gardin
+      - service: cover.open_cover
+        data:
+          entity_id: cover.sovevaerelse_gardin
 
   ########################
   # Sleep Event Triggers #
