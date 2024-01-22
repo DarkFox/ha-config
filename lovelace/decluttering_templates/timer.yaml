@@ -1,11 +1,16 @@
 card:
-  type: vertical-stack
+  type: custom:layout-card
+  layout_type: custom:grid-layout
+  layout:
+    grid-template-columns: 20% auto
+    grid-template-rows: auto
+    grid-template-areas: |
+      "icon timer"
   cards:
     - type: custom:button-card
       entity: "[[entity]]"
-      layout: icon_state
-      show_state: true
       show_name: false
+      show_state: false
       triggers_update: all
       tap_action:
         action: call-service
@@ -32,7 +37,28 @@ card:
       styles:
         state:
           - font-size: 50pt
+        icon:
+          - color: >-
+              [[[
+                switch(states['sensor.timer_'+('[[entity]]'.replace('timer.', '')) + '_state'].state) {
+                  case 'active':
+                    return "#FFFFFFFF";
+                    break;
+                  case 'paused':
+                    return "#000000FF";
+                    break;
+                  case 'finished':
+                    return "#FFFFFFFF";
+                    break;
+                  case 'idle':
+                    return "var(--icon-primary-color, currentcolor)"
+                    break;
+                  default:
+                    return "var(--icon-primary-color, currentcolor)"
+                }
+              ]]]
         card:
+          - height: 100%
           - background-color: >-
               [[[
                 switch(states['sensor.timer_'+('[[entity]]'.replace('timer.', '')) + '_state'].state) {
@@ -52,45 +78,12 @@ card:
                     return "var(--ha-card-background)"
                 }
               ]]]
-
-    - type: horizontal-stack
-      cards:
-        - type: custom:button-card
-          name: +10s
-          show_icon: false
-          styles:
-            card:
-              - font-size: 20pt
-              - font-weight: 600
-          tap_action:
-            action: call-service
-            service: script.timer_add_time
-            service_data:
-              entity_id: "[[entity]]"
-              seconds: 10
-        - type: custom:button-card
-          name: +1m
-          show_icon: false
-          styles:
-            card:
-              - font-size: 20pt
-              - font-weight: 600
-          tap_action:
-            action: call-service
-            service: script.timer_add_time
-            service_data:
-              entity_id: "[[entity]]"
-              minutes: 1
-        - type: custom:button-card
-          name: +10m
-          show_icon: false
-          styles:
-            card:
-              - font-size: 20pt
-              - font-weight: 600
-          tap_action:
-            action: call-service
-            service: script.timer_add_time
-            service_data:
-              entity_id: "[[entity]]"
-              minutes: 10
+      view_layout:
+        grid-area: icon
+    - type: custom:flipdown-timer-card
+      entity: "[[entity]]"
+      theme: light
+      localize:
+        button: Start, Pause, Stop, Fortsæt, Nulstil
+      view_layout:
+        grid-area: timer
