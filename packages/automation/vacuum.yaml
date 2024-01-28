@@ -62,6 +62,13 @@ input_text:
     name: Vacuum Last Empty
     icon: mdi:delete
 
+input_datetime:
+  vacuum_last_clean:
+    name: Vacuum Last Clean
+    has_date: true
+    has_time: true
+    icon: mdi:calendar
+
 sensor:
   - platform: template
     sensors:
@@ -112,6 +119,20 @@ template:
             ]
 
 automation:
+  - id: update_vacuum_last_clean
+    alias: Update Vacuum Last Clean
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: vacuum.valetudo_roborocks5
+        from: cleaning
+    action:
+      - service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.vacuum_last_clean
+        data:
+          datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+
   - id: vacuum_show_menu_when_undocked
     alias: Vacuum Show Menu When Undocked
     initial_state: true
@@ -207,3 +228,22 @@ automation:
           - condition: template
             value_template: "{{ not is_state('vacuum.valetudo_roborocks5', 'docked') }}"
           - service: vacuum.return_to_base
+
+  - id: vacuum_error_notification
+    alias: Vacuum Error Notification
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: sensor.valetudo_roborocks5_error
+    condition:
+      - condition: template
+        value_template: "{{ trigger.to_state.state not in ['No error', 'Unknown', 'Unavailable'] }}"
+    action:
+      - service: script.translate
+        data:
+          message: "{{ trigger.to_state.state }}"
+        response_variable: output
+      - service: script.notify_everywhere
+        data:
+          message: >-
+            Støvsuger fejl: {{ output.translation }}
