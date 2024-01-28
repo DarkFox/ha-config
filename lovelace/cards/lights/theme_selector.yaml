@@ -1,0 +1,63 @@
+type: custom:auto-entities
+card:
+  type: grid
+  square: false
+card_param: cards
+filter:
+  template: |
+    {% set themes = state_attr('input_select.theme', 'options') %}
+    {% set current_theme = states('input_select.theme') %}
+    {% set ns = namespace(ret=[]) %}
+    {% for theme in themes %}
+      {% set is_current_theme = current_theme == theme %}
+      {% set params = state_attr('sensor.theme', 'themes').get(theme, {}) %}
+      {% set primary_color_hue = params['primary'][0] %}
+      {% set primary_color_saturation = params['primary'][1] %}
+      {% set secondary_color_hue = params['secondary'][0] %}
+      {% set secondary_color_saturation = params['secondary'][1] %}
+      {% set active_name_style =  [{
+        "background-color": "hsl(" + (primary_color_hue|string) + ", " + (primary_color_saturation|string) + "%, 50%)",
+        "border-radius": "4px",
+        "padding": "2px"
+      }] %}
+      {% set inactive_name_style =  [{
+        "background-color": "hsl(" + (primary_color_hue|string) + ", " + (primary_color_saturation|string) + "%, 50%)",
+        "border-radius": "4px",
+        "padding": "2px"
+      }] %}
+      {% set name_style = active_name_style if is_current_theme else inactive_name_style %}
+      {% if params %}
+        {% set ns.ret = ns.ret + [
+          {
+            "type": "custom:button-card",
+            "name": theme,
+            "icon": "mdi:palette",
+            "size": "50px",
+            "color_type": "card",
+            "color": "hsl(" + (primary_color_hue|string) + ", " + (primary_color_saturation|string) + "%, 50%)",
+            "styles": {
+              "card": [{
+                "background-color": "hsl(" + (primary_color_hue|string) + ", " + (primary_color_saturation|string) + "%, 50%)" if is_current_theme else "var(--ha-card-background,var(--card-background-color,#fff))",
+              }],
+              "icon": [{
+                "color": "hsl(" + (secondary_color_hue|string) + ", " + (secondary_color_saturation|string) + "%, 50%)"
+              }],
+              "name": [{
+                "background-color": "hsl(" + (primary_color_hue|string) + ", " + (primary_color_saturation|string) + "%, 50%)",
+                "border-radius": "4px",
+                "padding": "2px"
+              }]
+            },
+            "tap_action": {
+              "action": "call-service",
+              "service": "input_select.select_option",
+              "service_data": {
+                "entity_id": "input_select.theme",
+                "option": theme
+              }
+            }
+          }
+        ] %}
+      {% endif %}
+    {% endfor %}
+    {{ ns.ret }}
