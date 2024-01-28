@@ -1,0 +1,51 @@
+input_datetime:
+  parking_timer:
+    name: Parking Timer
+    has_date: true
+    has_time: true
+    icon: mdi:timer
+
+template:
+  - sensor:
+      - name: Parking Alarm
+        state: "{{ (as_timestamp(states('input_datetime.parking_timer')) + 2.75 * 60 * 60) | timestamp_custom('%Y-%m-%d %H:%M:%S') }}"
+      - name: Parking Limit
+        state: "{{ (as_timestamp(states('input_datetime.parking_timer')) + 3 * 60 * 60) | timestamp_custom('%Y-%m-%d %H:%M:%S') }}"
+
+automation:
+  - alias: "Parking Timer"
+    id: parking_timer
+    trigger:
+      platform: state
+      entity_id: device_tracker.id_3_pro_tracker
+      to:
+        - RSH P2
+        - RSH P4
+    action:
+      - service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.parking_timer
+        data:
+          datetime: >
+            {% set now = now() %}
+            {% set seconds_past = (now.minute % 15) * 60 + now.second %}
+            {% set seconds_until_next_quarter = (15 * 60) - seconds_past %}
+            {% set next_quarter_timestamp = as_timestamp(now) + seconds_until_next_quarter %}
+            {{ next_quarter_timestamp | timestamp_custom('%Y-%m-%d %H:%M:%S') }}
+      - service: notify.telegram_darkfox
+        data:
+          message: >-
+            Parkeret på {{ states('device_tracker.id_3_pro_tracker') }}.
+            Timer sat til kl. {{ as_timestamp(states('input_datetime.parking_timer')) | timestamp_custom('%H:%M') }},
+            flyt bilen inden kl. {{ as_timestamp(states('sensor.parking_limit')) | timestamp_custom('%H:%M') }}.
+            Sæt alarm til kl. {{ as_timestamp(states('sensor.parking_alarm')) | timestamp_custom('%H:%M') }}.
+
+  - alias: "Parking Alarm"
+    trigger:
+      platform: time
+      at: sensor.parking_alarm
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: >-
+            Flyt bilen!

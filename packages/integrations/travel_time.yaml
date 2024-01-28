@@ -130,6 +130,9 @@ sensor:
         unit_of_measurement: m
         device_class: duration
 
+      next_leave_in:
+        value_template: "{{ [states('sensor.car_commute_leave_in')|int, states('sensor.next_scheduled_leave_in')|int]|min }}"
+
   - platform: rejseplanen
     name: S-Tog Måløv
     stop_id: "8600709"
@@ -232,3 +235,44 @@ automation:
       - service: homeassistant.update_entity
         target:
           entity_id: sensor.martin_til_destination
+
+  - id: time_to_leave_notification
+    alias: time_to_leave_notification
+    initial_state: true
+    mode: single
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.next_leave_in
+        below: 46
+      - platform: numeric_state
+        entity_id: sensor.next_leave_in
+        below: 31
+      - platform: numeric_state
+        entity_id: sensor.next_leave_in
+        below: 21
+      - platform: numeric_state
+        entity_id: sensor.next_leave_in
+        below: 16
+      - platform: numeric_state
+        entity_id: sensor.next_leave_in
+        below: 11
+      - platform: numeric_state
+        entity_id: sensor.next_leave_in
+        below: 6
+      - platform: numeric_state
+        entity_id: sensor.next_leave_in
+        below: 1
+    condition:
+      - alias: "If at home"
+        condition: state
+        entity_id: person.martin
+        state: "home"
+    action:
+      - service: script.notify_everywhere
+        data:
+          message: >-
+            {% if trigger.to_state.state|int(-1) == 0 %}
+              Tid til at tage afsted.
+            {% else %}
+              Tag afsted om {{ trigger.to_state.state|int(-1) }} minutter.
+            {% endif %}

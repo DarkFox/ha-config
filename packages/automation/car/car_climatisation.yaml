@@ -1,0 +1,119 @@
+input_boolean:
+  car_keep_climatising:
+    name: Keep Climatising
+    icon: mdi:fan-clock
+
+automation:
+  - id: climatise_car_for_upcoming_drive
+    alias: climatise_car_for_upcoming_drive
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.commute_soon
+          - binary_sensor.martin_next_scheduled_destination_leave_soon
+        from: "off"
+        to: "on"
+        for:
+          minutes: 25
+    condition:
+      - alias: "If at home"
+        condition: state
+        entity_id: person.martin
+        state: "home"
+    action:
+      - alias: "Climatise car"
+        service: switch.turn_on
+        target:
+          entity_id: switch.id_3_pro_climatisation
+
+  - id: climatise_car_for_commute_from_work
+    alias: climatise_car_for_commute_from_work
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.going_home_soon
+        from: "off"
+        to: "on"
+    condition:
+      - alias: "If at work"
+        condition: state
+        entity_id: person.martin
+        state: RSH
+    action:
+      - alias: "Climatise car"
+        service: switch.turn_on
+        target:
+          entity_id: switch.id_3_pro_climatisation
+
+  - id: car_keep_climatising
+    alias: Car Keep Climatising
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_boolean.car_keep_climatising
+        from: "off"
+        to: "on"
+      - platform: state
+        entity_id: binary_sensor.id_3_pro_klimatisering
+        from: "off"
+        to: "on"
+        for:
+          minutes: 5
+    condition:
+      - condition: state
+        entity_id: input_boolean.car_keep_climatising
+        state: "on"
+    action:
+      - alias: "Climatise car"
+        service: switch.turn_on
+        target:
+          entity_id: switch.id_3_pro_climatisation
+
+  - id: car_keep_klimatising_off
+    alias: Car Keep Climatising Off
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_boolean.car_keep_climatising
+        from: "on"
+        to: "off"
+    action:
+      - alias: "Stop climatising car"
+        service: switch.turn_off
+        target:
+          entity_id: switch.id_3_pro_climatisation
+
+  - alias: notify_car_climatising
+    id: notify_car_climatising
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.id_3_pro_klimatisering
+        to: "on"
+    condition:
+      - condition: numeric_state
+        entity_id: sensor.id_3_pro_remaining_climatisation_time
+        above: 6
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Klimatiserer bilen til {{ states('sensor.id_3_pro_target_temperature') }}°. {{ states('sensor.id_3_pro_remaining_climatisation_time') }} minutter tilbage."
+          data:
+            inline_keyboard:
+              - "Stop klimatisering:/car_climatisation_off"
+      - service: automation.turn_on
+        target:
+          entity_id: automation.notify_car_climatisation_end
+
+  - alias: notify_car_climatisation_end
+    id: notify_car_climatisation_end
+    initial_state: false
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.id_3_pro_klimatisering
+        to: "off"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Klimatisering afsluttet."
+      - service: automation.turn_off
+        target:
+          entity_id: automation.notify_car_climatisation_end

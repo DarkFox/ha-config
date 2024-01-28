@@ -1,0 +1,271 @@
+automation:
+  - id: car_menu
+    initial_state: true
+    alias: Bil Menu
+    trigger:
+      - platform: event
+        event_type: telegram_callback
+        event_data:
+          command: "/bil"
+      - platform: event
+        event_type: telegram_command
+        event_data:
+          command: "/bil"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: >
+            {% if is_state('sensor.id_3_pro_charging_state', 'charging') -%}
+              Opladning startet. Bilen lader op til {{ states('sensor.id_3_pro_target_state_of_charge') }}%.
+              Færdig ca. {{ states('sensor.id_3_pro_charging_complete_at') }}
+            {%- else -%}
+              Oplading afsluttet. Bilen er ladt op til {{ states('sensor.id_3_pro_state_of_charge') }}%.
+            {%- endif %}
+            {%- if states('sensor.id_3_pro_remaining_climatisation_time')|int > 0 -%}
+              Klimatiserer bilen til {{ states('sensor.id_3_pro_target_temperature') }}°. {{ states('sensor.id_3_pro_remaining_climatisation_time') }} minutter tilbage.
+            {%- else -%}
+              Klimatisering afsluttet.
+            {%- endif -%}
+      - service: notify.telegram_darkfox
+        data:
+          message: "Menu:"
+          data:
+            inline_keyboard:
+              - "Klimatisering:/car_climatisation, Opladning:/car_charging"
+
+  - id: car_climatisation_menu
+    initial_state: true
+    alias: Bil Klimatisering Menu
+    trigger:
+      - platform: event
+        event_type: telegram_callback
+        event_data:
+          command: "/car_climatisation"
+      - platform: event
+        event_type: telegram_command
+        event_data:
+          command: "/car_climatisation"
+    variables:
+      temp: "{{ states('sensor.id_3_pro_target_temperature')|int }}"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Klimatisering Menu"
+          data:
+            inline_keyboard:
+              - "{{ 'Stop klimatisering:/car_climatisation_off' if states('sensor.id_3_pro_remaining_climatisation_time')|int > 0 else 'Klimatiser nu:/car_climatisation_on' }}"
+              - "{{ '[18°]' if temp == 18 else '18°' }}:/car_climatisation_set 18, {{ '[19°]' if temp == 19 else '19°' }}:/car_climatisation_set 19, {{ '[20°]' if temp == 20 else '20°' }}:/car_climatisation_set 20"
+              - "{{ '[21°]' if temp == 21 else '21°' }}:/car_climatisation_set 21, {{ '[22°]' if temp == 22 else '22°' }}:/car_climatisation_set 22, {{ '[23°]' if temp == 23 else '23°' }}:/car_climatisation_set 23"
+
+  - id: car_climatisation_set
+    initial_state: true
+    alias: Bil Klimatisering Sæt temperatur
+    trigger:
+      - platform: event
+        event_type: telegram_callback
+        event_data:
+          command: "/car_climatisation_set"
+      - platform: event
+        event_type: telegram_command
+        event_data:
+          command: "/car_climatisation_set"
+    action:
+      - service: number.set_value
+        target:
+          entity_id: number.id_3_pro_target_climate_temperature
+        data:
+          temperature: "{{ trigger.event.data['args'][0] }}"
+      - service: notify.telegram_darkfox
+        data:
+          message: >-
+            Temperatur sat til {{ trigger.event.data['args'][0] }}°.
+
+  - id: car_climatisation_on
+    initial_state: true
+    alias: Bil Klimatisering Tænd
+    trigger:
+      - platform: event
+        event_type: telegram_callback
+        event_data:
+          command: "/car_climatisation_on"
+      - platform: event
+        event_type: telegram_command
+        event_data:
+          command: "/car_climatisation_on"
+    action:
+      - service: switch.turn_on
+        target:
+          entity_id: switch.id_3_pro_climatisation
+
+  - id: car_climatisation_off
+    initial_state: true
+    alias: Bil Klimatisering Stop
+    trigger:
+      - platform: event
+        event_type: telegram_callback
+        event_data:
+          command: "/car_climatisation_off"
+      - platform: event
+        event_type: telegram_command
+        event_data:
+          command: "/car_climatisation_off"
+    action:
+      - service: switch.turn_off
+        target:
+          entity_id: switch.id_3_pro_climatisation
+
+  - id: car_charging_menu
+    initial_state: true
+    alias: Bil Opladning Menu
+    trigger:
+      - platform: event
+        event_type: telegram_callback
+        event_data:
+          command: "/car_charging"
+      - platform: event
+        event_type: telegram_command
+        event_data:
+          command: "/car_charging"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Opladning Menu"
+          data:
+            inline_keyboard:
+              - "{{ 'Stop opladning:/car_charging_off' if is_state('sensor.id_3_pro_charging_state', 'charging') else 'Start opladning:/car_charging_on' }}"
+              - "50%:/car_charging_set 50, 60%:/car_charging_set 60, 70%:/car_charging_set 70, 80%:/car_charging_set 80, 90%:/car_charging_set 90, 100%:/car_charging_set 100"
+              - "Ladere RSH:/chargers_rsh, Ladere RSR:/chargers_rsr"
+
+  - id: car_chargers_rsh
+    initial_state: true
+    alias: car_chargers_rsh
+    trigger:
+      - platform: event
+        event_type: telegram_callback
+        event_data:
+          command: "/chargers_rsh"
+      - platform: event
+        event_type: telegram_command
+        event_data:
+          command: "/chargers_rsh"
+    action:
+      - choose:
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.rsh_p2_eon_ladere
+                above: 1
+            sequence:
+              - service: notify.telegram_darkfox
+                data:
+                  message: "Der er {{ states('sensor.rsh_p2_eon_ladere') }} Eon ladestationer ledige i P2."
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.rsh_p2_clever_ladere
+                above: 0
+            sequence:
+              - service: notify.telegram_darkfox
+                data:
+                  message: "Der er {{ states('sensor.rsh_p2_clever_ladere') }} Clever ladestationer ledige i P2."
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.rsh_p4_spirii_ladere
+                above: 0
+            sequence:
+              - service: notify.telegram_darkfox
+                data:
+                  message: "Der er {{ states('sensor.rsh_p4_spirii_ladere') }} Spirii ladestationer ledige på P4."
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.rsh_p4_eon_ladere
+                above: 0
+            sequence:
+              - service: notify.telegram_darkfox
+                data:
+                  message: "Der er {{ states('sensor.rsh_p4_eon_ladere') }} Eon ladestationer ledige på P4."
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.rsh_p7_spirii_ladere
+                above: 1
+            sequence:
+              - service: notify.telegram_darkfox
+                data:
+                  message: "Der er {{ states('sensor.rsh_p7_spirii_ladere') }} Spirii ladestationer ledige på P7."
+
+  - id: car_chargers_rsr
+    initial_state: true
+    alias: car_chargers_rsr
+    trigger:
+      - platform: event
+        event_type: telegram_callback
+        event_data:
+          command: "/chargers_rsr"
+      - platform: event
+        event_type: telegram_command
+        event_data:
+          command: "/chargers_rsr"
+    action:
+      - choose:
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.rsr_p_hus_spirii_ladere
+                above: 1 # One spot likely taken by car charging from Clever charger
+            sequence:
+              - service: notify.telegram_darkfox
+                data:
+                  message: "Der er {{ states('sensor.rsr_p_hus_spirii_ladere') }} Spirii ladestationer ledige i P-Huset."
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.rsr_p_hus_clever_ladere
+                above: 1 # One spot reserved for carshare
+            sequence:
+              - service: notify.telegram_darkfox
+                data:
+                  message: "Der er {{ states('sensor.rsr_p_hus_clever_ladere') }} Clever ladestationer ledige i P-Huset."
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.rsr_hovedindgang_spirii_ladere
+                above: 0
+            sequence:
+              - service: notify.telegram_darkfox
+                data:
+                  message: "Der er {{ states('sensor.rsr_hovedindgang_spirii_ladere') }} Spirii ladestationer ledige ved hovedindgangen."
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.rsr_patienthotel_clever_ladere
+                above: 0
+            sequence:
+              - service: notify.telegram_darkfox
+                data:
+                  message: "Der er {{ states('sensor.rsr_patienthotel_clever_ladere') }} ladestationer ledige ved patienthotellet."
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.rsr_hovedindgang_clever_ladere
+                above: 0
+            sequence:
+              - service: notify.telegram_darkfox
+                data:
+                  message: "Der er {{ states('sensor.rsr_hovedindgang_clever_ladere') }} Clever ladestationer ledige ved hovedindgangen."
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.rsr_hovedindgang_eon_ladere
+                above: 0
+            sequence:
+              - service: notify.telegram_darkfox
+                data:
+                  message: "Der er {{ states('sensor.rsr_hovedindgang_eon_ladere') }} Eon ladestationer ledige ved hovedindgangen."
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.rsr_nordflojen_eon_ladere
+                above: 0
+            sequence:
+              - service: notify.telegram_darkfox
+                data:
+                  message: "Der er {{ states('sensor.rsr_nordflojen_eon_ladere') }} Eon ladestationer ledige ved nordfløjen."
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.rsr_blegdamsvej_spirii_ladere
+                above: 0
+            sequence:
+              - service: notify.telegram_darkfox
+                data:
+                  message: "Der er {{ states('sensor.rsr_blegdamsvej_spirii_ladere') }} Spirii ladestationer ledige på den anden side af Blegdamsvej."
