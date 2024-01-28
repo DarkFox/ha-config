@@ -135,274 +135,223 @@ light:
         turn_off:
           event: light_profile_off_null
 
-sensor:
-  - platform: template
-    sensors:
-      inactive_light_profile:
-        value_template: >
+template:
+  - sensor:
+      - name: Theme
+        unique_id: theme
+        state: "{{ states('input_select.theme') }}"
+        attributes:
+          primary_color: >
+            {%- set theme = states('input_select.theme') -%}
+            {% if state_attr('sensor.theme', 'themes') and theme in state_attr('sensor.theme', 'themes') %}
+              {{ state_attr('sensor.theme', 'themes')[theme]['primary'] }}
+            {% else %}
+              0,100
+            {% endif %}
+          primary_color_12v: >
+            {%- set theme = states('input_select.theme') -%}
+            {% if state_attr('sensor.theme', 'themes') and theme in state_attr('sensor.theme', 'themes') %}
+              {{ state_attr('sensor.theme', 'themes')[theme]['primary_12v'] }}
+            {% else %}
+              0,100
+            {% endif %}
+          primary_color_hue: >
+            {%- set theme = states('input_select.theme') -%}
+            {% if state_attr('sensor.theme', 'themes') and theme in state_attr('sensor.theme', 'themes') %}
+              {{ state_attr('sensor.theme', 'themes')[theme]['primary_hue'] }}
+            {% else %}
+              0,100
+            {% endif %}
+          secondary_color: >
+            {%- set theme = states('input_select.theme') -%}
+            {% if state_attr('sensor.theme', 'themes') and theme in state_attr('sensor.theme', 'themes') %}
+              {{ state_attr('sensor.theme', 'themes')[theme]['secondary'] }}
+            {% else %}
+              0,100
+            {% endif %}
+          secondary_color_hue: >
+            {%- set theme = states('input_select.theme') -%}
+            {% if state_attr('sensor.theme', 'themes') and theme in state_attr('sensor.theme', 'themes') %}
+              {{ state_attr('sensor.theme', 'themes')[theme]['secondary_hue'] }}
+            {% else %}
+              0,100
+            {% endif %}
+          themes: >-
+            {{ {
+              "Tron": {
+                "primary": [53, 100],
+                "primary_12v": [53, 100],
+                "primary_hue": [45, 100],
+                "secondary": [179, 100],
+                "secondary_hue": [199, 100]
+              },
+              "Vaporwave": {
+                "primary": [315, 100],
+                "primary_12v": [315, 100],
+                "primary_hue": [320, 100],
+                "secondary": [170, 100],
+                "secondary_hue": [180, 100]
+              },
+              "Ocean": {
+                "primary": [165, 100],
+                "primary_12v": [165, 100],
+                "primary_hue": [180, 100],
+                "secondary": [210, 100],
+                "secondary_hue": [210, 97]
+              },
+              "Halloween": {
+                "primary": [30, 100],
+                "primary_12v": [40, 100],
+                "primary_hue": [25, 100],
+                "secondary": [274, 100],
+                "secondary_hue": [263, 100]
+              },
+              "Christmas": {
+                "primary": [0, 100],
+                "primary_12v": [0, 100],
+                "primary_hue": [0, 100],
+                "secondary": [120, 100],
+                "secondary_hue": [140, 100]
+              },
+              "Little": {
+                "primary": [300, 70],
+                "primary_12v": [300, 70],
+                "primary_hue": [285, 90],
+                "secondary": [220, 70],
+                "secondary_hue": [225, 70]
+              },
+              "Portal": {
+                "primary": [30, 100],
+                "primary_12v": [40, 100],
+                "primary_hue": [26, 100],
+                "secondary": [220, 100],
+                "secondary_hue": [240, 100]
+              },
+              "Portal Inverted": {
+                "primary": [220, 100],
+                "primary_12v": [220, 100],
+                "primary_hue": [240, 100],
+                "secondary": [30, 100],
+                "secondary_hue": [26, 100]
+              },
+              "Dragon": {
+                "primary": [274, 100],
+                "primary_12v": [274, 100],
+                "primary_hue": [263, 100],
+                "secondary": [120, 100],
+                "secondary_hue": [140, 100]
+              },
+              "Demon": {
+                "primary": [0, 100],
+                "primary_12v": [0, 100],
+                "primary_hue": [0, 100],
+                "secondary": [274, 100],
+                "secondary_hue": [263, 100]
+              },
+              "Red and Blue": {
+                "primary": [0, 100],
+                "primary_12v": [0, 100],
+                "primary_hue": [0, 100],
+                "secondary": [240, 100],
+                "secondary_hue": [255, 100]
+              },
+              "Yellow and Green": {
+                "primary": [53, 100],
+                "primary_12v": [53, 100],
+                "primary_hue": [45, 100],
+                "secondary": [120, 100],
+                "secondary_hue": [140, 100]
+              },
+              "Gold and Pink": {
+                "primary": [45, 100],
+                "primary_12v": [50, 100],
+                "primary_hue": [45, 100],
+                "secondary": [300, 100],
+                "secondary_hue": [285, 90]
+              },
+              "Screaming Pink": {
+                "primary": [315, 100],
+                "primary_12v": [315, 100],
+                "primary_hue": [330, 100],
+                "secondary": [315, 100],
+                "secondary_hue": [330, 100]
+              },
+              "Red": {
+                "primary": [0, 100],
+                "primary_12v": [0, 100],
+                "primary_hue": [0, 100],
+                "secondary": [0, 100],
+                "secondary_hue": [0, 100]
+              },
+              "Green": {
+                "primary": [105, 100],
+                "primary_12v": [105, 100],
+                "primary_hue": [125, 100],
+                "secondary": [120, 100],
+                "secondary_hue": [140, 100]
+              },
+              "Blue": {
+                "primary": [240, 100],
+                "primary_12v": [240, 100],
+                "primary_hue": [255, 100],
+                "secondary": [220, 100],
+                "secondary_hue": [240, 100]
+              },
+              "Yellow": {
+                "primary": [53, 100],
+                "primary_12v": [53, 100],
+                "primary_hue": [45, 100],
+                "secondary": [44, 100],
+                "secondary_hue": [44, 81]
+              },
+              "Purple": {
+                "primary": [274, 100],
+                "primary_12v": [274, 100],
+                "primary_hue": [263, 100],
+                "secondary": [263, 100],
+                "secondary_hue": [263, 100]
+              },
+              "Orange": {
+                "primary": [30, 100],
+                "primary_12v": [40, 100],
+                "primary_hue": [24, 100],
+                "secondary": [29, 100],
+                "secondary_hue": [30, 100]
+              },
+              "Spring Blossom": {
+                "primary": [335, 40],
+                "primary_12v": [325, 60],
+                "primary_hue": [339, 58],
+                "secondary": [350, 20],
+                "secondary_hue": [327, 9]
+              },
+              "Slava Ukraini": {
+                "primary": [240, 100],
+                "primary_12v": [240, 100],
+                "primary_hue": [255, 100],
+                "secondary": [44, 100],
+                "secondary_hue": [44, 81]
+              },
+              "Party": {
+                "primary": [30, 100],
+                "primary_12v": [40, 100],
+                "primary_hue": [26, 100],
+                "secondary": [220, 100],
+                "secondary_hue": [240, 100]
+              },
+              "New Years": {
+                "primary": [30, 100],
+                "primary_12v": [40, 100],
+                "primary_hue": [26, 100],
+                "secondary": [220, 100],
+                "secondary_hue": [240, 100]
+              }
+            } | tojson }}
+      - name: Inactive Light Profile
+        state: >
           {% set profile = states('input_select.light_profile') %}
           {% set profiles = state_attr('input_select.light_profile', 'options') %}
           {{ profiles[profiles.index(profile)+1] or 'Off' }}
-
-      theme:
-        friendly_name: Theme
-        value_template: "{{ states('input_select.theme') }}"
-        attribute_templates:
-          primary_color: >
-            {%- set theme = states('input_select.theme') -%}
-            {% if theme == 'Tron' -%}
-              53,100
-            {% elif theme == 'Vaporwave' -%}
-              315,100
-            {% elif theme == 'Ocean' -%}
-              165,100
-            {% elif theme == 'Halloween' -%}
-              30,100
-            {% elif theme == 'Christmas' -%}
-              0,100
-            {% elif theme == 'Little' -%}
-              300,70
-            {% elif theme == 'Portal' -%}
-              30,100
-            {% elif theme == 'Portal Inverted' -%}
-              220,100
-            {% elif theme == 'Dragon' -%}
-              274,100
-            {% elif theme == 'Demon' -%}
-              0,100
-            {% elif theme == 'Red and Blue' -%}
-              0,100
-            {% elif theme == 'Yellow and Green' -%}
-              53,100
-            {% elif theme == 'Gold and Pink' -%}
-              45, 100
-            {% elif theme == 'Screaming Pink' -%}
-              315,100
-            {% elif theme == 'Red' -%}
-              0,100
-            {% elif theme == 'Green' -%}
-              105,100
-            {% elif theme == 'Blue' -%}
-              240,100
-            {% elif theme == 'Yellow' -%}
-              53,100
-            {% elif theme == 'Purple' -%}
-              274,100
-            {% elif theme == 'Orange' -%}
-              30,100
-            {% elif theme == 'Spring Blossom' -%}
-              335,40
-            {% elif theme == 'Slava Ukraini' -%}
-              240,100
-            {% elif theme == 'Party' -%}
-              30,100
-            {% elif theme == 'New Years' -%}
-              30,100
-            {% endif -%}
-          primary_color_12v: >
-            {%- set theme = states('input_select.theme') -%}
-            {% if theme == 'Tron' -%}
-              53,100
-            {% elif theme == 'Vaporwave' -%}
-              315,100
-            {% elif theme == 'Ocean' -%}
-              165,100
-            {% elif theme == 'Halloween' -%}
-              40,100
-            {% elif theme == 'Christmas' -%}
-              0,100
-            {% elif theme == 'Little' -%}
-              300,70
-            {% elif theme == 'Portal' -%}
-              40,100
-            {% elif theme == 'Portal Inverted' -%}
-              220,100
-            {% elif theme == 'Dragon' -%}
-              274,100
-            {% elif theme == 'Demon' -%}
-              0,100
-            {% elif theme == 'Red and Blue' -%}
-              0,100
-            {% elif theme == 'Yellow and Green' -%}
-              53,100
-            {% elif theme == 'Gold and Pink' -%}
-              50, 100
-            {% elif theme == 'Screaming Pink' -%}
-              315,100
-            {% elif theme == 'Red' -%}
-              0,100
-            {% elif theme == 'Green' -%}
-              105,100
-            {% elif theme == 'Blue' -%}
-              240,100
-            {% elif theme == 'Yellow' -%}
-              53,100
-            {% elif theme == 'Purple' -%}
-              274,100
-            {% elif theme == 'Orange' -%}
-              40,100
-            {% elif theme == 'Spring Blossom' -%}
-              325,60
-            {% elif theme == 'Slava Ukraini' -%}
-              240,100
-            {% elif theme == 'Party' -%}
-              40,100
-            {% elif theme == 'New Years' -%}
-              40,100
-            {% endif -%}
-          primary_color_hue: >
-            {%- set theme = states('input_select.theme') -%}
-            {% if theme == 'Tron' -%}
-              45,100
-            {% elif theme == 'Vaporwave' -%}
-              320,100
-            {% elif theme == 'Ocean' -%}
-              180,100
-            {% elif theme == 'Halloween' -%}
-              25,100
-            {% elif theme == 'Christmas' -%}
-              0,100
-            {% elif theme == 'Little' -%}
-              285,90
-            {% elif theme == 'Portal' -%}
-              26,100
-            {% elif theme == 'Portal Inverted' -%}
-              240,100
-            {% elif theme == 'Dragon' -%}
-              263,100
-            {% elif theme == 'Demon' -%}
-              0,100
-            {% elif theme == 'Red and Blue' -%}
-              0,100
-            {% elif theme == 'Yellow and Green' -%}
-              45,100
-            {% elif theme == 'Gold and Pink' -%}
-              45, 100
-            {% elif theme == 'Screaming Pink' -%}
-              330,100
-            {% elif theme == 'Red' -%}
-              0,100
-            {% elif theme == 'Green' -%}
-              125,100
-            {% elif theme == 'Blue' -%}
-              255,100
-            {% elif theme == 'Yellow' -%}
-              45,100
-            {% elif theme == 'Purple' -%}
-              268,100
-            {% elif theme == 'Orange' -%}
-              24,100
-            {% elif theme == 'Spring Blossom' -%}
-              339,58
-            {% elif theme == 'Slava Ukraini' -%}
-              255,100
-            {% elif theme == 'Party' -%}
-              26,100
-            {% elif theme == 'New Years' -%}
-              26,100
-            {% endif -%}
-          secondary_color: >
-            {%- set theme = states('input_select.theme') -%}
-            {% if theme == 'Tron' -%}
-              179,100
-            {% elif theme == 'Vaporwave' -%}
-              170,100
-            {% elif theme == 'Ocean' -%}
-              210,100
-            {% elif theme == 'Halloween' -%}
-              274,100
-            {% elif theme == 'Christmas' -%}
-              120,100
-            {% elif theme == 'Little' -%}
-              220,70
-            {% elif theme == 'Portal' -%}
-              220,100
-            {% elif theme == 'Portal Inverted' -%}
-              30,100
-            {% elif theme == 'Dragon' -%}
-              120,100
-            {% elif theme == 'Demon' -%}
-              274,100
-            {% elif theme == 'Red and Blue' -%}
-              240,100
-            {% elif theme == 'Yellow and Green' -%}
-              120,100
-            {% elif theme == 'Gold and Pink' -%}
-              300, 100
-            {% elif theme == 'Screaming Pink' -%}
-              315,100
-            {% elif theme == 'Red' -%}
-              0,100
-            {% elif theme == 'Green' -%}
-              120,100
-            {% elif theme == 'Blue' -%}
-              220,100
-            {% elif theme == 'Yellow' -%}
-              44,100
-            {% elif theme == 'Purple' -%}
-              274,100
-            {% elif theme == 'Orange' -%}
-              29,100
-            {% elif theme == 'Spring Blossom' -%}
-              350,20
-            {% elif theme == 'Slava Ukraini' -%}
-              44,100
-            {% elif theme == 'Party' -%}
-              220,100
-            {% elif theme == 'New Years' -%}
-              220,100
-            {% endif -%}
-          secondary_color_hue: >
-            {%- set theme = states('input_select.theme') -%}
-            {% if theme == 'Tron' -%}
-              199,100
-            {% elif theme == 'Vaporwave' -%}
-              180,100
-            {% elif theme == 'Ocean' -%}
-              210,97
-            {% elif theme == 'Halloween' -%}
-              263,100
-            {% elif theme == 'Christmas' -%}
-              140,100
-            {% elif theme == 'Little' -%}
-              225,70
-            {% elif theme == 'Portal' -%}
-              240,100
-            {% elif theme == 'Portal Inverted' -%}
-              26,100
-            {% elif theme == 'Dragon' -%}
-              140,100
-            {% elif theme == 'Demon' -%}
-              263,100
-            {% elif theme == 'Red and Blue' -%}
-              255,100
-            {% elif theme == 'Yellow and Green' -%}
-              140,100
-            {% elif theme == 'Gold and Pink' -%}
-              285, 90
-            {% elif theme == 'Screaming Pink' -%}
-              330,100
-            {% elif theme == 'Red' -%}
-              0,100
-            {% elif theme == 'Green' -%}
-              140,100
-            {% elif theme == 'Blue' -%}
-              220,100
-            {% elif theme == 'Yellow' -%}
-              44,81
-            {% elif theme == 'Purple' -%}
-              263,100
-            {% elif theme == 'Orange' -%}
-              30,100
-            {% elif theme == 'Spring Blossom' -%}
-              327,9
-            {% elif theme == 'Slava Ukraini' -%}
-              44,81
-            {% elif theme == 'Party' -%}
-              240,100
-            {% elif theme == 'New Years' -%}
-              240,100
-            {% endif -%}
 
 scene:
   - name: Bright
@@ -642,7 +591,7 @@ script:
       entities:
         description: Scene to apply on top of preset
         example: >-
-          light.tv_mobel_hojre_hylde: {
+          light.tv_mobel: {
             "state": True,
             "brightness": 128,
             "color_temp": 430,
