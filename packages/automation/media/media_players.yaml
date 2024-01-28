@@ -1,4 +1,26 @@
 script:
+  group_mute_toggle:
+    fields:
+      group:
+        description: Group to mute or unmute
+        example: "stue"
+    variables:
+      group_members: "{{ state_attr('media_player.'+group, 'group_members') }}"
+      mute_states: >-
+        {% set group_members = state_attr('media_player.'+group, 'group_members') %}
+        [
+        {% for member in group_members %}
+          {{ state_attr(member, 'is_volume_muted') }}{{ ',' if not loop.last }}
+        {% endfor %}
+        ]
+      any_muted: "{{ mute_states | select('equalto', true) | list | length > 0 }}"
+    sequence:
+      - service: media_player.volume_mute
+        target:
+          entity_id: "{{ group_members }}"
+        data:
+          is_volume_muted: "{{ not any_muted }}"
+
   join_unjoin_sonos_group:
     fields:
       entity_id:
@@ -276,22 +298,25 @@ script:
 automation:
   - id: adjust_speaker_group_volume
     alias: Adjust Speaker Group Volume
+    initial_state: true
     trigger:
       - platform: state
         entity_id:
           - input_number.stue_group_volume
           - input_number.kokken_group_volume
+          - input_number.kontor_group_volume
           - input_number.sovevaerelse_group_volume
           - input_number.badevaerelse_group_volume
+          - input_number.roam_group_volume
     action:
       repeat:
-        for_each: "{{ state_attr(trigger.entity_id, 'group_members') }}"
+        for_each: "{{ state_attr((trigger.entity_id|replace('input_number','media_player')|replace('_group_volume', '')), 'group_members') }}"
         sequence:
           - service: media_player.volume_set
             target:
               entity_id: "{{ repeat.item }}"
             data:
-              volume: "{{ '' }}"
+              volume_level: "{{ trigger.to_state.state|int/100 }}"
 
 input_number:
   stue_group_volume:
@@ -301,6 +326,11 @@ input_number:
     step: 1
   kokken_group_volume:
     name: Køkken Gruppe Lydstyrke
+    min: 0
+    max: 100
+    step: 1
+  kontor_group_volume:
+    name: Kontor Gruppe Lydstyrke
     min: 0
     max: 100
     step: 1
@@ -407,49 +437,11 @@ template:
           {% set group_members = state_attr(entity, 'group_members') %}
           {{ group_members[0] }}
 
-      - name: Stue Speaker Group Max Volume
-        state: >-
-          {% set group_members = state_attr('media_player.stue', 'group_members') %}
-          {% set ns = namespace(ret=[]) %}
-          {% for member in group_members %}
-            {% set ns.ret = ns.ret + [state_attr(member, 'volume_level')] %}
-          {% endfor %}
-          {{ ns.ret|average }}
-
-      - name: Stue Speaker Distance to Group Max Volume
-        state: >-
-          {{ (state_attr('media_player.stue', 'volume_level')|float) - (states('sensor.stue_speaker_group_max_volume')|float)  }}
-
-      - name: Stue Speaker Volume Exponent
-        state: >-
-          {% set group_max = (states('sensor.stue_speaker_group_max_volume')|float) %}
-          {% set distance = (states('sensor.stue_speaker_distance_to_group_max_volume')|float)%}
-          {{ 1-(distance + group_max) }}
-
       - name: Køkken Speaker Lead By
         state: >-
           {% set entity = 'media_player.kokken' %}
           {% set group_members = state_attr(entity, 'group_members') %}
           {{ group_members[0] }}
-
-      - name: Køkken Speaker Group Max Volume
-        state: >-
-          {% set group_members = state_attr('media_player.kokken', 'group_members') %}
-          {% set ns = namespace(ret=[]) %}
-          {% for member in group_members %}
-            {% set ns.ret = ns.ret + [state_attr(member, 'volume_level')] %}
-          {% endfor %}
-          {{ ns.ret|average }}
-
-      - name: Køkken Speaker Distance to Group Max Volume
-        state: >-
-          {{ (state_attr('media_player.kokken', 'volume_level')|float) - (states('sensor.kokken_speaker_group_max_volume')|float)  }}
-
-      - name: Køkken Speaker Volume Exponent
-        state: >-
-          {% set group_max = (states('sensor.kokken_speaker_group_max_volume')|float) %}
-          {% set distance = (states('sensor.kokken_speaker_distance_to_group_max_volume')|float)%}
-          {{ 1-(distance + group_max) }}
 
       - name: Kontor Speaker Lead By
         state: >-
@@ -457,49 +449,11 @@ template:
           {% set group_members = state_attr(entity, 'group_members') %}
           {{ group_members[0] }}
 
-      - name: Kontor Speaker Group Max Volume
-        state: >-
-          {% set group_members = state_attr('media_player.kontor', 'group_members') %}
-          {% set ns = namespace(ret=[]) %}
-          {% for member in group_members %}
-            {% set ns.ret = ns.ret + [state_attr(member, 'volume_level')] %}
-          {% endfor %}
-          {{ ns.ret|average }}
-
-      - name: Kontor Speaker Distance to Group Max Volume
-        state: >-
-          {{ (state_attr('media_player.kontor', 'volume_level')|float) - (states('sensor.kontor_speaker_group_max_volume')|float)  }}
-
-      - name: Kontor Speaker Volume Exponent
-        state: >-
-          {% set group_max = (states('sensor.kontor_speaker_group_max_volume')|float) %}
-          {% set distance = (states('sensor.kontor_speaker_distance_to_group_max_volume')|float)%}
-          {{ 1-(distance + group_max) }}
-
       - name: Sovevaerelse Speaker Lead By
         state: >-
           {% set entity = 'media_player.sovevaerelse' %}
           {% set group_members = state_attr(entity, 'group_members') %}
           {{ group_members[0] }}
-
-      - name: Sovevaerelse Speaker Group Max Volume
-        state: >-
-          {% set group_members = state_attr('media_player.sovevaerelse', 'group_members') %}
-          {% set ns = namespace(ret=[]) %}
-          {% for member in group_members %}
-            {% set ns.ret = ns.ret + [state_attr(member, 'volume_level')] %}
-          {% endfor %}
-          {{ ns.ret|average }}
-
-      - name: Sovevaerelse Speaker Distance to Group Max Volume
-        state: >-
-          {{ (state_attr('media_player.sovevaerelse', 'volume_level')|float) - (states('sensor.sovevaerelse_speaker_group_max_volume')|float)  }}
-
-      - name: Sovevaerelse Speaker Volume Exponent
-        state: >-
-          {% set group_max = (states('sensor.sovevaerelse_speaker_group_max_volume')|float) %}
-          {% set distance = (states('sensor.sovevaerelse_speaker_distance_to_group_max_volume')|float)%}
-          {{ 1-(distance + group_max) }}
 
       - name: Badevaerelse Speaker Lead By
         state: >-
@@ -507,49 +461,11 @@ template:
           {% set group_members = state_attr(entity, 'group_members') %}
           {{ group_members[0] }}
 
-      - name: Badevaerelse Speaker Group Max Volume
-        state: >-
-          {% set group_members = state_attr('media_player.badevaerelse', 'group_members') %}
-          {% set ns = namespace(ret=[]) %}
-          {% for member in group_members %}
-            {% set ns.ret = ns.ret + [state_attr(member, 'volume_level')] %}
-          {% endfor %}
-          {{ ns.ret|average }}
-
-      - name: Badevaerelse Speaker Distance to Group Max Volume
-        state: >-
-          {{ (state_attr('media_player.badevaerelse', 'volume_level')|float) - (states('sensor.badevaerelse_speaker_group_max_volume')|float)  }}
-
-      - name: Badevaerelse Speaker Volume Exponent
-        state: >-
-          {% set group_max = (states('sensor.badevaerelse_speaker_group_max_volume')|float) %}
-          {% set distance = (states('sensor.badevaerelse_speaker_distance_to_group_max_volume')|float)%}
-          {{ 1-(distance + group_max) }}
-
       - name: Roam Speaker Lead By
         state: >-
           {% set entity = 'media_player.roam' %}
           {% set group_members = state_attr(entity, 'group_members') %}
           {{ group_members[0] }}
-
-      - name: Roam Speaker Group Max Volume
-        state: >-
-          {% set group_members = state_attr('media_player.roam', 'group_members') %}
-          {% set ns = namespace(ret=[]) %}
-          {% for member in group_members %}
-            {% set ns.ret = ns.ret + [state_attr(member, 'volume_level')] %}
-          {% endfor %}
-          {{ ns.ret|average }}
-
-      - name: Roam Speaker Distance to Group Max Volume
-        state: >-
-          {{ (state_attr('media_player.roam', 'volume_level')|float) - (states('sensor.roam_speaker_group_max_volume')|float)  }}
-
-      - name: Roam Speaker Volume Exponent
-        state: >-
-          {% set group_max = (states('sensor.roam_speaker_group_max_volume')|float) %}
-          {% set distance = (states('sensor.roam_speaker_distance_to_group_max_volume')|float)%}
-          {{ 1-(distance + group_max) }}
 
       - name: Active Media Player
         state: >
