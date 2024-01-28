@@ -3,30 +3,40 @@ media_player:
     name: Soveværelse TV
     children:
       - media_player.sovevarelse_tv_dlna
-      - media_player.sovevarelse_soundbar_songpal
+      - media_player.sovevaerelse_soundbar_songpal
     commands:
       turn_on:
         service: switch.turn_on
-        data:
+        target:
           entity_id: switch.sovevaerelse_tv
       turn_off:
         service: switch.turn_off
-        data:
+        target:
           entity_id: switch.sovevaerelse_tv
       volume_up:
         service: media_player.volume_up
-        data:
-          entity_id: media_player.sovevarelse_soundbar_songpal
+        target:
+          entity_id: media_player.sovevaerelse_soundbar_songpal
       volume_down:
         service: media_player.volume_down
+        target:
+          entity_id: media_player.sovevaerelse_soundbar_songpal
+      volume_set:
+        service: media_player.volume_set
+        target:
+          entity_id: media_player.sovevaerelse_soundbar_songpal
         data:
-          entity_id: media_player.sovevarelse_soundbar_songpal
+          volume_level: "{{ volume_level }}"
       volume_mute:
         service: media_player.volume_mute
+        target:
+          entity_id: media_player.sovevaerelse_soundbar_songpal
         data:
-          entity_id: media_player.sovevarelse_soundbar_songpal
+          is_volume_muted: "{{ not state_attr('media_player.sovevaerelse_soundbar_songpal', 'is_volume_muted') }}"
     attributes:
       state: switch.sovevaerelse_tv
+      volume_level: media_player.sovevaerelse_soundbar_songpal|volume_level
+      is_volume_muted: media_player.sovevaerelse_soundbar_songpal|is_volume_muted
     device_class: tv
 
 input_select:
@@ -75,7 +85,7 @@ switch:
         turn_on:
           - service: songpal.set_sound_setting
             target:
-              entity_id: media_player.sovevarelse_soundbar_songpal
+              entity_id: media_player.sovevaerelse_soundbar_songpal
             data:
               name: nightMode
               value: "on"
@@ -85,7 +95,7 @@ switch:
         turn_off:
           - service: songpal.set_sound_setting
             target:
-              entity_id: media_player.sovevarelse_soundbar_songpal
+              entity_id: media_player.sovevaerelse_soundbar_songpal
             data:
               name: nightMode
               value: "off"
@@ -274,7 +284,7 @@ automation:
     action:
       - service: media_player.volume_mute
         data:
-          entity_id: media_player.sovevarelse_soundbar_songpal
+          entity_id: media_player.sovevaerelse_soundbar_songpal
           is_volume_muted: true
 
   - alias: bedroom_media_unmute
@@ -290,7 +300,7 @@ automation:
     action:
       - service: media_player.volume_mute
         data:
-          entity_id: media_player.sovevarelse_soundbar_songpal
+          entity_id: media_player.sovevaerelse_soundbar_songpal
           is_volume_muted: false
 
   - alias: sovevaerelse_soundbar_volume_remote_state_up
