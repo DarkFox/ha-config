@@ -1,10 +1,79 @@
+input_text:
+  translation_output:
+    name: Translation output
+    icon: mdi:comment-text-outline
+
+script:
+  translate:
+    fields:
+      message:
+        description: The message to translate
+        example: "Hello, how are you?"
+      force_translate:
+        description: Force translation even if cached
+        example: true
+    sequence:
+      - choose:
+          # Check if the translation is cached
+          - conditions:
+              - condition: template
+                value_template: "{{ not (force_translate|bool(false)) }}"
+              - condition: template
+                value_template: >-
+                  {{ true if state_attr('sensor.translation_cache', 'translations') and message in state_attr('sensor.translation_cache', 'translations') else false }}
+            sequence:
+              - variables:
+                  translation: "{{ state_attr('sensor.translation_cache', 'translations')[message] }}"
+              - service: input_text.set_value
+                target:
+                  entity_id: input_text.translation_output
+                data:
+                  value: "{{ translation }}"
+        default:
+          - service: conversation.process
+            data:
+              text: "Oversæt dette til dansk (returner kun den oversatte tekst): {{message}}"
+              language: DA
+              agent_id: 4e0a875b09f8a19a405e1bf3e5c4adac
+            response_variable: agent
+          - variables:
+              translation: "{{ agent.response.speech.plain.speech }}"
+          - event: translation_response_received
+            event_data:
+              message: "{{ message }}"
+              translation: "{{ translation }}"
+          - service: input_text.set_value
+            target:
+              entity_id: input_text.translation_output
+            data:
+              value: "{{ translation }}"
+      - variables:
+          output:
+            translation: "{{ states('input_text.translation_output') }}"
+      - stop: "Return translation"
+        response_variable: output
+
+  insert_translation:
+    fields:
+      message:
+        description: The message to translate
+        example: "Hello, how are you?"
+      translation:
+        description: The translation to insert
+        example: "Hej, hvordan har du det?"
+    sequence:
+      - event: translation_response_received
+        event_data:
+          message: "{{ message }}"
+          translation: "{{ translation }}"
+
 intent_script:
   AskNabu:
     action:
       - service: conversation.process
         data:
           text: "{{query}}"
-          language: "da"
+          language: DA
           agent_id: 4e0a875b09f8a19a405e1bf3e5c4adac
         response_variable: agent
       - event: openai_response_received
@@ -14,6 +83,24 @@ intent_script:
       text: "{{ states['sensor.openai_query_response'].attributes.full_response }}"
 
 template:
+  - trigger:
+      platform: event
+      event_type: translation_response_received
+    sensor:
+      - name: "Translation Cache"
+        state: "{{ as_timestamp(now()) | timestamp_custom('%H:%M:%S %d %b %Y', true) }}"
+        attributes:
+          translations: >
+            {% set old_translations = state_attr('sensor.translation_cache', 'translations') or {} %}
+            {% set new_message = trigger.event.data.message %}
+            {% set new_translation = trigger.event.data.translation %}
+            {
+              {% for message, translation in old_translations.items() %}
+                "{{ message }}": "{{ translation }}",
+              {% endfor %}
+              "{{ new_message }}": "{{ new_translation }}"
+            }
+
   - trigger:
       platform: event
       event_type: openai_response_received
