@@ -14,7 +14,6 @@ card:
         icon: true
         source: true
         power: true
-        volume: true
         runtime: false
         shuffle: false
         repeat: false
@@ -24,6 +23,7 @@ card:
         navigation_path: /d5369777_music_assistant_beta/ingress
       speaker_group:
         platform: sonos
+        sync_volume: true
         entities:
           - entity_id: media_player.stue
             name: Stue
@@ -53,27 +53,36 @@ card:
           - type: custom:auto-entities
             card:
               type: custom:fold-entity-row
+              card_mod:
+                style:
+                  .: |
+                    #items {
+                      padding-left: 0px !important;
+                    }
               head:
-                type: custom:mushroom-number-card
-                entity: "input_number.[[room]]_group_volume"
+                type: custom:mushroom-media-player-card
+                entity: "media_player.[[origin_room]]"
+                show_volume_level: true
+                volume_controls:
+                  - volume_set
+                  - volume_mute
+                fill_container: true
                 primary_info: none
                 secondary_info: none
-                fill_container: true
-                icon: mdi:volume-mute
+                icon_type: none
                 layout: horizontal
-                tap_action:
-                  action: call-service
-                  service: script.group_mute_toggle
-                  data:
-                    group: "[[room]]"
                 card_mod:
                   style:
                     .: |
                       ha-card {
                         box-shadow: none !important;
                         background: none !important;
-                        padding: 0px !important;
+                        padding: 2px 12px 8px 0px !important;
                         margin: 0px !important;
+                      }
+                      mushroom-state-item {
+                        margin: 0px !important;
+                        padding: 0px 16px 0px 0px !important;
                       }
             filter:
               template: |
@@ -90,15 +99,26 @@ card:
                           "volume_mute"
                       ],
                       "fill_container": true,
-                      "primary_info": "name",
+                      "primary_info": "none",
                       "secondary_info": "none",
-                      "icon_type": "none",
+                      "layout": "horizontal",
                       "card_mod": {
                         "style": {
-                          ".": "ha-card {\n  box-shadow: none !important;\n  background: none !important;\n  padding: 0px !important;\n  margin: 0px !important;\n}\n"
+                          ".": "
+                            ha-card {
+                              box-shadow: none !important;
+                              background: none !important;
+                              padding: 2px 12px 2px 0px !important;
+                              margin: 0px !important;
+                            }
+                            mushroom-state-item {
+                              margin: 0px !important;
+                              padding: 0px 16px 0px 0px !important;
+                            }
+                          "
                         }
                       }
-                  }
-                ] %}
+                    }
+                  ] %}
                 {% endfor %}
                 {{ ns.ret }}

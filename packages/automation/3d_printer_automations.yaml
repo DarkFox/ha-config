@@ -29,6 +29,15 @@ template:
             or is_state('binary_sensor.3d_printer_skab', 'on')
           }}
   - sensor:
+      - name: 3D Printer Status
+        state: >-
+          {% set state = states('sensor.octoprint_current_state') %}
+          {% set translations = state_attr('sensor.translation_cache', 'translations') %}
+          {% if state == "Operational" and states('sensor.octoprint_print_time') != 'unavailable' %}
+            Færdig
+          {% else %}
+            {{ translations[state] if state in translations else state }}
+          {% endif %}
       - name: 3D Printer Materiale
         state: >-
           {% set temp = (states('sensor.octoprint_bed_target')|int) %}
@@ -210,9 +219,17 @@ automation:
           data:
             tag: "3d_print_status_notification"
             channel: "3D Printer Status"
+      - service: script.translate
+        data:
+          message: "{{ states('sensor.octoprint_current_state') }}"
+        response_variable: output
+      - delay:
+          seconds: 1
+      - variables:
+          message: "3D Printer {{ states('sensor.3d_printer_status') }}"
       - service: notify.mobile_app_darkphone
         data:
-          title: "3D Printer {{ states('sensor.octoprint_current_state') }}"
+          title: "{{ message }}"
           message: ""
           data:
             tag: "3d_print_alert_notification"
@@ -221,7 +238,7 @@ automation:
             image: /api/camera_proxy/camera.3d_printer
       - service: script.voice_broadcast
         data:
-          message: "3D Printer {{ states('sensor.octoprint_current_state') }}"
+          message: "{{ message }}"
 
   - id: 3d_printer_auto_shutdown
     alias: 3d Printer Auto Shutdown
