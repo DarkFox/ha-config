@@ -126,12 +126,17 @@ sensor:
         device_class: timestamp
       next_scheduled_leave_in:
         value_template: >-
-          {{ (((states('sensor.next_scheduled_leave_at')|as_timestamp) - (now()|as_timestamp))/60)|int }}
+          {%- set timestamp = states('sensor.next_scheduled_leave_at')|as_timestamp(0) -%}
+          {%- if timestamp != 0 -%}
+            {{ (((states('sensor.next_scheduled_leave_at')|as_timestamp) - (now()|as_timestamp))/60)|int }}
+          {% else %}
+            unknown
+          {%- endif -%}
         unit_of_measurement: m
         device_class: duration
 
       next_leave_in:
-        value_template: "{{ [states('sensor.car_commute_leave_in')|int, states('sensor.next_scheduled_leave_in')|int]|min }}"
+        value_template: "{{ [states('sensor.car_commute_leave_in')|int(999999), states('sensor.next_scheduled_leave_in')|int(999999)]|min }}"
 
   - platform: rejseplanen
     name: S-Tog Måløv
