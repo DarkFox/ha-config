@@ -56,6 +56,95 @@ calendar:
 
 template:
   - sensor:
+      - name: Agenda
+        state: >-
+          {{ states('sensor.vagtplan_agenda')|int(0)
+            + states('sensor.arbejde_agenda')|int(0)
+            + states('sensor.personlig_agenda')|int(0)
+            + states('sensor.tripit_agenda')|int(0) }}
+        attributes:
+          events: >-
+            {% if has_value('sensor.vagtplan_agenda') and 'agenda' in states.sensor.vagtplan_agenda.attributes
+              and has_value('sensor.arbejde_agenda') and 'agenda' in states.sensor.arbejde_agenda.attributes
+              and has_value('sensor.personlig_agenda') and 'agenda' in states.sensor.personlig_agenda.attributes
+              and has_value('sensor.tripit_agenda') and 'agenda' in states.sensor.tripit_agenda.attributes %}
+              {{ (state_attr('sensor.vagtplan_agenda', 'agenda')
+                + state_attr('sensor.arbejde_agenda', 'agenda')
+                + state_attr('sensor.personlig_agenda', 'agenda')
+                + state_attr('sensor.tripit_agenda', 'agenda'))|sort(attribute='start') | list }}
+            {% else %}
+              []
+            {% endif %}
+      - name: Agenda Tomorrow
+        state: >-
+          {% if has_value('sensor.vagtplan_agenda') and 'tomorrow' in states.sensor.vagtplan_agenda.attributes
+            and has_value('sensor.arbejde_agenda') and 'tomorrow' in states.sensor.arbejde_agenda.attributes
+            and has_value('sensor.personlig_agenda') and 'tomorrow' in states.sensor.personlig_agenda.attributes
+            and has_value('sensor.tripit_agenda') and 'tomorrow' in states.sensor.tripit_agenda.attributes %}
+              {{ state_attr('sensor.vagtplan_agenda', 'tomorrow')|length
+                + state_attr('sensor.arbejde_agenda', 'tomorrow')|length
+                + state_attr('sensor.personlig_agenda', 'tomorrow')|length
+                + state_attr('sensor.tripit_agenda', 'tomorrow')|length }}
+            {% else %}
+              0
+            {% endif %}
+        attributes:
+          events: >-
+            {% if has_value('sensor.vagtplan_agenda') and 'tomorrow' in states.sensor.vagtplan_agenda.attributes
+              and has_value('sensor.arbejde_agenda') and 'tomorrow' in states.sensor.arbejde_agenda.attributes
+              and has_value('sensor.personlig_agenda') and 'tomorrow' in states.sensor.personlig_agenda.attributes
+              and has_value('sensor.tripit_agenda') and 'tomorrow' in states.sensor.tripit_agenda.attributes %}
+              {{ (state_attr('sensor.vagtplan_agenda', 'tomorrow')
+                + state_attr('sensor.arbejde_agenda', 'tomorrow')
+                + state_attr('sensor.personlig_agenda', 'tomorrow')
+                + state_attr('sensor.tripit_agenda', 'tomorrow'))|sort(attribute='start') | list }}
+            {% else %}
+              []
+            {% endif %}
+      - name: Full Agenda
+        state: >-
+          {{ states('sensor.agenda')|int(0)
+            + states('sensor.agenda_tomorrow')|int(0) }}
+        attributes:
+          events: >-
+            {% set agendas = [state_attr('sensor.agenda', 'events'),
+                              state_attr('sensor.agenda_tomorrow', 'events')] %}
+            {% if (agendas | select('!=', None) | list | length) > 0 %}
+              {{ (state_attr('sensor.agenda', 'events')
+                + state_attr('sensor.agenda_tomorrow', 'events'))|sort(attribute='start') | list }}
+            {% else %}
+              []
+            {% endif %}
+
+      - name: Upcoming Events
+        state: >-
+          {% set start = now().strftime('%Y-%m-%d %H:%M:%S') %}
+          {% set end = (now() + timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S') %}
+          {{ state_attr('sensor.full_agenda', 'events')|selectattr('start', 'ge', start)|selectattr('start', 'lt', end)|list|length }}
+        attributes:
+          events: >-
+            {% set start = now().strftime('%Y-%m-%d %H:%M:%S') %}
+            {% set end = (now() + timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S') %}
+            {{ state_attr('sensor.full_agenda', 'events')|selectattr('start', 'ge', start)|selectattr('start', 'lt', end)|list }}
+
+      - name: Upcoming Driving Event
+        state: >-
+          {% set start = (state_attr('sensor.upcoming_events', 'events')|selectattr('bil', 'eq', true)|list|first).get('start') %}
+          {{ as_timestamp(start) | timestamp_local('unavailable') }}
+        device_class: timestamp
+        attributes:
+          event: >-
+            {{ state_attr('sensor.upcoming_events', 'events')|selectattr('bil', 'eq', true)|list|first }}
+
+      - name: Waking Event
+        state: >-
+          {% set start = (state_attr('sensor.full_agenda', 'events')|selectattr('wake', 'eq', true)|list|first).get('start') %}
+          {{ as_timestamp(start) | timestamp_local('unavailable') }}
+        device_class: timestamp
+        attributes:
+          event: >-
+            {{ state_attr('sensor.full_agenda', 'events')|selectattr('wake', 'eq', true)|list|first }}
+
       - name: Next personal event start clock
         unique_id: next_personal_event_start_clock
         state: >-
@@ -100,7 +189,7 @@ automation:
     trigger:
       - platform: time_pattern
         hours: "*"
-        minutes: "/5"
+        minutes: "/1"
         seconds: "0"
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
@@ -134,10 +223,19 @@ automation:
                     {%- set end = (event.end | as_datetime) -%}
                     "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
                     "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    {% if event.location %}
+                      "location": "{{ event.location }}",
+                    {% endif %}
                     {%- if event.summary|regex_match('På (RSR|RSH)') -%}
+                      "bil": true,
+                      "wake": true,
                       "summary": "Arbejde - {{ event.summary | replace('På ', '') | replace('RSH', 'Herlev Hospital') | replace('RSR', 'Rigshospitalet') }}"
                     {%- elif event.summary|regex_match('Vagt') -%}
                       "summary": "Tilkaldevagt"
+                    {%- elif event.summary|regex_match('Kursus') -%}
+                      "bil": true,
+                      "wake": true,
+                      "summary": "{{ event.summary }}"
                     {%- else -%}
                       "summary": "{{ event.summary }}"
                     {%- endif -%}
@@ -152,7 +250,12 @@ automation:
                     {%- set end = (event.end | as_datetime) -%}
                     "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
                     "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    {% if event.location %}
+                      "location": "{{ event.location }}",
+                    {% endif %}
                     {%- if event.summary|regex_match('På (RSR|RSH)') -%}
+                      "bil": true,
+                      "wake": true,
                       "summary": "Arbejde - {{ event.summary | replace('På ', '') | replace('RSH', 'Herlev Hospital') | replace('RSR', 'Rigshospitalet') }}"
                     {%- elif event.summary|regex_match('Vagt') -%}
                       "summary": "Tilkaldevagt"
@@ -225,6 +328,9 @@ automation:
                     {%- set end = (event.end | as_datetime) -%}
                     "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
                     "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    {% if event.location %}
+                      "location": "{{ event.location }}",
+                    {% endif %}
                     "summary": "{{ event.summary }}"
                   }{{ ',' if not loop.last }}
                 {% endfor %}
@@ -237,6 +343,9 @@ automation:
                     {%- set end = (event.end | as_datetime) -%}
                     "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
                     "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    {% if event.location %}
+                      "location": "{{ event.location }}",
+                    {% endif %}
                     "summary": "{{ event.summary }}"
                   }{{ ',' if not loop.last }}
                 {% endfor %}
@@ -262,7 +371,7 @@ automation:
     trigger:
       - platform: time_pattern
         hours: "*"
-        minutes: "/5"
+        minutes: "/1"
         seconds: "0"
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
@@ -297,6 +406,13 @@ automation:
                     {%- set end = (event.end | as_datetime) -%}
                     "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
                     "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    "wake": true,
+                    {% if event.location %}
+                      "location": "{{ event.location }}",
+                    {% endif %}
+                    {% if remove_string in event.summary %}
+                      "bil": true,
+                    {%- endif %}
                     "summary": "{{ event.summary | replace(remove_string, '')|title }}"
                   }{{ ',' if not loop.last }}
                 {%- endfor -%}
@@ -310,6 +426,13 @@ automation:
                     {%- set end = (event.end | as_datetime) -%}
                     "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
                     "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    "wake": true,
+                    {% if event.location %}
+                      "location": "{{ event.location }}",
+                    {% endif %}
+                    {% if remove_string in event.summary %}
+                      "bil": true,
+                    {%- endif %}
                     "summary": "{{ event.summary | replace(remove_string, '')|title }}"
                   }{{ ',' if not loop.last }}
                 {%- endfor -%}
@@ -335,7 +458,7 @@ automation:
     trigger:
       - platform: time_pattern
         hours: "*"
-        minutes: "/5"
+        minutes: "/1"
         seconds: "0"
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
@@ -369,6 +492,10 @@ automation:
                     {%- set end = (event.end | as_datetime) -%}
                     "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
                     "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    "wake": true,
+                    {% if event.location %}
+                      "location": "{{ event.location }}",
+                    {% endif %}
                     "summary": "{{ event.summary }}"
                   }{{ ',' if not loop.last }}
                 {%- endfor -%}
@@ -381,6 +508,10 @@ automation:
                     {%- set end = (event.end | as_datetime) -%}
                     "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
                     "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
+                    "wake": true,
+                    {% if event.location %}
+                      "location": "{{ event.location }}",
+                    {% endif %}
                     "summary": "{{ event.summary }}"
                   }{{ ',' if not loop.last }}
                 {%- endfor -%}

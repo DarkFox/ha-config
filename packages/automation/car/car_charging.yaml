@@ -1,26 +1,7 @@
-proximity:
-  bil_to_home:
-    zone: home
-    devices: device_tracker.id_3_pro_tracker
-    unit_of_measurement: m
-    tolerance: 100
-
-  bil_to_rsr:
-    zone: rsr
-    devices: device_tracker.id_3_pro_tracker
-    unit_of_measurement: m
-    tolerance: 100
-
-  bil_to_rsh:
-    zone: rsh
-    devices: device_tracker.id_3_pro_tracker
-    unit_of_measurement: m
-    tolerance: 100
-
 sensor:
   - platform: statistics
     name: proximity_bil_to_rsr_stats
-    entity_id: proximity.bil_to_rsr
+    entity_id: sensor.rsr_bil_distance
     state_characteristic: mean
     sampling_size: 20
     max_age:
@@ -28,7 +9,7 @@ sensor:
 
   - platform: statistics
     name: proximity_bil_to_rsh_stats
-    entity_id: proximity.bil_to_rsh
+    entity_id: sensor.rsh_bil_distance
     state_characteristic: mean
     sampling_size: 20
     max_age:
@@ -50,54 +31,11 @@ input_datetime:
     has_time: true
 
 template:
-  - sensor:
-      - name: "Car Charging Idle Fee Starting At"
-        state: >-
-          {%
-            if is_state('sensor.id_3_pro_plug_connection_state', 'connected')
-            and not is_state('input_text.car_charging_type', '')
-            and states('device_tracker.id_3_pro_tracker') in ['not_home', 'RSH', 'RSR']
-          %}
-            {% set car_charging_started = states('input_text.car_charging_started')|int %}
-            {% set charge_type = states('input_text.car_charging_type') %}
-            {% if car_charging_started|as_datetime %}
-              {% if charge_type == 'ac' %}
-                {% set fee_start_time = (car_charging_started + (180*60))|as_datetime|as_local %}
-                {% if (fee_start_time.strftime('%H:%M') > '21:00') %}
-                  {% set fee_start_time = (as_timestamp(fee_start_time) + (1*24*3600)) | timestamp_custom("%Y-%m-%d 09:00:00", True)|as_datetime|as_local %}
-                {% elif (fee_start_time.strftime('%H:%M') < '09:00') %}
-                  {% set fee_start_time = as_timestamp(fee_start_time) | timestamp_custom("%Y-%m-%d 09:00:00", True)|as_datetime|as_local %}
-                {% endif %}
-                {{ fee_start_time }}
-              {% else %}
-                {{ (car_charging_started + (90*60))|as_datetime|as_local }}
-              {% endif %}
-            {% endif %}
-          {% endif %}
-        device_class: timestamp
-
-      - name: "Car Charging Idle Fee Starting In"
-        state: >-
-          {{ ((states('sensor.car_charging_idle_fee_starting_at')|as_timestamp - now().timestamp())/60)|int }}
-        device_class: duration
-        unit_of_measurement: minutes
-
-      - name: "Car Charging Complete or Idle Fee Time"
-        state: >-
-          {%- set ct = (states('sensor.id_3_pro_remaining_charging_time') if is_state('binary_sensor.car_charging_done_before_idle_fee', 'on') else states('sensor.car_charging_idle_fee_starting_in'))|int -%}
-          {% if ct > 60 %}{{ ct // 60 }}:{{ '{:0>2d}'.format(ct%60) }}{% else %}{{ct}}{% endif %}
-        device_class: duration
-        unit_of_measurement: minutes
-
   - binary_sensor:
-      - name: "Car charging done before idle fee"
-        state: "{{ states('sensor.id_3_pro_remaining_charging_time') < states('sensor.car_charging_idle_fee_starting_in') }}"
-        attributes:
-          icon: mdi:car-clock
       - name: At RSR Soon
-        state: "{{ (states('proximity.bil_to_rsr')|float < 2000) }}"
+        state: "{{ (states('sensor.rsr_bil_distance')|float < 2000) }}"
       - name: At RSH Soon
-        state: "{{ (states('proximity.bil_to_rsr')|float < 2000) }}"
+        state: "{{ (states('sensor.rsh_bil_distance')|float < 2000) }}"
       - name: At Work Soon
         state: "{{ is_state('binary_sensor.at_rsr_soon', 'on') or is_state('binary_sensor.at_rsh_soon', 'on') }}"
 
@@ -234,41 +172,6 @@ automation:
           message: >-
             Bilen er ladt op til {{ states('sensor.id_3_pro_state_of_charge') }}/{{ states('sensor.id_3_pro_target_state_of_charge') }}%.
             Færdig om {{ states('sensor.id_3_pro_remaining_charging_time') }} minutter.
-
-  - alias: notify_idle_fee_time
-    id: notify_idle_fee_time
-    initial_state: false
-    trigger:
-      - platform: state
-        entity_id: sensor.car_charging_idle_fee_starting_at
-    action:
-      - delay:
-          seconds: 1
-      - service: notify.telegram_darkfox
-        data:
-          message: >-
-            Blokeringsgebyr starter kl. {{ states('sensor.car_charging_idle_fee_starting_at')|as_timestamp|timestamp_custom('%H:%M', True) }}.
-            {{ 'Opladning bliver ikke færdig inden.' if is_state('binary_sensor.car_charging_done_before_idle_fee', 'off') }}
-
-  - id: warn_charger_idle_fees
-    alias: warn_charger_idle_fees
-    initial_state: false
-    mode: restart
-    trigger:
-      - platform: numeric_state
-        entity_id: sensor.car_charging_idle_fee_starting_in
-        below: 16
-    action:
-      - service: notify.telegram_darkfox
-        data:
-          message: Blokeringsgebyr starter om {{ states('sensor.car_charging_idle_fee_starting_in') }} minutter!
-      - wait_template: "{{ is_state('sensor.car_charging_idle_fee_starting_in', '') }}"
-        timeout:
-          minutes: "{{ states('sensor.car_charging_idle_fee_starting_in')|int }}"
-      - condition: "{{ not wait.completed }}"
-      - service: notify.telegram_darkfox
-        data:
-          message: Blokeringsgebyr starter nu!
 
   - alias: notify_car_charged
     id: notify_car_charged

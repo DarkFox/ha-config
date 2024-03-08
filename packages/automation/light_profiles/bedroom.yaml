@@ -42,7 +42,8 @@ sensor:
         value_template: >-
           {% set profile = states('sensor.bedroom_light_profile') %}
           {% set profiles = state_attr('input_select.light_profile', 'options') %}
-          {{ profiles[profiles.index(profile)+1] or 'Off' }}
+          {% set index = profiles.index(profile)+1 %}
+          {{ profiles[index] if index < len(profiles) else 'Off' }}
 
       bedroom_active_light_profile:
         friendly_name: Bedroom Active Light Profile
@@ -389,8 +390,6 @@ automation:
           entity_id: light.bedroom_tablet
         data:
           brightness: 32
-      - delay:
-          seconds: "{{ (states('input_number.scene_transition_time') or 0.5) + 1 | float }}"
 
   - alias: activate_light_profile_bedroom_night
     initial_state: true

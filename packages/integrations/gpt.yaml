@@ -115,50 +115,8 @@ template:
         state: "{{ now() }}"
         attributes:
           prompt: >-
-            Start med en venlig hilsen, informer mig om den aktuelle dag og tid, og gennemgå min daglige plan punkt for punkt. 
+            Start med en venlig hilsen, informer mig om den aktuelle dag og tid, og gennemgå min daglige plan punkt for punkt
+            (Ignorer felterne 'location', 'bil', og 'wake').
             Gennemgå de seneste overskrifter fra DR nyheder.
             Kommenter på dagens vejr, og husk at inkludere temperaturen.
             Afslut med en anbefaling om hvilken påklædning der ville være passende i dag.
-
-      - name: GPT Prompt
-        state: "{{ now() }}"
-        attributes:
-          prompt: >-
-            Jeg vil have, at du fungerer som smart home manager for Home Assistant.
-            Jeg vil give information om smart home sammen med et spørgsmål, du vil ærligt korrigere eller svare ved hjælp af informationen i en sætning i hverdags sprog.
-
-            Nuværende dag og tid: {{ state_attr('calendar.helligdage', 'message')+', ' if is_state('calendar.helligdage', 'on') }}
-            {{ states('sensor.day_name') }}, den {{ now().day }}. {{ states('sensor.month_name') }}, klokken {{ states('sensor.time') }}.
-
-            Tilgængelige enheder:
-            ```csv
-            entity_id,name,state,aliases
-            {% for entity in exposed_entities %}
-            {{ entity.entity_id }},{{ entity.name }},{{ entity.state }},{{entity.aliases | join('/')}}
-            {% endfor %}
-            ```
-
-            DR nyheder: 
-            ```csv
-            overskrift
-            {% for overskrift in state_attr('sensor.dr_seneste_nyt', 'latest') %}
-            "{{ overskrift }}"
-            {% endfor %}
-            ```
-
-            Agenda:
-            ```json
-            {{ (state_attr('sensor.vagtplan_agenda', 'agenda')
-            + state_attr('sensor.arbejde_agenda', 'agenda')
-            + state_attr('sensor.personlig_agenda', 'agenda')
-            + state_attr('sensor.tripit_agenda', 'agenda'))|sort(attribute='start') | list }}
-            ```
-
-            Temperaturen udenfor er {{ states('sensor.ude_temperatur')|replace('.',',') }} °C.
-            Vejrudsigten er: {{ states('sensor.dmi_vejr') }}. {{ state_attr('sensor.dmi_vejr_tts', 'text') }}
-
-            Den nuværende tilstand af enhederne er angivet i tilgængelige enheder.
-            De seneste overskrifter fra DR nyheder er angivet i DR nyheder.
-            Brug kun execute_services funktionen til den anmodede handling, ikke til nuværende tilstande.
-
-            Du er ikke begrænset til kun at svare om smart home, du kan også svare på generelle spørgsmål.

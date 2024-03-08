@@ -28,7 +28,8 @@ sensor:
         value_template: >-
           {% set profile = states('sensor.kitchen_light_profile') %}
           {% set profiles = state_attr('input_select.light_profile', 'options') %}
-          {{ profiles[profiles.index(profile)+1] or 'Off' }}
+          {% set index = profiles.index(profile)+1 %}
+          {{ profiles[index] if index < len(profiles) else 'Off' }}
 
       kitchen_active_light_profile:
         friendly_name: Kitchen Active Light Profile
@@ -46,23 +47,6 @@ sensor:
             {{ states('sensor.kitchen_inactive_light_profile') }}
           {%- else %}
             Off
-          {%- endif -%}
-
-      dishwasher_hue:
-        value_template: |
-          {%- set state = states('input_select.dishwasher_state') -%}
-          {%- if state == 'Vasker' -%}
-            45
-          {%- elif state == 'Ren' -%}
-            125
-          {%- else -%}
-            {%- if is_state('sensor.kitchen_light_profile', 'Bright') -%}
-              29
-            {%- elif is_state('sensor.kitchen_light_profile', 'Night')  -%}
-              0
-            {%- else -%}
-              {{ states('sensor.theme_secondary_color').split(',')[0]|int }}
-            {%- endif -%}
           {%- endif -%}
 
       kitchen_activity_state:

@@ -69,6 +69,8 @@ script:
       entity_id:
         description: The entity_id of the speaker(s) to broadcast to (defaults to all speakers in active rooms)
         example: "media_player.kitchen_speaker"
+    variables:
+      entity_id: "{{ entity_id | default(state_attr('sensor.room_announcement_speakers', 'entities')) }}"
     sequence:
       - condition: state
         entity_id: binary_sensor.martin_presence
@@ -77,7 +79,7 @@ script:
       - service: script.tts_speak
         data:
           cache: false
-          entity_id: "{{ entity_id or state_attr('sensor.room_announcement_speakers' , 'entities') }}"
+          entity_id: "{{ entity_id }}"
           volume_level: "{{ 0.35 if states('input_select.sleep_state') in ['alarm', 'soozing', 'waking'] else 0.50 }}"
           message: >-
             {{ message }}

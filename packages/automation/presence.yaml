@@ -9,34 +9,34 @@ input_select:
       - Væk
       - Udvidet væk
 
-proximity:
-  martin_to_home:
-    zone: home
-    devices:
-      - person.martin
-    unit_of_measurement: m
-    tolerance: 100
+# proximity:
+#   martin_to_home:
+#     zone: home
+#     devices:
+#       - person.martin
+#     unit_of_measurement: m
+#     tolerance: 100
 
-  martin_to_rsr:
-    zone: rsr
-    devices:
-      - person.martin
-    unit_of_measurement: m
-    tolerance: 100
+#   martin_to_rsr:
+#     zone: rsr
+#     devices:
+#       - person.martin
+#     unit_of_measurement: m
+#     tolerance: 100
 
-  martin_to_rsh:
-    zone: rsh
-    devices:
-      - person.martin
-    unit_of_measurement: m
-    tolerance: 100
+#   martin_to_rsh:
+#     zone: rsh
+#     devices:
+#       - person.martin
+#     unit_of_measurement: m
+#     tolerance: 100
 
 sensor:
   - platform: template
     sensors:
       martin_to_home_dir_of_travel:
         friendly_name: "Direction of Travel to Home"
-        value_template: "{{ state_attr('proximity.martin_to_home', 'dir_of_travel') }}"
+        value_template: "{{ states('sensor.home_martin_direction_of_travel') }}"
       martin_to_home_distance_change:
         friendly_name: "Distance change to Home"
         value_template: "{{ state_attr('sensor.proximity_martin_to_home_stats', 'change') }}"
@@ -53,11 +53,11 @@ sensor:
 
   - platform: derivative
     name: martin_to_home_proximity_derivative
-    source: proximity.martin_to_home
+    source: sensor.home_martin_distance
 
   - platform: statistics
     name: proximity_martin_to_home_stats
-    entity_id: proximity.martin_to_home
+    entity_id: sensor.home_martin_distance
     state_characteristic: mean
     sampling_size: 20
     max_age:
@@ -70,13 +70,13 @@ binary_sensor:
         friendly_name: "Martin Snart hjemme"
         value_template: >
           {{
-            states('proximity.martin_to_home')|float < 1500
+            states('sensor.home_martin_distance')|float < 1500
             or
             (
-              states('proximity.martin_to_home')|float < 10000
+              states('sensor.home_martin_distance')|float < 10000
               and
               states('sensor.martin_to_home_distance_change')|float(0.0) * 4
-            ) + states('proximity.martin_to_home')|float < 0
+            ) + states('sensor.home_martin_distance')|float < 0
           }}
 
       martin_presence:
@@ -87,7 +87,7 @@ binary_sensor:
             is_state('person.martin', 'home')
             or is_state('device_tracker.darkphone', 'home')
             or "Pærevangen" in states('sensor.darkphone_geocoded_location')
-            or ((is_state('binary_sensor.activity_last10', 'on') and states('proximity.martin_to_home')|int < 2000 ))
+            or ((is_state('binary_sensor.activity_last10', 'on') and states('sensor.home_martin_distance')|int < 2000 ))
             or (states('input_select.sleep_state') in ['in bed', 'sleeping', 'paused', 'alarm', 'waking'] and is_state('input_select.latest_motion', 'Bedroom'))
           }}
 

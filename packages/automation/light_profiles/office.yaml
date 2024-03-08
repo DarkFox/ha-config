@@ -42,7 +42,8 @@ sensor:
         value_template: >-
           {% set profile = states('sensor.office_selected_light_profile') %}
           {% set profiles = state_attr('input_select.light_profile', 'options') %}
-          {{ profiles[profiles.index(profile)+1] or 'Off' }}
+          {% set index = profiles.index(profile)+1 %}
+          {{ profiles[index] if index < len(profiles) else 'Off' }}
 
       office_active_light_profile:
         friendly_name: Office Active Light Profile
