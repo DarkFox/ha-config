@@ -8,13 +8,16 @@ input_datetime:
 template:
   - sensor:
       - name: Parking Alarm
-        state: "{{ (as_timestamp(states('input_datetime.parking_timer')) + 2.75 * 60 * 60) | timestamp_custom('%Y-%m-%d %H:%M:%S') }}"
+        state: "{{ (as_timestamp(states('input_datetime.parking_timer')) + 2.75 * 60 * 60) | as_datetime }}"
+        device_class: timestamp
       - name: Parking Limit
-        state: "{{ (as_timestamp(states('input_datetime.parking_timer')) + 3 * 60 * 60) | timestamp_custom('%Y-%m-%d %H:%M:%S') }}"
+        state: "{{ (as_timestamp(states('input_datetime.parking_timer')) + 3 * 60 * 60) | as_datetime }}"
+        device_class: timestamp
 
 automation:
   - alias: "Parking Timer"
     id: parking_timer
+    initial_state: True
     trigger:
       platform: state
       entity_id: device_tracker.id_3_pro_tracker
@@ -41,6 +44,8 @@ automation:
             Sæt alarm til kl. {{ as_timestamp(states('sensor.parking_alarm')) | timestamp_custom('%H:%M') }}.
 
   - alias: "Parking Alarm"
+    id: parking_alarm
+    initial_state: True
     trigger:
       platform: time
       at: sensor.parking_alarm
