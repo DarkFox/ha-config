@@ -518,11 +518,15 @@ automation:
         data:
           entity_id: media_player.sovevaerelse
           message: >-
+            {% set events = state_attr('sensor.upcoming_events', 'events') or [] %}
             Alarm sat til klokken {{ wake_up_time }}.
-            {% if states('sensor.wake_up_event_source_entity') == 'fallback' %}
-              Der er ingen aftaler i morgen.
+            {% if events|length > 0 %}
+              Agenda for i morgen:
+              {% for event in events %}
+                - Klokken {{ (event.start | as_datetime).strftime('%H:%M') }}: {{ event.summary }}.
+              {% endfor %}
             {% else %}
-              Første aftale i morgen er "{{ states('sensor.wake_up_event_source_message') }}", klokken {{ states('sensor.wake_up_event_source_start_time') }}, fra {{ states('sensor.wake_up_event_source_name') }}.
+              Der er ingen aftaler i morgen.
             {% endif %}
       - service: input_number.set_value
         data:
