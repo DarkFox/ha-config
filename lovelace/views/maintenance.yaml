@@ -46,21 +46,84 @@ cards:
               options:
                 secondary_info: last-changed
 
-      - type: entities
-        title: System Monitor
-        show_header_toggle: false
-        entities:
-          - entity: sensor.cpu_temperature
-          - entity: sensor.processor_use
-          - entity: sensor.load_1m
-          - entity: sensor.load_5m
-          - entity: sensor.load_15m
-          - entity: sensor.memory_free
-          - entity: sensor.swap_use
-          - entity: sensor.disk_free
-          - entity: sensor.last_boot
-          - entity: sensor.ha_installed_version
-          - entity: sensor.ha_last_restart
+      - type: vertical-stack
+        cards:
+          - type: horizontal-stack
+            cards:
+              - type: custom:mini-graph-card
+                name: CPU
+                entities:
+                  - sensor.processor_use
+                hours_to_show: 6
+                points_per_hour: 8
+              - type: custom:mini-graph-card
+                name: RAM
+                entities:
+                  - sensor.system_monitor_memory_use_percent
+                hours_to_show: 6
+                points_per_hour: 8
+          - type: custom:mini-graph-card
+            name: Load
+            entities:
+              - entity: sensor.load_1m
+                name: 1m
+              - entity: sensor.load_5m
+                name: 5m
+              - entity: sensor.load_15m
+                name: 15m
+            hours_to_show: 6
+            points_per_hour: 16
+            line_width: 2
+            show:
+              state: false
+              legend: false
+          - type: custom:stack-in-card
+            mode: horizontal
+            cards:
+              - type: custom:mushroom-entity-card
+                entity: sensor.load_1m
+                name: 1m
+                icon: ""
+                icon_color: accent
+                layout: horizontal
+                fill_container: false
+              - type: custom:mushroom-entity-card
+                entity: sensor.load_5m
+                name: 5m
+                icon: ""
+                icon_color: primary
+                layout: horizontal
+                fill_container: false
+              - type: custom:mushroom-entity-card
+                entity: sensor.load_15m
+                name: 15m
+                icon: ""
+                icon_color: red
+                layout: horizontal
+                fill_container: false
+          - type: horizontal-stack
+            cards:
+              - type: custom:mini-graph-card
+                entities:
+                  - sensor.disk_free
+                points_per_hour: 1
+                hours_to_show: 72
+              - type: custom:mini-graph-card
+                name: External HDD
+                entities:
+                  - sensor.radarr_disk_space_movies
+                points_per_hour: 1
+                hours_to_show: 72
+
+          - type: entities
+            title: System Monitor
+            show_header_toggle: false
+            entities:
+              - entity: sensor.cpu_temperature
+              - entity: sensor.system_monitor_memory_use
+              - entity: sensor.swap_use
+              - entity: sensor.last_boot
+              - entity: sensor.ha_installed_version
 
       - type: entities
         title: ""
