@@ -143,18 +143,19 @@ sensor:
         value_template: "26"
       bathroom_min_temp:
         value_template: >
+          {%- set target = states('input_number.target_temperature')|int -%}
           {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
           {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
           {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
           {%- set active = is_state('binary_sensor.bathroom_activity', 'on') -%}
           {% if on %}
             {% if active %}
-              {{ states('input_number.target_temperature')|int }}
+              {{ target }}
             {% else %}
-              {{ states('input_number.target_temperature')|int - 2 }}
+              {{ target - 2 }}
             {% endif %}
           {% elif extended %}
-            {{ states('input_number.target_temperature')|int - 5 }}
+            {{ target - 5 }}
           {% else %}
             15
           {% endif %}
@@ -163,6 +164,7 @@ sensor:
         value_template: "26"
       office_min_temp:
         value_template: >
+          {%- set target = states('input_number.target_temperature')|int -%}
           {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
           {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
           {%- set summer = is_state('sensor.season', 'summer') -%}
@@ -172,12 +174,12 @@ sensor:
               or is_state('binary_sensor.working_from_home', 'on') -%}
           {% if on %}
             {% if active %}
-              {{ states('input_number.target_temperature')|int }}
+              {{ target }}
             {% else %}
-              {{ states('input_number.target_temperature')|int- 2 }}
+              {{ target- 2 }}
             {% endif %}
           {% elif extended %}
-            {{ states('input_number.target_temperature')|int - 5 }}
+            {{ target - 5 }}
           {% else %}
             15
           {% endif %}
@@ -186,6 +188,7 @@ sensor:
         value_template: "26"
       living_room_min_temp:
         value_template: >
+          {%- set target = states('input_number.target_temperature')|int -%}
           {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
           {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
           {%- set summer = is_state('sensor.season', 'summer') -%}
@@ -193,12 +196,12 @@ sensor:
           {%- set active = is_state('binary_sensor.living_room_activity', 'on') -%}
           {% if on %}
             {% if active %}
-              {{ states('input_number.target_temperature')|int }}
+              {{ target }}
             {% else %}
-              {{ states('input_number.target_temperature')|int - 2 }}
+              {{ target - 2 }}
             {% endif %}
           {% elif extended %}
-            {{ states('input_number.target_temperature')|int -5 }}
+            {{ target -5 }}
           {% else %}
             15
           {% endif %}
@@ -207,6 +210,7 @@ sensor:
         value_template: "26"
       workshop_min_temp:
         value_template: >
+          {%- set target = states('input_number.target_temperature')|int -%}
           {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
           {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
           {%- set summer = is_state('sensor.season', 'summer') -%}
@@ -214,12 +218,12 @@ sensor:
           {%- set active = is_state('binary_sensor.workshop_activity', 'on') -%}
           {% if on %}
             {% if active %}
-              {{ states('input_number.target_temperature')|int }}
+              {{ target }}
             {% else %}
-              {{ states('input_number.target_temperature')|int - 2 }}
+              {{ target - 2 }}
             {% endif %}
           {% elif extended %}
-            {{ states('input_number.target_temperature')|int - 5 }}
+            {{ target - 5 }}
           {% else %}
             15
           {% endif %}
@@ -229,14 +233,15 @@ sensor:
           {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
           {%- set sleeping = is_state('input_select.sleep_state', 'sleeping') -%}
           {% if sleeping %}
-            {{ states('input_number.target_temperature')|int }}
+            {{ target }}
           {% elif night %}
-            {{ states('input_number.target_temperature')|int - 3 }}
+            {{ target - 3 }}
           {% else %}
             26
           {% endif %}
       bedroom_min_temp:
         value_template: >
+          {%- set target = states('input_number.target_temperature')|int -%}
           {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
           {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
           {%- set summer = is_state('sensor.season', 'summer') -%}
@@ -244,12 +249,12 @@ sensor:
           {%- set active = is_state('binary_sensor.bedroom_activity', 'on') -%}
           {% if on %}
             {% if summer or night or not active %}
-              {{ states('input_number.target_temperature')|int - 2 }}
+              {{ target - 2 }}
             {% else %}
-              {{ states('input_number.target_temperature')|int }}
+              {{ target }}
             {% endif %}
           {% elif extended %}
-            {{ states('input_number.target_temperature')|int - 5 }}
+            {{ target - 5 }}
           {% else %}
             15
           {% endif %}
