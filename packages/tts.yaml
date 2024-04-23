@@ -17,6 +17,9 @@ sensor:
           {%- elif now().hour < 24 -%}
             Godaften
           {%- endif -%}
+      chime_path:
+        value_template: >-
+          {{ states('input_text.notification_sound').split(': ')[1] }}
 
 command_line:
   - sensor:
@@ -52,7 +55,8 @@ input_text:
 
 script:
   tts_speak:
-    alias: "Wrapper for TTS service"
+    alias: "TTS Speak"
+    description: "Speak a message using TTS"
     fields:
       message:
         description: "The message to speak"
@@ -75,8 +79,27 @@ script:
           volume_level: "{{ volume_level or 0.5 }}"
           cache: "{{ cache or 'false' }}"
           tts_platform: "{{ 'cloud' if is_state('binary_sensor.internet', 'on') else 'tts.piper' }}"
-          chime_path: "{{ states('input_text.notification_sound').split(': ')[1] }}"
+          chime_path: "{{ states('sensor.chime_path') }}"
           announce: true
+
+  tts_url:
+    alias: "TTS URL"
+    description: >
+      Generate a TTS sound file and return the URL.
+      Returns a chime_tts dict with the URL in the 'url' attribute.
+    fields:
+      message:
+        description: "The message to speak"
+        example: "Hello world"
+    sequence:
+      - service: chime_tts.say_url
+        response_variable: chime_tts
+        data:
+          message: "{{ message | replace('\n', ' ') }}"
+          tts_platform: "{{ 'cloud' if is_state('binary_sensor.internet', 'on') else 'tts.piper' }}"
+          chime_path: "{{ states('sensor.chime_path') }}"
+      - stop: "Return chime_tts"
+        response_variable: "chime_tts"
 
 automation:
   - alias: "Set notification sounds options"
