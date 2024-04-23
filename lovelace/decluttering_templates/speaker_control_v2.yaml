@@ -1,0 +1,336 @@
+card:
+  type: vertical-stack
+  cards:
+    - type: custom:layout-card
+      layout_type: custom:grid-layout
+      cards:
+        - show_name: false
+          show_icon: true
+          type: button
+          tap_action:
+            action: call-service
+            service: media_player.volume_down
+            target:
+              entity_id: "media_player.[[room]]"
+            data: {}
+          icon: mdi:volume-minus
+          hold_action:
+            action: none
+          view_layout:
+            grid-area: 1 / 1 / 2 / 2
+        - type: custom:button-card
+          show_name: false
+          show_icon: false
+          tap_action:
+            action: none
+          show_state: false
+          show_label: true
+          label: |
+            [[[
+              return Math.round(
+                states['media_player.[[room]]'].attributes.volume_level
+                * 100
+              ) 
+            ]]]
+          styles:
+            card:
+              - height: 100%
+            label:
+              - font-size: 2vh
+              - font-weight: bold
+          view_layout:
+            grid-area: 1 / 2 / 2 / 3
+        - show_name: false
+          show_icon: true
+          type: button
+          tap_action:
+            action: call-service
+            service: media_player.volume_up
+            target:
+              entity_id: "media_player.[[room]]"
+            data: {}
+          icon: mdi:volume-plus
+          hold_action:
+            action: none
+          view_layout:
+            grid-area: 1 / 3 / 2 / 4
+        - show_name: false
+          show_icon: true
+          type: button
+          tap_action:
+            action: call-service
+            service: media_player.media_next_track
+            target:
+              entity_id: "media_player.[[room]]"
+          icon: mdi:skip-next
+          hold_action:
+            action: none
+          view_layout:
+            grid-area: 1 / 4 / 2 / 5
+        - show_name: false
+          show_icon: true
+          type: button
+          tap_action:
+            action: call-service
+            service: media_player.volume_set
+            target:
+              entity_id: "media_player.[[room]]"
+            data:
+              volume_level: 0.1
+          icon: mdi:volume-low
+          hold_action:
+            action: none
+          view_layout:
+            grid-area: 2 / 1 / 2 / 2
+        - show_name: false
+          show_icon: true
+          type: button
+          tap_action:
+            action: call-service
+            service: media_player.volume_set
+            target:
+              entity_id: "media_player.[[room]]"
+            data:
+              volume_level: 0.3
+          icon: mdi:volume-medium
+          hold_action:
+            action: none
+          view_layout:
+            grid-area: 2 / 2 / 2 / 3
+        - show_name: false
+          show_icon: true
+          type: button
+          tap_action:
+            action: call-service
+            service: media_player.volume_set
+            target:
+              entity_id: "media_player.[[room]]"
+            data:
+              volume_level: 0.6
+          icon: mdi:volume-high
+          hold_action:
+            action: none
+          view_layout:
+            grid-area: 2 / 3 / 2 / 4
+        - show_name: false
+          show_icon: true
+          type: custom:button-card
+          entity: input_boolean.show_[[room]]_speaker_details
+          icon: |
+            [[[
+              if (states['input_boolean.show_[[room]]_speaker_details'].state == 'on')
+                return 'mdi:circle-slice-8'
+              else
+                return 'mdi:circle-double'
+            ]]]
+          view_layout:
+            grid-area: 2 / 4 / 2 / 5
+        - show_name: false
+          show_icon: true
+          type: custom:button-card
+          tap_action:
+            action: call-service
+            service: script.play_pause_mute
+            data:
+              entity_id: "media_player.[[room]]"
+          hold_action:
+            action: call-service
+            service: script.join_unjoin_sonos_group
+            data:
+              entity_id: "media_player.[[room]]"
+          entity: "media_player.[[room]]"
+          icon: mdi:play-pause
+          styles:
+            card:
+              - height: 100%
+          state:
+            - operator: template
+              value: |
+                [[[
+                  return states['media_player.[[room]]'].attributes.source == 'TV'
+                  && states['media_player.[[room]]'].attributes.is_volume_muted
+                ]]]
+              icon: mdi:volume-high
+            - operator: template
+              value: |
+                [[[
+                  return states['media_player.[[room]]'].attributes.source == 'TV'
+                  && !states['media_player.[[room]]'].attributes.is_volume_muted
+                ]]]
+              icon: mdi:volume-off
+            - value: playing
+              icon: mdi:pause
+            - value: paused
+              icon: mdi:play
+          view_layout:
+            grid-area: 1 / 5 / 3 / 6
+      layout:
+        grid-template-columns: repeat(5, 1fr)
+        grid-template-rows: auto auto
+        margin: "-4px"
+    - type: conditional
+      conditions:
+        - condition: state
+          entity: "input_boolean.show_[[room]]_speaker_details"
+          state: "on"
+      card:
+        type: vertical-stack
+        cards:
+          - type: grid
+            columns: 5
+            square: false
+            cards:
+              - show_name: false
+                show_icon: true
+                type: button
+                icon: mdi:playlist-music
+                tap_action:
+                  action: url
+                  url_path: >-
+                    /api/hassio_ingress/lFOpjwoqRagG9KRTAC4wkAf1YARx-zJHSq5duv6bjrY/#/playlists
+              - type: custom:gap-card
+              - type: custom:gap-card
+              - type: custom:gap-card
+              - type: custom:gap-card
+              - show_name: false
+                show_icon: true
+                type: button
+                icon: mdi:yin-yang
+                tap_action:
+                  action: call-service
+                  service: script.play_chillhop_playlist
+                  data:
+                    entity_id: "media_player.[[room]]_mass"
+              - show_name: false
+                show_icon: true
+                type: button
+                icon: mdi:waveform
+                tap_action:
+                  action: call-service
+                  service: script.play_hardstyle_playlist
+                  data:
+                    entity_id: "media_player.[[room]]_mass"
+              - show_name: false
+                show_icon: true
+                type: button
+                icon: mdi:calendar
+                tap_action:
+                  action: call-service
+                  service: script.play_seasonal_playlist
+                  data:
+                    entity_id: "media_player.[[room]]_mass"
+              - show_name: false
+                show_icon: true
+                type: button
+                icon: mdi:cassette
+                tap_action:
+                  action: call-service
+                  service: script.play_80s_playlist
+                  data:
+                    entity_id: "media_player.[[room]]_mass"
+              - show_name: false
+                show_icon: true
+                type: button
+                icon: mdi:disc-player
+                tap_action:
+                  action: call-service
+                  service: script.play_90s_playlist
+                  data:
+                    entity_id: "media_player.[[room]]_mass"
+              - show_name: false
+                show_icon: true
+                type: button
+                icon: mdi:shuffle-variant
+                tap_action:
+                  action: call-service
+                  service: script.play_supermix_playlist
+                  data:
+                    entity_id: "media_player.[[room]]_mass"
+              - show_name: false
+                show_icon: true
+                type: button
+                icon: mdi:clock-time-four-outline
+                tap_action:
+                  action: call-service
+                  service: script.play_closing_time_playlist
+                  data:
+                    entity_id: "media_player.[[room]]_mass"
+          - type: grid
+            columns: 5
+            square: false
+            cards:
+              - show_name: false
+                show_icon: true
+                type: button
+                icon: mdi:radio-tower
+                tap_action:
+                  action: url
+                  url_path: >-
+                    /api/hassio_ingress/lFOpjwoqRagG9KRTAC4wkAf1YARx-zJHSq5duv6bjrY/#/radios
+              - type: custom:gap-card
+              - type: custom:gap-card
+              - type: custom:gap-card
+              - type: custom:gap-card
+              - show_name: false
+                show_icon: true
+                type: button
+                icon: mdi:numeric-1-box
+                tap_action:
+                  action: call-service
+                  service: script.play_dr_p1
+                  data:
+                    entity_id: "media_player.[[room]]_mass"
+              - show_name: false
+                show_icon: true
+                type: button
+                icon: mdi:numeric-3-box
+                tap_action:
+                  action: call-service
+                  service: script.play_dr_p3
+                  data:
+                    entity_id: "media_player.[[room]]_mass"
+              - show_name: false
+                show_icon: true
+                type: button
+                icon: mdi:numeric-4-box
+                tap_action:
+                  action: call-service
+                  service: script.play_dr_p4
+                  data:
+                    entity_id: "media_player.[[room]]_mass"
+              - show_name: false
+                show_icon: true
+                type: button
+                icon: fas:bowl-food
+                tap_action:
+                  action: call-service
+                  service: script.play_somafm_groove_salad
+                  data:
+                    entity_id: "media_player.[[room]]_mass"
+              - show_name: false
+                show_icon: true
+                type: button
+                icon: mdi:bottle-soda
+                tap_action:
+                  action: call-service
+                  service: script.play_somafm_poptron
+                  data:
+                    entity_id: "media_player.[[room]]_mass"
+              - show_name: false
+                show_icon: true
+                type: button
+                icon: mdi:blender
+                tap_action:
+                  action: call-service
+                  service: script.play_somafm_beat_blender
+                  data:
+                    entity_id: "media_player.[[room]]_mass"
+              - show_name: false
+                show_icon: true
+                type: button
+                icon: fas:sleigh
+                tap_action:
+                  action: call-service
+                  service: script.play_somafm_xmas_in_frisko
+                  data:
+                    entity_id: "media_player.[[room]]_mass"

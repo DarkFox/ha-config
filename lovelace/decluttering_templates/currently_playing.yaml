@@ -1,0 +1,77 @@
+card:
+  type: custom:button-card
+  entity: media_player.[[room]]
+  icon: |
+    [[[
+      if (states['media_player.[[room]]'].attributes.source == 'TV')
+        return 'mdi:television';
+      else
+        return 'mdi:music';
+    ]]]
+  label: |
+    [[[
+      if (states['media_player.[[room]]'].attributes.source == 'TV')
+        return ''
+      else
+        return states['media_player.[[room]]'].attributes.media_title;
+    ]]]
+  show_icon: true
+  show_name: false
+  show_state: false
+  show_label: true
+  layout: icon_state_name2nd
+  custom_fields:
+    artist: |
+      [[[
+        if (states['media_player.[[room]]'].attributes.source == 'TV')
+          return 'TV'
+        else if (!states['media_player.[[room]]'].attributes.media_artist)
+          return states['media_player.[[room]]_mass'].attributes.media_title
+        else
+          return states['media_player.[[room]]'].attributes.media_artist;
+      ]]]
+  styles:
+    card:
+      - height: 130px
+      - background: no-repeat center/100%
+      - background-image: |
+          [[[ 
+            const player = states['media_player.[[room]]'];
+            const picture = player.attributes.entity_picture;
+            const gradient = 'linear-gradient(rgba(var(--rgb-card-background-color), 0.8), rgba(var(--rgb-card-background-color), 0.95))';
+
+            if (picture) {
+              return `${gradient}, url("${picture}")`;
+            } else {
+              return '';
+            }
+          ]]]
+    state:
+      - font-size: 3.5em
+    label:
+      - justify-self: start
+      - text-align: left
+      - text-wrap: wrap
+      - padding-left: 10px
+      - color: var(--secondary-text-color)
+      - width: calc(100% - 20px)
+    grid:
+      - grid-template-areas: '"artist artist i" "artist artist null" "l l l"'
+      - grid-template-columns: 1fr 1fr 50px
+      - grid-template-rows: min-content 1fr min-content
+    img_cell:
+      - align-self: start
+      - text-align: left
+      - width: 50px
+      - height: 25px
+      - padding-top: 4px
+    custom_fields:
+      artist:
+        - align-self: start
+        - justify-self: start
+        - text-align: left
+        - text-wrap: wrap
+        - width: 100%
+        - padding-top: 4px
+        - padding-left: 10px
+        - font-size: 120%

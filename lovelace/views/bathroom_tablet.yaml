@@ -3,21 +3,12 @@ path: kiosk
 icon: "mdi:tablet"
 panel: true
 cards:
-  - type: custom:layout-card
-    layout_type: custom:grid-layout
-    layout:
-      grid-template-columns: 35% 35% 30%
-      grid-template-rows: auto
+  - type: horizontal-stack
     cards:
       - type: vertical-stack
         cards:
-          - !include ../cards/clock.yaml
-          - !include ../cards/weekday.yaml
+          - !include ../cards/weather/simple_weather.yaml
 
-          - !include ../cards/weather/weather_forecast.yaml
-
-      - type: vertical-stack
-        cards:
           - type: conditional
             conditions:
               - entity: binary_sensor.commute_soon
@@ -34,7 +25,7 @@ cards:
             conditions:
               - entity: input_boolean.guests
                 state: "off"
-            card: !include ../cards/calendar.yaml
+            card: !include ../cards/calendar_compact.yaml
 
           - type: conditional
             conditions:
@@ -45,12 +36,20 @@ cards:
               cards:
                 - !include ../cards/bathroom_occupied.yaml
 
-          - !include ../cards/power_gauges.yaml
+          - !include ../cards/power_gauges_compact.yaml
 
       - type: vertical-stack
         cards:
+          - type: horizontal-stack
+            cards:
+              - type: custom:decluttering-card
+                template: currently_playing
+                variables:
+                  - room: badevaerelse
+              - !include ../cards/compact_clock.yaml
+
           - type: custom:decluttering-card
-            template: speaker_control_active_or_room
+            template: speaker_control_v2
             variables:
               - room: badevaerelse
 
