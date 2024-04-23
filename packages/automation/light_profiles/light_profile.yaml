@@ -417,6 +417,31 @@ script:
       event_data:
         profile: "Off"
 
+  toggle_light_profile:
+    description: Switch between light profiles. If the selected profile is already active, the light will be turned off.
+    fields:
+      room:
+        description: The room to toggle the light profile in (optional)
+        example: "stue"
+      profile:
+        description: The profile to toggle to
+        example: "Bright"
+    sequence:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ is_state('sensor.'+room+'_light_profile', profile) if room else is_state('input_select.light_profile', profile) }}"
+            sequence:
+              event: set_light_profile
+              event_data:
+                room: "{{ room if room else '' }}"
+                profile: "Off"
+        default:
+          event: set_light_profile
+          event_data:
+            room: "{{ room if room else '' }}"
+            profile: "{{ profile }}"
+
   select_new_years_theme:
     alias: Select New Years Theme
     sequence:
