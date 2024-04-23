@@ -41,6 +41,19 @@ template:
   - sensor:
       - name: "Puzzel Profil"
         state: "{{ 'Logget af' if is_state('sensor.puzzel_status_temp', 'LoggedOff') else state_attr('binary_sensor.puzzel_status', 'profil') }}"
+      - name: "Puzzel Kø"
+        state: "{{ (state_attr('sensor.puzzel_status', 'result').profiles | selectattr('id', 'equalto', state_attr('sensor.puzzel_status', 'result').currentProfileId) | first).name }}"
+      - name: "Puzzel State"
+        state: >-
+          {% if is_state('sensor.puzzel_status_temp', 'Pause') %}
+            {{ (state_attr('sensor.puzzel_user', 'result').pauseTypes | selectattr('id', 'equalto', state_attr('sensor.puzzel_status', 'result').pauseTypeId) | first).description }}
+          {% elif is_state('sensor.puzzel_status_temp', 'LoggedOff') %}
+            Logget af
+          {% else %}
+            Ledig
+          {% endif %}
+      - name: "Puzzel Nummer"
+        state: "{{ state_attr('sensor.puzzel_status', 'result').mobilePhone }}"
       - name: "Puzzel Status Temp"
         state: "{{ state_attr('sensor.puzzel_status', 'result').contactCentreStatus }}"
   - binary_sensor:
