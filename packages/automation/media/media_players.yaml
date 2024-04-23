@@ -60,6 +60,26 @@ script:
         data:
           is_volume_muted: "{{ not state_attr(entity_id , 'is_volume_muted') }}"
 
+  play_pause_mute:
+    description: Play or pause media, if source is TV, mute or unmute
+    fields:
+      entity_id:
+        description: Media Player that will be played or paused
+        example: media_player.media_room
+    sequence:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ state_attr(entity_id, 'source') == 'TV' }}"
+            sequence:
+              - service: script.toggle_mute
+                data:
+                  entity_id: "{{ entity_id }}"
+        default:
+          - service: media_player.media_play_pause
+            target:
+              entity_id: "{{ entity_id }}"
+
   briefing_announcement:
     alias: Briefing Announcement
     fields:
@@ -85,21 +105,41 @@ script:
           message: >-
             {{ agent.response.speech.plain.speech }}
 
+  briefing_announcement_url:
+    alias: Briefing Announcement URL
+    sequence:
+      - service: conversation.process
+        data:
+          text: >-
+            {{ state_attr('sensor.gpt_briefing_prompt', 'prompt') | regex_replace("  +", ' ') }}
+          language: DA
+          agent_id: 4e0a875b09f8a19a405e1bf3e5c4adac
+        response_variable: agent
+      - service: script.tts_url
+        response_variable: chime_tts
+        data:
+          message: "{{ agent.response.speech.plain.speech }}"
+      - stop: "Return chime_tts"
+        response_variable: "chime_tts"
+
   mass_briefing_playlist:
     alias: MASS Briefing playlist
+    fields:
+      entity_id:
+        description: Media Player that will play the playlist
+        example: media_player.media_room
+      playlist:
+        description: Playlist URIs
+        example: "library://radio/1"
     sequence:
-      - service: script.briefing_announcement
-        data:
-          entity_id: "{{ announcement_entities | default(entity_id|replace('_mass','')) }}"
-          volume_level: "{{ volume_level | default(0.5) }}"
-      - delay:
-          seconds: 10
+      - service: script.briefing_announcement_url
+        response_variable: briefing_url
       - service: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
           repeat: "off"
           shuffle: false
-          playlist: "{{ playlist }}"
+          playlist: "{{ [briefing_url.url] + playlist }}"
 
   mass_playlist:
     alias: MASS Playlist
@@ -116,6 +156,9 @@ script:
       playlist:
         description: Playlist URIs
         example: "library://radio/1"
+      enqueue:
+        description: "Enqueue mode (default: replace)"
+        example: "replace"
     sequence:
       - service: media_player.repeat_set
         target:
@@ -131,8 +174,17 @@ script:
         target:
           entity_id: "{{ entity_id }}"
         data:
-          enqueue: replace
+          enqueue: "{{ enqueue | default('replace') }}"
           media_id: "{{ playlist }}"
+
+  play_dr_p1:
+    alias: Play DR P1
+    sequence:
+      - service: script.mass_playlist
+        data:
+          entity_id: "{{ entity_id }}"
+          playlist:
+            - library://radio/4
 
   play_dr_p3:
     alias: Play DR P3
@@ -142,6 +194,51 @@ script:
           entity_id: "{{ entity_id }}"
           playlist:
             - library://radio/1
+
+  play_dr_p4:
+    alias: Play DR P4
+    sequence:
+      - service: script.mass_playlist
+        data:
+          entity_id: "{{ entity_id }}"
+          playlist:
+            - library://radio/12
+
+  play_somafm_groove_salad:
+    alias: "Play SomaFM: Groove Salad"
+    sequence:
+      - service: script.mass_playlist
+        data:
+          entity_id: "{{ entity_id }}"
+          playlist:
+            - library://radio/6
+
+  play_somafm_poptron:
+    alias: "Play SomaFM: PopTron"
+    sequence:
+      - service: script.mass_playlist
+        data:
+          entity_id: "{{ entity_id }}"
+          playlist:
+            - library://radio/10
+
+  play_somafm_beat_blender:
+    alias: "Play SomaFM: Beat Blender"
+    sequence:
+      - service: script.mass_playlist
+        data:
+          entity_id: "{{ entity_id }}"
+          playlist:
+            - library://radio/7
+
+  play_somafm_xmas_in_frisko:
+    alias: "Play SomaFM: Xmas in Frisko"
+    sequence:
+      - service: script.mass_playlist
+        data:
+          entity_id: "{{ entity_id }}"
+          playlist:
+            - library://radio/3
 
   play_chillhop_playlist:
     alias: Play Chillhop Playlist
@@ -163,38 +260,71 @@ script:
           playlist:
             - library://playlist/8
 
+  play_80s_playlist:
+    alias: Play 80's Playlist
+    sequence:
+      - service: script.mass_playlist
+        data:
+          entity_id: "{{ entity_id }}"
+          shuffle: true
+          playlist:
+            - library://playlist/16
+
+  play_90s_playlist:
+    alias: Play 90's Playlist
+    sequence:
+      - service: script.mass_playlist
+        data:
+          entity_id: "{{ entity_id }}"
+          shuffle: true
+          playlist:
+            - library://playlist/62
+
+  play_supermix_playlist:
+    alias: Play Supermix Playlist
+    sequence:
+      - service: script.mass_playlist
+        data:
+          entity_id: "{{ entity_id }}"
+          shuffle: true
+          playlist:
+            - library://playlist/54
+
+  play_closing_time_playlist:
+    alias: Play Closing Time Playlist
+    sequence:
+      - service: script.mass_playlist
+        data:
+          entity_id: "{{ entity_id }}"
+          enqueue: add
+          playlist:
+            - library://playlist/22
+
   play_seasonal_playlist:
     alias: Play Seasonal Playlist
     sequence:
       # TODO: Script to select playlist based on season
       # Should have music for: Winter, Spring, Summer, Autumn, Halloween, Christmas, New Years
       - variables:
-          # Winter: 2. Januar - 31. Marts, 1. November - 30. November
-          # Spring: 1. April - 30. Juni
-          # Summer: 1. Juli - 30. September
-          # Autumn: 1. Oktober - 26. Oktober
-          # Halloween: 27. Oktober - 31. Oktober
-          # Christmas: 1. December - 27. December
-          # New Years: 28. December - 1. Januar
           playlist: >-
             {% set month = now().month %}
             {% set day = now().day %}
-            {% if (month == 1 and day < 1) or month == 2 or month == 3 or month == 11 or (month == 10 and day < 27) %}
+            {% if (month == 1 and day > 1) or month == 2 or month == 3 %}
               {# winter #}
-              
+              library://playlist/69
             {% elif month == 4 or month == 5 or month == 6 %}
               {# spring #}
-
+              
             {% elif month == 7 or month == 8 or month == 9 %}
               {# summer #}
-
-            {% elif month == 10 and day >= 27 %}
-              {# halloween #}
-
-            {% elif (month == 12 and day >= 28) or month == 1 %}
+              library://playlist/67
+            {% elif month == 10 or month == 11 %}
+              {# autumn #}
+              library://playlist/66
+            {% elif (month == 12 and day >= 28) or (month == 1 and day == 1) %}
               {# new_years #}
               library://playlist/65
-            {% else %}
+            {% elif month == 12 %}
               {# christmas #}
               library://playlist/5
             {% endif %}
@@ -324,6 +454,53 @@ automation:
               entity_id: "{{ repeat.item }}"
             data:
               volume_level: "{{ trigger.to_state.state|int/100 }}"
+
+  - id: speaker_details_timeout
+    alias: Speaker Details Timeout
+    initial_state: true
+    mode: parallel
+    trigger:
+      - platform: state
+        entity_id:
+          - input_boolean.show_stue_speaker_details
+          - input_boolean.show_kokken_speaker_details
+          - input_boolean.show_kontor_speaker_details
+          - input_boolean.show_sovevaerelse_speaker_details
+          - input_boolean.show_badevaerelse_speaker_details
+          - input_boolean.show_roam_speaker_details
+        to: "on"
+        for:
+          minutes: 5
+    action:
+      - service: input_boolean.turn_off
+        target:
+          entity_id: "{{ trigger.entity_id }}"
+
+input_boolean:
+  show_stue_speaker_details:
+    name: Vis Stue Højttaler Detaljer
+    icon: mdi:circle-double
+    initial: "off"
+  show_kokken_speaker_details:
+    name: Vis Køkken Højttaler Detaljer
+    icon: mdi:circle-double
+    initial: "off"
+  show_kontor_speaker_details:
+    name: Vis Kontor Højttaler Detaljer
+    icon: mdi:circle-double
+    initial: "off"
+  show_sovevaerelse_speaker_details:
+    name: Vis Soveværelse Højttaler Detaljer
+    icon: mdi:circle-double
+    initial: "off"
+  show_badevaerelse_speaker_details:
+    name: Vis Badeværelse Højttaler Detaljer
+    icon: mdi:circle-double
+    initial: "off"
+  show_roam_speaker_details:
+    name: Vis Roam Højttaler Detaljer
+    icon: mdi:circle-double
+    initial: "off"
 
 input_number:
   stue_group_volume:
