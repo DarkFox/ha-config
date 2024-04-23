@@ -1,68 +1,84 @@
 type: vertical-stack
 cards:
-  - type: horizontal-stack
+  - type: custom:stack-in-card
+    mode: horizontal
     cards:
       - type: "custom:button-card"
-        size: 50px
-        name: Auto
-        color: var(--state-active-color)
-        entity: input_boolean.auto_light_profile
-      - type: "custom:button-card"
-        size: 50px
+        size: 40px
         name: Lyst
         color: var(--state-active-color)
         entity: light.light_profile_bright
+        tap_action:
+          action: call-service
+          service: script.toggle_light_profile
+          service_data:
+            profile: Bright
+        styles:
+          name:
+            - font-size: 80%
+
       - type: "custom:button-card"
-        size: 50px
+        size: 40px
         name: Normal
         color: var(--state-active-color)
         entity: light.light_profile_default
+        tap_action:
+          action: call-service
+          service: script.toggle_light_profile
+          service_data:
+            profile: Default
+        styles:
+          name:
+            - font-size: 80%
+
       - type: "custom:button-card"
-        size: 50px
+        size: 40px
         name: Dæmpet
         color: var(--state-active-color)
         entity: light.light_profile_dimmed
-  - type: horizontal-stack
-    cards:
-      - type: "custom:config-template-card"
-        variables:
-          theme_name: states['sensor.theme'].state
-          primary_color_hue: states['sensor.theme'].attributes['primary_color'][0]
-          primary_color_saturation: states['sensor.theme'].attributes['primary_color'][1]
-          secondary_color_hue: states['sensor.theme'].attributes['secondary_color'][0]
-          secondary_color_saturation: states['sensor.theme'].attributes['secondary_color'][1]
-        entities:
-          - sensor.theme
-        card:
-          type: "custom:button-card"
-          name: "${ theme_name }"
-          entity: input_select.theme
-          size: 50px
-          color_type: card
-          color: "${ 'hsl(' + primary_color_hue + ',' + primary_color_saturation + '%, 50%)' }"
-          styles:
-            icon:
-              - color: "${ 'hsl(' + secondary_color_hue + ',' + secondary_color_saturation + '%, ' + (primary_color_hue != secondary_color_hue ? '50' : '20') + '%)' }"
-          tap_action:
-            action: fire-dom-event
-            browser_mod:
-              service: browser_mod.popup
-              data:
-                title: Temaer
-                content: !include lights/theme_selector.yaml
+        tap_action:
+          action: call-service
+          service: script.toggle_light_profile
+          service_data:
+            profile: Dimmed
+        styles:
+          name:
+            - font-size: 80%
 
       - type: "custom:button-card"
-        size: 50px
+        size: 40px
         name: Baggrund
         color: var(--state-active-color)
         entity: light.light_profile_ambient
+        tap_action:
+          action: call-service
+          service: script.toggle_light_profile
+          service_data:
+            profile: Ambient
+        styles:
+          name:
+            - font-size: 80%
+
       - type: "custom:button-card"
-        size: 50px
+        size: 40px
         name: Nat
         color: var(--state-active-color)
         entity: light.light_profile_night
+        tap_action:
+          action: call-service
+          service: script.toggle_light_profile
+          service_data:
+            profile: Night
+        styles:
+          name:
+            - font-size: 80%
+
+  - type: horizontal-stack
+    cards:
       - type: "custom:button-card"
-        size: 50px
-        name: Slukket
+        size: 40px
+        name: Auto
         color: var(--state-active-color)
-        entity: light.light_profile_off
+        entity: input_boolean.auto_light_profile
+
+      - !include lights/theme_button.yaml

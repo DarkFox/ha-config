@@ -1,42 +1,34 @@
 type: custom:stack-in-card
 mode: vertical
 cards:
-  # - type: "custom:config-template-card"
-  #   variables:
-  #     - states['sensor.weather_card_name_text'].state
-  #   entities:
-  #     - sensor.weather_card_name_text
-  #   card:
-  #     type: weather-forecast
-  #     entity: weather.forecast_home
-  #     show_forecast: false
-  #     name: "${vars[0]}"
-  #     style:
-  #       .: |
-  #         ha-card {
-  #           background-color: transparent;
-  #         }
-  #         .name, .state {
-  #           overflow: visible !important;
-  #         }
-  - type: custom:simple-weather-card
-    entity: weather.forecast_home
-    name: " "
-    primary_info:
-      - extrema
-      - wind_speed
-    secondary_info:
-      - humidity
-      - precipitation
+  - type: custom:config-template-card
+    variables:
+      - states['sensor.weather_card_name_text'].state
+    entities:
+      - sensor.weather_card_name_text
+    card:
+      show_current: true
+      show_forecast: false
+      type: weather-forecast
+      entity: weather.forecast_home
+      name: ${vars[0]}
+      forecast_type: daily
+      secondary_info_attribute: wind_speed
+      tap_action:
+        action: fire-dom-event
+        browser_mod:
+          service: browser_mod.popup
+          data:
+            # title: Vejr
+            size: wide
+            timeout: 60000
+            content:
+              type: vertical-stack
+              cards:
+                - type: horizontal-stack
+                  cards:
+                    - !include weather_forecast.yaml
+                    - !include weather_radar.yaml
+                - !include temp_graph.yaml
 
   - !include dmi_weather_warnings.yaml
-
-  - type: custom:popup-card
-    entity: weather.forecast_home
-    title: Vejr
-    size: wide
-    card:
-      type: vertical-stack
-      cards:
-        - !include weather.yaml
-        - !include temp_graph.yaml

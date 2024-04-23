@@ -1,0 +1,26 @@
+type: "custom:config-template-card"
+variables:
+  theme_name: states['sensor.theme'].state
+  primary_color_hue: states['sensor.theme'].attributes['primary_color'][0]
+  primary_color_saturation: states['sensor.theme'].attributes['primary_color'][1]
+  secondary_color_hue: states['sensor.theme'].attributes['secondary_color'][0]
+  secondary_color_saturation: states['sensor.theme'].attributes['secondary_color'][1]
+entities:
+  - sensor.theme
+card:
+  type: "custom:button-card"
+  name: "${ theme_name }"
+  entity: input_select.theme
+  size: 40px
+  color_type: card
+  color: "${ 'hsl(' + primary_color_hue + ',' + primary_color_saturation + '%, 50%)' }"
+  styles:
+    icon:
+      - color: "${ 'hsl(' + secondary_color_hue + ',' + secondary_color_saturation + '%, ' + (primary_color_hue != secondary_color_hue ? '50' : '20') + '%)' }"
+  tap_action:
+    action: fire-dom-event
+    browser_mod:
+      service: browser_mod.popup
+      data:
+        title: Temaer
+        content: !include theme_selector.yaml
