@@ -1,20 +1,20 @@
 title: Soveværelse Tablet
 path: kiosk
-icon: mdi:cellphone
+icon: mdi:tablet
 panel: true
 cards:
   - type: vertical-stack
     cards:
-      - !include ../cards/weather/dmi_weather_warnings.yaml
-
       - type: horizontal-stack
         cards:
           - type: vertical-stack
             cards:
-              - !include ../cards/clock.yaml
-              - !include ../cards/weekday.yaml
+              - !include ../cards/weather/simple_weather.yaml
 
-              - !include ../cards/sleep.yaml
+              - type: custom:decluttering-card
+                template: room_light_profile
+                variables:
+                  - room: bedroom
 
               - type: horizontal-stack
                 cards:
@@ -27,18 +27,13 @@ cards:
                     entity: fan.sovevaerelse_blaeser
                     name: Blæser
 
-              - type: custom:decluttering-card
-                template: room_light_profile
-                variables:
-                  - room: bedroom
+              - !include ../cards/sleep.yaml
 
               - !include ../cards/climate/target_temperature.yaml
 
               - type: entities
                 state_color: true
                 entities:
-                  - entity: switch.bedroom_curtain_automations
-                    name: Auto Gardin
                   - entity: cover.sovevaerelse_gardin
                     name: Gardin
                     # type: "custom:slider-entity-row"
@@ -48,14 +43,24 @@ cards:
                   - entity: cover.sovevaerelse_gardin_vindue
                     # type: "custom:slider-entity-row"
                     name: Vindue
-
-              - type: custom:decluttering-card
-                template: light_groups
-                variables:
-                  - rum: sovevaerelse
+                  - entity: switch.bedroom_curtain_automations
+                    name: Auto Gardin
 
           - type: vertical-stack
             cards:
+              - type: horizontal-stack
+                cards:
+                  - type: custom:decluttering-card
+                    template: currently_playing
+                    variables:
+                      - room: sovevaerelse
+                  - !include ../cards/compact_clock.yaml
+
+              - type: custom:decluttering-card
+                template: speaker_control_v2
+                variables:
+                  - room: sovevaerelse
+
               - type: conditional
                 conditions:
                   - entity: binary_sensor.commute_soon
@@ -67,11 +72,6 @@ cards:
                   - entity: binary_sensor.octoprint_printing
                     state: "on"
                 card: !include ../cards/3d_printer_preview.yaml
-
-              - type: custom:decluttering-card
-                template: speaker_control_active_or_room
-                variables:
-                  - room: sovevaerelse
 
               - type: custom:mushroom-media-player-card
                 entity: media_player.sovevaerelse_tv
@@ -121,3 +121,8 @@ cards:
                   - entity: input_boolean.guests
                     state: "off"
                 card: !include ../cards/calendar_compact.yaml
+
+              - type: custom:decluttering-card
+                template: light_groups
+                variables:
+                  - rum: sovevaerelse
