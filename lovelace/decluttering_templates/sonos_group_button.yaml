@@ -1,0 +1,33 @@
+card:
+  type: custom:button-card
+  entity: "sensor.[[room]]_speaker_group_state"
+  name: |
+    [[[
+      return states['media_player.[[room]]'].attributes.friendly_name;
+    ]]]
+  styles:
+    name:
+      - font-size: 70%
+  icon: mdi:speaker
+  color: orange
+  state:
+    - value: "leader - media_player.[[origin_room]]"
+      icon: mdi:speaker-wireless
+      color: green
+    - value: "member - media_player.[[origin_room]]"
+      icon: mdi:speaker-multiple
+      color: green
+    - operator: regex
+      value: "leader - (.+)"
+      icon: mdi:speaker-wireless
+      color: orange
+    - operator: regex
+      value: "member - (.+)"
+      icon: mdi:speaker-multiple
+      color: orange
+  tap_action:
+    action: call-service
+    service: script.join_unjoin_sonos_group
+    data:
+      entity_id: "media_player.[[room]]"
+      leader_entity_id: "media_player.[[origin_room]]"

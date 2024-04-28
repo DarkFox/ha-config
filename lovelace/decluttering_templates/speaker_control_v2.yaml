@@ -72,14 +72,16 @@ card:
           type: button
           tap_action:
             action: call-service
-            service: media_player.volume_set
-            target:
-              entity_id: "media_player.[[room]]"
+            service: script.set_volume_preset
             data:
-              volume_level: 0.1
-          icon: mdi:volume-low
+              room: "[[room]]"
+              preset: low
           hold_action:
-            action: none
+            action: call-service
+            service: script.set_volume_preset
+            data:
+              preset: low
+          icon: mdi:volume-low
           view_layout:
             grid-area: 2 / 1 / 2 / 2
         - show_name: false
@@ -87,14 +89,16 @@ card:
           type: button
           tap_action:
             action: call-service
-            service: media_player.volume_set
-            target:
-              entity_id: "media_player.[[room]]"
+            service: script.set_volume_preset
             data:
-              volume_level: 0.3
-          icon: mdi:volume-medium
+              room: "[[room]]"
+              preset: medium
           hold_action:
-            action: none
+            action: call-service
+            service: script.set_volume_preset
+            data:
+              preset: medium
+          icon: mdi:volume-medium
           view_layout:
             grid-area: 2 / 2 / 2 / 3
         - show_name: false
@@ -102,14 +106,16 @@ card:
           type: button
           tap_action:
             action: call-service
-            service: media_player.volume_set
-            target:
-              entity_id: "media_player.[[room]]"
+            service: script.set_volume_preset
             data:
-              volume_level: 0.6
-          icon: mdi:volume-high
+              room: "[[room]]"
+              preset: high
           hold_action:
-            action: none
+            action: call-service
+            service: script.set_volume_preset
+            data:
+              preset: high
+          icon: mdi:volume-high
           view_layout:
             grid-area: 2 / 3 / 2 / 4
         - show_name: false
@@ -176,22 +182,20 @@ card:
       card:
         type: vertical-stack
         cards:
+          - type: custom:mushroom-title-card
+            title: ""
+            subtitle: Højttalere
+          - type: custom:decluttering-card
+            template: sonos_group_buttons
+            variables:
+              - origin_room: "[[room]]"
+          - type: custom:mushroom-title-card
+            title: ""
+            subtitle: Lister
           - type: grid
             columns: 5
             square: false
             cards:
-              - show_name: false
-                show_icon: true
-                type: button
-                icon: mdi:playlist-music
-                tap_action:
-                  action: url
-                  url_path: >-
-                    /api/hassio_ingress/lFOpjwoqRagG9KRTAC4wkAf1YARx-zJHSq5duv6bjrY/#/playlists
-              - type: custom:gap-card
-              - type: custom:gap-card
-              - type: custom:gap-card
-              - type: custom:gap-card
               - show_name: false
                 show_icon: true
                 type: button
@@ -255,22 +259,13 @@ card:
                   service: script.play_closing_time_playlist
                   data:
                     entity_id: "media_player.[[room]]_mass"
+          - type: custom:mushroom-title-card
+            title: ""
+            subtitle: Radio
           - type: grid
             columns: 5
             square: false
             cards:
-              - show_name: false
-                show_icon: true
-                type: button
-                icon: mdi:radio-tower
-                tap_action:
-                  action: url
-                  url_path: >-
-                    /api/hassio_ingress/lFOpjwoqRagG9KRTAC4wkAf1YARx-zJHSq5duv6bjrY/#/radios
-              - type: custom:gap-card
-              - type: custom:gap-card
-              - type: custom:gap-card
-              - type: custom:gap-card
               - show_name: false
                 show_icon: true
                 type: button
@@ -334,3 +329,7 @@ card:
                   service: script.play_somafm_xmas_in_frisko
                   data:
                     entity_id: "media_player.[[room]]_mass"
+
+          - type: custom:mushroom-title-card
+            title: ""
+            subtitle: ""

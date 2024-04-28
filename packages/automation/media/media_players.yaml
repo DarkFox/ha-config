@@ -26,8 +26,11 @@ script:
       entity_id:
         description: Media Player that will be joined or unjoined
         example: media_player.media_room
+      leader_entity_id:
+        description: Media Player that the entity will be joined to (optional, current group leader if not given)
+        example: media_player.media_room
     variables:
-      group_leader_entity: "{{ states('sensor.sonos_group_leader') }}"
+      group_leader_entity: "{{ leader_entity_id or states('sensor.sonos_group_leader') }}"
     sequence:
       - choose:
           - conditions:
@@ -79,6 +82,80 @@ script:
           - service: media_player.media_play_pause
             target:
               entity_id: "{{ entity_id }}"
+
+  set_volume_preset:
+    description: Set volume preset for room
+    fields:
+      room:
+        description: Room to set volume preset. If not given, the preset will be applied to all rooms
+        example: "stue"
+        selector:
+          select:
+            options:
+              - stue
+              - kokken
+              - kontor
+              - sovevaerelse
+              - badevaerelse
+              - roam
+      preset:
+        description: Volume preset (low, medium, high)
+        example: "low"
+        required: true
+        selector:
+          select:
+            options:
+              - low
+              - medium
+              - high
+    variables:
+      media_player_presets:
+        stue:
+          low: 0.2
+          medium: 0.4
+          high: 0.7
+        kokken:
+          low: 0.2
+          medium: 0.4
+          high: 0.7
+        kontor:
+          low: 0.2
+          medium: 0.4
+          high: 0.7
+        sovevaerelse:
+          low: 0.15
+          medium: 0.4
+          high: 0.7
+        badevaerelse:
+          low: 0.2
+          medium: 0.4
+          high: 0.7
+        roam:
+          low: 0.3
+          medium: 0.5
+          high: 0.7
+    sequence:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ room in media_player_presets.keys() }}"
+            sequence:
+              - service: media_player.volume_set
+                target:
+                  entity_id: "media_player.{{ room }}"
+                data:
+                  volume_level: "{{ media_player_presets[room][preset] }}"
+        default:
+          - repeat:
+              count: "{{ media_player_presets|length }}"
+              sequence:
+                - variables:
+                    room: "{{ (media_player_presets.keys()|list)[repeat.index-1] }}"
+                - service: media_player.volume_set
+                  target:
+                    entity_id: "media_player.{{ room }}"
+                  data:
+                    volume_level: "{{ media_player_presets[room][preset] }}"
 
   briefing_announcement:
     alias: Briefing Announcement
@@ -650,6 +727,72 @@ template:
           {% set entity = 'media_player.roam' %}
           {% set group_members = state_attr(entity, 'group_members') %}
           {{ group_members[0] }}
+
+      - name: Stue Speaker Group State
+        state: >-
+          {%- set room = 'stue' -%}
+          {%- if is_state('binary_sensor.'+room+'_group_leader', 'on') -%}
+            leader
+          {%- elif not is_state('sensor.'+room+'_speaker_lead_by', 'media_player.'+room) -%}
+            member
+          {%- else -%}
+            solo
+          {%- endif %} - {{ states('sensor.'+room+'_speaker_lead_by') }}
+
+      - name: Køkken Speaker Group State
+        state: >-
+          {%- set room = 'kokken' -%}
+          {%- if is_state('binary_sensor.'+room+'_group_leader', 'on') -%}
+            leader
+          {%- elif not is_state('sensor.'+room+'_speaker_lead_by', 'media_player.'+room) -%}
+            member
+          {%- else -%}
+            solo
+          {%- endif %} - {{ states('sensor.'+room+'_speaker_lead_by') }}
+
+      - name: Kontor Speaker Group State
+        state: >-
+          {%- set room = 'kontor' -%}
+          {%- if is_state('binary_sensor.'+room+'_group_leader', 'on') -%}
+            leader
+          {%- elif not is_state('sensor.'+room+'_speaker_lead_by', 'media_player.'+room) -%}
+            member
+          {%- else -%}
+            solo
+          {%- endif %} - {{ states('sensor.'+room+'_speaker_lead_by') }}
+
+      - name: Sovevaerelse Speaker Group State
+        state: >-
+          {%- set room = 'sovevaerelse' -%}
+          {%- if is_state('binary_sensor.'+room+'_group_leader', 'on') -%}
+            leader
+          {%- elif not is_state('sensor.'+room+'_speaker_lead_by', 'media_player.'+room) -%}
+            member
+          {%- else -%}
+            solo
+          {%- endif %} - {{ states('sensor.'+room+'_speaker_lead_by') }}
+
+      - name: Badevaerelse Speaker Group State
+        state: >-
+          {%- set room = 'badevaerelse' -%}
+          {%- if is_state('binary_sensor.'+room+'_group_leader', 'on') -%}
+            leader
+          {%- elif not is_state('sensor.'+room+'_speaker_lead_by', 'media_player.'+room) -%}
+            member
+          {%- else -%}
+            solo
+          {%- endif %} - {{ states('sensor.'+room+'_speaker_lead_by') }}
+
+      - name: Roam Speaker Group State
+        state: >-
+          {%- set room = 'roam' -%}
+          {%- if is_state('binary_sensor.'+room+'_group_leader', 'on') -%}
+            leader
+          {%- elif not is_state('sensor.'+room+'_speaker_lead_by', 'media_player.'+room) -%}
+            member
+          {%- else -%}
+            solo
+          {%- endif %} - {{ states('sensor.'+room+'_speaker_lead_by') }}
 
       - name: Active Media Player
         state: >
