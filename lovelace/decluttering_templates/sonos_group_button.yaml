@@ -11,10 +11,16 @@ card:
   icon: mdi:speaker
   color: orange
   state:
-    - value: "leader - media_player.[[origin_room]]"
+    - value: |
+        [[[
+          return "leader - "+states["sensor.[[room]]_speaker_lead_by"].state;
+        ]]]
       icon: mdi:speaker-wireless
       color: green
-    - value: "member - media_player.[[origin_room]]"
+    - value: |
+        [[[
+          return "member - "+states["sensor.[[room]]_speaker_lead_by"].state;
+        ]]]
       icon: mdi:speaker-multiple
       color: green
     - operator: regex
@@ -30,4 +36,7 @@ card:
     service: script.join_unjoin_sonos_group
     data:
       entity_id: "media_player.[[room]]"
-      leader_entity_id: "media_player.[[origin_room]]"
+      leader_entity_id: |
+        [[[
+          return states["sensor.[[room]]_speaker_lead_by"].state;
+        ]]]
