@@ -3,61 +3,65 @@ path: kiosk
 icon: "mdi:tablet"
 panel: true
 cards:
-  - type: horizontal-stack
+  - type: vertical-stack
     cards:
-      - type: vertical-stack
+      - !include ../cards/time_to_leave_countdown.yaml
+
+      - type: horizontal-stack
         cards:
-          - !include ../cards/weather/simple_weather.yaml
-
-          - type: conditional
-            conditions:
-              - entity: binary_sensor.commute_soon
-                state: "on"
-            card: !include /config/lovelace/cards/transport/commute.yaml
-
-          - type: conditional
-            conditions:
-              - entity: binary_sensor.octoprint_printing
-                state: "on"
-            card: !include ../cards/3d_printer_preview.yaml
-
-          - type: conditional
-            conditions:
-              - entity: input_boolean.guests
-                state: "off"
-            card: !include ../cards/calendar_compact.yaml
-
-          - type: conditional
-            conditions:
-              - entity: input_boolean.guests
-                state: "on"
-            card:
-              type: vertical-stack
-              cards:
-                - !include ../cards/bathroom_occupied.yaml
-
-          - !include ../cards/power_gauges_compact.yaml
-
-      - type: vertical-stack
-        cards:
-          - type: horizontal-stack
+          - type: vertical-stack
             cards:
+              - !include ../cards/weather/simple_weather.yaml
+
+              - type: conditional
+                conditions:
+                  - entity: binary_sensor.commute_soon
+                    state: "on"
+                card: !include /config/lovelace/cards/transport/commute.yaml
+
+              - type: conditional
+                conditions:
+                  - entity: binary_sensor.octoprint_printing
+                    state: "on"
+                card: !include ../cards/3d_printer_preview.yaml
+
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.guests
+                    state: "off"
+                card: !include ../cards/calendar_compact.yaml
+
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.guests
+                    state: "on"
+                card:
+                  type: vertical-stack
+                  cards:
+                    - !include ../cards/bathroom_occupied.yaml
+
+              - !include ../cards/power_gauges_compact.yaml
+
+          - type: vertical-stack
+            cards:
+              - type: horizontal-stack
+                cards:
+                  - type: custom:decluttering-card
+                    template: currently_playing
+                    variables:
+                      - room: badevaerelse
+                  - !include ../cards/compact_clock.yaml
+
               - type: custom:decluttering-card
-                template: currently_playing
+                template: speaker_control_v2
                 variables:
                   - room: badevaerelse
-              - !include ../cards/compact_clock.yaml
 
-          - type: custom:decluttering-card
-            template: speaker_control_v2
-            variables:
-              - room: badevaerelse
+              - !include ../cards/laundry.yaml
 
-          - !include ../cards/laundry.yaml
+              - type: custom:decluttering-card
+                template: room_state_and_light_profile
+                variables:
+                  - room: bathroom
 
-          - type: custom:decluttering-card
-            template: room_state_and_light_profile
-            variables:
-              - room: bathroom
-
-          - !include ../cards/climate/target_temperature.yaml
+              - !include ../cards/climate/target_temperature.yaml

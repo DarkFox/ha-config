@@ -3,85 +3,94 @@ path: kiosk
 icon: "mdi:devices"
 panel: true
 cards:
-  - type: horizontal-stack
+  - type: vertical-stack
     cards:
-      - type: vertical-stack
+      - !include ../cards/time_to_leave_countdown.yaml
+
+      - type: horizontal-stack
         cards:
-          - !include ../cards/clock.yaml
-          - !include ../cards/weekday.yaml
+          - type: vertical-stack
+            cards:
+              - !include ../cards/weather/weather_radar.yaml
 
-          - type: conditional
-            conditions:
-              - entity: input_boolean.guests
-                state: "off"
-            card: !include ../cards/calendar.yaml
+              - !include ../cards/laundry.yaml
 
-          - type: conditional
-            conditions:
-              - entity: input_boolean.guests
-                state: "on"
-            card:
-              type: vertical-stack
-              cards:
-                - type: custom:html-card
-                  content: !secret ui_wifi_content
+              - type: conditional
+                conditions:
+                  - entity: binary_sensor.commute_soon
+                    state: "on"
+                card: !include /config/lovelace/cards/transport/commute.yaml
 
-          - !include ../cards/power_gauges.yaml
+              - type: conditional
+                conditions:
+                  - entity: binary_sensor.s_train_message_present
+                    state: "on"
+                card: !include /config/lovelace/cards/s_train_status.yaml
+              - type: custom:rejseplanen-stog-card
+                entity: sensor.s_tog_malov
+                title: " "
+                max_entries: 4
 
-          - type: conditional
-            conditions:
-              - entity: input_boolean.guests
-                state: "off"
-            card:
-              type: horizontal-stack
-              cards:
-                - !include ../cards/bathroom_occupied.yaml
-                - !include ../cards/hoveddor_laas.yaml
+          - type: vertical-stack
+            cards:
+              - !include ../cards/weather/weather_forecast.yaml
 
-      - type: vertical-stack
-        cards:
-          - !include ../cards/transport/car_card.yaml
+              - !include ../cards/transport/car.yaml
 
-          - type: conditional
-            conditions:
-              - entity: binary_sensor.commute_soon
-                state: "on"
-            card: !include /config/lovelace/cards/transport/commute.yaml
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.guests
+                    state: "on"
+                card:
+                  type: horizontal-stack
+                  cards:
+                    - !include ../cards/bathroom_occupied.yaml
+                    - !include ../cards/hoveddor_laas.yaml
 
-          - type: conditional
-            conditions:
-              - entity: binary_sensor.s_train_message_present
-                state: "on"
-            card: !include /config/lovelace/cards/s_train_status.yaml
-          - type: custom:rejseplanen-stog-card
-            entity: sensor.s_tog_malov
-            title: " "
-            max_entries: 4
+              - !include ../cards/conditional_timers.yaml
 
-          - !include ../cards/laundry.yaml
+              - type: conditional
+                conditions:
+                  - entity: binary_sensor.octoprint_printing
+                    state: "on"
+                card: !include ../cards/3d_printer_preview.yaml
 
-          - type: conditional
-            conditions:
-              - entity: input_boolean.guests
-                state: "on"
-            card:
-              type: horizontal-stack
-              cards:
-                - !include ../cards/bathroom_occupied.yaml
-                - !include ../cards/hoveddor_laas.yaml
+              - !include ../cards/low_battery.yaml
 
-          - !include ../cards/conditional_timers.yaml
+          - type: vertical-stack
+            cards:
+              - type: horizontal-stack
+                cards:
+                  - type: custom:decluttering-card
+                    template: currently_playing
+                    variables:
+                      - room: roam
+                  - !include ../cards/compact_clock.yaml
 
-          - type: conditional
-            conditions:
-              - entity: binary_sensor.octoprint_printing
-                state: "on"
-            card: !include ../cards/3d_printer_preview.yaml
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.guests
+                    state: "off"
+                card: !include ../cards/calendar.yaml
 
-          - !include ../cards/low_battery.yaml
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.guests
+                    state: "on"
+                card:
+                  type: vertical-stack
+                  cards:
+                    - type: custom:html-card
+                      content: !secret ui_wifi_content
 
-      - type: vertical-stack
-        cards:
-          - !include ../cards/weather/weather_radar.yaml
+              - !include ../cards/power_gauges.yaml
 
-          - !include ../cards/weather/weather_forecast.yaml
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.guests
+                    state: "off"
+                card:
+                  type: horizontal-stack
+                  cards:
+                    - !include ../cards/bathroom_occupied.yaml
+                    - !include ../cards/hoveddor_laas.yaml

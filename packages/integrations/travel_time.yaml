@@ -126,17 +126,14 @@ sensor:
         device_class: timestamp
       next_scheduled_leave_in:
         value_template: >-
-          {%- set timestamp = states('sensor.next_scheduled_leave_at')|as_timestamp(0) -%}
-          {%- if timestamp != 0 -%}
+          {%- set timestamp = states('sensor.next_scheduled_leave_at')|as_timestamp(-1) -%}
+          {%- if timestamp != -1 -%}
             {{ (((states('sensor.next_scheduled_leave_at')|as_timestamp) - (now()|as_timestamp))/60)|int }}
           {% else %}
             unknown
           {%- endif -%}
         unit_of_measurement: min
         device_class: duration
-
-      next_leave_in:
-        value_template: "{{ [states('sensor.car_commute_leave_in')|int(999999), states('sensor.next_scheduled_leave_in')|int(999999)]|min }}"
 
   - platform: rejseplanen
     name: S-Tog Måløv
@@ -156,33 +153,28 @@ sensor:
     direction:
       - Frederikssund St.
 
-  - platform: rejseplanen
-    name: S-Tog Nørreport
-    stop_id: "008600646"
-    departure_type: S
-
-  - platform: rejseplanen
-    name: København H Afgange
-    stop_id: "8600626"
-
   - platform: dsb_trafikinfo
     name: DSB Trafikinfo
     sender: S-tog
 
-  # - platform: scrape
-  #   resource: http://www.dsb.dk/trafikinformation/s-tog-overblik/
-  #   name: s_train_message
-  #   select: "div.FooterFreeText"
-  #   value_template: >-
-  #     {{ value | trim  | reverse | regex_replace(find='.*(ppA BSD|nalpesjeR|nenalpesjeR|erem eS).*?(\.|\Z)', replace='', ignorecase=True) | reverse }}
-  #   scan_interval: 600
-
-  # - platform: scrape
-  #   resource: http://www.dsb.dk/trafikinformation/s-tog-overblik/
-  #   name: s_train_c_status
-  #   select: "table.RepeaterTable tr:nth-of-type(3) td.TDItemLabel div b"
-  #   value_template: "{{ value | trim }}"
-  #   scan_interval: 600
+template:
+  - sensor:
+      - name: "Next Leave In"
+        state: |
+          {%- set car_commute_leave_in = states('sensor.car_commute_leave_in')|int(-1) -%}
+          {%- set next_scheduled_leave_in = states('sensor.next_scheduled_leave_in')|int(-1) -%}
+          {%- if car_commute_leave_in > 0 and next_scheduled_leave_in > 0 -%}
+            {{ min(car_commute_leave_in, next_scheduled_leave_in) }}
+          {%- elif car_commute_leave_in > 0 -%}
+            {{ car_commute_leave_in }}
+          {%- elif next_scheduled_leave_in > 0 -%}
+            {{ next_scheduled_leave_in }}
+          {%- else -%}
+            -1
+          {%- endif -%}
+        attributes:
+          unit_of_measurement: min
+          device_class: duration
 
 automation:
   - alias: "Commute - Update sensors before commute"

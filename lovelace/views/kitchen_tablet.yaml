@@ -3,86 +3,90 @@ path: kiosk
 icon: "mdi:tablet"
 panel: true
 cards:
-  - type: horizontal-stack
+  - type: vertical-stack
     cards:
-      - type: vertical-stack
+      - !include ../cards/time_to_leave_countdown.yaml
+
+      - type: horizontal-stack
         cards:
-          - !include ../cards/weather/simple_weather.yaml
-
-          - !include ../cards/fridge.yaml
-
-          - !include ../cards/vacuum.yaml
-          - !include ../cards/laundry.yaml
-
-          - type: conditional
-            conditions:
-              - entity: binary_sensor.commute_soon
-                state: "on"
-            card: !include /config/lovelace/cards/transport/commute.yaml
-
-          - type: conditional
-            conditions:
-              - entity: binary_sensor.octoprint_printing
-                state: "on"
-            card: !include ../cards/3d_printer_preview.yaml
-
-          - !include ../cards/conditional_timers.yaml
-
-          - !include ../cards/power_gauges.yaml
-
-      - type: vertical-stack
-        view_layout:
-          grid-area: right
-        cards:
-          - type: horizontal-stack
+          - type: vertical-stack
             cards:
+              - !include ../cards/weather/simple_weather.yaml
+
+              - !include ../cards/fridge.yaml
+
+              - !include ../cards/vacuum.yaml
+              - !include ../cards/laundry.yaml
+
+              - type: conditional
+                conditions:
+                  - entity: binary_sensor.commute_soon
+                    state: "on"
+                card: !include /config/lovelace/cards/transport/commute.yaml
+
+              - type: conditional
+                conditions:
+                  - entity: binary_sensor.octoprint_printing
+                    state: "on"
+                card: !include ../cards/3d_printer_preview.yaml
+
+              - !include ../cards/conditional_timers.yaml
+
+              - !include ../cards/power_gauges.yaml
+
+          - type: vertical-stack
+            view_layout:
+              grid-area: right
+            cards:
+              - type: horizontal-stack
+                cards:
+                  - type: custom:decluttering-card
+                    template: currently_playing
+                    variables:
+                      - room: kokken
+                  - !include ../cards/compact_clock.yaml
+
               - type: custom:decluttering-card
-                template: currently_playing
+                template: speaker_control_v2
                 variables:
                   - room: kokken
-              - !include ../cards/compact_clock.yaml
 
-          - type: custom:decluttering-card
-            template: speaker_control_v2
-            variables:
-              - room: kokken
+              - type: custom:decluttering-card
+                template: room_state_and_light_profile
+                variables:
+                  - room: kitchen
 
-          - type: custom:decluttering-card
-            template: room_state_and_light_profile
-            variables:
-              - room: kitchen
+              - !include ../cards/climate/target_temperature.yaml
 
-          - !include ../cards/climate/target_temperature.yaml
-
-          - type: grid
-            square: false
-            cards:
-              - type: "custom:button-card"
-                entity: switch.mikroovn
-                name: Mikroovn
-                color: auto
-                tap_action:
-                  action: toggle
-                hold_action:
-                  action: more-info
-              - type: "custom:button-card"
-                entity: sensor.elkedel_status
-                name: Elkedel
-                color: auto
-                tap_action:
-                  action: fire-dom-event
-                  browser_mod:
-                    service: browser_mod.popup
-                    data:
-                      title: Timers
-                      content: !include ../cards/kettle.yaml
-              - type: "custom:button-card"
-                name: Timere
-                icon: mdi:timer
-                tap_action:
-                  action: fire-dom-event
-                  browser_mod:
-                    service: browser_mod.popup
-                    data:
-                      title: Timers
-                      content: !include ../cards/kitchen_timers.yaml
+              - type: grid
+                square: false
+                cards:
+                  - type: "custom:button-card"
+                    entity: switch.mikroovn
+                    name: Mikroovn
+                    color: auto
+                    tap_action:
+                      action: toggle
+                    hold_action:
+                      action: more-info
+                  - type: "custom:button-card"
+                    entity: sensor.elkedel_status
+                    name: Elkedel
+                    color: auto
+                    tap_action:
+                      action: fire-dom-event
+                      browser_mod:
+                        service: browser_mod.popup
+                        data:
+                          title: Timers
+                          content: !include ../cards/kettle.yaml
+                  - type: "custom:button-card"
+                    name: Timere
+                    icon: mdi:timer
+                    tap_action:
+                      action: fire-dom-event
+                      browser_mod:
+                        service: browser_mod.popup
+                        data:
+                          title: Timers
+                          content: !include ../cards/kitchen_timers.yaml

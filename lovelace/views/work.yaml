@@ -4,112 +4,116 @@ type: panel
 icon: mdi:briefcase
 badges: []
 cards:
-  - type: custom:layout-card
-    layout_type: custom:horizontal-layout
-    layout:
-      max_cols: 3
+  - type: vertical-stack
     cards:
-      - type: vertical-stack
+      - !include ../cards/time_to_leave_countdown.yaml
+
+      - type: custom:layout-card
+        layout_type: custom:horizontal-layout
+        layout:
+          max_cols: 3
         cards:
-          - type: custom:auto-entities
-            card:
-              type: entities
-              title: Puzzel
-            filter:
-              template: |
-                {% set profiles = (
-                  state_attr('sensor.puzzel_status', 'result').profiles
-                  | list
-                ) %}
-                {% set ns = namespace(ret=[
-                  {
-                    "entity": "sensor.puzzel_state",
-                    "name": "Status",
-                    "icon": "mdi:phone",
-                    "secondary_info": "last-changed"
-                  },
-                  {
-                    "entity": "sensor.puzzel_ko",
-                    "name": "Kø",
-                    "icon": "mdi:queue-first-in-last-out",
-                    "secondary_info": "last-changed"
-                  },
-                  {
-                    "entity": "script.puzzel_log_off",
-                    "icon": "mdi:logout",
-                    "name": "Log af",
-                    "action_name": "Log af"
-                  },
-                  {
-                    "type": "section",
-                    "label": "Kø"
-                  }
-                ]) %}
-                {% for profile in profiles %}
-                  {% set ns.ret = ns.ret + [
-                    {
-                      "type": "button",
-                      "name": profile.name,
-                      "icon": "mdi:login",
-                      "action_name": "Log ind",
-                      "tap_action": {
-                          "action": "call-service",
-                          "service": "script.puzzel_log_on",
-                          "data": {
-                            "queue_id": profile.id
-                          }
+          - type: vertical-stack
+            cards:
+              - type: custom:auto-entities
+                card:
+                  type: entities
+                  title: Puzzel
+                filter:
+                  template: |
+                    {% set profiles = (
+                      state_attr('sensor.puzzel_status', 'result').profiles
+                      | list
+                    ) %}
+                    {% set ns = namespace(ret=[
+                      {
+                        "entity": "sensor.puzzel_state",
+                        "name": "Status",
+                        "icon": "mdi:phone",
+                        "secondary_info": "last-changed"
+                      },
+                      {
+                        "entity": "sensor.puzzel_ko",
+                        "name": "Kø",
+                        "icon": "mdi:queue-first-in-last-out",
+                        "secondary_info": "last-changed"
+                      },
+                      {
+                        "entity": "script.puzzel_log_off",
+                        "icon": "mdi:logout",
+                        "name": "Log af",
+                        "action_name": "Log af"
+                      },
+                      {
+                        "type": "section",
+                        "label": "Kø"
                       }
-                    }
-                  ] %}
-                {% endfor %}
-                {% set ns.ret = ns.ret + [
-                  {
-                    "type": "section",
-                    "label": "Pause"
-                  }
-                ] %}
-                    {% set pauseTypes = (
-                  state_attr('sensor.puzzel_user', 'result').pauseTypes
-                  | list
-                ) %}
-                {% for pauseType in pauseTypes %}
-                  {% set ns.ret = ns.ret + [
-                    {
-                      "type": "button",
-                      "name": pauseType.description,
-                      "icon": "mdi:logout-variant",
-                      "action_name": "Pause",
-                      "tap_action": {
-                          "action": "call-service",
-                          "service": "script.puzzel_log_on",
-                          "data": {
-                            "queue_id": pauseType.description
+                    ]) %}
+                    {% for profile in profiles %}
+                      {% set ns.ret = ns.ret + [
+                        {
+                          "type": "button",
+                          "name": profile.name,
+                          "icon": "mdi:login",
+                          "action_name": "Log ind",
+                          "tap_action": {
+                              "action": "call-service",
+                              "service": "script.puzzel_log_on",
+                              "data": {
+                                "queue_id": profile.id
+                              }
                           }
+                        }
+                      ] %}
+                    {% endfor %}
+                    {% set ns.ret = ns.ret + [
+                      {
+                        "type": "section",
+                        "label": "Pause"
                       }
-                    }
-                  ] %}
-                {% endfor %}
-                {% set ns.ret = ns.ret + [
-                  {
-                    "entity": "script.puzzel_pause_off",
-                    "icon": "mdi:logout",
-                    "name": "Tilbage",
-                    "action_name": "Tilbage"
-                  }
-                ] %}
-                {{ ns.ret }}
+                    ] %}
+                        {% set pauseTypes = (
+                      state_attr('sensor.puzzel_user', 'result').pauseTypes
+                      | list
+                    ) %}
+                    {% for pauseType in pauseTypes %}
+                      {% set ns.ret = ns.ret + [
+                        {
+                          "type": "button",
+                          "name": pauseType.description,
+                          "icon": "mdi:logout-variant",
+                          "action_name": "Pause",
+                          "tap_action": {
+                              "action": "call-service",
+                              "service": "script.puzzel_log_on",
+                              "data": {
+                                "queue_id": pauseType.description
+                              }
+                          }
+                        }
+                      ] %}
+                    {% endfor %}
+                    {% set ns.ret = ns.ret + [
+                      {
+                        "entity": "script.puzzel_pause_off",
+                        "icon": "mdi:logout",
+                        "name": "Tilbage",
+                        "action_name": "Tilbage"
+                      }
+                    ] %}
+                    {{ ns.ret }}
 
-      - type: vertical-stack
-        cards:
-          - !include ../cards/compact_clock.yaml
-          - !include ../cards/calendar_work.yaml
+          - type: vertical-stack
+            cards:
+              - !include ../cards/compact_clock.yaml
+              - !include ../cards/calendar_work.yaml
 
-      - type: vertical-stack
-        cards:
-          - !include ../cards/transport/car.yaml
-          - type: entities
-            entities:
-              - entity: sensor.parking_limit
-                name: Parkering udløber
+          - type: vertical-stack
+            cards:
+              - !include ../cards/transport/car.yaml
+              - type: entities
+                entities:
+                  - entity: sensor.parking_limit
+                    name: Parkering udløber
 
-          - !include ../cards/weather/weather_forecast.yaml
+              - !include ../cards/weather/weather_forecast.yaml
