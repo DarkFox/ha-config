@@ -70,21 +70,10 @@ automation:
           id: kokken_volumeknap
           event: 1002
     action:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: media_player.kokken_mini
-                state: "playing"
-            sequence:
-              - service: media_player.volume_mute
-                data:
-                  entity_id: media_player.kokken_mini
-                  is_volume_muted: "{{ not state_attr('media_player.kokken_mini', 'is_volume_muted') }}"
-        default:
-          - service: media_player.volume_mute
-            data:
-              entity_id: media_player.kokken_soundbar_songpal
-              is_volume_muted: "{{ not state_attr('media_player.kokken_soundbar_songpal', 'is_volume_muted') }}"
+      - service: media_player.volume_mute
+        data:
+          entity_id: media_player.kokken
+          is_volume_muted: "{{ not state_attr('media_player.kokken', 'is_volume_muted') }}"
 
   - alias: kokken_soundbar_volume_remote_up
     initial_state: true
@@ -98,19 +87,9 @@ automation:
     action:
       - repeat:
           sequence:
-            - choose:
-                - conditions:
-                    - condition: state
-                      entity_id: media_player.kokken_mini
-                      state: "playing"
-                  sequence:
-                    - service: media_player.volume_up
-                      data:
-                        entity_id: media_player.kokken_mini
-              default:
-                - service: media_player.volume_up
-                  data:
-                    entity_id: media_player.kokken_soundbar_songpal
+            - service: media_player.volume_up
+              data:
+                entity_id: media_player.kokken
             - delay:
                 milliseconds: 75
           until:
@@ -135,19 +114,9 @@ automation:
     action:
       - repeat:
           sequence:
-            - choose:
-                - conditions:
-                    - condition: state
-                      entity_id: media_player.kokken_mini
-                      state: "playing"
-                  sequence:
-                    - service: media_player.volume_down
-                      data:
-                        entity_id: media_player.kokken_mini
-              default:
-                - service: media_player.volume_down
-                  data:
-                    entity_id: media_player.kokken_soundbar_songpal
+            - service: media_player.volume_down
+              data:
+                entity_id: media_player.kokken
             - delay:
                 milliseconds: 75
           until:
@@ -159,61 +128,3 @@ automation:
                 - condition: state
                   entity_id: input_select.kokken_soundbar_volume_remote_state
                   state: "up"
-
-  - alias: Kitchen Speaker active trigger
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: input_select.kitchen_room_state
-        to: "active"
-      - platform: state
-        entity_id: input_select.hallway_room_state
-        to: "active"
-      - platform: state
-        entity_id: media_player.kokken_soundbar_songpal
-        to: "on"
-    condition:
-      - condition: or
-        conditions:
-          - condition: state
-            entity_id: input_select.kitchen_room_state
-            state: "active"
-          - condition: state
-            entity_id: input_select.hallway_room_state
-            state: "active"
-      - condition: state
-        entity_id: media_player.kokken_soundbar_songpal
-        state: "on"
-    action:
-      - service: media_player.volume_mute
-        data:
-          entity_id: media_player.kokken_soundbar_songpal
-          is_volume_muted: false
-
-  - alias: Kitchen Speaker inactive trigger
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: input_select.kitchen_room_state
-        to: "off"
-      - platform: state
-        entity_id: input_select.hallway_room_state
-        to: "off"
-      - platform: state
-        entity_id: media_player.kokken_soundbar_songpal
-        to: "on"
-    condition:
-      - condition: state
-        entity_id: input_select.kitchen_room_state
-        state: "off"
-      - condition: state
-        entity_id: input_select.hallway_room_state
-        state: "off"
-      - condition: state
-        entity_id: media_player.kokken_soundbar_songpal
-        state: "on"
-    action:
-      - service: media_player.volume_mute
-        data:
-          entity_id: media_player.kokken_soundbar_songpal
-          is_volume_muted: true
