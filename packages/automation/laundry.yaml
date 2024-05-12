@@ -9,14 +9,30 @@ input_boolean:
 
 template:
   - sensor:
-      - name: "Washing Machine Finished At"
+      - name: "Vaskemaskine Program"
+        state: "{{ state_attr('sensor.washing_machine', 'program') }}"
+      - name: "Vaskemaskine Program Kode"
+        state: "{{ state_attr('sensor.washing_machine', 'program_code') }}"
+      - name: "Vaskemaskine Temperatur"
+        state: "{{ state_attr('sensor.washing_machine', 'temperature') }}"
+        device_class: temperature
+        unit_of_measurement: "°C"
+      - name: "Vaskemaskine Centrifugering"
+        state: "{{ state_attr('sensor.washing_machine', 'spin_speed') }}"
+        unit_of_measurement: "RPM"
+      - name: "Vaskemaskine Fyldningsgrad"
+        state: "{{ state_attr('sensor.washing_machine', 'fill_percent') }}"
+        unit_of_measurement: "%"
+      - name: "Vaskemaskine Færdig"
         state: "{{ as_datetime(as_timestamp(now())|int + states('sensor.wash_cycle_remaining_time')|int*60) }}"
-        device_class: date
+        device_class: timestamp
       - name: dryer_temp_delta
         state: "{{ states('sensor.torretumbler_temperature')|float - states('sensor.badevaerelse_temperatur')|float }}"
         device_class: temperature
         unit_of_measurement: "°C"
   - binary_sensor:
+      - name: Vaskemaskine Fjernstyring
+        state: "{{ state_attr('sensor.washing_machine', 'remote_control') }}"
       - name: Tørretumbler
         state: "{{ states('sensor.dryer_temp_delta')|int > 10 and states('sensor.pow_k_l2_power')|int > 900 }}"
         device_class: running
