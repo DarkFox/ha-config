@@ -46,26 +46,33 @@ sensor:
       dmi_aktuel_varsel:
         friendly_name: "DMI Aktuel Varsel"
         value_template: >-
-          {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].warningTitle }}
+          {{ state_attr('sensor.dmi_aktuel_varsel', 'raw')['warningTitle'] if state_attr('sensor.dmi_aktuel_varsel', 'raw') }}
         attribute_templates:
+          raw: >-
+            {% set actualWarnings = state_attr('sensor.dmi_warnings_specific_raw', 'actualWarnings') %}
+            {% if actualWarnings and actualWarnings|length > 0 %}
+              {{ actualWarnings[0]|tojson }}
+            {% else %}
+              {}
+            {% endif %}
           text: >-
-            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].warningText }}
+            {{ state_attr('sensor.dmi_aktuel_varsel', 'raw')['warningText'] if state_attr('sensor.dmi_aktuel_varsel', 'raw') }}
           additional_text: >-
-            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].additionalText }}
+            {{ state_attr('sensor.dmi_aktuel_varsel', 'raw')['additionalText'] if state_attr('sensor.dmi_aktuel_varsel', 'raw') }}
           valid_from: >-
-            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].validFromText }}
+            {{ state_attr('sensor.dmi_aktuel_varsel', 'raw')['validFromText'] if state_attr('sensor.dmi_aktuel_varsel', 'raw') }}
           valid_to: >-
-            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].validToText }}
+            {{ state_attr('sensor.dmi_aktuel_varsel', 'raw')['validToText'] if state_attr('sensor.dmi_aktuel_varsel', 'raw') }}
           issued_at: >-
-            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].issuedAtText }}
+            {{ state_attr('sensor.dmi_aktuel_varsel', 'raw')['issuedAtText'] if state_attr('sensor.dmi_aktuel_varsel', 'raw') }}
           category: >-
-            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].formattedCategory }}
+            {{ state_attr('sensor.dmi_aktuel_varsel', 'raw')['formattedCategory'] if state_attr('sensor.dmi_aktuel_varsel', 'raw') }}
           valid_from_timestamp: >-
-            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].validFrom }}
+            {{ state_attr('sensor.dmi_aktuel_varsel', 'raw')['validFrom'] if state_attr('sensor.dmi_aktuel_varsel', 'raw') }}
           valid_to_timestamp: >-
-            {{ "" if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].validTo }}
+            {{ state_attr('sensor.dmi_aktuel_varsel', 'raw')['validTo'] if state_attr('sensor.dmi_aktuel_varsel', 'raw') }}
           entity_picture: >-
-            /local/downloads/dmi_warning_icons/{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].icon }}
+            {{ '/local/downloads/dmi_warning_icons/'+state_attr('sensor.dmi_aktuel_varsel', 'raw')['icon'] if state_attr('sensor.dmi_aktuel_varsel', 'raw') }}
 
   - platform: rest
     name: dmi_weather_raw
@@ -163,25 +170,41 @@ automation:
         to: "on"
     action:
       - delay:
-          seconds: 10
+          seconds: 5
+
+      - variables:
+          actualWarnings: >-
+            {% set actualWarnings = state_attr('sensor.dmi_warnings_specific_raw', 'actualWarnings') %}
+            {% if actualWarnings and actualWarnings|length > 0 %}
+              {{ actualWarnings|tojson }}
+            {% else %}
+              []
+            {% endif %}
+          fivedayWarnings: >-
+            {% set fivedayWarnings = state_attr('sensor.dmi_warnings_specific_raw', 'fivedayWarnings') %}
+            {% if fivedayWarnings and fivedayWarnings|length > 0 %}
+              {{ fivedayWarnings|tojson }}
+            {% else %}
+              []
+            {% endif %}
 
       - service: mqtt.publish
         data:
           topic: "dmi_current_warnings/state"
           retain: True
           payload: >-
-            {{ 0 if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings | length }}
+            {{ actualWarnings | length }}
 
       - service: mqtt.publish
         data:
           topic: "dmi_current_warnings/attributes"
           retain: True
           payload: >-
-            {% if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 %}
+            {% if actualWarnings|length < 1 %}
               {}
             {% else %}
               {
-              {% for warning in states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings %}
+              {% for warning in actualWarnings %}
                 "{{ warning.issuedAtText }} {{warning.warningTitle}}": {{ warning | string | replace("'", '"') }}{%- if not loop.last %},{%- endif %}
               {% endfor %}
               }
@@ -192,25 +215,28 @@ automation:
           topic: "dmi_future_warnings/state"
           retain: True
           payload: >-
-            {{ 0 if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 else states.sensor.dmi_warnings_specific_raw.attributes.fivedayWarnings|length }}
+            {{ fivedayWarnings|length }}
 
       - service: mqtt.publish
         data:
           topic: "dmi_future_warnings/attributes"
           retain: True
           payload: >-
-            {% if states.sensor.dmi_warnings_raw.attributes.warnings|length < 1 %}
+            {% if fivedayWarnings|length < 1 %}
               {}
             {% else %}
               {
-              {% for warning in states.sensor.dmi_warnings_specific_raw.attributes.fivedayWarnings %}
+              {% for warning in fivedayWarnings %}
                 "{{ warning.issuedAtText }} {{warning.warningTitle}}": {{ warning | string | replace("'", '"') }}{%- if not loop.last %},{%- endif %}
               {% endfor %}
               }
             {% endif %}
 
+      - condition: template
+        value_template: "{{ actualWarnings|length > 0 }}"
+
       - service: downloader.download_file
         data:
-          url: "https://www.dmi.dk/fileadmin/assets/Varselsikoner/{{ states.sensor.dmi_warnings_specific_raw.attributes.actualWarnings[0].icon }}"
+          url: "https://www.dmi.dk/fileadmin/assets/Varselsikoner/{{ actualWarnings[0].icon }}"
           subdir: dmi_warning_icons
           overwrite: true

@@ -8,14 +8,6 @@ sensor:
       - sensor.altan_temperatur
       - sensor.lille_altan_temperatur
 
-  - platform: thermal_comfort
-    sensors:
-      udenfor:
-        friendly_name: Udenfor
-        temperature_sensor: sensor.temperature
-        humidity_sensor: sensor.humidity
-        pressure_sensor: sensor.pressure
-
   - platform: template
     sensors:
       translated_weather_title:
@@ -39,8 +31,6 @@ sensor:
           } %}
           {{ translations[states('weather.forecast_home')] }}
 
-      weather_card_secondary_info:
-        value_template: "{{ state_attr('sensor.temp_range', 'min')|round }}°/{{ state_attr('sensor.temp_range', 'max')|round }}°"
       weather_card_name_text:
         value_template: "{{ (state_attr('weather.forecast_home', 'precipitation')|replace('.',','))+' mm. ' if state_attr('weather.forecast_home', 'precipitation') }}"
       wind_text:
@@ -84,21 +74,6 @@ sensor:
         friendly_name: "Sol Retning"
         value_template: "{{ state_attr('sun.sun', 'azimuth') }}"
         unit_of_measurement: "°"
-      temp_range:
-        friendly_name: Temperaturer
-        value_template: "{{ (this.attributes.min) | default('unknown') }}-{{ (this.attributes.max) | default('unknown') }}"
-        attribute_templates:
-          list: >
-            {% set forecast = state_attr('weather.forecast_home_hourly', 'forecast') %}
-            [
-            {% for hour in forecast[0:24] %}
-              {% if 6 < (hour['datetime'][11:13] | int) < 22 %}
-                {{ hour['temperature']|int }},
-              {% endif %}
-            {% endfor %}
-            ]
-          min: "{{ (this.attributes.list|min) | default('unknown') }}"
-          max: "{{ (this.attributes.list|max) | default('unknown') }}"
 
 template:
   - sensor:

@@ -130,7 +130,7 @@ sensor:
           {%- if timestamp != -1 -%}
             {{ (((states('sensor.next_scheduled_leave_at')|as_timestamp) - (now()|as_timestamp))/60)|int }}
           {% else %}
-            unknown
+            -1
           {%- endif -%}
         unit_of_measurement: min
         device_class: duration
@@ -268,8 +268,8 @@ automation:
       - service: script.notify_everywhere
         data:
           message: >-
-            {% if trigger.to_state.state|int(-1) == 0 %}
+            {% if trigger.to_state.state|int(0) < 1 %}
               Tid til at tage afsted.
             {% else %}
-              Tag afsted om {{ trigger.to_state.state|int(-1) }} minutter.
+              Tag afsted om {{ trigger.to_state.state|int(0) }} minutter.
             {% endif %}
