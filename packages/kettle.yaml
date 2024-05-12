@@ -10,20 +10,22 @@ template:
             '4': 'Holder varm',
             '5': 'Færdig'
           } %}
-          {% set status_id = states('sensor.elkedel_status_id') %}
-          {{ statuses[status_id] }}
+          {% if is_state('switch.elkedel', 'off') %}
+            Slukket
+          {% elif is_state('switch.elkedel', 'on') and is_state('switch.elkedel_varmholdning', 'off') %}
+            Varmer
+          {% elif is_state('switch.elkedel', 'on') and is_state('switch.elkedel_varmholdning', 'on') %}
+            Holder varm
+          {% endif %}
         attributes:
           icon: >-
-            {% set icons = {
-              '0': 'mdi:kettle-outline',
-              '1': 'mdi:kettle-alert-outline',
-              '2': 'mdi:kettle-off-outline',
-              '3': 'mdi:kettle-steam-outline',
-              '4': 'mdi:kettle-steam',
-              '5': 'mdi:kettle-alert'
-            } %}
-            {% set status_id = states('sensor.elkedel_status_id') %}
-            {{ icons[status_id] }}
+            {% if is_state('switch.elkedel', 'off') %}
+              mdi:kettle-outline
+            {% elif is_state('switch.elkedel', 'on') and is_state('switch.elkedel_varmholdning', 'off') %}
+              mdi:kettle-steam-outline
+            {% elif is_state('switch.elkedel', 'on') and is_state('switch.elkedel_varmholdning', 'on') %}
+              mdi:kettle-steam
+            {% endif %}
   - binary_sensor:
       - name: Elkedel Brygger
         state: >-
