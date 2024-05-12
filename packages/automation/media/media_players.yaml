@@ -204,17 +204,33 @@ script:
     fields:
       entity_id:
         description: Media Player that will play the playlist
-        example: media_player.media_room
+        example: media_player.media_room_mass
+        selector:
+          entity:
+            filter:
+              - integration: mass
       playlist:
-        description: Playlist URIs
+        description: Playlist URI string or list of URIs
         example: "library://radio/1"
+        selector:
+          text:
+            multiline: true
+      repeat:
+        description: Repeat mode
+        example: "(off|one|all)"
+        selector:
+          select:
+            options:
+              - "off"
+              - "one"
+              - "all"
     sequence:
       - service: script.briefing_announcement_url
         response_variable: briefing_url
       - service: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
-          repeat: "off"
+          repeat: "{{ repeat | default('off') }}"
           shuffle: false
           playlist: "{{ [briefing_url.url] + playlist }}"
 
@@ -223,19 +239,40 @@ script:
     fields:
       entity_id:
         description: Media Player that will play the playlist
-        example: media_player.media_room
+        example: media_player.media_room_mass
+        selector:
+          entity:
+            filter:
+              - integration: mass
       repeat:
         description: Repeat mode
-        example: "off"
+        example: "(off|one|all)"
+        selector:
+          select:
+            options:
+              - "off"
+              - "one"
+              - "all"
       shuffle:
         description: Shuffle mode
         example: false
       playlist:
-        description: Playlist URIs
+        description: Playlist URI string or list of URIs
         example: "library://radio/1"
+        selector:
+          text:
+            multiline: true
       enqueue:
         description: "Enqueue mode (default: replace)"
         example: "replace"
+        selector:
+          select:
+            options:
+              - "play"
+              - "replace"
+              - "next"
+              - "replace_next"
+              - "add"
     sequence:
       - service: media_player.repeat_set
         target:
