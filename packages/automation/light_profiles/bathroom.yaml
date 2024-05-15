@@ -29,7 +29,7 @@ sensor:
           {% set profile = states('sensor.bathroom_light_profile') %}
           {% set profiles = state_attr('input_select.light_profile', 'options') %}
           {% set index = profiles.index(profile)+1 %}
-          {{ profiles[index] if index < len(profiles) else 'Off' }}
+          {{ profiles[index] if index < (profiles|length) else 'Off' }}
 
       bathroom_active_light_profile:
         friendly_name: Bathroom Active Light Profile
@@ -108,18 +108,38 @@ group:
 
 automation:
   - alias: activate_light_profile_bathroom_bright
+    id: activate_light_profile_bathroom_bright
     initial_state: true
     trigger:
       - platform: state
         entity_id: &room_light_profile sensor.bathroom_active_light_profile
         to: "Bright"
+        variables:
+          previous: "{{ trigger.from_state.state }}"
       - platform: event
         event_type: refresh_light_profile
+        variables:
+          previous: "{{ states('sensor.bathroom_active_light_profile') }}"
     condition:
       - condition: state
         entity_id: *room_light_profile
         state: "Bright"
     action:
+      # light.badevaerelse_loft does not handle switches between colour and white light well.
+      # Therefore we need to start with changing it to white light, if previous profile had colour.
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ previous in ['Ambient', 'Night', 'Party', 'Off'] }}"
+            sequence:
+              - service: light.turn_on
+                target:
+                  entity_id: light.badevaerelse_loft
+                data:
+                  brightness: 1
+                  color_temp: 153
+                  transition: 0
+              - delay: 1
       - service: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
@@ -127,29 +147,51 @@ automation:
             light.badevaerelse_loft:
               state: on
               brightness: 255
-              color_temp: 240
+              color_temp: 153
             light.badevaerelse_lampe:
               state: on
               brightness: 255
               color_temp: 240
               effect: "None"
-            light.bathroom_tablet:
-              state: on
-              brightness: 255
+      - service: light.turn_on
+        target:
+          entity_id: light.bathroom_tablet
+        data:
+          brightness: 255
 
   - alias: activate_light_profile_bathroom_default
+    id: activate_light_profile_bathroom_default
     initial_state: true
     trigger:
       - platform: state
         entity_id: *room_light_profile
         to: "Default"
+        variables:
+          previous: "{{ trigger.from_state.state }}"
       - platform: event
         event_type: refresh_light_profile
+        variables:
+          previous: "{{ states('sensor.bathroom_active_light_profile') }}"
     condition:
       - condition: state
         entity_id: *room_light_profile
         state: "Default"
     action:
+      # light.badevaerelse_loft does not handle switches between colour and white light well.
+      # Therefore we need to start with changing it to white light, if previous profile had colour.
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ previous in ['Ambient', 'Night', 'Party', 'Off'] }}"
+            sequence:
+              - service: light.turn_on
+                target:
+                  entity_id: light.badevaerelse_loft
+                data:
+                  brightness: 1
+                  color_temp: 153
+                  transition: 0
+              - delay: 1
       - service: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
@@ -163,18 +205,24 @@ automation:
               brightness: 255
               color_temp: 240
               effect: "None"
-            light.bathroom_tablet:
-              state: on
-              brightness: 255
+      - service: light.turn_on
+        target:
+          entity_id: light.bathroom_tablet
+        data:
+          brightness: 255
 
   - alias: activate_light_profile_bathroom_dimmed
+    id: activate_light_profile_bathroom_dimmed
     initial_state: true
     trigger:
       - platform: state
         entity_id: *room_light_profile
-        to: "Dimmed"
+        variables:
+          previous: "{{ trigger.from_state.state }}"
       - platform: event
         event_type: refresh_light_profile
+        variables:
+          previous: "{{ states('sensor.bathroom_active_light_profile') }}"
     condition:
       - condition: state
         entity_id: *room_light_profile
@@ -186,25 +234,32 @@ automation:
           entities:
             light.badevaerelse_loft:
               state: on
-              brightness: 32
-              color_temp: 370
+              brightness: 127
+              hs_color: "{{ state_attr('sensor.theme', 'primary_color_eglo') }}"
             light.badevaerelse_lampe:
               state: on
               brightness: 127
               color_temp: 370
               effect: "None"
-            light.bathroom_tablet:
-              state: on
-              brightness: 127
+      - service: light.turn_on
+        target:
+          entity_id: light.bathroom_tablet
+        data:
+          brightness: 127
 
   - alias: activate_light_profile_bathroom_ambient
+    id: activate_light_profile_bathroom_ambient
     initial_state: true
     trigger:
       - platform: state
         entity_id: *room_light_profile
         to: "Ambient"
+        variables:
+          previous: "{{ trigger.from_state.state }}"
       - platform: event
         event_type: refresh_light_profile
+        variables:
+          previous: "{{ states('sensor.bathroom_active_light_profile') }}"
     condition:
       - condition: state
         entity_id: *room_light_profile
@@ -216,25 +271,32 @@ automation:
           entities:
             light.badevaerelse_loft:
               state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+              brightness: 64
+              hs_color: "{{ state_attr('sensor.theme', 'primary_color_eglo') }}"
             light.badevaerelse_lampe:
               state: on
               brightness: 64
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
               effect: "None"
-            light.bathroom_tablet:
-              state: on
-              brightness: 64
+      - service: light.turn_on
+        target:
+          entity_id: light.bathroom_tablet
+        data:
+          brightness: 64
 
   - alias: activate_light_profile_bathroom_night
+    id: activate_light_profile_bathroom_night
     initial_state: true
     trigger:
       - platform: state
         entity_id: *room_light_profile
         to: "Night"
+        variables:
+          previous: "{{ trigger.from_state.state }}"
       - platform: event
         event_type: refresh_light_profile
+        variables:
+          previous: "{{ states('sensor.bathroom_active_light_profile') }}"
     condition:
       - condition: state
         entity_id: *room_light_profile
@@ -253,18 +315,25 @@ automation:
               brightness: 2
               color_temp: 454
               effect: "None"
-            light.bathroom_tablet:
-              state: on
-              brightness: 24
+      - service: light.turn_on
+        target:
+          entity_id: light.bathroom_tablet
+        data:
+          brightness: 24
 
   - alias: activate_light_profile_bathroom_off
+    id: activate_light_profile_bathroom_off
     initial_state: true
     trigger:
       - platform: state
         entity_id: *room_light_profile
         to: "Off"
+        variables:
+          previous: "{{ trigger.from_state.state }}"
       - platform: event
         event_type: refresh_light_profile
+        variables:
+          previous: "{{ states('sensor.bathroom_active_light_profile') }}"
     condition:
       - condition: state
         entity_id: *room_light_profile
@@ -278,17 +347,34 @@ automation:
               state: off
             light.badevaerelse_lampe:
               state: off
-            light.bathroom_tablet:
-              state: off
+      - delay: "{{ (states('input_number.scene_transition_time') | float or 0.5) + 1 }}"
+      - condition: "{{ is_state('sensor.bathroom_selected_light_profile', 'Off') }}"
+      - service: light.turn_off
+        target:
+          entity_id: light.badevaerelse_loft
+      # For some reason the light will still zombie a minute after turning off. So we kill it again.
+      - delay: 00:01:00
+      - condition: "{{ is_state('sensor.bathroom_selected_light_profile', 'Off') }}"
+      - service: light.turn_off
+        target:
+          entity_id: light.badevaerelse_loft
+      - service: light.turn_off
+        target:
+          entity_id: light.bathroom_tablet
 
   - alias: activate_light_profile_bathroom_party
+    id: activate_light_profile_bathroom_party
     initial_state: true
     trigger:
       - platform: state
         entity_id: *room_light_profile
         to: "Party"
+        variables:
+          previous: "{{ trigger.from_state.state }}"
       - platform: event
         event_type: refresh_light_profile
+        variables:
+          previous: "{{ states('sensor.bathroom_active_light_profile') }}"
     condition:
       - condition: state
         entity_id: *room_light_profile
@@ -308,9 +394,11 @@ automation:
               brightness: 255
               color_temp: 370
               effect: "None"
-            light.bathroom_tablet:
-              state: on
-              brightness: 127
+      - service: light.turn_on
+        target:
+          entity_id: light.bathroom_tablet
+        data:
+          brightness: 127
 
 input_boolean:
   bathroom_activity_override:

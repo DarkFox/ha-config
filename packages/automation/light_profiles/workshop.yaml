@@ -29,7 +29,7 @@ sensor:
           {% set profile = states('sensor.workshop_light_profile') %}
           {% set profiles = state_attr('input_select.light_profile', 'options') %}
           {% set index = profiles.index(profile)+1 %}
-          {{ profiles[index] if index < len(profiles) else 'Off' }}
+          {{ profiles[index] if index < (profiles|length) else 'Off' }}
 
       workshop_active_light_profile:
         friendly_name: Workshop Active Light Profile
@@ -93,6 +93,7 @@ group:
 
 automation:
   - alias: activate_light_profile_workshop_bright
+    id: activate_light_profile_workshop_bright
     initial_state: true
     trigger:
       - platform: state
@@ -128,6 +129,7 @@ automation:
             - light.vaerksted_loftlampe
 
   - alias: activate_light_profile_workshop_default
+    id: activate_light_profile_workshop_default
     initial_state: true
     trigger:
       - platform: state
@@ -163,6 +165,7 @@ automation:
             - light.vaerksted_loftlampe
 
   - alias: activate_light_profile_workshop_dimmed
+    id: activate_light_profile_workshop_dimmed
     initial_state: true
     trigger:
       - platform: state
@@ -198,6 +201,7 @@ automation:
             - light.vaerksted_loftlampe
 
   - alias: activate_light_profile_workshop_ambient
+    id: activate_light_profile_workshop_ambient
     initial_state: true
     trigger:
       - platform: state
@@ -224,6 +228,7 @@ automation:
               brightness: 36
 
   - alias: activate_light_profile_workshop_night
+    id: activate_light_profile_workshop_night
     initial_state: true
     trigger:
       - platform: state
@@ -249,6 +254,7 @@ automation:
               state: off
 
   - alias: activate_light_profile_workshop_off
+    id: activate_light_profile_workshop_off
     initial_state: true
     trigger:
       - platform: state
