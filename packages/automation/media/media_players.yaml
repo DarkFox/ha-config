@@ -123,9 +123,9 @@ script:
           medium: 0.4
           high: 0.7
         sovevaerelse:
-          low: 0.1
-          medium: 0.4
-          high: 0.7
+          low: 0.15
+          medium: 0.3
+          high: 0.6
         badevaerelse:
           low: 0.2
           medium: 0.4
@@ -224,6 +224,14 @@ script:
               - "off"
               - "one"
               - "all"
+      volume_level:
+        description: Volume level
+        example: 0.5
+        selector:
+          number:
+            min: 0
+            max: 1
+            step: 0.01
     sequence:
       - service: script.briefing_announcement_url
         response_variable: briefing_url
@@ -231,6 +239,7 @@ script:
         data:
           entity_id: "{{ entity_id }}"
           repeat: "{{ repeat | default('off') }}"
+          volume_level: "{{ volume_level | default(0.5) }}"
           shuffle: false
           playlist: "{{ [briefing_url.url] + playlist }}"
 
@@ -273,7 +282,20 @@ script:
               - "next"
               - "replace_next"
               - "add"
+      volume_level:
+        description: Volume level
+        example: 0.5
+        selector:
+          number:
+            min: 0
+            max: 1
+            step: 0.01
     sequence:
+      - service: media_player.volume_set
+        target:
+          entity_id: "{{ entity_id }}"
+        data:
+          volume_level: "{{ volume_level | default(0.5) }}"
       - service: media_player.repeat_set
         target:
           entity_id: "{{ entity_id }}"

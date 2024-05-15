@@ -707,6 +707,10 @@ automation:
           playlist:
             - "{{ states('sensor.podcast_radioavisen') }}"
             - library://radio/1
+      - service: media_player.volume_set
+        data:
+          entity_id: "media_player.sovevaerelse_mass"
+          volume_level: 0.2
       - delay:
           minutes: 5
       - condition: state
@@ -828,7 +832,7 @@ automation:
       - service: media_player.volume_set
         data:
           entity_id: "media_player.sovevaerelse"
-          volume_level: 0.3
+          volume_level: 0.25
       - delay:
           seconds: 2
       - service: automation.trigger
@@ -869,7 +873,11 @@ automation:
           entity_id: media_player.sovevaerelse
         data:
           group_members: >-
-            ["media_player.badevaerelse" {{ ', "media_player.kokken", "media_player.roam"' if is_state('input_boolean.guests', 'off') }}]
+            [
+              "media_player.badevaerelse"
+              {{ ', "media_player.kokken"' if is_state('input_boolean.guests', 'off') }}
+              {{ ', "media_player.roam"' if is_state('input_boolean.guests', 'off') and not is_state('media_player.roam', 'unavailable') }}
+            ]
       - service: script.mass_briefing_playlist
         data:
           entity_id: media_player.sovevaerelse_mass
