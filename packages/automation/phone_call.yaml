@@ -7,7 +7,8 @@ input_boolean:
   work_phone_ringing:
 
 automation:
-  - alias: pause_media_on_phone_call
+  - alias: Pause Media On Phone Call
+    id: pause_media_on_phone_call
     initial_state: true
     trigger:
       - platform: state
@@ -26,7 +27,8 @@ automation:
       - service: script.turn_on
         entity_id: script.pause_all_media
 
-  - alias: unpause_on_phone_call_finished
+  - alias: Unpause On Phone Call Finished
+    id: unpause_media_on_phone_call_finished
     initial_state: true
     trigger:
       - platform: state
@@ -42,7 +44,8 @@ automation:
       - service: script.turn_on
         entity_id: script.resume_all_media
 
-  - alias: on_call_ringing_while_sleeping
+  - alias: On Call Ringing While Sleeping
+    id: on_call_ringing_while_sleeping
     initial_state: true
     trigger:
       - platform: state
@@ -73,7 +76,8 @@ automation:
                   room: bedroom
                   profile: Night
 
-  - alias: on_call_picked_up
+  - alias: On Call Picked Up
+    id: on_call_picked_up
     initial_state: true
     trigger:
       - platform: state
@@ -107,7 +111,8 @@ automation:
           room: bedroom
           profile: Dimmed
 
-  - alias: on_call_done
+  - alias: On Call Done
+    id: on_call_done
     initial_state: true
     trigger:
       - platform: state
@@ -151,7 +156,8 @@ automation:
                   entity_id: input_select.sleep_state
                   option: sleeping
 
-  - alias: on_call_not_picked_up
+  - alias: On Call Not Picked Up
+    id: on_call_not_picked_up
     initial_state: true
     trigger:
       - platform: state
@@ -186,32 +192,94 @@ automation:
                   entity_id: input_select.sleep_state
                   option: sleeping
 
-  - alias: work_phone_ringing
+  - alias: Work phone caller lookup
+    id: work_phone_caller_lookup
     initial_state: true
     trigger:
-      platform: webhook
-      webhook_id: !secret work_phone_ringing_webhook
-      local_only: false
+      - platform: state
+        entity_id: input_text.work_phone_caller
+    condition:
+      - condition: state
+        entity_id: sensor.arbejdstelefon_phone_state
+        state:
+          - "ringing"
+          - "offhook"
     action:
-      - service: "input_boolean.turn_{{ 'on' if trigger.json.state else 'off' }}"
+      - service: script.puzzel_lookup_caller
+        response_variable: caller
         data:
-          entity_id: input_boolean.work_phone_ringing
+          phone_number: "{{ {'phone_number': states('input_text.work_phone_caller')|string} }}"
       - choose:
           - conditions:
               - condition: template
-                value_template: "{{ trigger.json.state }}"
+                value_template: "{{ caller is not none and caller != {} }}"
             sequence:
-              - service: input_text.set_value
+              - service: script.notify_caller_info
                 data:
-                  entity_id: input_text.work_phone_caller
-                  value: "{{ trigger.json.caller }}"
+                  caller: "{{ caller }}"
         default:
-          - service: input_text.set_value
-            data:
-              entity_id: input_text.work_phone_caller
-              value: ""
+          # If no caller is found, try looking up the number current puzzel caller
+          - service: script.puzzel_get_current_request
+            response_variable: current_request
+
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ current_request is not none and current_request != {} and current_request != '' }}"
+                sequence:
+                  - service: script.puzzel_lookup_caller
+                    response_variable: caller
+                    data:
+                      phone_number: "{{ {'phone_number': current_request.requestRemoteAddress} }}"
+                  - choose:
+                      - conditions:
+                          - condition: template
+                            value_template: "{{ caller is not none and caller != {} }}"
+                        sequence:
+                          - service: script.notify_caller_info
+                            data:
+                              caller: "{{ caller }}"
+                    default:
+                      - service: notify.telegram_darkfox
+                        data:
+                          message: "Arbejdsopkald fra ukendt nummer: {{ current_request.requestRemoteAddress }}"
+            default:
+              # Just send phone number to telegram
+              - service: notify.telegram_darkfox
+                data:
+                  message: "Arbejdsopkald fra ukendt nummer: {{ states('input_text.work_phone_caller') }}"
 
 script:
+  notify_caller_info:
+    alias: "Notify Caller Info"
+    fields:
+      caller:
+        description: "The caller object"
+    sequence:
+      - service: notify.mobile_app_arbejdstelefon
+        data:
+          title: "{{ caller.firstName }} {{ caller.lastName }}"
+          message: |
+            {{ caller.title }} hos {{ caller.organizationName }}.
+            Tlf: {{ caller.communicationPoints | selectattr('communicationType', 'Cell') | map(attribute='remoteAddress') | first }}
+            Email: {{ caller.communicationPoints | selectattr('communicationType', 'equalto', 'EMail') | map(attribute='remoteAddress') | first }}
+          data:
+            tag: "puzzel_caller"
+            channel: "Puzzel Caller"
+            importance: high
+            ttl: 0
+            priority: high
+            persistent: false
+            clickAction: noAction
+            notification_icon: mdi:phone-classic
+      - service: notify.telegram_darkfox
+        data:
+          message: |
+            Arbejdspkald fra {{ caller.firstName }} {{ caller.lastName }}
+            {{ caller.title }} hos {{ caller.organizationName }}.
+            Tlf: {{ caller.communicationPoints | selectattr('communicationType', 'equalto', 'Cell') | map(attribute='remoteAddress') | first }}
+            Email: {{ caller.communicationPoints | selectattr('communicationType', 'equalto', 'EMail') | map(attribute='remoteAddress') | first }}
+
   pause_all_media:
     alias: "Sæt afspilning på pause"
     sequence:

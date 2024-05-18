@@ -72,6 +72,119 @@ template:
           nummer: "{{ state_attr('sensor.puzzel_status', 'result').mobilePhone }}"
 
 script:
+  puzzel_contacts_lookup:
+    alias: "Puzzel Contacts Lookup"
+    fields:
+      phone_number:
+        description: "Dictionary containing a phone number under the phone_number key, to prevent the template from removing the country code"
+        example: '{"phone_number": "+4512345678"}'
+    sequence:
+      - variables:
+          # Remove country code from phone number
+          phone_number: "{{ phone_number.phone_number | regex_replace('^\\+45', '') }}"
+
+      - service: shell_command.curl
+        response_variable: result
+        data:
+          url: "https://agent.puzzel.com/contactcentre5/{{ state_attr('sensor.puzzel_user', 'result').customerKey }}/users/{{ state_attr('sensor.puzzel_user', 'result').userId|string }}/catalog/contacts/search"
+          method: post
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ state_attr('sensor.puzzel_login', 'accessToken') }}"
+          payload:
+            phoneNumber: "{{ phone_number|string }}"
+
+      - variables:
+          # Convert stdout from JSON to dict
+          stdout: "{{ result.stdout | from_json }}"
+          # Extract first result from JSON
+          caller: "{{ stdout.result | first }}"
+
+      - stop: "Return caller info"
+        response_variable: caller
+
+  puzzel_external_contacts_lookup:
+    alias: "Puzzel External Contacts Lookup"
+    fields:
+      phone_number:
+        description: "Dictionary containing a phone number under the phone_number key, to prevent the template from removing the country code"
+        example: '{"phone_number": "+4512345678"}'
+    sequence:
+      - variables:
+          # Remove country code from phone number
+          phone_number: "{{ phone_number.phone_number | regex_replace('^\\+45', '') }}"
+
+      - service: shell_command.curl
+        response_variable: result
+        data:
+          url: "https://agent.puzzel.com/contactcentre5/{{ state_attr('sensor.puzzel_user', 'result').customerKey }}/externalcontact/contacts/search"
+          method: post
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ state_attr('sensor.puzzel_login', 'accessToken') }}"
+          payload:
+            phoneNumber: "{{ phone_number|string }}"
+
+      - variables:
+          # Convert stdout from JSON to dict
+          stdout: "{{ result.stdout | from_json }}"
+          # Extract first result from JSON
+          caller: "{{ stdout.result | first }}"
+
+      - stop: "Return caller info"
+        response_variable: caller
+
+  puzzel_lookup_caller:
+    alias: "Puzzel Caller Lookup"
+    fields:
+      phone_number:
+        description: "Dictionary containing a phone number under the phone_number key, to prevent the template from removing the country code"
+        example: '{"phone_number": "+4512345678"}'
+    sequence:
+      # Try contacts first, if no result, try external contacts
+      - service: script.puzzel_contacts_lookup
+        response_variable: caller
+        data:
+          phone_number: "{{ {'phone_number': phone_number} }}"
+
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ caller is not none and caller != {} }}"
+            sequence:
+              - stop: "Return caller info"
+                response_variable: caller
+
+        default:
+          - service: script.puzzel_external_contacts_lookup
+            response_variable: caller
+            data:
+              phone_number: "{{ {'phone_number': phone_number} }}"
+
+          - stop: "Return caller info"
+            response_variable: caller
+
+  puzzel_get_current_request:
+    alias: "Puzzel Get Current Request"
+    sequence:
+      - service: shell_command.curl
+        response_variable: result
+        data:
+          url: "https://agent.puzzel.com/contactcentre5/{{ state_attr('sensor.puzzel_user', 'result').customerKey }}/users/{{ state_attr('sensor.puzzel_user', 'result').userId }}/visualqueues"
+          method: get
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ state_attr('sensor.puzzel_login', 'accessToken') }}"
+
+      - variables:
+          # Convert stdout from JSON to dict
+          stdout: "{{ result.stdout | from_json }}"
+          # Extract first result from JSON
+          request: "{{ stdout.result | first }}"
+
+      - stop: "Return request info"
+        response_variable: request
+
   puzzel_log_on:
     alias: "Log onto Puzzel queue"
     fields:
