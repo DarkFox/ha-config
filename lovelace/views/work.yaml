@@ -15,6 +15,27 @@ cards:
         cards:
           - type: vertical-stack
             cards:
+              - type: custom:button-card
+                entity: sensor.puzzel_state
+                label: "[[[ return states['sensor.puzzel_state'].state == 'Logget af' ? '' : states['sensor.puzzel_ko'].state ]]]"
+                icon: mdi:phone
+                layout: icon_state_name2nd
+                show_name: false
+                show_state: true
+                show_label: true
+                state:
+                  - value: "Ledig"
+                    color: var(--label-badge-green)
+                  - value: "Logget af"
+                    color: var(--label-badge-red)
+                    icon: mdi:phone-off
+                  - value: "Andet"
+                    color: var(--label-badge-yellow)
+                    icon: mdi:phone-paused
+                  - value: "I møde"
+                    color: var(--label-badge-yellow)
+                    icon: mdi:phone-paused
+
               - type: custom:auto-entities
                 card:
                   type: entities
@@ -26,18 +47,6 @@ cards:
                       | list
                     ) %}
                     {% set ns = namespace(ret=[
-                      {
-                        "entity": "sensor.puzzel_state",
-                        "name": "Status",
-                        "icon": "mdi:phone",
-                        "secondary_info": "last-changed"
-                      },
-                      {
-                        "entity": "sensor.puzzel_ko",
-                        "name": "Kø",
-                        "icon": "mdi:queue-first-in-last-out",
-                        "secondary_info": "last-changed"
-                      },
                       {
                         "entity": "script.puzzel_log_off",
                         "icon": "mdi:logout",
@@ -72,7 +81,7 @@ cards:
                         "label": "Pause"
                       }
                     ] %}
-                        {% set pauseTypes = (
+                    {% set pauseTypes = (
                       state_attr('sensor.puzzel_user', 'result').pauseTypes
                       | list
                     ) %}
@@ -85,9 +94,9 @@ cards:
                           "action_name": "Pause",
                           "tap_action": {
                               "action": "call-service",
-                              "service": "script.puzzel_log_on",
+                              "service": "script.puzzel_pause_on",
                               "data": {
-                                "queue_id": pauseType.description
+                                "pause_type": pauseType.description
                               }
                           }
                         }
@@ -106,6 +115,23 @@ cards:
           - type: vertical-stack
             cards:
               - !include ../cards/compact_clock.yaml
+
+              - type: custom:button-card
+                entity: sensor.next_work_event
+                icon: mdi:calendar-clock
+                show_icon: true
+                show_state: true
+                show_label: true
+                show_name: false
+                layout: icon_state_name2nd
+                # Label = attributes.start_time
+                label: "[[[ return states['sensor.next_work_event'].attributes.start_time ]]]"
+                styles:
+                  label:
+                    - font-size: 1.5em
+                    - font-weight: bold
+                    - color: var(--primary-text-color)
+
               - !include ../cards/calendar_work.yaml
 
           - type: vertical-stack
