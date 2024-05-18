@@ -26,24 +26,24 @@ sensor:
     name: next_event_for_wakeup_time
     type: min
     entity_ids:
-      - sensor.next_work_event
-      - sensor.next_personal_event
-      - sensor.next_tripit_event
+      - sensor.next_work_event_timestamp
+      - sensor.next_personal_event_timestamp
+      - sensor.next_tripit_event_timestamp
       - sensor.fallback_wake_up_time
 
   - platform: template
     sensors:
-      next_work_event:
+      next_work_event_timestamp:
         value_template: >-
           {% set time = as_timestamp(state_attr('calendar.arbejdskalender_arbejde', 'start_time')) or 4294967295 %}
           {{ (time-(2*60*60)) if as_timestamp(now())+(1*60*60) < time else 4294967295 }}
-      next_personal_event:
+      next_personal_event_timestamp:
         value_template: >-
           {% set time = as_timestamp(states('sensor.next_scheduled_leave_at')) if has_value('sensor.next_scheduled_leave_at')
               else as_timestamp(state_attr('calendar.personlig', 'start_time')) if has_value('calendar.personlig')
               else 4294967295 %}
           {{ (time-(2*60*60)) if as_timestamp(now())+(1*60*60) < time else 4294967295 }}
-      next_tripit_event:
+      next_tripit_event_timestamp:
         value_template: >-
           {% set time = as_timestamp(state_attr('calendar.tripit', 'start_time')) or 4294967295 %}
           {{ (time-(2*60*60)) if as_timestamp(now())+(1*60*60) < time else 4294967295 }}
@@ -59,9 +59,9 @@ sensor:
       wake_up_event_source_entity:
         value_template: >-
           {% set calendars = {
-            'sensor.next_work_event': 'calendar.arbejdskalender_arbejde',
-            'sensor.next_personal_event': 'calendar.personlig',
-            'sensor.next_tripit_event': 'calendar.tripit',
+            'sensor.next_work_event_timestamp': 'calendar.arbejdskalender_arbejde',
+            'sensor.next_personal_event_timestamp': 'calendar.personlig',
+            'sensor.next_tripit_event_timestamp': 'calendar.tripit',
             'sensor.fallback_wake_up_time': 'fallback'
           } %}
           {{ calendars[states('sensor.wake_up_event_source')] }}
@@ -74,9 +74,9 @@ sensor:
       wake_up_event_source_name:
         value_template: >-
           {% set calendars = {
-            'sensor.next_work_event': 'Arbejdskalender',
-            'sensor.next_personal_event': 'Personlig Kalender',
-            'sensor.next_tripit_event': 'TripIt',
+            'sensor.next_work_event_timestamp': 'Arbejdskalender',
+            'sensor.next_personal_event_timestamp': 'Personlig Kalender',
+            'sensor.next_tripit_event_timestamp': 'TripIt',
             'sensor.fallback_wake_up_time': 'Standard'
           } %}
           {{ calendars[states('sensor.wake_up_event_source')] }}

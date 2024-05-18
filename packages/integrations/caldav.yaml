@@ -163,6 +163,18 @@ template:
             unknown
           {% endif %}
 
+      - name: Next Work Event
+        state: >-
+          {% set event = state_attr('sensor.arbejde_agenda', 'agenda')|selectattr('end', 'ge', (now()|string))|list|first %}
+          {{ event.summary if event is defined else 'Ingen' }}
+        attributes:
+          event: >-
+            {% set event = state_attr('sensor.arbejde_agenda', 'agenda')|selectattr('end', 'ge', (now()|string))|list|first %}
+            {{ event if event is defined else None }}
+          start_time: >-
+            {% set event = state_attr('sensor.arbejde_agenda', 'agenda')|selectattr('end', 'ge', (now()|string))|list|first %}
+            {{ event.start.split(' ')[1][:-3] if event is defined else None }}
+
 mqtt:
   sensor:
     - name: Vagtplan Agenda
