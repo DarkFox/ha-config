@@ -297,12 +297,15 @@ script:
           phone: "{{ caller.communicationPoints | selectattr('communicationType', 'equalto', 'Cell') | map(attribute='remoteAddress') | first }}"
           email: "{{ caller.communicationPoints | selectattr('communicationType', 'equalto', 'EMail') | map(attribute='remoteAddress') | first }}"
 
+      - variables:
+          formatted_phone: "{{ phone | string | regex_findall(find='..') | join(' ') }}"
+
       - service: notify.mobile_app_arbejdstelefon
         data:
           title: "{{ name }}"
           message: |
             {{ title }} hos {{ organization }}.
-            Tlf: {{ phone }}
+            Tlf: {{ formatted_phone }}
             Email: {{ email }}
           data:
             tag: "puzzel_caller"
@@ -318,7 +321,7 @@ script:
           message: |
             Arbejdspkald fra {{ name }}
             {{ title }} hos {{ organization }}.
-            Tlf: {{ phone }}
+            Tlf: {{ formatted_phone }}
             Email: {{ email }}
 
   pause_all_media:
