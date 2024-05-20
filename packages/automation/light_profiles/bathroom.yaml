@@ -138,9 +138,9 @@ automation:
                   entity_id: light.badevaerelse_loft
                 data:
                   brightness: 1
-                  color_temp: 153
+                  color_temp: 370
                   transition: 0
-              - delay: 1
+              - delay: 0.25
       - service: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
@@ -191,17 +191,17 @@ automation:
                   entity_id: light.badevaerelse_loft
                 data:
                   brightness: 1
-                  color_temp: 153
+                  color_temp: 370
                   transition: 0
-              - delay: 1
+              - delay: 0.25
       - service: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
             light.badevaerelse_loft:
               state: on
-              brightness: 255
-              color_temp: 240
+              brightness: 230
+              color_temp: 333
             light.badevaerelse_lampe:
               state: on
               brightness: 255
@@ -231,13 +231,28 @@ automation:
         entity_id: *room_light_profile
         state: "Dimmed"
     action:
+      # light.badevaerelse_loft does not handle switches between colour and white light well.
+      # Therefore we need to start with changing it to colour light, if previous profile had white.
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ previous in ['Bright', 'Default'] }}"
+            sequence:
+              - service: light.turn_on
+                target:
+                  entity_id: light.badevaerelse_loft
+                data:
+                  brightness: "{{ state_attr('light.badevaerelse_loft', 'brightness') }}"
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_eglo') }}"
+                  transition: 0
+              - delay: 0.25
       - service: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
             light.badevaerelse_loft:
               state: on
-              brightness: 127
+              brightness: 168
               hs_color: "{{ state_attr('sensor.theme', 'primary_color_eglo') }}"
             light.badevaerelse_lampe:
               state: on
@@ -269,13 +284,28 @@ automation:
         entity_id: *room_light_profile
         state: "Ambient"
     action:
+      # light.badevaerelse_loft does not handle switches between colour and white light well.
+      # Therefore we need to start with changing it to colour light, if previous profile had white.
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ previous in ['Bright', 'Default'] }}"
+            sequence:
+              - service: light.turn_on
+                target:
+                  entity_id: light.badevaerelse_loft
+                data:
+                  brightness: "{{ state_attr('light.badevaerelse_loft', 'brightness') }}"
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_eglo') }}"
+                  transition: 0
+              - delay: 0.25
       - service: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
             light.badevaerelse_loft:
               state: on
-              brightness: 64
+              brightness: 68
               hs_color: "{{ state_attr('sensor.theme', 'primary_color_eglo') }}"
             light.badevaerelse_lampe:
               state: on
@@ -307,6 +337,21 @@ automation:
         entity_id: *room_light_profile
         state: "Night"
     action:
+      # light.badevaerelse_loft does not handle switches between colour and white light well.
+      # Therefore we need to start with changing it to colour light, if previous profile had white.
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ previous in ['Bright', 'Default'] }}"
+            sequence:
+              - service: light.turn_on
+                target:
+                  entity_id: light.badevaerelse_loft
+                data:
+                  brightness: "{{ state_attr('light.badevaerelse_loft', 'brightness') }}"
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_eglo') }}"
+                  transition: 0
+              - delay: 0.25
       - service: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
