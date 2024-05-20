@@ -76,12 +76,12 @@ script:
     alias: "Puzzel Contacts Lookup"
     fields:
       phone_number:
-        description: "Dictionary containing a phone number under the phone_number key, to prevent the template from removing the country code"
-        example: '{"phone_number": "+4512345678"}'
+        description: "Phone number to lookup in Puzzel contacts"
+        example: "12345678"
     sequence:
       - variables:
-          # Remove country code from phone number
-          phone_number: "{{ phone_number.phone_number | regex_replace('^\\+45', '') }}"
+          # Take only the last 8 digits of the phone number.
+          phone_number: "{{ (phone_number|string)[-8:] }}"
 
       - service: shell_command.curl
         response_variable: result
@@ -107,12 +107,12 @@ script:
     alias: "Puzzel External Contacts Lookup"
     fields:
       phone_number:
-        description: "Dictionary containing a phone number under the phone_number key, to prevent the template from removing the country code"
-        example: '{"phone_number": "+4512345678"}'
+        description: "Phone number to lookup in Puzzel contacts"
+        example: "12345678"
     sequence:
       - variables:
-          # Remove country code from phone number
-          phone_number: "{{ phone_number.phone_number | regex_replace('^\\+45', '') }}"
+          # Take only the last 8 digits of the phone number.
+          phone_number: "{{ (phone_number|string)[-8:] }}"
 
       - service: shell_command.curl
         response_variable: result
@@ -138,31 +138,23 @@ script:
     alias: "Puzzel Caller Lookup"
     fields:
       phone_number:
-        description: "Dictionary containing a phone number under the phone_number key, to prevent the template from removing the country code"
-        example: '{"phone_number": "+4512345678"}'
+        description: "Phone number to lookup in Puzzel contacts"
+        example: "12345678"
     sequence:
-      # Try contacts first, if no result, try external contacts
       - service: script.puzzel_contacts_lookup
-        response_variable: caller
+        response_variable: puzzel_contacts_lookup_result
         data:
-          phone_number: "{{ {'phone_number': phone_number} }}"
+          phone_number: "{{ phone_number }}"
+      - service: script.puzzel_external_contacts_lookup
+        response_variable: puzzel_external_contacts_lookup_result
+        data:
+          phone_number: "{{ phone_number }}"
 
-      - choose:
-          - conditions:
-              - condition: template
-                value_template: "{{ caller is not none and caller != {} }}"
-            sequence:
-              - stop: "Return caller info"
-                response_variable: caller
+      - variables:
+          caller: "{{ puzzel_contacts_lookup_result if (puzzel_contacts_lookup_result != none and puzzel_contacts_lookup_result != {}) else puzzel_external_contacts_lookup_result }}"
 
-        default:
-          - service: script.puzzel_external_contacts_lookup
-            response_variable: caller
-            data:
-              phone_number: "{{ {'phone_number': phone_number} }}"
-
-          - stop: "Return caller info"
-            response_variable: caller
+      - stop: "Return caller info"
+        response_variable: caller
 
   puzzel_get_current_request:
     alias: "Puzzel Get Current Request"

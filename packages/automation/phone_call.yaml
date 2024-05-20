@@ -205,10 +205,12 @@ automation:
           - "ringing"
           - "offhook"
     action:
+      - variables:
+          phone_number: "{{ states('input_text.work_phone_caller')[-8:] }}"
       - service: script.puzzel_lookup_caller
         response_variable: caller
         data:
-          phone_number: "{{ {'phone_number': states('input_text.work_phone_caller')|string} }}"
+          phone_number: "{{ phone_number }}"
       - choose:
           - conditions:
               - condition: template
@@ -225,44 +227,83 @@ automation:
           - choose:
               - conditions:
                   - condition: template
-                    value_template: "{{ current_request is not none and current_request != {} and current_request != '' }}"
+                    value_template: |
+                      {{
+                        current_request is not none
+                        and current_request != {}
+                        and current_request != ''
+                      }}
                 sequence:
-                  - service: script.puzzel_lookup_caller
-                    response_variable: caller
-                    data:
-                      phone_number: "{{ {'phone_number': current_request.requestRemoteAddress} }}"
+                  - variables:
+                      request_remote_address: "{{ current_request['requestRemoteAddress'][-8:] }}"
                   - choose:
                       - conditions:
                           - condition: template
-                            value_template: "{{ caller is not none and caller != {} }}"
+                            value_template: "{{ request_remote_address != phone_number }}"
                         sequence:
-                          - service: script.notify_caller_info
+                          - service: script.notify_unknown_caller
                             data:
-                              caller: "{{ caller }}"
+                              # Split phone number into groups of 2 digits
+                              phone_number: "{{ phone_number }}"
                     default:
-                      - service: notify.telegram_darkfox
+                      - service: script.puzzel_lookup_caller
+                        response_variable: puzzel_caller
                         data:
-                          message: "Arbejdsopkald fra ukendt nummer: {{ current_request.requestRemoteAddress }}"
+                          phone_number: "{{ request_remote_address }}"
+                      - choose:
+                          - conditions:
+                              - condition: template
+                                value_template: "{{ puzzel_caller is not none and puzzel_caller != {} }}"
+                            sequence:
+                              - service: script.notify_caller_info
+                                data:
+                                  caller: "{{ puzzel_caller }}"
+                        default:
+                          - service: script.notify_unknown_caller
+                            data:
+                              # Split phone number into groups of 2 digits
+                              phone_number: "{{ request_remote_address }}"
             default:
               # Just send phone number to telegram
-              - service: notify.telegram_darkfox
+              - service: script.notify_unknown_caller
                 data:
-                  message: "Arbejdsopkald fra ukendt nummer: {{ states('input_text.work_phone_caller') }}"
+                  phone_number: "{{ phone_number }}"
 
 script:
+  notify_unknown_caller:
+    alias: "Notify Unknown Caller"
+    fields:
+      phone_number:
+        description: "The phone number of the unknown caller"
+    sequence:
+      - service: notify.telegram_darkfox
+        data:
+          message: >-
+            Arbejdsopkald fra ukendt nummer: {{ phone_number | string | regex_findall(find='..') | join(' ') }}
+
   notify_caller_info:
     alias: "Notify Caller Info"
     fields:
       caller:
         description: "The caller object"
     sequence:
+      - condition: template
+        value_template: "{{ caller is not none and caller != {} }}"
+
+      - variables:
+          name: "{{ caller.firstName|trim }} {{ caller.lastName|trim }}"
+          title: "{{ caller.title|trim }}"
+          organization: "{{ caller.organizationName|trim }}"
+          phone: "{{ caller.communicationPoints | selectattr('communicationType', 'equalto', 'Cell') | map(attribute='remoteAddress') | first }}"
+          email: "{{ caller.communicationPoints | selectattr('communicationType', 'equalto', 'EMail') | map(attribute='remoteAddress') | first }}"
+
       - service: notify.mobile_app_arbejdstelefon
         data:
-          title: "{{ caller.firstName }} {{ caller.lastName }}"
+          title: "{{ name }}"
           message: |
-            {{ caller.title }} hos {{ caller.organizationName }}.
-            Tlf: {{ caller.communicationPoints | selectattr('communicationType', 'Cell') | map(attribute='remoteAddress') | first }}
-            Email: {{ caller.communicationPoints | selectattr('communicationType', 'equalto', 'EMail') | map(attribute='remoteAddress') | first }}
+            {{ title }} hos {{ organization }}.
+            Tlf: {{ phone }}
+            Email: {{ email }}
           data:
             tag: "puzzel_caller"
             channel: "Puzzel Caller"
@@ -275,10 +316,10 @@ script:
       - service: notify.telegram_darkfox
         data:
           message: |
-            Arbejdspkald fra {{ caller.firstName }} {{ caller.lastName }}
-            {{ caller.title }} hos {{ caller.organizationName }}.
-            Tlf: {{ caller.communicationPoints | selectattr('communicationType', 'equalto', 'Cell') | map(attribute='remoteAddress') | first }}
-            Email: {{ caller.communicationPoints | selectattr('communicationType', 'equalto', 'EMail') | map(attribute='remoteAddress') | first }}
+            Arbejdspkald fra {{ name }}
+            {{ title }} hos {{ organization }}.
+            Tlf: {{ phone }}
+            Email: {{ email }}
 
   pause_all_media:
     alias: "Sæt afspilning på pause"
