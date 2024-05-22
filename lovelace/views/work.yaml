@@ -12,106 +12,11 @@ cards:
         layout_type: custom:horizontal-layout
         layout:
           max_cols: 3
+        styles:
+          card:
+            - padding: 0px
+            - margin: 0px
         cards:
-          - type: vertical-stack
-            cards:
-              - type: custom:button-card
-                entity: sensor.puzzel_state
-                label: "[[[ return states['sensor.puzzel_state'].state == 'Logget af' ? '' : states['sensor.puzzel_ko'].state ]]]"
-                icon: mdi:phone
-                layout: icon_state_name2nd
-                show_name: false
-                show_state: true
-                show_label: true
-                state:
-                  - value: "Ledig"
-                    color: var(--label-badge-green)
-                  - value: "Logget af"
-                    color: var(--label-badge-red)
-                    icon: mdi:phone-off
-                  - value: "Andet"
-                    color: var(--label-badge-yellow)
-                    icon: mdi:phone-paused
-                  - value: "I møde"
-                    color: var(--label-badge-yellow)
-                    icon: mdi:phone-paused
-
-              - type: custom:auto-entities
-                card:
-                  type: entities
-                  title: Puzzel
-                filter:
-                  template: |
-                    {% set profiles = (
-                      state_attr('sensor.puzzel_status', 'result').profiles
-                      | list
-                    ) %}
-                    {% set ns = namespace(ret=[
-                      {
-                        "entity": "script.puzzel_log_off",
-                        "icon": "mdi:logout",
-                        "name": "Log af",
-                        "action_name": "Log af"
-                      },
-                      {
-                        "type": "section",
-                        "label": "Kø"
-                      }
-                    ]) %}
-                    {% for profile in profiles %}
-                      {% set ns.ret = ns.ret + [
-                        {
-                          "type": "button",
-                          "name": profile.name,
-                          "icon": "mdi:login",
-                          "action_name": "Log ind",
-                          "tap_action": {
-                              "action": "call-service",
-                              "service": "script.puzzel_log_on",
-                              "data": {
-                                "queue_id": profile.id
-                              }
-                          }
-                        }
-                      ] %}
-                    {% endfor %}
-                    {% set ns.ret = ns.ret + [
-                      {
-                        "type": "section",
-                        "label": "Pause"
-                      }
-                    ] %}
-                    {% set pauseTypes = (
-                      state_attr('sensor.puzzel_user', 'result').pauseTypes
-                      | list
-                    ) %}
-                    {% for pauseType in pauseTypes %}
-                      {% set ns.ret = ns.ret + [
-                        {
-                          "type": "button",
-                          "name": pauseType.description,
-                          "icon": "mdi:logout-variant",
-                          "action_name": "Pause",
-                          "tap_action": {
-                              "action": "call-service",
-                              "service": "script.puzzel_pause_on",
-                              "data": {
-                                "pause_type": pauseType.description
-                              }
-                          }
-                        }
-                      ] %}
-                    {% endfor %}
-                    {% set ns.ret = ns.ret + [
-                      {
-                        "entity": "script.puzzel_pause_off",
-                        "icon": "mdi:logout",
-                        "name": "Tilbage",
-                        "action_name": "Tilbage"
-                      }
-                    ] %}
-                    {{ ns.ret }}
-
           - type: vertical-stack
             cards:
               - !include ../cards/compact_clock.yaml
@@ -132,14 +37,110 @@ cards:
                     - font-weight: bold
                     - color: var(--primary-text-color)
 
-              - !include ../cards/calendar_work.yaml
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    entity: sensor.puzzel_state
+                    label: "[[[ return states['sensor.puzzel_state'].state == 'Logget af' ? '' : states['sensor.puzzel_ko'].state ]]]"
+                    icon: mdi:phone
+                    layout: icon_state_name2nd
+                    show_name: false
+                    show_state: true
+                    show_label: true
+                    tap_action:
+                      action: call-service
+                      service: switch.toggle
+                      service_data:
+                        entity_id: switch.puzzel
+                    state:
+                      - value: "Ledig"
+                        color: var(--label-badge-green)
+                      - value: "Logget af"
+                        color: var(--label-badge-red)
+                        icon: mdi:phone-off
+                      - value: "Pause"
+                        color: var(--label-badge-yellow)
+                        icon: mdi:phone-paused
+                    styles:
+                      card:
+                        - height: 100px
+                        - flex-grow: 1
+                        - margin-right: 10px # Add some margin for spacing
+
+                  - type: custom:button-card
+                    entity: sensor.puzzel_state
+                    icon: mdi:pause
+                    show_name: false
+                    show_state: false
+                    color_type: auto
+                    tap_action:
+                      action: call-service
+                      service: switch.toggle
+                      service_data:
+                        entity_id: switch.puzzel_pause
+                    state:
+                      - value: "Ledig"
+                        color: var(--label-badge-green)
+                      - value: "Logget af"
+                        color: var(--label-badge-red)
+                        icon: " "
+                      - value: "Pause"
+                        color: var(--label-badge-background-color)
+                        icon: mdi:play
+                        styles:
+                          card:
+                            - background-color: var(--label-badge-yellow)
+                    styles:
+                      card:
+                        - aspect-ratio: 1/1
+                        - height: 100px
+                        - width: 100px
+
+              - type: custom:auto-entities
+                card:
+                  type: entities
+                # Trigger on changes to sensor.puzzel_ko
+                filter:
+                  template: |
+                    {% set profiles = (
+                      state_attr('sensor.puzzel_ko', 'available_profiles')
+                    ) %}
+                    {% set current_profile = state_attr('sensor.puzzel_ko', 'profile_id') %}
+                    {% set ns = namespace(ret=[]) %}
+                    {% for profile in profiles %}
+                      {% set ns.ret = ns.ret + [
+                        {
+                          "type": "button",
+                          "name": profile.name,
+                          "icon": ("mdi:menu" if profile.id != current_profile else "mdi:menu-open"),
+                          "action_name": ("Log ind" if profile.id != current_profile else " "),
+                          "tap_action": {
+                              "action": "call-service",
+                              "service": "script.puzzel_log_on",
+                              "data": {
+                                "queue_id": profile.id
+                              }
+                          }
+                        }
+                      ] %}
+                    {% endfor %}
+                    {{ ns.ret }}
 
           - type: vertical-stack
             cards:
               - !include ../cards/transport/car.yaml
-              - type: entities
-                entities:
-                  - entity: sensor.parking_limit
-                    name: Parkering udløber
+              - type: conditional
+                conditions:
+                  - entity: binary_sensor.show_parking_limit
+                    state: "on"
+                card:
+                  type: entities
+                  entities:
+                    - entity: sensor.parking_limit
+                      name: Parkering udløber
 
+              - !include ../cards/calendar_work.yaml
+
+          - type: vertical-stack
+            cards:
               - !include ../cards/weather/weather_forecast.yaml
