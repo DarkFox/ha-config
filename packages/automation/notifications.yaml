@@ -69,8 +69,12 @@ script:
       entity_id:
         description: The entity_id of the speaker(s) to broadcast to (defaults to all speakers in active rooms)
         example: "media_player.kitchen_speaker"
+      volume_level:
+        description: The volume level to use for the broadcast (optional)
+        example: 0.5
     variables:
       entity_id: "{{ entity_id | default(state_attr('sensor.room_announcement_speakers', 'entities')) }}"
+      default_volume: "{{ 0.35 if states('input_select.sleep_state') in ['alarm', 'soozing', 'waking'] else 0.50 }}"
     sequence:
       - condition: state
         entity_id: binary_sensor.martin_presence
@@ -80,7 +84,7 @@ script:
         data:
           cache: false
           entity_id: "{{ entity_id }}"
-          volume_level: "{{ 0.35 if states('input_select.sleep_state') in ['alarm', 'soozing', 'waking'] else 0.50 }}"
+          volume_level: "{{ volume_level | default(default_volume) }}"
           message: >-
             {{ message }}
 

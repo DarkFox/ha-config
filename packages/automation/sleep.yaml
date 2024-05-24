@@ -521,6 +521,7 @@ automation:
       wake_up_time: "{{ states('sensor.wake_up_time_clock') }}"
     action:
       - service: script.turn_on
+        continue_on_error: true
         target:
           entity_id: script.sleep_as_android_set_alarm
         data:
@@ -529,8 +530,10 @@ automation:
             timehour: "{{ wake_up_time.split(':')[0] }}"
             timemin: "{{ wake_up_time.split(':')[1] }}"
       - service: script.voice_broadcast
+        continue_on_error: true
         data:
           entity_id: media_player.sovevaerelse
+          volume_level: 0.2
           message: >-
             {% set events = state_attr('sensor.upcoming_events', 'events') or [] %}
             Alarm sat til klokken {{ wake_up_time }}.
@@ -655,6 +658,50 @@ automation:
         data:
           entity_id: "automation.reset_scene_transition_time"
 
+  - alias: alarm_action_media
+    id: alarm_action_media
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_select.sleep_state
+      to: "alarm"
+    action:
+      - service: media_player.unjoin
+        target:
+          entity_id:
+            - media_player.sovevaerelse
+            - media_player.badevaerelse
+            - media_player.kokken
+            - media_player.kontor
+            - media_player.stue
+            - media_player.roam
+      - service: media_player.volume_set
+        data:
+          entity_id: "media_player.sovevaerelse"
+          volume_level: 0.2
+      - service: script.mass_playlist
+        data:
+          entity_id: media_player.sovevaerelse_mass
+          repeat: "all"
+          playlist:
+            - "{{ states('sensor.podcast_radioavisen') }}"
+            - library://radio/1
+      - service: media_player.volume_set
+        data:
+          entity_id: "media_player.sovevaerelse_mass"
+          volume_level: 0.2
+      - delay:
+          minutes: 10
+      - condition: state
+        entity_id: input_select.sleep_state
+        state:
+          - "alarm"
+          - "snoozing"
+      - service: media_player.volume_set
+        data:
+          entity_id: "media_player.sovevaerelse"
+          volume_level: 0.30
+
   - alias: alarm_action
     id: alarm_action
     initial_state: true
@@ -681,36 +728,11 @@ automation:
         event_data:
           room: bedroom
           profile: Ambient
-
       - delay:
           seconds: 2
       - service: automation.trigger
         data:
           entity_id: "automation.reset_scene_transition_time"
-      - service: media_player.unjoin
-        target:
-          entity_id:
-            - media_player.sovevaerelse
-            - media_player.badevaerelse
-            - media_player.kokken
-            - media_player.kontor
-            - media_player.stue
-            - media_player.roam
-      - service: media_player.volume_set
-        data:
-          entity_id: "media_player.sovevaerelse"
-          volume_level: 0.2
-      - service: script.mass_playlist
-        data:
-          entity_id: media_player.sovevaerelse_mass
-          repeat: "all"
-          playlist:
-            - "{{ states('sensor.podcast_radioavisen') }}"
-            - library://radio/1
-      - service: media_player.volume_set
-        data:
-          entity_id: "media_player.sovevaerelse_mass"
-          volume_level: 0.2
       - delay:
           minutes: 5
       - condition: state
@@ -752,10 +774,6 @@ automation:
           - "alarm"
           - "snoozing"
           - "waking"
-      - service: media_player.volume_set
-        data:
-          entity_id: "media_player.sovevaerelse"
-          volume_level: 0.25
       - choose:
           - conditions:
               - condition: state
@@ -766,7 +784,6 @@ automation:
                 data:
                   entity_id: cover.sovevaerelse_gardin_vindue
                   position: 25
-
       - delay:
           minutes: 10
       - condition: state
@@ -785,6 +802,28 @@ automation:
                 data:
                   entity_id: cover.sovevaerelse_gardin_vindue
                   position: 20
+
+  - alias: waking_action_media
+    id: waking_action_media
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_select.sleep_state
+      to: "waking"
+    action:
+      - service: script.mass_playlist
+        data:
+          entity_id: media_player.sovevaerelse_mass
+          repeat: "all"
+          playlist:
+            - "{{ states('sensor.podcast_radioavisen') }}"
+            - library://radio/1
+      - wait_template: "{{ is_state('media_player.sovevaerelse', 'playing') }}"
+        timeout: "00:00:30"
+      - service: media_player.volume_set
+        data:
+          entity_id: "media_player.sovevaerelse"
+          volume_level: 0.30
 
   - alias: waking_action
     id: waking_action
@@ -820,27 +859,14 @@ automation:
         event_data:
           room: bedroom
           profile: Dimmed
-      - service: script.mass_playlist
-        data:
-          entity_id: media_player.sovevaerelse_mass
-          repeat: "all"
-          playlist:
-            - "{{ states('sensor.podcast_radioavisen') }}"
-            - library://radio/1
-      - wait_template: "{{ is_state('media_player.sovevaerelse', 'playing') }}"
-        timeout: "00:00:30"
-      - service: media_player.volume_set
-        data:
-          entity_id: "media_player.sovevaerelse"
-          volume_level: 0.25
       - delay:
           seconds: 2
       - service: automation.trigger
         data:
           entity_id: "automation.reset_scene_transition_time"
 
-  - alias: awake_action
-    id: awake_action
+  - alias: awake_action_media
+    id: awake_action_media
     initial_state: true
     trigger:
       platform: state
@@ -848,26 +874,6 @@ automation:
       to: "awake"
       from: "waking"
     action:
-      - service: switch.turn_off
-        target:
-          entity_id: switch.dorklokke_forstyr_ikke
-      - service: input_number.set_value
-        data:
-          entity_id: "input_number.scene_transition_time"
-          value: 120.0
-      - delay:
-          seconds: 1
-      - event: set_light_profile
-        event_data:
-          room: bedroom
-          profile: Dimmed
-      - event: set_light_profile
-        event_data:
-          room: bathroom
-          profile: Dimmed
-      - service: script.turn_on
-        target:
-          entity_id: script.sleep_as_android_stop_tracking
       - service: media_player.join
         target:
           entity_id: media_player.sovevaerelse
@@ -894,45 +900,6 @@ automation:
           entity_id: >-
             ["media_player.sovevaerelse", "media_player.badevaerelse" {{ ', "media_player.kokken"' if is_state('input_boolean.guests', 'off') }}]
           volume_level: 0.5
-      - service: input_number.set_value
-        data:
-          entity_id: "input_number.scene_transition_time"
-          value: 120.0
-      - delay:
-          seconds: 1
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: input_boolean.bedroom_separate_light_profile
-                state: "on"
-            sequence:
-              - event: set_light_profile
-                event_data:
-                  room: bedroom
-                  profile: Default
-        default:
-          - event: set_light_profile
-            event_data:
-              profile: Default
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: input_boolean.bathroom_separate_light_profile
-                state: "on"
-            sequence:
-              - event: set_light_profile
-                event_data:
-                  room: bathroom
-                  profile: Default
-        default:
-          - event: set_light_profile
-            event_data:
-              profile: Default
-      - delay:
-          seconds: 2
-      - service: automation.trigger
-        data:
-          entity_id: "automation.reset_scene_transition_time"
       - delay:
           minutes: 2
       - service: media_player.volume_set
@@ -940,6 +907,59 @@ automation:
           entity_id: >-
             ["media_player.sovevaerelse", "media_player.badevaerelse" {{ ', "media_player.kokken"' if is_state('input_boolean.guests', 'off') }}]
           volume_level: 0.6
+
+  - alias: awake_action
+    id: awake_action
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: input_select.sleep_state
+      to: "awake"
+      from: "waking"
+    action:
+      - service: switch.turn_off
+        target:
+          entity_id: switch.dorklokke_forstyr_ikke
+      - service: script.turn_on
+        target:
+          entity_id: script.sleep_as_android_stop_tracking
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.scene_transition_time"
+          value: 120.0
+      - delay:
+          seconds: 1
+      - event: set_light_profile
+        event_data:
+          room: bedroom
+          profile: Dimmed
+      - delay:
+          seconds: 1
+      - event: set_light_profile
+        event_data:
+          room: bathroom
+          profile: Dimmed
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.scene_transition_time"
+          value: 120.0
+      - delay:
+          seconds: 1
+      - event: set_light_profile
+        event_data:
+          room: bedroom
+          profile: Default
+      - delay:
+          seconds: 1
+      - event: set_light_profile
+        event_data:
+          room: bathroom
+          profile: Default
+      - delay:
+          seconds: 2
+      - service: automation.trigger
+        data:
+          entity_id: "automation.reset_scene_transition_time"
       - delay:
           minutes: 5
       - service: cover.open_cover
