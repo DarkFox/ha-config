@@ -1,7 +1,7 @@
 type: "custom:button-card"
 name: >
   [[[
-    return 'Bil - ' + states['device_tracker.id_3_pro_tracker'].state;
+    return states['device_tracker.id_3_pro_tracker'].state + (states['binary_sensor.id_3_pro_klimatisering'].state == 'on' ? ' - ' + states['sensor.id_3_pro_remaining_climatisation_time'].state + ' min' : '');
   ]]]
 entity: sensor.id_3_pro_state_of_charge
 hold_action:
@@ -35,19 +35,12 @@ custom_fields:
     [[[
       return '/ ' + states['sensor.id_3_pro_target_state_of_charge'].state + ' % (' + states['sensor.id_3_pro_range'].state + ' km)';
     ]]]
-  climate: >
-    [[[
-      if (states['binary_sensor.id_3_pro_klimatisering'].state == 'on')
-        return states['sensor.id_3_pro_remaining_climatisation_time'].state + ' min';
-      else
-        return '';
-    ]]]
 styles:
   card:
     - height: 105px
     - padding-top: 0
   grid:
-    - grid-template-areas: '"n climate i" "s unit unit" "l l l"'
+    - grid-template-areas: '"n n i" "s unit unit" "l l l"'
     - grid-template-columns: min-content 1fr 50px
     - grid-template-rows: min-content 1fr min-content
   img_cell:
