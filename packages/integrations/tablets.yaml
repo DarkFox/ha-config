@@ -16,7 +16,6 @@ script:
         target:
           entity_id:
             - light.kitchen_tablet
-            - light.hallway_tablet
             - light.bathroom_tablet
             - light.bedroom_tablet
       - delay:
@@ -108,21 +107,6 @@ automation:
         data:
           entity_id: switch.gang_tablet_lader
 
-  - alias: hallway_tablet_ip_webhook
-    initial_state: True
-    trigger:
-      platform: webhook
-      webhook_id: !secret hallway_tablet_ip_webhook
-      local_only: true
-      allowed_methods:
-        - GET
-        - POST
-    action:
-      service: "input_text.set_value"
-      data:
-        entity_id: input_text.hallway_tablet_ip
-        value: "{{ trigger.json.state }}"
-
   - alias: bedroom_tablet_screensaver_webhook
     initial_state: True
     trigger:
@@ -170,19 +154,12 @@ automation:
         data:
           entity_id: switch.bedroom_tablet_charger
 
-input_text:
-  hallway_tablet_ip:
-    name: Hallway Tablet IP
-
 rest_command:
   kitchen_tablet_command:
     url: "http://{{ states('sensor.kokken_tablet_wifi_ip_address') }}:1817/?message={{ command }}"
     method: GET
   bathroom_tablet_command:
     url: "http://{{ states('sensor.badevaerelse_tablet_wifi_ip_address') }}:1817/?message={{ command }}"
-    method: GET
-  hallway_tablet_command:
-    url: "http://{{ states('input_text.hallway_tablet_ip') }}:1817/?message={{ command }}"
     method: GET
   bedroom_tablet_command:
     url: "http://{{ states('sensor.sovevaerelse_tablet_wifi_ip_address') }}:1817/?message={{ command }}"
@@ -266,47 +243,6 @@ light:
           - delay:
               seconds: 1
           - service: notify.mobile_app_badevaerelse_tablet
-            data:
-              message: "command_screen_brightness_level"
-              data:
-                command: "{{ brightness }}"
-                ttl: 0
-                priority: high
-
-      hallway_tablet:
-        friendly_name: "Hallway Tablet"
-        level_template: "{{ states('sensor.gang_tablet_screen_brightness')|int }}"
-        value_template: "{{ states('binary_sensor.gang_tablet_interactive') }}"
-        turn_on:
-          - service: notify.mobile_app_gang_tablet
-            data:
-              message: "command_screen_on"
-              data:
-                command: "keep_screen_on"
-                ttl: 0
-                priority: high
-        turn_off:
-          - service: rest_command.hallway_tablet_command
-            data:
-              command: "screen=:=off"
-        set_level:
-          - service: notify.mobile_app_gang_tablet
-            data:
-              message: "command_screen_on"
-              data:
-                command: "keep_screen_on"
-                ttl: 0
-                priority: high
-          - service: notify.mobile_app_gang_tablet
-            data:
-              message: "command_screen_brightness_level"
-              data:
-                command: "{{ brightness }}"
-                ttl: 0
-                priority: high
-          - delay:
-              seconds: 1
-          - service: notify.mobile_app_gang_tablet
             data:
               message: "command_screen_brightness_level"
               data:
