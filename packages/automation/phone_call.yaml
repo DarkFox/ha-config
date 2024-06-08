@@ -2,9 +2,72 @@ input_text:
   active_media_player:
   active_media_type:
   work_phone_caller:
+    initial: ""
 
 input_boolean:
   work_phone_ringing:
+
+template:
+  - trigger:
+      platform: event
+      event_type:
+        - work_call_received
+        - work_call_ended
+    sensor:
+      - name: "Current Work Call"
+        state: "{{ trigger.event.data.phone_number if trigger.event.event_type == 'work_call_received' }}"
+        attributes:
+          phone_number: "{{ trigger.event.data.phone_number if trigger.event.event_type == 'work_call_received' }}"
+          formatted_phone: "{{ trigger.event.data.phone_number | string | regex_findall(find='..') | join(' ') if trigger.event.event_type == 'work_call_received' }}"
+          caller_info: "{{ trigger.event.data.caller_info if trigger.event.event_type == 'work_call_received' }}"
+          start: "{{ as_timestamp(now()) | timestamp_custom('%Y-%m-%d %H:%M:%S', true) if trigger.event.event_type == 'work_call_received' }}"
+
+  - trigger:
+      platform: event
+      event_type:
+        - work_call_ended
+        - clear_work_call_log
+    sensor:
+      - name: "Work Call Log"
+        state: "{{ as_timestamp(now()) | timestamp_custom('%Y-%m-%d %H:%M:%S', true) }}"
+        attributes:
+          call_log: |
+            {% if trigger.event.event_type == 'clear_work_call_log' %}
+              {}
+            {% else %}
+              {% set old_call_log = state_attr('sensor.work_call_log', 'call_log') or {} %}
+              {% set current_call = trigger.event.data.call_info %}
+              {% set caller_info = current_call['caller_info'] or {} %}
+              {% set new_caller = {
+                'phone_number': current_call['phone_number'],
+                'formatted_phone': current_call['formatted_phone'],
+                'name': caller_info.get('name', ''),
+                'title': caller_info.get('title', ''),
+                'organization': caller_info.get('organization', ''),
+                'email': caller_info.get('email', ''),
+                'start': current_call['start'],
+                'end': as_timestamp(now()) | timestamp_custom('%Y-%m-%d %H:%M:%S', true)
+              } %}
+              {
+                {% for key, value in old_call_log.items() %}
+                  "{{key}}": {{ value | tojson }},
+                {% endfor %}
+                "{{ new_caller['start'] }}": {{ new_caller | tojson }}
+              }
+            {% endif %}
+
+  - sensor:
+      - name: "Reverse Work Call Log"
+        state: "{{ states('sensor.work_call_log') }}"
+        attributes:
+          call_log: |
+            {% set call_log = state_attr('sensor.work_call_log', 'call_log') or {} %}
+            {% set call_log_keys = call_log.keys() | list %}
+            {
+              {% for key in call_log_keys | reverse %}
+                "{{ key }}": {{ call_log[key] | tojson }},
+              {% endfor %}
+            }
 
 automation:
   - alias: Pause Media On Phone Call
@@ -199,6 +262,8 @@ automation:
       - platform: state
         entity_id: input_text.work_phone_caller
     condition:
+      - condition: template
+        value_template: "{{ trigger.to_state.state not in ['', 'unavailable', 'unknown'] }}"
       - condition: state
         entity_id: sensor.arbejdstelefon_phone_state
         state:
@@ -216,9 +281,15 @@ automation:
               - condition: template
                 value_template: "{{ caller is not none and caller != {} }}"
             sequence:
-              - service: script.notify_caller_info
-                data:
-                  caller: "{{ caller }}"
+              - event: work_call_received
+                event_data:
+                  phone_number: "{{ phone_number }}"
+                  caller_info:
+                    name: "{{ caller.firstName|trim }} {{ caller.lastName|trim }}"
+                    title: "{{ caller.title|trim }}"
+                    organization: "{{ caller.organizationName|trim }}"
+                    phone_number: "{{ caller.communicationPoints | selectattr('communicationType', 'equalto', 'Cell') | map(attribute='remoteAddress') | first }}"
+                    email: "{{ caller.communicationPoints | selectattr('communicationType', 'equalto', 'EMail') | map(attribute='remoteAddress') | first }}"
         default:
           # If no caller is found, try looking up the number current puzzel caller
           - service: script.puzzel_get_current_request
@@ -241,10 +312,10 @@ automation:
                           - condition: template
                             value_template: "{{ request_remote_address != phone_number }}"
                         sequence:
-                          - service: script.notify_unknown_caller
-                            data:
-                              # Split phone number into groups of 2 digits
+                          - event: work_call_received
+                            event_data:
                               phone_number: "{{ phone_number }}"
+                              caller_info: {}
                     default:
                       - service: script.puzzel_lookup_caller
                         response_variable: puzzel_caller
@@ -255,19 +326,98 @@ automation:
                               - condition: template
                                 value_template: "{{ puzzel_caller is not none and puzzel_caller != {} }}"
                             sequence:
-                              - service: script.notify_caller_info
-                                data:
-                                  caller: "{{ puzzel_caller }}"
+                              - event: work_call_received
+                                event_data:
+                                  phone_number: "{{ request_remote_address }}"
+                                  caller_info:
+                                    name: "{{ puzzel_caller.firstName|trim }} {{ puzzel_caller.lastName|trim }}"
+                                    title: "{{ puzzel_caller.title|trim }}"
+                                    organization: "{{ puzzel_caller.organizationName|trim }}"
+                                    phone_number: "{{ puzzel_caller.communicationPoints | selectattr('communicationType', 'equalto', 'Cell') | map(attribute='remoteAddress') | first }}"
+                                    email: "{{ puzzel_caller.communicationPoints | selectattr('communicationType', 'equalto', 'EMail') | map(attribute='remoteAddress') | first }}"
+
                         default:
-                          - service: script.notify_unknown_caller
-                            data:
-                              # Split phone number into groups of 2 digits
+                          - event: work_call_received
+                            event_data:
                               phone_number: "{{ request_remote_address }}"
+                              caller_info: {}
             default:
-              # Just send phone number to telegram
-              - service: script.notify_unknown_caller
-                data:
+              - event: work_call_received
+                event_data:
                   phone_number: "{{ phone_number }}"
+                  caller_info: {}
+
+  - alias: Work call ended
+    id: work_call_ended
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: sensor.arbejdstelefon_phone_state
+        to: idle
+        from:
+          - ringing
+          - offhook
+    action:
+      - event: work_call_ended
+        event_data:
+          call_info:
+            phone_number: "{{ states('sensor.current_work_call') }}"
+            caller_info: "{{ state_attr('sensor.current_work_call', 'caller_info') }}"
+            start: "{{ state_attr('sensor.current_work_call', 'start') }}"
+      - service: input_text.set_value
+        data:
+          entity_id: input_text.work_phone_caller
+          value: ""
+
+  - alias: Notify Work Call
+    id: notify_work_call
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: work_call_received
+    action:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.event.data.caller_info is not none and trigger.event.data.caller_info != {} }}"
+            sequence:
+              - variables:
+                  caller: "{{ trigger.event.data.caller_info }}"
+                  name: "{{ caller.name }}"
+                  title: "{{ caller.title }}"
+                  email: "{{ caller.email }}"
+                  organization: "{{ caller.organization }}"
+                  formatted_phone: "{{ caller.phone_number | string | regex_findall(find='..') | join(' ') }}"
+
+              - service: notify.mobile_app_arbejdstelefon
+                data:
+                  title: "{{ name }}"
+                  message: |
+                    {{ title }} hos {{ organization }}.
+                    Tlf: {{ formatted_phone }}
+                    Email: {{ email }}
+                  data:
+                    tag: "puzzel_caller"
+                    channel: "Puzzel Caller"
+                    importance: high
+                    ttl: 0
+                    priority: high
+                    persistent: false
+                    clickAction: noAction
+                    notification_icon: mdi:phone-classic
+              - service: notify.telegram_darkfox
+                data:
+                  message: |
+                    Arbejdspkald fra {{ name }}
+                    {{ title }} hos {{ organization }}.
+                    Tlf: {{ formatted_phone }}
+                    Email: {{ email }}
+
+        default:
+          - service: notify.telegram_darkfox
+            data:
+              message: >-
+                Arbejdsopkald fra ukendt nummer: {{ trigger.event.data.phone_number | string | regex_findall(find='..') | join(' ') }}
 
 script:
   notify_unknown_caller:
@@ -323,6 +473,12 @@ script:
             {{ title }} hos {{ organization }}.
             Tlf: {{ formatted_phone }}
             Email: {{ email }}
+
+  clear_work_call_log:
+    alias: "Clear Work Call Log"
+    sequence:
+      - alias: "Clears the work call log"
+        event: clear_work_call_log
 
   pause_all_media:
     alias: "Sæt afspilning på pause"
