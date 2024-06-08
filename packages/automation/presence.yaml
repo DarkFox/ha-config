@@ -1,35 +1,27 @@
 input_select:
-  martin_status:
-    name: Martin Status
+  martin_state:
+    name: Martin State
     options:
-      - Snart hjemme
-      - Hjemme
-      - Lige ankommet
-      - Lige gået
-      - Væk
-      - Udvidet væk
+      - home_soon
+      - just_arrived
+      - home
+      - leaving
+      - just_left
+      - away
+      - away_long
 
-# proximity:
-#   martin_to_home:
-#     zone: home
-#     devices:
-#       - person.martin
-#     unit_of_measurement: m
-#     tolerance: 100
+input_datetime:
+  martin_state_changed:
+    name: Martin State Changed
+    has_date: true
+    has_time: true
 
-#   martin_to_rsr:
-#     zone: rsr
-#     devices:
-#       - person.martin
-#     unit_of_measurement: m
-#     tolerance: 100
-
-#   martin_to_rsh:
-#     zone: rsh
-#     devices:
-#       - person.martin
-#     unit_of_measurement: m
-#     tolerance: 100
+template:
+  - sensor:
+      - name: "Martin State Changed Minutes Ago"
+        state: "{{ (as_timestamp(now()) - as_timestamp(states('input_datetime.martin_state_changed'))) / 60 }}"
+        unit_of_measurement: "min"
+        icon: mdi:clock-time-eight-outline
 
 sensor:
   - platform: template
@@ -67,7 +59,7 @@ binary_sensor:
   - platform: template
     sensors:
       martin_home_soon:
-        friendly_name: "Martin Snart hjemme"
+        friendly_name: "Martin Home Soon"
         value_template: >
           {{
             states('sensor.home_martin_distance')|float < 1500
@@ -75,8 +67,8 @@ binary_sensor:
             (
               states('sensor.home_martin_distance')|float < 10000
               and
-              states('sensor.martin_to_home_distance_change')|float(0.0) * 4
-            ) + states('sensor.home_martin_distance')|float < 0
+              (states('sensor.martin_to_home_distance_change')|float(0.0) * 4) + states('sensor.home_martin_distance')|float < 0
+            )
           }}
 
       martin_presence:
@@ -165,3 +157,134 @@ automation:
         data:
           message: "Home Soon: {{ states('binary_sensor.martin_home_soon') }}"
           title: "Home Soon"
+
+  # Status State Machine
+  #
+  # Definitions:
+  # home_soon: Arriving home soon (Triggered by binary_sensor.martin_home_soon)
+  # just_arrived: Just walked in the door (Triggered by binary_sensor.hoveddor)
+  # home: Home for more than 5 minutes (Triggered by being in state 'just_arrived' for more than 5 minutes)
+  # leaving: On the way out the door (Triggered by button press, voice command, or the car starting while at home)
+  # just_left: Just left (Triggered by being in state 'leaving' for more than 5 minutes)
+  # away: Away for more than just a short thing (Triggered by being in state 'just_left' for more than 30 minutes)
+  # away_long: Away for more than a day (Triggered by being in state 'away' for more than 18 hours)
+  #
+  # Use events to trigger transitions, to simplify the state machine automation
+
+  - alias: Martin State Machine
+    id: martin_state_machine
+    initial_state: true
+    mode: queued
+    trigger:
+      - platform: event
+        event_type: martin_state_change
+    variables:
+      current_state: "{{ states('input_select.martin_state') }}"
+      new_state: "{{ trigger.event.data.state }}"
+      allowed_transitions:
+        home_soon:
+          - home
+          - away
+          - away_long
+        just_arrived:
+          - home
+          - leaving
+          - just_left
+        home:
+          - leaving
+          - just_left
+        leaving:
+          - just_left
+          - home
+        just_left:
+          - home
+          - away
+        away:
+          - away_long
+          - home_soon
+          - just_arrived
+        away_long:
+          - home_soon
+          - just_arrived
+      transition_allowed: "{{ new_state in allowed_transitions[current_state] }}"
+    action:
+      - choose:
+          - conditions:
+              - condition: "{{ transition_allowed }}"
+            sequence:
+              - service: input_datetime.set_datetime
+                target:
+                  entity_id: input_datetime.martin_state_changed
+                data:
+                  timestamp: "{{ now().isoformat() }}"
+              - service: input_select.select_option
+                target:
+                  entity_id: input_select.martin_state
+                data:
+                  option: "{{ new_state }}"
+          - conditions:
+              - condition: "{{ not transition_allowed }}"
+            sequence:
+              - service: script.debug_notification
+                data:
+                  message: "Invalid state transition from {{ current_state }} to {{ new_state }}"
+                  title: "Martin State: Invalid State Transition"
+
+  # State Machine Triggers #
+
+  # Time based triggers
+  - alias: Martin State Machine - Trigger Home
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.martin_state_changed_minutes_ago
+        above: 5
+    condition:
+      - condition: state
+        entity_id: input_select.martin_state
+        state: "just_arrived"
+    action:
+      - event: martin_state_change
+        event_data:
+          state: home
+
+  - alias: Martin State Machine - Trigger Just Left
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.martin_state_changed_minutes_ago
+        above: 5
+    condition:
+      - condition: state
+        entity_id: input_select.martin_state
+        state: "leaving"
+    action:
+      - event: martin_state_change
+        event_data:
+          state: just_left
+
+  - alias: Martin State Machine - Trigger Away
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.martin_state_changed_minutes_ago
+        above: 30
+    condition:
+      - condition: state
+        entity_id: input_select.martin_state
+        state: "just_left"
+    action:
+      - event: martin_state_change
+        event_data:
+          state: away
+
+  - alias: Martin State Machine - Trigger Away Long
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.martin_state_changed_minutes_ago
+        above: 1080
+    condition:
+      - condition: state
+        entity_id: input_select.martin_state
+        state: "away"
+    action:
+      - event: martin_state_change
+        event_data:
+          state: away_long
