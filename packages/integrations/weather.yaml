@@ -39,24 +39,6 @@ sensor:
           {{ states('sensor.beaufort_beskrivelse') }}
           {{ '(' + states('sensor.beaufort_vindstod_beskrivelse') + ')' if states('sensor.beaufort_beskrivelse') != states('sensor.beaufort_vindstod_beskrivelse') }}
           {{ 'fra '+states('sensor.vindretning') if states('sensor.beaufort')|int > 1 }}
-      wind_speed_description:
-        value_template: >-
-          {% set translations = {
-            "calm": "Stille",
-            "light_air": "Næsten stille",
-            "light_breeze": "Svag vind",
-            "gentle_breeze": "Let vind",
-            "moderate_breeze": "Jævn vind",
-            "fresh_breeze": "Frisk vind",
-            "strong_breeze": "Hård vind",
-            "moderate_gale": "Stiv kuling",
-            "fresh_gale": "Hård kuling",
-            "strong_gale": "Stormende kuling",
-            "storm": "Storm",
-            "violent_storm": "Stærk storm",
-            "hurricane": "Orkan"
-          } %}
-          {{ translations[states('sensor.beaufort')] }}
       precip_today:
         friendly_name: Nedbør
         value_template: "{{ state_attr('weather.forecast_home', 'forecast')[0].precipitation }}"
