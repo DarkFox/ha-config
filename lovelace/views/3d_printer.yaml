@@ -57,13 +57,15 @@ cards:
                   url_path: http://192.168.42.210/
                 name: |
                   [[[
-                    return states['sensor.3d_printer_print_name'].state
+                    return states['sensor.octoprint_print_progress'].state.replace('.', ',') + '% - ' + states['sensor.3d_printer_materiale'].state
                   ]]]
-                entity: sensor.octoprint_print_progress
+                entity: sensor.3d_printer_print_name
+                icon: mdi:cube
                 layout: icon_name_state2nd
                 show_state: true
                 show_icon: true
                 show_name: true
+                show_label: true
                 size: 25px
 
               - show_state: false
@@ -77,17 +79,6 @@ cards:
                   service: script.turn_on
                   service_data:
                     entity_id: script.update_model_image
-
-              - type: custom:button-card
-                tap_action:
-                  action: more-info
-                entity: sensor.3d_printer_materiale
-                name: Materiale
-                layout: icon_name_state2nd
-                show_state: true
-                show_icon: true
-                show_name: true
-                size: 25px
 
           - type: vertical-stack
             cards:
@@ -192,40 +183,49 @@ cards:
               - type: horizontal-stack
                 cards:
                   - type: custom:button-card
-                    tap_action:
-                      action: more-info
                     entity: sensor.octoprint_print_time
-                    name: Tid Brugt
+                    name: |
+                      [[[
+                        return 'Kl. ' + (['unavailable', 'unknown', ''].includes(states['sensor.3d_printer_finish_time'].state) ? ' ' : states['sensor.3d_printer_finish_time'].state)
+                      ]]]
+                    # Convert from seconds to HH:MM:SS
+                    label: |
+                      [[[
+                        return (['unavailable', 'unknown', ''].includes(states['sensor.octoprint_print_time_left'].state) ? ' ' : '/' + new Date(states['sensor.octoprint_print_time_left'].state * 1000).toISOString().substr(11, 8))
+                      ]]]
                     layout: icon_name_state2nd
                     show_state: true
                     show_icon: true
                     show_name: true
+                    show_label: true
                     size: 25px
-
-                  - type: custom:button-card
                     tap_action:
-                      action: more-info
-                    entity: sensor.octoprint_print_time_left
-                    name: Tid Tilbage
-                    layout: icon_name_state2nd
-                    show_state: true
-                    show_icon: true
-                    show_name: true
-                    size: 25px
+                      # Graph time left against time spent
+                      action: fire-dom-event
+                      browser_mod:
+                        service: browser_mod.popup
+                        data:
+                          title: 3D Printer
+                          content:
+                            type: custom:mini-graph-card
+                            points_per_hour: 30
+                            hours_to_show: 6
+                            hour24: true
+                            line_width: 2
+                            height: 400
+                            show:
+                              name: false
+                              icon: false
+                              labels: true
+                              labels_secondary: true
+                            entities:
+                              - entity: sensor.octoprint_print_time
+                                show_fill: false
+                                show_legend: true
+                              - entity: sensor.octoprint_print_time_left
+                                show_fill: false
+                                show_legend: true
 
-                  - type: custom:button-card
-                    tap_action:
-                      action: more-info
-                    entity: sensor.3d_printer_finish_time
-                    name: Sluttid
-                    layout: icon_name_state2nd
-                    show_state: true
-                    show_icon: true
-                    show_name: true
-                    size: 25px
-
-              - type: horizontal-stack
-                cards:
                   - type: custom:button-card
                     entity: sensor.3d_printer_humidity
                     name: |
@@ -233,6 +233,7 @@ cards:
                         return states['sensor.3d_printer_temperature'].state +
                         ' °C'
                       ]]]
+                    label: " "
                     icon: mdi:cube-scan
                     layout: icon_name_state2nd
                     show_state: true
@@ -274,6 +275,11 @@ cards:
                         return states['sensor.filament_hylde_temperature'].state +
                         ' °C'
                       ]]]
+                    label: |
+                      [[[
+                        return parseFloat(states['sensor.filament_hylde_absolute_humidity'].state).toFixed(2) +
+                        ' g/m³'
+                      ]]]
                     icon: mdi:movie-roll
                     layout: icon_name_state2nd
                     show_state: true
@@ -285,38 +291,77 @@ cards:
                       browser_mod:
                         service: browser_mod.popup
                         data:
-                          title: 3D Printer
+                          title: Filament Hylde
+                          size: wide
                           content:
-                            type: custom:mini-graph-card
-                            points_per_hour: 30
-                            hours_to_show: 6
-                            hour24: true
-                            line_width: 2
-                            height: 400
-                            show:
-                              name: false
-                              icon: false
-                              labels: true
-                              labels_secondary: true
-                            entities:
+                            type: custom:apexcharts-card
+                            graph_span: 3d
+                            apex_config:
+                              chart:
+                                height: 600px
+                            header:
+                              show: true
+                              title: Filament Hylde
+                              show_states: true
+                            yaxis:
+                              - id: temperature
+                                decimals: 1
+                                min: 15
+                                max: 40
+                                opposite: false
+                                apex_config:
+                                  title:
+                                    text: "°C"
+                              - id: humidity
+                                decimals: 1
+                                min: 15
+                                max: 50
+                                opposite: true
+                                apex_config:
+                                  title:
+                                    text: "%"
+                              - id: absolute_humidity
+                                decimals: 2
+                                min: 5
+                                max: 20
+                                opposite: true
+                                apex_config:
+                                  title:
+                                    text: "g/m³"
+                            series:
                               - entity: sensor.filament_hylde_temperature
-                                show_fill: false
-                                # show_legend: false
+                                name: Temperatur
+                                unit: "°C"
+                                fill_raw: last
+                                stroke_width: 2
                                 color: "#FF7500"
+                                yaxis_id: temperature
                               - entity: sensor.filament_hylde_humidity
-                                show_fill: false
-                                # show_legend: false
-                                y_axis: secondary
+                                name: Luftfugtighed
+                                unit: "%"
+                                fill_raw: last
+                                stroke_width: 2
+                                color: "#0075FF"
+                                yaxis_id: humidity
+                              - entity: sensor.filament_hylde_absolute_humidity
+                                name: Absolut Luftfugtighed
+                                unit: "g/m³"
+                                fill_raw: last
+                                stroke_width: 2
+                                color: "#00FF75"
+                                yaxis_id: absolute_humidity
 
                   - type: custom:button-card
                     tap_action:
                       action: more-info
                     entity: sensor.octoprint_soc_temperature
                     name: SoC
+                    label: " "
                     layout: icon_name_state2nd
                     show_state: true
                     show_icon: true
                     show_name: true
+                    show_label: true
                     size: 25px
 
               - type: horizontal-stack

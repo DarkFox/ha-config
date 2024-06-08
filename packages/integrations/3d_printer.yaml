@@ -21,9 +21,9 @@ sensor:
         value_template: >-
           {{
             (as_timestamp(now())+(states('sensor.octoprint_print_time_left')|int))
-            | timestamp_custom('%Y-%m-%d %H:%M')
+            | timestamp_custom('%d. %H:%M')
             | replace((as_timestamp(now())
-            | timestamp_custom('%Y-%m-%d ')), '')
+            | timestamp_custom('%d. ')), '')
           }}
 
 script:
@@ -47,3 +47,24 @@ automation:
       - service: script.turn_on
         target:
           entity_id: script.update_model_image
+
+  - id: 3d_printer_turn_on_with_job
+    alias: 3D Printer Turn On With Job
+    initial_state: true
+    mode: single
+    trigger:
+      - platform: mqtt
+        topic: "octoPrint/event/Connecting"
+    condition:
+      - condition: state
+        entity_id: switch.3d_printer_afbryder
+        state: "off"
+    action:
+      - service: switch.turn_on
+        target:
+          entity_id: switch.3d_printer_afbryder
+      - delay:
+          seconds: 5
+      - service: switch.turn_on
+        target:
+          entity_id: switch.octoprint_connect_to_printer
