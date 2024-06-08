@@ -135,10 +135,9 @@ automation:
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
-            light.kontor_spots:
+            light.kontor_loftlampe:
               state: on
               brightness: 255
-              color_temp: 260
             light.kontor_loftlys:
               state: on
               brightness: 255
@@ -191,6 +190,14 @@ automation:
               state: on
               brightness: 255
               effect: "None"
+      - delay:
+          seconds: "{{ (states('input_number.scene_transition_time') or 1) | round(0, 'ceil')+2}}"
+      - service: light.turn_on
+        data:
+          transition: 0
+          color_temp: 260
+          entity_id:
+            - light.kontor_loftlampe
 
   - alias: activate_light_profile_office_default
     id: activate_light_profile_office_default
@@ -211,10 +218,9 @@ automation:
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
-            light.kontor_spots:
+            light.kontor_loftlampe:
               state: on
-              brightness: 172
-              color_temp: 390
+              brightness: 255
             light.kontor_loftlys:
               state: on
               brightness: 255
@@ -268,6 +274,14 @@ automation:
               state: on
               brightness: 255
               effect: "None"
+      - delay:
+          seconds: "{{ (states('input_number.scene_transition_time') or 1) | round(0, 'ceil')+2}}"
+      - service: light.turn_on
+        data:
+          transition: 0
+          color_temp: 390
+          entity_id:
+            - light.kontor_loftlampe
 
   - alias: activate_light_profile_office_dimmed
     id: activate_light_profile_office_dimmed
@@ -288,11 +302,9 @@ automation:
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
-            light.kontor_spots:
+            light.kontor_loftlampe:
               state: on
-              brightness: 64
-              color_temp: 390
-              effect: "None"
+              brightness: 1
             light.kontor_loftlys:
               state: on
               brightness: 255
@@ -347,6 +359,14 @@ automation:
               state: on
               brightness: 127
               effect: "None"
+      - delay:
+          seconds: "{{ (states('input_number.scene_transition_time') or 1) | round(0, 'ceil')+2}}"
+      - service: light.turn_on
+        data:
+          transition: 0
+          color_temp: 454
+          entity_id:
+            - light.kontor_loftlampe
 
   - alias: activate_light_profile_office_ambient
     id: activate_light_profile_office_ambient
@@ -372,11 +392,8 @@ automation:
               brightness: 100
               hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
               effect: "None"
-            light.kontor_spots:
-              state: on
-              brightness: 50
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-              effect: "None"
+            light.kontor_loftlampe:
+              state: off
             light.projektor:
               state: on
               brightness: 100
@@ -451,7 +468,7 @@ automation:
               brightness: 32
               rgb_color: [255, 0, 0]
               effect: "None"
-            light.kontor_spots:
+            light.kontor_loftlampe:
               state: off
             light.projektor:
               state: on
@@ -546,10 +563,8 @@ automation:
               state: on
               effect: "colorloop"
               brightness: 127
-            light.kontor_spots:
-              state: on
-              effect: "colorloop"
-              brightness: 127
+            light.kontor_loftlampe:
+              state: off
             light.projektor:
               state: on
               effect: "colorloop"

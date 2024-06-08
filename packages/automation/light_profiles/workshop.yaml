@@ -114,20 +114,13 @@ automation:
             light.vaerksted_loftlampe:
               state: on
               brightness: 255
+              color_temp: 250
             light.hobbybord_bord:
               state: on
               brightness: 255
             light.hobbybord_vaerktojsskab:
               state: on
               brightness: 255
-      - delay:
-          seconds: "{{ (states('input_number.scene_transition_time') or 1) | round(0, 'ceil')+2}}"
-      - service: light.turn_on
-        data:
-          transition: 0
-          kelvin: 3500
-          entity_id:
-            - light.vaerksted_loftlampe
 
   - alias: activate_light_profile_workshop_default
     id: activate_light_profile_workshop_default
@@ -151,20 +144,13 @@ automation:
             light.vaerksted_loftlampe:
               state: on
               brightness: 255
+              color_temp: 250
             light.hobbybord_bord:
               state: on
               brightness: 255
             light.hobbybord_vaerktojsskab:
               state: on
               brightness: 255
-      - delay:
-          seconds: "{{ (states('input_number.scene_transition_time') or 1) | round(0, 'ceil')+2}}"
-      - service: light.turn_on
-        data:
-          transition: 0
-          kelvin: 3500
-          entity_id:
-            - light.vaerksted_loftlampe
 
   - alias: activate_light_profile_workshop_dimmed
     id: activate_light_profile_workshop_dimmed
@@ -187,21 +173,15 @@ automation:
           entities:
             light.vaerksted_loftlampe:
               state: on
-              brightness: 1
+              effect: "None"
+              brightness: 72
+              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
             light.hobbybord_bord:
               state: on
               brightness: 48
             light.hobbybord_vaerktojsskab:
               state: on
               brightness: 48
-      - delay:
-          seconds: "{{ (states('input_number.scene_transition_time') or 1) | round(0, 'ceil')+2}}"
-      - service: light.turn_on
-        data:
-          transition: 0
-          kelvin: 2202
-          entity_id:
-            - light.vaerksted_loftlampe
 
   - alias: activate_light_profile_workshop_ambient
     id: activate_light_profile_workshop_ambient
@@ -223,7 +203,10 @@ automation:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
             light.vaerksted_loftlampe:
-              state: off
+              state: on
+              effect: "None"
+              brightness: 48
+              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
             light.hobbybord_bord:
               state: on
               brightness: 36
@@ -251,7 +234,10 @@ automation:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
             light.vaerksted_loftlampe:
-              state: off
+              state: on
+              effect: "None"
+              brightness: 2
+              rgb_color: [255, 0, 0]
             light.hobbybord_bord:
               state: on
               brightness: 8
