@@ -5,3 +5,23 @@ template:
         icon: mdi:virtual-reality
         delay_off:
           seconds: 30
+
+      - name: Quest Virtual Desktop In Use
+        state: "{{ is_state('binary_sensor.quest_in_use', 'on') and is_state('sensor.quest_last_used_app', 'VirtualDesktop.Android') }}"
+        icon: mdi:virtual-reality
+        delay_off:
+          seconds: 30
+
+automation:
+  - alias: "Switch PC sound to VR"
+    id: switch_pc_sound_to_vr
+    mode: single
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.quest_virtual_desktop_in_use
+        to: "on"
+    action:
+      - service: button.press
+        target:
+          entity_id: button.martin_pc_martin_pc_vr_sound
