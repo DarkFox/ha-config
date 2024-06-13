@@ -22,6 +22,15 @@ sensor:
 
 template:
   - binary_sensor:
+      - name: 3D Printer Aktiv
+        state: >-
+          {{
+            states('sensor.octoprint_current_state') in ['Printing', 'Pausing', 'Resuming', 'Cancelling', 'Error']
+            or states('sensor.octoprint_actual_bed_temp')|int > 40
+            or states('sensor.octoprint_actual_tool0_temp')|int > 40
+            or states('sensor.octoprint_target_bed_temp')|int > 40
+            or states('sensor.octoprint_target_tool0_temp')|int > 40
+          }}
       - name: 3D Printer Lys
         state: >-
           {{
@@ -244,9 +253,8 @@ automation:
     alias: 3d Printer Auto Shutdown
     trigger:
       - platform: state
-        entity_id: sensor.octoprint_current_state
-        from: "Printing"
-        to: "Operational"
+        entity_id: binary_sensor.3d_printer_aktiv
+        to: "off"
         for:
           minutes: 15
     action:
