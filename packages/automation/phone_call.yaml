@@ -20,6 +20,7 @@ template:
           phone_number: "{{ trigger.event.data.phone_number if trigger.event.event_type == 'work_call_received' }}"
           formatted_phone: "{{ trigger.event.data.phone_number | string | regex_findall(find='..') | join(' ') if trigger.event.event_type == 'work_call_received' }}"
           caller_info: "{{ trigger.event.data.caller_info if trigger.event.event_type == 'work_call_received' }}"
+          line: "{{ trigger.event.data.line if trigger.event.event_type == 'work_call_received' }}"
           start: "{{ as_timestamp(now()) | timestamp_custom('%Y-%m-%d %H:%M:%S', true) if trigger.event.event_type == 'work_call_received' }}"
 
   - trigger:
@@ -37,23 +38,32 @@ template:
             {% else %}
               {% set old_call_log = state_attr('sensor.work_call_log', 'call_log') or {} %}
               {% set current_call = trigger.event.data.call_info %}
-              {% set caller_info = current_call['caller_info'] or {} %}
-              {% set new_caller = {
-                'phone_number': current_call['phone_number'],
-                'formatted_phone': current_call['formatted_phone'],
-                'name': caller_info.get('name', ''),
-                'title': caller_info.get('title', ''),
-                'organization': caller_info.get('organization', ''),
-                'email': caller_info.get('email', ''),
-                'start': current_call['start'],
-                'end': as_timestamp(now()) | timestamp_custom('%Y-%m-%d %H:%M:%S', true)
-              } %}
-              {
-                {% for key, value in old_call_log.items() %}
-                  "{{key}}": {{ value | tojson }},
-                {% endfor %}
-                "{{ new_caller['start'] }}": {{ new_caller | tojson }}
-              }
+              {% if current_call.get('phone_number', '')|string != '' %}
+                {% set caller_info = current_call['caller_info'] or {} %}
+                {% set start = current_call.get('start', now()) | as_timestamp | int  %}
+                {% set end = as_timestamp(now()) | int %}
+                {% set duration = end - start %}
+                {% set new_caller = {
+                  'phone_number': current_call.get('phone_number', ''),
+                  'formatted_phone': current_call.get('formatted_phone', ''),
+                  'name': caller_info.get('name', ''),
+                  'title': caller_info.get('title', ''),
+                  'organization': caller_info.get('organization', ''),
+                  'email': caller_info.get('email', ''),
+                  'line': current_call.get('line', ''),
+                  'start': current_call.get('start', ''),
+                  'end': end | timestamp_custom('%Y-%m-%d %H:%M:%S', true),
+                  'duration': duration
+                } %}
+                {
+                  {% for key, value in old_call_log.items() %}
+                    "{{key}}": {{ value | tojson }},
+                  {% endfor %}
+                  "{{ new_caller['start'] }}": {{ new_caller | tojson }}
+                }
+              {% else %}
+                {{ old_call_log | tojson }}
+              {% endif %}
             {% endif %}
 
   - sensor:
@@ -276,76 +286,21 @@ automation:
         response_variable: caller
         data:
           phone_number: "{{ phone_number }}"
-      - choose:
-          - conditions:
-              - condition: template
-                value_template: "{{ caller is not none and caller != {} }}"
-            sequence:
-              - event: work_call_received
-                event_data:
-                  phone_number: "{{ phone_number }}"
-                  caller_info:
-                    name: "{{ caller.firstName|trim }} {{ caller.lastName|trim }}"
-                    title: "{{ caller.title|trim }}"
-                    organization: "{{ caller.organizationName|trim }}"
-                    phone_number: "{{ caller.communicationPoints | selectattr('communicationType', 'equalto', 'Cell') | map(attribute='remoteAddress') | first }}"
-                    email: "{{ caller.communicationPoints | selectattr('communicationType', 'equalto', 'EMail') | map(attribute='remoteAddress') | first }}"
-        default:
-          # If no caller is found, try looking up the number current puzzel caller
-          - service: script.puzzel_get_current_request
-            response_variable: current_request
 
-          - choose:
-              - conditions:
-                  - condition: template
-                    value_template: |
-                      {{
-                        current_request is not none
-                        and current_request != {}
-                        and current_request != ''
-                      }}
-                sequence:
-                  - variables:
-                      request_remote_address: "{{ current_request['requestRemoteAddress'][-8:] }}"
-                  - choose:
-                      - conditions:
-                          - condition: template
-                            value_template: "{{ request_remote_address != phone_number }}"
-                        sequence:
-                          - event: work_call_received
-                            event_data:
-                              phone_number: "{{ phone_number }}"
-                              caller_info: {}
-                    default:
-                      - service: script.puzzel_lookup_caller
-                        response_variable: puzzel_caller
-                        data:
-                          phone_number: "{{ request_remote_address }}"
-                      - choose:
-                          - conditions:
-                              - condition: template
-                                value_template: "{{ puzzel_caller is not none and puzzel_caller != {} }}"
-                            sequence:
-                              - event: work_call_received
-                                event_data:
-                                  phone_number: "{{ request_remote_address }}"
-                                  caller_info:
-                                    name: "{{ puzzel_caller.firstName|trim }} {{ puzzel_caller.lastName|trim }}"
-                                    title: "{{ puzzel_caller.title|trim }}"
-                                    organization: "{{ puzzel_caller.organizationName|trim }}"
-                                    phone_number: "{{ puzzel_caller.communicationPoints | selectattr('communicationType', 'equalto', 'Cell') | map(attribute='remoteAddress') | first }}"
-                                    email: "{{ puzzel_caller.communicationPoints | selectattr('communicationType', 'equalto', 'EMail') | map(attribute='remoteAddress') | first }}"
+      - service: script.puzzel_get_current_request
+        response_variable: puzzel_request
 
-                        default:
-                          - event: work_call_received
-                            event_data:
-                              phone_number: "{{ request_remote_address }}"
-                              caller_info: {}
-            default:
-              - event: work_call_received
-                event_data:
-                  phone_number: "{{ phone_number }}"
-                  caller_info: {}
+      - variables:
+          current_request: "{{ puzzel_request or {} }}"
+          actual_phone_number: "{{ current_request.get('phone_number', '') or phone_number }}"
+          actual_caller: "{{ current_request.get('caller', {}) or caller }}"
+          line: "{{ caller.get('caller', {}).get('name', '') if current_request.get('phone_number') else ''}}"
+
+      - event: work_call_received
+        event_data:
+          phone_number: "{{ actual_phone_number }}"
+          caller_info: "{{ actual_caller }}"
+          line: "{{ line }}"
 
   - alias: Work call ended
     id: work_call_ended
@@ -362,7 +317,9 @@ automation:
         event_data:
           call_info:
             phone_number: "{{ states('sensor.current_work_call') }}"
+            formatted_phone: "{{ state_attr('sensor.current_work_call', 'formatted_phone') }}"
             caller_info: "{{ state_attr('sensor.current_work_call', 'caller_info') }}"
+            line: "{{ state_attr('sensor.current_work_call', 'line') }}"
             start: "{{ state_attr('sensor.current_work_call', 'start') }}"
       - service: input_text.set_value
         data:
@@ -373,21 +330,25 @@ automation:
     id: notify_work_call
     initial_state: true
     trigger:
-      - platform: event
-        event_type: work_call_received
+      - platform: state
+        entity_id: sensor.current_work_call
+    condition:
+      - condition: template
+        value_template: "{{ trigger.to_state.state not in ['unknown', 'unavailable', ''] }}"
     action:
       - choose:
           - conditions:
               - condition: template
-                value_template: "{{ trigger.event.data.caller_info is not none and trigger.event.data.caller_info != {} }}"
+                value_template: "{{ trigger.to_state.attributes.caller_info is not none and trigger.to_state.attributes.caller_info != {} }}"
             sequence:
               - variables:
-                  caller: "{{ trigger.event.data.caller_info }}"
+                  caller: "{{ trigger.to_state.attributes.caller_info }}"
                   name: "{{ caller.name }}"
                   title: "{{ caller.title }}"
                   email: "{{ caller.email }}"
                   organization: "{{ caller.organization }}"
-                  formatted_phone: "{{ caller.phone_number | string | regex_findall(find='..') | join(' ') }}"
+                  formatted_phone: "{{ trigger.to_state.attributes.formatted_phone }}"
+                  line: "{{ trigger.to_state.attributes.line }}"
 
               - service: notify.mobile_app_arbejdstelefon
                 data:
@@ -396,6 +357,7 @@ automation:
                     {{ title }} hos {{ organization }}.
                     Tlf: {{ formatted_phone }}
                     Email: {{ email }}
+                    {{ 'Linje: ' + line if line != '' }}
                   data:
                     tag: "puzzel_caller"
                     channel: "Puzzel Caller"
@@ -412,12 +374,13 @@ automation:
                     {{ title }} hos {{ organization }}.
                     Tlf: {{ formatted_phone }}
                     Email: {{ email }}
+                    {{ 'Linje: ' + line if line != '' }}
 
         default:
           - service: notify.telegram_darkfox
             data:
               message: >-
-                Arbejdsopkald fra ukendt nummer: {{ trigger.event.data.phone_number | string | regex_findall(find='..') | join(' ') }}
+                Arbejdsopkald fra ukendt nummer: {{ trigger.to_state.attributes.formatted_phone }}
 
 script:
   notify_unknown_caller:

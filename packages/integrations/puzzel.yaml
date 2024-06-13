@@ -95,6 +95,7 @@ switch:
 
 script:
   puzzel_contacts_lookup:
+    mode: parallel
     alias: "Puzzel Contacts Lookup"
     fields:
       phone_number:
@@ -114,7 +115,40 @@ script:
             Content-Type: application/json
             Authorization: "Bearer {{ state_attr('sensor.puzzel_login', 'accessToken') }}"
           payload:
-            phoneNumber: "{{ phone_number|string }}"
+            searchString: "{{ phone_number|string }}"
+
+      - variables:
+          # Convert stdout from JSON to dict
+          stdout: "{{ result.stdout | from_json }}"
+          # Extract first result from JSON
+          caller: "{{ stdout.result | first }}"
+
+      - stop: "Return caller info"
+        response_variable: caller
+
+  puzzel_users_lookup:
+    mode: parallel
+    alias: "Puzzel Users Lookup"
+    fields:
+      phone_number:
+        description: "Phone number to lookup in Puzzel users"
+        example: "12345678"
+    sequence:
+      - variables:
+          # Take only the last 8 digits of the phone number.
+          phone_number: "{{ (phone_number|string)[-8:] }}"
+
+      - service: shell_command.curl
+        response_variable: result
+        data:
+          url: "https://agent.puzzel.com/contactcentre5/{{ states('sensor.puzzel_customer_key') }}/users/{{ states('sensor.puzzel_user_id')|string }}/usersearch"
+          method: post
+          headers:
+            Content-Type: application/json
+            Authorization: "Bearer {{ state_attr('sensor.puzzel_login', 'accessToken') }}"
+          payload:
+            searchString: "{{ phone_number|string }}"
+            maxMatches: 1
 
       - variables:
           # Convert stdout from JSON to dict
@@ -126,6 +160,7 @@ script:
         response_variable: caller
 
   puzzel_external_contacts_lookup:
+    mode: parallel
     alias: "Puzzel External Contacts Lookup"
     fields:
       phone_number:
@@ -145,7 +180,7 @@ script:
             Content-Type: application/json
             Authorization: "Bearer {{ state_attr('sensor.puzzel_login', 'accessToken') }}"
           payload:
-            phoneNumber: "{{ phone_number|string }}"
+            searchString: "{{ phone_number|string }}"
 
       - variables:
           # Convert stdout from JSON to dict
@@ -156,29 +191,81 @@ script:
       - stop: "Return caller info"
         response_variable: caller
 
+  puzzel_extract_caller_info:
+    mode: parallel
+    alias: "Puzzel Extract Caller Info"
+    sequence:
+      - condition: template
+        alias: "caller_info must be a dict and not empty"
+        value_template: "{{ caller_info is mapping and (caller_info | length) > 0 }}"
+
+      - variables:
+          caller: |
+            {{
+              {
+                'name': (caller_info.get('firstName', '')|trim) + ' ' + (caller_info.get('lastName', '')|trim),
+                'title': (caller_info.get('title', '')|trim),
+                'organization': (caller_info.get('organizationName', '')|trim),
+                'phone_number': (caller_info.get('communicationPoints', {}) | selectattr('communicationType', 'equalto', 'Cell') | map(attribute='remoteAddress') | first | default('')),
+                'email': (caller_info.get('communicationPoints', {}) | selectattr('communicationType', 'equalto', 'EMail') | map(attribute='remoteAddress') | first | default(''))
+              } | tojson
+            }}
+
+      - stop: "Return caller info"
+        response_variable: caller
+
   puzzel_lookup_caller:
+    mode: parallel
     alias: "Puzzel Caller Lookup"
     fields:
       phone_number:
         description: "Phone number to lookup in Puzzel contacts"
         example: "12345678"
     sequence:
+      - condition: template
+        alias: "phone_number must be 8 digits"
+        value_template: "{{ phone_number | string | regex_match('^[0-9]{8}$') }}"
+
       - service: script.puzzel_contacts_lookup
         response_variable: puzzel_contacts_lookup_result
         data:
           phone_number: "{{ phone_number }}"
+
+      - service: script.puzzel_users_lookup
+        response_variable: puzzel_users_lookup_result
+        data:
+          phone_number: "{{ phone_number }}"
+
       - service: script.puzzel_external_contacts_lookup
         response_variable: puzzel_external_contacts_lookup_result
         data:
           phone_number: "{{ phone_number }}"
 
       - variables:
-          caller: "{{ puzzel_contacts_lookup_result if (puzzel_contacts_lookup_result != none and puzzel_contacts_lookup_result != {}) else puzzel_external_contacts_lookup_result }}"
+          caller_info: |
+            {% set contacts_result_valid = (puzzel_contacts_lookup_result != none and puzzel_contacts_lookup_result != {}) %}
+            {% set users_result_valid = (puzzel_users_lookup_result != none and puzzel_users_lookup_result != {}) %}
+            {% set external_contacts_result_valid = (puzzel_external_contacts_lookup_result != none and puzzel_external_contacts_lookup_result != {}) %}
+            {% if contacts_result_valid %}
+              {{ puzzel_contacts_lookup_result }}
+            {% elif users_result_valid %}
+              {{ puzzel_users_lookup_result }}
+            {% elif external_contacts_result_valid %}
+              {{ puzzel_external_contacts_lookup_result }}
+            {% else %}
+              {}
+            {% endif %}
 
-      - stop: "Return caller info"
+      - service: script.puzzel_extract_caller_info
+        response_variable: caller
+        data:
+          caller_info: "{{ caller_info }}"
+
+      - stop: "Return caller"
         response_variable: caller
 
   puzzel_get_current_request:
+    mode: parallel
     alias: "Puzzel Get Current Request"
     sequence:
       - service: shell_command.curl
@@ -194,10 +281,27 @@ script:
           # Convert stdout from JSON to dict
           stdout: "{{ result.stdout | from_json }}"
           # Extract first result from JSON
-          request: "{{ stdout.result | first }}"
+          current_request: "{{ stdout.result | first }}"
+          # Extract phone number from current request
+          phone_number: "{{ current_request.get('requestRemoteAddress', '') if current_request else '' }}"
 
-      - stop: "Return request info"
-        response_variable: request
+      - service: script.puzzel_lookup_caller
+        response_variable: puzzel_caller
+        data:
+          phone_number: "{{ phone_number }}"
+
+      - variables:
+          puzzel_caller: |
+            {{
+              {
+                'phone_number': phone_number,
+                'current_request': current_request,
+                'caller': puzzel_caller
+              }
+            }}
+
+      - stop: "Return caller info"
+        response_variable: puzzel_caller
 
   puzzel_log_on:
     alias: "Log onto Puzzel queue"
