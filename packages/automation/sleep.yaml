@@ -35,7 +35,7 @@ sensor:
     sensors:
       next_work_event_timestamp:
         value_template: >-
-          {% set time = as_timestamp(state_attr('calendar.arbejdskalender_arbejde', 'start_time')) or 4294967295 %}
+          {% set time = as_timestamp(state_attr('calendar.arbejdskalender_vagtskema', 'start_time')) or 4294967295 %}
           {{ (time-(2*60*60)) if as_timestamp(now())+(1*60*60) < time else 4294967295 }}
       next_personal_event_timestamp:
         value_template: >-
@@ -59,7 +59,7 @@ sensor:
       wake_up_event_source_entity:
         value_template: >-
           {% set calendars = {
-            'sensor.next_work_event_timestamp': 'calendar.arbejdskalender_arbejde',
+            'sensor.next_work_event_timestamp': 'calendar.arbejdskalender_vagtskema',
             'sensor.next_personal_event_timestamp': 'calendar.personlig',
             'sensor.next_tripit_event_timestamp': 'calendar.tripit',
             'sensor.fallback_wake_up_time': 'fallback'
@@ -1025,3 +1025,37 @@ automation:
         service: fan.turn_off
         target:
           entity_id: fan.sovevaerelse_blaeser
+
+  - id: notify_phone_not_charging_on_sleep
+    alias: Notify phone not charging on sleep
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_select.sleep_state
+        to: "sleeping"
+      - platform: state
+        entity_id: sensor.darkphone_charger_type
+        to: "none"
+        for:
+          seconds: 10
+      - platform: state
+        entity_id: binary_sensor.darkphone_interactive
+        to: "off"
+        for:
+          seconds: 10
+    condition:
+      - condition: state
+        entity_id: input_select.sleep_state
+        state: "sleeping"
+      - condition: state
+        entity_id: binary_sensor.darkphone_charger_type
+        state: "none"
+      - condition: state
+        entity_id: binary_sensor.darkphone_interactive
+        state: "off"
+    action:
+      - service: script.voice_broadcast
+        data:
+          entity_id: media_player.sovevaerelse
+          volume_level: 0.2
+          message: "Din telefon lader ikke. Husk at sætte den i laderen."
