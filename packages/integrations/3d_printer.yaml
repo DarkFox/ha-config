@@ -1,30 +1,127 @@
+input_boolean:
+  3d_printer_cooling:
+
+input_text:
+  3d_printer_last_started:
+  3d_printer_last_ended:
+
+climate:
+  - platform: generic_thermostat
+    name: 3D Printer
+    heater: input_boolean.3d_printer_cooling
+    target_sensor: sensor.3d_printer_temperature
+    min_temp: 15
+    max_temp: 60
+    target_temp: 25
+    ac_mode: true
+    target_temp_step: 1
+
+sensor:
+  - platform: min_max
+    name: 3d_printer_max_temp
+    type: max
+    entity_ids:
+      - sensor.octoprint_tool_0_temperature
+      - sensor.octoprint_bed_temperature
+
 camera:
   - platform: local_file
     file_path: /config/www/downloads/3d_printer/model.jpg
     name: "3D Printer Model Image"
 
-binary_sensor:
-  - platform: template
-    sensors:
-      3d_printer_running:
-        value_template: "{{ states('sensor.3d_printer_afbryder_forbrug')|float > 0.01 }}"
+mqtt:
+  sensor:
+    - name: "3D Printer Materiale"
+      state_topic: "octoPrint/metadata/slicer_settings.material_type"
 
-sensor:
-  - platform: template
-    sensors:
-      3d_printer_print_name:
-        value_template: >-
-          {{ states('sensor.octoprint_print_file') | replace('.gcode', '') | replace('CFFFP_', '') | replace('_', ' ') | title }}
-      3d_printer_finish_time:
-        icon_template: mdi:clock-outline
-        friendly_name: 3D Printer Finish Time
-        value_template: >-
+template:
+  - binary_sensor:
+      - name: 3D Printer Running
+        device_class: running
+        state: >-
+          {{ states('sensor.3d_printer_afbryder_forbrug')|float > 0.01 }}
+      - name: 3D Printer Aktiv
+        device_class: running
+        state: >-
           {{
-            (as_timestamp(now())+(states('sensor.octoprint_print_time_left')|int))
-            | timestamp_custom('%d. %H:%M')
-            | replace((as_timestamp(now())
-            | timestamp_custom('%d. ')), '')
+            states('sensor.octoprint_current_state') in ['Printing', 'Pausing', 'Resuming', 'Cancelling', 'Error']
+            or states('sensor.octoprint_actual_bed_temp')|int > 40
+            or states('sensor.octoprint_actual_tool0_temp')|int > 40
+            or states('sensor.octoprint_target_bed_temp')|int > 40
+            or states('sensor.octoprint_target_tool0_temp')|int > 40
           }}
+      - name: 3D Printer Lys
+        state: >-
+          {{
+            is_state('switch.3d_printer_afbryder', 'on')
+            or is_state('binary_sensor.3d_printer_skab', 'on')
+          }}
+
+  - sensor:
+      - name: 3D Printer Status
+        state: >-
+          {% set state = states('sensor.octoprint_current_state') %}
+          {% set translations = state_attr('sensor.translation_cache', 'translations') %}
+          {% if state == "Operational" and states('sensor.octoprint_print_time') != 'unavailable' %}
+            Færdig
+          {% else %}
+            {{ translations[state] if state in translations else state }}
+          {% endif %}
+
+      # - name: 3D Printer Materiale
+      #   state: >-
+      #     {% set temp = (states('sensor.octoprint_bed_target')|int) %}
+      #     {% if is_state('switch.3d_printer_afbryder', 'off') %}
+      #       off
+      #     {% elif temp < 15 %}
+      #       none
+      #     {% elif temp >= 15 and temp < 61 %}
+      #       PLA
+      #     {% elif temp >= 61 and temp < 81 %}
+      #       PETG
+      #     {% elif temp >= 81 %}
+      #       ABS
+      #     {% endif %}
+
+      - name: 3D Printer Estimated Total Time
+        state: >-
+          {{ (states('sensor.octoprint_estimated_finish_time')|as_datetime - states('sensor.octoprint_start_time')|as_datetime).total_seconds() }}
+        unit_of_measurement: seconds
+
+      - name: 3D Printer Print Name
+        state: >-
+          {{ states('sensor.octoprint_print_file') | replace('.gcode', '') | replace('CFFFP_', '') | replace('_', ' ') | title }}
+
+      - name: 3D Printer Finish Time
+        state: >-
+          {%- set now_day = now().day -%}
+          {%- set finish_day = (as_timestamp(now()) + (states('sensor.octoprint_print_time_left') | int)) | timestamp_custom('%d') | int -%}
+          {%- set day_diff = finish_day - now_day -%}
+          {{
+            (as_timestamp(now()) + (states('sensor.octoprint_print_time_left') | int))
+            | timestamp_custom('%H:%M')
+          }} {{ '+'+(day_diff|string)+'d' if day_diff > 0 else '' }}
+
+      - name: 3D Printer Max Time
+        state: |
+          {%- set printTimes = [
+            (states('sensor.octoprint_print_time')|int(0)),
+            (states('sensor.octoprint_print_time_left')|int(0)),
+            (states('sensor.octoprint_approximate_total_print_time')|int(0)),
+            (states('sensor.3d_printer_estimated_total_time')|int(0))
+          ] -%}
+          {{ printTimes | max }}
+
+      - name: 3D Printer Graph Hours To Show
+        state: |
+          {%- set start = states('input_text.3d_printer_last_started')|as_timestamp() -%}
+          {%- set diff = (now()|as_timestamp) - start -%}
+          {%- set hours = ((diff/3600)+1)|int -%}
+          {%- if hours > 12 -%}
+            12h
+          {%- else -%}
+            {{ hours }}h
+          {%- endif -%}
 
 script:
   update_model_image:
@@ -47,3 +144,33 @@ automation:
       - service: script.turn_on
         target:
           entity_id: script.update_model_image
+
+  - id: set_3d_printer_last_started
+    alias: Set 3D Printer Last Started
+    trigger:
+      - platform: state
+        entity_id: sensor.octoprint_start_time
+        not_to:
+          - unavailable
+          - unknown
+    action:
+      - service: input_text.set_value
+        data:
+          entity_id: input_text.3d_printer_last_started
+          value: "{{ states('sensor.octoprint_start_time') }}"
+      - service: input_text.set_value
+        data:
+          entity_id: input_text.3d_printer_last_ended
+          value: ""
+
+  - id: set_3d_printer_last_ended
+    alias: Set 3D Printer Last Ended
+    trigger:
+      - platform: state
+        entity_id: sensor.octoprint_start_time
+        to: unknown
+    action:
+      - service: input_text.set_value
+        data:
+          entity_id: input_text.3d_printer_last_ended
+          value: "{{ now() }}"

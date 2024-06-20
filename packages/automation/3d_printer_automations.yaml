@@ -1,67 +1,3 @@
-input_boolean:
-  3d_printer_cooling:
-
-climate:
-  - platform: generic_thermostat
-    name: 3D Printer
-    heater: input_boolean.3d_printer_cooling
-    target_sensor: sensor.3d_printer_temperature
-    min_temp: 15
-    max_temp: 60
-    target_temp: 25
-    ac_mode: true
-    target_temp_step: 1
-
-sensor:
-  - platform: min_max
-    name: 3d_printer_max_temp
-    type: max
-    entity_ids:
-      - sensor.octoprint_tool_0_temperature
-      - sensor.octoprint_bed_temperature
-
-template:
-  - binary_sensor:
-      - name: 3D Printer Aktiv
-        state: >-
-          {{
-            states('sensor.octoprint_current_state') in ['Printing', 'Pausing', 'Resuming', 'Cancelling', 'Error']
-            or states('sensor.octoprint_actual_bed_temp')|int > 40
-            or states('sensor.octoprint_actual_tool0_temp')|int > 40
-            or states('sensor.octoprint_target_bed_temp')|int > 40
-            or states('sensor.octoprint_target_tool0_temp')|int > 40
-          }}
-      - name: 3D Printer Lys
-        state: >-
-          {{
-            is_state('switch.3d_printer_afbryder', 'on')
-            or is_state('binary_sensor.3d_printer_skab', 'on')
-          }}
-  - sensor:
-      - name: 3D Printer Status
-        state: >-
-          {% set state = states('sensor.octoprint_current_state') %}
-          {% set translations = state_attr('sensor.translation_cache', 'translations') %}
-          {% if state == "Operational" and states('sensor.octoprint_print_time') != 'unavailable' %}
-            Færdig
-          {% else %}
-            {{ translations[state] if state in translations else state }}
-          {% endif %}
-      - name: 3D Printer Materiale
-        state: >-
-          {% set temp = (states('sensor.octoprint_bed_target')|int) %}
-          {% if is_state('switch.3d_printer_afbryder', 'off') %}
-            off
-          {% elif temp < 15 %}
-            none
-          {% elif temp >= 15 and temp < 61 %}
-            PLA
-          {% elif temp >= 61 and temp < 81 %}
-            PETG
-          {% elif temp >= 81 %}
-            ABS
-          {% endif %}
-
 automation:
   - id: toggle_3d_printer_light
     alias: Toggle 3D printer light
@@ -94,7 +30,7 @@ automation:
                 state:
                   - "none"
                   - "PLA"
-                  - "PETG"
+                  - "PET-G"
             sequence:
               - service: scene.apply
                 data:
@@ -105,7 +41,9 @@ automation:
           - conditions:
               - condition: state
                 entity_id: sensor.3d_printer_materiale
-                state: "ABS"
+                state:
+                  - "ABS"
+                  - "ASA"
             sequence:
               - service: scene.apply
                 data:
