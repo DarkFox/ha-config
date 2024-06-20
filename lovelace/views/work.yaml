@@ -1,166 +1,155 @@
 title: Arbejde
 path: work
-type: panel
 icon: mdi:briefcase
-badges: []
+type: custom:horizontal-layout
+layout:
+  width: 400
+  max_cols: 3
 cards:
   - type: vertical-stack
     cards:
-      - !include ../cards/time_to_leave_countdown.yaml
+      - !include ../cards/compact_clock.yaml
 
-      - type: custom:layout-card
-        layout_type: custom:horizontal-layout
-        layout:
-          max_cols: 3
+      - type: custom:button-card
+        entity: sensor.next_work_event
+        icon: mdi:calendar-clock
+        show_icon: true
+        show_state: true
+        show_label: true
+        show_name: false
+        layout: icon_state_name2nd
+        # Label = attributes.start_time
+        label: "[[[ return states['sensor.next_work_event'].attributes.start_time ]]]"
         styles:
-          card:
-            - padding: 0px
-            - margin: 0px
-        cards:
-          - type: vertical-stack
-            cards:
-              - !include ../cards/compact_clock.yaml
+          label:
+            - font-size: 1.5em
+            - font-weight: bold
+            - color: var(--primary-text-color)
 
-              - type: custom:button-card
-                entity: sensor.next_work_event
-                icon: mdi:calendar-clock
-                show_icon: true
-                show_state: true
-                show_label: true
-                show_name: false
-                layout: icon_state_name2nd
-                # Label = attributes.start_time
-                label: "[[[ return states['sensor.next_work_event'].attributes.start_time ]]]"
-                styles:
-                  label:
-                    - font-size: 1.5em
-                    - font-weight: bold
-                    - color: var(--primary-text-color)
+      - type: conditional
+        conditions:
+          - entity: sensor.current_work_call
+            state_not: ""
+        card:
+          type: custom:button-card
+          entity: sensor.current_work_call
+          icon: mdi:card-account-phone-outline
+          show_icon: true
+          show_state: true
+          show_label: true
+          show_name: true
+          layout: icon_state_name2nd
+          name: |
+            [[[
+              var caller_info = states['sensor.current_work_call'].attributes.caller_info;
+              if (caller_info.title == null && caller_info.organization == null)
+                return '';
+              else if (caller_info.title == null)
+                return caller_info.organization;
+              else if (caller_info.organization == null)
+                return caller_info.title;
+              else
+                return states['sensor.current_work_call'].attributes.caller_info.title + ' - ' + states['sensor.current_work_call'].attributes.caller_info.organization
+            ]]]
+          label: "[[[ return states['sensor.current_work_call'].attributes.caller_info.name ]]]"
+          styles:
+            label:
+              - font-size: 1.5em
+              - font-weight: bold
+              - color: var(--primary-text-color)
 
-              - type: conditional
-                conditions:
-                  - entity: sensor.current_work_call
-                    state_not: ""
-                card:
-                  type: custom:button-card
-                  entity: sensor.current_work_call
-                  icon: mdi:card-account-phone-outline
-                  show_icon: true
-                  show_state: true
-                  show_label: true
-                  show_name: true
-                  layout: icon_state_name2nd
-                  name: |
-                    [[[
-                      var caller_info = states['sensor.current_work_call'].attributes.caller_info;
-                      if (caller_info.title == null && caller_info.organization == null)
-                        return '';
-                      else if (caller_info.title == null)
-                        return caller_info.organization;
-                      else if (caller_info.organization == null)
-                        return caller_info.title;
-                      else
-                        return states['sensor.current_work_call'].attributes.caller_info.title + ' - ' + states['sensor.current_work_call'].attributes.caller_info.organization
-                    ]]]
-                  label: "[[[ return states['sensor.current_work_call'].attributes.caller_info.name ]]]"
-                  styles:
-                    label:
-                      - font-size: 1.5em
-                      - font-weight: bold
-                      - color: var(--primary-text-color)
+      - type: custom:button-card
+        entity: sensor.puzzel_state
+        label: "[[[ return states['sensor.puzzel_state'].state == 'Logget af' ? '' : states['sensor.puzzel_ko'].state ]]]"
+        icon: mdi:phone
+        layout: icon_state_name2nd
+        show_name: false
+        show_state: true
+        show_label: true
+        tap_action:
+          action: call-service
+          service: switch.toggle
+          service_data:
+            entity_id: switch.puzzel
+        state:
+          - value: "Ledig"
+            color: var(--label-badge-green)
+          - value: "Logget af"
+            color: var(--label-badge-red)
+            icon: mdi:phone-off
+          - value: "Pause"
+            color: var(--label-badge-yellow)
+            icon: mdi:phone-paused
 
-              - type: custom:button-card
-                entity: sensor.puzzel_state
-                label: "[[[ return states['sensor.puzzel_state'].state == 'Logget af' ? '' : states['sensor.puzzel_ko'].state ]]]"
-                icon: mdi:phone
-                layout: icon_state_name2nd
-                show_name: false
-                show_state: true
-                show_label: true
-                tap_action:
-                  action: call-service
-                  service: switch.toggle
-                  service_data:
-                    entity_id: switch.puzzel
-                state:
-                  - value: "Ledig"
-                    color: var(--label-badge-green)
-                  - value: "Logget af"
-                    color: var(--label-badge-red)
-                    icon: mdi:phone-off
-                  - value: "Pause"
-                    color: var(--label-badge-yellow)
-                    icon: mdi:phone-paused
+      - type: entities
+        entities:
+          - type: custom:auto-entities
+            card:
+              type: custom:fold-entity-row
+              head:
+                type: section
+                label: "Profiler"
+            # Trigger on changes to sensor.puzzel_ko
+            filter:
+              template: |
+                {% set profiles = (
+                  state_attr('sensor.puzzel_ko', 'available_profiles')
+                ) %}
+                {% set current_profile = state_attr('sensor.puzzel_ko', 'profile_id') %}
+                {% set ns = namespace(ret=[]) %}
+                {% for profile in profiles %}
+                  {% set ns.ret = ns.ret + [
+                    {
+                      "type": "button",
+                      "name": profile.name,
+                      "icon": ("mdi:menu" if profile.id != current_profile else "mdi:menu-open"),
+                      "action_name": ("Log ind" if profile.id != current_profile else " "),
+                      "tap_action": {
+                          "action": "call-service",
+                          "service": "script.puzzel_log_on",
+                          "data": {
+                            "queue_id": profile.id
+                          }
+                      }
+                    }
+                  ] %}
+                {% endfor %}
+                {{ ns.ret }}
 
-              - type: entities
-                entities:
-                  - type: custom:auto-entities
-                    card:
-                      type: custom:fold-entity-row
-                      head:
-                        type: section
-                        label: "Profiler"
-                    # Trigger on changes to sensor.puzzel_ko
-                    filter:
-                      template: |
-                        {% set profiles = (
-                          state_attr('sensor.puzzel_ko', 'available_profiles')
-                        ) %}
-                        {% set current_profile = state_attr('sensor.puzzel_ko', 'profile_id') %}
-                        {% set ns = namespace(ret=[]) %}
-                        {% for profile in profiles %}
-                          {% set ns.ret = ns.ret + [
-                            {
-                              "type": "button",
-                              "name": profile.name,
-                              "icon": ("mdi:menu" if profile.id != current_profile else "mdi:menu-open"),
-                              "action_name": ("Log ind" if profile.id != current_profile else " "),
-                              "tap_action": {
-                                  "action": "call-service",
-                                  "service": "script.puzzel_log_on",
-                                  "data": {
-                                    "queue_id": profile.id
-                                  }
-                              }
-                            }
-                          ] %}
-                        {% endfor %}
-                        {{ ns.ret }}
-
-              - type: custom:list-card
-                entity: sensor.reverse_work_call_log
-                title: Opkaldslog
-                feed_attribute: call_log
-                row_limit: 5
-                columns:
-                  - title: Tid
+      - type: custom:list-card
+        entity: sensor.reverse_work_call_log
+        title: Opkaldslog
+        feed_attribute: call_log
+        row_limit: 5
+        columns:
+          - title: Tid
             field: diff
-                  - title: Nummer
-                    field: formatted_phone
-                  - title: Navn
-                    field: name
+          - title: Nummer
+            field: formatted_phone
+          - title: Navn
+            field: name
 
-          - type: vertical-stack
-            cards:
-              - !include ../cards/transport/car.yaml
-              - type: conditional
-                conditions:
-                  - entity: binary_sensor.show_parking_limit
-                    state: "on"
-                card:
-                  type: entities
-                  entities:
-                    - entity: sensor.parking_limit
-                      name: Parkering udløber
+  - type: vertical-stack
+    cards:
+      - !include ../cards/transport/car.yaml
+      - type: conditional
+        conditions:
+          - entity: binary_sensor.show_parking_limit
+            state: "on"
+        card:
+          type: entities
+          entities:
+            - entity: sensor.parking_limit
+              name: Parkering udløber
 
-              - !include ../cards/calendar_work.yaml
+      - !include ../cards/calendar_work.yaml
 
-              - type: conditional
-                conditions:
-                  - entity: binary_sensor.octoprint_printing
-                    state: "on"
-                card: !include ../cards/3d_printer/preview.yaml
+      - type: conditional
+        conditions:
+          - entity: binary_sensor.octoprint_printing
+            state: "on"
+        card: !include ../cards/3d_printer/preview.yaml
 
-          - type: vertical-stack
-            cards:
-              - !include ../cards/weather/weather_forecast.yaml
+  - type: vertical-stack
+    cards:
+      - !include ../cards/weather/weather_forecast.yaml
