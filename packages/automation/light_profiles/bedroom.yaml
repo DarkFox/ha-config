@@ -139,57 +139,60 @@ automation:
         entity_id: *room_light_profile
         state: "Bright"
     action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.seng_laeselampe:
-              state: on
-              brightness: 255
-              color_temp: 370
-              effect: "None"
-            light.sovevaerelse_loft:
-              state: on
-              brightness: 255
-              color_temp: 250
-              effect: "solid"
-            light.seng_spots_over:
-              state: on
-              brightness: 255
-              effect: "None"
-            light.seng_spots_under:
-              state: on
-              brightness: 255
-              effect: "None"
-            light.sovevaerelse_reol_spots:
-              state: on
-              brightness: 255
-              effect: "None"
-            light.seng_hylder_op:
+      - parallel:
+          - service: script.difficult_light
+            data:
+              entity_id: light.sovevaerelse_gulv
               state: on
               brightness: 255
               hs_color: [29, 15]
-              effect: "Solid"
-            light.seng_hylder_ned:
-              state: on
+              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+          - service: scene.apply
+            data:
+              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+              entities:
+                light.seng_laeselampe:
+                  state: on
+                  brightness: 255
+                  color_temp: 370
+                  effect: "None"
+                light.sovevaerelse_loft:
+                  state: on
+                  brightness: 255
+                  color_temp: 250
+                  effect: "solid"
+                light.seng_spots_over:
+                  state: on
+                  brightness: 255
+                  effect: "None"
+                light.seng_spots_under:
+                  state: on
+                  brightness: 255
+                  effect: "None"
+                light.sovevaerelse_reol_spots:
+                  state: on
+                  brightness: 255
+                  effect: "None"
+                light.seng_hylder_op:
+                  state: on
+                  brightness: 255
+                  hs_color: [29, 15]
+                  effect: "Solid"
+                light.seng_hylder_ned:
+                  state: on
+                  brightness: 255
+                  hs_color: [29, 15]
+                  effect: "Solid"
+                light.blyant:
+                  state: on
+                  brightness: 255
+                  hs_color: [29, 15]
+                  effect: "Solid"
+          - service: light.turn_on
+            target:
+              entity_id: light.bedroom_tablet
+            data:
               brightness: 255
-              hs_color: [29, 15]
-              effect: "Solid"
-            light.blyant:
-              state: on
-              brightness: 255
-              hs_color: [29, 15]
-              effect: "Solid"
-            light.sovevaerelse_gulv:
-              state: on
-              brightness: 255
-              hs_color: [29, 15]
-              effect: "None"
-      - service: light.turn_on
-        target:
-          entity_id: light.bedroom_tablet
-        data:
-          brightness: 255
 
   - alias: activate_light_profile_bedroom_default
     id: activate_light_profile_bedroom_default
@@ -206,57 +209,60 @@ automation:
         entity_id: *room_light_profile
         state: "Default"
     action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.seng_laeselampe:
-              state: on
-              brightness: 200
-              color_temp: 370
-              effect: "None"
-            light.seng_spots_over:
-              state: on
-              brightness: 200
-              effect: "None"
-            light.seng_spots_under:
-              state: on
-              brightness: 200
-              effect: "None"
-            light.sovevaerelse_reol_spots:
-              state: on
-              brightness: 200
-              effect: "None"
-            light.sovevaerelse_loft:
-              state: on
-              brightness: 200
-              color_temp: 250
-              effect: "Solid"
-            light.seng_hylder_op:
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
-              effect: "Solid"
-            light.seng_hylder_ned:
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.blyant:
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.sovevaerelse_gulv:
+      - parallel:
+          - service: script.difficult_light
+            data:
+              entity_id: light.sovevaerelse_gulv
               state: on
               brightness: 255
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-              effect: "None"
-      - service: light.turn_on
-        target:
-          entity_id: light.bedroom_tablet
-        data:
-          brightness: 172
+              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+          - service: scene.apply
+            data:
+              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+              entities:
+                light.seng_laeselampe:
+                  state: on
+                  brightness: 200
+                  color_temp: 370
+                  effect: "None"
+                light.seng_spots_over:
+                  state: on
+                  brightness: 200
+                  effect: "None"
+                light.seng_spots_under:
+                  state: on
+                  brightness: 200
+                  effect: "None"
+                light.sovevaerelse_reol_spots:
+                  state: on
+                  brightness: 200
+                  effect: "None"
+                light.sovevaerelse_loft:
+                  state: on
+                  brightness: 200
+                  color_temp: 250
+                  effect: "Solid"
+                light.seng_hylder_op:
+                  state: on
+                  brightness: 255
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
+                  effect: "Solid"
+                light.seng_hylder_ned:
+                  state: on
+                  brightness: 255
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                  effect: "Solid"
+                light.blyant:
+                  state: on
+                  brightness: 255
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                  effect: "Solid"
+          - service: light.turn_on
+            target:
+              entity_id: light.bedroom_tablet
+            data:
+              brightness: 172
 
   - alias: activate_light_profile_bedroom_dimmed
     id: activate_light_profile_bedroom_dimmed
@@ -273,62 +279,65 @@ automation:
         entity_id: *room_light_profile
         state: "Dimmed"
     action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.seng_laeselampe:
-              state: on
-              brightness: 172
-              color_temp: 460
-              effect: "None"
-            light.seng_spots_over:
-              state: on
-              brightness: 32
-              effect: "None"
-            light.seng_spots_under:
-              state: on
-              brightness: 32
-              effect: "None"
-            light.sovevaerelse_reol_spots:
-              state: on
-              brightness: 64
-              effect: "None"
-            light.sovevaerelse_loft_segment_1:
-              state: on
-              brightness: 24
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
-              effect: "Solid"
-            light.sovevaerelse_loft_segment_2:
-              state: on
-              brightness: 24
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
-              effect: "Solid"
-            light.seng_hylder_op:
-              state: on
-              brightness: 32
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
-              effect: "Solid"
-            light.seng_hylder_ned:
-              state: on
-              brightness: 32
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.blyant:
-              state: on
-              brightness: 96
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.sovevaerelse_gulv:
+      - parallel:
+          - service: script.difficult_light
+            data:
+              entity_id: light.sovevaerelse_gulv
               state: on
               brightness: 96
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-              effect: "None"
-      - service: light.turn_on
-        target:
-          entity_id: light.bedroom_tablet
-        data:
-          brightness: 127
+              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+          - service: scene.apply
+            data:
+              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+              entities:
+                light.seng_laeselampe:
+                  state: on
+                  brightness: 172
+                  color_temp: 460
+                  effect: "None"
+                light.seng_spots_over:
+                  state: on
+                  brightness: 32
+                  effect: "None"
+                light.seng_spots_under:
+                  state: on
+                  brightness: 32
+                  effect: "None"
+                light.sovevaerelse_reol_spots:
+                  state: on
+                  brightness: 64
+                  effect: "None"
+                light.sovevaerelse_loft_segment_1:
+                  state: on
+                  brightness: 24
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
+                  effect: "Solid"
+                light.sovevaerelse_loft_segment_2:
+                  state: on
+                  brightness: 24
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
+                  effect: "Solid"
+                light.seng_hylder_op:
+                  state: on
+                  brightness: 32
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
+                  effect: "Solid"
+                light.seng_hylder_ned:
+                  state: on
+                  brightness: 32
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                  effect: "Solid"
+                light.blyant:
+                  state: on
+                  brightness: 96
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                  effect: "Solid"
+          - service: light.turn_on
+            target:
+              entity_id: light.bedroom_tablet
+            data:
+              brightness: 127
 
   - alias: activate_light_profile_bedroom_ambient
     id: activate_light_profile_bedroom_ambient
@@ -345,59 +354,63 @@ automation:
         entity_id: *room_light_profile
         state: "Ambient"
     action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.seng_spots_over:
-              state: off
-            light.seng_spots_under:
-              state: off
-            light.sovevaerelse_loft_segment_1:
-              state: on
-              brightness: 8
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
-              effect: "Solid"
-            light.sovevaerelse_loft_segment_2:
-              state: on
-              brightness: 8
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
-              effect: "Solid"
-            light.sovevaerelse_reol_spots:
-              state: on
-              brightness: 32
-              effect: "None"
-            light.seng_hylder_op:
-              state: on
-              brightness: 2
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
-              effect: "Solid"
-            light.seng_hylder_ned:
-              state: on
-              brightness: 2
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.seng_laeselampe:
-              state: on
-              brightness: 2
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-              effect: "None"
-            light.blyant:
-              state: on
-              brightness: 24
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.sovevaerelse_gulv:
+      - parallel:
+          - service: script.difficult_light
+            data:
+              entity_id: light.sovevaerelse_gulv
               state: on
               brightness: 32
               hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-              effect: "None"
+              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
 
-      - service: light.turn_on
-        target:
-          entity_id: light.bedroom_tablet
-        data:
-          brightness: 32
+          - service: scene.apply
+            data:
+              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+              entities:
+                light.seng_spots_over:
+                  state: off
+                light.seng_spots_under:
+                  state: off
+                light.sovevaerelse_loft_segment_1:
+                  state: on
+                  brightness: 8
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
+                  effect: "Solid"
+                light.sovevaerelse_loft_segment_2:
+                  state: on
+                  brightness: 8
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
+                  effect: "Solid"
+                light.sovevaerelse_reol_spots:
+                  state: on
+                  brightness: 32
+                  effect: "None"
+                light.seng_hylder_op:
+                  state: on
+                  brightness: 2
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
+                  effect: "Solid"
+                light.seng_hylder_ned:
+                  state: on
+                  brightness: 2
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                  effect: "Solid"
+                light.seng_laeselampe:
+                  state: on
+                  brightness: 2
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                  effect: "None"
+                light.blyant:
+                  state: on
+                  brightness: 24
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                  effect: "Solid"
+
+          - service: light.turn_on
+            target:
+              entity_id: light.bedroom_tablet
+            data:
+              brightness: 32
 
   - alias: activate_light_profile_bedroom_night
     id: activate_light_profile_bedroom_night
@@ -414,51 +427,58 @@ automation:
         entity_id: *room_light_profile
         state: "Night"
     action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.seng_spots_over:
-              state: off
-            light.seng_spots_under:
-              state: off
-            light.sovevaerelse_reol_spots:
-              state: on
-              brightness: 8
-              effect: "None"
-            light.seng_laeselampe:
-              state: on
-              brightness: 2
-              rgb_color: [255, 0, 0]
-            light.blyant:
+      - parallel:
+          - service: script.difficult_light
+            data:
+              entity_id: light.sovevaerelse_gulv
               state: on
               brightness: 24
-              rgb_color: [255, 0, 0]
-              effect: "Solid"
-            light.sovevaerelse_gulv:
-              state: on
-              brightness: 24
-              rgb_color: [255, 0, 0]
-              effect: "None"
-            light.seng_hylder_op:
-              state: off
-            light.seng_hylder_ned:
-              state: on
-              brightness: 1
-              rgb_color: [255, 0, 0]
-              effect: "Solid"
-            light.sovevaerelse_loft_segment_1:
-              state: on
-              brightness: 5
-              rgb_color: [255, 0, 0]
-              effect: "Solid"
-            light.sovevaerelse_loft_segment_2:
-              state: on
-              brightness: 5
-              rgb_color: [255, 0, 0]
-              effect: "Solid"
-            light.bedroom_tablet:
-              state: on
+              hs_color: [0, 100]
+              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+
+          - service: scene.apply
+            data:
+              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+              entities:
+                light.seng_spots_over:
+                  state: off
+                light.seng_spots_under:
+                  state: off
+                light.sovevaerelse_reol_spots:
+                  state: on
+                  brightness: 8
+                  effect: "None"
+                light.seng_laeselampe:
+                  state: on
+                  brightness: 2
+                  rgb_color: [255, 0, 0]
+                light.blyant:
+                  state: on
+                  brightness: 24
+                  rgb_color: [255, 0, 0]
+                  effect: "Solid"
+                light.seng_hylder_op:
+                  state: off
+                light.seng_hylder_ned:
+                  state: on
+                  brightness: 1
+                  rgb_color: [255, 0, 0]
+                  effect: "Solid"
+                light.sovevaerelse_loft_segment_1:
+                  state: on
+                  brightness: 5
+                  rgb_color: [255, 0, 0]
+                  effect: "Solid"
+                light.sovevaerelse_loft_segment_2:
+                  state: on
+                  brightness: 5
+                  rgb_color: [255, 0, 0]
+                  effect: "Solid"
+
+          - service: light.turn_on
+            target:
+              entity_id: light.bedroom_tablet
+            data:
               brightness: 1
 
   - alias: activate_light_profile_bedroom_night_delayed_preset
@@ -539,43 +559,53 @@ automation:
         entity_id: *room_light_profile
         state: "Party"
     action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.seng_spots_over:
-              state: off
-            light.seng_spots_under:
-              state: off
-            light.seng_hylder_op:
+      - parallel:
+          - service: script.difficult_light
+            data:
+              entity_id: light.sovevaerelse_gulv
               state: on
-              effect: "Rainbow"
-              brightness: 127
-            light.seng_hylder_ned:
-              state: on
-              effect: "Rainbow"
-              brightness: 127
-            light.blyant:
-              state: on
-              effect: "Rainbow"
-              brightness: 127
-            light.sovevaerelse_loft:
-              state: on
-              effect: "Rainbow"
-              brightness: 127
-            light.seng_laeselampe:
-              state: on
-              effect: "colorloop"
-              brightness: 32
-            light.sovevaerelse_gulv:
-              state: on
-              effect: "colorloop"
-              brightness: 32
-      - service: light.turn_on
-        target:
-          entity_id: light.bedroom_tablet
-        data:
-          brightness: 1
+              brightness: 255
+              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+
+          - service: scene.apply
+            data:
+              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+              entities:
+                light.seng_spots_over:
+                  state: off
+                light.seng_spots_under:
+                  state: off
+                light.seng_hylder_op:
+                  state: on
+                  effect: "Rainbow"
+                  brightness: 127
+                light.seng_hylder_ned:
+                  state: on
+                  effect: "Rainbow"
+                  brightness: 127
+                light.blyant:
+                  state: on
+                  effect: "Rainbow"
+                  brightness: 127
+                light.sovevaerelse_loft:
+                  state: on
+                  effect: "Rainbow"
+                  brightness: 127
+                light.seng_laeselampe:
+                  state: on
+                  effect: "colorloop"
+                  brightness: 32
+                light.sovevaerelse_gulv:
+                  state: on
+                  effect: "colorloop"
+                  brightness: 32
+
+          - service: light.turn_on
+            target:
+              entity_id: light.bedroom_tablet
+            data:
+              brightness: 1
 
 input_boolean:
   bedroom_activity_override:

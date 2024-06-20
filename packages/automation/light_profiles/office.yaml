@@ -131,73 +131,70 @@ automation:
         entity_id: *room_light_profile
         state: "Bright"
     action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.kontor_loftlampe:
-              state: on
-              brightness: 255
-            light.kontor_loftlys:
+      - parallel:
+          - service: script.difficult_light
+            data:
+              entity_id: light.kontor_loftlampe
               state: on
               brightness: 255
               color_temp: 260
-            light.projektor:
-              state: on
-              brightness: 255
-              color_temp: 260
-            light.kontor_hylde:
-              state: on
-              brightness: 255
-              hs_color: [15, 43]
-              effect: "Solid"
-            light.pc_skaerme_hojre:
-              state: on
-              brightness: 255
-              hs_color: [15, 43]
-              effect: "Solid"
-            light.pc_skaerme_midt:
-              state: on
-              brightness: 255
-              hs_color: [15, 43]
-              effect: "Solid"
-            light.motherboard:
-              state: on
-              brightness: 255
-              hs_color: [15, 43]
-            light.g502_lightspeed_wireless_gaming_mouse_speed_leds:
-              state: on
-              brightness: 255
-              hs_color: [15, 43]
-            light.gpu_stand:
-              state: on
-              brightness: 255
-              hs_color: [15, 43]
-            light.gigabyte_rtx3070_ti_gaming_oc_8g_logo:
-              state: on
-              brightness: 255
-              hs_color: [15, 43]
-            light.g502_lightspeed_wireless_gaming_mouse_logo:
-              state: on
-              brightness: 255
-              hs_color: [15, 43]
-            light.spogelse:
-              state: on
-              brightness: 255
-              color_temp: 370
-              effect: "None"
-            light.spogelse_ojne:
-              state: on
-              brightness: 255
-              effect: "None"
-      - delay:
-          seconds: "{{ (states('input_number.scene_transition_time') or 1) | round(0, 'ceil')+2}}"
-      - service: light.turn_on
-        data:
-          transition: 0
-          color_temp: 260
-          entity_id:
-            - light.kontor_loftlampe
+              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+          - service: scene.apply
+            data:
+              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+              entities:
+                light.kontor_loftlys:
+                  state: on
+                  brightness: 255
+                  color_temp: 260
+                light.projektor:
+                  state: on
+                  brightness: 255
+                  color_temp: 260
+                light.kontor_hylde:
+                  state: on
+                  brightness: 255
+                  hs_color: [15, 43]
+                  effect: "Solid"
+                light.pc_skaerme_hojre:
+                  state: on
+                  brightness: 255
+                  hs_color: [15, 43]
+                  effect: "Solid"
+                light.pc_skaerme_midt:
+                  state: on
+                  brightness: 255
+                  hs_color: [15, 43]
+                  effect: "Solid"
+                light.motherboard:
+                  state: on
+                  brightness: 255
+                  hs_color: [15, 43]
+                light.g502_lightspeed_wireless_gaming_mouse_speed_leds:
+                  state: on
+                  brightness: 255
+                  hs_color: [15, 43]
+                light.gpu_stand:
+                  state: on
+                  brightness: 255
+                  hs_color: [15, 43]
+                light.gigabyte_rtx3070_ti_gaming_oc_8g_logo:
+                  state: on
+                  brightness: 255
+                  hs_color: [15, 43]
+                light.g502_lightspeed_wireless_gaming_mouse_logo:
+                  state: on
+                  brightness: 255
+                  hs_color: [15, 43]
+                light.spogelse:
+                  state: on
+                  brightness: 255
+                  color_temp: 370
+                  effect: "None"
+                light.spogelse_ojne:
+                  state: on
+                  brightness: 255
+                  effect: "None"
 
   - alias: activate_light_profile_office_default
     id: activate_light_profile_office_default
@@ -214,74 +211,71 @@ automation:
         entity_id: *room_light_profile
         state: "Default"
     action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.kontor_loftlampe:
+      - parallel:
+          - service: script.difficult_light
+            data:
+              entity_id: light.kontor_loftlampe
               state: on
-              brightness: 255
-            light.kontor_loftlys:
-              state: on
-              brightness: 255
+              brightness: 127
               color_temp: 390
-            light.projektor:
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-              effect: "None"
-            light.kontor_hylde:
-              state: on
-              brightness: 172
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
-              effect: "Solid"
-            light.pc_skaerme_hojre:
-              state: on
-              brightness: 172
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.pc_skaerme_midt:
-              state: on
-              brightness: 172
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.motherboard:
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
-            light.g502_lightspeed_wireless_gaming_mouse_speed_leds:
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
-            light.gpu_stand:
-              state: on
-              brightness: 64
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-            light.gigabyte_rtx3070_ti_gaming_oc_8g_logo:
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-            light.g502_lightspeed_wireless_gaming_mouse_logo:
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-            light.spogelse:
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "None"
-            light.spogelse_ojne:
-              state: on
-              brightness: 255
-              effect: "None"
-      - delay:
-          seconds: "{{ (states('input_number.scene_transition_time') or 1) | round(0, 'ceil')+2}}"
-      - service: light.turn_on
-        data:
-          transition: 0
-          color_temp: 390
-          entity_id:
-            - light.kontor_loftlampe
+              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+          - service: scene.apply
+            data:
+              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+              entities:
+                light.kontor_loftlys:
+                  state: on
+                  brightness: 255
+                  color_temp: 390
+                light.projektor:
+                  state: on
+                  brightness: 255
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                  effect: "None"
+                light.kontor_hylde:
+                  state: on
+                  brightness: 172
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
+                  effect: "Solid"
+                light.pc_skaerme_hojre:
+                  state: on
+                  brightness: 172
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                  effect: "Solid"
+                light.pc_skaerme_midt:
+                  state: on
+                  brightness: 172
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                  effect: "Solid"
+                light.motherboard:
+                  state: on
+                  brightness: 255
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
+                light.g502_lightspeed_wireless_gaming_mouse_speed_leds:
+                  state: on
+                  brightness: 255
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
+                light.gpu_stand:
+                  state: on
+                  brightness: 64
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                light.gigabyte_rtx3070_ti_gaming_oc_8g_logo:
+                  state: on
+                  brightness: 255
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                light.g502_lightspeed_wireless_gaming_mouse_logo:
+                  state: on
+                  brightness: 255
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                light.spogelse:
+                  state: on
+                  brightness: 255
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                  effect: "None"
+                light.spogelse_ojne:
+                  state: on
+                  brightness: 255
+                  effect: "None"
 
   - alias: activate_light_profile_office_dimmed
     id: activate_light_profile_office_dimmed
@@ -298,75 +292,72 @@ automation:
         entity_id: *room_light_profile
         state: "Dimmed"
     action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.kontor_loftlampe:
+      - parallel:
+          - service: script.difficult_light
+            data:
+              entity_id: light.kontor_loftlampe
               state: on
               brightness: 1
-            light.kontor_loftlys:
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-              effect: "None"
-            light.projektor:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-              effect: "None"
-            light.kontor_hylde:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
-              effect: "Solid"
-            light.pc_skaerme_hojre:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.pc_skaerme_midt:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.motherboard:
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
-            light.g502_lightspeed_wireless_gaming_mouse_speed_leds:
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
-            light.gpu_stand:
-              state: on
-              brightness: 32
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-            light.gigabyte_rtx3070_ti_gaming_oc_8g_logo:
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-            light.g502_lightspeed_wireless_gaming_mouse_logo:
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-            light.spogelse:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "None"
-            light.spogelse_ojne:
-              state: on
-              brightness: 127
-              effect: "None"
-      - delay:
-          seconds: "{{ (states('input_number.scene_transition_time') or 1) | round(0, 'ceil')+2}}"
-      - service: light.turn_on
-        data:
-          transition: 0
-          color_temp: 454
-          entity_id:
-            - light.kontor_loftlampe
+              color_temp: 454
+              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+          - service: scene.apply
+            data:
+              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+              entities:
+                light.kontor_loftlys:
+                  state: on
+                  brightness: 255
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                  effect: "None"
+                light.projektor:
+                  state: on
+                  brightness: 127
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                  effect: "None"
+                light.kontor_hylde:
+                  state: on
+                  brightness: 127
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
+                  effect: "Solid"
+                light.pc_skaerme_hojre:
+                  state: on
+                  brightness: 127
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                  effect: "Solid"
+                light.pc_skaerme_midt:
+                  state: on
+                  brightness: 127
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                  effect: "Solid"
+                light.motherboard:
+                  state: on
+                  brightness: 255
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
+                light.g502_lightspeed_wireless_gaming_mouse_speed_leds:
+                  state: on
+                  brightness: 255
+                  hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
+                light.gpu_stand:
+                  state: on
+                  brightness: 32
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                light.gigabyte_rtx3070_ti_gaming_oc_8g_logo:
+                  state: on
+                  brightness: 255
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                light.g502_lightspeed_wireless_gaming_mouse_logo:
+                  state: on
+                  brightness: 255
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                light.spogelse:
+                  state: on
+                  brightness: 127
+                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                  effect: "None"
+                light.spogelse_ojne:
+                  state: on
+                  brightness: 127
+                  effect: "None"
 
   - alias: activate_light_profile_office_ambient
     id: activate_light_profile_office_ambient
