@@ -13,34 +13,43 @@ calendar:
         search: '^(.*)(\d+)-(\d+).+'
       - name: Fri
         calendar: Vagtplan
-        search: "^(FRI|Afspadsering|Ferie|Andet fravær|Sygdom).+"
+        search: &fri_regex "^(FRI|Afspadsering|Ferie|Andet fravær|Sygdom).+"
       - name: Ferie
         calendar: Vagtplan
         search: "^(Ferie).+"
       - name: Vagt
         calendar: Arbejdskalender
-        search: "Vagt"
+        search: &vagt_regex "Vagt"
       - name: Arbejde
         calendar: Arbejdskalender
-        search: "På (RSH|RSR)"
+        search: &arbejde_regex "På (RSH|RSR)"
       - name: RSR
         calendar: Arbejdskalender
-        search: "På RSR"
+        search: &rsr_regex "På RSR"
       - name: RSH
         calendar: Arbejdskalender
-        search: "På RSH"
+        search: &rsh_regex "På RSH"
+      - name: On-site
+        calendar: Arbejdskalender
+        search: &on_site_regex "(På RSH|På RSR|Kursus)"
+      - name: Off-site
+        calendar: Arbejdskalender
+        search: &off_site_regex "Ude af huset"
+      - name: Transport
+        calendar: Arbejdskalender
+        search: &transport_regex "(På RSH|På RSR|Kursus|Ude af huset)"
       - name: WFH
         calendar: Arbejdskalender
-        search: "WFH"
+        search: &wfh_regex "(WFH|Arbejder hjemmefra)"
       - name: Vagtskema
         calendar: Arbejdskalender
-        search: "(På RSH|På RSR|Vagt|WFH|Kursus)"
+        search: &vagtskema_regex "(På RSH|På RSR|Vagt|WFH|Arbejder hjemmefra|Kursus|Ude af huset)"
       - name: Ferie
         calendar: Arbejdskalender
-        search: "^(Ferie).+"
+        search: &ferie_regex "^(Ferie).+"
       - name: Bil
         calendar: Personlig
-        search: ".*(#bil).*"
+        search: &bil_regex ".*(#bil).*"
 
   - platform: caldav
     username: !secret caldav_user
@@ -56,6 +65,22 @@ calendar:
 
 template:
   - sensor:
+      - name: Calendar Regexes
+        state: "OK"
+        attributes:
+          fri: *fri_regex
+          ferie: *ferie_regex
+          vagt: *vagt_regex
+          arbejde: *arbejde_regex
+          rsr: *rsr_regex
+          rsh: *rsh_regex
+          on_site: *on_site_regex
+          off_site: *off_site_regex
+          transport: *transport_regex
+          wfh: *wfh_regex
+          vagtskema: *vagtskema_regex
+          bil: *bil_regex
+
       - name: Agenda
         state: >-
           {{ states('sensor.vagtplan_agenda')|int(0)
@@ -75,6 +100,7 @@ template:
             {% else %}
               []
             {% endif %}
+
       - name: Agenda Tomorrow
         state: >-
           {% if has_value('sensor.vagtplan_agenda') and 'tomorrow' in states.sensor.vagtplan_agenda.attributes
@@ -101,6 +127,7 @@ template:
             {% else %}
               []
             {% endif %}
+
       - name: Full Agenda
         state: >-
           {{ states('sensor.agenda')|int(0)
@@ -226,55 +253,17 @@ automation:
           topic: virtual/agenda/vagtplan/events
           retain: true
           payload: >
+            {% from 'agenda.jinja' import agenda_event %}
+            {%- set regexes = states.sensor.calendar_regexes.attributes -%}
             {
               "agenda": [
                 {% for event in agenda['calendar.arbejdskalender_vagtskema'].events|sort(attribute='start') | list -%}
-                  {
-                    "calendar": "Vagtplan",
-                    {%- set start = (event.start | as_datetime) -%}
-                    {%- set end = (event.end | as_datetime) -%}
-                    "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
-                    "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
-                    {% if 'location' in event %}
-                      "location": "{{ event.location }}",
-                    {% endif %}
-                    {%- if event.summary|regex_match('På (RSR|RSH)') -%}
-                      "bil": true,
-                      "wake": true,
-                      "summary": "Arbejde - {{ event.summary | replace('På ', '') | replace('RSH', 'Herlev Hospital') | replace('RSR', 'Rigshospitalet') }}"
-                    {%- elif event.summary|regex_match('Vagt') -%}
-                      "summary": "Tilkaldevagt"
-                    {%- elif event.summary|regex_match('Kursus') -%}
-                      "bil": true,
-                      "wake": true,
-                      "summary": "{{ event.summary }}"
-                    {%- else -%}
-                      "summary": "{{ event.summary }}"
-                    {%- endif -%}
-                  }{%- if not loop.last %},{% endif %}
+                  {{ agenda_event("Vagtplan", event, False, regexes) }}{%- if not loop.last %},{% endif %}
                 {%- endfor -%}
               ],
               "tomorrow": [
                 {% for event in tomorrow['calendar.arbejdskalender_vagtskema'].events|sort(attribute='start') | list -%}
-                  {
-                    "calendar": "Vagtplan",
-                    {%- set start = (event.start | as_datetime) -%}
-                    {%- set end = (event.end | as_datetime) -%}
-                    "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
-                    "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
-                    {% if 'location' in event %}
-                      "location": "{{ event.location }}",
-                    {% endif %}
-                    {%- if event.summary|regex_match('På (RSR|RSH)') -%}
-                      "bil": true,
-                      "wake": true,
-                      "summary": "Arbejde - {{ event.summary | replace('På ', '') | replace('RSH', 'Herlev Hospital') | replace('RSR', 'Rigshospitalet') }}"
-                    {%- elif event.summary|regex_match('Vagt') -%}
-                      "summary": "Tilkaldevagt"
-                    {%- else -%}
-                      "summary": "{{ event.summary }}"
-                    {%- endif -%}
-                  }{%- if not loop.last %},{% endif %}
+                  {{ agenda_event("Vagtplan", event, False, regexes) }}{%- if not loop.last %},{% endif %}
                 {%- endfor -%}
               ]
             }
@@ -320,6 +309,8 @@ automation:
           topic: virtual/agenda/arbejde/events
           retain: true
           payload: >
+            {% from 'agenda.jinja' import agenda_event %}
+            {%- set regexes = states.sensor.calendar_regexes.attributes -%}
             {%- set ns = namespace(events=[],tomorrow=[]) -%}
             {%- for event in agenda['calendar.arbejdskalender'].events|sort(attribute='start') | list -%}
                 {%- if not (event.summary|regex_match('På (RSR|RSH)|Frokost|Aftensmad|Vagt|Fri|Opstartstid')) -%}
@@ -334,32 +325,12 @@ automation:
             {
               "agenda": [
                 {% for event in ns.events %}
-                  {
-                    "calendar": "Arbejdskalender",
-                    {%- set start = (event.start | as_datetime) -%}
-                    {%- set end = (event.end | as_datetime) -%}
-                    "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
-                    "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
-                    {% if 'location' in event %}
-                      "location": "{{ event.location }}",
-                    {% endif %}
-                    "summary": "{{ event.summary }}"
-                  }{{ ',' if not loop.last }}
+                  {{ agenda_event("Arbejdskalender", event, False, regexes) }}{%- if not loop.last %},{% endif %}
                 {% endfor %}
               ],
               "tomorrow": [
                 {% for event in ns.tomorrow %}
-                  {
-                    "calendar": "Arbejdskalender",
-                    {%- set start = (event.start | as_datetime) -%}
-                    {%- set end = (event.end | as_datetime) -%}
-                    "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
-                    "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
-                    {% if 'location' in event %}
-                      "location": "{{ event.location }}",
-                    {% endif %}
-                    "summary": "{{ event.summary }}"
-                  }{{ ',' if not loop.last }}
+                  {{ agenda_event("Arbejdskalender", event, False, regexes) }}{%- if not loop.last %},{% endif %}
                 {% endfor %}
               ]
             }
@@ -408,45 +379,17 @@ automation:
           topic: virtual/agenda/personlig/events
           retain: true
           payload: >
+            {% from 'agenda.jinja' import agenda_event %}
+            {%- set regexes = states.sensor.calendar_regexes.attributes -%}
             {
               "agenda": [
-                {%- set remove_string = ' #bil' -%}
                 {% for event in agenda['calendar.personlig'].events|sort(attribute='start') | list -%}
-                  {
-                    "calendar": "Personlig kalender",
-                    {%- set start = (event.start | as_datetime) -%}
-                    {%- set end = (event.end | as_datetime) -%}
-                    "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
-                    "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
-                    "wake": true,
-                    {% if 'location' in event %}
-                      "location": "{{ event.location }}",
-                    {% endif %}
-                    {% if remove_string in event.summary %}
-                      "bil": true,
-                    {%- endif %}
-                    "summary": "{{ event.summary | replace(remove_string, '')|title }}"
-                  }{{ ',' if not loop.last }}
+                  {{ agenda_event("Personlig kalender", event, True, regexes) }}{%- if not loop.last %},{% endif %}
                 {%- endfor -%}
               ],
               "tomorrow": [
-                {%- set remove_string = ' #bil' -%}
                 {% for event in tomorrow['calendar.personlig'].events|sort(attribute='start') | list -%}
-                  {
-                    "calendar": "Personlig kalender",
-                    {%- set start = (event.start | as_datetime) -%}
-                    {%- set end = (event.end | as_datetime) -%}
-                    "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
-                    "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
-                    "wake": true,
-                    {% if 'location' in event %}
-                      "location": "{{ event.location }}",
-                    {% endif %}
-                    {% if remove_string in event.summary %}
-                      "bil": true,
-                    {%- endif %}
-                    "summary": "{{ event.summary | replace(remove_string, '')|title }}"
-                  }{{ ',' if not loop.last }}
+                  {{ agenda_event("Personlig kalender", event, True, regexes) }}{%- if not loop.last %},{% endif %}
                 {%- endfor -%}
               ]
             }
@@ -495,37 +438,17 @@ automation:
           topic: virtual/agenda/tripit/events
           retain: true
           payload: >
+            {% from 'agenda.jinja' import agenda_event %}
+            {%- set regexes = states.sensor.calendar_regexes.attributes -%}
             {
               "agenda": [
                 {% for event in agenda['calendar.tripit'].events|sort(attribute='start') | list -%}
-                  {
-                    "calendar": "Tripit Kalender",
-                    {%- set start = (event.start | as_datetime) -%}
-                    {%- set end = (event.end | as_datetime) -%}
-                    "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
-                    "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
-                    "wake": true,
-                    {% if 'location' in event %}
-                      "location": "{{ event.location }}",
-                    {% endif %}
-                    "summary": "{{ event.summary }}"
-                  }{{ ',' if not loop.last }}
+                  {{ agenda_event("Tripit Kalender", event, True, regexes) }}{%- if not loop.last %},{% endif %}
                 {%- endfor -%}
               ],
               "tomorrow": [
                 {% for event in tomorrow['calendar.tripit'].events|sort(attribute='start') | list -%}
-                  {
-                    "calendar": "Tripit Kalender",
-                    {%- set start = (event.start | as_datetime) -%}
-                    {%- set end = (event.end | as_datetime) -%}
-                    "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
-                    "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
-                    "wake": true,
-                    {% if 'location' in event %}
-                      "location": "{{ event.location }}",
-                    {% endif %}
-                    "summary": "{{ event.summary }}"
-                  }{{ ',' if not loop.last }}
+                  {{ agenda_event("Tripit Kalender", event, True, regexes) }}{%- if not loop.last %},{% endif %}
                 {%- endfor -%}
               ]
             }

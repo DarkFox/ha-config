@@ -6,16 +6,16 @@ template:
       - name: Next work start clock
         unique_id: next_work_start_clock
         state: >-
-          {% if has_value('calendar.arbejdskalender_arbejde') and 'start_time' in states.calendar.arbejdskalender_arbejde.attributes %}
-            {{ state_attr('calendar.arbejdskalender_arbejde', 'start_time').split(' ')[1][:-3] }}
+          {% if has_value('calendar.arbejdskalender_vagtskema') and 'start_time' in states.calendar.arbejdskalender_vagtskema.attributes %}
+            {{ state_attr('calendar.arbejdskalender_vagtskema', 'start_time').split(' ')[1][:-3] }}
           {% else %}
             unknown
           {% endif %}
       - name: Days to next work
         state: >-
           {% from 'easy_time.jinja' import count_the_days %}
-          {% if has_value('calendar.arbejdskalender_arbejde') and 'start_time' in states.calendar.arbejdskalender_arbejde.attributes %}
-            {% set start_time = state_attr('calendar.arbejdskalender_arbejde', 'start_time') | as_datetime | as_local %}
+          {% if has_value('calendar.arbejdskalender_vagtskema') and 'start_time' in states.calendar.arbejdskalender_vagtskema.attributes %}
+            {% set start_time = state_attr('calendar.arbejdskalender_vagtskema', 'start_time') | as_datetime | as_local %}
             {{ count_the_days(start_time) }}
           {% else %}
             unavailable
@@ -32,16 +32,16 @@ template:
           {% endif %}
       - name: Morning shift
         state: >-
-          {% if has_value('calendar.arbejdskalender_arbejde') and 'start_time' in states.calendar.arbejdskalender_arbejde.attributes %}
-            {% set start_time = state_attr('calendar.arbejdskalender_arbejde', 'start_time') | as_datetime | as_local %}
+          {% if has_value('calendar.arbejdskalender_vagtskema') and 'start_time' in states.calendar.arbejdskalender_vagtskema.attributes %}
+            {% set start_time = state_attr('calendar.arbejdskalender_vagtskema', 'start_time') | as_datetime | as_local %}
             {{ start_time.hour < 12 }}
           {% else %}
             false
           {% endif %}
       - name: Evening shift
         state: >-
-          {% if has_value('calendar.arbejdskalender_arbejde') and 'start_time' in states.calendar.arbejdskalender_arbejde.attributes %}
-            {% set start_time = state_attr('calendar.arbejdskalender_arbejde', 'start_time') | as_datetime | as_local %}
+          {% if has_value('calendar.arbejdskalender_vagtskema') and 'start_time' in states.calendar.arbejdskalender_vagtskema.attributes %}
+            {% set start_time = state_attr('calendar.arbejdskalender_vagtskema', 'start_time') | as_datetime | as_local %}
             {{ start_time.hour > 11 }}
           {% else %}
             false

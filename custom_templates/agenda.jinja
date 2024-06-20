@@ -1,0 +1,30 @@
+{% macro work_event_summary(event, regexes) -%}
+    {%- if event.summary|regex_match(regexes.rsr) -%}
+        Arbejde - Rigshospitalet
+    {%- elif event.summary|regex_match(regexes.rsh) -%}
+        Arbejde - Herlev Hospital
+    {%- elif event.summary|regex_match(regexes.vagt) -%}
+        Tilkaldevagt
+    {%- elif event.summary|regex_match(regexes.off_site) -%}
+        {%- set subject = (' - ' + event.description if event.description else '') -%}
+        Ude af huset {{ subject }}
+    {%- else -%}
+        {{ event.summary }}
+    {%- endif -%}
+{% endmacro  %}
+
+{% macro agenda_event(calendar, event, all_wake, regexes) %}
+    {% set work_schedule = (calendar == 'Vagtplan') %}
+    {% set transport_regex = regexes.transport if work_schedule else regexes.bil %}
+    {
+        "calendar": "{{ calendar }}",
+        "start": "{{ (event.start | as_datetime).strftime('%Y-%m-%d %H:%M:%S') }}",
+        "end": "{{ (event.end | as_datetime).strftime('%Y-%m-%d %H:%M:%S') }}",
+        {% if 'location' in event %}
+            "location": "{{ event.location }}",
+        {% endif %}
+        "bil": {{ 'true' if event.summary|regex_match(transport_regex) else 'false' }},
+        "wake": {{ 'true' if all_wake or (event.summary|regex_match(transport_regex)) or (event.summary|regex_match(regexes.wfh)) else 'false' }},
+        "summary": "{{ work_event_summary(event, regexes) if work_schedule else event.summary|replace(' #bil', '') }}"
+    }
+{% endmacro %}
