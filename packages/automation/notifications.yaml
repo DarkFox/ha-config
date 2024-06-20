@@ -21,24 +21,25 @@ script:
   notify_everywhere:
     alias: Send notification everywhere
     sequence:
-      - service: notify.telegram_darkfox
-        data:
-          message: "{{ message }}"
-      - service: script.popup_notification
-        data:
-          message: "{{ message }}"
-      - service: script.voice_broadcast
-        data:
-          message: "{{ message }}"
-      - service: script.darkphone_tts
-        data:
-          message: "{{ message }}"
-      - service: notify.stue_tv
-        data:
-          message: "{{ message }}"
-      - service: notify.kontor_tv
-        data:
-          message: "{{ message }}"
+      - parallel:
+          - service: notify.telegram_darkfox
+            data:
+              message: "{{ message }}"
+          - service: script.popup_notification
+            data:
+              message: "{{ message }}"
+          - service: script.voice_broadcast
+            data:
+              message: "{{ message }}"
+          - service: script.darkphone_tts
+            data:
+              message: "{{ message }}"
+          - service: notify.stue_tv
+            data:
+              message: "{{ message }}"
+          - service: notify.kontor_tv
+            data:
+              message: "{{ message }}"
 
   darkphone_tts:
     alias: Read message on Darkphone if headset connected
