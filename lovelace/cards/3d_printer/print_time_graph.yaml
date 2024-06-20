@@ -1,28 +1,70 @@
-type: custom:mini-graph-card
-points_per_hour: 30
-hours_to_show: 6
-hour24: true
-line_width: 2
-height: 400
-show:
-  name: false
-  icon: false
-  labels: true
-  labels_secondary: true
+type: custom:config-template-card
 entities:
-  - entity: sensor.octoprint_print_time
-    name: Elapsed
-    show_fill: false
-    show_legend: true
-  - entity: sensor.octoprint_print_time_left
-    name: Remaining
-    show_fill: false
-    show_legend: true
-  - entity: sensor.octoprint_approximate_total_print_time
-    name: Initial Est. Total
-    show_fill: false
-    show_legend: true
-  - entity: sensor.3d_printer_estimated_total_time
-    name: OctoPrint Est. Total
-    show_fill: false
-    show_legend: true
+  - sensor.3d_printer_graph_hours_to_show
+config_templates: default
+variables:
+  graph_span: states['sensor.3d_printer_graph_hours_to_show'].state
+card:
+  type: custom:apexcharts-card
+  graph_span: "${graph_span}"
+  header:
+    show: false
+  series:
+    - entity: sensor.octoprint_print_time
+      name: Elapsed
+      type: line
+      stroke_width: 2
+      show:
+        legend_value: true
+        as_duration: second
+    - entity: sensor.octoprint_print_time_left
+      name: Remaining
+      type: line
+      stroke_width: 2
+      show:
+        legend_value: true
+        as_duration: second
+    - entity: sensor.octoprint_approximate_total_print_time
+      name: Initial Est.
+      type: line
+      stroke_width: 2
+      show:
+        legend_value: true
+        as_duration: second
+    - entity: sensor.3d_printer_estimated_total_time
+      name: OctoPrint Est. Total
+      type: line
+      stroke_width: 2
+      show:
+        legend_value: true
+        as_duration: second
+  apex_config:
+    chart:
+      height: 400
+    yaxis:
+      forceNiceScale: true
+      min: 0
+      tickAmount: 12
+      labels:
+        formatter: >
+          EVAL:function (value) {
+            const hours = Math.floor(value / 3600);
+            const minutes = Math.floor((value % 3600) / 60);
+            return hours + 'h ' + minutes + 'm';
+          }
+    xaxis:
+      type: datetime
+      tickAmount: 12
+      labels:
+        datetimeFormatter:
+          hour: "HH:mm"
+    grid:
+      show: true
+      borderColor: "#e0e0e0"
+      strokeDashArray: 4
+      xaxis:
+        lines:
+          show: true
+      yaxis:
+        lines:
+          show: true
