@@ -33,6 +33,7 @@ template:
         state: "{{ as_timestamp(now()) | timestamp_custom('%Y-%m-%d %H:%M:%S', true) }}"
         attributes:
           call_log: |
+            {% from 'datediff.jinja' import datetime_diff %}
             {% if trigger.event.event_type == 'clear_work_call_log' %}
               {}
             {% else %}
@@ -40,9 +41,12 @@ template:
               {% set current_call = trigger.event.data.call_info %}
               {% if current_call.get('phone_number', '')|string != '' %}
                 {% set caller_info = current_call['caller_info'] or {} %}
-                {% set start = current_call.get('start', now()) | as_timestamp | int  %}
-                {% set end = as_timestamp(now()) | int %}
-                {% set duration = end - start %}
+                {% set start = current_call.get('start', now()) %}
+                {% set start_ts = start | as_timestamp | int  %}
+                {% set end_ts = as_timestamp(now()) | int %}
+                {% set end = end_ts | timestamp_custom('%Y-%m-%d %H:%M:%S', true) %}
+                {% set duration = end_ts - start_ts %}
+                {% set diff = start+' > '+datetime_diff(start, end) %}
                 {% set new_caller = {
                   'phone_number': current_call.get('phone_number', ''),
                   'formatted_phone': current_call.get('formatted_phone', ''),
@@ -52,8 +56,9 @@ template:
                   'email': caller_info.get('email', ''),
                   'line': current_call.get('line', ''),
                   'start': current_call.get('start', ''),
-                  'end': end | timestamp_custom('%Y-%m-%d %H:%M:%S', true),
-                  'duration': duration
+                  'end': end,
+                  'duration': duration,
+                  'diff':diff
                 } %}
                 {
                   {% for key, value in old_call_log.items() %}
