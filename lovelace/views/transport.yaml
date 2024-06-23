@@ -1,122 +1,111 @@
 title: Transport
 path: transport
 icon: mdi:train-car
-panel: true
+type: custom:horizontal-layout
+layout:
+  width: 400
+  max_cols: 3
 cards:
-  - type: custom:layout-card
+  - type: vertical-stack
     cards:
-      - type: vertical-stack
+      - !include /config/lovelace/cards/transport/commute.yaml
+
+      - type: horizontal-stack
         cards:
-          - !include /config/lovelace/cards/transport/commute.yaml
+          - type: custom:button-card
+            entity: sensor.martin_to_home_distance_change
+            show_state: true
+            show_icon: false
+            styles:
+              state:
+                - font-size: 24pt
 
-          - type: horizontal-stack
-            cards:
-              - type: custom:button-card
-                entity: sensor.martin_to_home_distance_change
-                show_state: true
-                show_icon: false
-                styles:
-                  state:
-                    - font-size: 24pt
+          - type: custom:button-card
+            entity: sensor.home_martin_distance
+            show_state: true
+            show_icon: false
+            styles:
+              state:
+                - font-size: 24pt
 
-              - type: custom:button-card
-                entity: sensor.home_martin_distance
-                show_state: true
-                show_icon: false
-                styles:
-                  state:
-                    - font-size: 24pt
-
-          - type: horizontal-stack
-            cards:
-              - type: custom:button-card
-                entity: sensor.martin_to_home_distance_change_derivative
-                name: Distance Change Derivative
-                show_state: true
-                show_icon: false
-                styles:
-                  state:
-                    - font-size: 24pt
-
-              - type: custom:button-card
-                entity: sensor.martin_to_home_proximity_derivative
-                name: Proximity Derivative
-                show_state: true
-                show_icon: false
-                styles:
-                  state:
-                    - font-size: 24pt
-
-          - type: horizontal-stack
-            cards:
-              - type: custom:button-card
-                entity: sensor.martin_to_home_dir_of_travel
-                show_state: true
-                show_icon: false
-                styles:
-                  state:
-                    - font-size: 24pt
-
-              - type: custom:button-card
-                entity: binary_sensor.martin_home_soon
-                show_state: true
-                show_icon: false
-                styles:
-                  state:
-                    - font-size: 24pt
-
-          - type: entities
-            title: ""
-            show_header_toggle: false
-            entities:
-              - person.martin
-              - device_tracker.arbejdstelefon
-              - device_tracker.darkphone
-              - sensor.home_martin_distance
-              - sensor.martin_to_home_dir_of_travel
-              - sensor.proximity_martin_to_home_stats
-              - sensor.martin_to_home_distance_change
-              - sensor.martin_to_home_distance_change_derivative
-              - sensor.martin_to_home_proximity_derivative
-              - binary_sensor.martin_home_soon
-
-      - type: custom:layout-break
-
-      - type: vertical-stack
+      - type: horizontal-stack
         cards:
-          - type: conditional
-            conditions:
-              - entity: binary_sensor.s_train_message_present
-                state: "on"
-            card: !include /config/lovelace/cards/s_train_status.yaml
+          - type: custom:button-card
+            entity: sensor.martin_to_home_distance_change_derivative
+            name: Distance Change Derivative
+            show_state: true
+            show_icon: false
+            styles:
+              state:
+                - font-size: 24pt
 
-          - type: custom:rejseplanen-stog-card
-            entity: sensor.s_tog_malov
-            title: "Måløv St."
-            max_entries: 2
+          - type: custom:button-card
+            entity: sensor.martin_to_home_proximity_derivative
+            name: Proximity Derivative
+            show_state: true
+            show_icon: false
+            styles:
+              state:
+                - font-size: 24pt
 
-          - type: custom:rejseplanen-stog-card
-            entity: sensor.s_tog_norreport_mod_frederikssund
-            title: "Nørreport St. mod Frederikssund"
-            max_entries: 2
-
-          - type: custom:rejseplanen-card
-            entity: sensor.s_tog_malov
-            max_entries: 5
-            show_scheduled_time: true
-
-          - type: custom:rejseplanen-card
-            entity: sensor.s_tog_norreport_mod_frederikssund
-            show_scheduled_time: true
-
-      - type: custom:layout-break
-
-      - type: vertical-stack
+      - type: horizontal-stack
         cards:
-          - type: custom:rejseplanen-card
-            entity: sensor.s_tog_norreport
-            show_scheduled_time: true
+          - type: custom:button-card
+            entity: sensor.martin_to_home_dir_of_travel
+            show_state: true
+            show_icon: false
+            styles:
+              state:
+                - font-size: 24pt
 
-          - type: custom:rejseplanen-card
-            entity: sensor.kobenhavn_h_afgange
-            show_scheduled_time: true
+          - type: custom:button-card
+            entity: binary_sensor.martin_home_soon
+            show_state: true
+            show_icon: false
+            styles:
+              state:
+                - font-size: 24pt
+
+  - type: vertical-stack
+    cards:
+      - type: entities
+        title: ""
+        show_header_toggle: false
+        entities:
+          - person.martin
+          - device_tracker.arbejdstelefon
+          - device_tracker.darkphone
+          - sensor.home_martin_distance
+          - sensor.martin_to_home_dir_of_travel
+          - sensor.proximity_martin_to_home_stats
+          - sensor.martin_to_home_distance_change
+          - sensor.martin_to_home_distance_change_derivative
+          - sensor.martin_to_home_proximity_derivative
+          - binary_sensor.martin_home_soon
+
+  - type: vertical-stack
+    cards:
+      - type: conditional
+        conditions:
+          - entity: binary_sensor.s_train_message_present
+            state: "on"
+        card: !include /config/lovelace/cards/s_train_status.yaml
+
+      - type: custom:rejseplanen-stog-card
+        entity: sensor.s_tog_malov
+        title: "Måløv St."
+        max_entries: 2
+
+      - type: custom:rejseplanen-stog-card
+        entity: sensor.s_tog_norreport_mod_frederikssund
+        title: "Nørreport St. mod Frederikssund"
+        max_entries: 2
+
+      - type: custom:rejseplanen-card
+        entity: sensor.s_tog_malov
+        max_entries: 5
+        show_scheduled_time: true
+
+      - type: custom:rejseplanen-card
+        entity: sensor.s_tog_norreport_mod_frederikssund
+        show_scheduled_time: true

@@ -95,7 +95,7 @@ cards:
                 {% set profiles = (
                   state_attr('sensor.puzzel_ko', 'available_profiles')
                 ) %}
-                {% set current_profile = state_attr('sensor.puzzel_ko', 'profile_id') %}
+                {% set current_profile = state_attr('sensor.puzzel_ko', 'profile_id') or [] %}
                 {% set ns = namespace(ret=[]) %}
                 {% for profile in profiles %}
                   {% set ns.ret = ns.ret + [
@@ -116,18 +116,51 @@ cards:
                 {% endfor %}
                 {{ ns.ret }}
 
-      - type: custom:list-card
-        entity: sensor.reverse_work_call_log
-        title: Opkaldslog
-        feed_attribute: call_log
-        row_limit: 5
-        columns:
-          - title: Tid
-            field: diff
-          - title: Nummer
-            field: formatted_phone
-          - title: Navn
-            field: name
+      - type: conditional
+        conditions:
+          - entity: sensor.reverse_work_call_log
+            state_not: "0"
+        card:
+          - type: custom:stack-in-card
+            mode: vertical
+            cards:
+              - type: custom:list-card
+                entity: sensor.reverse_work_call_log
+                title: Opkaldslog
+                feed_attribute: call_log
+                row_limit: 5
+                columns:
+                  - title: Tid
+                    field: diff
+                  - title: Nummer
+                    field: formatted_phone
+                    style:
+                      - white-space: nowrap
+                  - title: Navn
+                    field: name
+                  - title: Svar
+                    field: picked_up
+
+              - type: custom:button-card
+                entity: sensor.reverse_work_call_log
+                icon: mdi:delete
+                name: Ryd log
+                show_icon: true
+                show_name: true
+                layout: icon_name
+                size: 30px
+                tap_action:
+                  action: call-service
+                  service: script.clear_work_call_log
+                  confirmation:
+                    text: "Er du sikker på at du vil rydde loggen?"
+                styles:
+                  card:
+                    - padding: 1% 0
+                  icon:
+                    - margin: 0 0 0 auto
+                  name:
+                    - margin: 0 auto 0 15%
 
   - type: vertical-stack
     cards:

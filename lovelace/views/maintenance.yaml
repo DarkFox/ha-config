@@ -1,9 +1,12 @@
 title: Maintenance
 path: maintenance
 icon: "mdi:wrench"
-panel: true
+type: custom:horizontal-layout
+layout:
+  width: 400
+  max_cols: 4
 cards:
-  - type: custom:layout-card
+  - type: vertical-stack
     cards:
       - type: horizontal-stack
         cards:
@@ -35,28 +38,8 @@ cards:
 
       - !include ../cards/low_battery.yaml
 
-      - type: custom:auto-entities
-        card:
-          type: entities
-          title: Batteries
-          show_header_toggle: false
-        filter:
-          include:
-            - entity_id: "*_batter*"
-              options:
-                secondary_info: last-changed
-          exclude:
-            - entity_id: "*_battery_power"
-            - entity_id: "*_battery_state"
-            - entity_id: "*_battery_health"
-            - entity_id: "*_battery_temperature*"
-            - entity_id: "*_batteritilstand"
-            - entity_id: "*_batteriets_sundhed"
-        sort:
-          method: state
-          numeric: true
-          ignore_case: true
-
+  - type: vertical-stack
+    cards:
       - type: vertical-stack
         cards:
           - type: horizontal-stack
@@ -135,18 +118,8 @@ cards:
               - entity: sensor.last_boot
               - entity: sensor.ha_installed_version
 
-      - type: entities
-        title: ""
-        show_header_toggle: false
-        entities:
-          - person.martin
-          - device_tracker.arbejdstelefon
-          - device_tracker.darkphone
-          - sensor.home_martin_distance
-          - sensor.martin_to_home_dir_of_travel
-          - sensor.martin_to_home_distance_change
-          - sensor.proximity_martin_to_home_stats
-
+  - type: vertical-stack
+    cards:
       - type: entities
         title: Presence
         show_header_toggle: false
@@ -157,7 +130,6 @@ cards:
           - binary_sensor.martin_home_soon
           - binary_sensor.activity
           - binary_sensor.activity_last10
-          - lock.hoveddor_las
           - input_select.latest_motion
 
       - type: entities
@@ -170,3 +142,27 @@ cards:
           - binary_sensor.kitchen_activity
           - binary_sensor.office_activity
           - binary_sensor.hallway_activity
+
+  - type: vertical-stack
+    cards:
+      - type: custom:auto-entities
+        card:
+          type: entities
+          title: Batteries
+          show_header_toggle: false
+        filter:
+          include:
+            - entity_id: "*_batter*"
+              options:
+                secondary_info: last-changed
+          exclude:
+            - entity_id: "*_battery_power"
+            - entity_id: "*_battery_state"
+            - entity_id: "*_battery_health"
+            - entity_id: "*_battery_temperature*"
+            - entity_id: "*_batteritilstand"
+            - entity_id: "*_batteriets_sundhed"
+        sort:
+          method: state
+          numeric: true
+          ignore_case: true

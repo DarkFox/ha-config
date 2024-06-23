@@ -1,29 +1,5 @@
-homeassistant:
-  customize:
-    sensor.energy_hourly:
-      friendly_name: Elforbrug Denne Time
-    sensor.energy_daily:
-      friendly_name: Elforbrug I Dag
-    sensor.energy_monthly:
-      friendly_name: Elforbrug Denne Måned
-    sensor.energy_quarterly:
-      friendly_name: Elforbrug Dette Kvartal
-    sensor.energy_last_hour:
-      icon: mdi:counter
-    sensor.energy_last_day:
-      icon: mdi:counter
-    sensor.energy_last_month:
-      icon: mdi:counter
-    sensor.energy_last_quarter:
-      icon: mdi:counter
-
 mqtt:
   sensor:
-    # - name: "Raw Electricity Price"
-    #   state_topic: "kamstrup/prices"
-    #   value_template: "{{ value_json.prices['0'] }}"
-    #   json_attributes_topic: "kamstrup/prices"
-
     - name: "Pow K Uptime"
       state_topic: "kamstrup/uptime"
 
@@ -181,49 +157,57 @@ utility_meter:
   energy_quarterly:
     source: sensor.pow_k_import_active_accumulated
     cycle: quarterly
-
-energy_meter:
-  energy_hourly:
+  energy_yearly:
     source: sensor.pow_k_import_active_accumulated
-    name: Elforbrug denne time
-    cycle: daily
-    price_entity: sensor.energi_data_service
-  energy_daily:
-    source: sensor.pow_k_import_active_accumulated
-    name: Elforbrug i dag
-    cycle: daily
-    price_entity: sensor.energi_data_service
-  energy_monthly:
-    source: sensor.pow_k_import_active_accumulated
-    name: Elforbrug denne måned
-    cycle: monthly
-    price_entity: sensor.energi_data_service
-  energy_quarterly:
-    source: sensor.pow_k_import_active_accumulated
-    name: Elforbrug dette kvartal
-    cycle: quarterly
-    price_entity: sensor.energi_data_service
+    cycle: yearly
 
   3d_printer_energy_hourly:
     source: sensor.3d_printer_afbryder_dagligt_forbrug
-    name: 3D Printer elforbrug denne time
-    cycle: daily
-    price_entity: sensor.energi_data_service
+    cycle: hourly
   3d_printer_energy_daily:
     source: sensor.3d_printer_afbryder_dagligt_forbrug
-    name: 3D Printer elforbrug i dag
     cycle: daily
-    price_entity: sensor.energi_data_service
   3d_printer_energy_monthly:
     source: sensor.3d_printer_afbryder_dagligt_forbrug
-    name: 3D Printer elforbrug denne måned
     cycle: monthly
-    price_entity: sensor.energi_data_service
   3d_printer_energy_quarterly:
     source: sensor.3d_printer_afbryder_dagligt_forbrug
-    name: 3D Printer elforbrug dette kvartal
     cycle: quarterly
+  3d_printer_energy_yearly:
+    source: sensor.3d_printer_afbryder_dagligt_forbrug
+    cycle: yearly
+
+energy_meter:
+  energy_cost_hourly:
+    unique_id: energy_cost_hourly
+    name: Elforbrug denne time
+    source: sensor.energy_hourly
     price_entity: sensor.energi_data_service
+    cycle: hourly
+  energy_cost_daily:
+    unique_id: energy_cost_daily
+    name: Elforbrug i dag
+    source: sensor.energy_daily
+    price_entity: sensor.energi_data_service
+    cycle: daily
+  energy_cost_monthly:
+    unique_id: energy_cost_monthly
+    name: Elforbrug denne måned
+    source: sensor.energy_monthly
+    price_entity: sensor.energi_data_service
+    cycle: monthly
+  energy_cost_quarterly:
+    unique_id: energy_cost_quarterly
+    name: Elforbrug dette kvartal
+    source: sensor.energy_quarterly
+    price_entity: sensor.energi_data_service
+    cycle: quarterly
+  energy_cost_yearly:
+    unique_id: energy_cost_yearly
+    name: Elforbrug dette kvartal
+    source: sensor.energy_yearly
+    price_entity: sensor.energi_data_service
+    cycle: yearly
 
 template:
   - sensor:
@@ -255,6 +239,74 @@ template:
         device_class: power
         unit_of_measurement: W
 
+        # Create duplicates of sensor.pow_k_import_active_accumulated for energy_meter sensors
+        # Because its auto-naming is crap
+      - name: energy_import_daily
+        state: "{{ states('sensor.pow_k_import_active_accumulated') }}"
+        device_class: energy
+        state_class: total_increasing
+        unit_of_measurement: kWh
+      - name: energy_import_hourly
+        state: "{{ states('sensor.pow_k_import_active_accumulated') }}"
+        device_class: energy
+        state_class: total_increasing
+        unit_of_measurement: kWh
+      - name: energy_import_monthly
+        state: "{{ states('sensor.pow_k_import_active_accumulated') }}"
+        device_class: energy
+        state_class: total_increasing
+        unit_of_measurement: kWh
+      - name: energy_import_quarterly
+        state: "{{ states('sensor.pow_k_import_active_accumulated') }}"
+        device_class: energy
+        state_class: total_increasing
+        unit_of_measurement: kWh
+      - name: energy_import_yearly
+        state: "{{ states('sensor.pow_k_import_active_accumulated') }}"
+        device_class: energy
+        state_class: total_increasing
+        unit_of_measurement: kWh
+
+      - name: energy_stats_table
+        state: "{{ now() }}"
+        attributes:
+          table: >-
+            {%- from 'utils.jinja' import pad_number -%}
+            {{
+              [
+                {
+                  'period': 'Time',
+                  'used': pad_number(states('sensor.energy_hourly'), 3) + ' kWh',
+                  'last_period': pad_number(states('sensor.energy_last_hour'), 3) + ' kWh',
+                  'cost': pad_number(states('sensor.energy_hourly_energi_data_service_cost'), 3) + ' kr'
+                },
+                {
+                  'period': 'Dag',
+                  'used': pad_number(states('sensor.energy_daily'), 3) + ' kWh',
+                  'last_period': pad_number(states('sensor.energy_last_day'), 3) + ' kWh',
+                  'cost': pad_number(states('sensor.energy_daily_energi_data_service_cost'), 3) + ' kr'
+                },
+                {
+                  'period': 'Måned',
+                  'used': pad_number(states('sensor.energy_monthly'), 3) + ' kWh',
+                  'last_period': pad_number(states('sensor.energy_last_month'), 3) + ' kWh',
+                  'cost': pad_number(states('sensor.energy_monthly_energi_data_service_cost'), 3) + ' kr'
+                },
+                {
+                  'period': 'Kvartal',
+                  'used': pad_number(states('sensor.energy_quarterly'), 3) + ' kWh',
+                  'last_period': pad_number(states('sensor.energy_last_quarter'), 3) + ' kWh',
+                  'cost': pad_number(states('sensor.energy_quarterly_energi_data_service_cost'), 3) + ' kr'
+                },
+                {
+                  'period': 'År',
+                  'used': pad_number(states('sensor.energy_yearly'), 3) + ' kWh',
+                  'last_period': pad_number(states('sensor.energy_last_year'), 3) + ' kWh',
+                  'cost': pad_number(states('sensor.energy_yearly_energi_data_service_cost'), 3) + ' kr'
+                }
+              ]
+            }}
+
 sensor:
   - platform: integration
     source: sensor.pow_k_l1_power
@@ -279,13 +331,24 @@ sensor:
     sensors:
       energy_cost_hourly:
         friendly_name: "Elomkostning"
-        value_template: "{{ (((states('sensor.pow_k_import_active')|float)/1000) * (states('sensor.energi_data_service')|float)) | round(3) }}"
+        value_template: |
+          {% if states('sensor.pow_k_import_active') not in ['unavailable', 'unknown'] and states('sensor.energi_data_service') not in ['unavailable', 'unknown'] %}
+            {{ (((states('sensor.pow_k_import_active')|float)/1000) * (states('sensor.energi_data_service')|float)) | round(3) }}
+          {% else %}
+            unavailable
+          {% endif %}
         unit_of_measurement: kr/t
         device_class: monetary
 
       energy_cost_this_hour:
         friendly_name: "Elomkostning Denne Time"
-        value_template: "{{ ((states('sensor.energy_hourly')|float) * (states('sensor.energi_data_service')|float)) | round(3) }}"
+        # make sure none of these are unavailable or unknown
+        value_template: |
+          {% if states('sensor.energy_hourly') not in ['unavailable', 'unknown'] and states('sensor.energi_data_service') not in ['unavailable', 'unknown'] %}
+            {{ ((states('sensor.energy_hourly')|float) * (states('sensor.energi_data_service')|float)) | round(3) }}
+          {% else %}
+            0
+          {% endif %}
         unit_of_measurement: kr
         device_class: monetary
 
@@ -307,5 +370,10 @@ sensor:
       energy_last_quarter:
         friendly_name: "Elforbrug Sidste Kvartal"
         value_template: "{{ state_attr('sensor.energy_quarterly', 'last_period') }}"
+        unit_of_measurement: kWh
+        device_class: energy
+      energy_last_year:
+        friendly_name: "Elforbrug Sidste År"
+        value_template: "{{ state_attr('sensor.energy_yearly', 'last_period') }}"
         unit_of_measurement: kWh
         device_class: energy

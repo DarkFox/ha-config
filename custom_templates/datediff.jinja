@@ -1,14 +1,12 @@
-{%- macro datetime_diff(t1, t2) -%}
-    {%- set datetime1 = as_datetime(t1)|as_timestamp|timestamp_custom('%Y-%m-%d %H:%M:%S', true) -%}
-    {%- set datetime2 = as_datetime(t2)|as_timestamp|timestamp_custom('%Y-%m-%d %H:%M:%S', true) -%}
-
+{%- macro datetime_diff(t1, t2, format='%Y-%m-%d %H:%M:%S') -%}
+    {%- set datetime1 = as_datetime(t1)|as_timestamp|timestamp_custom(format, true) -%}
     {%- set parts1 = datetime1.split(' ') -%}
-    {%- set parts2 = datetime2.split(' ') -%}
-    
     {%- set date1 = parts1[0].split('-') -%}
-    {%- set date2 = parts2[0].split('-') -%}
-    
     {%- set time1 = parts1[1].split(':') -%}
+
+    {%- set datetime2 = as_datetime(t2)|as_timestamp|timestamp_custom(format, true) -%}
+    {%- set parts2 = datetime2.split(' ') -%}
+    {%- set date2 = parts2[0].split('-') -%}
     {%- set time2 = parts2[1].split(':') -%}
 
     {%- set ns = namespace(differing_parts=[]) -%}

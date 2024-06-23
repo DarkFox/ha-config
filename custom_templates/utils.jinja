@@ -1,0 +1,11 @@
+{%- macro pad_number(number, dec_digits=2, int_digits=1, separator=',') -%}
+    {%- set number = number | float(0.0) | round(dec_digits) | string -%}
+    {%- set int_part, dec_part = number.split('.') -%}
+    {%- set int_part = int_part | int -%}
+    {%- set dec_part = dec_part | int -%}
+    {%- set int_part = int_part | string -%}
+    {%- set dec_part = dec_part | string -%}
+    {%- set int_part = '0' * (int_digits - int_part | length) ~ int_part -%}
+    {%- set dec_part = dec_part ~ '0' * (dec_digits - dec_part | length) -%}
+    {{ int_part ~ separator ~ dec_part }}
+{%- endmacro -%}

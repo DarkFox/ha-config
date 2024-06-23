@@ -8,9 +8,13 @@ variables:
     () => {
       return states['sensor.historic_energy_price_percentiles'].attributes['99th']
     }
-  get_yellow_threshold: |
+  get_lime_threshold: |
     () => {
       return states['sensor.historic_energy_price_percentiles'].attributes['25th']
+    }
+  get_yellow_threshold: |
+    () => {
+      return states['sensor.historic_energy_price_percentiles'].attributes['50th']
     }
   get_orange_threshold: |
     () => {
@@ -32,7 +36,7 @@ card:
       curve: stepline
       lineCap: butt
     chart:
-      height: 500px
+      height: 600px
     grid:
       show: true
       borderColor: rgb(158, 158, 158)
@@ -41,8 +45,13 @@ card:
       position: back
       yaxis:
         - "y": 0
-          y2: ${ get_yellow_threshold() }
+          y2: ${ get_lime_threshold() }
           fillColor: rgb(76, 175, 80)
+          strokeDashArray: 0
+          borderColor: "#00000000"
+        - "y": ${ get_lime_threshold() }
+          y2: ${ get_yellow_threshold() }
+          fillColor: rgb(186, 255, 58)
           strokeDashArray: 0
           borderColor: "#00000000"
         - "y": ${ get_yellow_threshold() }
@@ -85,7 +94,7 @@ card:
     - name: Totalpris
       entity: sensor.el_priser
       stroke_width: 3
-      float_precision: 2
+      float_precision: 3
       fill_raw: last
       type: line
       color: rgb(33, 150, 243)
@@ -104,7 +113,7 @@ card:
     - name: Spotpriser
       entity: sensor.el_spotpriser
       stroke_width: 3
-      float_precision: 2
+      float_precision: 3
       fill_raw: last
       type: line
       color: rgb(35, 163, 21)
@@ -122,7 +131,7 @@ card:
     - name: 1 time minima
       entity: sensor.el_naeste_billige_1_time
       stroke_width: 0
-      float_precision: 2
+      float_precision: 3
       type: area
       color: rgb(37, 243, 33)
       opacity: 0.3
@@ -144,7 +153,7 @@ card:
     - name: 3 timer minima
       entity: sensor.el_naeste_billige_3_timer
       stroke_width: 0
-      float_precision: 2
+      float_precision: 3
       type: area
       color: rgb(37, 243, 33)
       opacity: 0.2
@@ -166,7 +175,7 @@ card:
     - name: 6 timer minima
       entity: sensor.el_naeste_billige_6_timer
       stroke_width: 0
-      float_precision: 2
+      float_precision: 3
       type: area
       color: rgb(37, 243, 33)
       opacity: 0.1
@@ -188,7 +197,7 @@ card:
     - name: 1 time maxima
       entity: sensor.el_naeste_dyre_1_time
       stroke_width: 0
-      float_precision: 2
+      float_precision: 3
       type: area
       color: rgb(243, 33, 33)
       opacity: 0.3
@@ -210,7 +219,7 @@ card:
     - name: 3 timer maxima
       entity: sensor.el_naeste_dyre_3_timer
       stroke_width: 0
-      float_precision: 2
+      float_precision: 3
       type: area
       color: rgb(243, 33, 33)
       opacity: 0.2
@@ -232,7 +241,7 @@ card:
     - name: 6 timer maxima
       entity: sensor.el_naeste_dyre_6_timer
       stroke_width: 0
-      float_precision: 2
+      float_precision: 3
       type: area
       color: rgb(243, 33, 33)
       opacity: 0.1

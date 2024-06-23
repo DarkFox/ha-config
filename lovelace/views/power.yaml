@@ -1,138 +1,144 @@
 title: Power
 path: power
 icon: mdi:flash
-panel: true
+type: custom:horizontal-layout
+layout:
+  width: 400
+  max_cols: 4
 cards:
-  - type: custom:layout-card
+  - type: vertical-stack
     cards:
-      - type: vertical-stack
-        cards:
-          - !include ../cards/power_gauges.yaml
-          - !include ../cards/energy_prices/power_price_graphs.yaml
+      - !include ../cards/power_gauges.yaml
 
-          - type: custom:mini-graph-card
-            name: Elforbrug Per Time
-            hours_to_show: 12
-            points_per_hour: 1
-            lower_bound: 0.0
-            group_by: hour
-            hour24: true
-            show:
-              graph: bar
-              labels: true
-            entities:
-              - entity: sensor.energy_hourly
-                aggregate_func: max
+      - type: custom:list-card
+        entity: sensor.energy_stats_table
+        title: Elforbrug
+        feed_attribute: table
+        row_limit: 5
+        columns:
+          - title: Periode
+            field: period
+          - title: Pris
+            field: cost
+            style:
+              - text-align: center
+          - title: Forbrug
+            field: used
+            style:
+              - text-align: center
+          - title: Sidste periode
+            field: last_period
+            style:
+              - text-align: center
 
-          - type: custom:mini-graph-card
-            name: Elforbrug Per Dag
-            hours_to_show: 168
-            points_per_hour: 0.04
-            lower_bound: 0.0
-            group_by: date
-            hour24: true
-            show:
-              graph: bar
-              labels: true
-            entities:
-              - entity: sensor.energy_daily
-                aggregate_func: max
+      - type: custom:mini-graph-card
+        name: Elforbrug Per Time
+        hours_to_show: 12
+        points_per_hour: 1
+        lower_bound: 0.0
+        group_by: hour
+        hour24: true
+        show:
+          graph: bar
+          labels: true
+        entities:
+          - entity: sensor.energy_hourly
+            aggregate_func: max
 
-          - type: entities
-            show_header_toggle: false
-            entities:
-              - sensor.energi_data_service
-              - sensor.energy_hourly
-              - sensor.energy_cost_this_hour
-              - sensor.energy_last_hour
-              # - sensor.energy_cost_last_hour
-              - sensor.energy_daily
-              # - sensor.energy_cost_daily
-              - sensor.energy_last_day
-              # - sensor.energy_cost_last_day
-              - sensor.energy_monthly
-              # - sensor.energy_cost_monthly
-              - sensor.energy_last_month
-              # - sensor.energy_cost_last_month
-              - sensor.energy_quarterly
-              # - sensor.energy_cost_quarterly
-              - sensor.energy_last_quarter
-              # - sensor.energy_cost_last_quarter
+      - type: custom:mini-graph-card
+        name: Elforbrug Per Dag
+        hours_to_show: 168
+        points_per_hour: 0.04
+        lower_bound: 0.0
+        group_by: date
+        hour24: true
+        show:
+          graph: bar
+          labels: true
+        entities:
+          - entity: sensor.energy_daily
+            aggregate_func: max
 
-          - type: entities
-            show_header_toggle: false
-            entities:
-              - sensor.el_naeste_dyre_1_time
-              - sensor.el_naeste_dyre_3_timer
-              - sensor.el_naeste_dyre_6_timer
-              - sensor.el_naeste_billige_1_time
-              - sensor.el_naeste_billige_3_timer
-              - sensor.el_naeste_billige_6_timer
-              - sensor.el_billigste_1_time
-              - sensor.el_billigste_3_timer
-              - sensor.el_billigste_6_timer
+  - type: vertical-stack
+    cards:
+      - !include ../cards/energy_prices/cheapest_prices.yaml
+      - !include ../cards/energy_prices/cheap_prices.yaml
+      - !include ../cards/energy_prices/expensive_prices.yaml
 
-      - type: vertical-stack
-        cards:
-          - type: entities
-            show_header_toggle: false
-            entities:
-              - sensor.pow_k_uptime
-              - sensor.pow_k_import_hour
-              - sensor.pow_k_import_day
-              - sensor.pow_k_import_monthmax
-              - sensor.pow_k_import_threshold
+      - type: entities
+        show_header_toggle: false
+        entities:
+          - sensor.el_naeste_dyre_1_time
+          - sensor.el_naeste_dyre_3_timer
+          - sensor.el_naeste_dyre_6_timer
+          - sensor.el_naeste_billige_1_time
+          - sensor.el_naeste_billige_3_timer
+          - sensor.el_naeste_billige_6_timer
+          - sensor.el_billigste_1_time
+          - sensor.el_billigste_3_timer
+          - sensor.el_billigste_6_timer
 
-          - type: entities
-            show_header_toggle: false
-            entities:
-              - sensor.pow_k_import_active_accumulated
-              - sensor.pow_k_import_reactive_accumulated
-              - sensor.pow_k_export_active_accumulated
-              - sensor.pow_k_export_reactive_accumulated
+  - type: vertical-stack
+    cards:
+      - type: entities
+        show_header_toggle: false
+        entities:
+          - sensor.pow_k_uptime
+          - sensor.pow_k_import_hour
+          - sensor.pow_k_import_day
+          - sensor.pow_k_import_monthmax
+          - sensor.pow_k_import_threshold
 
-          - type: entities
-            show_header_toggle: false
-            entities:
-              - sensor.pow_k_import_active
-              - sensor.pow_k_export_active
-              - sensor.pow_k_import_reactive
-              - sensor.pow_k_export_reactive
+      - type: entities
+        show_header_toggle: false
+        entities:
+          - sensor.pow_k_import_active_accumulated
+          - sensor.pow_k_import_reactive_accumulated
+          - sensor.pow_k_export_active_accumulated
+          - sensor.pow_k_export_reactive_accumulated
 
-          - type: entities
-            show_header_toggle: false
-            entities:
-              - sensor.pow_k_l1_power_accumulated
-              - sensor.pow_k_l2_power_accumulated
-              - sensor.pow_k_l3_power_accumulated
+      - type: entities
+        show_header_toggle: false
+        entities:
+          - sensor.pow_k_import_active
+          - sensor.pow_k_export_active
+          - sensor.pow_k_import_reactive
+          - sensor.pow_k_export_reactive
 
-      - type: vertical-stack
-        cards:
-          - type: entities
-            show_header_toggle: false
-            entities:
-              - sensor.pow_k_l1_power
-              - sensor.pow_k_l2_power
-              - sensor.pow_k_l3_power
+      - type: entities
+        show_header_toggle: false
+        entities:
+          - sensor.pow_k_l1_power_accumulated
+          - sensor.pow_k_l2_power_accumulated
+          - sensor.pow_k_l3_power_accumulated
 
-          - type: entities
-            show_header_toggle: false
-            entities:
-              - sensor.pow_k_l1_current
-              - sensor.pow_k_l2_current
-              - sensor.pow_k_l3_current
+  - type: vertical-stack
+    cards:
+      - type: entities
+        show_header_toggle: false
+        entities:
+          - sensor.pow_k_l1_power
+          - sensor.pow_k_l2_power
+          - sensor.pow_k_l3_power
 
-          - type: entities
-            show_header_toggle: false
-            entities:
-              - sensor.pow_k_l1_voltage
-              - sensor.pow_k_l2_voltage
-              - sensor.pow_k_l3_voltage
+      - type: entities
+        show_header_toggle: false
+        entities:
+          - sensor.pow_k_l1_current
+          - sensor.pow_k_l2_current
+          - sensor.pow_k_l3_current
 
-          - type: entities
-            show_header_toggle: false
-            entities:
-              - sensor.pow_k_power_factor
-              - sensor.pow_k_l1_power_factor
-              - sensor.pow_k_l2_power_factor
-              - sensor.pow_k_l3_power_factor
+      - type: entities
+        show_header_toggle: false
+        entities:
+          - sensor.pow_k_l1_voltage
+          - sensor.pow_k_l2_voltage
+          - sensor.pow_k_l3_voltage
+
+      - type: entities
+        show_header_toggle: false
+        entities:
+          - sensor.pow_k_power_factor
+          - sensor.pow_k_l1_power_factor
+          - sensor.pow_k_l2_power_factor
+          - sensor.pow_k_l3_power_factor
