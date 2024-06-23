@@ -12,31 +12,63 @@ binary_sensor:
         delay_off:
           seconds: 30
         value_template: "{{ is_state('input_boolean.workshop_door_activity', 'on') }}"
-      workshop_occupied:
-        friendly_name: Værksted Optaget
-        device_class: occupancy
-        value_template: "{{ is_state('input_boolean.workshop_occupied', 'on') }}"
-# automation:
-#   - alias: workshop_door_activity_on
-#     initial_state: true
-#     trigger:
-#       - platform: state
-#         entity_id: binary_sensor.vaerksted_dor
-#         to: "on"
-#     action:
-#       - service: input_boolean.turn_on
-#         data:
-#           entity_id: input_boolean.workshop_door_activity
 
-#   - alias: workshop_door_activity_off
-#     initial_state: true
-#     trigger:
-#       - platform: state
-#         entity_id: input_boolean.workshop_door_activity
-#         to: "on"
-#         for:
-#           seconds: 5
-#     action:
-#       - service: input_boolean.turn_off
-#         data:
-#           entity_id: input_boolean.workshop_door_activity
+automation:
+  - alias: workshop_door_activity_on
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.vaerksted_dor
+        to:
+          - "on"
+          - "off"
+        not_from:
+          - "unavailable"
+          - "unknown"
+    action:
+      - service: input_boolean.turn_on
+        data:
+          entity_id: input_boolean.workshop_door_activity
+
+  - alias: workshop_door_activity_off
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_boolean.workshop_door_activity
+        to: "on"
+        for:
+          seconds: 5
+    action:
+      - service: input_boolean.turn_off
+        data:
+          entity_id: input_boolean.workshop_door_activity
+
+  - alias: workshop_desk_power_reminder
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.workshop_activity
+        to: "off"
+        for:
+          minutes: 15
+    condition:
+      - condition: number
+        entity_id: sensor.hobbybord_afbryder_forbrug
+        above: 0.05 # kW
+    action:
+      - service: script.notify_everywhere
+        data:
+          message: "Loddekolben eller andet er muligvis tændt på hobbybordet. Husk at slukke for strømmen."
+
+  - alias: workshop_desk_power_off
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.workshop_activity
+        to: "off"
+        for:
+          minutes: 30
+    action:
+      - service: switch.turn_off
+        data:
+          entity_id: switch.hobbybord_afbryder
