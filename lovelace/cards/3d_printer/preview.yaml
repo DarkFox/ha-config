@@ -2,47 +2,40 @@ type: vertical-stack
 cards:
   - type: horizontal-stack
     cards:
-      - type: picture-entity
-        entity: camera.3d_printer
-        camera_image: camera.3d_printer
-        show_state: false
-        show_name: false
+      - type: conditional
+        conditions:
+          - entity: input_boolean.3d_printer_swap_cameras
+            state: "off"
+        card:
+          type: picture-entity
+          entity: camera.3d_printer
+          camera_image: camera.3d_printer
+          show_state: false
+          show_name: false
 
-      - type: picture-entity
-        entity: camera.3d_printer_head
-        camera_image: camera.3d_printer_head
-        show_state: false
-        show_name: false
+      - type: conditional
+        conditions:
+          - entity: input_boolean.3d_printer_swap_cameras
+            state: "on"
+        card:
+          type: picture-entity
+          entity: camera.3d_printer_head
+          camera_image: camera.3d_printer_head
+          show_state: false
+          show_name: false
 
-  - type: horizontal-stack
-    cards:
       - type: vertical-stack
         cards:
           - type: "custom:button-card"
             tap_action:
               action: more-info
-            entity: sensor.octoprint_print_progress
-            layout: icon_name_state
-            show_state: true
-            show_icon: true
-            show_name: false
-
-          - type: "custom:button-card"
-            tap_action:
-              action: more-info
             entity: sensor.octoprint_print_time_left
-            layout: icon_name_state
+            # sensor.octoprint_print_progress
+            label: "[[[ return states['sensor.octoprint_print_progress'].state + '%' ]]]"
+            layout: icon_state_name2nd
             show_state: true
             show_icon: true
-            show_name: false
-
-          - type: "custom:button-card"
-            tap_action:
-              action: more-info
-            entity: sensor.3d_printer_finish_time
-            layout: icon_name_state
-            show_state: true
-            show_icon: true
+            show_label: true
             show_name: false
 
           - type: custom:button-card
@@ -55,111 +48,6 @@ cards:
             name: Pause Print
             entity: button.octoprint_pause_job
             layout: icon_name_state
-
-      - type: vertical-stack
-        cards:
-          - type: "custom:button-card"
-            entity: sensor.3d_printer_temperature
-            icon: "mdi:thermometer"
-            layout: icon_name_state
-            show_state: true
-            show_icon: true
-            show_name: false
-            tap_action:
-              action: fire-dom-event
-              browser_mod:
-                service: browser_mod.popup
-                data:
-                  title: 3D Printer
-                  content:
-                    type: custom:mini-graph-card
-                    points_per_hour: 30
-                    hours_to_show: 6
-                    hour24: true
-                    line_width: 2
-                    height: 400
-                    show:
-                      name: false
-                      icon: false
-                      labels: true
-                      labels_secondary: true
-                    entities:
-                      - entity: sensor.3d_printer_temperature
-                        show_fill: false
-                        # show_legend: false
-                        color: "#FF7500"
-                      - entity: sensor.3d_printer_humidity
-                        show_fill: false
-                        # show_legend: false
-                        y_axis: secondary
-
-          - type: "custom:button-card"
-            entity: sensor.octoprint_tool_0_temperature
-            icon: "mdi:printer-3d-nozzle"
-            layout: icon_name_state
-            show_state: true
-            show_icon: true
-            show_name: false
-            tap_action:
-              action: fire-dom-event
-              browser_mod:
-                service: browser_mod.popup
-                data:
-                  title: 3D Printer
-                  content:
-                    type: custom:mini-graph-card
-                    points_per_hour: 30
-                    hours_to_show: 6
-                    hour24: true
-                    line_width: 2
-                    height: 400
-                    show:
-                      name: false
-                      icon: false
-                      labels: true
-                      labels_secondary: true
-                    entities:
-                      - entity: sensor.octoprint_tool_0_temperature
-                        show_fill: false
-                        show_legend: false
-                      - entity: sensor.octoprint_tool_0_target
-                        show_fill: true
-                        show_line: false
-                        show_legend: false
-
-          - type: "custom:button-card"
-            entity: sensor.octoprint_bed_temperature
-            icon: "mdi:radiator"
-            layout: icon_name_state
-            show_state: true
-            show_icon: true
-            show_name: false
-            tap_action:
-              action: fire-dom-event
-              browser_mod:
-                service: browser_mod.popup
-                data:
-                  title: 3D Printer
-                  content:
-                    type: custom:mini-graph-card
-                    points_per_hour: 30
-                    hours_to_show: 6
-                    hour24: true
-                    line_width: 2
-                    height: 400
-                    show:
-                      name: false
-                      icon: false
-                      labels: true
-                      labels_secondary: true
-                    entities:
-                      - entity: sensor.octoprint_bed_temperature
-                        show_fill: false
-                        show_legend: false
-                      - entity: sensor.octoprint_bed_target
-                        show_fill: true
-                        show_line: false
-                        show_legend: false
 
           - type: custom:button-card
             tap_action:

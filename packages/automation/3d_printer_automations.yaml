@@ -1,3 +1,9 @@
+input_boolean:
+  3d_printer_swap_cameras:
+    name: Swap 3D printer cameras
+    icon: mdi:camera-switch
+    initial: false
+
 automation:
   - id: toggle_3d_printer_light
     alias: Toggle 3D printer light
@@ -187,6 +193,17 @@ automation:
         data:
           message: "{{ message }}"
 
+  - id: 3d_printer_active
+    alias: 3D Printer Aktiv
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.3d_printer_aktiv
+        to: "on"
+    action:
+      - service: automation.turn_on
+        target:
+          entity_id: automation.3d_printer_swap_cameras
+
   - id: 3d_printer_auto_shutdown
     alias: 3d Printer Auto Shutdown
     trigger:
@@ -199,3 +216,16 @@ automation:
       - service: switch.turn_off
         target:
           entity_id: switch.3d_printer_afbryder
+      - service: automation.turn_off
+        target:
+          entity_id: automation.3d_printer_swap_cameras
+
+  - id: 3d_printer_swap_cameras
+    alias: 3D Printer Swap Cameras
+    trigger:
+      - platform: time_pattern
+        seconds: "/15"
+    action:
+      - service: input_boolean.toggle
+        target:
+          entity_id: input_boolean.3d_printer_swap_cameras
