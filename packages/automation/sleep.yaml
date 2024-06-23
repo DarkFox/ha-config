@@ -35,7 +35,7 @@ sensor:
     sensors:
       next_work_event_timestamp:
         value_template: >-
-          {% set time = as_timestamp(state_attr('calendar.arbejdskalender_vagtskema', 'start_time')) or 4294967295 %}
+          {% set time = state_attr('calendar.arbejdskalender_vagtskema', 'start_time')|as_timestamp(4294967295) %}
           {{ (time-(2*60*60)) if as_timestamp(now())+(1*60*60) < time else 4294967295 }}
       next_personal_event_timestamp:
         value_template: >-
@@ -45,7 +45,7 @@ sensor:
           {{ (time-(2*60*60)) if as_timestamp(now())+(1*60*60) < time else 4294967295 }}
       next_tripit_event_timestamp:
         value_template: >-
-          {% set time = as_timestamp(state_attr('calendar.tripit', 'start_time')) or 4294967295 %}
+          {% set time = state_attr('calendar.tripit', 'start_time')|as_timestamp(4294967295) %}
           {{ (time-(2*60*60)) if as_timestamp(now())+(1*60*60) < time else 4294967295 }}
       fallback_wake_up_time:
         value_template: >-
@@ -70,7 +70,14 @@ sensor:
         attribute_templates:
           icon: mdi:calendar-clock
       wake_up_event_source_start_time:
-        value_template: "{{ (state_attr(states('sensor.wake_up_event_source_entity'), 'start_time')|as_timestamp|as_datetime|as_local).strftime('%H:%M') }}"
+        value_template: |
+          {%- set source_entity = states('sensor.wake_up_event_source_entity') -%}
+          {% if source_entity and source_entity not in ['unavailable', 'unknown'] %}
+            {% set start = state_attr(source_entity, 'start_time') %}
+            {{ (start|as_timestamp|as_datetime|as_local).strftime('%H:%M') if start else 'unknown' }}
+          {% else %}
+            unknown
+          {% endif %}
       wake_up_event_source_name:
         value_template: >-
           {% set calendars = {
@@ -113,12 +120,20 @@ binary_sensor:
     sensors:
       wake_up_time:
         friendly_name: "Opvågningstidspunkt"
-        value_template: "{{ (states('sensor.wake_up_time')|as_timestamp()) < (now()|as_timestamp) }}"
+        value_template: "{{ (states('sensor.wake_up_time')|as_timestamp(0)) < (now()|as_timestamp(0)) }}"
       bedtime:
         friendly_name: "Sengetid"
         value_template: >-
+          {% set bedtime = states('sensor.bedtime') %}
+          {% set wake_up_time = states('sensor.wake_up_time') %}
           {{
-            (states('sensor.bedtime')|as_timestamp()) < (now()|as_timestamp) < (states('sensor.wake_up_time')|as_timestamp())
+            (
+              bedtime
+              and bedtime not in ['unknown', 'unavailable']
+              and wake_up_time
+              and wake_up_time not in ['unknown', 'unavailable']
+              and (bedtime|as_timestamp()) < (now()|as_timestamp) < (wake_up_time|as_timestamp())
+            )
             or is_state('binary_sensor.sleep_as_android_bedtime', 'on')
           }}
 

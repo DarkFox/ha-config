@@ -156,21 +156,33 @@ template:
 
       - name: Upcoming Driving Event
         state: >-
-          {% set start = (state_attr('sensor.upcoming_events', 'events')|selectattr('bil', 'eq', true)|list|first).get('start') %}
-          {{ as_timestamp(start) | timestamp_local('unavailable') }}
+          {% set event = state_attr('sensor.upcoming_driving_event', 'event') or {} %}
+          {% set start = event.get('start', None) %}
+          {% if start %}
+            {{ as_timestamp(start) | timestamp_local('unavailable') }}
+          {% else %}
+            unknown
+          {% endif %}
         device_class: timestamp
         attributes:
           event: >-
-            {{ state_attr('sensor.upcoming_events', 'events')|selectattr('bil', 'eq', true)|list|first }}
+            {% set upcoming_bil_events = state_attr('sensor.upcoming_events', 'events')|selectattr('bil', 'eq', true)|list %}
+            {{ upcoming_bil_events|first if upcoming_bil_events|length > 0 else {} }}
 
       - name: Waking Event
         state: >-
-          {% set start = (state_attr('sensor.full_agenda', 'events')|selectattr('wake', 'eq', true)|list|first).get('start') %}
-          {{ as_timestamp(start) | timestamp_local('unavailable') }}
+          {% set event = state_attr('sensor.waking_event', 'event') or {} %}
+          {% set start = event.get('start', None) %}
+          {% if start %}
+            {{ as_timestamp(start) | timestamp_local('unavailable') }}
+          {% else %}
+            unknown
+          {% endif %}
         device_class: timestamp
         attributes:
           event: >-
-            {{ state_attr('sensor.full_agenda', 'events')|selectattr('wake', 'eq', true)|list|first }}
+            {% set waking_events = state_attr('sensor.full_agenda', 'events')|selectattr('wake', 'eq', true)|list %}
+            {{ waking_events|first if waking_events|length > 0 else {} }}
 
       - name: Next personal event start clock
         unique_id: next_personal_event_start_clock

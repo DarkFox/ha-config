@@ -749,7 +749,9 @@ template:
               {% set ns.playing = ns.playing + [media_player_entity_id] %}
             {% endif %}
           {% endfor %}
-          {{ ns.playing[0] if (ns.playing|length) > 0 else ns.grouped[0] }}
+          {% if ns.playing|length > 0 or ns.grouped|length > 0 %}
+            {{ ns.playing[0] if (ns.playing|length) > 0 else ns.grouped[0] }}
+          {% endif %}
 
       - name: Sonos Group Leader Room
         state: "{{ states('sensor.sonos_group_leader').split('.')[1] if states('sensor.sonos_group_leader') not in ['unknown', 'unavailable', '', none] }}"

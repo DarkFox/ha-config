@@ -44,7 +44,7 @@ sensor:
         value_template: !secret google_maps_embed_key
       next_work_in:
         value_template: >
-          {{ (as_timestamp(state_attr('calendar.arbejdskalender_arbejde' 'start_time'))|int)  - as_timestamp(now()) | int }}
+          {{ (as_timestamp(state_attr('calendar.arbejdskalender_arbejde', 'start_time'))|int)  - as_timestamp(now()) | int }}
       work_url_coords:
         value_template: >
           {% set zone = 'zone.rsh' %}
@@ -54,15 +54,18 @@ sensor:
           {% set zone = 'zone.home' %}
           {{ state_attr(zone, 'latitude') }}%2C{{ state_attr(zone, 'longitude') }}
       car_commute_leave_at:
-        value_template: >-
+        value_template: >
+          {% set start = states('sensor.work_start_time') %}
           {{
-            ((strptime(states('sensor.work_start_time'), '%Y-%m-%dT%H:%M:%S%z')
-            - timedelta(minutes=states('sensor.hjem_til_rsh')|int+15))|as_local).isoformat()
+            ((strptime(start, '%Y-%m-%dT%H:%M:%S%z')
+            - timedelta(minutes=states('sensor.hjem_til_rsh')|int(0)+15))|as_local).isoformat()
+            if start and start not in ['unavailable', 'unknown']
           }}
         device_class: timestamp
       car_commute_leave_in:
-        value_template: >-
-          {{ (((states('sensor.car_commute_leave_at')|as_timestamp) - (now()|as_timestamp))/60)|int }}
+        value_template: >
+          {% set time = states('sensor.car_commute_leave_at') %}
+          {{ (((time|as_timestamp) - (now()|as_timestamp))/60)|int if time and time not in ['unavailable', 'unknown'] else -1 }}
         unit_of_measurement: min
         device_class: duration
       work_start_time:
@@ -73,32 +76,32 @@ sensor:
         device_class: timestamp
       commute_status_car:
         value_template: >
-          {%- if states('sensor.hjem_til_rsh')|int > 45 -%}
+          {%- if states('sensor.hjem_til_rsh')|int(0) > 45 -%}
             bad
-          {%- elif states('sensor.hjem_til_rsh')|int > 25 -%}
+          {%- elif states('sensor.hjem_til_rsh')|int(0) > 25 -%}
             ok
           {%- else -%}
             good
           {%- endif -%}
       commute_status_transit:
         value_template: >
-          {%- if states('sensor.precip_today')|int > 5 or states('sensor.s_train_c_status') != 'Til tiden' -%}
+          {%- if states('sensor.precip_today')|int(0) > 5 or states('sensor.s_train_c_status') != 'Til tiden' -%}
             bad
-          {%- elif states('sensor.precip_today')|int > 1 or states('sensor.s_train_message') != '' -%}
+          {%- elif states('sensor.precip_today')|int(0) > 1 or states('sensor.s_train_message') != '' -%}
             ok
           {%- else -%}
             good
           {%- endif -%}
       commute_status_bike:
         value_template: >
-          {%- set headwind = (state_attr('weather.forecast_home', 'wind_bearing')|int > 35 and state_attr('weather.forecast_home', 'wind_bearing')|int < 146) -%}
-          {%- if states('sensor.temperature')|int < 0
-              or states('sensor.precip_today')|int > 5
-              or (headwind and states('sensor.beaufort')|int > 6) -%}
+          {%- set headwind = (state_attr('weather.forecast_home', 'wind_bearing')|int(0) > 35 and state_attr('weather.forecast_home', 'wind_bearing')|int(0) < 146) -%}
+          {%- if states('sensor.temperature')|int(0) < 0
+              or states('sensor.precip_today')|int(0) > 5
+              or (headwind and states('sensor.beaufort')|int(0) > 6) -%}
             bad
-          {%- elif states('sensor.temperature')|int < 10
-              or states('sensor.precip_today')|int > 1
-              or (headwind and states('sensor.beaufort')|int > 5) -%}
+          {%- elif states('sensor.temperature')|int(0) < 10
+              or states('sensor.precip_today')|int(0) > 1
+              or (headwind and states('sensor.beaufort')|int(0) > 5) -%}
             ok
           {%- else -%}
             good

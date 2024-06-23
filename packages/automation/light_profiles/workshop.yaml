@@ -33,7 +33,6 @@ sensor:
 
       workshop_active_light_profile:
         friendly_name: Workshop Active Light Profile
-        # NOTE: Party mode left out
         value_template: >
           {%- if is_state('input_select.workshop_room_state', 'active') -%}
             {{ states('sensor.workshop_light_profile') }}
@@ -68,18 +67,17 @@ binary_sensor:
           {%-
               elif is_state('binary_sensor.vaerksted_motion', 'on')
               or is_state('binary_sensor.vaerktoejsskab', 'on')
+              or is_state('binary_sensor.workshop_door_activity', 'on')
+              or is_state('input_select.latest_motion', 'Workshop')
           -%}
             true
-          {% else -%}
+          {%- else -%}
             false
-          {% endif -%}
+          {%- endif -%}
 
       workshop_activity_predicted:
         friendly_name: "Workshop Activity Predicted"
-        value_template: >-
-          {{
-            is_state('binary_sensor.workshop_door_activity', 'on')
-          }}
+        value_template: "false"
 
 group:
   workshop_activity_entities:

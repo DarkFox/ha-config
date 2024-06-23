@@ -87,7 +87,7 @@ sensor:
       vacuum_current_room:
         friendly_name: "Støvsuger Rum"
         value_template: >-
-          {{ state_attr('camera.valetudo_s5_camera', 'vacuum_position')['in_room'] }}
+          {{ (state_attr('camera.valetudo_s5_camera', 'vacuum_position') or {}).get('in_room', 'unknown') }}
 
 template:
   - sensor:
@@ -96,7 +96,7 @@ template:
         state: "OK"
         attributes:
           segments: >-
-            {% set rooms = state_attr('camera.valetudo_s5_camera', 'rooms') %}
+            {% set rooms = state_attr('camera.valetudo_s5_camera', 'rooms') or [] %}
             {% set icons = {
               "Værksted": "mdi:hand-saw",
               "Kontor": "mdi:desktop-tower-monitor",

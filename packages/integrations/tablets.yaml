@@ -1,12 +1,12 @@
-command_line:
-  - switch:
-      name: Gang Skærm
-      unique_id: gang_skaerm_switch
-      icon: mdi:image-frame
-      command_on: ssh -i /config/ssh/id_rsa -o 'StrictHostKeyChecking=no' martin@gang-skaerm.local 'export DISPLAY=:0 && xset dpms force on && xset -q'
-      command_off: ssh -i /config/ssh/id_rsa -o 'StrictHostKeyChecking=no' martin@gang-skaerm.local 'export DISPLAY=:0 && xset dpms force off && xset -q'
-      command_state: ssh -i /config/ssh/id_rsa -o 'StrictHostKeyChecking=no' martin@gang-skaerm.local 'DISPLAY=:0 xset -q'
-      value_template: "{{ 'Monitor is On' in value }}"
+# command_line:
+#   - switch:
+#       name: Gang Skærm
+#       unique_id: gang_skaerm_switch
+#       icon: mdi:image-frame
+#       command_on: ssh -i /config/ssh/id_rsa -o 'StrictHostKeyChecking=no' martin@gang-skaerm.local 'export DISPLAY=:0 && xset dpms force on && xset -q'
+#       command_off: ssh -i /config/ssh/id_rsa -o 'StrictHostKeyChecking=no' martin@gang-skaerm.local 'export DISPLAY=:0 && xset dpms force off && xset -q'
+#       command_state: ssh -i /config/ssh/id_rsa -o 'StrictHostKeyChecking=no' martin@gang-skaerm.local 'DISPLAY=:0 xset -q'
+#       value_template: "{{ 'Monitor is On' in value }}"
 
 script:
   reload_lovelace_on_tablets:
@@ -68,44 +68,6 @@ automation:
       - service: switch.turn_off
         data:
           entity_id: switch.kokken_tablet_lader
-
-  - alias: charge_gang_tablet
-    trigger:
-      - platform: numeric_state
-        entity_id: sensor.gang_tablet_battery_level
-        below: 60
-      - platform: state
-        entity_id: sensor.gang_tablet_battery_level
-        to:
-          - "unknown"
-          - "unavailable"
-      - platform: state
-        entity_id: binary_sensor.home_assistant_loaded
-        to: "on"
-    condition:
-      - condition: numeric_state
-        entity_id: sensor.gang_tablet_battery_level
-        below: 60
-    action:
-      - service: switch.turn_on
-        data:
-          entity_id: switch.gang_tablet_lader
-  - alias: discharge_gang_tablet
-    trigger:
-      - platform: numeric_state
-        entity_id: sensor.gang_tablet_battery_level
-        above: 80
-      - platform: state
-        entity_id: binary_sensor.home_assistant_loaded
-        to: "on"
-    condition:
-      - condition: numeric_state
-        entity_id: sensor.gang_tablet_battery_level
-        above: 80
-    action:
-      - service: switch.turn_off
-        data:
-          entity_id: switch.gang_tablet_lader
 
   - alias: bedroom_tablet_screensaver_webhook
     initial_state: True

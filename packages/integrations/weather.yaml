@@ -38,10 +38,13 @@ sensor:
         value_template: >-
           {{ states('sensor.beaufort_beskrivelse') }}
           {{ '(' + states('sensor.beaufort_vindstod_beskrivelse') + ')' if states('sensor.beaufort_beskrivelse') != states('sensor.beaufort_vindstod_beskrivelse') }}
-          {{ 'fra '+states('sensor.vindretning') if states('sensor.beaufort')|int > 1 }}
+          {{ 'fra '+states('sensor.vindretning') if states('sensor.beaufort')|int(0) > 1 }}
       precip_today:
         friendly_name: Nedbør
-        value_template: "{{ state_attr('weather.forecast_home', 'forecast')[0].precipitation }}"
+        # TODO: Deprecated. Use service call to get forecast instead.
+        value_template: |
+          {% set forecast = state_attr('weather.forecast_home', 'forecast') %}
+          {{ forecast[0].precipitation if forecast and forecast|length > 0 else '0' }}
         unit_of_measurement: mm
       sun_elevation:
         friendly_name: "Sol Højde"
@@ -167,9 +170,9 @@ automation:
           and (states('sensor.blitzortung_lightning_distance') | int) < 10
         }}
     action:
-      - service: notify.telegram_darkfox
+      - service: script.notify_darkphone
         data:
-          title: "Vejr Varsel: Torden"
+          message_title: "Vejr Varsel: Torden"
           message: "Lynnedslag {{ states('sensor.blitzortung_lightning_distance') }} {{ state_attr('sensor.blitzortung_lightning_distance', 'unit_of_measurement') }} væk."
       - delay:
           minutes: 10

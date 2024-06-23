@@ -33,27 +33,35 @@ command_line:
         --request GET "https://agent.puzzel.com/contactcentre5/{{ states('sensor.puzzel_customer_key') }}/users/{{ states('sensor.puzzel_user_id') }}"
         --header "Authorization: Bearer {{ state_attr('sensor.puzzel_login', 'accessToken') }}"
         --header "Content-Type: application/json"
-      value_template: "{{ value_json.result.contactCentreStatus }}"
+      value_template: "{{ value_json.get('result', {}).get('contactCentreStatus', 'unknown') if 'result' in value_json else 'unknown' }}"
       json_attributes:
         - result
 
 template:
   - sensor:
       - name: "Puzzel Customer Key"
-        state: "{{ state_attr('sensor.puzzel_user', 'result').customerKey }}"
+        state: "{{ (state_attr('sensor.puzzel_user', 'result') or {}).get('customerKey') }}"
       - name: "Puzzel User ID"
-        state: "{{ state_attr('sensor.puzzel_user', 'result').userId }}"
+        state: "{{ (state_attr('sensor.puzzel_user', 'result') or {}).get('userId') }}"
       - name: "Puzzel Nummer"
-        state: "{{ state_attr('sensor.puzzel_user_state', 'result').mobilePhone }}"
+        state: "{{ (state_attr('sensor.puzzel_user_state', 'result') or {}).get('mobilePhone') }}"
       - name: "Puzzel Status"
-        state: "{{ state_attr('sensor.puzzel_user_state', 'result').contactCentreStatus }}"
+        state: "{{ (state_attr('sensor.puzzel_user_state', 'result') or {}).get('contactCentreStatus') }}"
       - name: "Puzzel Profil"
         state: "{{ 'Logget af' if is_state('sensor.puzzel_state', 'Logget af') else states('sensor.puzzel_ko') }}"
       - name: "Puzzel Kø"
-        state: "{{ (state_attr('sensor.puzzel_user_state', 'result').profiles | selectattr('id', 'equalto', state_attr('sensor.puzzel_user_state', 'result').currentProfileId) | first).name }}"
+        state: |
+          {% set profiles = (state_attr('sensor.puzzel_user_state', 'result') or {}).get('profiles', None) %}
+          {% set currentProfileId = (state_attr('sensor.puzzel_user_state', 'result') or {}).get('currentProfileId', None) %}
+          {% if profiles and currentProfileId %}
+            {% set currentProfiles = profiles | selectattr('id', 'equalto', currentProfileId) | list %}
+            {{ (currentProfiles | first).name if currentProfiles|length > 0 else 'unknown' }}
+          {% else %}
+            unknown
+          {% endif %}
         attributes:
-          profile_id: "{{ state_attr('sensor.puzzel_user_state', 'result').currentProfileId }}"
-          available_profiles: "{{ state_attr('sensor.puzzel_user_state', 'result').profiles }}"
+          profile_id: "{{ (state_attr('sensor.puzzel_user_state', 'result') or {}).get('currentProfileId') }}"
+          available_profiles: "{{ (state_attr('sensor.puzzel_user_state', 'result') or {}).get('profiles') }}"
       - name: "Puzzel State"
         state: >-
           {% if is_state('sensor.puzzel_user_state', 'Pause') %}
@@ -313,7 +321,7 @@ script:
         description: "ID of queue to log on to (overrides queue name)"
         example: 12345
     variables:
-      profile_id: "{{ (queue_id|int) or (state_attr('sensor.puzzel_ko', 'available_profiles') | selectattr('name', 'equalto', queue) | first).id }}"
+      profile_id: "{{ (queue_id|int) if queue_id else (state_attr('sensor.puzzel_ko', 'available_profiles') | selectattr('name', 'equalto', queue) | first).id }}"
       phone_number: !secret work_phone_number
     sequence:
       - alias: "ensure all variables"
@@ -439,7 +447,7 @@ automation:
             entity_id: sensor.puzzel_profil
             state: "unknown"
     action:
-      - service: notify.telegram_darkfox
+      - service: script.notify_darkphone
         data:
           message: >-
             {% if is_state('sensor.puzzel_state', 'Logget af') %}
@@ -529,7 +537,7 @@ automation:
         event_data:
           command: "/puzzel"
     action:
-      - service: notify.telegram_darkfox
+      - service: script.notify_darkphone
         data:
           message: >-
             {% if is_state('sensor.puzzel_profil', 'Logget af') %}
@@ -568,7 +576,7 @@ automation:
         condition: template
         value_template: "{{ is_state('sensor.puzzel_profil', 'Logget af') }}"
     action:
-      - service: notify.telegram_darkfox
+      - service: script.notify_darkphone
         data:
           message: "Log på Puzzel?"
           data:

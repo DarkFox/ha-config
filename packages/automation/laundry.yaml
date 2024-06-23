@@ -24,7 +24,12 @@ template:
         state: "{{ state_attr('sensor.washing_machine', 'fill_percent') }}"
         unit_of_measurement: "%"
       - name: "Vaskemaskine Færdig"
-        state: "{{ as_datetime(as_timestamp(now())|int + states('sensor.wash_cycle_remaining_time')|int*60) }}"
+        state: |
+          {% if states('sensor.wash_cycle_remaining_time') not in ['unavailable', 'unknown'] %}
+            {{ as_datetime(as_timestamp(now())|int + states('sensor.wash_cycle_remaining_time')|int*60) }}
+          {% else %}
+            unknown
+          {% endif %}
         device_class: timestamp
       - name: dryer_temp_delta
         state: "{{ states('sensor.torretumbler_temperature')|float - states('sensor.badevaerelse_temperatur')|float }}"
@@ -34,7 +39,7 @@ template:
       - name: Vaskemaskine Fjernstyring
         state: "{{ state_attr('sensor.washing_machine', 'remote_control') }}"
       - name: Tørretumbler
-        state: "{{ states('sensor.dryer_temp_delta')|int > 10 and states('sensor.pow_k_l2_power')|int > 900 }}"
+        state: "{{ states('sensor.dryer_temp_delta')|int(0) > 10 and states('sensor.pow_k_l2_power')|int(0) > 900 }}"
         device_class: running
         attributes:
           icon: "{{ 'mdi:tumble-dryer' if this.state == 'on' else 'mdi:tumble-dryer-off' }}"

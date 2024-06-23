@@ -39,16 +39,16 @@ template:
       - name: 3D Printer Running
         device_class: running
         state: >-
-          {{ states('sensor.3d_printer_afbryder_forbrug')|float > 0.01 }}
+          {{ states('sensor.3d_printer_afbryder_forbrug')|float(0.0) > 0.01 }}
       - name: 3D Printer Aktiv
         device_class: running
         state: >-
           {{
             states('sensor.octoprint_current_state') in ['Printing', 'Pausing', 'Resuming', 'Cancelling', 'Error']
-            or states('sensor.octoprint_actual_bed_temp')|int > 40
-            or states('sensor.octoprint_actual_tool0_temp')|int > 40
-            or states('sensor.octoprint_target_bed_temp')|int > 40
-            or states('sensor.octoprint_target_tool0_temp')|int > 40
+            or states('sensor.octoprint_actual_bed_temp')|int(0) > 40
+            or states('sensor.octoprint_actual_tool0_temp')|int(0) > 40
+            or states('sensor.octoprint_target_bed_temp')|int(0) > 40
+            or states('sensor.octoprint_target_tool0_temp')|int(0) > 40
           }}
       - name: 3D Printer Lys
         state: >-
@@ -85,7 +85,13 @@ template:
 
       - name: 3D Printer Estimated Total Time
         state: >-
-          {{ (states('sensor.octoprint_estimated_finish_time')|as_datetime - states('sensor.octoprint_start_time')|as_datetime).total_seconds() }}
+          {% set start_time = states('sensor.octoprint_start_time')|as_timestamp(0) %}
+          {% set finish_time = states('sensor.octoprint_estimated_finish_time')|as_timestamp(0) %}
+          {% if start_time > 0 and finish_time > 0 %}
+            {{ finish_time - start_time }}
+          {% else %}
+            0
+          {% endif %}
         unit_of_measurement: seconds
 
       - name: 3D Printer Print Name
@@ -95,10 +101,10 @@ template:
       - name: 3D Printer Finish Time
         state: >-
           {%- set now_day = now().day -%}
-          {%- set finish_day = (as_timestamp(now()) + (states('sensor.octoprint_print_time_left') | int)) | timestamp_custom('%d') | int -%}
+          {%- set finish_day = (as_timestamp(now()) + (states('sensor.octoprint_print_time_left') | int(0))) | timestamp_custom('%d') | int(0) -%}
           {%- set day_diff = finish_day - now_day -%}
           {{
-            (as_timestamp(now()) + (states('sensor.octoprint_print_time_left') | int))
+            (as_timestamp(now()) + (states('sensor.octoprint_print_time_left') | int(0)))
             | timestamp_custom('%H:%M')
           }} {{ '+'+(day_diff|string)+'d' if day_diff > 0 else '' }}
 
@@ -115,8 +121,8 @@ template:
       - name: 3D Printer Graph Hours To Show
         state: |
           {%- set start = states('input_text.3d_printer_last_started')|as_timestamp() -%}
-          {%- set diff = (now()|as_timestamp) - start -%}
-          {%- set hours = ((diff/3600)+1)|int -%}
+          {%- set diff = (now()|as_timestamp(0)) - start -%}
+          {%- set hours = ((diff/3600)+1)|int(12) -%}
           {%- if hours > 12 -%}
             12h
           {%- else -%}
