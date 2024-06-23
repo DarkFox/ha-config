@@ -1,0 +1,74 @@
+template:
+  - sensor:
+      - name: "Low Battery"
+        state: >
+          {% set v = state_attr('sensor.low_battery', 'entities') %}
+          {{ v|length if v else 0 }}
+        attributes:
+          entities: >
+            {% set ns = namespace(ret=[]) %}
+            {% set excludes = [
+              "sensor\.low_battery",
+              ".+_battery_power",
+              ".+_battery_state",
+              ".+_battery_health",
+              ".+_battery_temperature",
+              ".+_batteritilstand",
+              ".+_batteriets_sundhed",
+            ] %}
+            {% set exclude_pattern = "({})".format('|'.join(excludes)) %}
+            {% set exclude_states = ['unknown'] %}
+            {% set include_states = ['on', 'unavailable'] %}
+
+            {% for state in states.sensor if (
+                '_batter' in state.entity_id
+                or state.attributes.device_class == 'battery'
+              )
+              and not state.state in exclude_states
+              and not (state.entity_id | regex_match(exclude_pattern))
+              and state.state | int(0) <= 15
+            %}
+              {% set ns.ret = ns.ret + [state.entity_id] %}
+            {% endfor %}
+
+            {% for state in states.binary_sensor if (
+                '_batter' in state.entity_id
+                or state.attributes.device_class == 'battery'
+              )
+              and not state.state in exclude_states
+              and not (state.entity_id | regex_match(exclude_pattern))
+              and state.state in include_states
+            %}
+              {% set ns.ret = ns.ret + [state.entity_id] %}
+            {% endfor %}
+
+            {{ ns.ret }}
+
+automation:
+  - alias: "Low Battery"
+    id: "low_battery"
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: sensor.low_battery
+        attribute: entities
+        for:
+          minutes: 15
+      - platform: state
+        entity_id: input_select.sleep_state
+        to: "awake"
+        for:
+          minutes: 15
+    condition:
+      - condition: numeric_state
+        entity_id: sensor.low_battery
+        above: 0
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: |
+            {% set v = state_attr('sensor.low_battery', 'entities') | map('state_attr', 'friendly_name') | list %}
+            {% set n = v|length if v else 0 %}
+            {% set e = v|join('\n- ') if v else '' %}
+            {% set m = 'Lavt batteri på {} enheder:\n- {}'.format(n, e) %}
+            {{ m }}
