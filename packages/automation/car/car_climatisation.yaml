@@ -93,9 +93,11 @@ automation:
         entity_id: sensor.id_3_pro_remaining_climatisation_time
         above: 6
     action:
-      - service: notify.telegram_darkfox
+      - service: script.notify_darkphone
         data:
-          message: "Klimatiserer bilen til {{ states('sensor.id_3_pro_target_temperature') }}°. {{ states('sensor.id_3_pro_remaining_climatisation_time') }} minutter tilbage."
+          message: |
+            Klimatiserer bilen til {{ states('sensor.id_3_pro_target_temperature') }}°.
+            {{ states('sensor.id_3_pro_remaining_climatisation_time') }} minutter tilbage.
           data:
             inline_keyboard:
               - "Stop klimatisering:/car_climatisation_off"
@@ -111,7 +113,7 @@ automation:
         entity_id: binary_sensor.id_3_pro_klimatisering
         to: "off"
     action:
-      - service: notify.telegram_darkfox
+      - service: script.notify_darkphone
         data:
           message: "Klimatisering afsluttet."
       - service: automation.turn_off

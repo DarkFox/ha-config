@@ -6,6 +6,7 @@ input_text:
 
 input_boolean:
   work_phone_ringing:
+  work_phone_picked_up:
 
 template:
   - trigger:
@@ -30,7 +31,16 @@ template:
         - clear_work_call_log
     sensor:
       - name: "Work Call Log"
-        state: "{{ as_timestamp(now()) | timestamp_custom('%Y-%m-%d %H:%M:%S', true) }}"
+        state: >
+          {% if trigger.event.event_type == 'clear_work_call_log' %}
+            0
+          {% else %}
+            {% if trigger.event.data.get('call_info', {}).get('phone_number', '')|string != '' %}
+              {{ ((state_attr('sensor.work_call_log', 'call_log') or {})|length)+1 }}
+            {% else %}
+              {{ state_attr('sensor.work_call_log', 'call_log')|length }}
+            {% endif %}
+          {% endif %}
         attributes:
           call_log: |
             {% from 'datediff.jinja' import datetime_diff %}
@@ -38,7 +48,7 @@ template:
               {}
             {% else %}
               {% set old_call_log = state_attr('sensor.work_call_log', 'call_log') or {} %}
-              {% set current_call = trigger.event.data.call_info %}
+              {% set current_call = trigger.event.data.get('call_info', {}) %}
               {% if current_call.get('phone_number', '')|string != '' %}
                 {% set caller_info = current_call['caller_info'] or {} %}
                 {% set start = current_call.get('start', now()) %}
@@ -58,7 +68,8 @@ template:
                   'start': current_call.get('start', ''),
                   'end': end,
                   'duration': duration,
-                  'diff':diff
+                  'diff':diff,
+                  'picked_up': ('Ja' if current_call.get('picked_up', False) else 'Nej')
                 } %}
                 {
                   {% for key, value in old_call_log.items() %}
@@ -80,7 +91,8 @@ template:
             {% set call_log_keys = call_log.keys() | list %}
             {
               {% for key in call_log_keys | reverse %}
-                "{{ key }}": {{ call_log[key] | tojson }},
+                "{{ key }}": {{ call_log[key] | replace('>', '&shy;>') }}
+                {{ ',' if not loop.last}}
               {% endfor %}
             }
 
@@ -307,6 +319,18 @@ automation:
           caller_info: "{{ actual_caller }}"
           line: "{{ line }}"
 
+  - alias: Work call picked up
+    id: work_call_picked_up
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: sensor.arbejdstelefon_phone_state
+        to: offhook
+    action:
+      - service: input_boolean.turn_on
+        data:
+          entity_id: input_boolean.work_phone_picked_up
+
   - alias: Work call ended
     id: work_call_ended
     initial_state: true
@@ -326,10 +350,14 @@ automation:
             caller_info: "{{ state_attr('sensor.current_work_call', 'caller_info') }}"
             line: "{{ state_attr('sensor.current_work_call', 'line') }}"
             start: "{{ state_attr('sensor.current_work_call', 'start') }}"
+            picked_up: "{{ is_state('input_boolean.work_phone_picked_up', 'on') }}"
       - service: input_text.set_value
         data:
           entity_id: input_text.work_phone_caller
           value: ""
+      - service: input_boolean.turn_off
+        data:
+          entity_id: input_boolean.work_phone_picked_up
 
   - alias: Notify Work Call
     id: notify_work_call

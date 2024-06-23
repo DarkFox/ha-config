@@ -53,12 +53,13 @@ automation:
         entity_id: input_boolean.car_delayed_charging
         state: "on"
     action:
-      - service: switch.turn_off
-        target:
-          entity_id: switch.id_3_pro_charging
-      - service: notify.telegram_darkfox
-        data:
-          message: "Opladning er bliver stoppet. Den starter igen kl. {{ states('input_datetime.car_start_charging_at') }}."
+      - parallel:
+          - service: switch.turn_off
+            target:
+              entity_id: switch.id_3_pro_charging
+          - service: script.notify_darkphone
+            data:
+              message: "Opladning er bliver stoppet. Den starter igen kl. {{ states('input_datetime.car_start_charging_at') }}."
 
   - id: car_start_delayed_charging
     alias: Car Delayed Charging
@@ -71,15 +72,16 @@ automation:
         entity_id: input_boolean.car_delayed_charging
         state: "on"
     action:
-      - service: input_boolean.turn_off
-        target:
-          entity_id: input_boolean.car_delayed_charging
-      - service: switch.turn_on
-        target:
-          entity_id: switch.id_3_pro_charging
-      - service: notify.telegram_darkfox
-        data:
-          message: "Forsinket opladningstidspunkt er nået. Genstarter opladning."
+      - parallel:
+          - service: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.car_delayed_charging
+          - service: switch.turn_on
+            target:
+              entity_id: switch.id_3_pro_charging
+          - service: script.notify_darkphone
+            data:
+              message: "Forsinket opladningstidspunkt er nået. Genstarter opladning."
 
   - id: set_car_charging_started_time
     alias: Set Car Charging Started Time
@@ -149,7 +151,7 @@ automation:
           {{ (from_time - to_time > 5 or to_time - from_time > 5) }}
     action:
       - delay: "00:00:05"
-      - service: notify.telegram_darkfox
+      - service: script.notify_darkphone
         data:
           message: >
             Bilen lader op fra {{ states('sensor.id_3_pro_state_of_charge') }}% til {{ states('sensor.id_3_pro_target_state_of_charge') }}%.
@@ -168,7 +170,7 @@ automation:
         entity_id: sensor.id_3_pro_charging_state
         state: "charging"
     action:
-      - service: notify.telegram_darkfox
+      - service: script.notify_darkphone
         data:
           message: >-
             Bilen er ladt op til {{ states('sensor.id_3_pro_state_of_charge') }}/{{ states('sensor.id_3_pro_target_state_of_charge') }}%.
@@ -188,6 +190,6 @@ automation:
             entity_id: sensor.id_3_pro_charging_state
             state: "unavailable"
     action:
-      - service: notify.telegram_darkfox
+      - service: script.notify_darkphone
         data:
           message: "Oplading afsluttet. Bilen er ladt op til {{ states('sensor.id_3_pro_state_of_charge') }}%."

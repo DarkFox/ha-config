@@ -41,6 +41,18 @@ script:
             data:
               message: "{{ message }}"
 
+  notify_darkphone:
+    alias: Send notification to Darkphone TTS and Telegram
+    sequence:
+      - service: script.darkphone_tts
+        data:
+          message: "{{ message_title + ' - ' if message_title }}{{ message }}"
+      - service: notify.telegram_darkfox
+        data:
+          title: "{{ message_title }}"
+          message: "{{ message }}"
+          data: "{{ data }}"
+
   darkphone_tts:
     alias: Read message on Darkphone if headset connected
     sequence:
@@ -51,6 +63,9 @@ script:
             state: "on"
           - condition: state
             entity_id: binary_sensor.darkphone_bluetooth_headphones_connected
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.darkphone_android_auto
             state: "on"
       - service: notify.mobile_app_darkphone
         data:
