@@ -1,7 +1,7 @@
 input_boolean:
   gdq_enable:
     name: "Enable GDQ"
-    icon: mdi:gamepad-up
+    icon: mdi:gamepad-right
 
 template:
   - trigger:
@@ -57,12 +57,22 @@ template:
             unknown
           {% endif %}
         attributes:
+          icon: mdi:gamepad-right
           next_run: >-
             {{ (
               (state_attr('sensor.upcoming_gdq_runs', 'watch_runs') or [])
             | sort(attribute='start')
             | first or {}
             ) }}
+
+      - name: "Next GDQ Run Starts In"
+        unique_id: next_gdq_run_starts_in
+        unit_of_measurement: "min"
+        state: >-
+          {% set next_run_start = state_attr('sensor.gdq_next_watch_run', 'next_run').get('start', false) %}
+          {{  ((next_run_start|as_datetime|as_local - now()).total_seconds() / 60)|int if next_run_start else none }}
+        attributes:
+          icon: mdi:calendar-clock
 
 automation:
   - alias: "Turn on GDQ"
@@ -81,6 +91,7 @@ automation:
             - automation.update_gdq_agenda
             - automation.update_gdq_agenda_state
             - automation.refresh_gdq_runs_regex
+            - automation.notify_gdq_run_coming_up
       - condition: state
         entity_id: input_boolean.gdq_enable
         state: "on"
@@ -111,3 +122,20 @@ automation:
       - service: automation.trigger
         target:
           entity_id: automation.update_gdq_agenda
+
+  - alias: "Notify GDQ Run Coming Up"
+    id: notify_gdq_run_coming_up
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.next_gdq_run_starts_in
+        below: 30
+      - platform: numeric_state
+        entity_id: sensor.next_gdq_run_starts_in
+        below: 15
+      - platform: numeric_state
+        entity_id: sensor.next_gdq_run_starts_in
+        below: 5
+    action:
+      - service: script.notify_everywhere
+        data:
+          message: "Next GDQ Run: {{ state_attr('sensor.gdq_next_watch_run', 'next_run').summary }} starts in {{ states('sensor.next_gdq_run_starts_in') }} minutes."
