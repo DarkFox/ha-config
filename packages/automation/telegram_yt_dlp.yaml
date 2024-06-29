@@ -1,0 +1,37 @@
+shell_command:
+  # Download videos using yt-dlp and return filenames of downloaded files as a json list
+  yt_dlp: >-
+    yt-dlp --print after_move:filepath -N 4 -f {{format_prefs}} {{flags}} -P {{output_folder}} -o {{output_file}} {{url}}
+
+script:
+  yt_dlp:
+    alias: "yt-dlp"
+    sequence:
+      - service: shell_command.yt_dlp
+        data:
+          url: "{{ url }}"
+          format_prefs: "best[ext=mp4]/bestvideo[height<=?720][ext=mp4][vcodec=avc1]+bestaudio[ext=m4a]/best"
+          output_folder: "{{ output_folder or '/config/www/downlaod/telegram/'}}"
+          output_file: "%(epoch+3600>%Y-%m%d)s/%(playlist_index|)s%(playlist_index& - |)s%(uploader).24s - %(title).48s.%(ext)s"
+          flags: "--no-mtime --hls-use-mpegts --embed-metadata --restrict-filenames --trim-filenames 120 {{ additional_flags if additional_flags is defined else '' }}"
+        target:
+          entity_id: shell_command.yt_dlp
+        mode: parallel
+
+automation:
+  - alias: "Telegram yt-dlp"
+    trigger:
+      platform: event
+      event_type: telegram_command
+      event_data:
+        command: "/yt-dlp"
+    action:
+      - service: shell_command.yt_dlp
+        response_variable: file_path
+        data:
+          url: "{{ trigger.event.data.text }}"
+      # Send the file to the user as uncompressed file
+      - service: telegram_bot.send_document
+        data:
+          target: "{{ trigger.event.data.chat_id }}"
+          document: "{{ file_path }}"
