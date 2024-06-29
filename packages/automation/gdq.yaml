@@ -1,0 +1,113 @@
+input_boolean:
+  gdq_enable:
+    name: "Enable GDQ"
+    icon: mdi:gamepad-up
+
+template:
+  - trigger:
+      platform: event
+      event_type: gdq_runs_updated
+    sensor:
+      - name: GDQ Runs Regex
+        unique_id: gdq_runs_regex
+        state: "{{ trigger.event.data.todo_items.get('todo.gdq_runs', {}).get('items', []) | length }}"
+        attributes:
+          regex: >-
+            {% from 'utils.jinja' import regex_escape %}
+            {% set runs = trigger.event.data.todo_items.get("todo.gdq_runs", {}).get("items", [])| map(attribute='summary') | list %}
+            {% set ns = namespace(escaped_runs=[]) %}
+            {% for run in runs %}
+              {% set ns.escaped_runs = ns.escaped_runs + [regex_escape(run)] %}
+            {% endfor %}
+            .*({{ ns.escaped_runs | join('|') }}).*
+
+  - sensor:
+      - name: Upcoming GDQ Runs
+        unique_id: upcoming_gdq_runs
+        state: >-
+          {{ (
+            (state_attr('sensor.gdq_agenda', 'agenda') or [])
+          + (state_attr('sensor.gdq_agenda', 'tomorrow') or [])
+          )|sort(attribute='start') | selectattr('watch', 'true') | list | length }}
+        attributes:
+          all_runs: >-
+            {{ (
+              (state_attr('sensor.gdq_agenda', 'agenda') or [])
+            + (state_attr('sensor.gdq_agenda', 'tomorrow') or [])
+            )|sort(attribute='start') | list }}
+          watch_runs: >-
+            {{ (
+              (state_attr('sensor.gdq_agenda', 'agenda') or [])
+            + (state_attr('sensor.gdq_agenda', 'tomorrow') or [])
+            )|sort(attribute='start') | selectattr('watch', 'true') | list }}
+
+      - name: GDQ Next Watch Run
+        unique_id: gdq_next_watch_run
+        device_class: timestamp
+        state: >-
+          {% set next_start = (
+                    (state_attr('sensor.upcoming_gdq_runs', 'watch_runs') or [])
+                    | sort(attribute='start')
+                    | first or {}
+                ).get('start')
+          %}
+          {% if next_start %}
+            {{ (next_start|as_datetime|as_local).isoformat() }}
+          {% else %}
+            unknown
+          {% endif %}
+        attributes:
+          next_run: >-
+            {{ (
+              (state_attr('sensor.upcoming_gdq_runs', 'watch_runs') or [])
+            | sort(attribute='start')
+            | first or {}
+            ) }}
+
+automation:
+  - alias: "Turn on GDQ"
+    id: turn_on_gdq
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_boolean.gdq_enable
+        to:
+          - "on"
+          - "off"
+    action:
+      - service: "automation.turn_{{ states('input_boolean.gdq_enable') }}"
+        target:
+          entity_id:
+            - automation.update_gdq_agenda
+            - automation.update_gdq_agenda_state
+            - automation.refresh_gdq_runs_regex
+      - condition: state
+        entity_id: input_boolean.gdq_enable
+        state: "on"
+      - service: automation.trigger
+        target:
+          entity_id:
+            - automation.update_gdq_agenda
+            - automation.refresh_gdq_runs_regex
+
+  - alias: "Refresh GDQ Runs Regex"
+    id: refresh_gdq_runs_regex
+    mode: restart
+    trigger:
+      - platform: state
+        entity_id: todo.gdq_runs
+    action:
+      - service: todo.get_items
+        data:
+          status: needs_action
+        target:
+          entity_id: todo.gdq_runs
+        response_variable: todo_items
+      - event: gdq_runs_updated
+        event_data:
+          todo_items: "{{ todo_items }}"
+      - delay:
+          seconds: 30
+      - service: automation.trigger
+        target:
+          entity_id: automation.update_gdq_agenda
