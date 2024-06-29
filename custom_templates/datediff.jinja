@@ -30,3 +30,37 @@
     {%- endif -%}
     {{ ns.differing_parts | join(' ') }}
 {%- endmacro -%}
+
+{%- macro split_seconds(input) -%}
+    {%- set value = input|int(0) -%}
+    {%- set abs_value = value if value >= 0 else -value -%}
+    {%- set days = (abs_value // 86400) -%}
+    {%- set hours = (abs_value % 86400) // 3600 -%}
+    {%- set minutes = (abs_value % 3600) // 60 -%}
+    {%- set seconds = abs_value % 60 -%}
+    {{
+        {
+        'days': days if value >= 0 else -days,
+        'hours': hours if value >= 0 else -hours,
+        'minutes': minutes if value >= 0 else -minutes,
+        'seconds': seconds if value >= 0 else -seconds
+        } | to_json
+    }}
+{%- endmacro -%}
+
+{%- macro format_seconds(input) -%}
+    {%- set labels = {'days': 'd', 'hours': 't', 'minutes': 'm', 'seconds': 's'} -%}
+    {%- set v = split_seconds(input|int(0))|from_json -%}
+    {%- set ns = namespace(ret=[],noskip=false) -%}
+    {%- for key in labels.keys() -%}
+        {%- if ns.noskip or v[key] > 0 -%}
+            {%- set ns.noskip = true -%}
+            {%- set ns.ret = ns.ret + [v[key] ~ labels[key]] -%}
+        {%- endif -%}
+    {%- endfor -%}
+    {%- if ns.ret | length == 0 -%}
+        0s
+    {%- else -%}
+        {{ ns.ret | join(' ') }}
+    {%- endif -%}
+{%- endmacro -%}

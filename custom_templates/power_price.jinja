@@ -1,27 +1,22 @@
 {%- macro power_price_group(p, current_start, last_end, current_values) -%}
 {%- from 'easy_time.jinja' import weekday -%}
+{%- from 'datediff.jinja' import split_seconds, format_seconds -%}
 {%- from 'utils.jinja' import pad_number -%}
 
 {%- set start_timestamp = current_start|as_timestamp -%}
-{%- set start_dow = weekday(start_timestamp|timestamp_custom('%w', true)|int, 'da') -%}
-{%- set human_start = start_dow + ' ' + (start_timestamp|timestamp_custom('%H:%M', true)) -%}
+{%- set next_week = (start_timestamp-(now()|as_timestamp) > 518400) -%}
+{%- set start_dow = ('N.' if next_week else '') + weekday((start_timestamp|as_datetime).weekday(), 'da') -%}
+{%- set start_time = (start_timestamp|timestamp_custom('%H:%M', true)) -%}
+{%- set human_start = start_dow + ' ' + start_time -%}
 
 {%- set end_timestamp = last_end|as_timestamp -%}
-{%- set end_dow = weekday(end_timestamp|timestamp_custom('%w', true)|int, 'da') -%}
-{%- set human_end = end_dow + ' ' + (end_timestamp|timestamp_custom('%H:%M', true)) -%}
+{%- set end_dow = ('N.' if next_week else '') + weekday((end_timestamp|as_datetime).weekday(), 'da') -%}
+{%- set end_time = (end_timestamp|timestamp_custom('%H:%M', true)) -%}
+{%- set human_end = end_dow + ' ' + end_time -%}
 
-{%- set until = (current_start|as_datetime - now()).total_seconds()|int -%}
-{%- set hours_until = (until / 3600)|int -%}
-{%- set minutes_until = (until / 60)|int -%}
-{%- set days_until = (hours_until/24)|int -%}
-
-{%- set human_hours_until = (hours_until - (days_until*24))|int -%}
-{%- set human_minutes_until = (minutes_until - (hours_until*60))|int -%}
-{%- set human_readable_until = (
-    (days_until|string+'d ' if days_until > 0 else '')
-    + ((human_hours_until|string)+'t ' if human_hours_until > 0 else '')
-    + ((human_minutes_until|string)+'m')
-) if until > 0 else 'Nu' -%}
+{%- set seconds_until = (current_start|as_datetime - now()).total_seconds()|int -%}
+{%- set until = split_seconds(seconds_until)|from_json -%}
+{%- set human_readable_until = format_seconds(seconds_until) if seconds_until > 0 else 'Nu' -%}
 
 {%- set min_value = current_values | min -%}
 {%- set max_value = current_values | max -%}
@@ -32,9 +27,9 @@
     'end': last_end,
     'time_diff': human_start + ' > ' + (human_end | replace(start_dow, '')),
     'hours': (current_values | length),
-    'days_until': days_until,
-    'hours_until': hours_until,
-    'minutes_until': minutes_until,
+    'days_until': until.days,
+    'hours_until': until.hours,
+    'minutes_until': until.minutes,
     'human_readable_until': human_readable_until,
     'min': min_value,
     'max': max_value,

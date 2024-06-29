@@ -1,7 +1,10 @@
 mqtt:
   sensor:
-    - name: "Pow K Uptime"
+    - name: "Pow K Uptime Seconds"
       state_topic: "kamstrup/uptime"
+
+    - name: "Pow K Meter Clock"
+      state_topic: "kamstrup/meter/clock"
 
     - name: "Pow K VCC"
       state_topic: "kamstrup/vcc"
@@ -211,6 +214,19 @@ energy_meter:
 
 template:
   - sensor:
+      - name: Pow K Uptime
+        state: >
+          {% from 'datediff.jinja' import format_seconds %}
+          {{ format_seconds(states('sensor.pow_k_uptime_seconds')) }}
+        attributes:
+          icon: mdi:clock-outline
+
+      - name: Pow K Up Since
+        state: >
+          {{ as_timestamp(now()) - states('sensor.pow_k_uptime_seconds') | int }}
+        attributes:
+          icon: mdi:calendar-clock
+
       - name: Pow K L1 Power
         state: >-
           {{
