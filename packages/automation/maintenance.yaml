@@ -60,14 +60,16 @@ automation:
         for:
           minutes: 15
     condition:
-      - condition: numeric_state
-        entity_id: sensor.low_battery
-        above: 0
+      - condition: template
+        value_template: "{{ bool((state_attr('sensor.low_battery', 'entities') or []) | length > 0) }}"
+      - condition: state
+        entity_id: input_select.sleep_state
+        state: "awake"
     action:
       - service: notify.telegram_darkfox
         data:
           message: |
-            {% set v = state_attr('sensor.low_battery', 'entities') | map('state_attr', 'friendly_name') | list %}
+            {% set v = (state_attr('sensor.low_battery', 'entities') or []) | map('state_attr', 'friendly_name') | list %}
             {% set n = v|length if v else 0 %}
             {% set e = v|join('\n- ') if v else '' %}
             {% set m = 'Lavt batteri på {} enheder:\n- {}'.format(n, e) %}
