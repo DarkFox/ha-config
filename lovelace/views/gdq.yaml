@@ -1,0 +1,116 @@
+title: GDQ
+path: gdq
+icon: mdi:gamepad-right
+type: custom:horizontal-layout
+layout:
+  width: 300
+  max_cols: 3
+cards:
+  - type: vertical-stack
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: custom:mushroom-title-card
+            title: Next run to watch
+          - type: custom:button-card
+            entity: sensor.gdq_next_watch_run
+            state_display: >-
+              [[[ return entity.attributes.next_run.description.replace(/\n/gi,
+              '<br />') ]]]
+            label: >-
+              [[[ return 'In ' + states['sensor.next_gdq_run_starts_in'].state +
+              ' minutes' ]]]
+            name: "[[[ return entity.attributes.next_run.summary ]]]"
+            layout: name_state
+            show_state: true
+            show_name: true
+            show_label: true
+            size: 10%
+
+      - type: vertical-stack
+        cards:
+          - type: custom:mushroom-title-card
+            title: Upcoming runs to watch
+          - type: custom:config-template-card
+            entities:
+              - sensor.gdq_runs_regex
+              - calendar.sgdq_2024
+            config_templates: default
+            variables:
+              RUNS_REGEX: states["sensor.gdq_runs_regex"].attributes.regex
+            card:
+              type: custom:atomic-calendar-revive
+              eventDateFormat: ddd
+              showProgressBar: true
+              hideDeclined: true
+              hideFinishedEvents: true
+              showLocation: false
+              showDescription: true
+              disableEventLink: true
+              maxDaysToShow: 7
+              entities:
+                - entity: calendar.sgdq_2024
+                  allowlist: ${RUNS_REGEX}
+              card_mod:
+                style:
+                  .: |
+                    ha-card {
+                      max-height: 60vh;
+                      overflow-y: scroll;
+                    }
+                    .single-event-container {
+                      grid-template-columns: 0.5fr 100fr !important;
+                      padding-top: 5px;
+                      padding-bottom: 5px;
+                      border-bottom: 1px dotted #aaa;
+                    }
+                    .event-left {
+                      width: min-content !important;
+                    }
+                    .event-title {
+                      font-weight: bold;
+                      font-size: 1.2em;
+                    }
+
+  - type: vertical-stack
+    cards:
+      - type: custom:mushroom-title-card
+        title: All runs
+      - type: custom:atomic-calendar-revive
+        eventDateFormat: ddd
+        showProgressBar: true
+        hideDeclined: true
+        hideFinishedEvents: true
+        showLocation: false
+        showDescription: true
+        disableEventLink: true
+        maxDaysToShow: 7
+        entities:
+          - entity: calendar.sgdq_2024
+        card_mod:
+          style:
+            .: |
+              ha-card {
+                max-height: 85vh;
+                overflow-y: scroll;
+              }
+              .single-event-container {
+                grid-template-columns: 0.5fr 100fr !important;
+                padding-top: 5px;
+                padding-bottom: 5px;
+                border-bottom: 1px dotted #aaa;
+              }
+              .event-left {
+                width: min-content !important;
+              }
+              .event-title {
+                font-weight: bold;
+                font-size: 1.2em;
+              }
+
+  - type: vertical-stack
+    cards:
+      - type: custom:mushroom-title-card
+        title: Run searches
+      - type: todo-list
+        entity: todo.gdq_runs
