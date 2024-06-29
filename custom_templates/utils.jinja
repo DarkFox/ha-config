@@ -1,4 +1,17 @@
 {%- macro pad_number(number, dec_digits=2, int_digits=1, separator=',') -%}
+    {# 
+    This macro pads a number with leading zeros and adds a separator between the integer and decimal parts.
+    
+    Parameters:
+    - number: The number to pad and format.
+    - dec_digits: The number of decimal digits to include. Default is 2.
+    - int_digits: The minimum number of integer digits to include. Default is 1.
+    - separator: The separator character to use between the integer and decimal parts. Default is ','.
+    
+    Usage: 
+    {{ pad_number(123.45, dec_digits=3, int_digits=3, separator='.') }}  # Output: '123.450'
+    #}
+
     {%- set number = number | float(0.0) | round(dec_digits) | string -%}
     {%- set int_part, dec_part = number.split('.') -%}
     {%- set int_part = int_part | int -%}
@@ -8,4 +21,87 @@
     {%- set int_part = '0' * (int_digits - int_part | length) ~ int_part -%}
     {%- set dec_part = dec_part ~ '0' * (dec_digits - dec_part | length) -%}
     {{ int_part ~ separator ~ dec_part }}
+{%- endmacro -%}
+
+{%- macro constrain(x, min_x, max_x) -%}
+    {# 
+    This macro constrains a value within a specified range.
+    
+    Parameters:
+    - x: The value to constrain.
+    - min_x: The minimum value of the range.
+    - max_x: The maximum value of the range.
+    
+    Usage: 
+    {{ constrain(10, 0, 100) }}  # Output: 10
+    #}
+
+    {{ min(max((x|float),(min_x|float)), (max_x|float)) }}
+{%- endmacro -%}
+
+{%- macro map(x, in_min, in_max, out_min, out_max) -%}
+    {# 
+    This macro maps a value from one range to another range.
+    
+    Parameters:
+    - x: The value to map.
+    - in_min: The minimum value of the input range.
+    - in_max: The maximum value of the input range.
+    - out_min: The minimum value of the output range.
+    - out_max: The maximum value of the output range.
+    
+    Usage: 
+    {{ map(50, 0, 100, 0, 255) }}  # Output: 127.5
+    #}
+    {%- set x = x | float -%}
+    {%- set in_min = in_min | float -%}
+    {%- set in_max = in_max | float -%}
+    {%- set out_min = out_min | float -%}
+    {%- set out_max = out_max | float -%}
+
+    {{ out_min + (x - in_min) * (out_max - out_min) / (in_max - in_min) }}
+{%- endmacro -%}
+
+{%- macro map_clamp(x, in_min, in_max, out_min, out_max) -%}
+    {# 
+    This macro maps a value from one range to another range and clamps the result within the output range.
+    
+    Parameters:
+    - x: The value to map.
+    - in_min: The minimum value of the input range.
+    - in_max: The maximum value of the input range.
+    - out_min: The minimum value of the output range.
+    - out_max: The maximum value of the output range.
+    
+    Usage: 
+    {{ map_clamp(50, 0, 100, 0, 255) }}  # Output: 127.5
+    #}
+
+    {{ constrain(map(x, in_min, in_max, out_min, out_max), out_min, out_max) }}
+{%- endmacro -%}
+
+{%- macro map_clamp_input(x, in_min, in_max, out_min, out_max) -%}
+    {# 
+    This macro maps a value from one range to another range and clamps the input value within the input range.
+    
+    Parameters:
+    - x: The value to map.
+    - in_min: The minimum value of the input range.
+    - in_max: The maximum value of the input range.
+    - out_min: The minimum value of the output range.
+    - out_max: The maximum value of the output range.
+    
+    Usage: 
+    {{ map_clamp_input(50, 0, 100, 0, 255) }}  # Output: 127.5
+    #}
+
+    {{ map(constrain(x, in_min, in_max), in_min, in_max, out_min, out_max) }}
+{%- endmacro -%}
+
+
+{%- macro regex_escape(value) -%}
+    {{ value.replace('\\', '\\\\').replace('.', '\\.').replace('^', '\\^').replace('$', '\\$')
+        .replace('*', '\\*').replace('+', '\\+').replace('?', '\\?').replace('{', '\\{')
+        .replace('}', '\\}').replace('[', '\\[').replace(']', '\\]').replace('(', '\\(')
+        .replace(')', '\\)').replace('|', '\\|') }}
 {%- endmacro -%}
