@@ -32,6 +32,8 @@ script:
               - condition: template
                 value_template: "{{ modus == 'close' }}"
             sequence:
+              - condition: template
+                value_template: "{{ states('sensor.sovevaerelse_gardin_value') == 'open' }}"
               - service: "cover.open_cover"
                 target:
                   entity_id: cover.sovevaerelse_gardin_dor
@@ -139,6 +141,7 @@ cover:
         friendly_name: "Soveværelse Gardin"
         device_class: curtain
         position_template: "{{ states('sensor.sovevaerelse_gardin_position') }}"
+        value_template: "{{ states('sensor.sovevaerelse_gardin_value') }}"
         open_cover:
           service: script.sovevaerelse_gardin
           data:
@@ -179,7 +182,24 @@ sensor:
         value_template: "{{ state_attr('cover.stue_gardin_hojre', 'current_position') }}"
       stue_gardin_venstre_position:
         value_template: "{{ state_attr('cover.stue_gardin_venstre', 'current_position') }}"
+
       sovevaerelse_gardin_vindue_position:
-        value_template: "{{ state_attr('cover.sovevaerelse_gardin_vindue', 'current_position') }}"
+        value_template: >-
+          {% from 'utils.jinja' import map_clamp_input %}
+          {{ map_clamp_input(state_attr('cover.sovevaerelse_gardin_vindue', 'current_position'), 45, 100, 0, 100)|int }}
       sovevaerelse_gardin_dor_position:
         value_template: "{{ state_attr('cover.sovevaerelse_gardin_dor', 'current_position') }}"
+      sovevaerelse_gardin_value:
+        value_template: >-
+          {% set states = [states('cover.sovevaerelse_gardin_vindue'), states('cover.sovevaerelse_gardin_dor')] %}
+          {% set dor_position = state_attr('cover.sovevaerelse_gardin_dor', 'current_position')|int %}
+          {% set vindue_position = state_attr('cover.sovevaerelse_gardin_vindue', 'current_position')|int %}
+          {% if 'closing' in states %}
+            closing
+          {% elif 'opening' in states %}
+            opening
+          {% elif dor_position == 0 and vindue_position < 45 %}
+            closed
+          {% else %}
+            open
+          {% endif %}
