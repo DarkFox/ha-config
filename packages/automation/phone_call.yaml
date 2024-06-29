@@ -84,7 +84,7 @@ template:
 
   - sensor:
       - name: "Reverse Work Call Log"
-        state: "{{ states('sensor.work_call_log') }}"
+        state: "{{ state_attr('sensor.work_call_log', 'call_log')|length if state_attr('sensor.work_call_log', 'call_log') else 0 }}"
         attributes:
           call_log: |
             {% set call_log = state_attr('sensor.work_call_log', 'call_log') or {} %}

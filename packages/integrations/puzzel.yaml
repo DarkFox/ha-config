@@ -279,19 +279,22 @@ script:
       - service: shell_command.curl
         response_variable: result
         data:
-          url: "https://agent.puzzel.com/contactcentre5/{{ states('sensor.puzzel_customer_key') }}/users/{{ states('sensor.puzzel_user_id') }}/visualqueues"
+          url: "https://agent.puzzel.com/contactcentre5/{{ states('sensor.puzzel_customer_key') }}/users/{{ states('sensor.puzzel_user_id') }}/stateinformation/extended?personalQueue=true&request=true"
           method: get
           headers:
             Content-Type: application/json
             Authorization: "Bearer {{ state_attr('sensor.puzzel_login', 'accessToken') }}"
 
       - variables:
-          # Convert stdout from JSON to dict
           stdout: "{{ result.stdout | from_json }}"
-          # Extract first result from JSON
-          current_request: "{{ stdout.result | first }}"
-          # Extract phone number from current request
-          phone_number: "{{ current_request.get('requestRemoteAddress', '') if current_request else '' }}"
+          ongoing_request_list: "{{ stdout.result.get('request', []) }}"
+          ongoing_request: "{{ current_request_list | first if current_request_list | length > 0 }}"
+          ongoing_request_phone_number: "{{ ongoing_request.get('remoteAddress', '') if ongoing_request else '' }}"
+          personal_queue_list: "{{ stdout.result.get('personalQueueList', []) }}"
+          incoming_request: "{{ personal_queue_list | first if personal_queue_list | length > 0 }}"
+          incoming_request_phone_number: "{{ incoming_request.get('requestRemoteAddress', '') if incoming_request else '' }}"
+          current_request: "{{ ongoing_request or incoming_request }}"
+          phone_number: "{{ ongoing_request_phone_number or incoming_request_phone_number }}"
 
       - service: script.puzzel_lookup_caller
         response_variable: puzzel_caller
