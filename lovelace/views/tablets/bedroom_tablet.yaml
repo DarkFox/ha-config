@@ -1,0 +1,142 @@
+title: Soveværelse Tablet
+path: kiosk
+icon: mdi:tablet
+type: custom:grid-layout
+layout:
+  grid-template-columns: 50% 50%
+  grid-template-rows: auto
+  grid-template-areas: |
+    "header header"
+    "left right"
+cards:
+  - type: vertical-stack
+    view_layout:
+      grid-area: header
+    cards:
+      - !include ../../cards/time_to_leave_countdown.yaml
+
+  - type: vertical-stack
+    view_layout:
+      grid-area: left
+    cards:
+      - !include ../../cards/weather/simple_weather.yaml
+
+      - type: custom:decluttering-card
+        template: room_light_profile
+        variables:
+          - room: bedroom
+
+      - type: horizontal-stack
+        cards:
+          - !include ../../cards/dorklokke.yaml
+          - !include ../../cards/hoveddor_laas.yaml
+          - type: custom:button-card
+            entity: climate.aircondition
+            name: A/C
+          - type: custom:button-card
+            entity: fan.sovevaerelse_blaeser
+            name: Blæser
+
+      - !include ../../cards/sleep.yaml
+
+      - !include ../../cards/climate/target_temperature.yaml
+
+      - type: entities
+        state_color: true
+        entities:
+          - entity: cover.sovevaerelse_gardin
+            name: Gardin
+            # type: "custom:slider-entity-row"
+          - entity: cover.sovevaerelse_gardin_dor
+            # type: "custom:slider-entity-row"
+            name: Dør
+          - entity: cover.sovevaerelse_gardin_vindue
+            # type: "custom:slider-entity-row"
+            name: Vindue
+          - entity: switch.bedroom_curtain_automations
+            name: Auto Gardin
+
+  - type: vertical-stack
+    view_layout:
+      grid-area: right
+    cards:
+      - type: horizontal-stack
+        cards:
+          - type: custom:decluttering-card
+            template: currently_playing
+            variables:
+              - room: sovevaerelse
+          - !include ../../cards/compact_clock.yaml
+
+      - type: custom:decluttering-card
+        template: speaker_control_v2
+        variables:
+          - room: sovevaerelse
+
+      - type: conditional
+        conditions:
+          - entity: binary_sensor.commute_soon
+            state: "on"
+        card: !include /config/lovelace/cards/transport/commute.yaml
+
+      - type: conditional
+        conditions:
+          - entity: binary_sensor.octoprint_printing
+            state: "on"
+        card: !include ../../cards/3d_printer/preview.yaml
+
+      - type: custom:mushroom-media-player-card
+        entity: media_player.sovevaerelse_tv
+        name: TV
+        layout: horizontal
+        secondary_info: none
+        volume_controls:
+          - volume_buttons
+          - volume_mute
+        tap_action:
+          action: toggle
+
+      - type: conditional
+        conditions:
+          - entity: media_player.sovevaerelse_tv
+            state_not: "off"
+        card:
+          type: vertical-stack
+          cards:
+            - type: media-control
+              entity: media_player.sovevaerelse_chromecast
+
+            - type: custom:my-slider
+              entity: media_player.sovevaerelse_tv
+              intermediate: true
+
+            - type: horizontal-stack
+              square: false
+              cards:
+                - type: custom:button-card
+                  entity: switch.sovevaerelse_soundbar_night_mode
+                  name: Sound Night
+                  layout: icon_name
+                  size: 40px
+                  tap_action:
+                    action: toggle
+                - type: custom:button-card
+                  entity: switch.sovevaerelse_tv_night_mode
+                  name: TV Night
+                  layout: icon_name
+                  size: 40px
+                  tap_action:
+                    action: toggle
+
+      - !include ../../cards/gdq/compact_overview.yaml
+
+      - type: conditional
+        conditions:
+          - entity: input_boolean.guests
+            state: "off"
+        card: !include ../../cards/calendar_compact.yaml
+
+      - type: custom:decluttering-card
+        template: light_groups
+        variables:
+          - rum: sovevaerelse

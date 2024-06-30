@@ -1,6 +1,6 @@
-title: Living Room
-path: living-room
-icon: "mdi:sofa"
+title: Kontor
+path: office
+icon: "mdi:desktop-tower-monitor"
 type: custom:grid-layout
 layout:
   grid-template-columns: 33.3% 33.3% 33.3%
@@ -32,149 +32,126 @@ cards:
           - type: custom:decluttering-card
             template: currently_playing
             variables:
-              - room: stue
-          - !include ../cards/compact_clock.yaml
+              - room: kontor
+          - !include ../../cards/compact_clock.yaml
 
       - type: custom:decluttering-card
         template: speaker_control_v2
         variables:
-          - room: stue
+          - room: kontor
 
       - type: custom:decluttering-card
         template: room_state_and_light_profile
         variables:
-          - room: living_room
+          - room: office
 
       - type: custom:decluttering-card
         template: room_climate_with_thermostat
         variables:
-          - rum: stue
-          - icon: mdi:sofa
+          - rum: kontor
+          - icon: mdi:desktop-tower-monitor
+
+      - type: custom:decluttering-card
+        template: light_groups
+        variables:
+          - rum: kontor
 
   - type: vertical-stack
     view_layout:
       grid-area: middle
     cards:
-      - !include ../cards/media_players/living_room_media.yaml
-
-      - type: horizontal-stack
-        cards:
-          - type: "custom:button-card"
-            entity: switch.living_room_curtain_automations
-            name: Auto Gardin
-            color: auto
-            size: 50px
-
-          - type: "custom:button-card"
-            entity: input_boolean.bar_open
-            icon: mdi:glass-cocktail
-            name: Bar
-            color: auto
-            size: 50px
-
-          - type: "custom:button-card"
-            entity: switch.stue_blaeser
-            name: Blæser
-            color: auto
-            size: 50px
-
-      - type: custom:decluttering-card
-        template: light_groups
-        variables:
-          - rum: stue
-
       - type: entities
-        state_color: true
+        title: PC
+        show_header_toggle: false
         entities:
-          - entity: cover.stue_gardin
-            type: "custom:slider-entity-row"
-          - entity: cover.stue_gardin_venstre
-            type: "custom:slider-entity-row"
-          - entity: cover.stue_gardin_hojre
-            type: "custom:slider-entity-row"
+          - switch.martin_pc
+          - binary_sensor.martin_pc_activity
+          - entity: switch.pc_afbryder
+            name: PC
+          - entity: switch.pc_tilbehor_afbryder
+            name: PC Tilbehør
+          - switch.printer_afbryder
+          - sensor.steam_76561197970641649
+          - sensor.steam_game
+
+      - type: vertical-stack
+        cards:
+          - type: horizontal-stack
+            cards:
+              - type: custom:mini-graph-card
+                name: CPU
+                entities:
+                  - entity: sensor.martin_pc_cpuload
+                    color: "#FF6347"
+                hours_to_show: 0.5
+                points_per_hour: 240
+              - type: custom:mini-graph-card
+                name: GPU
+                icon: mdi:chart-areaspline
+                entities:
+                  - entity: sensor.martin_pc_gpuload
+                    color: "#4682B4"
+                hours_to_show: 0.5
+                points_per_hour: 240
+          - type: horizontal-stack
+            cards:
+              - type: custom:mini-graph-card
+                name: CPU Frequency
+                entities:
+                  - entity: sensor.martin_pc_martin_pc_currentclockspeed
+                    color: "#32CD32"
+                hours_to_show: 0.5
+                points_per_hour: 240
+              - type: custom:mini-graph-card
+                name: RAM
+                entities:
+                  - entity: sensor.martin_pc_memoryusage
+                    color: "#9932CC"
+                hours_to_show: 0.5
+                points_per_hour: 240
+
+      - !include ../../cards/printer.yaml
+
+      - type: custom:mushroom-cover-card
+        entity: cover.kontor_rullegardin
+        show_position_control: false
+        name: Vindue
+        show_buttons_control: true
+        layout: horizontal
+
+      - type: custom:mushroom-cover-card
+        entity: cover.kontor_altandor_gardin
+        show_position_control: false
+        name: Dør
+        show_buttons_control: true
+        layout: horizontal
 
   - type: vertical-stack
     view_layout:
       grid-area: right
     cards:
-      - type: horizontal-stack
-        cards:
-          - show_name: true
-            show_icon: true
-            type: button
-            tap_action:
-              action: toggle
-            entity: switch.sync_box_power
-            name: Sync Box
-          - show_name: true
-            show_icon: true
-            type: button
-            tap_action:
-              action: toggle
-            entity: switch.sync_box_light_sync
-            name: Light Sync
-          - show_name: true
-            show_icon: true
-            type: button
-            tap_action:
-              action: call-service
-              service: select.select_option
-              target:
-                entity_id: select.sync_box_entertainment_area
-              data:
-                option: Stue TV Ambilight
-            entity: select.sync_box_entertainment_area
-            show_state: false
-            name: "Gruppe: TV"
-            icon: mdi:television
-          - show_name: true
-            show_icon: true
-            type: button
-            tap_action:
-              action: call-service
-              service: select.select_option
-              target:
-                entity_id: select.sync_box_entertainment_area
-              data:
-                option: Stue Gruppe
-            entity: select.sync_box_entertainment_area
-            show_state: false
-            name: "Gruppe: Stue"
-            icon: ""
-      - type: entities
-        entities:
-          - type: custom:slider-entity-row
-            entity: number.sync_box_brightness
-            name: Brightness
-            show_icon: true
-            full_row: true
-          - entity: select.sync_box_hdmi_input
-          - entity: select.sync_box_sync_mode
-          - entity: select.sync_box_intensity
+      - type: tile
+        entity: media_player.kontor_tv
+        tap_action:
+          action: toggle
+        show_entity_picture: false
+        hide_state: true
+        vertical: false
 
       - type: custom:mini-media-player
-        entity: media_player.stue_tv
         artwork: cover
-        hide:
-          icon: true
-
-      - type: custom:mini-media-player
-        entity: media_player.stue_shield
-        artwork: cover
-        hide:
-          icon: true
+        entity: media_player.kontor_shield
 
       - type: conditional
         conditions:
-          - entity: remote.stue_shield
+          - entity: remote.kontor_shield
             state_not: "off"
         card:
           type: vertical-stack
           cards:
             - type: custom:android-tv-card
-              remote_id: remote.stue_shield
-              slider_id: media_player.stue_soundbar
-              keyboard_id: media_player.stue_shield_adb
+              remote_id: remote.kontor_shield
+              keyboard_id: media_player.kontor_shield_adb
               custom_keys:
                 smarttube:
                   icon: mdi:youtube
@@ -193,7 +170,6 @@ cards:
                   - play_pause
                   - next
                   - fast_forward
-                - - slider
 
             - type: custom:plex-meets-homeassistant
               title: Watch Next
@@ -203,8 +179,8 @@ cards:
               port: 32400
               libraryName: Watch Next
               entity:
-                - androidtv | media_player.stue_shield_adb
-                - cast | media_player.stue_shield
+                - androidtv | media_player.kontor_shield_adb
+                - cast | media_player.kontor_shield
               sort: lastViewedAt:desc
               playTrailer: false
               showExtras: false
@@ -223,8 +199,8 @@ cards:
               port: 32400
               libraryName: Movies
               entity:
-                - androidtv | media_player.stue_shield_adb
-                - cast | media_player.stue_shield
+                - androidtv | media_player.kontor_shield_adb
+                - cast | media_player.kontor_shield
               sort: addedAt:desc
               playTrailer: false
               showExtras: false
@@ -243,8 +219,8 @@ cards:
               port: 32400
               libraryName: TV Shows
               entity:
-                - androidtv | media_player.stue_shield_adb
-                - cast | media_player.stue_shield
+                - androidtv | media_player.kontor_shield_adb
+                - cast | media_player.kontor_shield
               sort: addedAt:desc
               playTrailer: false
               showExtras: false

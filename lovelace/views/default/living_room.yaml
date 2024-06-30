@@ -1,0 +1,256 @@
+title: Living Room
+path: living-room
+icon: "mdi:sofa"
+type: custom:grid-layout
+layout:
+  grid-template-columns: 33.3% 33.3% 33.3%
+  grid-template-rows: auto
+  grid-template-areas: |
+    "header header header"
+    "left middle right"
+  mediaquery:
+    "(max-width: 800px)":
+      grid-template-columns: 100%
+      grid-template-areas: |
+        "header"
+        "left"
+        "middle"
+        "right"
+    "(max-width: 1200px)":
+      grid-template-columns: 50% 50%
+      grid-template-areas: |
+        "header header"
+        "left middle"
+        "right right"
+cards:
+  - type: vertical-stack
+    view_layout:
+      grid-area: left
+    cards:
+      - type: horizontal-stack
+        cards:
+          - type: custom:decluttering-card
+            template: currently_playing
+            variables:
+              - room: stue
+          - !include ../../cards/compact_clock.yaml
+
+      - type: custom:decluttering-card
+        template: speaker_control_v2
+        variables:
+          - room: stue
+
+      - type: custom:decluttering-card
+        template: room_state_and_light_profile
+        variables:
+          - room: living_room
+
+      - type: custom:decluttering-card
+        template: room_climate_with_thermostat
+        variables:
+          - rum: stue
+          - icon: mdi:sofa
+
+  - type: vertical-stack
+    view_layout:
+      grid-area: middle
+    cards:
+      - !include ../../cards/media_players/living_room_media.yaml
+
+      - type: horizontal-stack
+        cards:
+          - type: "custom:button-card"
+            entity: switch.living_room_curtain_automations
+            name: Auto Gardin
+            color: auto
+            size: 50px
+
+          - type: "custom:button-card"
+            entity: input_boolean.bar_open
+            icon: mdi:glass-cocktail
+            name: Bar
+            color: auto
+            size: 50px
+
+          - type: "custom:button-card"
+            entity: switch.stue_blaeser
+            name: Blæser
+            color: auto
+            size: 50px
+
+      - type: custom:decluttering-card
+        template: light_groups
+        variables:
+          - rum: stue
+
+      - type: entities
+        state_color: true
+        entities:
+          - entity: cover.stue_gardin
+            type: "custom:slider-entity-row"
+          - entity: cover.stue_gardin_venstre
+            type: "custom:slider-entity-row"
+          - entity: cover.stue_gardin_hojre
+            type: "custom:slider-entity-row"
+
+  - type: vertical-stack
+    view_layout:
+      grid-area: right
+    cards:
+      - type: horizontal-stack
+        cards:
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: switch.sync_box_power
+            name: Sync Box
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: switch.sync_box_light_sync
+            name: Light Sync
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: call-service
+              service: select.select_option
+              target:
+                entity_id: select.sync_box_entertainment_area
+              data:
+                option: Stue TV Ambilight
+            entity: select.sync_box_entertainment_area
+            show_state: false
+            name: "Gruppe: TV"
+            icon: mdi:television
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: call-service
+              service: select.select_option
+              target:
+                entity_id: select.sync_box_entertainment_area
+              data:
+                option: Stue Gruppe
+            entity: select.sync_box_entertainment_area
+            show_state: false
+            name: "Gruppe: Stue"
+            icon: ""
+      - type: entities
+        entities:
+          - type: custom:slider-entity-row
+            entity: number.sync_box_brightness
+            name: Brightness
+            show_icon: true
+            full_row: true
+          - entity: select.sync_box_hdmi_input
+          - entity: select.sync_box_sync_mode
+          - entity: select.sync_box_intensity
+
+      - type: custom:mini-media-player
+        entity: media_player.stue_tv
+        artwork: cover
+        hide:
+          icon: true
+
+      - type: custom:mini-media-player
+        entity: media_player.stue_shield
+        artwork: cover
+        hide:
+          icon: true
+
+      - type: conditional
+        conditions:
+          - entity: remote.stue_shield
+            state_not: "off"
+        card:
+          type: vertical-stack
+          cards:
+            - type: custom:android-tv-card
+              remote_id: remote.stue_shield
+              slider_id: media_player.stue_soundbar
+              keyboard_id: media_player.stue_shield_adb
+              custom_keys:
+                smarttube:
+                  icon: mdi:youtube
+                  source: https://www.youtube.com
+              rows:
+                - - power
+                  - info
+                  - plex
+                  - smarttube
+                - - back
+                  - home
+                  - keyboard
+                - - dpad
+                - - rewind
+                  - previous
+                  - play_pause
+                  - next
+                  - fast_forward
+                - - slider
+
+            - type: custom:plex-meets-homeassistant
+              title: Watch Next
+              token: !secret plex_token
+              ip: !secret plex_addr
+              protocol: https
+              port: 32400
+              libraryName: Watch Next
+              entity:
+                - androidtv | media_player.stue_shield_adb
+                - cast | media_player.stue_shield
+              sort: lastViewedAt:desc
+              playTrailer: false
+              showExtras: false
+              showSearch: false
+              maxRows: 1
+              useHorizontalScroll: "Yes"
+              useShuffle: "No"
+              displayTitleMain: "Yes"
+              displaySubtitleMain: "Yes"
+
+            - type: custom:plex-meets-homeassistant
+              title: Movies
+              token: !secret plex_token
+              ip: !secret plex_addr
+              protocol: https
+              port: 32400
+              libraryName: Movies
+              entity:
+                - androidtv | media_player.stue_shield_adb
+                - cast | media_player.stue_shield
+              sort: addedAt:desc
+              playTrailer: false
+              showExtras: false
+              showSearch: false
+              maxRows: 1
+              useHorizontalScroll: "Yes"
+              useShuffle: "No"
+              displayTitleMain: "Yes"
+              displaySubtitleMain: "Yes"
+
+            - type: custom:plex-meets-homeassistant
+              title: TV Shows
+              token: !secret plex_token
+              ip: !secret plex_addr
+              protocol: https
+              port: 32400
+              libraryName: TV Shows
+              entity:
+                - androidtv | media_player.stue_shield_adb
+                - cast | media_player.stue_shield
+              sort: addedAt:desc
+              playTrailer: false
+              showExtras: false
+              showSearch: false
+              maxRows: 1
+              useHorizontalScroll: "Yes"
+              useShuffle: "No"
+              displayTitleMain: "Yes"
+              displaySubtitleMain: "Yes"
