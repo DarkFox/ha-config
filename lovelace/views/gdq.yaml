@@ -3,7 +3,7 @@ path: gdq
 icon: mdi:gamepad-right
 type: custom:grid-layout
 layout:
-  grid-template-columns: 33.3% 33.3% 33.3%
+  grid-template-columns: 40% 40% 20%
   grid-template-rows: auto
   grid-template-areas: |
     "header header header"
@@ -29,108 +29,61 @@ cards:
     cards:
       - type: vertical-stack
         cards:
-          - type: custom:button-card
-            entity: sensor.gdq_on_deck
-            state_display: >-
-              [[[ return entity.attributes.on_deck.description.replace(/\n/gi, '<br />') ]]]
-            label: >-
-              [[[
-                let startsIn = Math.floor((new Date() - Date.parse(entity.attributes.on_deck.start)) / (1000 * 60));
-                let endsIn = Math.floor((Date.parse(entity.attributes.on_deck.end) - new Date()) / (1000 * 60));
-                if (startsIn < 0) return 'Starts in: ' + Math.abs(startsIn) + ' min';
-                else if (endsIn < 0) return 'Ended: ' + Math.abs(endsIn) + ' min ago';
-                else return 'Started: ' + startsIn + ' min ago - ' + 'Ends in: ' + endsIn + ' min';
-              ]]]
-            name: "[[[ return entity.attributes.on_deck.summary ]]]"
-            layout: name_state
-            icon: mdi:gamepad-right
-            show_state: true
-            show_name: true
-            show_label: true
-            size: 10%
-            tap_action:
-              action: url
-              url_path: "https://www.twitch.tv/gamesdonequick"
-            styles:
-              icon:
-                - color: >-
-                    [[[
-                      if (entity.attributes.on_deck.watch) return 'var(--success-color)';
-                      else return 'var(--primary-text-color)';
-                    ]]]
-              card:
-                - box-shadow: >-
-                    [[[
-                      if (entity.attributes.on_deck.watch) return '0px 0px 5px 5px var(--success-color)';
-                      else return 'none';
-                    ]]]
-            card_mod:
-              style:
-                .: |
-                  #name::first-line {
-                    font-size: 1.2em;
-                    font-weight: bold;
-                    line-height: 1.6em;
-                    vertical-align: top;
-                  }
-                  #name {
-                    font-size: 0.8em;
-                    margin-bottom: 5px;
-                  }
-                  #icon {
-                    float: left;
-                    margin-right: 10px;
-                  }
-                  #img-cell {
-                    margin-bottom: 10px;
-                  }
-                  #img-cell::after {
-                    display: block;
-                    float: right;
-                    margin-right: auto;
-                    content: "On deck";
-                    font-size: 2em;
-                  }
-                  #label {
-                    font-weight: bold;
-                  }
+          - !include ../cards/gdq/on_deck.yaml
 
       - type: vertical-stack
         cards:
           - type: custom:mushroom-title-card
             title: All runs
 
-          - type: custom:atomic-calendar-revive
-            eventDateFormat: ddd
-            showProgressBar: true
-            hideDeclined: true
-            hideFinishedEvents: true
-            showLocation: false
-            showDescription: true
-            disableEventLink: true
-            maxDaysToShow: 7
+          - type: custom:config-template-card
             entities:
-              - entity: calendar.sgdq_2024
-            card_mod:
-              style:
-                .: |
-                  ha-card {
-                    max-height: calc(85vh - 220px);
-                    overflow-y: scroll;
-                  }
-                  .single-event-container {
-                    grid-template-columns: 0.5fr 100fr !important;
-                    padding-top: 5px;
-                    padding-bottom: 5px;
-                    border-bottom: 1px dotted #aaa;
-                  }
-                  .event-left {
-                    width: min-content !important;
-                  }
-                  .event-title {
-                    font-weight: bold;
-                    font-size: 1.2em;
-                  }
+              - sensor.gdq_runs_regex
+              - calendar.sgdq_2024
+            config_templates: default
+            variables:
+              RUNS_REGEX: states["sensor.gdq_runs_regex"].attributes.regex
+            card:
+              type: custom:atomic-calendar-revive
+              eventDateFormat: ddd
+              showProgressBar: true
+              hideDeclined: true
+              hideFinishedEvents: true
+              showLocation: false
+              showDescription: true
+              showEventIcon: true
+              disableEventLink: true
+              maxDaysToShow: 7
+              entities:
+                - name: Runs to watch
+                  entity: calendar.sgdq_2024
+                  allowlist: ${RUNS_REGEX}
+                  icon: mdi:gamepad-right
+                  color: var(--success-color)
+                - name: Other runs
+                  entity: calendar.sgdq_2024
+                  blocklist: ${RUNS_REGEX}
+                  icon: mdi:gamepad-right
+              card_mod:
+                style:
+                  .: |
+                    ha-card {
+                      max-height: calc(85vh - 220px);
+                      overflow-y: scroll;
+                    }
+                    .single-event-container {
+                      grid-template-columns: 0.5fr 100fr !important;
+                      padding-top: 5px;
+                      padding-bottom: 5px;
+                      border-bottom: 1px dotted #aaa;
+                    }
+                    .event-left {
+                      width: min-content !important;
+                    }
+                    .event-title {
+                      font-weight: bold;
+                      font-size: 1.2em;
+                    }
 
   - type: vertical-stack
     view_layout:
@@ -138,60 +91,7 @@ cards:
     cards:
       - type: vertical-stack
         cards:
-          - type: custom:button-card
-            entity: sensor.gdq_next_watch_run
-            state_display: >-
-              [[[ return entity.attributes.next_run.description.replace(/\n/gi, '<br />') ]]]
-            label: >-
-              [[[
-                let startsIn = Math.floor((new Date() - Date.parse(entity.attributes.next_run.start)) / (1000 * 60));
-                let endsIn = Math.floor((Date.parse(entity.attributes.next_run.end) - new Date()) / (1000 * 60));
-                if (startsIn < 0) return 'Starts in: ' + Math.abs(startsIn) + ' min';
-                else if (endsIn < 0) return 'Ended: ' + Math.abs(endsIn) + ' min ago';
-                else return 'Starts in: ' + startsIn + ' min';
-              ]]]
-            name: "[[[ return entity.attributes.next_run.summary ]]]"
-            layout: name_state
-            show_state: true
-            show_name: true
-            show_label: true
-            size: 10%
-            tap_action:
-              action: url
-              url_path: "https://www.twitch.tv/gamesdonequick"
-            styles:
-              icon:
-                - color: var(--success-color)
-            card_mod:
-              style:
-                .: |
-                  #name::first-line {
-                    font-size: 1.2em;
-                    font-weight: bold;
-                    line-height: 1.6em;
-                    vertical-align: top;
-                  }
-                  #name {
-                    font-size: 0.8em;
-                    margin-bottom: 5px;
-                  }
-                  #icon {
-                    float: left;
-                    margin-right: 10px;
-                  }
-                  #img-cell {
-                    margin-bottom: 10px;
-                  }
-                  #img-cell::after {
-                    display: block;
-                    float: right;
-                    margin-right: auto;
-                    content: "Next to watch";
-                    font-size: 2em;
-                  }
-                  #label {
-                    font-weight: bold;
-                  }
+          - !include ../cards/gdq/next_to_watch.yaml
 
       - type: vertical-stack
         cards:
@@ -213,11 +113,14 @@ cards:
               hideFinishedEvents: true
               showLocation: false
               showDescription: true
+              showEventIcon: true
               disableEventLink: true
               maxDaysToShow: 7
               entities:
                 - entity: calendar.sgdq_2024
                   allowlist: ${RUNS_REGEX}
+                  icon: mdi:gamepad-right
+                  color: var(--success-color)
               card_mod:
                 style:
                   .: |

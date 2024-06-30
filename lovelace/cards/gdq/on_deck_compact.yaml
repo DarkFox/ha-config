@@ -1,0 +1,55 @@
+type: custom:button-card
+entity: sensor.gdq_on_deck
+state_display: >-
+  [[[ return entity.attributes.on_deck.description.split("\n")[0] ]]]
+label: >-
+  [[[
+    let startsIn = Math.floor((new Date() - Date.parse(entity.attributes.on_deck.start)) / (1000 * 60));
+    let endsIn = Math.floor((Date.parse(entity.attributes.on_deck.end) - new Date()) / (1000 * 60));
+    if (startsIn < 0) return 'Starts in: ' + Math.abs(startsIn) + ' min';
+    else if (endsIn < 0) return 'Ended: ' + Math.abs(endsIn) + ' min ago';
+    else return 'Started: ' + startsIn + ' min ago - ' + 'Ends in: ' + endsIn + ' min';
+  ]]]
+name: "[[[ return entity.attributes.on_deck.summary ]]]"
+layout: vertical
+icon: mdi:gamepad-right
+show_state: true
+show_name: true
+show_label: true
+size: 10%
+tap_action:
+  action: url
+  url_path: "https://www.twitch.tv/gamesdonequick"
+styles:
+  icon:
+    - color: >-
+        [[[
+          if (entity.attributes.on_deck.watch) return 'var(--success-color)';
+          else return 'var(--primary-text-color)';
+        ]]]
+  card:
+    - box-shadow: >-
+        [[[
+          if (entity.attributes.on_deck.watch) return '0px 0px 5px 5px var(--success-color)';
+          else return 'none';
+        ]]]
+card_mod:
+  style:
+    .: |
+      #name {
+        font-weight: bold;
+      }
+      #icon {
+        float: left;
+        margin-right: 10px;
+      }
+      #img-cell::after {
+        display: block;
+        float: right;
+        margin-right: auto;
+        content: "Next to watch";
+        font-size: 1.5vw;
+      }
+      #label {
+        font-weight: bold;
+      }

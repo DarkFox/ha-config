@@ -1,0 +1,54 @@
+type: custom:button-card
+entity: sensor.gdq_next_watch_run
+state_display: >-
+  [[[ return entity.attributes.next_run.description.replace(/\n/gi, '<br />') ]]]
+label: >-
+  [[[
+    let startsIn = Math.floor((new Date() - Date.parse(entity.attributes.next_run.start)) / (1000 * 60));
+    let endsIn = Math.floor((Date.parse(entity.attributes.next_run.end) - new Date()) / (1000 * 60));
+    if (startsIn < 0) return 'Starts in: ' + Math.abs(startsIn) + ' min';
+    else if (endsIn < 0) return 'Ended: ' + Math.abs(endsIn) + ' min ago';
+    else return 'Starts in: ' + startsIn + ' min';
+  ]]]
+name: "[[[ return entity.attributes.next_run.summary ]]]"
+layout: name_state
+show_state: true
+show_name: true
+show_label: true
+size: 10%
+tap_action:
+  action: url
+  url_path: "https://www.twitch.tv/gamesdonequick"
+styles:
+  icon:
+    - color: var(--success-color)
+card_mod:
+  style:
+    .: |
+      #name::first-line {
+        font-size: 1.2em;
+        font-weight: bold;
+        line-height: 1.6em;
+        vertical-align: top;
+      }
+      #name {
+        font-size: 0.8em;
+        margin-bottom: 5px;
+      }
+      #icon {
+        float: left;
+        margin-right: 10px;
+      }
+      #img-cell {
+        margin-bottom: 10px;
+      }
+      #img-cell::after {
+        display: block;
+        float: right;
+        margin-right: auto;
+        content: "Next to watch";
+        font-size: 1.5vw;
+      }
+      #label {
+        font-weight: bold;
+      }
