@@ -1,12 +1,31 @@
 title: Transport
 path: transport
 icon: mdi:train-car
-type: custom:horizontal-layout
+type: custom:grid-layout
 layout:
-  width: 300
-  max_cols: 3
+  grid-template-columns: 33.3% 33.3% 33.3%
+  grid-template-rows: auto
+  grid-template-areas: |
+    "header header header"
+    "left middle right"
+  mediaquery:
+    "(max-width: 800px)":
+      grid-template-columns: 100%
+      grid-template-areas: |
+        "header"
+        "left"
+        "middle"
+        "right"
+    "(max-width: 1200px)":
+      grid-template-columns: 50% 50%
+      grid-template-areas: |
+        "header header"
+        "left middle"
+        "right right"
 cards:
   - type: vertical-stack
+    view_layout:
+      grid-area: left
     cards:
       - !include /config/lovelace/cards/transport/commute.yaml
 
@@ -67,6 +86,8 @@ cards:
                 - font-size: 24pt
 
   - type: vertical-stack
+    view_layout:
+      grid-area: middle
     cards:
       - type: entities
         title: ""
@@ -84,6 +105,8 @@ cards:
           - binary_sensor.martin_home_soon
 
   - type: vertical-stack
+    view_layout:
+      grid-area: right
     cards:
       - type: conditional
         conditions:

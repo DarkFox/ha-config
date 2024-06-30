@@ -1,12 +1,38 @@
 title: Power
 path: power
 icon: mdi:flash
-type: custom:horizontal-layout
+type: custom:grid-layout
 layout:
-  width: 400
-  max_cols: 4
+  grid-template-columns: 25% 25% 25% 25%
+  grid-template-rows: auto
+  grid-template-areas: |
+    "header header header header"
+    "column1 column2 column3 column4"
+  mediaquery:
+    "(max-width: 800px)":
+      grid-template-columns: 100%
+      grid-template-areas: |
+        "header"
+        "column1"
+        "column2"
+        "column3"
+        "column4"
+    "(max-width: 1200px)":
+      grid-template-columns: 50% 50%
+      grid-template-areas: |
+        "header header"
+        "column1 column2"
+        "column3 column4"
+    "(max-width: 1600px)":
+      grid-template-columns: 33.3% 33.3% 33.3%
+      grid-template-areas: |
+        "header header header"
+        "column1 column2 column3"
+        "colunn1 column2 column4"
 cards:
   - type: vertical-stack
+    view_layout:
+      grid-area: column1
     cards:
       - !include ../cards/power_gauges.yaml
 
@@ -60,6 +86,8 @@ cards:
             aggregate_func: max
 
   - type: vertical-stack
+    view_layout:
+      grid-area: column2
     cards:
       - !include ../cards/energy_prices/cheapest_prices.yaml
       - !include ../cards/energy_prices/cheap_prices.yaml
@@ -79,6 +107,8 @@ cards:
           - sensor.el_billigste_6_timer
 
   - type: vertical-stack
+    view_layout:
+      grid-area: column3
     cards:
       - type: entities
         show_header_toggle: false
@@ -113,6 +143,8 @@ cards:
           - sensor.pow_k_l3_power_accumulated
 
   - type: vertical-stack
+    view_layout:
+      grid-area: column4
     cards:
       - type: entities
         show_header_toggle: false

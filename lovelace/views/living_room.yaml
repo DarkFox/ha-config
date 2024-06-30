@@ -1,12 +1,31 @@
 title: Living Room
 path: living-room
 icon: "mdi:sofa"
-type: custom:horizontal-layout
+type: custom:grid-layout
 layout:
-  width: 300
-  max_cols: 3
+  grid-template-columns: 33.3% 33.3% 33.3%
+  grid-template-rows: auto
+  grid-template-areas: |
+    "header header header"
+    "left middle right"
+  mediaquery:
+    "(max-width: 800px)":
+      grid-template-columns: 100%
+      grid-template-areas: |
+        "header"
+        "left"
+        "middle"
+        "right"
+    "(max-width: 1200px)":
+      grid-template-columns: 50% 50%
+      grid-template-areas: |
+        "header header"
+        "left middle"
+        "right right"
 cards:
   - type: vertical-stack
+    view_layout:
+      grid-area: left
     cards:
       - type: horizontal-stack
         cards:
@@ -32,12 +51,9 @@ cards:
           - rum: stue
           - icon: mdi:sofa
 
-      - type: custom:decluttering-card
-        template: light_groups
-        variables:
-          - rum: stue
-
   - type: vertical-stack
+    view_layout:
+      grid-area: middle
     cards:
       - !include ../cards/media_players/living_room_media.yaml
 
@@ -62,6 +78,11 @@ cards:
             color: auto
             size: 50px
 
+      - type: custom:decluttering-card
+        template: light_groups
+        variables:
+          - rum: stue
+
       - type: entities
         state_color: true
         entities:
@@ -73,6 +94,8 @@ cards:
             type: "custom:slider-entity-row"
 
   - type: vertical-stack
+    view_layout:
+      grid-area: right
     cards:
       - type: horizontal-stack
         cards:

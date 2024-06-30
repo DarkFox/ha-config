@@ -1,44 +1,31 @@
 title: Maintenance
 path: maintenance
 icon: "mdi:wrench"
-type: custom:horizontal-layout
+type: custom:grid-layout
 layout:
-  width: 400
-  max_cols: 4
+  grid-template-columns: 33.3% 33.3% 33.3%
+  grid-template-rows: auto
+  grid-template-areas: |
+    "header header header"
+    "left middle right"
+  mediaquery:
+    "(max-width: 800px)":
+      grid-template-columns: 100%
+      grid-template-areas: |
+        "header"
+        "left"
+        "middle"
+        "right"
+    "(max-width: 1200px)":
+      grid-template-columns: 50% 50%
+      grid-template-areas: |
+        "header header"
+        "left middle"
+        "right right"
 cards:
   - type: vertical-stack
-    cards:
-      - type: horizontal-stack
-        cards:
-          - show_name: true
-            show_icon: true
-            type: button
-            tap_action:
-              action: toggle
-            entity: script.select_new_years_theme
-            icon: mdi:firework
-
-          - show_name: true
-            show_icon: true
-            type: button
-            tap_action:
-              action: toggle
-            entity: script.reload_lovelace_on_tablets
-
-          - show_name: true
-            show_icon: true
-            type: button
-            tap_action:
-              action: toggle
-            entity: script.update_all_esphome_devices
-
-      - type: entities
-        entities:
-          - input_select.notification_sound
-
-      - !include ../cards/low_battery.yaml
-
-  - type: vertical-stack
+    view_layout:
+      grid-area: left
     cards:
       - type: vertical-stack
         cards:
@@ -119,6 +106,8 @@ cards:
               - entity: sensor.ha_installed_version
 
   - type: vertical-stack
+    view_layout:
+      grid-area: middle
     cards:
       - type: entities
         title: Presence
@@ -144,7 +133,39 @@ cards:
           - binary_sensor.hallway_activity
 
   - type: vertical-stack
+    view_layout:
+      grid-area: right
     cards:
+      - type: horizontal-stack
+        cards:
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: script.select_new_years_theme
+            icon: mdi:firework
+
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: script.reload_lovelace_on_tablets
+
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: script.update_all_esphome_devices
+
+      - type: entities
+        entities:
+          - input_select.notification_sound
+
+      - !include ../cards/low_battery.yaml
+
       - type: custom:auto-entities
         card:
           type: entities

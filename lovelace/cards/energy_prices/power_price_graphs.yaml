@@ -1,6 +1,29 @@
-type: vertical-stack
+type: custom:layout-card
+layout_type: custom:grid-layout
+layout:
+  grid-template-columns: 1fr 1fr 1fr
+  grid-template-rows: auto
+  grid-template-areas: |
+    "header header header"
+    "left middle right"
+  mediaquery:
+    "(max-width: 1000px)":
+      grid-template-columns: 100%
+      grid-template-areas: |
+        "header"
+        "left"
+        "middle"
+        "right"
+    "(max-width: 1400px)":
+      grid-template-columns: 50% 50%
+      grid-template-areas: |
+        "header header"
+        "left middle"
+        "right right"
 cards:
   - type: custom:tabbed-card
+    view_layout:
+      grid-area: header
     tabs:
       - card: !include power_prices_day.yaml
         attributes:
@@ -10,8 +33,18 @@ cards:
         attributes:
           label: Uge
 
-  - type: horizontal-stack
+  - type: vertical-stack
+    view_layout:
+      grid-area: left
     cards:
       - !include cheapest_prices.yaml
+  - type: vertical-stack
+    view_layout:
+      grid-area: middle
+    cards:
       - !include cheap_prices.yaml
+  - type: vertical-stack
+    view_layout:
+      grid-area: right
+    cards:
       - !include expensive_prices.yaml
