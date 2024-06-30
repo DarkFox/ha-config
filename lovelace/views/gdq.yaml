@@ -39,7 +39,7 @@ cards:
           - type: custom:config-template-card
             entities:
               - sensor.gdq_runs_regex
-              - calendar.sgdq_2024
+              - calendar.sgdq_2024_ics
             config_templates: default
             variables:
               RUNS_REGEX: states["sensor.gdq_runs_regex"].attributes.regex
@@ -56,12 +56,12 @@ cards:
               maxDaysToShow: 7
               entities:
                 - name: Runs to watch
-                  entity: calendar.sgdq_2024
+                  entity: calendar.sgdq_2024_ics
                   allowlist: ${RUNS_REGEX}
                   icon: mdi:gamepad-right
                   color: var(--success-color)
                 - name: Other runs
-                  entity: calendar.sgdq_2024
+                  entity: calendar.sgdq_2024_ics
                   blocklist: ${RUNS_REGEX}
                   icon: mdi:gamepad-right
               card_mod:
@@ -101,7 +101,7 @@ cards:
           - type: custom:config-template-card
             entities:
               - sensor.gdq_runs_regex
-              - calendar.sgdq_2024
+              - calendar.sgdq_2024_ics
             config_templates: default
             variables:
               RUNS_REGEX: states["sensor.gdq_runs_regex"].attributes.regex
@@ -117,7 +117,7 @@ cards:
               disableEventLink: true
               maxDaysToShow: 7
               entities:
-                - entity: calendar.sgdq_2024
+                - entity: calendar.sgdq_2024_ics
                   allowlist: ${RUNS_REGEX}
                   icon: mdi:gamepad-right
                   color: var(--success-color)
@@ -146,6 +146,14 @@ cards:
     view_layout:
       grid-area: right
     cards:
+      - type: grid
+        cards:
+          - type: button
+            entity: script.refresh_gdq_agenda
+            name: Refresh
+            tap_action:
+              action: call-service
+              service: script.refresh_gdq_agenda
       - type: todo-list
         title: Watchlist
         entity: todo.gdq_runs
