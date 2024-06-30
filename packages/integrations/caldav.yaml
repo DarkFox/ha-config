@@ -300,10 +300,13 @@ automation:
     action:
       - delay:
           seconds: 5
+      - variables:
+          vagtplan: "{{ (state_attr('sensor.vagtplan_agenda', 'agenda') or []) + (state_attr('sensor.vagtplan_agenda', 'tomorrow') or []) }}"
+          next_shift: "{{ vagtplan[0] if vagtplan else none }}"
       - service: calendar.get_events
         data:
-          start_date_time: "{{ state_attr('sensor.vagtplan_agenda', 'agenda')[0]['start'] if state_attr('sensor.vagtplan_agenda', 'agenda') else '1970-01-01 00:00:00' }}"
-          end_date_time: "{{ state_attr('sensor.vagtplan_agenda', 'tomorrow')[0]['end'] if state_attr('sensor.vagtplan_agenda', 'tomorrow') else '1970-01-01 00:00:00' }}"
+          start_date_time: "{{ next_shift['start'] if next_shift else '1970-01-01 00:00:00' }}"
+          end_date_time: "{{ next_shift['end'] if next_shift else '1970-01-01 00:00:00' }}"
         target:
           entity_id: calendar.arbejdskalender
         response_variable: all_events
