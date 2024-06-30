@@ -106,6 +106,8 @@ script:
       - service: homeassistant.update_entity
         target:
           entity_id: calendar.sgdq_2024_ics
+      - delay:
+          seconds: 5
       - service: automation.trigger
         target:
           entity_id: automation.update_gdq_agenda
@@ -137,6 +139,23 @@ automation:
             - automation.update_gdq_agenda
             - automation.refresh_gdq_runs_regex
 
+  - alias: "Notify GDQ Run Coming Up"
+    id: notify_gdq_run_coming_up
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.next_gdq_run_starts_in
+        below: 30
+      - platform: numeric_state
+        entity_id: sensor.next_gdq_run_starts_in
+        below: 15
+      - platform: numeric_state
+        entity_id: sensor.next_gdq_run_starts_in
+        below: 5
+    action:
+      - service: script.notify_everywhere
+        data:
+          message: "Næste GDQ spil: {{ state_attr('sensor.gdq_next_watch_run', 'next_run').summary }} starter om {{ states('sensor.next_gdq_run_starts_in') }} minutter."
+
   - alias: "Refresh GDQ Runs Regex"
     id: refresh_gdq_runs_regex
     mode: restart
@@ -155,26 +174,7 @@ automation:
           todo_items: "{{ todo_items }}"
       - delay:
           seconds: 30
-      - service: automation.trigger
-        target:
-          entity_id: automation.update_gdq_agenda
-
-  - alias: "Notify GDQ Run Coming Up"
-    id: notify_gdq_run_coming_up
-    trigger:
-      - platform: numeric_state
-        entity_id: sensor.next_gdq_run_starts_in
-        below: 30
-      - platform: numeric_state
-        entity_id: sensor.next_gdq_run_starts_in
-        below: 15
-      - platform: numeric_state
-        entity_id: sensor.next_gdq_run_starts_in
-        below: 5
-    action:
-      - service: script.notify_everywhere
-        data:
-          message: "Næste GDQ spil: {{ state_attr('sensor.gdq_next_watch_run', 'next_run').summary }} starter om {{ states('sensor.next_gdq_run_starts_in') }} minutter."
+      - service: script.refresh_gdq_agenda
 
   - id: update_gdq_agenda
     alias: Update GDQ Agenda
