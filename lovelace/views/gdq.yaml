@@ -3,161 +3,189 @@ path: gdq
 icon: mdi:gamepad-right
 type: custom:grid-layout
 layout:
-  grid-template-columns: 40% 40% 20%
+  place-items: start stretch
+  grid-template-columns: 26.66% 26.66% 26.66% 20%
   grid-template-rows: auto
   grid-template-areas: |
-    "header header header"
-    "left middle right"
-  mediaquery:
-    "(max-width: 800px)":
-      grid-template-columns: 100%
-      grid-template-areas: |
-        "header"
-        "left"
-        "middle"
-        "right"
-    "(max-width: 1200px)":
-      grid-template-columns: 50% 50%
-      grid-template-areas: |
-        "header header"
-        "left middle"
-        "right right"
+    "on_deck next_up next_watch sidebar"
+    "all_runs . upcoming_watch sidebar"
+    ". . . sidebar"
+  # mediaquery:
+  #   "(max-width: 800px)":
+  #     grid-template-columns: 100%
+  #     grid-template-areas: |
+  #       "header"
+  #       "left"
+  #       "middle"
+  #       "right"
+  #   "(max-width: 1200px)":
+  #     grid-template-columns: 50% 50%
+  #     grid-template-areas: |
+  #       "header header"
+  #       "left middle"
+  #       "right right"
 cards:
   - type: vertical-stack
     view_layout:
-      grid-area: left
+      grid-area: on_deck
     cards:
-      - type: vertical-stack
-        cards:
-          - !include ../cards/gdq/on_deck.yaml
-
-      - type: vertical-stack
-        cards:
-          - type: custom:mushroom-title-card
-            title: All runs
-
-          - type: custom:config-template-card
-            entities:
-              - sensor.gdq_runs_regex
-              - calendar.sgdq_2024_ics
-            config_templates: default
-            variables:
-              RUNS_REGEX: states["sensor.gdq_runs_regex"].attributes.regex
-            card:
-              type: custom:atomic-calendar-revive
-              eventDateFormat: ddd
-              showProgressBar: true
-              hideDeclined: true
-              hideFinishedEvents: true
-              showLocation: false
-              showDescription: true
-              showEventIcon: true
-              disableEventLink: true
-              maxDaysToShow: 7
-              entities:
-                - name: Runs to watch
-                  entity: calendar.sgdq_2024_ics
-                  allowlist: ${RUNS_REGEX}
-                  icon: mdi:gamepad-right
-                  color: var(--success-color)
-                - name: Other runs
-                  entity: calendar.sgdq_2024_ics
-                  blocklist: ${RUNS_REGEX}
-                  icon: mdi:gamepad-right
-              card_mod:
-                style:
-                  .: |
-                    ha-card {
-                      max-height: calc(85vh - 220px);
-                      overflow-y: scroll;
-                    }
-                    .single-event-container {
-                      grid-template-columns: 0.5fr 100fr !important;
-                      padding-top: 5px;
-                      padding-bottom: 5px;
-                      border-bottom: 1px dotted #aaa;
-                    }
-                    .event-left {
-                      width: min-content !important;
-                    }
-                    .event-title {
-                      font-weight: bold;
-                      font-size: 1.2em;
-                    }
+      - !include ../cards/gdq/on_deck.yaml
 
   - type: vertical-stack
     view_layout:
-      grid-area: middle
+      grid-area: next_up
     cards:
-      - type: vertical-stack
-        cards:
-          - !include ../cards/gdq/next_to_watch.yaml
-
-      - type: vertical-stack
-        cards:
-          - type: custom:mushroom-title-card
-            title: Upcoming runs to watch
-
-          - type: custom:config-template-card
-            entities:
-              - sensor.gdq_runs_regex
-              - calendar.sgdq_2024_ics
-            config_templates: default
-            variables:
-              RUNS_REGEX: states["sensor.gdq_runs_regex"].attributes.regex
-            card:
-              type: custom:atomic-calendar-revive
-              eventDateFormat: ddd
-              showProgressBar: true
-              hideDeclined: true
-              hideFinishedEvents: true
-              showLocation: false
-              showDescription: true
-              showEventIcon: true
-              disableEventLink: true
-              maxDaysToShow: 7
-              entities:
-                - entity: calendar.sgdq_2024_ics
-                  allowlist: ${RUNS_REGEX}
-                  icon: mdi:gamepad-right
-                  color: var(--success-color)
-              card_mod:
-                style:
-                  .: |
-                    ha-card {
-                      max-height: calc(85vh - 220px);
-                      overflow-y: scroll;
-                    }
-                    .single-event-container {
-                      grid-template-columns: 0.5fr 100fr !important;
-                      padding-top: 5px;
-                      padding-bottom: 5px;
-                      border-bottom: 1px dotted #aaa;
-                    }
-                    .event-left {
-                      width: min-content !important;
-                    }
-                    .event-title {
-                      font-weight: bold;
-                      font-size: 1.2em;
-                    }
+      - !include ../cards/gdq/next_up.yaml
 
   - type: vertical-stack
     view_layout:
-      grid-area: right
+      grid-area: next_watch
     cards:
+      - !include ../cards/gdq/next_to_watch.yaml
+
+  - type: vertical-stack
+    view_layout:
+      grid-area: all_runs
+    cards:
+      - type: custom:mushroom-title-card
+        title: All runs
+
+      - type: custom:config-template-card
+        entities:
+          - sensor.gdq_runs_regex
+          - calendar.gdq_schedule
+        config_templates: default
+        variables:
+          RUNS_REGEX: states["sensor.gdq_runs_regex"].attributes.regex
+        card:
+          type: custom:atomic-calendar-revive
+          eventDateFormat: ddd
+          showProgressBar: true
+          hideDeclined: true
+          hideFinishedEvents: true
+          showLocation: false
+          showDescription: true
+          showEventIcon: true
+          disableEventLink: true
+          maxDaysToShow: 7
+          entities:
+            - name: Runs to watch
+              entity: calendar.gdq_schedule
+              allowlist: ${RUNS_REGEX}
+              icon: mdi:gamepad-right
+              color: var(--success-color)
+            - name: Other runs
+              entity: calendar.gdq_schedule
+              blocklist: ${RUNS_REGEX}
+              icon: mdi:gamepad-right
+          card_mod:
+            style:
+              .: |
+                ha-card {
+                  max-height: calc(85vh - 220px);
+                  overflow-y: scroll;
+                }
+                .single-event-container {
+                  grid-template-columns: 0.5fr 100fr !important;
+                  padding-top: 5px;
+                  padding-bottom: 5px;
+                  border-bottom: 1px dotted #aaa;
+                }
+                .event-left {
+                  width: min-content !important;
+                }
+                .event-title {
+                  font-weight: bold;
+                  font-size: 1.2em;
+                }
+
+  - type: vertical-stack
+    view_layout:
+      grid-area: upcoming_watch
+    cards:
+      - type: custom:mushroom-title-card
+        title: Upcoming runs to watch
+
+      - type: custom:config-template-card
+        entities:
+          - sensor.gdq_runs_regex
+          - calendar.gdq_schedule
+        config_templates: default
+        variables:
+          RUNS_REGEX: states["sensor.gdq_runs_regex"].attributes.regex
+        card:
+          type: custom:atomic-calendar-revive
+          eventDateFormat: ddd
+          showProgressBar: true
+          hideDeclined: true
+          hideFinishedEvents: true
+          showLocation: false
+          showDescription: true
+          showEventIcon: true
+          disableEventLink: true
+          maxDaysToShow: 7
+          entities:
+            - entity: calendar.gdq_schedule
+              allowlist: ${RUNS_REGEX}
+              icon: mdi:gamepad-right
+              color: var(--success-color)
+          card_mod:
+            style:
+              .: |
+                ha-card {
+                  max-height: calc(85vh - 220px);
+                  overflow-y: scroll;
+                }
+                .single-event-container {
+                  grid-template-columns: 0.5fr 100fr !important;
+                  padding-top: 5px;
+                  padding-bottom: 5px;
+                  border-bottom: 1px dotted #aaa;
+                }
+                .event-left {
+                  width: min-content !important;
+                }
+                .event-title {
+                  font-weight: bold;
+                  font-size: 1.2em;
+                }
+
+  - type: vertical-stack
+    view_layout:
+      grid-area: sidebar
+    cards:
+      - type: custom:mini-graph-card
+        entities:
+          - sensor.sgdq_2024_donation_total
+        name: Donation Total
+        icon: mdi:cash
+        hours_to_show: 24
+        points_per_hour: 30
+        line_color: var(--success-color)
+        line_width: 3
+        font_size: 75
+        height: 100
+
       - type: grid
         columns: 4
         cards:
           - type: custom:button-card
             color_type: blank-card
-          - type: custom:button-card
-            color_type: blank-card
-          - type: custom:button-card
-            color_type: blank-card
+          - type: button
+            name: Donate
+            icon: mdi:cash
+            tap_action:
+              action: url
+              url_path: https://tracker.gamesdonequick.com/tracker/ui/donate/48
+          - type: button
+            name: Prizes
+            icon: mdi:gift
+            tap_action:
+              action: url
+              url_path: https://tracker.gamesdonequick.com/tracker/ui/events/48/prizes
           - type: button
             entity: script.refresh_gdq_agenda
-            show_name: false
+            name: Refresh
             tap_action:
               action: call-service
               service: script.refresh_gdq_agenda

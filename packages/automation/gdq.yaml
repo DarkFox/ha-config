@@ -5,10 +5,22 @@ input_boolean:
 
 ics_calendar:
   calendars:
-    - name: "SGDQ 2024 ICS"
-      url: "https://aldaviva.com/docs/gdq.ics"
+    - name: "GDQ Schedule"
+      # Why the SpikeVegeta hate @Aldaviva ? :(
+      url: "http://local-games-done-quick-calendar-factory:8081/?includeAnnoyingPeople=true"
       days: 10
-      download_interval: 5
+      download_interval: 1
+
+scrape:
+  - resource: https://tracker.gamesdonequick.com/tracker/donations/SGDQ2024
+    scan_interval: 60
+    sensor:
+      - name: SGDQ 2024 Donation Total
+        select: h3.text-center > small
+        index: 0
+        unique_id: 4e8b22de-3720-11ef-985e-94c691109e98
+        value_template: "{{ value.strip().split('$')[1].split(' ')[0].replace(',','') }}"
+        unit_of_measurement: USD
 
 template:
   - trigger:
@@ -71,6 +83,13 @@ template:
             + (state_attr('sensor.gdq_agenda', 'tomorrow') or [])
             )|sort(attribute='start') %}
             {{ (runs | selectattr('start', 'le', start) | list | last) or (runs | selectattr('start', 'ge', start) | list | first)  }}
+          next_up: >-
+            {% set start = now().strftime('%Y-%m-%d %H:%M:%S') %}
+            {% set runs = (
+              (state_attr('sensor.gdq_agenda', 'agenda') or [])
+            + (state_attr('sensor.gdq_agenda', 'tomorrow') or [])
+            )|sort(attribute='start') %}
+            {{ (runs | selectattr('start', 'ge', start) | list | first) }}
 
       - name: GDQ Next Watch Run
         unique_id: gdq_next_watch_run
@@ -107,12 +126,23 @@ script:
     sequence:
       - service: homeassistant.update_entity
         target:
-          entity_id: calendar.sgdq_2024_ics
+          entity_id: calendar.gdq_schedule
       - delay:
           seconds: 5
       - service: automation.trigger
         target:
           entity_id: automation.update_gdq_agenda
+
+  gdq_get_current_bids:
+    alias: Get Current Bids
+    sequence:
+      - service: shell_command.curl
+        response_variable: result
+        data:
+          url: https://tracker.gamesdonequick.com/tracker/bids/SGDQ2024
+          method: get
+      - stop: "Return"
+        response_variable: result
 
 automation:
   - alias: "Turn on GDQ"
@@ -185,7 +215,7 @@ automation:
         minutes: "/15"
         seconds: "0"
       - platform: state
-        entity_id: calendar.sgdq_2024_ics
+        entity_id: calendar.gdq_schedule
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
@@ -195,12 +225,12 @@ automation:
           start_date_time: "{{ (now() + timedelta(days=-1)).strftime('%Y-%m-%d') }} 00:00:00"
           end_date_time: "{{ (now() + timedelta(days=1)).strftime('%Y-%m-%d') }} 23:59:59"
         target:
-          entity_id: calendar.sgdq_2024_ics
+          entity_id: calendar.gdq_schedule
         response_variable: all_events
       - variables:
           split_time: "{{ ((now().strftime('%Y-%m-%d') + ' 23:59:59')|as_datetime|as_local).isoformat() }}"
-          agenda: "{{ all_events['calendar.sgdq_2024_ics'].events | selectattr('start', 'lt', split_time) | list }}"
-          tomorrow: "{{ all_events['calendar.sgdq_2024_ics'].events | selectattr('start', 'ge', split_time) | list }}"
+          agenda: "{{ all_events['calendar.gdq_schedule'].events | selectattr('start', 'lt', split_time) | list }}"
+          tomorrow: "{{ all_events['calendar.gdq_schedule'].events | selectattr('start', 'ge', split_time) | list }}"
       - service: mqtt.publish
         data:
           topic: virtual/agenda/gdq/events

@@ -1,16 +1,16 @@
 type: custom:button-card
 entity: sensor.gdq_on_deck
 state_display: >-
-  [[[ return entity.attributes.on_deck.description.replace(/\n/gi, '<br />') ]]]
+  [[[ return entity.attributes.next_up.description.replace(/\n/gi, '<br />') ]]]
 label: >-
   [[[
-    let startsIn = Math.floor((new Date() - Date.parse(entity.attributes.on_deck.start)) / (1000 * 60));
-    let endsIn = Math.floor((Date.parse(entity.attributes.on_deck.end) - new Date()) / (1000 * 60));
+    let startsIn = Math.floor((new Date() - Date.parse(entity.attributes.next_up.start)) / (1000 * 60));
+    let endsIn = Math.floor((Date.parse(entity.attributes.next_up.end) - new Date()) / (1000 * 60));
     if (startsIn < 0) return 'Starts in: ' + Math.abs(startsIn) + ' min';
     else if (endsIn < 0) return 'Ended: ' + Math.abs(endsIn) + ' min ago';
     else return 'Started: ' + startsIn + ' min ago - ' + 'Ends in: ' + endsIn + ' min';
   ]]]
-name: "[[[ return entity.attributes.on_deck.summary ]]]"
+name: "[[[ return entity.attributes.next_up.summary ]]]"
 layout: name_state
 icon: mdi:gamepad-right
 show_state: true
@@ -24,13 +24,13 @@ styles:
   icon:
     - color: >-
         [[[
-          if (entity.attributes.on_deck.watch) return 'var(--success-color)';
+          if (entity.attributes.next_up.watch) return 'var(--success-color)';
           else return 'var(--primary-text-color)';
         ]]]
   card:
     - box-shadow: >-
         [[[
-          if (entity.attributes.on_deck.watch) return '0px 0px 5px 5px var(--success-color)';
+          if (entity.attributes.next_up.watch) return '0px 0px 5px 5px var(--success-color)';
           else return null;
         ]]]
 card_mod:
@@ -57,7 +57,7 @@ card_mod:
         display: block;
         float: right;
         margin-right: auto;
-        content: "On deck";
+        content: "Next up";
         font-size: 1.5vw;
       }
       #label {
