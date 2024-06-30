@@ -3,6 +3,11 @@ input_boolean:
     name: "Enable GDQ"
     icon: mdi:gamepad-right
 
+ics_calendar:
+  calendars:
+    - name: "SGDQ 2024 ICS"
+      url: "https://aldaviva.com/docs/gdq.ics"
+
 template:
   - trigger:
       platform: event
@@ -93,6 +98,18 @@ template:
         attributes:
           icon: mdi:calendar-clock
 
+script:
+  refresh_gdq_agenda:
+    alias: Refresh GDQ Agenda
+    icon: mdi:calendar-refresh
+    sequence:
+      - service: homeassistant.update_entity
+        target:
+          entity_id: calendar.sgdq_2024_ics
+      - service: automation.trigger
+        target:
+          entity_id: automation.update_gdq_agenda
+
 automation:
   - alias: "Turn on GDQ"
     id: turn_on_gdq
@@ -157,4 +174,70 @@ automation:
     action:
       - service: script.notify_everywhere
         data:
-          message: "Next GDQ Run: {{ state_attr('sensor.gdq_next_watch_run', 'next_run').summary }} starts in {{ states('sensor.next_gdq_run_starts_in') }} minutes."
+          message: "Næste GDQ spil: {{ state_attr('sensor.gdq_next_watch_run', 'next_run').summary }} starter om {{ states('sensor.next_gdq_run_starts_in') }} minutter."
+
+  - id: update_gdq_agenda
+    alias: Update GDQ Agenda
+    trigger:
+      - platform: time_pattern
+        hours: "*"
+        minutes: "/15"
+        seconds: "0"
+      - platform: state
+        entity_id: calendar.sgdq_2024_ics
+      - platform: state
+        entity_id: binary_sensor.home_assistant_loaded
+        to: "on"
+    action:
+      - service: calendar.get_events
+        data:
+          start_date_time: "{{ (now() + timedelta(days=-1)).strftime('%Y-%m-%d') }} 00:00:00"
+          end_date_time: "{{ (now() + timedelta(days=1)).strftime('%Y-%m-%d') }} 23:59:59"
+        target:
+          entity_id: calendar.sgdq_2024_ics
+        response_variable: all_events
+      - variables:
+          split_time: "{{ ((now().strftime('%Y-%m-%d') + ' 23:59:59')|as_datetime|as_local).isoformat() }}"
+          agenda: "{{ all_events['calendar.sgdq_2024_ics'].events | selectattr('start', 'lt', split_time) | list }}"
+          tomorrow: "{{ all_events['calendar.sgdq_2024_ics'].events | selectattr('start', 'ge', split_time) | list }}"
+      - service: mqtt.publish
+        data:
+          topic: virtual/agenda/gdq/events
+          retain: true
+          payload: >
+            {% from 'agenda.jinja' import agenda_event %}
+            {%- set regexes = states.sensor.calendar_regexes.attributes -%}
+            {%- set bool_attrs = {
+              'watch': [(state_attr('sensor.gdq_runs_regex', 'regex') or '')]
+            } -%}
+            {
+              "agenda": [
+                {% for event in agenda|sort(attribute='start') | list -%}
+                  {{ agenda_event("GDQ Kalender", event, regexes, bool_attrs) }}{%- if not loop.last %},{% endif %}
+                {%- endfor -%}
+              ],
+              "tomorrow": [
+                {% for event in tomorrow|sort(attribute='start') | list -%}
+                  {{ agenda_event("GDQ Kalender", event, regexes, bool_attrs) }}{%- if not loop.last %},{% endif %}
+                {%- endfor -%}
+              ]
+            }
+
+  - id: update_gdq_agenda_state
+    alias: Update GDQ Agenda State
+    trigger:
+      - platform: mqtt
+        topic: virtual/agenda/gdq/events
+    action:
+      - service: mqtt.publish
+        data:
+          topic: virtual/agenda/gdq/state
+          retain: true
+          payload: "{{ trigger.payload_json.agenda | length }}"
+
+mqtt:
+  sensor:
+    - name: GDQ Agenda
+      state_topic: virtual/agenda/gdq/state
+      json_attributes_topic: virtual/agenda/gdq/events
+      unit_of_measurement: "events"
