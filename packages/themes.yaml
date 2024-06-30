@@ -15,31 +15,31 @@ automation:
       platform: state
       entity_id: input_select.light_profile
     action:
-      # - choose:
-      #     - conditions:
-      #         - condition: state
-      #           entity_id: input_select.light_profile
-      #           state:
-      #             - "Bright"
-      #             - "Default"
-      #       sequence:
-      #         service: frontend.set_theme
-      #         data:
-      #           name: "Mushroom Square Shadow"
-      #     - conditions:
-      #         - condition: state
-      #           entity_id: input_select.light_profile
-      #           state:
-      #             - "Night"
-      #             - "Off"
-      #       sequence:
-      #         service: frontend.set_theme
-      #         data:
-      #           name: "Caule Dark Blue"
-      #   default:
-      service: frontend.set_theme
-      data:
-        name: "Mushroom Square Shadow"
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_select.light_profile
+                state:
+                  - "Bright"
+                  - "Default"
+            sequence:
+              service: browser_mod.set_theme
+              data:
+                dark: light
+          - conditions:
+              - condition: state
+                entity_id: input_select.light_profile
+                state:
+                  - "Night"
+                  - "Off"
+            sequence:
+              service: browser_mod.set_theme
+              data:
+                dark: dark
+        default:
+          service: browser_mod.set_theme
+          data:
+            dark: AUTO
 
 template:
   - binary_sensor:
