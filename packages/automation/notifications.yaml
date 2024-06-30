@@ -20,28 +20,61 @@ template:
 script:
   notify_everywhere:
     alias: Send notification everywhere
+    fields:
+      message_title:
+        description: The title of the message
+        example: "Warning"
+        selector:
+          text:
+      message:
+        description: The message to send
+        example: "Hello, this is a test"
+        selector:
+          text:
+      severity:
+        description: The severity of the message (1=info, 2=warning, 3=critical)
+        example: 2
+        selector:
+          number:
+            min: 1
+            max: 3
+      data:
+        description: Additional data to send with the message
+        example: "{'inline_keyboard': {'text': 'Click me', 'url': 'https://www.home-assistant.io'}}"
+        selector:
+          object:
     sequence:
       - parallel:
           - service: notify.telegram_darkfox
             data:
+              title: "{{ message_title or none }}"
               message: "{{ message }}"
+              data: "{{ data or {} }}"
           - service: script.popup_notification
             data:
+              message_title: "{{ message_title or none }}"
               message: "{{ message }}"
           - service: script.voice_broadcast
             data:
+              message_title: "{{ message_title or none }}"
               message: "{{ message }}"
           - service: script.darkphone_tts
             data:
+              message_title: "{{ message_title or none }}"
               message: "{{ message }}"
           - service: notify.stue_tv
             data:
-              message: "{{ message }}"
+              message: |
+                {{ message_title or '' }}
+                {{ message }}
           - service: notify.kontor_tv
             data:
-              message: "{{ message }}"
+              message: |
+                {{ message_title or '' }}
+                {{ message }}
           - service: notify.martin_pc
             data:
+              title: "{{ message_title or none }}"
               message: "{{ message }}"
 
   notify_darkphone:
@@ -49,7 +82,8 @@ script:
     sequence:
       - service: script.darkphone_tts
         data:
-          message: "{{ message_title + ' - ' if message_title }}{{ message }}"
+          message_title: "{{ message_title }}"
+          message: "{{ message }}"
       - service: notify.telegram_darkfox
         data:
           title: "{{ message_title }}"
@@ -58,6 +92,17 @@ script:
 
   darkphone_tts:
     alias: Read message on Darkphone if headset connected
+    fields:
+      message_title:
+        description: The title of the message
+        example: "Warning"
+        selector:
+          text:
+      message:
+        description: The message to read
+        example: "Hello, this is a test"
+        selector:
+          text:
     sequence:
       - condition: or
         conditions:
@@ -75,22 +120,37 @@ script:
           message: "TTS"
           data:
             media_stream: "media_stream"
-            tts_text: "{{ message }}"
+            tts_text: "{{ message_title + ' - ' if message_title }}{{ message }}"
             ttl: 0
             priority: high
 
   voice_broadcast:
     alias: Broadcast message on all speakers if home
     fields:
+      message_title:
+        description: The title of the message
+        example: "Warning"
+        selector:
+          text:
       message:
         description: The message to broadcast
         example: "Hello, this is a test"
+        selector:
+          text:
       entity_id:
         description: The entity_id of the speaker(s) to broadcast to (defaults to all speakers in active rooms)
         example: "media_player.kitchen_speaker"
+        selector:
+          entity:
+            domain: media_player
       volume_level:
         description: The volume level to use for the broadcast (optional)
         example: 0.5
+        selector:
+          number:
+            step: 0.01
+            min: 0
+            max: 1
     variables:
       entity_id: "{{ entity_id | default(state_attr('sensor.room_announcement_speakers', 'entities')) }}"
       default_volume: "{{ 0.35 if states('input_select.sleep_state') in ['alarm', 'soozing', 'waking'] else 0.50 }}"
@@ -105,11 +165,16 @@ script:
           entity_id: "{{ entity_id }}"
           volume_level: "{{ volume_level | default(default_volume) }}"
           message: >-
-            {{ message }}
+            {{ message_title + ' - ' if message_title }}{{ message }}
 
   popup_notification:
     alias: Popup Notification using Browser Mod
     fields:
+      message_title:
+        description: The title of the message
+        example: "Warning"
+        selector:
+          text:
       message:
         description: The message to display
         example: "Hello, this is a test"
@@ -121,6 +186,7 @@ script:
           autoclose: true
           timeout: 30000
           size: wide
+          title: "{{ message_title or none }}"
           content: |
             <div style="font-size: 32pt; line-height: 32pt; font-weight: bold; text-align: center; padding: 24pt 0 20pt;">
               {{ message }}
