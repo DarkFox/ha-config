@@ -40,6 +40,31 @@ template:
             {% endfor %}
             .*({{ ns.escaped_runs | join('|') }}).*
 
+  - trigger:
+      platform: event
+      event_type: gdq_bids
+    sensor:
+      - name: GDQ Bids
+        unique_id: gdq_bids
+        state: "{{ trigger.event.data.bids | length }}"
+        attributes:
+          last_updated: "{{ now().isoformat() }}"
+          all_bids: "{{ trigger.event.data.bids }}"
+          goals: "{{ trigger.event.data.bids | selectattr('goal', 'defined') | reverse | list }}"
+          bid_wars: >-
+            {% set bid_wars = trigger.event.data.bids | selectattr('options', 'defined') | reverse | list %}
+            {% set ns = namespace(bid_options=[]) %}
+            {% for bid in bid_wars %}
+              {% set ns.bid_options = ns.bid_options + [dict(bid, options=none)] %}
+              {% for option in bid.options %}
+                {% set ns.bid_options = ns.bid_options + [
+                  dict(option, run='')
+                ] %}
+              {% endfor %}
+            {% endfor %}
+
+            {{ ns.bid_options }}
+
   - sensor:
       - name: Upcoming GDQ Runs
         unique_id: upcoming_gdq_runs
@@ -126,23 +151,16 @@ script:
     sequence:
       - service: homeassistant.update_entity
         target:
-          entity_id: calendar.gdq_schedule
+          entity_id:
+            - calendar.gdq_schedule
+            - sensor.sgdq_2024_donation_total
       - delay:
           seconds: 5
       - service: automation.trigger
         target:
-          entity_id: automation.update_gdq_agenda
-
-  gdq_get_current_bids:
-    alias: Get Current Bids
-    sequence:
-      - service: shell_command.curl
-        response_variable: result
-        data:
-          url: https://tracker.gamesdonequick.com/tracker/bids/SGDQ2024
-          method: get
-      - stop: "Return"
-        response_variable: result
+          entity_id:
+            - automation.update_gdq_agenda
+            - automation.refresh_gdq_bids
 
 automation:
   - alias: "Turn on GDQ"
@@ -162,6 +180,7 @@ automation:
             - automation.update_gdq_agenda_state
             - automation.refresh_gdq_runs_regex
             - automation.notify_gdq_run_coming_up
+            - automation.refresh_gdq_bids
       - condition: state
         entity_id: input_boolean.gdq_enable
         state: "on"
@@ -186,6 +205,17 @@ automation:
       - service: script.notify_everywhere
         data:
           message: "Næste GDQ spil: {{ state_attr('sensor.gdq_next_watch_run', 'next_run').summary }} starter om {{ states('sensor.next_gdq_run_starts_in') }} minutter."
+
+  - alias: "Refresh GDQ Bids"
+    id: refresh_gdq_bids
+    mode: single
+    trigger:
+      - platform: time_pattern
+        hours: "*"
+        minutes: "/1"
+        seconds: "0"
+    action:
+      - service: pyscript.gdq_get_bids
 
   - alias: "Refresh GDQ Runs Regex"
     id: refresh_gdq_runs_regex
@@ -265,6 +295,16 @@ automation:
           topic: virtual/agenda/gdq/state
           retain: true
           payload: "{{ trigger.payload_json.agenda | length }}"
+
+group:
+  gdq_automations:
+    name: "GDQ Automations"
+    entities:
+      - automation.notify_gdq_run_coming_up
+      - automation.refresh_gdq_bids
+      - automation.refresh_gdq_runs_regex
+      - automation.update_gdq_agenda
+      - automation.update_gdq_agenda_state
 
 mqtt:
   sensor:
