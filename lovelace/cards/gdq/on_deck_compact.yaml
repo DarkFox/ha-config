@@ -11,6 +11,8 @@ label: >-
     else return 'Started: ' + entity.attributes.on_deck_formatted_start.replace('-','') + ' ago - ' + 'Ends in: ' + entity.attributes.on_deck_formatted_end;
   ]]]
 name: "[[[ return entity.attributes.on_deck.summary ]]]"
+custom_fields:
+  progress_pct: " "
 layout: vertical
 icon: mdi:gamepad-right
 show_state: true
@@ -21,6 +23,25 @@ tap_action:
   action: url
   url_path: "https://www.twitch.tv/gamesdonequick"
 styles:
+  grid:
+    - grid-template-areas: '"i" "n" "s" "l" "progress_pct"'
+  custom_fields:
+    progress_pct:
+      - height: 0.5em
+      - margin: 0 auto calc(-4% - 0.7em) 0
+      - width: >-
+          [[[
+            let startsIn = Math.floor((new Date() - Date.parse(entity.attributes.on_deck.start)) / (1000 * 60));
+            let endsIn = Math.floor((Date.parse(entity.attributes.on_deck.end) - new Date()) / (1000 * 60));
+            if (startsIn < 0) return '0%';
+            else if (endsIn < 0) return '100%';
+            else return Math.floor((startsIn / (startsIn + endsIn)) * 100) + "%";
+          ]]]
+      - background-color: >-
+          [[[
+            if (entity.attributes.on_deck.watch) return 'var(--success-color)';
+            else return 'var(--blue-color)';
+          ]]]
   icon:
     - color: >-
         [[[
