@@ -39,12 +39,14 @@ description: Get the current bids from the Games Done Quick tracker. Fires 'gdq_
             'description': parse_text(columns[2].text)
         }
 
-        bid['amount'] = parse_amount(columns[3].text)
-        if len(columns) > 4 and parse_amount(columns[4].text):
-            bid['goal'] = parse_amount(columns[4].text)
+        amount = parse_amount(columns[3].text)
+        bid['amount'] = int(amount) if amount else None
 
-        if 'goal' in bid and isinstance(bid['amount'], float) and isinstance(bid['goal'], float):
-            percent = (bid['amount'] / bid['goal']) * 100
+        goal = parse_amount(columns[4].text) if len(columns) > 4 else None
+        bid['goal'] = int(goal) if goal else None
+
+        if goal and isinstance(amount, float) and isinstance(goal, float):
+            percent = (amount / bid['goal']) * 100
             bid['percent'] = round(percent, 2)
 
         if get_options:

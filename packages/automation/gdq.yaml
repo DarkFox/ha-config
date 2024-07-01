@@ -50,9 +50,12 @@ template:
         attributes:
           last_updated: "{{ now().isoformat() }}"
           all_bids: "{{ trigger.event.data.bids }}"
-          goals: "{{ trigger.event.data.bids | selectattr('goal', 'defined') | reverse | list }}"
+          goals: >-
+            {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
+            {{ trigger.event.data.bids | selectattr('goal', 'defined') | selectattr('run', 'in', games) | reverse | list }}
           bid_wars: >-
-            {% set bid_wars = trigger.event.data.bids | selectattr('options', 'defined') | reverse | list %}
+            {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
+            {% set bid_wars = trigger.event.data.bids | selectattr('options', 'defined') | selectattr('run', 'in', games) | reverse | list %}
             {% set ns = namespace(bid_options=[]) %}
             {% for bid in bid_wars %}
               {% set ns.bid_options = ns.bid_options + [dict(bid, options=none)] %}
