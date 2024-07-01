@@ -6,9 +6,9 @@ label: >-
   [[[
     let startsIn = Math.floor((new Date() - Date.parse(entity.attributes.on_deck.start)) / (1000 * 60));
     let endsIn = Math.floor((Date.parse(entity.attributes.on_deck.end) - new Date()) / (1000 * 60));
-    if (startsIn < 0) return 'Starts in: ' + Math.abs(startsIn) + ' min';
-    else if (endsIn < 0) return 'Ended: ' + Math.abs(endsIn) + ' min ago';
-    else return 'Started: ' + startsIn + ' min ago - ' + 'Ends in: ' + endsIn + ' min';
+    if (startsIn < 0) return 'Starts in: ' + entity.attributes.on_deck_formatted_start;
+    else if (endsIn < 0) return 'Ended: ' + entity.attributes.on_deck_formatted_end.replace('-','') + ' ago';
+    else return 'Started: ' + entity.attributes.on_deck_formatted_start.replace('-','') + ' ago - ' + 'Ends in: ' + entity.attributes.on_deck_formatted_end;
   ]]]
 name: "[[[ return entity.attributes.on_deck.summary ]]]"
 layout: name_state
@@ -45,6 +45,7 @@ card_mod:
       #name {
         font-size: 0.8em;
         margin-bottom: 5px;
+        height: 6.4em;
       }
       #icon {
         float: left;
@@ -58,7 +59,7 @@ card_mod:
         float: right;
         margin-right: auto;
         content: "On deck";
-        font-size: 1.5vw;
+        font-size: 2em;
       }
       #label {
         font-weight: bold;

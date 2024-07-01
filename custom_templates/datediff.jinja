@@ -40,15 +40,16 @@
     {%- set seconds = abs_value % 60 -%}
     {{
         {
-        'days': days if value >= 0 else -days,
-        'hours': hours if value >= 0 else -hours,
-        'minutes': minutes if value >= 0 else -minutes,
-        'seconds': seconds if value >= 0 else -seconds
+            'negative': value <= 0,
+            'days': days,
+            'hours': hours,
+            'minutes': minutes,
+            'seconds': seconds
         } | to_json
     }}
 {%- endmacro -%}
 
-{%- macro format_seconds(input) -%}
+{%- macro format_seconds(input, precision=none) -%}
     {%- set labels = {'days': 'd', 'hours': 't', 'minutes': 'm', 'seconds': 's'} -%}
     {%- set v = split_seconds(input|int(0))|from_json -%}
     {%- set ns = namespace(ret=[],noskip=false) -%}
@@ -57,10 +58,13 @@
             {%- set ns.noskip = true -%}
             {%- set ns.ret = ns.ret + [v[key] ~ labels[key]] -%}
         {%- endif -%}
+        {%- if precision is defined and precision == key -%}
+            {%- break -%}
+        {%- endif -%}
     {%- endfor -%}
     {%- if ns.ret | length == 0 -%}
         0s
     {%- else -%}
-        {{ ns.ret | join(' ') }}
+        {{ '-' if v['negative'] else '' }}{{ ns.ret | join(' ') }}
     {%- endif -%}
 {%- endmacro -%}
