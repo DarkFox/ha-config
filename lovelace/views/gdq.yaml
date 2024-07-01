@@ -7,9 +7,9 @@ layout:
   grid-template-columns: 26.66% 26.66% 26.66% 20%
   grid-template-rows: auto
   grid-template-areas: |
-    "on_deck up_next next_watch donation_total"
-    "main main main sidebar"
-    ". . . sidebar"
+    "on_deck  up_next        next_watch donation_total"
+    "all_runs upcoming_watch bids       sidebar"
+    "all_runs upcoming_watch bid_wars   sidebar"
   mediaquery:
     "(max-width: 800px)":
       grid-template-columns: 100%
@@ -18,14 +18,18 @@ layout:
         "up_next"
         "next_watch"
         "donation_total"
-        "main"
+        "bids"
+        "bid_wars"
+        "all_runs"
+        "upcoming_watch"
         "sidebar"
     "(max-width: 1200px)":
       grid-template-columns: 50% 50%
       grid-template-areas: |
         "on_deck up_next"
         "next_watch donation_total"
-        "main main"
+        "bids bid_wars"
+        "all_runs upcoming_watch"
         "sidebar sidebar"
 cards:
   - type: vertical-stack
@@ -49,14 +53,17 @@ cards:
   - type: custom:mini-graph-card
     entities:
       - entity: sensor.sgdq_2024_donation_total
-    name: Donation Total
-    icon: mdi:cash
     hours_to_show: 24
     points_per_hour: 30
     line_color: var(--success-color)
     line_width: 3
     font_size: 75
     decimals: 0
+    height: 140
+    show:
+      name: false
+      icon: false
+      labels: true
     tap_action:
       action: fire-dom-event
       browser_mod:
@@ -72,196 +79,171 @@ cards:
             height: 100%;
           }
 
-  - type: custom:layout-card
+  - type: custom:config-template-card
+    entities:
+      - sensor.gdq_runs_regex
+      - calendar.gdq_schedule
+      - sensor.gdq_on_deck
+    config_templates: default
+    variables:
+      RUNS_REGEX: states["sensor.gdq_runs_regex"].attributes.regex
     view_layout:
-      grid-area: main
-    layout_type: custom:grid-layout
-    layout:
-      place-items: start stretch
-      grid-template-columns: 33.33% 33.33% 33.33%
-      grid-template-rows: auto
-      grid-template-areas: |
-        "all_runs upcoming_watch bids"
-        "all_runs upcoming_watch bid_wars"
-      mediaquery:
-        "(max-width: 800px)":
-          grid-template-columns: 100%
-          grid-template-areas: |
-            "all_runs"
-            "upcoming_watch"
-            "bids"
-            "bid_wars"
-        "(max-width: 1200px)":
-          grid-template-columns: 50% 50%
-          grid-template-areas: |
-            "all_runs upcoming_watch"
-            "bids bid_wars"
-    cards:
-      - type: custom:config-template-card
-        entities:
-          - sensor.gdq_runs_regex
-          - calendar.gdq_schedule
-          - sensor.gdq_on_deck
-        config_templates: default
-        variables:
-          RUNS_REGEX: states["sensor.gdq_runs_regex"].attributes.regex
-        view_layout:
-          grid-area: all_runs
-        card:
-          type: custom:atomic-calendar-revive
-          name: All runs
-          eventDateFormat: ddd
-          showProgressBar: true
-          hideDeclined: true
-          hideFinishedEvents: true
-          showLocation: false
-          showDescription: true
-          showEventIcon: true
-          disableEventLink: true
-          maxDaysToShow: 7
-          entities:
-            - name: Runs to watch
-              entity: calendar.gdq_schedule
-              allowlist: ${RUNS_REGEX}
-              icon: mdi:gamepad-right
-              color: var(--success-color)
-            - name: Other runs
-              entity: calendar.gdq_schedule
-              blocklist: ${RUNS_REGEX}
-              icon: mdi:gamepad-right
-          card_mod:
-            style:
-              .: |
-                ha-card {
-                  max-height: 741px;
-                  overflow-y: scroll;
-                }
-                .single-event-container {
-                  grid-template-columns: 0.5fr 100fr !important;
-                  padding-top: 5px;
-                  padding-bottom: 5px;
-                  border-bottom: 1px dotted #aaa;
-                }
-                .event-left {
-                  width: min-content !important;
-                }
-                .event-title {
-                  font-weight: bold;
-                  font-size: 1.2em;
-                }
+      grid-area: all_runs
+    card:
+      type: custom:atomic-calendar-revive
+      name: All runs
+      eventDateFormat: ddd
+      showProgressBar: true
+      hideDeclined: true
+      hideFinishedEvents: true
+      showLocation: false
+      showDescription: true
+      showEventIcon: true
+      disableEventLink: true
+      maxDaysToShow: 7
+      entities:
+        - name: Runs to watch
+          entity: calendar.gdq_schedule
+          allowlist: ${RUNS_REGEX}
+          icon: mdi:gamepad-right
+          color: var(--success-color)
+        - name: Other runs
+          entity: calendar.gdq_schedule
+          blocklist: ${RUNS_REGEX}
+          icon: mdi:gamepad-right
+      card_mod:
+        style:
+          .: |
+            ha-card {
+              max-height: 750px;
+              overflow-y: scroll;
+            }
+            .single-event-container {
+              grid-template-columns: 0.5fr 100fr !important;
+              padding-top: 5px;
+              padding-bottom: 5px;
+              border-bottom: 1px dotted #aaa;
+            }
+            .event-left {
+              width: min-content !important;
+            }
+            .event-title {
+              font-weight: bold;
+              font-size: 1.2em;
+            }
 
-      - type: custom:config-template-card
-        entities:
-          - sensor.gdq_runs_regex
-          - calendar.gdq_schedule
-          - sensor.gdq_on_deck
-        config_templates: default
-        variables:
-          RUNS_REGEX: states["sensor.gdq_runs_regex"].attributes.regex
-        view_layout:
-          grid-area: upcoming_watch
-        card:
-          type: custom:atomic-calendar-revive
-          name: Upcoming runs to watch
-          eventDateFormat: ddd
-          showProgressBar: true
-          hideDeclined: true
-          hideFinishedEvents: true
-          showLocation: false
-          showDescription: true
-          showEventIcon: true
-          disableEventLink: true
-          maxDaysToShow: 7
-          entities:
-            - entity: calendar.gdq_schedule
-              allowlist: ${RUNS_REGEX}
-              icon: mdi:gamepad-right
-              color: var(--success-color)
-          card_mod:
-            style:
-              .: |
-                ha-card {
-                  max-height: 741px;
-                  overflow-y: scroll;
-                }
-                .single-event-container {
-                  grid-template-columns: 0.5fr 100fr !important;
-                  padding-top: 5px;
-                  padding-bottom: 5px;
-                  border-bottom: 1px dotted #aaa;
-                }
-                .event-left {
-                  width: min-content !important;
-                }
-                .event-title {
-                  font-weight: bold;
-                  font-size: 1.2em;
-                }
+  - type: custom:config-template-card
+    entities:
+      - sensor.gdq_runs_regex
+      - calendar.gdq_schedule
+      - sensor.gdq_on_deck
+    config_templates: default
+    variables:
+      RUNS_REGEX: states["sensor.gdq_runs_regex"].attributes.regex
+    view_layout:
+      grid-area: upcoming_watch
+    card:
+      type: custom:atomic-calendar-revive
+      name: Upcoming runs to watch
+      eventDateFormat: ddd
+      showProgressBar: true
+      hideDeclined: true
+      hideFinishedEvents: true
+      showLocation: false
+      showDescription: true
+      showEventIcon: true
+      disableEventLink: true
+      maxDaysToShow: 7
+      entities:
+        - entity: calendar.gdq_schedule
+          allowlist: ${RUNS_REGEX}
+          icon: mdi:gamepad-right
+          color: var(--success-color)
+      card_mod:
+        style:
+          .: |
+            ha-card {
+              max-height: 750px;
+              overflow-y: scroll;
+            }
+            .single-event-container {
+              grid-template-columns: 0.5fr 100fr !important;
+              padding-top: 5px;
+              padding-bottom: 5px;
+              border-bottom: 1px dotted #aaa;
+            }
+            .event-left {
+              width: min-content !important;
+            }
+            .event-title {
+              font-weight: bold;
+              font-size: 1.2em;
+            }
 
-      - type: custom:list-card
-        view_layout:
-          grid-area: bids
-        entity: sensor.gdq_bids
-        title: Bid Goals
-        feed_attribute: goals
-        columns:
-          - field: run
-            title: Run
-            add_link: link
-          - field: name
-            title: Bid
-            add_link: link
-          - field: amount
-            title: Amount
-            prefix: "$"
-            style:
-              - text-align: center
-          - field: goal
-            title: Goal
-            prefix: "$"
-            style:
-              - text-align: center
-          - field: percent
-            title: "%"
-            postfix: "%"
-            style:
-              - text-align: center
-        card_mod:
-          style:
-            .: |
-              ha-card {
-                height: 365px;
-                overflow-y: scroll;
-              }
+  - type: custom:list-card
+    view_layout:
+      grid-area: bids
+    entity: sensor.gdq_bids
+    title: Bid Goals
+    feed_attribute: goals
+    columns:
+      - field: run
+        title: Run
+        add_link: link
+      - field: name
+        title: Bid
+        add_link: link
+      - field: amount
+        title: Amount
+        prefix: "$"
+        style:
+          - text-align: center
+      - field: goal
+        title: Goal
+        prefix: "$"
+        style:
+          - text-align: center
+      - field: percent
+        title: "%"
+        postfix: "%"
+        style:
+          - text-align: center
+    card_mod:
+      style:
+        .: |
+          ha-card {
+            height: 368px;
+            overflow-y: scroll;
+          }
 
-      - type: custom:list-card
-        view_layout:
-          grid-area: bid_wars
-        entity: sensor.gdq_bids
-        title: Bid Wars
-        feed_attribute: bid_wars
-        columns:
-          - field: run
-            title: Run
-            add_link: link
-            style:
-              - font-weight: bold
-              - width: min-content
-          - field: name
-            title: Option
-            add_link: link
-          - field: amount
-            title: Total
-            prefix: "$"
-            style:
-              - text-align: center
-        card_mod:
-          style:
-            .: |
-              ha-card {
-                height: 365px;
-                overflow-y: scroll;
-              }
+  - type: custom:list-card
+    view_layout:
+      grid-area: bid_wars
+    entity: sensor.gdq_bids
+    title: Bid Wars
+    feed_attribute: bid_wars
+    columns:
+      - field: run
+        title: Run
+        add_link: link
+        style:
+          - font-weight: bold
+          - width: min-content
+      - field: name
+        title: Option
+        add_link: link
+      - field: amount
+        title: Total
+        prefix: "$"
+        style:
+          - text-align: center
+    card_mod:
+      style:
+        .: |
+          ha-card {
+            height: 368px;
+            overflow-y: scroll;
+          }
 
   - type: vertical-stack
     view_layout:
@@ -306,3 +288,10 @@ cards:
       - type: todo-list
         title: Watchlist
         entity: todo.gdq_runs
+        card_mod:
+          style:
+            .: |
+              ha-card {
+                max-height: 652px;
+                overflow-y: scroll;
+              }
