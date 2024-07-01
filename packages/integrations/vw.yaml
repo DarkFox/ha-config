@@ -3,7 +3,7 @@ switch:
     switches:
       id_3_pro_charging:
         friendly_name: ID.3 Pro Charging
-        unique_id: id_3_pro_charging
+        unique_id: 8aad7bcf-89a3-48d9-88ea-2b8609617a50
         value_template: "{{ not is_state('sensor.id_3_pro_charging_mode', 'off') }}"
         icon_template: "{{ 'mdi:battery-charging' if not is_state('sensor.id_3_pro_charging_mode', 'off') else 'mdi:battery' }}"
         turn_on:
@@ -19,7 +19,7 @@ switch:
 
       id_3_pro_climatisation:
         friendly_name: ID.3 Pro Climatisation
-        unique_id: id_3_pro_climatisation
+        unique_id: 89f42f3d-9563-474f-ac2e-933c3076723f
         value_template: "{{ is_state('binary_sensor.id_3_pro_klimatisering', 'on') }}"
         icon_template: "{{ 'mdi:hvac' if is_state('binary_sensor.id_3_pro_klimatisering', 'on') else 'mdi:hvac-off' }}"
         turn_on:
@@ -35,7 +35,7 @@ switch:
 
       id_3_pro_reduced_ac_charging_speed:
         friendly_name: ID.3 Pro Reduced AC Charging Speed
-        unique_id: id_3_pro_reduced_ac_charging_speed
+        unique_id: a563afd5-760e-400f-9f5d-ee2c0b11c4f5
         value_template: "{{ is_state('sensor.id_3_pro_max_charge_current_ac', 'reduced') }}"
         icon_template: mdi:flash
         turn_on:
@@ -52,7 +52,7 @@ switch:
 template:
   - binary_sensor:
       - name: ID.3 Pro Locked
-        unique_id: id_3_pro_locked
+        unique_id: 7471c9be-140d-4103-bcbc-5e54fbff0f6c
         state: >-
           {{
             is_state('sensor.id_3_pro_door_front_left_lock_status', 'unlocked')
@@ -63,25 +63,25 @@ template:
           }}
         device_class: lock
       - name: "ID.3 Pro Klimatisering"
-        unique_id: id_3_pro_climatising
+        unique_id: 3d153849-757e-4062-96b8-54aba1bfa44d
         state: "{{ states('sensor.id_3_pro_remaining_climatisation_time') | int > 0 }}"
         attributes:
           icon: "{{ 'mdi:hvac' if is_state('binary_sensor.id_3_pro_klimatisering', 'on') else 'mdi:hvac-off' }}"
       - name: ID.3 Pro Is Charging
-        unique_id: id_3_pro_charging
+        unique_id: e06d2312-821d-4bb9-8f66-78efa1bd6164
         state: "{{ is_state('sensor.id_3_pro_charging_state', 'charging') }}"
         attributes:
           icon: "{{ 'mdi:battery-charging' if not is_state('sensor.id_3_pro_charging', 'off') else 'mdi:battery' }}"
 
   - sensor:
       - name: "ID.3 Pro Charging Time Remaining"
-        unique_id: id_3_pro_remaining_charging_time_to_complete
+        unique_id: e9a7814e-c7d9-4fac-a56d-70b73b895dde
         state: "{{ (timedelta(minutes=states('sensor.id_3_pro_remaining_charging_time')|int)|string)[:-3] }}"
         attributes:
           icon: mdi:clock-end
 
       - name: ID.3 Pro Charging Complete At
-        unique_id: id_3_pro_charging_complete_at
+        unique_id: 385fb3fc-61bf-41a8-a7c0-3249fc16fd7c
         state: >-
           {%- if is_state('binary_sensor.id_3_pro_is_charging', 'on') -%}
             {%- set end_time = (states('sensor.id_3_pro_remaining_charging_time')|int*60) + (as_timestamp(now())|int) -%}

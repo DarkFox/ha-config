@@ -48,6 +48,15 @@ calendar:
         name: Bil
         search: &personlig_bil_regex ".*(#bil).*"
 
+ics_calendar:
+  calendars:
+    # TODO: Switch to ics_calendar for external calendars.
+    # Filter events in agenda sensors, instead of using filters feature and retreiving the same feed multiple times
+    # Make the sensors emulate calendar entities, so they can be used the same way
+    - name: "Arbejdskalender ICS"
+      url: !secret work_calendar_url
+      days: 7
+
 template:
   - sensor:
       - name: Calendar Regexes
@@ -173,7 +182,7 @@ template:
             {{ waking_events|first if waking_events|length > 0 else {} }}
 
       - name: Next personal event start clock
-        unique_id: next_personal_event_start_clock
+        unique_id: a001219d-0724-46b4-9af9-a5f13532a397
         state: >-
           {% if has_value('calendar.personlig') and 'start_time' in states.calendar.personlig.attributes %}
             {{ state_attr('calendar.personlig', 'start_time').split(' ')[1][:-3] }}
