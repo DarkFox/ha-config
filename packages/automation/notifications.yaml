@@ -49,7 +49,7 @@ script:
           # If the message is a chime_tts segments list, extract the tts attribute of each segment
           message_text: |
             {%- if message is list and message | selectattr('tts', 'defined') | list | length > 0 -%}
-              {{ message | selectattr('tts', 'defined') | map(attribute='tts') | join(' ') }}
+              {{ message | map(attribute='tts') | map('trim') | list | join(' ') }}
             {%- else -%}
               {{ message }}
             {%- endif -%}
