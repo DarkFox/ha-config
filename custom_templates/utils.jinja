@@ -143,3 +143,27 @@
     {%- endif -%}
     {{ int_part ~ ',' ~ dec_part }}
 {%- endmacro -%}
+
+{%- macro sort_list_by_attr(input, attr, values, include_non_matching=False) -%}
+    {#-
+    This macro sorts a list based on an attribute and a list of values.
+    
+    Parameters:
+    - input: The list to sort.
+    - attr: The attribute to sort by.
+    - values: The list of values to sort by.
+    - include_non_matching: Whether to include items that don't match any of the values (default is False).
+    
+    Usage: 
+    {{ sort_list_by_attr(list, 'name', ['apple', 'banana', 'cherry']) }}
+    {{ sort_list_by_attr(list, 'name', ['apple', 'banana', 'cherry'], True) }}
+    -#}
+    {%- set ns = namespace(sorted_list=[]) -%}
+    {%- for value in values -%}
+        {%- set ns.sorted_list = ns.sorted_list + (input | selectattr(attr, 'eq', value) | list) -%}
+    {%- endfor -%}
+    {%- if include_non_matching -%}
+        {%- set ns.sorted_list = ns.sorted_list + (input | rejectattr(attr, 'in', values) | list) -%}
+    {%- endif -%}
+    {{ ns.sorted_list }}
+{%- endmacro -%}
