@@ -114,26 +114,26 @@ template:
           on_deck: >-
             {{ (state_attr('binary_sensor.gdq_calendar', 'current') | first or state_attr('binary_sensor.gdq_calendar', 'next')) }}
           on_deck_formatted_start: >-
-            {% from 'datediff.jinja' import format_seconds %}
+            {% from 'easy_time.jinja' import custom_relative_time %}
             {% set on_deck = (state_attr('binary_sensor.gdq_calendar', 'current') | first or state_attr('binary_sensor.gdq_calendar', 'next')) %}
-            {{ format_seconds((on_deck.get('start') | as_datetime | as_local - now()).total_seconds() | int, 'minutes') if on_deck else none }}
+            {{ custom_relative_time(on_deck.get('start'), 'day, hour, minute', short=true) if on_deck else none }}
           on_deck_formatted_end: >-
-            {% from 'datediff.jinja' import format_seconds %}
+            {% from 'easy_time.jinja' import custom_relative_time %}
             {% set on_deck = (state_attr('binary_sensor.gdq_calendar', 'current') | first or state_attr('binary_sensor.gdq_calendar', 'next')) %}
-            {{ format_seconds((on_deck.get('end') | as_datetime | as_local - now()).total_seconds() | int, 'minutes') if on_deck else none }}
+            {{ custom_relative_time(on_deck.get('end'), 'day, hour, minute', short=true) if on_deck else none }}
           on_deck_end_min: >-
             {% set on_deck = (state_attr('binary_sensor.gdq_calendar', 'current') | first or state_attr('binary_sensor.gdq_calendar', 'next')) %}
             {{ ((on_deck.get('end') | as_datetime | as_local - now()).total_seconds() / 60) | int if on_deck else none }}
           up_next: >-
             {{ state_attr('binary_sensor.gdq_calendar', 'next') }}
           up_next_formatted_start: >-
-            {% from 'datediff.jinja' import format_seconds %}
+            {% from 'easy_time.jinja' import custom_relative_time %}
             {% set up_next = state_attr('binary_sensor.gdq_calendar', 'next') %}
-            {{ format_seconds((up_next.get('start') | as_datetime | as_local - now()).total_seconds() | int, 'minutes') if up_next else none }}
+            {{ custom_relative_time(up_next.get('start'), 'day, hour, minute', short=true) if up_next else none }}
           up_next_formatted_end: >-
-            {% from 'datediff.jinja' import format_seconds %}
+            {% from 'easy_time.jinja' import custom_relative_time %}
             {% set up_next = state_attr('binary_sensor.gdq_calendar', 'next') %}
-            {{ format_seconds((up_next.get('end') | as_datetime | as_local - now()).total_seconds() | int, 'minutes') if up_next else none }}
+            {{ custom_relative_time(up_next.get('end'), 'day, hour, minute', short=true) if up_next else none }}
 
       - name: GDQ Next Watch Run
         unique_id: 2d756300-cc24-45f6-be99-faef83cf5034
@@ -147,13 +147,13 @@ template:
             {% set time = now().strftime('%Y-%m-%d %H:%M:%S') %}
             {{ (state_attr('binary_sensor.gdq_calendar_watch_runs', 'next') or {} ) }}
           formatted_start: >-
-            {% from 'datediff.jinja' import format_seconds %}
+            {% from 'easy_time.jinja' import custom_relative_time %}
             {% set next_run = state_attr('binary_sensor.gdq_calendar_watch_runs', 'next') %}
-            {{ format_seconds((next_run.get('start') | as_datetime | as_local - now()).total_seconds() | int, 'minutes') if next_run else none }}
+            {{ custom_relative_time(next_run.get('start'), 'day, hour, minute', short=true) if next_run else none }}
           formatted_end: >-
-            {% from 'datediff.jinja' import format_seconds %}
+            {% from 'easy_time.jinja' import custom_relative_time %}
             {% set next_run = state_attr('binary_sensor.gdq_calendar_watch_runs', 'next') %}
-            {{ format_seconds((next_run.get('end') | as_datetime | as_local - now()).total_seconds() | int, 'minutes') if next_run else none }}
+            {{ custom_relative_time(next_run.get('end'), 'day, hour, minute', short=true) if next_run else none }}
 
 script:
   refresh_gdq_agenda:
