@@ -1,5 +1,5 @@
 {%- macro pad_number(number, dec_digits=2, int_digits=1, separator=',') -%}
-    {# 
+    {#-
     This macro pads a number with leading zeros and adds a separator between the integer and decimal parts.
     
     Parameters:
@@ -10,7 +10,7 @@
     
     Usage: 
     {{ pad_number(123.45, dec_digits=3, int_digits=3, separator='.') }}  # Output: '123.450'
-    #}
+    -#}
 
     {%- set number = number | float(0.0) | round(dec_digits) | string -%}
     {%- set int_part, dec_part = number.split('.') -%}
@@ -24,7 +24,7 @@
 {%- endmacro -%}
 
 {%- macro constrain(x, min_x, max_x) -%}
-    {# 
+    {#-
     This macro constrains a value within a specified range.
     
     Parameters:
@@ -34,13 +34,13 @@
     
     Usage: 
     {{ constrain(10, 0, 100) }}  # Output: 10
-    #}
+    -#}
 
     {{ min(max((x|float),(min_x|float)), (max_x|float)) }}
 {%- endmacro -%}
 
 {%- macro map(x, in_min, in_max, out_min, out_max) -%}
-    {# 
+    {#-
     This macro maps a value from one range to another range.
     
     Parameters:
@@ -52,7 +52,7 @@
     
     Usage: 
     {{ map(50, 0, 100, 0, 255) }}  # Output: 127.5
-    #}
+    -#}
     {%- set x = x | float -%}
     {%- set in_min = in_min | float -%}
     {%- set in_max = in_max | float -%}
@@ -63,7 +63,7 @@
 {%- endmacro -%}
 
 {%- macro map_clamp(x, in_min, in_max, out_min, out_max) -%}
-    {# 
+    {#-
     This macro maps a value from one range to another range and clamps the result within the output range.
     
     Parameters:
@@ -75,13 +75,13 @@
     
     Usage: 
     {{ map_clamp(50, 0, 100, 0, 255) }}  # Output: 127.5
-    #}
+    -#}
 
     {{ constrain(map(x, in_min, in_max, out_min, out_max), out_min, out_max) }}
 {%- endmacro -%}
 
 {%- macro map_clamp_input(x, in_min, in_max, out_min, out_max) -%}
-    {# 
+    {#-
     This macro maps a value from one range to another range and clamps the input value within the input range.
     
     Parameters:
@@ -93,7 +93,7 @@
     
     Usage: 
     {{ map_clamp_input(50, 0, 100, 0, 255) }}  # Output: 127.5
-    #}
+    -#}
 
     {{ map(constrain(x, in_min, in_max), in_min, in_max, out_min, out_max) }}
 {%- endmacro -%}
@@ -104,4 +104,42 @@
         .replace('*', '\\*').replace('+', '\\+').replace('?', '\\?').replace('{', '\\{')
         .replace('}', '\\}').replace('[', '\\[').replace(']', '\\]').replace('(', '\\(')
         .replace(')', '\\)').replace('|', '\\|') }}
+{%- endmacro -%}
+
+{%- macro slugify(input) -%}
+    {#-
+    This macro converts a string into a slug by replacing spaces with hyphens and removing special characters.
+
+    Parameters:
+    - input: The string to convert into a slug.
+
+    Usage:
+    {{ slugify('Hello, World!') }}  # Output: 'hello-world'
+    -#}
+    {{ input | trim | lower | regex_replace('[^a-z0-9]+', '-') | trim('-') }}
+{%- endmacro -%}
+
+{%- macro format_number(value, decimals, pad_dec=false) -%}
+    {#-
+    This macro formats a number with Danish decimal and thousand separators.
+
+    Parameters:
+    - value: The number to format.
+    - decimals: The number of decimal places to include.
+    - pad_dec: Whether to pad the decimal part with zeros. Default is false.
+
+    Usage:
+    {{ format_number(1234567.89, 2) }}  # Output: '1.234.567,89'
+    -#}
+    {%- set value = value | round(decimals) | string -%}
+    {%- set int_part, dec_part = value.split('.') -%}
+    {%- set int_part = int_part | int -%}
+    {%- set dec_part = dec_part | int -%}
+    {%- set int_part = int_part | string -%}
+    {%- set dec_part = dec_part | string -%}
+    {%- set int_part = int_part | regex_replace('(\d)(?=(\d{3})+(?!\d))', '\\1.') -%}
+    {%- if pad_dec -%}
+        {%- set dec_part = dec_part ~ '0' * (decimals - dec_part | length) -%}
+    {%- endif -%}
+    {{ int_part ~ ',' ~ dec_part }}
 {%- endmacro -%}

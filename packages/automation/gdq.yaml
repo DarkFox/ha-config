@@ -48,27 +48,17 @@ template:
     sensor:
       - name: GDQ Bids
         unique_id: 38be3c41-5735-4e7d-9f77-7d134a119bd4
-        state: "{{ trigger.event.data.bids | length }}"
+        state: >-
+          {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
+          {{ trigger.event.data.bids | selectattr('run', 'in', games) | list | length }}
         attributes:
           last_updated: "{{ now().isoformat() }}"
-          all_bids: "{{ trigger.event.data.bids }}"
           goals: >-
             {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
             {{ trigger.event.data.bids | selectattr('goal', 'defined') | selectattr('run', 'in', games) | reverse | list }}
           bid_wars: >-
             {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
-            {% set bid_wars = trigger.event.data.bids | selectattr('options', 'defined') | selectattr('run', 'in', games) | reverse | list %}
-            {% set ns = namespace(bid_options=[]) %}
-            {% for bid in bid_wars %}
-              {% set ns.bid_options = ns.bid_options + [dict(bid, options=none)] %}
-              {% for option in bid.options %}
-                {% set ns.bid_options = ns.bid_options + [
-                  dict(option, run='')
-                ] %}
-              {% endfor %}
-            {% endfor %}
-
-            {{ ns.bid_options }}
+            {{ trigger.event.data.bids | selectattr('options', 'defined') | selectattr('run', 'in', games) | reverse | list }}
 
   - trigger:
       platform: event
