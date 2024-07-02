@@ -22,11 +22,27 @@ description: Get the current bids from the Games Done Quick tracker. Fires 'gdq_
 
         return float(amount[1:])
 
+    def format_currency(amount):
+        # Split the number into integer and decimal parts
+        integer_part, decimal_part = f'{amount:.2f}'.split('.')
+        
+        # Reverse the integer part and group by thousands
+        integer_part = integer_part[::-1]
+        grouped_integer = '.'.join([integer_part[i:i+3] for i in range(0, len(integer_part), 3)])
+        
+        # Reverse back and combine with the decimal part
+        formatted_amount = f'{grouped_integer[::-1]},{decimal_part}'
+        
+        return formatted_amount
+
     def parse_text(text) -> str:
         return text.strip()
 
+    def calc_percent(amount, goal):
+        percent = (amount / goal) * 100
+        return round(percent, 2)
 
-    def parse_bid_row(row, get_options=True, all_soup=None):
+    def parse_bid_row(row, get_options=True, all_soup=None, bid_total=None):
         columns = row.select('td')
         relative_url = columns[0].find('a')['href']
         bid_id = get_bid_id(relative_url)
@@ -40,30 +56,31 @@ description: Get the current bids from the Games Done Quick tracker. Fires 'gdq_
         }
 
         amount = parse_amount(columns[3].text)
-        bid['amount'] = int(amount) if amount else None
+        bid['amount'] = amount if amount else 0.0
 
         goal = parse_amount(columns[4].text) if len(columns) > 4 else None
-        bid['goal'] = int(goal) if goal else None
+        bid['goal'] = goal if goal else None
 
         if goal and isinstance(amount, float) and isinstance(goal, float):
-            percent = (amount / bid['goal']) * 100
-            bid['percent'] = round(percent, 2)
+            bid['percent'] = calc_percent(amount, goal)
+        elif bid_total and isinstance(amount, float) and isinstance(bid_total, float):
+            bid['percent'] = calc_percent(amount, bid_total)
 
         if get_options:
-            options = get_bid_options(bid_id, all_soup=all_soup)
+            options = get_bid_options(bid, all_soup=all_soup)
             if options:
                 bid['options'] = options
 
         return bid
 
-    def get_bid_options(bid_id, all_soup=None):
+    def get_bid_options(bid, all_soup=None):
         options = []
-        id_str = f'bidOptionData-{bid_id}'
+        id_str = f'bidOptionData-{bid["id"]}'
         options_trs = all_soup.select(f'tr#{id_str}')
         if len(options_trs) > 0:
             option_tr = options_trs[0]
             option_rows = option_tr.select('tr.small')
-            options = [parse_bid_row(r, get_options=False) for r in option_rows]
+            options = [parse_bid_row(r, get_options=False, bid_total=bid['amount']) for r in option_rows]
 
         return options
 
