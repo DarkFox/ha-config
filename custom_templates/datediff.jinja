@@ -49,8 +49,20 @@
     }}
 {%- endmacro -%}
 
-{%- macro format_seconds(input, precision=none) -%}
-    {%- set labels = {'days': 'd', 'hours': 't', 'minutes': 'm', 'seconds': 's'} -%}
+{%- macro format_seconds(input, precision=none, labels={'days': 'd', 'hours': 't', 'minutes': 'm', 'seconds': 's'}) -%}
+    {#-
+    This macro formats a number of seconds into a human-readable string.
+
+    Parameters:
+    - input: The number of seconds to format.
+    - precision: The highest unit to include in the output. If not specified, all units will be included.
+    - labels: A dictionary of labels to use for each unit. The keys should be 'days', 'hours', 'minutes', and 'seconds'.
+
+    Example:
+    {{ 3661 | format_seconds }} -> 1h 1m 1s
+    {{ 3661 | format_seconds(precision='minutes') }} -> 1h 1m
+    {{ 3661 | format_seconds(labels={'days': ' dag', 'hours': ' tim', 'minutes': ' min', 'seconds': ' sek'}) }} -> 1 tim 1 min 1 sek
+    -#}
     {%- set v = split_seconds(input|int(0))|from_json -%}
     {%- set ns = namespace(ret=[],noskip=false) -%}
     {%- for key in labels.keys() -%}
