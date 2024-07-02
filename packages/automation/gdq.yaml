@@ -80,29 +80,46 @@ template:
           events: >-
             {% set time = now().strftime('%Y-%m-%d %H:%M:%S') %}
             {{ trigger.event.data.get('events', []) | selectattr('end', 'gt', time) | list }}
-          watch_runs: >-
+
+      - name: GDQ Calendar Watch Runs
+        unique_id: adf4a108-56d8-4fad-a9a8-d85de4e60bde
+        state: >-
+          {% set time = now().strftime('%Y-%m-%d %H:%M:%S') %}
+          {{ 'on' if trigger.event.data.get('events', []) | selectattr('watch', 'true') | selectattr('start', 'le', time) | selectattr('end', 'gt', time) | list else 'off' }}
+        attributes:
+          last_updated: "{{ now().isoformat() }}"
+          current: >-
             {% set time = now().strftime('%Y-%m-%d %H:%M:%S') %}
-            {{ trigger.event.data.get('events', []) |sort(attribute='start') | selectattr('watch', 'true') | selectattr('end', 'gt', time) | list }}
+            {{ trigger.event.data.get('events', []) | selectattr('watch', 'true') | selectattr('start', 'le', time) | selectattr('end', 'gt', time) | list }}
+          next: >-
+            {% set time = now().strftime('%Y-%m-%d %H:%M:%S') %}
+            {{ trigger.event.data.get('events', []) | selectattr('watch', 'true') | selectattr('start', 'gt', time) | list | first }}
+          events: >-
+            {% set time = now().strftime('%Y-%m-%d %H:%M:%S') %}
+            {{ trigger.event.data.get('events', []) | selectattr('watch', 'true') | selectattr('end', 'gt', time) | list }}
 
   - sensor:
       - name: GDQ On Deck
         unique_id: 359fc2c0-7e2a-4836-bacf-90f7abbe3856
         unit_of_measurement: "min"
         state: >-
-          {% set on_deck = (state_attr('binary_sensor.gdq_calendar', 'current') or state_attr('binary_sensor.gdq_calendar', 'next') or []) | first %}
+          {% set on_deck = (state_attr('binary_sensor.gdq_calendar', 'current') | first or state_attr('binary_sensor.gdq_calendar', 'next')) %}
           {{ ((on_deck.get('start') |as_datetime|as_local - now()).total_seconds() / 60) | int if on_deck else none }}
         attributes:
           icon: mdi:gamepad-right
           on_deck: >-
-            {{ (state_attr('binary_sensor.gdq_calendar', 'current') or state_attr('binary_sensor.gdq_calendar', 'next') or []) | first }}
+            {{ (state_attr('binary_sensor.gdq_calendar', 'current') | first or state_attr('binary_sensor.gdq_calendar', 'next')) }}
           on_deck_formatted_start: >-
             {% from 'datediff.jinja' import format_seconds %}
-            {% set on_deck = (state_attr('binary_sensor.gdq_calendar', 'current') or state_attr('binary_sensor.gdq_calendar', 'next') or []) | first %}
+            {% set on_deck = (state_attr('binary_sensor.gdq_calendar', 'current') | first or state_attr('binary_sensor.gdq_calendar', 'next')) %}
             {{ format_seconds((on_deck.get('start') | as_datetime | as_local - now()).total_seconds() | int, 'minutes') if on_deck else none }}
           on_deck_formatted_end: >-
             {% from 'datediff.jinja' import format_seconds %}
-            {% set on_deck = (state_attr('binary_sensor.gdq_calendar', 'current') or state_attr('binary_sensor.gdq_calendar', 'next') or []) | first %}
+            {% set on_deck = (state_attr('binary_sensor.gdq_calendar', 'current') | first or state_attr('binary_sensor.gdq_calendar', 'next')) %}
             {{ format_seconds((on_deck.get('end') | as_datetime | as_local - now()).total_seconds() | int, 'minutes') if on_deck else none }}
+          on_deck_end_min: >-
+            {% set on_deck = (state_attr('binary_sensor.gdq_calendar', 'current') | first or state_attr('binary_sensor.gdq_calendar', 'next')) %}
+            {{ ((on_deck.get('end') | as_datetime | as_local - now()).total_seconds() / 60) | int if on_deck else none }}
           up_next: >-
             {{ state_attr('binary_sensor.gdq_calendar', 'next') }}
           up_next_formatted_start: >-
@@ -118,32 +135,20 @@ template:
         unique_id: 2d756300-cc24-45f6-be99-faef83cf5034
         unit_of_measurement: "min"
         state: >-
-          {% set time = now().strftime('%Y-%m-%d %H:%M:%S') %}
-          {% set next_run = (
-              (state_attr('binary_sensor.gdq_calendar', 'watch_runs') or []) | selectattr('start', 'gt', time) 
-            | first or {}
-            ) %}
+          {% set next_run = state_attr('binary_sensor.gdq_calendar_watch_runs', 'next') %}
           {{ ((next_run.get('start') |as_datetime|as_local - now()).total_seconds() / 60) | int if next_run else none }}
         attributes:
           icon: mdi:gamepad-right
           next_run: >-
             {% set time = now().strftime('%Y-%m-%d %H:%M:%S') %}
-            {{ ((state_attr('binary_sensor.gdq_calendar', 'watch_runs') or []) | selectattr('start', 'gt', time) | first or {} ) }}
+            {{ (state_attr('binary_sensor.gdq_calendar_watch_runs', 'next') or {} ) }}
           formatted_start: >-
             {% from 'datediff.jinja' import format_seconds %}
-            {% set time = now().strftime('%Y-%m-%d %H:%M:%S') %}
-            {% set next_run = (
-                (state_attr('binary_sensor.gdq_calendar', 'watch_runs') or []) | selectattr('start', 'gt', time) 
-              | first or {}
-              ) %}
+            {% set next_run = state_attr('binary_sensor.gdq_calendar_watch_runs', 'next') %}
             {{ format_seconds((next_run.get('start') | as_datetime | as_local - now()).total_seconds() | int, 'minutes') if next_run else none }}
           formatted_end: >-
             {% from 'datediff.jinja' import format_seconds %}
-            {% set time = now().strftime('%Y-%m-%d %H:%M:%S') %}
-            {% set next_run = (
-                (state_attr('binary_sensor.gdq_calendar', 'watch_runs') or []) | selectattr('start', 'gt', time) 
-              | first or {}
-              ) %}
+            {% set next_run = state_attr('binary_sensor.gdq_calendar_watch_runs', 'next') %}
             {{ format_seconds((next_run.get('end') | as_datetime | as_local - now()).total_seconds() | int, 'minutes') if next_run else none }}
 
 script:
@@ -240,7 +245,7 @@ automation:
     trigger:
       - platform: time_pattern
         hours: "*"
-        minutes: "/15"
+        minutes: "/1"
         seconds: "0"
       - platform: state
         entity_id: calendar.gdq_schedule
@@ -266,7 +271,7 @@ automation:
             {% from 'agenda.jinja' import agenda_event %}
             {% set ns = namespace(ret=[]) %}
             {% for event in all_events['calendar.gdq_schedule'].events | sort(attribute='start') | list -%}
-              {% set ns.ret = ns.ret + [agenda_event("GDQ Kalender", event, regexes, bool_attrs)|from_json] %}
+              {% set ns.ret = ns.ret + [agenda_event("GDQ Kalender", dict(event, location=none), regexes, bool_attrs)|from_json] %}
             {%- endfor -%}
             {{ ns.ret }}
 
