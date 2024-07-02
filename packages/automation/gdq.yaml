@@ -210,7 +210,16 @@ automation:
     action:
       - service: script.notify_everywhere
         data:
-          message: "Næste GDQ spil: {{ state_attr('sensor.gdq_next_watch_run', 'next_run').summary }} starter om {{ states('sensor.gdq_next_watch_run') }} minutter."
+          message:
+            - tts: "Næste GDQ spil:"
+            - tts: "{{ state_attr('sensor.gdq_next_watch_run', 'next_run').summary }}"
+              language: en-US
+              voice: SteffanNeural
+              offset: -900
+            - tts: >-
+                {%- from 'easy_time.jinja' import custom_relative_time -%}
+                starter {{ custom_relative_time(state_attr('sensor.gdq_next_watch_run', 'next_run').get('start', ''), 'day, hour, minute') }}
+              offset: -900
 
   - alias: "Refresh GDQ Bids"
     id: refresh_gdq_bids
