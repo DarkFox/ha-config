@@ -48,9 +48,10 @@ script:
   tts_speak:
     alias: "TTS Speak"
     description: "Speak a message using TTS"
+    mode: parallel
     fields:
       message:
-        description: "The message to speak"
+        description: "The message to speak. Can be a chime_tts segments list."
         example: "Hello world"
       volume_level:
         description: "The volume level to use (Default 0.5))"
@@ -61,16 +62,23 @@ script:
       entity_id:
         description: "The media player(s) to use"
         example: "media_player.speaker"
+      chime_path:
+        description: "The path to the chime TTS files"
+        example: "/media/Notifications/Pixel Sounds/Chime.mp3"
+      offset:
+        description: "The offset in milliseconds between the chime and the TTS"
+        example: "-200"
     sequence:
       - service: chime_tts.say
         target:
           entity_id: "{{ entity_id }}"
         data:
-          message: "{{ message | replace('\n', ' ') }}"
+          message: "{{ message }}"
           volume_level: "{{ volume_level or 0.5 }}"
           cache: "{{ cache or 'false' }}"
           tts_platform: "{{ 'cloud' if is_state('binary_sensor.internet', 'on') else 'tts.piper' }}"
-          chime_path: "{{ states('sensor.chime_path') }}"
+          chime_path: "{{ chime_path | default(states('sensor.chime_path')) }}"
+          offset: "{{ offset | default(-500) | int }}"
           announce: true
 
   tts_url:
@@ -78,17 +86,21 @@ script:
     description: >
       Generate a TTS sound file and return the URL.
       Returns a chime_tts dict with the URL in the 'url' attribute.
+    mode: parallel
     fields:
       message:
-        description: "The message to speak"
+        description: "The message to speak. Can be a chime_tts segments list."
         example: "Hello world"
+      chime_path:
+        description: "The path to the chime TTS files"
+        example: "/media/Notifications/Pixel Sounds/Chime.mp3"
     sequence:
       - service: chime_tts.say_url
         response_variable: chime_tts
         data:
-          message: "{{ message | replace('\n', ' ') }}"
+          message: "{{ message }}"
           tts_platform: "{{ 'cloud' if is_state('binary_sensor.internet', 'on') else 'tts.piper' }}"
-          chime_path: "{{ states('sensor.chime_path') }}"
+          chime_path: "{{ chime_path | default(states('sensor.chime_path')) }}"
       - stop: "Return chime_tts"
         response_variable: "chime_tts"
 
@@ -145,7 +157,10 @@ automation:
     initial_state: true
     trigger:
       platform: state
-      entity_id: input_text.notification_sound
+      entity_id: sensor.chime_path
+      not_from:
+        - "unknown"
+        - "unavailable"
     action:
       - service: script.voice_broadcast
         data:

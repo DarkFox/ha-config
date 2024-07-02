@@ -14,7 +14,7 @@ template:
               {%- endfor %}
               {{ ns.ret | unique | list }}
             {%- else -%}
-            []
+              []
             {%- endif -%}
 
 script:
@@ -27,63 +27,100 @@ script:
         selector:
           text:
       message:
-        description: The message to send
+        description: The message to send (Can be a chime_tts segments list)
         example: "Hello, this is a test"
         selector:
           text:
       severity:
-        description: The severity of the message (1=info, 2=warning, 3=critical)
-        example: 2
+        description: The severity of the message (0=low_priority, 1=info, 2=warning, 3=critical) (default=1)
+        example: "2"
         selector:
           number:
-            min: 1
+            min: 0
             max: 3
+            step: 1
       data:
         description: Additional data to send with the message
         example: "{'inline_keyboard': {'text': 'Click me', 'url': 'https://www.home-assistant.io'}}"
         selector:
           object:
     sequence:
+      - variables:
+          # If the message is a chime_tts segments list, extract the tts attribute of each segment
+          message_text: |
+            {%- if message is list and message | selectattr('tts', 'defined') | list | length > 0 -%}
+              {{ message | selectattr('tts', 'defined') | map(attribute='tts') | join(' ') }}
+            {%- else -%}
+              {{ message }}
+            {%- endif -%}
       - parallel:
           - service: notify.telegram_darkfox
             data:
-              title: "{{ message_title or none }}"
-              message: "{{ message }}"
+              title: "{{ message_title }}"
+              message: "{{ message_text }}"
               data: "{{ data or {} }}"
           - service: script.popup_notification
             data:
-              message_title: "{{ message_title or none }}"
-              message: "{{ message }}"
+              message_title: "{{ message_title }}"
+              message: "{{ message_text }}"
+              severity: "{{ severity | default(1) | int }}"
           - service: script.voice_broadcast
             data:
-              message_title: "{{ message_title or none }}"
+              message_title: "{{ message_title }}"
               message: "{{ message }}"
+              severity: "{{ severity | default(1) | int }}"
           - service: script.darkphone_tts
             data:
-              message_title: "{{ message_title or none }}"
-              message: "{{ message }}"
+              message_title: "{{ message_title }}"
+              message: "{{ message_text }}"
+              severity: "{{ severity | default(1) | int }}"
           - service: notify.stue_tv
             data:
               message: |
                 {{ message_title or '' }}
-                {{ message }}
+                {{ message_text }}
           - service: notify.kontor_tv
             data:
               message: |
                 {{ message_title or '' }}
-                {{ message }}
+                {{ message_text }}
           - service: notify.martin_pc
             data:
-              title: "{{ message_title or none }}"
-              message: "{{ message }}"
+              title: "{{ message_title }}"
+              message: "{{ message_text }}"
 
   notify_darkphone:
     alias: Send notification to Darkphone TTS and Telegram
+    fields:
+      message_title:
+        description: The title of the message
+        example: "Warning"
+        selector:
+          text:
+      message:
+        description: The message to send
+        example: "Hello, this is a test"
+        selector:
+          text:
+      severity:
+        description: The severity of the message (0=low_priority, 1=info, 2=warning, 3=critical) (default=1)
+        example: "2"
+        selector:
+          number:
+            min: 0
+            max: 3
+            step: 1
+      data:
+        description: Additional data to send with the message
+        example: "{'inline_keyboard': {'text': 'Click me', 'url': 'https://www.home-assistant.io'}}"
+        selector:
+          object:
     sequence:
       - service: script.darkphone_tts
         data:
           message_title: "{{ message_title }}"
           message: "{{ message }}"
+          severity: "{{ severity | default(1) | int }}"
       - service: notify.telegram_darkfox
         data:
           title: "{{ message_title }}"
@@ -91,7 +128,7 @@ script:
           data: "{{ data or {} }}"
 
   darkphone_tts:
-    alias: Read message on Darkphone if headset connected
+    alias: Read message on Darkphone if headset connected (Low priority messages are not read)
     fields:
       message_title:
         description: The title of the message
@@ -103,7 +140,27 @@ script:
         example: "Hello, this is a test"
         selector:
           text:
+      severity:
+        description: The severity of the message (0=low_priority, 1=info, 2=warning, 3=critical) (default=1)
+        example: "2"
+        selector:
+          number:
+            min: 0
+            max: 3
+            step: 1
     sequence:
+      - variables:
+          severity: "{{ severity | default(1) | int }}"
+          media_stream: >
+            {% if severity == 3 %}
+              alarm_stream_max
+            {% elif severity == 2 %}
+              alarm_stream
+            {% else %}
+              notification_stream
+            {% endif %}
+      - condition: template
+        value_template: "{{ severity > 0 }}"
       - condition: or
         conditions:
           - condition: state
@@ -119,7 +176,7 @@ script:
         data:
           message: "TTS"
           data:
-            media_stream: "media_stream"
+            media_stream: "{{ media_stream }}"
             tts_text: "{{ message_title + ' - ' if message_title }}{{ message }}"
             ttl: 0
             priority: high
@@ -151,9 +208,38 @@ script:
             step: 0.01
             min: 0
             max: 1
+      severity:
+        description: The severity of the message (0=low_priority, 1=info, 2=warning, 3=critical) (default=1)
+        example: "2"
+        selector:
+          number:
+            min: 0
+            max: 3
+            step: 1
     variables:
-      entity_id: "{{ entity_id | default(state_attr('sensor.room_announcement_speakers', 'entities')) }}"
-      default_volume: "{{ 0.35 if states('input_select.sleep_state') in ['alarm', 'soozing', 'waking'] else 0.50 }}"
+      severity: "{{ severity | default(1) | int }}"
+      entity_id: >-
+        {% if severity > 1 %}
+          {{ state_attr('group.all_speakers', 'entity_id') }}
+        {% else %}
+          {{ entity_id | default(state_attr('sensor.room_announcement_speakers', 'entities')) }}
+        {% endif %}
+      default_volume: >-
+        {% if severity == 3 %}
+          0.75
+        {% elif severity == 2 %}
+          0.50
+        {% else %}
+          {{ 0.35 if states('input_select.sleep_state') in ['alarm', 'soozing', 'waking'] else 0.50 }}
+        {% endif %}
+      chime_path: >-
+        {% if severity == 3 %}
+          /media/Notifications/Facility Siren.mp3
+        {% elif severity == 2 %}
+          /config/custom_components/chime_tts/mp3s/error.mp3
+        {% else %}
+          {{ none }}
+        {% endif %}
     sequence:
       - condition: state
         entity_id: binary_sensor.martin_presence
@@ -161,11 +247,15 @@ script:
       - condition: "{{ states('input_select.sleep_state') not in ['sleeping', 'paused', 'smart wake'] }}"
       - service: script.tts_speak
         data:
-          cache: false
           entity_id: "{{ entity_id }}"
           volume_level: "{{ volume_level | default(default_volume) }}"
-          message: >-
-            {{ message_title + ' - ' if message_title }}{{ message }}
+          chime_path: "{{ chime_path }}"
+          message: |
+            {%- if message is list and message | selectattr('tts', 'defined') | list | length > 0 -%}
+              {{ ([{"tts": message_title}] if message_title is defined else []) + message }}
+            {%- else -%}
+              {{ message }}
+            {%- endif -%}
 
   popup_notification:
     alias: Popup Notification using Browser Mod
@@ -186,7 +276,7 @@ script:
           autoclose: true
           timeout: 30000
           size: wide
-          title: "{{ message_title or none }}"
+          title: "{{ message_title }}"
           content: |
             <div style="font-size: 32pt; line-height: 32pt; font-weight: bold; text-align: center; padding: 24pt 0 20pt;">
               {{ message }}
@@ -251,6 +341,7 @@ automation:
       - service: script.notify_everywhere
         data:
           message: "Hoveddøren er ikke låst!"
+          severity: 2
 
   - alias: Freezer Door Open Notification
     id: freezer_door_open_notification
@@ -265,6 +356,7 @@ automation:
       - service: script.notify_everywhere
         data:
           message: "Fryseren står åben!"
+          severity: 2
 
   - alias: Fridge Door Open Notification
     id: fridge_door_open_notification
@@ -279,6 +371,7 @@ automation:
       - service: script.notify_everywhere
         data:
           message: "Køleskabet står åben!"
+          severity: 2
 
   - alias: Smartwatch charged notification
     id: smartwatch_charged_notification
