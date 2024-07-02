@@ -1,19 +1,23 @@
 automation:
-  - alias: "Set theme at startup"
+  - alias: Light Profile Frontend Theme Setter
+    id: light_profile_frontend_theme_setter
     initial_state: True
     trigger:
       - platform: homeassistant
         event: start
-    action:
-      service: automation.trigger
-      data:
-        entity_id: automation.light_profile_frontend_theme_setter
-
-  - alias: Light Profile Frontend Theme Setter
-    initial_state: True
-    trigger:
-      platform: state
-      entity_id: input_select.light_profile
+      - platform: state
+        entity_id: input_select.light_profile
+      - platform: template
+        alias: Set current mode when a browser becomes available
+        value_template: >-
+          [
+            {%- for entity in states.binary_sensor | rejectattr('state', 'eq', 'unavailable') | selectattr('entity_id', 'match', '.+_browser_dark_mode') | list -%}
+              "{{ entity.attributes.get('browserID') }}",
+            {% endfor -%}
+          ]
+    variables:
+      browser_ids: >-
+        {{ (trigger.to_state.attributes.browserID | reject('in', trigger.from_state.attributes.browserID)) if trigger.platform == 'template' else none }}
     action:
       - choose:
           - conditions:
@@ -26,6 +30,7 @@ automation:
               service: browser_mod.set_theme
               data:
                 dark: light
+                browser_id: "{{ browser_ids or [] }}"
           - conditions:
               - condition: state
                 entity_id: input_select.light_profile
@@ -36,10 +41,12 @@ automation:
               service: browser_mod.set_theme
               data:
                 dark: dark
+                browser_id: "{{ browser_ids or [] }}"
         default:
           service: browser_mod.set_theme
           data:
-            dark: AUTO
+            dark: auto
+            browser_id: "{{ browser_ids or [] }}"
 
 template:
   - binary_sensor:
