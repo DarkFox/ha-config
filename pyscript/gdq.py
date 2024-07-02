@@ -39,6 +39,8 @@ description: Get the current bids from the Games Done Quick tracker. Fires 'gdq_
         return text.strip()
 
     def calc_percent(amount, goal):
+        if goal == 0:
+            return 0.0
         percent = (amount / goal) * 100
         return round(percent, 2)
 
@@ -58,12 +60,15 @@ description: Get the current bids from the Games Done Quick tracker. Fires 'gdq_
         amount = parse_amount(columns[3].text)
         bid['amount'] = amount if amount else 0.0
 
-        goal = parse_amount(columns[4].text) if len(columns) > 4 else None
-        bid['goal'] = goal if goal else None
+        goal = None
+        if len(columns) > 4:
+            goal = parse_amount(columns[4].text)
+            if goal:
+                bid['goal'] = goal
 
-        if goal and isinstance(amount, float) and isinstance(goal, float):
+        if isinstance(amount, float) and isinstance(goal, float):
             bid['percent'] = calc_percent(amount, goal)
-        elif bid_total and isinstance(amount, float) and isinstance(bid_total, float):
+        elif isinstance(amount, float) and isinstance(bid_total, float):
             bid['percent'] = calc_percent(amount, bid_total)
 
         if get_options:

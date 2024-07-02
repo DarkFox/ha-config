@@ -53,7 +53,7 @@ template:
           {{ trigger.event.data.bids | selectattr('run', 'in', games) | list | length }}
         attributes:
           last_updated: "{{ now().isoformat() }}"
-          goals: >-
+          challenges: >-
             {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
             {{ trigger.event.data.bids | selectattr('goal', 'defined') | selectattr('run', 'in', games) | reverse | list }}
           bid_wars: >-
@@ -217,6 +217,13 @@ automation:
         minutes: "/1"
         seconds: "0"
     action:
+      - condition: template
+        # Pyscript is slow to load the services, so we need to check if it's missing using watchman
+        value_template: >-
+          {{
+            'entities' in states.sensor.watchman_missing_services.attributes
+            and state_attr('sensor.watchman_missing_services', 'entities') | selectattr('id', 'eq', 'pyscript.gdq_get_bids') | list | length == 0
+          }}
       - service: pyscript.gdq_get_bids
 
   - alias: "Refresh GDQ Runs Regex"
