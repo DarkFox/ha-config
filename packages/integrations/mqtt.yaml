@@ -1,0 +1,51 @@
+shell_command:
+  read_mqtt_dump: "cat /config/mqtt_dump.txt"
+
+script:
+  mqtt_clear_retained_messages:
+    fields:
+      topic:
+        description: "The topic to clear retained messages for"
+        example: "my/topic/#"
+    sequence:
+      # Dump retained messages to /config/mqtt_dump.txt
+      - service: mqtt.dump
+        data:
+          topic: "{{ topic }}"
+          duration: 1
+      # Read the dump
+      - delay:
+          seconds: 2
+      - service: shell_command.read_mqtt_dump
+        response_variable: mqtt_dump
+      - variables:
+          topics: >-
+            {% set lines = (mqtt_dump.stdout | trim).split('\n') %}
+            {% set ns = namespace(ret=[]) %}
+            {% for line in lines %}
+              {% if line == '' %}{% continue %}{% endif %}
+              {% set topic, _ = line.split(',') %}
+              {% set ns.ret = ns.ret + [topic] %}
+            {% endfor %}
+
+            {{ ns.ret }}
+      # Clear retained messages
+      - repeat:
+          count: "{{ topics | length }}"
+          sequence:
+            - variables:
+                topic: "{{ topics[repeat.index-1] }}"
+            - condition: template
+              value_template: "{{ topic and topic != '' }}"
+            - service: mqtt.publish
+              data:
+                topic: "{{ topic }}"
+                payload: ""
+                retain: true
+
+      - variables:
+          return:
+            topics: "{{ topics }}"
+
+      - stop: Return cleared topics
+        response_variable: "return"
