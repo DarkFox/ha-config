@@ -54,11 +54,15 @@ template:
         attributes:
           last_updated: "{{ now().isoformat() }}"
           challenges: >-
+            {% from 'utils.jinja' import sort_list_by_attr %}
             {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
-            {{ trigger.event.data.bids | selectattr('goal', 'defined') | selectattr('run', 'in', games) | reverse | list }}
+            {% set challenges = trigger.event.data.bids | selectattr('goal', 'defined') | selectattr('run', 'in', games) | list %}
+            {{ sort_list_by_attr(challenges, 'run', games) }}
           bid_wars: >-
+            {% from 'utils.jinja' import sort_list_by_attr %}
             {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
-            {{ trigger.event.data.bids | selectattr('options', 'defined') | selectattr('run', 'in', games) | reverse | list }}
+            {% set bid_wars = trigger.event.data.bids | selectattr('options', 'defined') | selectattr('run', 'in', games) | list %}
+            {{ sort_list_by_attr(bid_wars, 'run', games) }}
 
   - trigger:
       platform: event
@@ -272,15 +276,17 @@ automation:
         target:
           entity_id: calendar.gdq_schedule
         response_variable: all_events
-      - event: gdq_calendar_updated
-        event_data:
-          events: >-
+      - variables:
+          agenda_events: >-
             {% from 'agenda.jinja' import agenda_event %}
             {% set ns = namespace(ret=[]) %}
             {% for event in all_events['calendar.gdq_schedule'].events | sort(attribute='start') | list -%}
               {% set ns.ret = ns.ret + [agenda_event("GDQ Kalender", dict(event, location=none), regexes, bool_attrs)|from_json] %}
             {%- endfor -%}
             {{ ns.ret }}
+      - event: gdq_calendar_updated
+        event_data:
+          events: "{{ agenda_events }}"
 
 group:
   gdq_automations:

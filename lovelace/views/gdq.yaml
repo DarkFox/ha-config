@@ -202,7 +202,8 @@ cards:
     card_param: cards
     filter:
       template: |
-        {% from 'utils.jinja' import slugify, format_number %}
+        {% from 'utils.jinja' import slugify, format_number, sort_list_by_attr %}
+        {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
         {% set ns = namespace(
           ret=[],
           options=[],
@@ -315,7 +316,12 @@ cards:
           }] %}
         {% endfor %}
 
-        {{ ns.ret }}
+        {{ 
+          sort_list_by_attr(ns.ret, 'label', games) if ns.ret | length > 0 else [{
+            "type": "custom:button-card",
+            "name": "No challenges or bid wars right now",
+          }]
+        }}
 
   - type: vertical-stack
     view_layout:
