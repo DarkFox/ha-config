@@ -104,6 +104,103 @@ script:
       - stop: "Return chime_tts"
         response_variable: "chime_tts"
 
+  ai_language_detection:
+    alias: "AI Language Detection"
+    description: "Detect the language of a text using AI"
+    mode: parallel
+    fields:
+      text:
+        description: "The text to detect the language of"
+        example: "Hello world"
+    variables:
+      prompt: |
+        I have a task where I need to identify which parts of a given sentence are in Danish and which are in English.
+        Additionally, I need the output to be in JSON format, where each segment of the sentence is categorized by language.
+        Segments that are in the same language and are contiguous should be merged into a single segment.
+        A segment is not necessarily bounded by punctuation, but by a change in language, and can be a single word like a proper noun.
+        Any punctuation and spaces in the input text should be preserved.
+        Opening and closing quotes should be kept within the same segment if possible, but does not necessarily mark the start or end of the segment.
+        The JSON format should be a list of dictionaries, each containing the attributes "language" and "segment".
+        Language should be an IETF language and region tag.
+
+        Here is an example sentence:
+        ```
+        "Maybe," svarede Peter, "let's see how the weather holds up." Han tog en slurk af sin kaffe og strakte sig. Fuglene sang, og der var en let brise i luften.
+        ```
+
+        The output should look like this:
+        [
+          {"language": "en-US", "segment": "\"Maybe,\""},
+          {"language": "da-DK", "segment": "svarede Peter,"},
+          {"language": "en-US", "segment": "\"let's see how the weather holds up.\""},
+          {"language": "da-DK", "segment": "Han tog en slurk af sin kaffe og strakte sig. Fuglene sang, og der var en let brise i luften."}
+        ]
+
+        Another example:
+        ```
+        Næste GDQ spil: Super "Sonic Saves the World" World, starter om 29 minutter
+        ```
+
+        The output should look like this:
+        [
+          {"language": "da-DK", "segment": "Næste GDQ spil: "},
+          {"language": "en-US", "segment": "Super "Sonic Saves the World" World, "},
+          {"language": "da-DK", "segment": "starter om 29 minutter"}
+        ]
+
+        Only provide the json formatted output, do not add any comments, greetings, or explanations.
+
+        Please provide the solution for the following text:
+        ```
+        {{ text }}
+        ```
+    sequence:
+      - service: conversation.process
+        data:
+          text: "{{ prompt }}"
+          language: EN
+          agent_id: 4e0a875b09f8a19a405e1bf3e5c4adac
+        response_variable: agent
+      - variables:
+          response:
+            # Some times the ai wraps the response in ```json ``` so we need to remove it
+            segments: "{{ agent.response.speech.plain.speech | regex_replace('```json\n', '') | regex_replace('```', '') | from_json }}"
+      - stop: "Return response"
+        response_variable: "response"
+
+  ai_tts_language_segments:
+    alias: "AI TTS Language Segments"
+    description: "Generate TTS segments for a message using AI"
+    mode: parallel
+    fields:
+      message:
+        description: "The message to speak"
+        example: "Hello world"
+    sequence:
+      - service: script.ai_language_detection
+        response_variable: response
+        data:
+          text: "{{ message }}"
+      - variables:
+          return:
+            segments: >-
+              {% set ns = namespace(ret=[]) %}
+
+              {% for segment in response.segments %}
+                {% set output = {
+                  "tts": segment.segment,
+                  "language": segment.language
+                } %}
+                {% set output = dict(output, **({"voice": "SteffanNeural"} if segment.language == 'en-US' else {})) %}
+                {% set output = dict(output, **({"offset": -900} if not loop.first else {})) %}
+                {% set ns.ret = ns.ret + [output] %}
+              {% endfor %}
+
+              {{ ns.ret }}
+
+      - stop: "Return segments"
+        response_variable: "return"
+
 automation:
   - alias: "Set notification sounds options"
     initial_state: true
