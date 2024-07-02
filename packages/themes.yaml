@@ -16,8 +16,8 @@ automation:
             {% endfor -%}
           ]
     variables:
-      browser_ids: >-
-        {{ (trigger.to_state.attributes.browserID | reject('in', trigger.from_state.attributes.browserID)) if trigger.platform == 'template' else none }}
+      browser_id: >-
+        {{ [trigger.to_state.attributes.browserID] if trigger.platform == 'template' and trigger.to_state.state != 'unavailable' else [] }}
     action:
       - choose:
           - conditions:
@@ -25,28 +25,28 @@ automation:
                 entity_id: input_select.light_profile
                 state:
                   - "Bright"
-                  - "Default"
             sequence:
               service: browser_mod.set_theme
               data:
                 dark: light
-                browser_id: "{{ browser_ids or [] }}"
+                browser_id: "{{ browser_id }}"
           - conditions:
               - condition: state
                 entity_id: input_select.light_profile
                 state:
+                  - "Ambient"
                   - "Night"
                   - "Off"
             sequence:
               service: browser_mod.set_theme
               data:
                 dark: dark
-                browser_id: "{{ browser_ids or [] }}"
+                browser_id: "{{ browser_id }}"
         default:
           service: browser_mod.set_theme
           data:
             dark: auto
-            browser_id: "{{ browser_ids or [] }}"
+            browser_id: "{{ browser_id }}"
 
 template:
   - binary_sensor:
