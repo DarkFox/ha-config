@@ -443,12 +443,13 @@ automation:
         attribute: state
     condition:
       - condition: template
-        value_template: "{{ trigger.from_state.state != 'unknown' and trigger.from_state.state != '' and trigger.from_state.state != 'unavailable' }}"
-      - condition: not
-        conditions:
-          - condition: state
-            entity_id: sensor.puzzel_profil
-            state: "unknown"
+        alias: "Not to or from unknown or unavailable state"
+        value_template: >-
+          {{ 
+            not trigger.from_state.state in ['unknown', 'unavailable']
+            and has_value('sensor.puzzel_state')
+            and has_value('sensor.puzzel_profil')
+          }}
     action:
       - service: script.notify_darkphone
         data:
