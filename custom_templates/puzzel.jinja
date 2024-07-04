@@ -1,0 +1,22 @@
+{%- macro search_puzzel_queues(includes, excludes=[]) -%}
+    {#-
+        This macro searches for the profiles that match the includes and excludes
+        parameters. The includes and excludes parameters can be a single regex string or
+        a list of regex strings. The macro returns a list of profiles that match the
+        includes and excludes parameters.
+
+        :param includes: A regex string or a list of regex strings to include in the search
+        :param excludes: A regex string or a list of regex strings to exclude from the search (optional)
+    -#}
+    {%- set includes = [includes] if includes is string else includes -%}
+    {%- set excludes = [excludes] if excludes is string else excludes -%}
+    {%- set profiles = state_attr('sensor.puzzel_ko', 'available_profiles') -%}
+    {%- set ns = namespace(ret=[]) -%}
+    {%- for include in includes -%}
+        {%- set ns.ret = ns.ret + (profiles|selectattr('name', 'search', include)|list) -%}
+    {%- endfor -%}
+    {%- for exclude in excludes -%}
+        {%- set ns.ret = ns.ret | rejectattr('name', 'search', exclude) | list -%}
+    {%- endfor -%}
+    {{ ns.ret | to_json }}
+{%- endmacro -%}

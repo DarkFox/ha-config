@@ -1,5 +1,6 @@
 input_boolean:
   force_on_call:
+  ignore_incorrect_puzzel_state:
 
 template:
   - sensor:
@@ -21,28 +22,59 @@ template:
           {% else %}
             unavailable
           {% endif %}
-      - name: Puzzel expected state
-        unique_id: 68f478fa-6710-4bb9-8181-0f5e425eac89
-        state: >-
-          {% set ns = namespace(required=[],any=[]) %}
-          {% if is_state('calendar.arbejdskalender_vagt', 'on') or is_state('binary_sensor.on_call_today', 'on') %}
-            {% set ns.required = ns.required + ["Vagt"] %}
-          {% endif %}
-          {% if is_state('calendar.arbejdskalender_on_site', 'on') %}
-            {% set ns.any = ns.any + ["LSS"] %}
-          {% endif %}
-          {% if is_state('calendar.arbejdskalender_rsr', 'on') %}
-            {% set ns.any = ns.any + ["RSR"] %}
-          {% endif %}
-          {% if is_state('calendar.arbejdskalender_rsh', 'on') %}
-            {% set ns.any = ns.any + ["RSH"] %}
-          {% endif %}
-          {% if is_state('calendar.arbejdskalender_wfh', 'on') %}
-            {% set ns.any = ns.any + ["LSS", "RSR", "RSH"] %}
-          {% endif %}
-          {{ { 'required': ns.required, 'any': ns.any } }}
 
   - binary_sensor:
+      - name: Puzzel expected state
+        unique_id: 5dae538c-28da-48d6-b231-0bcd72f6b301
+        state: >-
+          {{
+            is_state('calendar.arbejdskalender_vagt', 'on')
+            or is_state('binary_sensor.on_call_today', 'on')
+            or is_state('calendar.arbejdskalender_on_site', 'on')
+            or is_state('calendar.arbejdskalender_wfh', 'on')
+          }}
+        attributes:
+          any: >-
+            {%- from 'puzzel.jinja' import search_puzzel_queues -%}
+
+            {%- if is_state('calendar.arbejdskalender_vagt', 'on') -%}
+              {{ search_puzzel_queues('Vagt', '\+') | from_json | sort(attribute='name', reverse=true) }}
+            {%- elif is_state('binary_sensor.on_call_today', 'on') and is_state('calendar.arbejdskalender_rsh', 'on') -%}
+              {% set include = 'RSH \+ Vagt' %}
+              {{ search_puzzel_queues(include) | from_json | sort(attribute='name', reverse=true) }}
+            {%- elif is_state('binary_sensor.on_call_today', 'on') and is_state('calendar.arbejdskalender_rsr', 'on') -%}
+              {% set include = 'RSR \+ Vagt' %}
+              {{ search_puzzel_queues(include) | from_json | sort(attribute='name', reverse=true) }}
+            {%- else -%}
+              {%- set excludes = ['Vagt'] -%}
+              {%- set ns = namespace(any=[]) -%}
+              {%- if is_state('calendar.arbejdskalender_on_site', 'on') -%}
+                {%- set ns.any = ns.any + search_puzzel_queues("LSS", excludes) | from_json -%}
+              {%- endif -%}
+              {%- if is_state('calendar.arbejdskalender_rsr', 'on') -%}
+                {%- set ns.any = ns.any + search_puzzel_queues("RSR", excludes) | from_json -%}
+              {%- endif -%}
+              {%- if is_state('calendar.arbejdskalender_rsh', 'on') -%}
+                {%- set ns.any = ns.any + search_puzzel_queues("RSH", excludes) | from_json -%}
+              {%- endif -%}
+              {%- if is_state('calendar.arbejdskalender_wfh', 'on') -%}
+                {%- set ns.any = ns.any + search_puzzel_queues(["LSS", "RSR", "RSH"], excludes) | from_json -%}
+              {%- endif -%}
+              {{ ns.any | sort(attribute='name', reverse=true) }}
+            {%- endif -%}
+
+      - name: Puzzel state incorrect
+        unique_id: dfc06f77-bd7e-4c90-8cd1-394a7773010a
+        device_class: problem
+        state: >-
+          {{
+            not is_state('binary_sensor.puzzel_expected_state', states('binary_sensor.puzzel_status'))
+            or (
+              is_state('binary_sensor.puzzel_expected_state', 'on')
+              and state_attr('sensor.puzzel_ko', 'profile_id') not in (state_attr('binary_sensor.puzzel_expected_state', 'any') | map(attribute='id'))
+            )
+          }}
+
       - name: On call today
         unique_id: 50d53d18-959d-4d86-bcbd-3ab7fec9b3cd
         state: >-
@@ -53,6 +85,7 @@ template:
           {% else %}
             false
           {% endif %}
+
       - name: Morning shift
         unique_id: 4bc7fe62-3436-41e9-ac55-921626d96d0a
         state: >-
@@ -116,54 +149,81 @@ template:
           }}
 
 automation:
-  - id: puzzel_remind_on_call
+  - alias: Notify Puzzel State Incorrect
+    id: c3d79ebf-18c1-4e2a-8776-a7fdddf87de1
     initial_state: true
-    alias: Remind me to log into on call queue
     trigger:
       - platform: state
-        entity_id: binary_sensor.scheduled_on_call
+        entity_id: binary_sensor.puzzel_state_incorrect
         to: "on"
-        for:
-          minutes: 1
+      - platform: time_pattern
+        minutes: "/15"
     condition:
-      - alias: "Not logged into an on call queue"
-        condition: template
-        value_template: "{{ not is_state('sensor.puzzel_profil', 'Vagt') }}"
+      - condition: state
+        entity_id: binary_sensor.puzzel_state_incorrect
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.ignore_incorrect_puzzel_state
+        state: "off"
     action:
-      - service: notify.telegram_darkfox
-        data:
-          message: "Skift til vagt køen?"
-          data:
-            inline_keyboard:
-              - "Log på Vagt:/puzzel_login Vagt"
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.puzzel_expected_state
+                state: "on"
+            sequence:
+              - service: script.notify_darkphone
+                data:
+                  message: "Log på Puzzel?"
+                  data:
+                    inline_keyboard: >-
+                      {% set ns = namespace(ret=[]) %}
+                      {% for profile in state_attr('binary_sensor.puzzel_expected_state', 'any') | sort(attribute='name') %}
+                        {% set ns.ret = ns.ret + [profile.name + ':/puzzel_login '+(profile.id|string)] %}
+                      {% endfor %}
+                      {{ ns.ret + ['Ignorer:/puzzel_ignore_incorrect'] }}
+        default:
+          - service: script.notify_darkphone
+            data:
+              message: "Du er stadig logget på Puzzel"
+              data:
+                inline_keyboard: >-
+                  {{ ['Log af:/puzzel_log_off', 'Ignorer:/puzzel_ignore_incorrect'] }}
 
-  - id: puzzel_remind_log_off
+  - alias: "Ignore Incorrect Puzzel State"
+    id: 9b773b63-18d4-4c98-b743-683bc9d5cad9
     initial_state: true
-    alias: Remind me to log off Puzzel
+    trigger:
+      - platform: event
+        event_type: telegram_callback
+        event_data:
+          command: "/puzzel_ignore_incorrect"
+      - platform: event
+        event_type: telegram_command
+        event_data:
+          command: "/puzzel_ignore_incorrect"
+    action:
+      - service: telegram_bot.answer_callback_query
+        data:
+          callback_query_id: "{{ trigger.event.data.id }}"
+          message: "Ignorerer forkert Puzzel status indtil næste skift"
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.ignore_incorrect_puzzel_state
+
+  - alias: Reset Ignore Incorrect Puzzel State
+    id: efca9026-7293-4d95-8ae9-7cc084b3e244
+    initial_state: true
     trigger:
       - platform: state
-        entity_id:
-          - binary_sensor.working
-          - binary_sensor.scheduled_on_call
-    condition:
-      - condition: and
-        conditions:
-          - condition: state
-            entity_id: binary_sensor.working
-            state: "off"
-          - condition: state
-            entity_id: binary_sensor.scheduled_on_call
-            state: "off"
-          - condition: state
-            entity_id: binary_sensor.puzzel_status
-            state: "on"
+        entity_id: binary_sensor.puzzel_state_incorrect
+        not_from:
+          - "unknown"
+          - "unavailable"
     action:
-      - service: script.notify_darkphone
-        data:
-          message: "Du er stadig logget på Puzzel!"
-          data:
-            inline_keyboard:
-              - "Log af:/puzzel_log_off"
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.ignore_incorrect_puzzel_state
 
   - id: set_work_phone_modes
     initial_state: true

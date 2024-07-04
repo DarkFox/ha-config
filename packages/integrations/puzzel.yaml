@@ -415,6 +415,7 @@ script:
 automation:
   - id: update_puzzel_user_info
     alias: Update Puzzel user info
+    mode: queued
     trigger:
       - platform: state
         entity_id: sensor.puzzel_login
@@ -434,7 +435,7 @@ automation:
 
   - id: puzzel_state_confirmation
     alias: Puzzel state confirmation
-    mode: single
+    mode: restart
     trigger:
       - platform: state
         entity_id: sensor.puzzel_profil
@@ -451,6 +452,8 @@ automation:
             and has_value('sensor.puzzel_profil')
           }}
     action:
+      - delay:
+          seconds: 5
       - service: script.notify_darkphone
         data:
           message: >-
@@ -541,7 +544,7 @@ automation:
         event_data:
           command: "/puzzel"
     action:
-      - service: script.notify_darkphone
+      - service: notify.telegram_darkfox
         data:
           message: >-
             {% if is_state('sensor.puzzel_profil', 'Logget af') %}
@@ -565,27 +568,6 @@ automation:
                 + ['Ledig:/puzzel_pause off']
                 + ['Pause:/puzzel_pause on'] }}
               {% endif %}
-
-  - id: telegram_bot_puzzel_log_on_menu
-    initial_state: true
-    alias: Puzzel log on menu
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.working
-        to: "on"
-        for:
-          minutes: 5
-    condition:
-      - alias: "Not logged into an on call queue"
-        condition: template
-        value_template: "{{ is_state('sensor.puzzel_profil', 'Logget af') }}"
-    action:
-      - service: script.notify_darkphone
-        data:
-          message: "Log på Puzzel?"
-          data:
-            inline_keyboard: >-
-              {{ state_attr('sensor.puzzel_ko', 'available_profiles') | map(attribute='name') | map('regex_replace', '\A(.*)\Z', '\\1:/puzzel_login \\1') | list }}
 
   - id: telegram_bot_log_off_puzzel
     alias: "Telegram bot log off puzzel"
@@ -624,17 +606,40 @@ automation:
               - condition: template
                 value_template: "{{ not trigger.event.data['args'] }}"
             sequence:
+              - service: notify.telegram_darkfox
+                data:
+                  message: "Log på Puzzel?"
+                  data:
+                    inline_keyboard: >-
+                      {% set ns = namespace(ret=[]) %}
+                      {% for profile in state_attr('sensor.puzzel_ko', 'available_profiles') | sort(attribute='name') %}
+                        {% set ns.ret = ns.ret + [profile.name + ':/puzzel_login '+(profile.id|string)] %}
+                      {% endfor %}
+                      {{ ns.ret }}
+        default:
+          - variables:
+              queue_id: "{{ trigger.event.data['args'][0]|int }}"
+              profile: "{{ state_attr('sensor.puzzel_ko', 'available_profiles') | selectattr('id', 'eq', queue_id) | list | first }}"
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ profile is not none }}"
+                sequence:
+                  - service: telegram_bot.answer_callback_query
+                    data:
+                      callback_query_id: "{{ trigger.event.data.id }}"
+                      message: "Logger på {{ profile.name }}..."
+                  - service: script.puzzel_log_on
+                    data:
+                      queue_id: "{{ queue_id }}"
+            default:
+              - service: telegram_bot.answer_callback_query
+                data:
+                  callback_query_id: "{{ trigger.event.data.id }}"
+                  message: "Kø ikke fundet"
               - service: automation.trigger
                 target:
-                  entity_id: automation.puzzel_log_on_menu
-        default:
-          - service: telegram_bot.answer_callback_query
-            data:
-              callback_query_id: "{{ trigger.event.data.id }}"
-              message: "Logger på {{ trigger.event.data['args'] | join(' ') }}..."
-          - service: script.puzzel_log_on
-            data:
-              queue: "{{ trigger.event.data['args'] | join(' ') }}"
+                  entity_id: automation.telegram_bot_log_on_puzzel
 
   - id: telegram_bot_pause_puzzel
     alias: "Telegram bot pause Puzzel"
