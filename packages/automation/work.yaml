@@ -21,6 +21,27 @@ template:
           {% else %}
             unavailable
           {% endif %}
+      - name: Puzzel expected state
+        unique_id: 68f478fa-6710-4bb9-8181-0f5e425eac89
+        state: >-
+          {% set ns = namespace(required=[],any=[]) %}
+          {% if is_state('calendar.arbejdskalender_vagt', 'on') or is_state('binary_sensor.on_call_today', 'on') %}
+            {% set ns.required = ns.required + ["Vagt"] %}
+          {% endif %}
+          {% if is_state('calendar.arbejdskalender_on_site', 'on') %}
+            {% set ns.any = ns.any + ["LSS"] %}
+          {% endif %}
+          {% if is_state('calendar.arbejdskalender_rsr', 'on') %}
+            {% set ns.any = ns.any + ["RSR"] %}
+          {% endif %}
+          {% if is_state('calendar.arbejdskalender_rsh', 'on') %}
+            {% set ns.any = ns.any + ["RSH"] %}
+          {% endif %}
+          {% if is_state('calendar.arbejdskalender_wfh', 'on') %}
+            {% set ns.any = ns.any + ["LSS", "RSR", "RSH"] %}
+          {% endif %}
+          {{ { 'required': ns.required, 'any': ns.any } }}
+
   - binary_sensor:
       - name: On call today
         unique_id: 50d53d18-959d-4d86-bcbd-3ab7fec9b3cd
