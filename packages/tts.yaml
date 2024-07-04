@@ -80,7 +80,7 @@ script:
           volume_level: "{{ volume_level if (volume_level|replace('-','')).isdigit() else 0.5 }}"
           cache: "{{ true if cache else false }}"
           tts_platform: "{{ 'cloud' if is_state('binary_sensor.internet', 'on') else 'tts.piper' }}"
-          chime_path: "{{ chime_path if chime_path else states('sensor.chime_path') }}"
+          chime_path: "{{ chime_path if chime_path and '/' in chime_path and '.' in chime_path else states('sensor.chime_path') }}"
           offset: "{{ offset }}"
           announce: true
 
@@ -113,7 +113,7 @@ script:
           message: "{{ [dict(message[0], offset=offset)] + message[1:] if is_segments else message }}"
           cache: "{{ true if cache else false }}"
           tts_platform: "{{ 'cloud' if is_state('binary_sensor.internet', 'on') else 'tts.piper' }}"
-          chime_path: "{{ chime_path if chime_path else states('sensor.chime_path') }}"
+          chime_path: "{{ chime_path if chime_path and '/' in chime_path and '.' in chime_path else states('sensor.chime_path') }}"
           offset: "{{ offset }}"
       - stop: "Return chime_tts"
         response_variable: "chime_tts"
