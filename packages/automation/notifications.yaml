@@ -48,7 +48,7 @@ script:
       - variables:
           # If the message is a chime_tts segments list, extract the tts attribute of each segment
           message_text: |
-            {%- if message is list and message | selectattr('tts', 'defined') | list | length > 0 -%}
+            {%- if message is list and message[0] is mapping and message | selectattr('tts', 'defined') | list | length > 0 -%}
               {{ message | map(attribute='tts') | map('trim') | list | join(' ') }}
             {%- else -%}
               {{ message }}
@@ -217,7 +217,7 @@ script:
             max: 3
             step: 1
     variables:
-      severity: "{{ severity | default(1) | int }}"
+      severity: "{{ severity|int if (severity|replace('-','')).isdigit() else 1 }}"
       entity_id: >-
         {% if severity > 1 %}
           {{ state_attr('group.all_speakers', 'entity_id') }}
@@ -252,7 +252,7 @@ script:
           chime_path: "{{ chime_path }}"
           message: |
             {%- if message is list and message | selectattr('tts', 'defined') | list | length > 0 -%}
-              {{ ([{"tts": message_title}] if message_title is defined else []) + message }}
+              {{ ([{"tts": message_title}] if message_title and message_title != '' else []) + message }}
             {%- else -%}
               {{ message }}
             {%- endif -%}

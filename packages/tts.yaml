@@ -69,16 +69,19 @@ script:
         description: "The offset in milliseconds between the chime and the TTS"
         example: "-200"
     sequence:
+      - variables:
+          offset: "{{ offset|int if (offset|replace('-','')).isdigit() else -500 }}"
+          is_segments: "{{ message is list and message[0] is mapping and message | selectattr('tts', 'defined') | list | length > 0 }}"
       - service: chime_tts.say
         target:
           entity_id: "{{ entity_id }}"
         data:
-          message: "{{ message }}"
-          volume_level: "{{ volume_level or 0.5 }}"
-          cache: "{{ cache or 'false' }}"
+          message: "{{ [dict(message[0], offset=offset)] + message[1:] if is_segments else message }}"
+          volume_level: "{{ volume_level if (volume_level|replace('-','')).isdigit() else 0.5 }}"
+          cache: "{{ true if cache else false }}"
           tts_platform: "{{ 'cloud' if is_state('binary_sensor.internet', 'on') else 'tts.piper' }}"
-          chime_path: "{{ chime_path | default(states('sensor.chime_path')) }}"
-          offset: "{{ offset | default(-500) | int }}"
+          chime_path: "{{ chime_path if chime_path else states('sensor.chime_path') }}"
+          offset: "{{ offset }}"
           announce: true
 
   tts_url:
@@ -91,16 +94,27 @@ script:
       message:
         description: "The message to speak. Can be a chime_tts segments list."
         example: "Hello world"
+      cache:
+        description: "Whether to cache the TTS file (Default false)"
+        example: "false"
       chime_path:
         description: "The path to the chime TTS files"
         example: "/media/Notifications/Pixel Sounds/Chime.mp3"
+      offset:
+        description: "The offset in milliseconds between the chime and the TTS"
+        example: "-200"
     sequence:
+      - variables:
+          offset: "{{ offset|int if (offset|replace('-','')).isdigit() else -500 }}"
+          is_segments: "{{ message is list and message[0] is mapping and message | selectattr('tts', 'defined') | list | length > 0 }}"
       - service: chime_tts.say_url
         response_variable: chime_tts
         data:
-          message: "{{ message }}"
+          message: "{{ [dict(message[0], offset=offset)] + message[1:] if is_segments else message }}"
+          cache: "{{ true if cache else false }}"
           tts_platform: "{{ 'cloud' if is_state('binary_sensor.internet', 'on') else 'tts.piper' }}"
-          chime_path: "{{ chime_path | default(states('sensor.chime_path')) }}"
+          chime_path: "{{ chime_path if chime_path else states('sensor.chime_path') }}"
+          offset: "{{ offset }}"
       - stop: "Return chime_tts"
         response_variable: "chime_tts"
 
@@ -163,8 +177,16 @@ script:
         response_variable: agent
       - variables:
           response:
-            # Some times the ai wraps the response in ```json ``` so we need to remove it
-            segments: "{{ agent.response.speech.plain.speech | regex_replace('```json\n', '') | regex_replace('```', '') | from_json }}"
+            # Some times the ai wraps the response in ```json ``` so we need to remove it.
+            # Remove empty segments
+            segments: >-
+              {{
+                agent.response.speech.plain.speech
+                | regex_replace('```json\n', '')
+                | regex_replace('```', '')
+                | from_json
+                | selectattr('segment', 'ne', '')
+              }}
       - stop: "Return response"
         response_variable: "response"
 

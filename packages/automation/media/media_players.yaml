@@ -1,5 +1,6 @@
 script:
   group_mute_toggle:
+    mode: parallel
     fields:
       group:
         description: Group to mute or unmute
@@ -22,6 +23,7 @@ script:
           is_volume_muted: "{{ not any_muted }}"
 
   join_unjoin_sonos_group:
+    mode: parallel
     fields:
       entity_id:
         description: Media Player that will be joined or unjoined
@@ -52,6 +54,7 @@ script:
                     {{ [entity_id] + state_attr(group_leader_entity, 'group_members') }}
 
   toggle_mute:
+    mode: parallel
     fields:
       entity_id:
         description: Media Player that will be mute or unmuted
@@ -64,6 +67,7 @@ script:
           is_volume_muted: "{{ not state_attr(entity_id , 'is_volume_muted') }}"
 
   play_pause_mute:
+    mode: parallel
     description: Play or pause media, if source is TV, mute or unmute
     fields:
       entity_id:
@@ -84,6 +88,7 @@ script:
               entity_id: "{{ entity_id }}"
 
   set_volume_preset:
+    mode: parallel
     description: Set volume preset for room
     fields:
       room:
@@ -158,6 +163,7 @@ script:
                     volume_level: "{{ media_player_presets[room][preset] }}"
 
   briefing_announcement:
+    mode: parallel
     alias: Briefing Announcement
     fields:
       entity_id:
@@ -183,6 +189,7 @@ script:
             {{ agent.response.speech.plain.speech }}
 
   briefing_announcement_url:
+    mode: parallel
     alias: Briefing Announcement URL
     sequence:
       - service: conversation.process
@@ -200,6 +207,7 @@ script:
         response_variable: "chime_tts"
 
   mass_briefing_playlist:
+    mode: parallel
     alias: MASS Briefing playlist
     fields:
       entity_id:
@@ -244,6 +252,7 @@ script:
           playlist: "{{ [briefing_url.url] + playlist }}"
 
   mass_playlist:
+    mode: parallel
     alias: MASS Playlist
     fields:
       entity_id:
@@ -314,6 +323,7 @@ script:
           media_id: "{{ playlist }}"
 
   play_dr_p1:
+    mode: parallel
     alias: Play DR P1
     sequence:
       - service: script.mass_playlist
@@ -323,6 +333,7 @@ script:
             - library://radio/4
 
   play_dr_p3:
+    mode: parallel
     alias: Play DR P3
     sequence:
       - service: script.mass_playlist
@@ -332,6 +343,7 @@ script:
             - library://radio/1
 
   play_dr_p4:
+    mode: parallel
     alias: Play DR P4
     sequence:
       - service: script.mass_playlist
@@ -341,6 +353,7 @@ script:
             - library://radio/12
 
   play_somafm_groove_salad:
+    mode: parallel
     alias: "Play SomaFM: Groove Salad"
     sequence:
       - service: script.mass_playlist
@@ -350,6 +363,7 @@ script:
             - library://radio/6
 
   play_somafm_poptron:
+    mode: parallel
     alias: "Play SomaFM: PopTron"
     sequence:
       - service: script.mass_playlist
@@ -359,6 +373,7 @@ script:
             - library://radio/10
 
   play_somafm_beat_blender:
+    mode: parallel
     alias: "Play SomaFM: Beat Blender"
     sequence:
       - service: script.mass_playlist
@@ -368,6 +383,7 @@ script:
             - library://radio/7
 
   play_somafm_xmas_in_frisko:
+    mode: parallel
     alias: "Play SomaFM: Xmas in Frisko"
     sequence:
       - service: script.mass_playlist
@@ -377,6 +393,7 @@ script:
             - library://radio/3
 
   play_chillhop_playlist:
+    mode: parallel
     alias: Play Chillhop Playlist
     sequence:
       - service: script.mass_playlist
@@ -387,6 +404,7 @@ script:
             - library://playlist/13
 
   play_hardstyle_playlist:
+    mode: parallel
     alias: Play Hardstyle Playlist
     sequence:
       - service: script.mass_playlist
@@ -397,6 +415,7 @@ script:
             - library://playlist/8
 
   play_80s_playlist:
+    mode: parallel
     alias: Play 80's Playlist
     sequence:
       - service: script.mass_playlist
@@ -407,6 +426,7 @@ script:
             - library://playlist/16
 
   play_90s_playlist:
+    mode: parallel
     alias: Play 90's Playlist
     sequence:
       - service: script.mass_playlist
@@ -417,6 +437,7 @@ script:
             - library://playlist/62
 
   play_supermix_playlist:
+    mode: parallel
     alias: Play Supermix Playlist
     sequence:
       - service: script.mass_playlist
@@ -427,6 +448,7 @@ script:
             - library://playlist/54
 
   play_closing_time_playlist:
+    mode: parallel
     alias: Play Closing Time Playlist
     sequence:
       - service: script.mass_playlist
@@ -437,6 +459,7 @@ script:
             - library://playlist/22
 
   play_seasonal_playlist:
+    mode: parallel
     alias: Play Seasonal Playlist
     sequence:
       # TODO: Script to select playlist based on season
@@ -502,6 +525,7 @@ script:
             {%- endif -%}
 
   play_plex:
+    mode: parallel
     alias: "Play the requested media from Plex"
     fields:
       entity_id:
@@ -543,6 +567,7 @@ script:
                 }
 
   weather_report:
+    mode: parallel
     alias: Vejrudsigt
     sequence:
       - service: script.tts_speak
@@ -552,6 +577,7 @@ script:
           message: "{{ states('sensor.dmi_vejr_tts') }} {{ state_attr('sensor.dmi_vejr_tts', 'text') }}"
 
   briefing:
+    mode: parallel
     alias: Rapport
     sequence:
       - service: conversation.process
@@ -571,6 +597,7 @@ script:
 automation:
   - id: adjust_speaker_group_volume
     alias: Adjust Speaker Group Volume
+    mode: parallel
     initial_state: true
     trigger:
       - platform: state
@@ -593,6 +620,7 @@ automation:
 
   - id: speaker_details_timeout
     alias: Speaker Details Timeout
+    mode: parallel
     initial_state: true
     mode: parallel
     trigger:

@@ -213,19 +213,20 @@ automation:
       time: >-
         {% from 'easy_time.jinja' import custom_relative_time %}
         {{ custom_relative_time(state_attr('sensor.gdq_next_watch_run', 'next_run').get('start', ''), 'day, hour, minute') }}
-      message: >-
-        Næste GDQ spil: {{ game }} — {{ category }}, starter {{ time }}
-      response: {}
     action:
-      - service: script.ai_tts_language_segments
-        response_variable: response
-        continue_on_error: true
-        data:
-          message: "{{ message }}"
       - service: script.notify_everywhere
         data:
-          message: >-
-            {{ response.get('segments') if response.get('segments', []) | length > 0 else message }}
+          message:
+            - tts: "Næste GDQ spil: "
+              language: da-DK
+              offset: -500
+            - tts: "{{ game }} — {{ category }},"
+              language: en-US
+              voice: SteffanNeural
+              offset: -900
+            - tts: " starter {{ time }}"
+              language: da-DK
+              offset: -900
 
   - alias: "Refresh GDQ Bids"
     id: refresh_gdq_bids
