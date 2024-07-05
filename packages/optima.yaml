@@ -1,0 +1,56 @@
+ics_calendar:
+  calendars:
+    - name: "Vagtplan"
+      url: !secret optima_ics_url
+      days: 7
+      download_interval: 5
+
+automation:
+  - alias: "Save Optima Calendar"
+    initial_state: true
+    mode: restart
+    trigger:
+      - platform: time_pattern
+        hours: "*"
+        minutes: "/15"
+      - platform: state
+        entity_id: binary_sensor.home_assistant_loaded
+        to: "on"
+    action:
+      - service: script.save_optima_calendar
+
+script:
+  save_optima_calendar:
+    sequence:
+      - variables:
+          login_url: !secret optima_login_url
+          calendar_url: !secret optima_calendar_url
+          params:
+            ShowResetPasswordLink: "True"
+            ReturnUrl: ""
+            ApplicationName: ""
+            Username: !secret optima_user
+            Password: !secret optima_pass
+            btnLogin: "Log in"
+          url: "{{ login_url }}"
+          payload_string: >-
+            {%- for key in params -%}
+            {{ key }}={{ params[key] | urlencode }}{%- if not loop.last -%}&{%- endif -%}
+            {%- endfor -%}
+
+      - service: shell_command.curl
+        data:
+          url: "{{ login_url }}"
+          method: post
+          headers:
+            Content-Type: "application/x-www-form-urlencoded"
+          payload_string: "{{ payload_string }}"
+          cookie_file: /config/.optima_cookies
+
+      - service: shell_command.curl
+        response_variable: response
+        data:
+          url: "{{ calendar_url }}"
+          cookie_file: /config/.optima_cookies
+          ignore_errors: true
+          output_file: !secret optima_local_path
