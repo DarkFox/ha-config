@@ -439,16 +439,27 @@ automation:
     trigger:
       - platform: state
         entity_id: sensor.puzzel_profil
+        not_from:
+          - "unknown"
+          - "unavailable"
+        not_to:
+          - "unknown"
+          - "unavailable"
       - platform: state
-        entity_id: binary_sensor.puzzel_user_state
+        entity_id: binary_sensor.puzzel_status
         attribute: state
+        not_from:
+          - "unknown"
+          - "unavailable"
+        not_to:
+          - "unknown"
+          - "unavailable"
     condition:
       - condition: template
         alias: "Not to or from unknown or unavailable state"
         value_template: >-
           {{ 
-            not trigger.from_state.state in ['unknown', 'unavailable']
-            and has_value('sensor.puzzel_state')
+            has_value('sensor.puzzel_state')
             and has_value('sensor.puzzel_profil')
           }}
     action:
@@ -457,10 +468,10 @@ automation:
       - service: script.notify_darkphone
         data:
           message: >-
-            {% if is_state('sensor.puzzel_state', 'Logget af') %}
-              Logget af Puzzel
-            {% else %}
+            {% if is_state('binary_sensor.puzzel_status', 'on') %}
               Logget på Puzzel - {{ states('sensor.puzzel_ko') }}. Status: {{ states('sensor.puzzel_state') }}
+            {% else %}
+              Logget af Puzzel
             {% endif %}
 
   - id: puzzel_state_notification

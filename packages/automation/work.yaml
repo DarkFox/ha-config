@@ -29,7 +29,6 @@ template:
         state: >-
           {{
             is_state('calendar.arbejdskalender_vagt', 'on')
-            or is_state('binary_sensor.on_call_today', 'on')
             or is_state('calendar.arbejdskalender_on_site', 'on')
             or is_state('calendar.arbejdskalender_wfh', 'on')
           }}
@@ -183,6 +182,9 @@ automation:
                       {% endfor %}
                       {{ ns.ret + ['Ignorer:/puzzel_ignore_incorrect'] }}
         default:
+          - condition: state
+            entity_id: binary_sensor.puzzel_status
+            state: "on"
           - service: script.notify_darkphone
             data:
               message: "Du er stadig logget på Puzzel"
