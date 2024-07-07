@@ -1,10 +1,3 @@
-ics_calendar:
-  calendars:
-    - name: "Vagtplan"
-      url: !secret optima_ics_url
-      days: 7
-      download_interval: 5
-
 automation:
   - alias: "Save Optima Calendar"
     initial_state: true
@@ -32,25 +25,22 @@ script:
             Username: !secret optima_user
             Password: !secret optima_pass
             btnLogin: "Log in"
-          url: "{{ login_url }}"
-          payload_string: >-
-            {%- for key in params -%}
-            {{ key }}={{ params[key] | urlencode }}{%- if not loop.last -%}&{%- endif -%}
-            {%- endfor -%}
 
       - service: shell_command.curl
+        response_variable: login
         data:
           url: "{{ login_url }}"
           method: post
           headers:
             Content-Type: "application/x-www-form-urlencoded"
-          payload_string: "{{ payload_string }}"
+          payload: "{{ params }}"
           cookie_file: /config/.optima_cookies
 
       - service: shell_command.curl
         response_variable: response
         data:
           url: "{{ calendar_url }}"
+          follow_redirects: true
           cookie_file: /config/.optima_cookies
           ignore_errors: true
           output_file: !secret optima_local_path
