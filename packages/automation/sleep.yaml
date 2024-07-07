@@ -509,21 +509,11 @@ automation:
       - service: cover.close_cover
         data:
           entity_id: cover.sovevaerelse_gardin
-      - service: input_number.set_value
-        data:
-          entity_id: "input_number.scene_transition_time"
-          value: 300.0
-      - delay:
-          seconds: 1
       - event: set_light_profile
         event_data:
           room: bedroom
           profile: Ambient
-      - delay:
-          seconds: 2
-      - service: automation.trigger
-        data:
-          entity_id: "automation.reset_scene_transition_time"
+          transition_time: 300.0
 
   - alias: in_bed_action
     id: in_bed_action
@@ -535,46 +525,37 @@ automation:
     variables:
       wake_up_time: "{{ states('sensor.wake_up_time_clock') }}"
     action:
-      - service: script.turn_on
-        continue_on_error: true
-        target:
-          entity_id: script.sleep_as_android_set_alarm
-        data:
-          variables:
-            message: HA
-            timehour: "{{ wake_up_time.split(':')[0] }}"
-            timemin: "{{ wake_up_time.split(':')[1] }}"
-      - service: script.voice_broadcast
-        continue_on_error: true
-        data:
-          entity_id: media_player.sovevaerelse
-          volume_level: 0.2
-          message: >-
-            {% set events = state_attr('sensor.upcoming_events', 'events') or [] %}
-            Alarm sat til klokken {{ wake_up_time }}.
-            {% if events|length > 0 %}
-              Agenda for i morgen:
-              {% for event in events %}
-                - Klokken {{ (event.start | as_datetime).strftime('%H:%M') }}: {{ event.summary }}.
-              {% endfor %}
-            {% else %}
-              Der er ingen aftaler i morgen.
-            {% endif %}
-      - service: input_number.set_value
-        data:
-          entity_id: "input_number.scene_transition_time"
-          value: 120.0
-      - delay:
-          seconds: 1
-      - event: set_light_profile
-        event_data:
-          room: bedroom
-          profile: Night
-      - delay:
-          seconds: 2
-      - service: automation.trigger
-        data:
-          entity_id: "automation.reset_scene_transition_time"
+      - parallel:
+          - service: script.turn_on
+            continue_on_error: true
+            target:
+              entity_id: script.sleep_as_android_set_alarm
+            data:
+              variables:
+                message: HA
+                timehour: "{{ wake_up_time.split(':')[0] }}"
+                timemin: "{{ wake_up_time.split(':')[1] }}"
+          - service: script.voice_broadcast
+            continue_on_error: true
+            data:
+              entity_id: media_player.sovevaerelse
+              volume_level: 0.2
+              message: >-
+                {% set events = state_attr('sensor.upcoming_events', 'events') or [] %}
+                Alarm sat til klokken {{ wake_up_time }}.
+                {% if events|length > 0 %}
+                  Agenda for i morgen:
+                  {% for event in events %}
+                    - Klokken {{ (event.start | as_datetime).strftime('%H:%M') }}: {{ event.summary }}.
+                  {% endfor %}
+                {% else %}
+                  Der er ingen aftaler i morgen.
+                {% endif %}
+          - event: set_light_profile
+            event_data:
+              room: bedroom
+              profile: Night
+              transition_time: 120.0
 
   - alias: sleeping_action
     id: sleeping_action
@@ -597,21 +578,11 @@ automation:
               - service: script.turn_on
                 target:
                   entity_id: script.sleep_as_android_start_tracking
-      - service: input_number.set_value
-        data:
-          entity_id: "input_number.scene_transition_time"
-          value: 10.0
-      - delay:
-          seconds: 1
       - event: set_light_profile
         event_data:
           room: bedroom
           profile: "Off"
-      - delay:
-          seconds: 2
-      - service: automation.trigger
-        data:
-          entity_id: "automation.reset_scene_transition_time"
+          transition_time: 10.0
 
   - alias: sleep_paused_action
     id: sleep_paused_action
@@ -657,21 +628,11 @@ automation:
       - service: switch.turn_off
         target:
           entity_id: switch.dorklokke_forstyr_ikke
-      - service: input_number.set_value
-        data:
-          entity_id: "input_number.scene_transition_time"
-          value: 600.0
-      - delay:
-          seconds: 1
       - event: set_light_profile
         event_data:
           room: bedroom
           profile: Night
-      - delay:
-          seconds: 2
-      - service: automation.trigger
-        data:
-          entity_id: "automation.reset_scene_transition_time"
+          transition_time: 600.0
 
   - alias: alarm_action_media
     id: alarm_action_media
@@ -733,21 +694,11 @@ automation:
       - service: switch.turn_off
         target:
           entity_id: switch.dorklokke_forstyr_ikke
-      - service: input_number.set_value
-        data:
-          entity_id: "input_number.scene_transition_time"
-          value: 300.0
-      - delay:
-          seconds: 1
       - event: set_light_profile
         event_data:
           room: bedroom
           profile: Ambient
-      - delay:
-          seconds: 2
-      - service: automation.trigger
-        data:
-          entity_id: "automation.reset_scene_transition_time"
+          transition_time: 300.0
       - delay:
           minutes: 5
       - condition: state
@@ -756,21 +707,11 @@ automation:
           - "alarm"
           - "snoozing"
           - "waking"
-      - service: input_number.set_value
-        data:
-          entity_id: "input_number.scene_transition_time"
-          value: 300.0
-      - delay:
-          seconds: 1
       - event: set_light_profile
         event_data:
           room: bedroom
           profile: Dimmed
-      - delay:
-          seconds: 2
-      - service: automation.trigger
-        data:
-          entity_id: "automation.reset_scene_transition_time"
+          transition_time: 300.0
       - choose:
           - conditions:
               - condition: state
@@ -848,37 +789,28 @@ automation:
       entity_id: input_select.sleep_state
       to: "waking"
     action:
-      - service: switch.turn_off
-        target:
-          entity_id: switch.dorklokke_forstyr_ikke
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: sun.sun
-                state: "above_horizon"
-            sequence:
-              - service: cover.open_cover
-                data:
-                  entity_id: cover.sovevaerelse_gardin_dor
-              - service: cover.set_cover_position
-                data:
-                  entity_id: cover.sovevaerelse_gardin_vindue
-                  position: 30
-      - service: input_number.set_value
-        data:
-          entity_id: "input_number.scene_transition_time"
-          value: 120.0
-      - delay:
-          seconds: 1
-      - event: set_light_profile
-        event_data:
-          room: bedroom
-          profile: Dimmed
-      - delay:
-          seconds: 2
-      - service: automation.trigger
-        data:
-          entity_id: "automation.reset_scene_transition_time"
+      - parallel:
+          - event: set_light_profile
+            event_data:
+              room: bedroom
+              profile: Dimmed
+              transition_time: 120.0
+          - service: switch.turn_off
+            target:
+              entity_id: switch.dorklokke_forstyr_ikke
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: sun.sun
+                    state: "above_horizon"
+                sequence:
+                  - service: cover.open_cover
+                    data:
+                      entity_id: cover.sovevaerelse_gardin_dor
+                  - service: cover.set_cover_position
+                    data:
+                      entity_id: cover.sovevaerelse_gardin_vindue
+                      position: 30
 
   - alias: awake_action_media
     id: awake_action_media
@@ -932,52 +864,32 @@ automation:
       to: "awake"
       from: "waking"
     action:
-      - service: switch.turn_off
-        target:
-          entity_id: switch.dorklokke_forstyr_ikke
-      - service: script.turn_on
-        target:
-          entity_id: script.sleep_as_android_stop_tracking
-      - service: input_number.set_value
-        data:
-          entity_id: "input_number.scene_transition_time"
-          value: 120.0
+      - parallel:
+          - service: cover.open_cover
+            data:
+              entity_id: cover.sovevaerelse_gardin
+          - service: switch.turn_off
+            target:
+              entity_id: switch.dorklokke_forstyr_ikke
+          - service: script.turn_on
+            target:
+              entity_id: script.sleep_as_android_stop_tracking
+          - event: set_light_profile
+            event_data:
+              room:
+                - bedroom
+                - bathroom
+              profile: Dimmed
+              transition_time: 120.0
       - delay:
-          seconds: 1
+          minutes: 5
       - event: set_light_profile
         event_data:
-          room: bedroom
-          profile: Dimmed
-      - delay:
-          seconds: 1
-      - event: set_light_profile
-        event_data:
-          room: bathroom
-          profile: Dimmed
-      - service: input_number.set_value
-        data:
-          entity_id: "input_number.scene_transition_time"
-          value: 120.0
-      - delay:
-          seconds: 1
-      - event: set_light_profile
-        event_data:
-          room: bedroom
+          room:
+            - bedroom
+            - bathroom
           profile: Default
-      - delay:
-          seconds: 1
-      - event: set_light_profile
-        event_data:
-          room: bathroom
-          profile: Default
-      - delay:
-          seconds: 2
-      - service: automation.trigger
-        data:
-          entity_id: "automation.reset_scene_transition_time"
-      - service: cover.open_cover
-        data:
-          entity_id: cover.sovevaerelse_gardin
+          transition_time: 120.0
 
   ########################
   # Sleep Event Triggers #
