@@ -80,3 +80,18 @@
         {{ '-' if v['negative'] else '' }}{{ ns.ret | join(' ') }}
     {%- endif -%}
 {%- endmacro -%}
+
+{%- macro relative_start_end_time(start, end, starts_str='Starter ', ends_str='. Slutter ', started_str='Startede ', ended_str='Sluttede ', est='') -%}
+    {%- from 'easy_time.jinja' import custom_relative_time -%}
+    {%- set startsIn = ((now()|as_timestamp) - (start|as_timestamp)) / (1000 * 60) -%}
+    {%- set startsFormatted = custom_relative_time(start, 'day, hour, minute', short=true) -%}
+    {%- set endsIn = ((end|as_timestamp) - (now()|as_timestamp)) / (1000 * 60) -%}
+    {%- set endsFormatted = custom_relative_time(end, 'day, hour, minute', short=true) -%}
+    {%- if (startsIn < 0) -%}
+        {{ starts_str }}{{ startsFormatted }}{{ est }}
+    {%- elif (endsIn < 0) -%}
+        {{ ended_str }}{{ endsFormatted.replace('-','') }}
+    {%- else -%}
+        {{ started_str }}{{ startsFormatted.replace('-','') }}{{ ends_str }}{{ endsFormatted }}{{ est }}
+    {%- endif -%}
+{%- endmacro -%}

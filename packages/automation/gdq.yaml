@@ -9,20 +9,20 @@ ics_calendar:
       # Why the SpikeVegeta hate @Aldaviva ? :(
       url: "http://local-games-done-quick-calendar-factory:8081/?includeAnnoyingPeople=true"
       days: &gdq_days 10
-      download_interval: 1
+      download_interval: 1440 # Download once a day unless gdq_enable is on
 
-scrape:
-  - resource: https://tracker.gamesdonequick.com/tracker/donations/SGDQ2024
-    scan_interval: 60
-    sensor:
-      - name: SGDQ 2024 Donation Total
-        select: h3.text-center > small
-        index: 0
-        unique_id: 4e8b22de-3720-11ef-985e-94c691109e98
-        value_template: "{{ value.strip().split('$')[1].split(' ')[0].replace(',','') }}"
-        unit_of_measurement: USD
-        device_class: monetary
-        state_class: total
+# scrape:
+#   - resource: https://tracker.gamesdonequick.com/tracker/donations/SGDQ2024
+#     scan_interval: 60
+#     sensor:
+#       - name: SGDQ 2024 Donation Total
+#         select: h3.text-center > small
+#         index: 0
+#         unique_id: 4e8b22de-3720-11ef-985e-94c691109e98
+#         value_template: "{{ value.strip().split('$')[1].split(' ')[0].replace(',','') }}"
+#         unit_of_measurement: USD
+#         device_class: monetary
+#         state_class: total
 
 template:
   - trigger:
@@ -113,27 +113,40 @@ template:
           icon: mdi:gamepad-right
           on_deck: >-
             {{ (state_attr('binary_sensor.gdq_calendar', 'current') | first or state_attr('binary_sensor.gdq_calendar', 'next')) }}
-          on_deck_formatted_start: >-
-            {% from 'easy_time.jinja' import custom_relative_time %}
-            {% set on_deck = (state_attr('binary_sensor.gdq_calendar', 'current') | first or state_attr('binary_sensor.gdq_calendar', 'next')) %}
-            {{ custom_relative_time(on_deck.get('start'), 'day, hour, minute', short=true) if on_deck else none }}
-          on_deck_formatted_end: >-
-            {% from 'easy_time.jinja' import custom_relative_time %}
-            {% set on_deck = (state_attr('binary_sensor.gdq_calendar', 'current') | first or state_attr('binary_sensor.gdq_calendar', 'next')) %}
-            {{ custom_relative_time(on_deck.get('end'), 'day, hour, minute', short=true) if on_deck else none }}
-          on_deck_end_min: >-
-            {% set on_deck = (state_attr('binary_sensor.gdq_calendar', 'current') | first or state_attr('binary_sensor.gdq_calendar', 'next')) %}
-            {{ ((on_deck.get('end') | as_datetime | as_local - now()).total_seconds() / 60) | int if on_deck else none }}
+          on_deck_formatted_time: >-
+            {% from 'datediff.jinja' import relative_start_end_time %}
+            {% set event = state_attr('sensor.gdq_on_deck', 'on_deck') %}
+            {% if event %}
+              {{ relative_start_end_time(event.start, event.end, est='~') }}
+            {% else %}
+              Ingen lige nu
+            {% endif %}
+          on_deck_compact_time: >-
+            {% from 'datediff.jinja' import relative_start_end_time %}
+            {% set event = state_attr('sensor.gdq_on_deck', 'on_deck') %}
+            {% if event %}
+              {{ relative_start_end_time(event.start, event.end, '', ' <> ', '', '', est='~') }}
+            {% else %}
+              Ingen kommende
+            {% endif %}
           up_next: >-
             {{ state_attr('binary_sensor.gdq_calendar', 'next') }}
-          up_next_formatted_start: >-
-            {% from 'easy_time.jinja' import custom_relative_time %}
-            {% set up_next = state_attr('binary_sensor.gdq_calendar', 'next') %}
-            {{ custom_relative_time(up_next.get('start'), 'day, hour, minute', short=true) if up_next else none }}
-          up_next_formatted_end: >-
-            {% from 'easy_time.jinja' import custom_relative_time %}
-            {% set up_next = state_attr('binary_sensor.gdq_calendar', 'next') %}
-            {{ custom_relative_time(up_next.get('end'), 'day, hour, minute', short=true) if up_next else none }}
+          up_next_formatted_time: >-
+            {% from 'datediff.jinja' import relative_start_end_time %}
+            {% set event = state_attr('binary_sensor.gdq_calendar', 'next') %}
+            {% if event %}
+              {{ relative_start_end_time(event.start, event.end, est='~') }}
+            {% else %}
+              Ingen kommende
+            {% endif %}
+          up_next_compact_time: >-
+            {% from 'datediff.jinja' import relative_start_end_time %}
+            {% set event = state_attr('binary_sensor.gdq_calendar', 'next') %}
+            {% if event %}
+              {{ relative_start_end_time(event.start, event.end, '', ' <> ', '', '', est='~') }}
+            {% else %}
+              Ingen kommende
+            {% endif %}
 
       - name: GDQ Next Watch Run
         unique_id: 2d756300-cc24-45f6-be99-faef83cf5034
@@ -146,14 +159,22 @@ template:
           next_run: >-
             {% set time = now().strftime('%Y-%m-%d %H:%M:%S') %}
             {{ (state_attr('binary_sensor.gdq_calendar_watch_runs', 'next') or {} ) }}
-          formatted_start: >-
-            {% from 'easy_time.jinja' import custom_relative_time %}
-            {% set next_run = state_attr('binary_sensor.gdq_calendar_watch_runs', 'next') %}
-            {{ custom_relative_time(next_run.get('start'), 'day, hour, minute', short=true) if next_run else none }}
-          formatted_end: >-
-            {% from 'easy_time.jinja' import custom_relative_time %}
-            {% set next_run = state_attr('binary_sensor.gdq_calendar_watch_runs', 'next') %}
-            {{ custom_relative_time(next_run.get('end'), 'day, hour, minute', short=true) if next_run else none }}
+          formatted_time: >-
+            {% from 'datediff.jinja' import relative_start_end_time %}
+            {% set event = state_attr('binary_sensor.gdq_calendar_watch_runs', 'next') %}
+            {% if event %}
+              {{ relative_start_end_time(event.start, event.end, est='~') }}
+            {% else %}
+              Ingen kommende
+            {% endif %}
+          compact_time: >-
+            {% from 'datediff.jinja' import relative_start_end_time %}
+            {% set event = state_attr('binary_sensor.gdq_calendar_watch_runs', 'next') %}
+            {% if event %}
+              {{ relative_start_end_time(event.start, event.end, '', ' <> ', '', '', est='~') }}
+            {% else %}
+              Ingen kommende
+            {% endif %}
 
 script:
   refresh_gdq_agenda:
@@ -285,6 +306,11 @@ automation:
       bool_attrs:
         watch: "{{ [(state_attr('sensor.gdq_runs_regex', 'regex') or '')] }}"
     action:
+      - service: homeassistant.update_entity
+        target:
+          entity_id: calendar.gdq_schedule
+      - delay:
+          seconds: 5
       - service: calendar.get_events
         data:
           start_date_time: "{{ (now() + timedelta(days=-1)).strftime('%Y-%m-%d') }} 00:00:00"
