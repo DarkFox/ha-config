@@ -7,9 +7,12 @@
 ##
 ##   url: string (Required)
 ##   args: string (Optional) default is '-sS'
+##   follow_redirects: boolean (Optional) default is 'true'. If used in conjunction with the 'post' method, this will be ignored, and curl's own method estimation will be used.
 ##   method: string (Optional) default is 'get'
 ##   headers: dict (Optional) default is empty
 ##   payload: dict (Optional) default is empty
+##   cookie_file: string (Optional) default is empty
+##   output_file: string (Optional) default is empty
 ##   stream: string (Optional) default is '/dev/null'
 ##
 ## Example Usage:
@@ -30,6 +33,7 @@
 ##         payload:
 ##           key1: value1
 ##           key2: value2
+##         cookie_file: /path/to/cookie_file.txt
 ################################################
 
 ################################################
@@ -38,4 +42,16 @@
 
 shell_command:
   curl: >-
-    curl {{ args|default('-sS') }} -X {{ method|default('get')|upper }} {%- for k in headers %} -H "{{ k }}: {{ headers[k] }}"{% endfor %} {{- (' -d \'' ~ payload_string ~ '\'') if payload_string }} {{- (' -d \'' ~ payload|tojson ~ '\'') if payload }} {{ url }} > {{ stream|default('/dev/null') }}
+    curl {{ args|default('-sS') }} {{ '-L' if follow_redirects }} {{ '-X ' ~ method|default('get')|upper if not (follow_redirects and method|upper == 'POST') }} {%- for k in headers %} -H "{{ k }}: {{ headers[k] }}"{% endfor %} 
+    {{- (' -d \'' ~ payload_string ~ '\'') if payload_string }} 
+    {%- if payload and "Content-Type" in headers and headers["Content-Type"] == "application/x-www-form-urlencoded" %} 
+      {%- for p in payload %} 
+        {{- (' --data-urlencode \'' ~ p ~ '=' ~ payload[p] ~ '\'') }} 
+      {%- endfor %} 
+    {%- elif payload %} 
+      {{- (' -d \'' ~ payload|tojson ~ '\'') }} 
+    {%- endif %} 
+    {{- (' -b \'' ~ cookie_file ~ '\'') if cookie_file }} 
+    {{- (' -c \'' ~ cookie_file ~ '\'') if cookie_file }} 
+    {{- (' -o \'' ~ output_file ~ '\'') if output_file }} 
+    {{- ' ' ~ url|trim|to_json }} > {{ stream|default('/dev/null') }}
