@@ -1,24 +1,80 @@
 type: custom:stack-in-card
 mode: vertical
 cards:
-  - type: "custom:config-template-card"
+  - type: custom:config-template-card
     variables:
       - states['sensor.weather_card_name_text'].state
     entities:
+      - weather.forecast_home
       - sensor.weather_card_name_text
+      - sensor.translated_weather_title
+      - sensor.dmi_vejr
+      - binary_sensor.show_weather_warnings
+      - sensor.dmi_aktuel_varsel
+      - binary_sensor.show_coming_weather_warnings
+      - sensor.dmi_kommende_varsler
     card:
+      show_current: true
+      show_forecast: false
       type: weather-forecast
       entity: weather.forecast_home
-      name: "${vars[0]}"
+      name: ${vars[0]}
+      forecast_type: daily
+      secondary_info_attribute: wind_speed
       card_mod:
         style:
           .: |
             ha-card {
-              background-color: transparent;
               padding-bottom: 0 !important;
             }
-            .name, .state {
-              overflow: visible !important;
+            .state {
+              font-size: 120% !important;
+              float: left !important;
             }
+
+      tap_action:
+        action: fire-dom-event
+        browser_mod:
+          service: browser_mod.popup
+          data:
+            # title: Vejr
+            size: wide
+            timeout: 60000
+            content:
+              type: vertical-stack
+              cards:
+                - type: horizontal-stack
+                  cards:
+                    - !include weather_forecast.yaml
+                    - !include weather_radar.yaml
+                - !include temp_graph.yaml
+
+  - type: custom:hourly-weather
+    entity: weather.forecast_home
+    name: " "
+    icons: true
+    show_wind: "speed"
+    card_mod:
+      style:
+        $: |
+          h1.card-header {
+            padding: 0;
+            margin: 0;
+          }
+        weather-bar $: |
+          .wind {
+            height: 1em;
+            text-wrap: none;
+            white-space: nowrap;
+          }
+        .: |
+          ha-card {
+            padding-top: 0 !important;
+            background-color: transparent;
+            box-shadow: none;
+          }
+          .card-content {
+            padding-bottom: 2px !important;
+          }
 
   - !include dmi_weather_warnings.yaml
