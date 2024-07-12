@@ -21,3 +21,112 @@ template:
             {% endfor %}
           {% endfor %}
           {{ ns.ret }}
+
+script:
+  mobile_app_configure_ble_transmitter:
+    mode: queued
+    fields:
+      service:
+        name: "Service"
+        description: "The service to send the command to. Must be a mobile app notify service. Ignored if device is set"
+        example: "notify.mobile_app_watch"
+        selector:
+          text:
+      device:
+        name: "Device"
+        description: "The device to send the command to. Must be a mobile app device"
+        example: "Watch"
+        selector:
+          device:
+            filter:
+              integration: mobile_app
+      ble_advertise:
+        name: "Advertise Mode"
+        description: "The BLE advertising mode to use"
+        example: "ble_advertise_low_latency"
+        selector:
+          select:
+            options:
+              - label: "Low Latency"
+                value: "ble_advertise_low_latency"
+              - label: "Balanced"
+                value: "ble_advertise_balanced"
+              - label: "Low Power"
+                value: "ble_advertise_low_power"
+      ble_transmit:
+        name: "Transmit Power"
+        description: "The BLE transmit power to use"
+        example: "ble_transmit_high"
+        selector:
+          select:
+            options:
+              - label: "Ultra Low"
+                value: "ble_transmit_ultra_low"
+              - label: "Low"
+                value: "ble_transmit_low"
+              - label: "Medium"
+                value: "ble_transmit_medium"
+              - label: "High"
+                value: "ble_transmit_high"
+      ble_uuid:
+        name: "UUID"
+        description: "The BLE UUID of the device to advertise Must be a valid UUID"
+        example: "574d31d0-928b-4bcd-9a19-610fb4515184"
+        selector:
+          text:
+      ble_major:
+        name: "Major"
+        description: "The BLE major value to use for the device"
+        example: "0"
+        selector:
+          number:
+            mode: box
+            min: 0
+            max: 65535
+            step: 1
+      ble_minor:
+        name: "Minor"
+        description: "The BLE minor value to use for the device"
+        example: "0"
+        selector:
+          number:
+            mode: box
+            min: 0
+            max: 65535
+            step: 1
+    variables:
+      service: >-
+        {{ ('notify.mobile_app_'~device_attr(device, 'name') | slugify) if device is defined else service }}
+      settings:
+        ble_advertise: "{{ ble_advertise }}"
+        ble_transmit: "{{ ble_transmit }}"
+        ble_uuid: "{{ ble_uuid }}"
+        ble_major: "{{ ble_major }}"
+        ble_minor: "{{ ble_minor }}"
+      param_command:
+        ble_advertise: "ble_set_advertise_mode"
+        ble_transmit: "ble_set_transmit_power"
+        ble_uuid: "ble_set_uuid"
+        ble_major: "ble_set_major"
+        ble_minor: "ble_set_minor"
+      commands: >-
+        {%- set ns = namespace(ret=[]) -%}
+        {%- for key, value in settings.items() -%}
+          {%- if value is defined -%}
+            {%- set ns.ret = ns.ret + [{
+              "command": param_command[key],
+              key: value,
+              'ttl': 0,
+              'priority': 'high'
+            }] -%}
+          {%- endif -%}
+        {%- endfor -%}
+        {{ ns.ret }}
+    sequence:
+      - repeat:
+          for_each: "{{ commands }}"
+          sequence:
+            - service: "{{ service }}"
+              data:
+                message: "command_ble_transmitter"
+                data: "{{ repeat.item }}"

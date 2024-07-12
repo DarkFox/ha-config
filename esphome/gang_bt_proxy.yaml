@@ -38,70 +38,18 @@ esp32_ble_tracker:
 bluetooth_proxy:
   active: true
 
-# ble_client:
-#   - mac_address: !secret black_itag_mac
-#     id: itag_black
-
 binary_sensor:
-  # - platform: template
-  #   id: black_button
-  #   name: "Black iTag Button"
-  #   filters:
-  #     delayed_off: 200ms
   - platform: ble_presence
-    mac_address: !secret black_itag_mac
-    name: "Black iTag"
-
-  - platform: ble_presence
-    mac_address: !secret mi_band_mac
-    name: "Gang BLE Presence Mi Band"
-
-  - platform: ble_presence
-    ibeacon_uuid: !secret darkphone_uuid
     name: "Gang BLE Presence Darkphone"
+    ibeacon_uuid: !secret darkphone_btle_uuid
+  - platform: ble_presence
+    name: "Gang BLE Presence DarkWatch"
+    ibeacon_uuid: !secret darkwatch_btle_uuid
 
 sensor:
   - platform: ble_rssi
-    mac_address: !secret black_itag_mac
-    name: "Black iTag RSSI value"
-
-  - platform: ble_rssi
-    ibeacon_uuid: !secret darkphone_uuid
     name: "Gang BLE Darkphone RSSI value"
-
+    ibeacon_uuid: !secret darkphone_btle_uuid
   - platform: ble_rssi
-    mac_address: !secret mi_band_mac
-    name: "Gang BLE Mi Band RSSI value"
-
-#   - platform: ble_client
-#     type: characteristic
-#     ble_client_id: itag_black
-#     name: "Black iTag btn"
-#     service_uuid: 'ffe0'
-#     characteristic_uuid: 'ffe1'
-#     notify: true
-#     update_interval: never
-#     on_notify:
-#       then:
-#         - binary_sensor.template.publish:
-#             id: black_button
-#             state: ON
-#         - binary_sensor.template.publish:
-#             id: black_button
-#             state: OFF
-# # This entry queries the battery level. Some tags may not
-# # support this characteristic, you will see 'Unknown' in the
-# # HA frontend.
-#   - platform: ble_client
-#     type: characteristic
-#     ble_client_id: itag_black
-#     name: "Black iTag Battery"
-#     service_uuid: '180f'
-#     characteristic_uuid: '2a19'
-#     icon: 'mdi:battery'
-#     unit_of_measurement: '%'
-# # This entry queries polls the RSSI when the tag is connected.
-#   - platform: ble_client
-#     type: rssi
-#     ble_client_id: itag_black
-#     name: "Black iTag Button RSSI"
+    name: "Gang BLE DarkWatch RSSI value"
+    ibeacon_uuid: !secret darkwatch_btle_uuid
