@@ -11,7 +11,11 @@ binary_sensor:
   - platform: template
     sensors:
       s_train_message_present:
-        value_template: "{{ not is_state('sensor.s_train_message', '') or not is_state('sensor.s_train_c_status', 'Til tiden') }}"
+        value_template: >-
+          {{ (states('sensor.s_train_message') | regex_match('.*(\sC(\W|$)|alle|Alle).*')) or not is_state('sensor.s_train_c_status', 'Til tiden') }}
+      s_train_message_about_c:
+        value_template: >-
+          {{ (states('sensor.s_train_message') | regex_match('.*(\sC(\W|$)|alle|Alle).*')) }}
       commute_soon:
         value_template: >-
           {%- set time_to_leave_car_commute = strptime(states('sensor.car_commute_leave_at'), '%Y-%m-%dT%H:%M:%S%z', '-1') -%}
