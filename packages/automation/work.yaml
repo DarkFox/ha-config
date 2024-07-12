@@ -66,13 +66,17 @@ template:
         unique_id: dfc06f77-bd7e-4c90-8cd1-394a7773010a
         device_class: problem
         state: >-
-          {{
-            not is_state('binary_sensor.puzzel_expected_state', states('binary_sensor.puzzel_status'))
-            or (
-              is_state('binary_sensor.puzzel_expected_state', 'on')
-              and state_attr('sensor.puzzel_ko', 'profile_id') not in (state_attr('binary_sensor.puzzel_expected_state', 'any') | map(attribute='id'))
-            )
-          }}
+          {% if has_value('binary_sensor.puzzel_status') %}
+            {{
+              not is_state('binary_sensor.puzzel_expected_state', states('binary_sensor.puzzel_status'))
+              or (
+                is_state('binary_sensor.puzzel_expected_state', 'on')
+                and state_attr('sensor.puzzel_ko', 'profile_id') not in (state_attr('binary_sensor.puzzel_expected_state', 'any') | map(attribute='id'))
+              )
+            }}
+          {% else %}
+            unknown
+          {% endif %}
 
       - name: On call today
         unique_id: 50d53d18-959d-4d86-bcbd-3ab7fec9b3cd

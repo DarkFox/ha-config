@@ -899,6 +899,26 @@ template:
       - name: Active Media Player Room
         state: "{{ states('sensor.active_media_player').split('.')[1] if states('sensor.active_media_player') not in ['unknown', 'unavailable', '', none] }}"
 
+      - name: Stue Speaker Entity Picture
+        state: "ok"
+        attributes:
+          entity_picture: >-
+            {% if is_state_attr('media_player.stue', 'source', 'TV') %}
+              {{ state_attr('media_player.stue_shield_adb', 'entity_picture') }}
+            {% else %}
+              {{ state_attr('media_player.stue', 'entity_picture') }}
+            {% endif %}
+
+      - name: Kontor Speaker Entity Picture
+        state: "ok"
+        attributes:
+          entity_picture: >-
+            {% if is_state_attr('media_player.kontor', 'source', 'TV') %}
+              {{ state_attr('media_player.kontor_shield_adb', 'entity_picture') }}
+            {% else %}
+              {{ state_attr('media_player.kontor', 'entity_picture') }}
+            {% endif %}
+
 group:
   all_speakers:
     - media_player.kokken
