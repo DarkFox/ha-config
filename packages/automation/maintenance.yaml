@@ -15,6 +15,8 @@ template:
               ".+_battery_temperature",
               ".+_batteritilstand",
               ".+_batteriets_sundhed",
+              ".+_browser_battery",
+              ".+_target_state_of_charge"
             ] %}
             {% set exclude_pattern = "({})".format('|'.join(excludes)) %}
             {% set exclude_states = ['unknown'] %}
@@ -74,50 +76,3 @@ automation:
             {% set e = v|join('\n- ') if v else '' %}
             {% set m = 'Lavt batteri på {} enheder:\n- {}'.format(n, e) %}
             {{ m }}
-
-  - alias: "Transmission Add-on not started"
-    id: a0850ced-1cc8-46ce-8421-d3f850094e44
-    initial_state: true
-    trigger:
-      - platform: template
-        value_template: "{{ (states('sensor.last_boot') | as_timestamp) > (now() | as_timestamp - 900) }}"
-    condition:
-      - condition: state
-        entity_id: sensor.transmission_status
-        state: "unavailable"
-    action:
-      - service: notify.telegram_darkfox
-        data:
-          message: "Transmission Add-on not started. The VPN configuration probably broke again."
-          data:
-            inline_keyboard:
-              - "Clean up & restart Transmission:/transmission_cleanup"
-
-  - alias: "Telegram Command Transmission Cleanup"
-    id: 68ab7376-1cdb-42a2-903e-7f69105d5653
-    initial_state: true
-    trigger:
-      - platform: event
-        event_type: telegram_callback
-        event_data:
-          data:
-            command: "/transmission_cleanup"
-      - platform: event
-        event_type: telegram_command
-        event_data:
-          command: "/transmission_cleanup"
-    action:
-      - service: hassio.addon_stop
-        data:
-          addon: db21ed7f_transmission_openvpn
-      - delay:
-          seconds: 30
-      - service: shell_command.transmission_cleanup
-      - delay:
-          seconds: 30
-      - service: hassio.addon_restart
-        data:
-          addon: db21ed7f_transmission_openvpn
-
-shell_command:
-  transmission_cleanup: "rm -rf /homeassistant/vpn-configs-contrib"
