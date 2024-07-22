@@ -1,4 +1,15 @@
 {%- macro datetime_diff(t1, t2, format='%Y-%m-%d %H:%M:%S') -%}
+    {#-
+    This macro calculates the difference between two datetimes.
+
+    Parameters:
+    - t1: The first datetime.
+    - t2: The second datetime.
+    - format: The format to use for the output.
+
+    Returns:
+    - A string representing the difference between the two datetimes.
+    -#}
     {%- set datetime1 = as_datetime(t1)|as_timestamp|timestamp_custom(format, true) -%}
     {%- set parts1 = datetime1.split(' ') -%}
     {%- set date1 = parts1[0].split('-') -%}
@@ -29,6 +40,26 @@
         {%- endfor -%}
     {%- endif -%}
     {{ ns.differing_parts | join(' ') }}
+{%- endmacro -%}
+
+{%- macro timestamp_diff(t1, t2, format='%Y-%m-%d %H:%M:%S', splitter=' ') -%}
+    {#- Removes the date part from t2 if it's the same as t1
+
+    Parameters:
+    - t1: The first datetime.
+    - t2: The second datetime.
+    - format: The format to use for the output.
+    - splitter: The character to split the datetime string on.
+    -#}
+    {%- set datetime1 = as_timestamp(t1)|timestamp_custom(format, true) -%}
+    {%- set datetime2 = as_timestamp(t2)|timestamp_custom(format, true) -%}
+    {%- set parts1 = datetime1.split(splitter) -%}
+    {%- set parts2 = datetime2.split(splitter) -%}
+    {%- if parts1[0] == parts2[0] -%}
+        {{ parts2[1] }}
+    {%- else -%}
+        {{ datetime2 }}
+    {%- endif -%}
 {%- endmacro -%}
 
 {%- macro split_seconds(input) -%}
