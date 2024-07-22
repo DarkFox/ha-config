@@ -43,7 +43,7 @@ template:
           {% endif %}
         attributes:
           call_log: |
-            {% from 'datediff.jinja' import datetime_diff %}
+            {% from 'datediff.jinja' import timestamp_diff %}
             {% if trigger.event.event_type == 'clear_work_call_log' %}
               {}
             {% else %}
@@ -56,7 +56,7 @@ template:
                 {% set end_ts = as_timestamp(now()) | int %}
                 {% set end = end_ts | timestamp_custom('%Y-%m-%d %H:%M:%S', true) %}
                 {% set duration = end_ts - start_ts %}
-                {% set diff = start+' > '+datetime_diff(start, end) %}
+                {% set diff = start+' > '+timestamp_diff(start, end) %}
                 {% set new_caller = {
                   'phone_number': current_call.get('phone_number', ''),
                   'formatted_phone': current_call.get('formatted_phone', ''),
