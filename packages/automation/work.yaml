@@ -35,32 +35,38 @@ template:
         attributes:
           any: >-
             {%- from 'puzzel.jinja' import search_puzzel_queues -%}
-
-            {%- if is_state('calendar.arbejdskalender_vagt', 'on') -%}
-              {{ search_puzzel_queues('Vagt', '\+') | from_json | sort(attribute='name', reverse=true) }}
-            {%- elif is_state('binary_sensor.on_call_today', 'on') and is_state('calendar.arbejdskalender_rsh', 'on') -%}
-              {% set include = 'RSH \+ Vagt' %}
-              {{ search_puzzel_queues(include) | from_json | sort(attribute='name', reverse=true) }}
-            {%- elif is_state('binary_sensor.on_call_today', 'on') and is_state('calendar.arbejdskalender_rsr', 'on') -%}
-              {% set include = 'RSR \+ Vagt' %}
-              {{ search_puzzel_queues(include) | from_json | sort(attribute='name', reverse=true) }}
+            {%- set on_call = is_state('calendar.arbejdskalender_vagt', 'on') -%}
+            {%- set on_call_today = is_state('binary_sensor.on_call_today', 'on') -%}
+            {%- set rsh = is_state('calendar.arbejdskalender_rsh', 'on') -%}
+            {%- set rsr = is_state('calendar.arbejdskalender_rsr', 'on') -%}
+            {%- set on_site = is_state('calendar.arbejdskalender_on_site', 'on') -%}
+            {%- set wfh = is_state('calendar.arbejdskalender_wfh', 'on') -%}
+            {%- set ns = namespace(inc=[],exc=[]) -%}
+            {%- if on_call -%}
+              {%- set ns.exc = ['\+'] -%}
+              {%- set ns.inc = ns.inc + ['Vagt'] -%}
+            {%- elif on_call_today -%}
+              {%- if rsh -%}
+                {%- set ns.inc = ns.inc + ['RSH \+ Vagt'] -%}
+              {%- elif rsr -%}
+                {%- set ns.inc = ns.inc + ['RSR \+ Vagt'] -%}
+              {%- endif -%}
             {%- else -%}
-              {%- set excludes = ['Vagt'] -%}
-              {%- set ns = namespace(any=[]) -%}
-              {%- if is_state('calendar.arbejdskalender_on_site', 'on') -%}
-                {%- set ns.any = ns.any + search_puzzel_queues("LSS", excludes) | from_json -%}
+              {%- set ns.exc = ['Vagt'] -%}
+              {%- if on_site -%}
+                {%- set ns.inc = ns.inc + ["LSS"] -%}
               {%- endif -%}
-              {%- if is_state('calendar.arbejdskalender_rsr', 'on') -%}
-                {%- set ns.any = ns.any + search_puzzel_queues("RSR", excludes) | from_json -%}
+              {%- if rsr -%}
+                {%- set ns.inc = ns.inc + ["RSR"] -%}
               {%- endif -%}
-              {%- if is_state('calendar.arbejdskalender_rsh', 'on') -%}
-                {%- set ns.any = ns.any + search_puzzel_queues("RSH", excludes) | from_json -%}
+              {%- if rsh -%}
+                {%- set ns.inc = ns.inc + ["RSH"] -%}
               {%- endif -%}
-              {%- if is_state('calendar.arbejdskalender_wfh', 'on') -%}
-                {%- set ns.any = ns.any + search_puzzel_queues(["LSS", "RSR", "RSH"], excludes) | from_json -%}
+              {%- if wfh -%}
+                {%- set ns.inc = ns.inc + ["LSS", "RSR", "RSH"] -%}
               {%- endif -%}
-              {{ ns.any | sort(attribute='name', reverse=true) }}
             {%- endif -%}
+            {{ search_puzzel_queues(ns.inc, ns.exc) | from_json | sort(attribute='name', reverse=true) }}
 
       - name: Puzzel state incorrect
         unique_id: dfc06f77-bd7e-4c90-8cd1-394a7773010a
