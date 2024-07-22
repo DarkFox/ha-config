@@ -25,18 +25,38 @@ automation:
   - id: 3d_printer_set_thermostat
     alias: 3d Printer Set Thermostat
     initial_state: true
+    mode: queued
     trigger:
       - platform: state
-        entity_id: sensor.3d_printer_materiale
+        entity_id:
+          - sensor.3d_printer_build_volume_temperature
+          - binary_sensor.3d_printer_aktiv
+          - sensor.octoprint_current_state
     action:
       - choose:
-          - conditions:
-              - condition: state
-                entity_id: sensor.3d_printer_materiale
-                state:
-                  - "none"
-                  - "PLA"
-                  - "PET-G"
+          - alias: Printing
+            conditions:
+              - condition: template
+                value_template: >-
+                  {{
+                    is_state('binary_sensor.3d_printer_aktiv', 'on')
+                    and states('sensor.octoprint_current_state') in ['Printing', 'Pausing', 'Resuming']
+                  }}
+            sequence:
+              - service: scene.apply
+                data:
+                  entities:
+                    climate.3d_printer:
+                      state: "cool"
+                      temperature: "{{ states('sensor.3d_printer_build_volume_temperature') | default(25) }}"
+          - alias: Cool down
+            conditions:
+              - condition: template
+                value_template: >-
+                  {{
+                    is_state('binary_sensor.3d_printer_aktiv', 'on')
+                    and states('sensor.octoprint_current_state') not in ['Printing', 'Pausing', 'Resuming']
+                  }}
             sequence:
               - service: scene.apply
                 data:
@@ -44,19 +64,6 @@ automation:
                     climate.3d_printer:
                       state: "cool"
                       temperature: 20
-          - conditions:
-              - condition: state
-                entity_id: sensor.3d_printer_materiale
-                state:
-                  - "ABS"
-                  - "ASA"
-            sequence:
-              - service: scene.apply
-                data:
-                  entities:
-                    climate.3d_printer:
-                      state: "cool"
-                      temperature: 40
         default:
           - service: climate.turn_off
             target:

@@ -33,6 +33,12 @@ mqtt:
   sensor:
     - name: "3D Printer Materiale"
       state_topic: "octoPrint/metadata/slicer_settings.material_type"
+      availability_topic: "octoPrint/availability"
+    - name: "3D Printer Build Volume Temperature"
+      # TODO: Enable in OctoPrint
+      state_topic: "octoPrint/metadata/slicer_settings.build_volume_temperature"
+      device_class: temperature
+      unit_of_measurement: "°C"
 
 template:
   - binary_sensor:
@@ -68,21 +74,6 @@ template:
           {% else %}
             {{ translations[state] if state in translations else state }}
           {% endif %}
-
-      # - name: 3D Printer Materiale
-      #   state: >-
-      #     {% set temp = (states('sensor.octoprint_bed_target')|int) %}
-      #     {% if is_state('switch.3d_printer_afbryder', 'off') %}
-      #       off
-      #     {% elif temp < 15 %}
-      #       none
-      #     {% elif temp >= 15 and temp < 61 %}
-      #       PLA
-      #     {% elif temp >= 61 and temp < 81 %}
-      #       PETG
-      #     {% elif temp >= 81 %}
-      #       ABS
-      #     {% endif %}
 
       - name: 3D Printer Estimated Total Time
         state: >-
