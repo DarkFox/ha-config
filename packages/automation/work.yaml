@@ -165,8 +165,14 @@ automation:
       - platform: state
         entity_id: binary_sensor.puzzel_state_incorrect
         to: "on"
+        for:
+          seconds: 10
+      - platform: state
+        entity_id: binary_sensor.location_at_work
+        for:
+          minutes: 5
       - platform: time_pattern
-        minutes: "/15"
+        minutes: "/30"
     condition:
       - condition: state
         entity_id: binary_sensor.puzzel_state_incorrect
@@ -180,6 +186,28 @@ automation:
               - condition: state
                 entity_id: binary_sensor.puzzel_expected_state
                 state: "on"
+              - condition: state
+                entity_id: binary_sensor.location_at_work
+                state: "on"
+            sequence:
+              - service: script.puzzel_log_on
+                data:
+                  queue_id: >-
+                    {% set current_profile_id = state_attr('sensor.puzzel_ko', 'profile_id')|int %}
+                    {% set expected_profiles = state_attr('binary_sensor.puzzel_expected_state', 'any') %}
+                    {% set current_queue_matched = expected_profiles | selectattr('id', 'eq', current_profile_id) | first %}
+                    {% if current_queue_matched %}
+                      {{ current_queue_matched.id }}
+                    {% else %}
+                      {{ expected_profiles | first.id }}
+                    {% endif %}
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.puzzel_expected_state
+                state: "on"
+              - condition: state
+                entity_id: binary_sensor.location_at_work
+                state: "off"
             sequence:
               - service: script.notify_darkphone
                 data:
@@ -191,16 +219,29 @@ automation:
                         {% set ns.ret = ns.ret + [profile.name + ':/puzzel_login '+(profile.id|string)] %}
                       {% endfor %}
                       {{ ns.ret + ['Ignorer:/puzzel_ignore_incorrect'] }}
-        default:
-          - condition: state
-            entity_id: binary_sensor.puzzel_status
-            state: "on"
-          - service: script.notify_darkphone
-            data:
-              message: "Du er stadig logget på Puzzel"
-              data:
-                inline_keyboard: >-
-                  {{ ['Log af:/puzzel_log_off', 'Ignorer:/puzzel_ignore_incorrect'] }}
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.puzzel_status
+                state: "on"
+              - condition: state
+                entity_id: binary_sensor.location_at_work
+                state: "on"
+            sequence:
+              - service: script.notify_darkphone
+                data:
+                  message: "Du er stadig logget på Puzzel"
+                  data:
+                    inline_keyboard: >-
+                      {{ ['Log af:/puzzel_log_off', 'Ignorer:/puzzel_ignore_incorrect'] }}
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.puzzel_status
+                state: "on"
+              - condition: state
+                entity_id: binary_sensor.location_at_work
+                state: "off"
+            sequence:
+              - service: script.puzzel_log_off
 
   - alias: "Ignore Incorrect Puzzel State"
     id: 9b773b63-18d4-4c98-b743-683bc9d5cad9
