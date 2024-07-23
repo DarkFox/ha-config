@@ -21,109 +21,141 @@ input_select:
       - snoozing
       - waking
 
-sensor:
-  - platform: min_max
-    name: next_event_for_wakeup_time
-    type: min
-    entity_ids:
-      - sensor.next_work_event_timestamp
-      - sensor.next_personal_event_timestamp
-      - sensor.next_tripit_event_timestamp
-      - sensor.fallback_wake_up_time
-
-  - platform: template
-    sensors:
-      next_work_event_timestamp:
-        value_template: >-
-          {% set time = state_attr('calendar.arbejdskalender_vagtskema', 'start_time')|as_timestamp(4294967295) %}
-          {{ (time-(2*60*60)) if as_timestamp(now())+(1*60*60) < time else 4294967295 }}
-      next_personal_event_timestamp:
-        value_template: >-
-          {% set time = as_timestamp(states('sensor.next_scheduled_leave_at')) if has_value('sensor.next_scheduled_leave_at')
-              else as_timestamp(state_attr('calendar.personlig', 'start_time')) if has_value('calendar.personlig')
-              else 4294967295 %}
-          {{ (time-(2*60*60)) if as_timestamp(now())+(1*60*60) < time else 4294967295 }}
-      next_tripit_event_timestamp:
-        value_template: >-
-          {% set time = state_attr('calendar.tripit', 'start_time')|as_timestamp(4294967295) %}
-          {{ (time-(2*60*60)) if as_timestamp(now())+(1*60*60) < time else 4294967295 }}
-      fallback_wake_up_time:
-        value_template: >-
-          {%- set hour = state_attr('input_datetime.fallback_wake_up_time', 'hour') -%}
-          {%- set minute = state_attr('input_datetime.fallback_wake_up_time', 'minute') -%}
-          {%- set days = 0 if 0 <= now().hour <= hour else 1 -%}
-          {%- set time = as_timestamp(now().replace(hour=hour,minute=minute,second=0,microsecond=0) + timedelta(days=days)) -%}
-          {{ time if as_timestamp(now())+(1*60*60) < time else 4294967295 }}
-      wake_up_event_source:
-        value_template: "{{ state_attr('sensor.next_event_for_wakeup_time', 'min_entity_id') }}"
-      wake_up_event_source_entity:
-        value_template: >-
-          {% set calendars = {
-            'sensor.next_work_event_timestamp': 'calendar.arbejdskalender_vagtskema',
-            'sensor.next_personal_event_timestamp': 'calendar.personlig',
-            'sensor.next_tripit_event_timestamp': 'calendar.tripit',
-            'sensor.fallback_wake_up_time': 'fallback'
-          } %}
-          {{ calendars[states('sensor.wake_up_event_source')] }}
-      wake_up_event_source_message:
-        value_template: "{{ state_attr(states('sensor.wake_up_event_source_entity'), 'message') }}"
-        attribute_templates:
-          icon: mdi:calendar-clock
-      wake_up_event_source_start_time:
-        value_template: |
-          {%- set source_entity = states('sensor.wake_up_event_source_entity') -%}
-          {% if source_entity and source_entity not in ['unavailable', 'unknown'] %}
-            {% set start = state_attr(source_entity, 'start_time') %}
-            {{ (start|as_timestamp|as_datetime|as_local).strftime('%H:%M') if start else 'unknown' }}
+template:
+  - sensor:
+      - name: Next Wake Event
+        unique_id: 240de22b-5950-4929-bcac-3640efabf14c
+        device_class: timestamp
+        state: >-
+          {% set event = state_attr('sensor.next_wake_event', 'event') or {} %}
+          {% set start = event.get('start', None) %}
+          {% if start %}
+            {{ as_timestamp(start) | timestamp_local('unavailable') }}
           {% else %}
             unknown
           {% endif %}
-      wake_up_event_source_name:
-        value_template: >-
-          {% set calendars = {
-            'sensor.next_work_event_timestamp': 'Arbejdskalender',
-            'sensor.next_personal_event_timestamp': 'Personlig Kalender',
-            'sensor.next_tripit_event_timestamp': 'TripIt',
-            'sensor.fallback_wake_up_time': 'Standard'
-          } %}
-          {{ calendars[states('sensor.wake_up_event_source')] }}
-        attribute_templates:
-          icon: mdi:calendar
-      wake_up_time:
-        friendly_name: "Opvågningstidspunkt"
-        value_template: >-
-          {% set limit = (states('input_text.last_wake_up_time')|int(0)) + (8*60*60) %}
-          {% set wake_up_time = states('sensor.next_event_for_wakeup_time')|int %}
-          {{ (wake_up_time if limit < wake_up_time else 4294967295) | timestamp_local() }}
-      minutes_to_wake_up_time:
-        friendly_name: Minutter til Opvågningstidspunkt
-        value_template: "{{ ((states('sensor.wake_up_time')|as_timestamp - now()|as_timestamp)/60)|int }}"
-      bedtime:
-        friendly_name: "Sengetid"
-        value_template: "{{ (states('sensor.wake_up_time')|as_timestamp - (8.5*60*60)) | timestamp_local() }}"
-      minutes_to_bedtime:
-        friendly_name: Minutter til Sengetid
-        value_template: "{{ ((states('sensor.bedtime')|as_timestamp - now()|as_timestamp)/60)|int }}"
-      bedtime_clock:
-        friendly_name: "Sengetid"
-        value_template: "{{ (states('sensor.bedtime')|as_datetime).strftime('%H:%M') }}"
-        attribute_templates:
-          icon: mdi:bed-clock
-      wake_up_time_clock:
-        friendly_name: "Alarm"
-        value_template: "{{ (states('sensor.wake_up_time')|as_datetime).strftime('%H:%M') }}"
-        attribute_templates:
+        attributes:
+          event: >-
+            {% set next_wake_events = state_attr('sensor.full_agenda', 'events')|selectattr('wake', 'eq', true)|list %}
+            {{ next_wake_events|first if next_wake_events|length > 0 else {} }}
+          calendar: >-
+            {% set event = state_attr('sensor.next_wake_event', 'event') or {} %}
+            {{ event.get('calendar', none) }}
+          start: >-
+            {% set event = state_attr('sensor.next_wake_event', 'event') or {} %}
+            {{ event.get('start', none) }}
+          end: >-
+            {% set event = state_attr('sensor.next_wake_event', 'event') or {} %}
+            {{ event.get('end', none) }}
+          location: >-
+            {% set event = state_attr('sensor.next_wake_event', 'event') or {} %}
+            {{ event.get('location', none) }}
+          description: >-
+            {% set event = state_attr('sensor.next_wake_event', 'event') or {} %}
+            {{ event.get('description', none) }}
+          travel: >-
+            {% set event = state_attr('sensor.next_wake_event', 'event') or {} %}
+            {{ event.get('travel', none) }}
+          bil: >-
+            {% set event = state_attr('sensor.next_wake_event', 'event') or {} %}
+            {{ event.get('bil', none) }}
+          wake: >-
+            {% set event = state_attr('sensor.next_wake_event', 'event') or {} %}
+            {{ event.get('wake', none) }}
+          summary: >-
+            {% set event = state_attr('sensor.next_wake_event', 'event') or {} %}
+            {{ event.get('summary', none) }}
+
+      - name: Fallback Wake Up Time
+        unique_id: 9a7c2769-8a9e-4481-9d14-6269b756ba80
+        state: >-
+          {%- set hour = state_attr('input_datetime.fallback_wake_up_time', 'hour') -%}
+          {%- set minute = state_attr('input_datetime.fallback_wake_up_time', 'minute') -%}
+          {%- set days = 0 if 0 <= now().hour <= hour else 1 -%}
+          {%- set time = now().replace(hour=hour,minute=minute,second=0,microsecond=0) + timedelta(days=days) -%}
+          {{ time if now()+timedelta(hours=1) < time else 'unknown' }}
+        device_class: timestamp
+
+      - name: Wake Up Event Source Name
+        unique_id: 8274b010-a2e6-4b07-84ce-30d3caf56e87
+        state: >-
+          {{ state_attr('sensor.next_wake_event', 'calendar') }}
+        attributes:
+          icon: mdi:calendar-clock
+
+      - name: Wake Up Event Source Message
+        unique_id: 1c6769cf-deec-4fdc-9f50-b51ce22c6e47
+        state: >-
+          {{ state_attr('sensor.next_wake_event', 'summary') }}
+        attributes:
+          icon: mdi:calendar-clock
+
+      - name: Next Wake Event Wake Time
+        unique_id: ddb30d57-608c-4179-a1d0-414341ed14de
+        state: >-
+          {{ (states('sensor.next_wake_event')|as_datetime - timedelta(hours=2)).isoformat() if has_value('sensor.next_wake_event') else 'unknown' }}
+        attributes:
           icon: mdi:alarm
 
-binary_sensor:
-  - platform: template
-    sensors:
-      wake_up_time:
-        friendly_name: "Opvågningstidspunkt"
-        value_template: "{{ (states('sensor.wake_up_time')|as_timestamp(0)) < (now()|as_timestamp(0)) }}"
-      bedtime:
-        friendly_name: "Sengetid"
-        value_template: >-
+      - name: Wake Up Time
+        unique_id: bc455fbc-f15f-46c5-99c7-cdcb7c9bfae4
+        device_class: timestamp
+        state: >-
+          {% set limit = (states('input_text.last_wake_up_time')|as_datetime + timedelta(hours=8)) if has_value('input_text.last_wake_up_time') else none %}
+          {% set wake_up_time = states('sensor.next_wake_event_wake_time')|as_datetime %}
+          {{ wake_up_time if not limit or limit < wake_up_time else 'unknown' }}
+        attributes:
+          icon: mdi:alarm-clock
+
+      - name: Minutes to Wake Up Time
+        unique_id: 5661d62b-8cdb-4b7c-a712-b4be3a60bc62
+        device_class: duration
+        unit_of_measurement: min
+        state: >-
+          {{ ((states('sensor.wake_up_time')|as_timestamp - now()|as_timestamp)/60)|int }}
+        attributes:
+          icon: mdi:alarm-clock
+
+      - name: Bedtime
+        unique_id: 40cc6f30-240e-489d-9720-c04dbb477058
+        device_class: timestamp
+        state: >-
+          {{ states('sensor.wake_up_time')|as_datetime - timedelta(hours=8, minutes=30) if has_value('sensor.wake_up_time') else 'unknown' }}
+        attributes:
+          icon: mdi:bed-clock
+
+      - name: Minutes to Bedtime
+        unique_id: 5fea6a88-1dee-46e7-878f-574148d4b207
+        device_class: duration
+        unit_of_measurement: min
+        state: >-
+          {{ ((states('sensor.bedtime')|as_timestamp - now()|as_timestamp)/60)|int }}
+        attributes:
+          icon: mdi:bed-clock
+
+      - name: Bedtime Clock
+        unique_id: 1be248a8-c637-47a1-8b79-8890660d4e5a
+        state: >-
+          {{ (states('sensor.bedtime')|as_datetime|as_local).strftime('%H:%M') }}
+        attributes:
+          icon: mdi:bed-clock
+
+      - name: Wake Up Clock
+        unique_id: 34c753a0-5058-4d1e-9e9a-b750c27a998c
+        state: >-
+          {{ (states('sensor.wake_up_time')|as_datetime|as_local).strftime('%H:%M') }}
+        attributes:
+          icon: mdi:alarm
+
+  - binary_sensor:
+      - name: Wake Up Time
+        unique_id: 4ffa2376-a5ed-4d71-9847-d37dcdc6b364
+        state: >-
+          {{ (states('sensor.wake_up_time')|as_timestamp(0)) < (now()|as_timestamp(0)) }}
+
+      - name: Bedtime
+        unique_id: 6fba153e-7254-4f19-acd0-8e09d138ea69
+        state: >-
           {% set bedtime = states('sensor.bedtime') %}
           {% set wake_up_time = states('sensor.wake_up_time') %}
           {{
@@ -690,7 +722,7 @@ automation:
         target:
           entity_id: input_text.last_wake_up_time
         data:
-          value: "{{ as_timestamp(now())|int }}"
+          value: "{{ now().isoformat() }}"
       - service: switch.turn_off
         target:
           entity_id: switch.dorklokke_forstyr_ikke

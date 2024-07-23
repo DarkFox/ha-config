@@ -7,88 +7,94 @@ homeassistant:
       friendly_name: S-Tog Driftbesked
       icon: mdi:train
 
-binary_sensor:
-  - platform: template
-    sensors:
-      s_train_message_present:
-        value_template: >-
-          {{ (states('sensor.s_train_message') | regex_match('.*(\sC(\W|$)|alle|Alle).*')) or not is_state('sensor.s_train_c_status', 'Til tiden') }}
-      s_train_message_about_c:
-        value_template: >-
-          {{ (states('sensor.s_train_message') | regex_match('.*(\sC(\W|$)|alle|Alle).*')) }}
-      commute_soon:
-        value_template: >-
-          {%- set time_to_leave_car_commute = strptime(states('sensor.car_commute_leave_at'), '%Y-%m-%dT%H:%M:%S%z', '-1') -%}
-          {%- if time_to_leave_car_commute != '-1' -%}
-            {{ time_to_leave_car_commute - timedelta(minutes=30) < now() and strptime(states('sensor.work_start_time'), '%Y-%m-%dT%H:%M:%S%z') > now() }}
-          {%- else -%}
-            False
-          {%- endif -%}
-      time_to_leave_car_commute:
-        value_template: >-
-          {%- set time_to_leave_car_commute = strptime(states('sensor.car_commute_leave_at'), '%Y-%m-%dT%H:%M:%S%z', '-1') -%}
-          {%- if time_to_leave_car_commute != '-1' -%}
-            {{ time_to_leave_car_commute < now() and strptime(states('sensor.work_start_time'), '%Y-%m-%dT%H:%M:%S%z') > now() }}
-          {%- else -%}
-            False
-          {%- endif -%}
-      going_home_soon:
-        value_template: >-
-          {%- set work_end_time = strptime(states('sensor.work_end_time'), '%Y-%m-%dT%H:%M:%S%z', '-1') -%}
-          {%- if work_end_time != '-1' -%}
-            {{ work_end_time - timedelta(minutes=5) < now() }}
-          {%- else -%}
-            False
-          {%- endif -%}
+template:
+  - sensor:
+      - name: Next Travel Event
+        unique_id: 67af8e12-5d9a-4468-8840-616796b36e5b
+        device_class: timestamp
+        state: >-
+          {% set event = state_attr('sensor.next_travel_event', 'event') or {} %}
+          {% set start = event.get('start', None) %}
+          {% if start %}
+            {{ as_timestamp(start) | timestamp_local('unavailable') }}
+          {% else %}
+            unknown
+          {% endif %}
+        attributes:
+          event: >-
+            {% set next_travel_events = state_attr('sensor.upcoming_events', 'events')|selectattr('travel', 'eq', true)|list %}
+            {{ next_travel_events|first if next_travel_events|length > 0 else {} }}
+          calendar: >-
+            {% set event = state_attr('sensor.next_travel_event', 'event') or {} %}
+            {{ event.get('calendar', none) }}
+          start: >-
+            {% set event = state_attr('sensor.next_travel_event', 'event') or {} %}
+            {{ event.get('start', none) }}
+          end: >-
+            {% set event = state_attr('sensor.next_travel_event', 'event') or {} %}
+            {{ event.get('end', none) }}
+          location: >-
+            {% set event = state_attr('sensor.next_travel_event', 'event') or {} %}
+            {{ event.get('location', none) }}
+          description: >-
+            {% set event = state_attr('sensor.next_travel_event', 'event') or {} %}
+            {{ event.get('description', none) }}
+          travel: >-
+            {% set event = state_attr('sensor.next_travel_event', 'event') or {} %}
+            {{ event.get('travel', none) }}
+          bil: >-
+            {% set event = state_attr('sensor.next_travel_event', 'event') or {} %}
+            {{ event.get('bil', none) }}
+          wake: >-
+            {% set event = state_attr('sensor.next_travel_event', 'event') or {} %}
+            {{ event.get('wake', none) }}
+          summary: >-
+            {% set event = state_attr('sensor.next_travel_event', 'event') or {} %}
+            {{ event.get('summary', none) }}
 
-sensor:
-  - platform: template
-    sensors:
-      google_maps_embed_key:
-        value_template: !secret google_maps_embed_key
-      next_work_in:
-        value_template: >
-          {{ (as_timestamp(state_attr('calendar.arbejdskalender_bil', 'start_time'))|int)  - as_timestamp(now()) | int }}
-      work_url_coords:
-        value_template: >
+      - name: Upcoming Travel Location
+        unique_id: ae8f41c7-775d-4b95-bb88-ed7b2865b9fb
+        state: >-
+          {{ state_attr('sensor.next_travel_event', 'location') }}
+        attributes:
+          mode: >-
+            {% if state_attr('sensor.next_travel_event', 'bil') %}
+              driving
+            {% elif state_attr('sensor.next_travel_event', 'transit') %}
+              transit
+            {% else %}
+              unknown
+            {% endif %}
+
+      # Port old template sensor syntax to new template sensor syntax
+      - name: Google Maps Embed Key
+        unique_id: f740d25c-edb4-4414-8b24-68e86211d7b9
+        state: !secret google_maps_embed_key
+      - name: Work URL Coords
+        unique_id: 3f4d717b-a008-4af8-ac63-c06db55ececc
+        state: >-
           {% set zone = 'zone.rsh' %}
           {{ state_attr(zone, 'latitude') }}%2C{{ state_attr(zone, 'longitude') }}
-      home_url_coords:
-        value_template: >
+      - name: Home URL Coords
+        unique_id: 9325ade6-7592-45dd-b2ad-154abd1b0900
+        state: >-
           {% set zone = 'zone.home' %}
           {{ state_attr(zone, 'latitude') }}%2C{{ state_attr(zone, 'longitude') }}
-      car_commute_leave_at:
-        value_template: >
-          {% set start = states('sensor.work_start_time') %}
-          {{
-            ((strptime(start, '%Y-%m-%dT%H:%M:%S%z')
-            - timedelta(minutes=states('sensor.hjem_til_rsh')|int(0)+15))|as_local).isoformat()
-            if start and start not in ['unavailable', 'unknown']
-          }}
-        device_class: timestamp
-      car_commute_leave_in:
-        value_template: >
-          {% set time = states('sensor.car_commute_leave_at') %}
-          {{ (((time|as_timestamp) - (now()|as_timestamp))/60)|int if time and time not in ['unavailable', 'unknown'] else -1 }}
-        unit_of_measurement: min
-        device_class: duration
-      work_start_time:
-        value_template: "{{ (strptime(state_attr('calendar.arbejdskalender_bil', 'start_time'), '%Y-%m-%d %H:%M:%S')|as_local).isoformat() }}"
-        device_class: timestamp
-      work_end_time:
-        value_template: "{{ (strptime(state_attr('calendar.arbejdskalender_bil', 'end_time'), '%Y-%m-%d %H:%M:%S')|as_local).isoformat() }}"
-        device_class: timestamp
-      commute_status_car:
-        value_template: >
-          {%- if states('sensor.hjem_til_rsh')|int(0) > 45 -%}
+
+      - name: Commute Status Car
+        unique_id: 5a3e3797-bbe0-4f6a-b5fa-54c452cafe32
+        state: >-
+          {%- if states('sensor.martin_til_destination_bil')|int(0) > 45 -%}
             bad
-          {%- elif states('sensor.hjem_til_rsh')|int(0) > 25 -%}
+          {%- elif states('sensor.martin_til_destination_bil')|int(0) > 25 -%}
             ok
           {%- else -%}
             good
           {%- endif -%}
-      commute_status_transit:
-        value_template: >
+
+      - name: Commute Status Transit
+        unique_id: 2a130ba4-a9cf-4912-befa-f493c66a8982
+        state: >-
           {%- if states('sensor.precip_today')|int(0) > 5 or states('sensor.s_train_c_status') != 'Til tiden' -%}
             bad
           {%- elif states('sensor.precip_today')|int(0) > 1 or states('sensor.s_train_message') != '' -%}
@@ -96,8 +102,10 @@ sensor:
           {%- else -%}
             good
           {%- endif -%}
-      commute_status_bike:
-        value_template: >
+
+      - name: Commute Status Car
+        unique_id: 72860175-ac13-4b88-b22b-44fd47292175
+        state: >-
           {%- set headwind = (state_attr('weather.forecast_home', 'wind_bearing')|int(0) > 35 and state_attr('weather.forecast_home', 'wind_bearing')|int(0) < 146) -%}
           {%- if states('sensor.temperature')|int(0) < 0
               or states('sensor.precip_today')|int(0) > 5
@@ -110,38 +118,83 @@ sensor:
           {%- else -%}
             good
           {%- endif -%}
-      martin_next_scheduled_destination:
-        friendly_name: "Next Scheduled Destination"
-        value_template: "{{ state_attr('calendar.personlig_bil', 'location') }}"
-      martin_next_scheduled_at:
-        friendly_name: "Next Scheduled at"
-        value_template: >-
-          {{
-            (strptime(state_attr('calendar.personlig_bil', 'start_time'), '%Y-%m-%d %H:%M:%S')|as_local).isoformat()
-            if state_attr('calendar.personlig_bil', 'location') else ''
-          }}
+
+      - name: Martin Next Scheduled At
+        unique_id: bcfd62ed-d849-41ec-ad23-7506219345a6
         device_class: timestamp
-      next_scheduled_leave_at:
-        value_template: >-
+        state: >-
+          {{
+            (strptime(state_attr('sensor.next_travel_event', 'start'), '%Y-%m-%d %H:%M:%S')|as_local).isoformat()
+            if state_attr('sensor.next_travel_event', 'location') else ''
+          }}
+      - name: Next Scheduled Leave At
+        unique_id: 7ce36e9c-2d32-49de-9ab7-d5df86b28aae
+        device_class: timestamp
+        state: >-
+          {% set driving = is_state_attr('sensor.upcoming_travel_location', 'mode', 'driving') %}
+          {% set travel_time_sensor = 'sensor.martin_til_destination_bil' if driving else 'sensor.martin_til_destination_transit' %}
+          {% set padding = 15 if driving else 5 %}
           {{
             ((
-              strptime(state_attr('calendar.personlig_bil', 'start_time'), '%Y-%m-%d %H:%M:%S')
-              - timedelta(minutes=states('sensor.martin_til_destination')|int+15)
+              strptime(state_attr('sensor.next_travel_event', 'start'), '%Y-%m-%d %H:%M:%S')
+              - timedelta(minutes=states(travel_time_sensor)|int+padding)
             )|as_local).isoformat()
-            if state_attr('calendar.personlig_bil', 'location') else ''
+            if state_attr('sensor.next_travel_event', 'location') else ''
           }}
-        device_class: timestamp
-      next_scheduled_leave_in:
-        value_template: >-
+
+      - name: Next Scheduled Leave In
+        unique_id: 69be0bee-d24a-4be0-90f8-e66bc3006d78
+        device_class: duration
+        unit_of_measurement: min
+        state: >-
           {%- set timestamp = states('sensor.next_scheduled_leave_at')|as_timestamp(-1) -%}
           {%- if timestamp != -1 -%}
             {{ (((states('sensor.next_scheduled_leave_at')|as_timestamp) - (now()|as_timestamp))/60)|int }}
           {% else %}
             -1
           {%- endif -%}
-        unit_of_measurement: min
-        device_class: duration
 
+  - binary_sensor:
+      - name: Martin Next Scheduled Destination Active
+        unique_id: 78ffca90-7a32-4764-932a-46ff4fb01548
+        state: >-
+          {%- set martin_next_scheduled_at = strptime(states('sensor.next_travel_event'), '%Y-%m-%dT%H:%M:%S%z', '-1') -%}
+          {%- if martin_next_scheduled_at != '-1' -%}
+            {{ martin_next_scheduled_at - timedelta(hours=12) < now() }}
+          {%- else -%}
+            False
+          {%- endif -%}
+      - name: Martin Next Scheduled Destination Leave Soon
+        unique_id: 9c450aa1-aaeb-49dd-9c2c-cb713fcb70b8
+        state: >-
+          {%- set time_to_leave_next_scheduled = strptime(states('sensor.next_scheduled_leave_at'), '%Y-%m-%dT%H:%M:%S%z', '-1') -%}
+          {%- if time_to_leave_next_scheduled != '-1' -%}
+            {{ time_to_leave_next_scheduled - timedelta(minutes=30) < now() }}
+          {%- else -%}
+            False
+          {%- endif -%}
+      - name: Martin Next Scheduled Destination Time To Leave
+        unique_id: 54cf1638-433c-44a6-8319-dd77c3511071
+        state: >-
+          {%- set time_to_leave_next_scheduled = strptime(states('sensor.next_scheduled_leave_at'), '%Y-%m-%dT%H:%M:%S%z', '-1') -%}
+          {%- if time_to_leave_next_scheduled != '-1' -%}
+            {{ time_to_leave_next_scheduled < now() }}
+          {%- else -%}
+            False
+          {%- endif -%}
+
+      - name: S-Train Message Present
+        unique_id: 7a00508c-c7f5-4877-9bc9-0565ea46f54c
+        device_class: problem
+        state: >-
+          {{ (states('sensor.s_train_message') | regex_match('.*(\sC(\W|$)|alle|Alle).*')) or not is_state('sensor.s_train_c_status', 'Til tiden') }}
+      - name: S-Train Message About C
+        unique_id: 46ee6a50-42a1-464a-aee0-df42dbfcf983
+        device_class: problem
+        state: >-
+          {{ (states('sensor.s_train_message') | regex_match('.*(\sC(\W|$)|alle|Alle).*')) }}
+
+sensor:
   - platform: rejseplanen
     name: S-Tog Måløv
     stop_id: "8600709"
@@ -164,54 +217,7 @@ sensor:
     name: DSB Trafikinfo
     sender: S-tog
 
-template:
-  - sensor:
-      - name: "Next Leave In"
-        state: |
-          {%- set car_commute_leave_in = states('sensor.car_commute_leave_in')|int(-1) -%}
-          {%- set next_scheduled_leave_in = states('sensor.next_scheduled_leave_in')|int(-1) -%}
-          {%- if car_commute_leave_in > 0 and next_scheduled_leave_in > 0 -%}
-            {{ min(car_commute_leave_in, next_scheduled_leave_in) }}
-          {%- elif car_commute_leave_in > 0 -%}
-            {{ car_commute_leave_in }}
-          {%- elif next_scheduled_leave_in > 0 -%}
-            {{ next_scheduled_leave_in }}
-          {%- else -%}
-            -1
-          {%- endif -%}
-        attributes:
-          unit_of_measurement: min
-          device_class: duration
-
 automation:
-  - alias: "Commute - Update sensors before commute"
-    initial_state: true
-    trigger:
-      - platform: time_pattern
-        minutes: "/5"
-    condition:
-      - condition: state
-        entity_id: binary_sensor.commute_soon
-        state: "on"
-    action:
-      - service: homeassistant.update_entity
-        target:
-          entity_id: sensor.hjem_til_rsh
-
-  - alias: "Commute - Update sensors outside commute time"
-    initial_state: true
-    trigger:
-      - platform: time_pattern
-        minutes: "/20"
-    condition:
-      - condition: state
-        entity_id: binary_sensor.commute_soon
-        state: "off"
-    action:
-      - service: homeassistant.update_entity
-        target:
-          entity_id: sensor.hjem_til_rsh
-
   - alias: "Next destination - Update sensors with high frequency when close to leave time"
     initial_state: true
     trigger:
@@ -222,9 +228,19 @@ automation:
         entity_id: binary_sensor.martin_next_scheduled_destination_leave_soon
         state: "on"
     action:
-      - service: homeassistant.update_entity
-        target:
-          entity_id: sensor.martin_til_destination
+      - choose:
+          - conditions: |-
+              {{ is_state_attr('sensor.upcoming_travel_location', 'mode', 'driving') }}
+            sequence:
+              - service: homeassistant.update_entity
+                target:
+                  entity_id: sensor.martin_til_destination_bil
+          - conditions: |-
+              {{ is_state_attr('sensor.upcoming_travel_location', 'mode', 'transit') }}
+            sequence:
+              - service: homeassistant.update_entity
+                target:
+                  entity_id: sensor.martin_til_destination_transit
 
   - alias: "Next destination - Update sensors slowly 12 hours before"
     initial_state: true
@@ -236,9 +252,19 @@ automation:
         entity_id: binary_sensor.martin_next_scheduled_destination_active
         state: "on"
     action:
-      - service: homeassistant.update_entity
-        target:
-          entity_id: sensor.martin_til_destination
+      - choose:
+          - conditions: |-
+              {{ is_state_attr('sensor.upcoming_travel_location', 'mode', 'driving') }}
+            sequence:
+              - service: homeassistant.update_entity
+                target:
+                  entity_id: sensor.martin_til_destination_bil
+          - conditions: |-
+              {{ is_state_attr('sensor.upcoming_travel_location', 'mode', 'transit') }}
+            sequence:
+              - service: homeassistant.update_entity
+                target:
+                  entity_id: sensor.martin_til_destination_transit
 
   - id: time_to_leave_notification
     alias: time_to_leave_notification
@@ -246,25 +272,25 @@ automation:
     mode: single
     trigger:
       - platform: numeric_state
-        entity_id: sensor.next_leave_in
+        entity_id: sensor.next_scheduled_leave_in
         below: 46
       - platform: numeric_state
-        entity_id: sensor.next_leave_in
+        entity_id: sensor.next_scheduled_leave_in
         below: 31
       - platform: numeric_state
-        entity_id: sensor.next_leave_in
+        entity_id: sensor.next_scheduled_leave_in
         below: 21
       - platform: numeric_state
-        entity_id: sensor.next_leave_in
+        entity_id: sensor.next_scheduled_leave_in
         below: 16
       - platform: numeric_state
-        entity_id: sensor.next_leave_in
+        entity_id: sensor.next_scheduled_leave_in
         below: 11
       - platform: numeric_state
-        entity_id: sensor.next_leave_in
+        entity_id: sensor.next_scheduled_leave_in
         below: 6
       - platform: numeric_state
-        entity_id: sensor.next_leave_in
+        entity_id: sensor.next_scheduled_leave_in
         below: 1
     condition:
       - alias: "If at home"

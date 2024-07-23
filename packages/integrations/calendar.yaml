@@ -50,7 +50,12 @@ calendar:
         search: &ferie_regex "^(Ferie).+"
       - calendar: Personlig
         name: Bil
-        search: &personlig_bil_regex ".*(#bil).*"
+        search: &personlig_bil_regex >-
+          \b(?:bil)\b|(?:[#([](?:bil)[)\]])
+      - calendar: Personlig
+        name: Transit
+        search: &transit_regex >-
+          \b(?:tog|rail|bus)\b|(?:[#([](?:tog|rail|bus)[)\]])
 
 ics_calendar:
   calendars:
@@ -84,6 +89,7 @@ template:
           vagtskema: *vagtskema_regex
           work_bil: *work_bil_regex
           bil: *personlig_bil_regex
+          transit: *transit_regex
 
       - name: Agenda
         state: >-
@@ -147,6 +153,43 @@ template:
               []
             {% endif %}
 
+      - name: Current Event
+        state: >-
+          {% set event = state_attr('sensor.current_event', 'event') or {} %}
+          {{ event.get('summary', 'Ingen') }}
+        attributes:
+          event: >-
+            {% set now = now()|as_timestamp|timestamp_custom('%Y-%M-%d %H:%m:%S') %}
+            {% set event = state_attr('sensor.full_agenda', 'events')|selectattr('start', 'le', now)|selectattr('end', 'ge', now)|list|first %}
+            {{ event if event is defined else None }}
+          calendar: >-
+            {% set event = state_attr('sensor.current_event', 'event') or {} %}
+            {{ event.get('calendar', None) }}
+          start: >-
+            {% set event = state_attr('sensor.current_event', 'event') or {} %}
+            {{ event.get('start', None) }}
+          end: >-
+            {% set event = state_attr('sensor.current_event', 'event') or {} %}
+            {{ event.get('end', None) }}
+          location: >-
+            {% set event = state_attr('sensor.current_event', 'event') or {} %}
+            {{ event.get('location', None) }}
+          description: >-
+            {% set event = state_attr('sensor.current_event', 'event') or {} %}
+            {{ event.get('description', None) }}
+          travel: >-
+            {% set event = state_attr('sensor.current_event', 'event') or {} %}
+            {{ event.get('travel', None) }}
+          bil: >-
+            {% set event = state_attr('sensor.current_event', 'event') or {} %}
+            {{ event.get('bil', None) }}
+          wake: >-
+            {% set event = state_attr('sensor.current_event', 'event') or {} %}
+            {{ event.get('wake', None) }}
+          summary: >-
+            {% set event = state_attr('sensor.current_event', 'event') or {} %}
+            {{ event.get('summary', None) }}
+
       - name: Upcoming Events
         state: >-
           {% set start = now().strftime('%Y-%m-%d %H:%M:%S') %}
@@ -158,41 +201,6 @@ template:
             {% set end = (now() + timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S') %}
             {{ state_attr('sensor.full_agenda', 'events')|selectattr('start', 'ge', start)|selectattr('start', 'lt', end)|list }}
 
-      - name: Upcoming Driving Event
-        state: >-
-          {% set event = state_attr('sensor.upcoming_driving_event', 'event') or {} %}
-          {% set start = event.get('start', None) %}
-          {% if start %}
-            {{ as_timestamp(start) | timestamp_local('unavailable') }}
-          {% else %}
-            unknown
-          {% endif %}
-        device_class: timestamp
-        attributes:
-          event: >-
-            {% set upcoming_bil_events = state_attr('sensor.upcoming_events', 'events')|selectattr('bil', 'eq', true)|list %}
-            {{ upcoming_bil_events|first if upcoming_bil_events|length > 0 else {} }}
-
-      - name: Upcoming Driving Location
-        state: >-
-          {% set event = state_attr('sensor.upcoming_driving_event', 'event') or {} %}
-          {{ event.get('location', 'unknown') }}
-
-      - name: Waking Event
-        state: >-
-          {% set event = state_attr('sensor.waking_event', 'event') or {} %}
-          {% set start = event.get('start', None) %}
-          {% if start %}
-            {{ as_timestamp(start) | timestamp_local('unavailable') }}
-          {% else %}
-            unknown
-          {% endif %}
-        device_class: timestamp
-        attributes:
-          event: >-
-            {% set waking_events = state_attr('sensor.full_agenda', 'events')|selectattr('wake', 'eq', true)|list %}
-            {{ waking_events|first if waking_events|length > 0 else {} }}
-
       - name: Next personal event start clock
         unique_id: a001219d-0724-46b4-9af9-a5f13532a397
         state: >-
@@ -201,6 +209,7 @@ template:
           {% else %}
             unknown
           {% endif %}
+
       - name: Days to next personal event
         state: >-
           {% from 'easy_time.jinja' import count_the_days %}
