@@ -1,9 +1,48 @@
-{%- macro event_match(event, regex) -%}
-    {{
-        event.get('summary', '')|regex_findall(regex, true) |length > 0 or
-        event.get('description', '')|regex_findall(regex, true) |length > 0 or
-        event.get('location', '')|regex_findall(regex, true) |length > 0
-    }}
+{%- macro first_non_empty_string(input) -%}
+    {#-
+    Returns the first non-empty string in a list or tuple.
+    Args:
+        input (str | list | tuple): The input to check.
+    Returns:
+        str: The first non-empty string in the input.
+    -#}
+    {%- if input is string -%}
+        {{ input }}
+    {%- elif input is list or input is tuple  -%}
+        {%- for item in input -%}
+            {%- set ns = namespace(value=item) -%}
+            {%- if item is list or item is tuple -%}
+                {%- set ns.value = first_non_empty_string(item) -%}
+            {%- endif -%}
+            {%- if ns.value is string -%}
+                {{ ns.value }}
+                {%- break -%}
+            {%- endif -%}
+        {%- endfor -%}
+    {%- endif -%}
+{%- endmacro -%}
+
+
+{%- macro event_match(event, regex_dict) -%}
+    {#-
+    Checks if any of the event fields match the regex provided in regex_dict.
+    Args:
+        event (dict): The event to check.
+        regex_dict (str | dict): Either a string with the regex to match against, or a dictionary with the following keys:
+            - regex (str): The regex to match against.
+            - negate (bool): If true, the function will return true if the regex does not match.
+    -#}
+    {% set ns = namespace(regex=regex_dict, negate=false) %}
+    {%- if regex_dict is mapping -%}
+        {%- set ns.regex = regex_dict.get('regex', '') -%}
+        {%- set ns.negate = bool(regex_dict.get('negate', false), false) -%}
+    {%- endif -%}
+    {%- set match = (
+        event.get('summary', '')|regex_findall(ns.regex, true) |length > 0 or
+        event.get('description', '')|regex_findall(ns.regex, true) |length > 0 or
+        event.get('location', '')|regex_findall(ns.regex, true) |length > 0
+    ) -%}
+    {{ ns.negate != match }}
 {%- endmacro -%}
 
 {%- macro event_match_any(event, regexes) -%}
@@ -30,7 +69,7 @@
     {%- endif -%}
 {% endmacro  %}
 
-{% macro agenda_event(calendar, event, regexes, bool_attrs={}) -%}
+{% macro agenda_event(calendar, event, regexes, bool_attrs={}, attrs={}) -%}
     {
         "calendar": "{{ calendar }}",
         "start": "{{ (event.get('start', '') | as_datetime).strftime('%Y-%m-%d %H:%M:%S') }}",
@@ -39,6 +78,9 @@
         "description": {{ event.get('description', '') | to_json }},
         {% for attr in bool_attrs -%}
         "{{ attr }}": {{ 'true' if bool(event_match_any(event, bool_attrs[attr]), false) else 'false' }},
+        {% endfor -%}
+        {% for attr in attrs -%}
+        "{{ attr }}": {{ first_non_empty_string(event.get('description', '') | regex_findall(attrs[attr], true)) | to_json }},
         {% endfor -%}
         "summary": {{ work_event_summary(event, regexes) | replace(' #bil', '') | to_json }}
     }

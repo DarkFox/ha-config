@@ -270,6 +270,9 @@ automation:
           split_time: "{{ ((now().strftime('%Y-%m-%d') + ' 23:59:59')|as_datetime|as_local).isoformat() }}"
           agenda: "{{ all_events['calendar.arbejdskalender_vagtskema'].events | selectattr('start', 'lt', split_time) | list }}"
           tomorrow: "{{ all_events['calendar.arbejdskalender_vagtskema'].events | selectattr('start', 'ge', split_time) | list }}"
+      - wait_template: "{{ is_state('sensor.calendar_regexes', 'OK') }}"
+        timeout:
+          seconds: 30
       - service: mqtt.publish
         data:
           topic: virtual/agenda/vagtplan/events
@@ -278,6 +281,7 @@ automation:
             {% from 'agenda.jinja' import agenda_event %}
             {%- set regexes = states.sensor.calendar_regexes.attributes -%}
             {%- set bool_attrs = {
+              'travel': [regexes.transit, regexes.work_bil, regexes.bil],
               'bil': [regexes.work_bil, regexes.bil],
               'wake': [regexes.work_bil, regexes.bil, regexes.wfh],
             } -%}
@@ -330,6 +334,9 @@ automation:
           split_time: "{{ ((now().strftime('%Y-%m-%d') + ' 23:59:59')|as_datetime|as_local).isoformat() }}"
           agenda: "{{ all_events['calendar.arbejdskalender'].events | selectattr('start', 'lt', split_time) | list }}"
           tomorrow: "{{ all_events['calendar.arbejdskalender'].events | selectattr('start', 'ge', split_time) | list }}"
+      - wait_template: "{{ is_state('sensor.calendar_regexes', 'OK') }}"
+        timeout:
+          seconds: 30
       - service: mqtt.publish
         data:
           topic: virtual/agenda/arbejde/events
@@ -338,6 +345,7 @@ automation:
             {% from 'agenda.jinja' import agenda_event %}
             {%- set regexes = states.sensor.calendar_regexes.attributes -%}
             {%- set bool_attrs = {
+              'travel': [regexes.transit, regexes.work_bil, regexes.bil],
               'bil': [regexes.work_bil, regexes.bil],
               'wake': [regexes.work_bil, regexes.bil, regexes.wfh],
             } -%}
@@ -403,6 +411,9 @@ automation:
           split_time: "{{ ((now().strftime('%Y-%m-%d') + ' 23:59:59')|as_datetime|as_local).isoformat() }}"
           agenda: "{{ all_events['calendar.personlig'].events | selectattr('start', 'lt', split_time) | list }}"
           tomorrow: "{{ all_events['calendar.personlig'].events | selectattr('start', 'ge', split_time) | list }}"
+      - wait_template: "{{ is_state('sensor.calendar_regexes', 'OK') }}"
+        timeout:
+          seconds: 30
       - service: mqtt.publish
         data:
           topic: virtual/agenda/personlig/events
@@ -411,8 +422,13 @@ automation:
             {% from 'agenda.jinja' import agenda_event %}
             {%- set regexes = states.sensor.calendar_regexes.attributes -%}
             {%- set bool_attrs = {
+              'travel': [regexes.transit, regexes.bil],
               'bil': [regexes.bil],
-              'wake': [''],
+              'transit': [regexes.transit],
+              'wake': [{
+                'negate': true,
+                'regex': '.*(#nowake).*'
+              }],
             } -%}
             {
               "agenda": [
@@ -465,6 +481,9 @@ automation:
           split_time: "{{ ((now().strftime('%Y-%m-%d') + ' 23:59:59')|as_datetime|as_local).isoformat() }}"
           agenda: "{{ all_events['calendar.tripit'].events | selectattr('start', 'lt', split_time) | list }}"
           tomorrow: "{{ all_events['calendar.tripit'].events | selectattr('start', 'ge', split_time) | list }}"
+      - wait_template: "{{ is_state('sensor.calendar_regexes', 'OK') }}"
+        timeout:
+          seconds: 30
       - service: mqtt.publish
         data:
           topic: virtual/agenda/tripit/events
@@ -473,18 +492,36 @@ automation:
             {% from 'agenda.jinja' import agenda_event %}
             {%- set regexes = states.sensor.calendar_regexes.attributes -%}
             {%- set bool_attrs = {
+              'travel': [regexes.transit, regexes.bil],
               'bil': [regexes.bil],
-              'wake': [''],
+              'transit': [regexes.transit],
+              'flight': ['.*(Flight).*'],
+              'wake': [{
+                'negate': true,
+                'regex': '.*( Eberhardt is in ).*'
+              }]
+            } -%}
+            {%- set attrs = {
+              'type': '\[(.+)\](?: (?:.+) -)* (?:.+) to (?:.+)',
+              'carrier': '\[(?:.+)\](?: (.+) -)* (?:.+) to (?:.+)',
+              'from': '\[(?:.+)\](?: (?:.+) -)* (.+) to (?:.+)',
+              'to': '\[(?:.+)\](?: (?:.+) -)* (?:.+) to (.+)'
             } -%}
             {
               "agenda": [
                 {% for event in agenda|sort(attribute='start') | list -%}
-                  {{ agenda_event("Tripit Kalender", event, regexes, bool_attrs) }}{%- if not loop.last %},{% endif %}
+                  {%- if ((event.get('end') | as_timestamp) - (event.get('start') | as_timestamp))/60/60 > 47 -%}
+                    {%- continue -%}
+                  {%- endif -%}
+                  {{ agenda_event("Tripit Kalender", event, regexes, bool_attrs, attrs) }}{%- if not loop.last %},{% endif %}
                 {%- endfor -%}
               ],
               "tomorrow": [
                 {% for event in tomorrow|sort(attribute='start') | list -%}
-                  {{ agenda_event("Tripit Kalender", event, regexes, bool_attrs) }}{%- if not loop.last %},{% endif %}
+                  {%- if ((event.get('end') | as_timestamp) - (event.get('start') | as_timestamp))/60/60 > 47 -%}
+                    {%- continue -%}
+                  {%- endif -%}
+                  {{ agenda_event("Tripit Kalender", event, regexes, bool_attrs, attrs) }}{%- if not loop.last %},{% endif %}
                 {%- endfor -%}
               ]
             }
