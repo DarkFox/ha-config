@@ -66,20 +66,21 @@ template:
               unknown
             {% endif %}
 
-      # Port old template sensor syntax to new template sensor syntax
       - name: Google Maps Embed Key
         unique_id: f740d25c-edb4-4414-8b24-68e86211d7b9
         state: !secret google_maps_embed_key
-      - name: Work URL Coords
-        unique_id: 3f4d717b-a008-4af8-ac63-c06db55ececc
+
+      - name: Martin Location URL Encoded
+        unique_id: dba11ecf-6f4a-4859-8292-9a2e19d5f52a
         state: >-
-          {% set zone = 'zone.rsh' %}
-          {{ state_attr(zone, 'latitude') }}%2C{{ state_attr(zone, 'longitude') }}
-      - name: Home URL Coords
-        unique_id: 9325ade6-7592-45dd-b2ad-154abd1b0900
+          {% set person = 'person.martin' %}
+          {{ state_attr(person, 'latitude') }}%2C{{ state_attr(person, 'longitude') }}
+
+      - name: Destination URL Encoded
+        unique_id: 7a840ea0-087e-4ed2-b2ae-b3377c807887
         state: >-
-          {% set zone = 'zone.home' %}
-          {{ state_attr(zone, 'latitude') }}%2C{{ state_attr(zone, 'longitude') }}
+          {% set location = state_attr('sensor.next_travel_event', 'location') %}
+          {{ location|urlencode }}
 
       - name: Commute Status Car
         unique_id: 5a3e3797-bbe0-4f6a-b5fa-54c452cafe32
