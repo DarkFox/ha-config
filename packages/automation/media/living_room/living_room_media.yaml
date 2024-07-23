@@ -20,17 +20,9 @@ binary_sensor:
               )
             ) or (
               is_state('media_player.stue_tv', 'on')
-              and state_attr('media_player.stue_tv', 'source') not in ['HDMI 1', 'HDMI 2']
+              and state_attr('media_player.stue_tv', 'source') not in ['NVIDIA', 'Sonos']
             )
           }}
-
-script:
-  change_living_room_media_source:
-    sequence:
-      - service: input_select.select_option
-        data:
-          entity_id: input_select.living_room_matrix_input
-          option: "{{ source }}"
 
 automation:
   - alias: living_room_tv_on
@@ -52,7 +44,7 @@ automation:
         entity_id: binary_sensor.living_room_video_out
         to: "off"
         for:
-          minutes: 2
+          seconds: 5
     condition:
       - condition: not
         conditions:
