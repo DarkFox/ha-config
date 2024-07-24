@@ -92,6 +92,42 @@ sensor:
         friendly_name: HA Last Restart
 
 automation:
+  - alias: Notify HA Server Power connection lost
+    id: e9719599-d69a-40e2-9cc0-de78d4d278c3
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: binary_sensor.ha_server_status
+      to: "off"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Home Assistant serveren har mistet forbindelsen til strømstikket!"
+
+  - alias: Notify HA Server Power turned off
+    id: a4dbdd07-a7b2-430c-81cb-3c9f5d595bbf
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: switch.ha_server
+      to: "off"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Strømmen til Home Assistant serveren er blevet slukket!"
+
+  - alias: Notify HA Server Power turned on
+    id: 1d9b57e6-ef42-4073-b275-66b450437888
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: switch.ha_server
+      to: "on"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Strømmen til Home Assistant serveren er blevet tændt!"
+
   - alias: Notify HA Shutdown
     id: e87622e0-9691-421b-8691-94fdab200eef
     initial_state: true
