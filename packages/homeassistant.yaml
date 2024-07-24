@@ -92,7 +92,30 @@ sensor:
         friendly_name: HA Last Restart
 
 automation:
+  - alias: Disable watchdog on expected shutdown
+    id: 182db9a6-a5ae-4f8e-a10d-039993322bb6
+    initial_state: true
+    trigger:
+      platform: homeassistant
+      event: shutdown
+    action:
+      - service: switch.turn_on
+        target:
+          entity_id: switch.disable_watchdog
+
+  - alias: Enable watchdog on startup
+    id: 5b24fffd-41c9-4d8c-a60b-8160986d828c
+    initial_state: true
+    trigger:
+      platform: homeassistant
+      event: start
+    action:
+      - service: switch.turn_off
+        target:
+          entity_id: switch.disable_watchdog
+
   - alias: Notify Of New External IP
+    id: e86275ad-9c5a-4243-9428-e47f82c03586
     initial_state: true
     trigger:
       platform: state
@@ -110,6 +133,7 @@ automation:
           message: "Din eksterne IP har ændret sig fra {{ trigger.from_state.state }} til {{ trigger.to_state.state }}"
 
   - alias: Update Available Notification
+    id: 2469a8f3-e00f-43ab-a0e2-defd8b34e319
     initial_state: true
     trigger:
       - platform: state
@@ -132,6 +156,7 @@ automation:
           message: "Ny Home Assistant opdatering! Version {{ states('sensor.docker_hub') }}"
 
   - alias: Uncommitted Changes Notification
+    id: bc36b25e-030a-4f15-a0e1-65cf739b7c37
     initial_state: true
     trigger:
       - platform: state
@@ -156,6 +181,7 @@ automation:
           message: "Uncommitted changes!"
 
   - alias: Clear TTS Cache
+    id: ac4fb256-a4c2-4a83-ba9c-edf92df19852
     initial_state: true
     trigger:
       platform: time
@@ -169,6 +195,7 @@ automation:
           clear_ha_tts_cache: false
 
   - alias: Set home_assistant_started on startup
+    id: e8b7e0a1-0e3e-45bd-9e48-53cb88d67650
     initial_state: true
     trigger:
       platform: homeassistant
