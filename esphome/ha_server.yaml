@@ -10,28 +10,36 @@ packages:
 wifi:
   reboot_timeout: 30min
 
-# Enable Home Assistant API
+script:
+  - id: watch_api
+    then:
+      - if:
+          condition:
+            for:
+              time: 15min
+              condition:
+                not:
+                  api.connected:
+          then:
+            - if:
+                condition:
+                  switch.is_on: disable_watchdog
+                then:
+                  - logger.log: "Client disconnected for 15 minutes, watchdog disabled"
+                else:
+                  - logger.log: "Client disconnected for 15 minutes, doing a hard restart"
+                  - switch.turn_off: relay
+                  - delay: 15s
+                  - switch.turn_on: relay
+                  - logger.log: "Restarted due to client disconnect. Disabling watchdog for 30 minutes"
+                  - switch.turn_on: disable_watchdog
+                  - delay: 30min
+                  - switch.turn_off: disable_watchdog
+
 api:
   reboot_timeout: 30min
   on_client_disconnected:
-    - if:
-        condition:
-          for:
-            time: 15min
-            condition:
-              not:
-                api.connected:
-        then:
-          - if:
-              condition:
-                switch.is_on: disable_watchdog
-              then:
-                - logger.log: "Client disconnected for 15 minutes, watchdog disabled"
-              else:
-                - logger.log: "Client disconnected for 15 minutes, doing a hard restart"
-                - switch.turn_off: relay
-                - delay: 5s
-                - switch.turn_on: relay
+    - script.execute: watch_api
 
 binary_sensor:
   - platform: status
@@ -42,3 +50,24 @@ switch:
     name: "Disable Watchdog"
     id: disable_watchdog
     optimistic: true
+    restore_mode: ALWAYS_ON
+    on_turn_on:
+      then:
+        - logger.log: "Watchdog disabled"
+    on_turn_off:
+      then:
+        - logger.log: "Watchdog enabled"
+        - if:
+            condition:
+              not:
+                api.connected:
+            then:
+              - script.execute: watch_api
+
+esphome:
+  on_boot:
+    priority: 600  # Low priority to ensure other setups run first
+    then:
+      - delay: 30min
+      - switch.turn_off: disable_watchdog
+      - logger.log: "Watchdog enabled after 30 minutes"
