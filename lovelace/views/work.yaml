@@ -128,13 +128,14 @@ cards:
                   state_attr('sensor.puzzel_ko', 'available_profiles')
                 ) %}
                 {% set current_profile = state_attr('sensor.puzzel_ko', 'profile_id') or [] %}
+                {% set expected_profile_ids = state_attr('binary_sensor.puzzel_expected_state', 'any') | map(attribute='id') | list %}
                 {% set ns = namespace(ret=[]) %}
                 {% for profile in profiles %}
                   {% set ns.ret = ns.ret + [
                     {
                       "type": "button",
                       "name": profile.name,
-                      "icon": ("mdi:menu" if profile.id != current_profile else "mdi:menu-open"),
+                      "icon": ("mdi:menu-open" if profile.id == current_profile else ("mdi:menu-close" if profile.id in expected_profile_ids else "mdi:menu")),
                       "action_name": ("Log ind" if profile.id != current_profile else " "),
                       "tap_action": {
                           "action": "call-service",
