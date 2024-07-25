@@ -16,6 +16,7 @@ sensor:
 command_line:
   - sensor:
       name: puzzel_user
+      unique_id: 5a09a86b-847d-4ed7-b622-901ce6b8054f
       scan_interval: 86400
       command: >
         curl
@@ -26,8 +27,22 @@ command_line:
       json_attributes:
         - result
   - sensor:
-      name: puzzel_user_state
+      name: puzzel_user_status
+      unique_id: 0719b916-d493-49c0-aa14-56f5fc3515c5
       scan_interval: 30
+      command: >
+        curl
+        --request GET "https://agent.puzzel.com/contactcentre5/{{ states('sensor.puzzel_customer_key') }}/users/{{ states('sensor.puzzel_user_id') }}/stateinformation"
+        --header "Authorization: Bearer {{ state_attr('sensor.puzzel_login', 'accessToken') }}"
+        --header "Content-Type: application/json"
+      # One of: Alerting, Allocated, Available, Busy, Connected, ConsultCall, Failure, NoAnswer, Searching, Setup, System, WrapUp
+      value_template: "{{ value_json.get('result', {}).get('userStatus', 'unknown') if 'result' in value_json else 'unknown' }}"
+      json_attributes:
+        - result
+  - sensor:
+      name: puzzel_user_details
+      unique_id: e3f543b5-926f-469b-a357-541625853d8e
+      scan_interval: 300
       command: >
         curl
         --request GET "https://agent.puzzel.com/contactcentre5/{{ states('sensor.puzzel_customer_key') }}/users/{{ states('sensor.puzzel_user_id') }}"
@@ -36,23 +51,41 @@ command_line:
       value_template: "{{ value_json.get('result', {}).get('contactCentreStatus', 'unknown') if 'result' in value_json else 'unknown' }}"
       json_attributes:
         - result
+  - sensor:
+      name: puzzel_user_requests
+      unique_id: ff51264f-48d8-4921-b7dd-4844f4745cdd
+      scan_interval: 3600
+      command: >
+        curl
+        --request GET "https://agent.puzzel.com/contactcentre5/{{ states('sensor.puzzel_customer_key') }}/users/{{ states('sensor.puzzel_user_id') }}/stateinformation/extended?personalQueue=1&request=1&extendedRequestInfo=1"
+        --header "Authorization: Bearer {{ state_attr('sensor.puzzel_login', 'accessToken') }}"
+        --header "Content-Type: application/json"
+      value_template: "{{ value_json.get('result', {}).get('request', [])|length if 'result' in value_json else 'unknown' }}"
+      json_attributes:
+        - result
 
 template:
   - sensor:
       - name: "Puzzel Customer Key"
+        unique_id: 7a90f696-0386-4246-80e1-0ff6af34307a
         state: "{{ (state_attr('sensor.puzzel_user', 'result') or {}).get('customerKey') }}"
       - name: "Puzzel User ID"
+        unique_id: ccd39176-4144-416d-ba2f-95f05c7427bc
         state: "{{ (state_attr('sensor.puzzel_user', 'result') or {}).get('userId') }}"
       - name: "Puzzel Nummer"
-        state: "{{ (state_attr('sensor.puzzel_user_state', 'result') or {}).get('mobilePhone') }}"
+        unique_id: aec4f600-450e-4b32-8bb3-01f6718627c3
+        state: "{{ (state_attr('sensor.puzzel_user_status', 'result') or {}).get('phoneNumber') }}"
       - name: "Puzzel Status"
-        state: "{{ (state_attr('sensor.puzzel_user_state', 'result') or {}).get('contactCentreStatus') }}"
+        unique_id: 991d78b7-4f12-4625-a6cf-b7e29574d175
+        state: "{{ (state_attr('sensor.puzzel_user_status', 'result') or {}).get('contactCentreStatus') }}"
       - name: "Puzzel Profil"
+        unique_id: ccbbdf06-3c54-4aea-b73f-11412a10fdc5
         state: "{{ 'Logget af' if is_state('sensor.puzzel_state', 'Logget af') else states('sensor.puzzel_ko') }}"
       - name: "Puzzel Kø"
+        unique_id: e4f07986-bf7e-4bbf-9176-cfd50d4f6ed1
         state: |
-          {% set profiles = (state_attr('sensor.puzzel_user_state', 'result') or {}).get('profiles', None) %}
-          {% set currentProfileId = (state_attr('sensor.puzzel_user_state', 'result') or {}).get('currentProfileId', None) %}
+          {% set profiles = (state_attr('sensor.puzzel_user_details', 'result') or {}).get('profiles', None) %}
+          {% set currentProfileId = (state_attr('sensor.puzzel_user_details', 'result') or {}).get('currentProfileId', None) %}
           {% if profiles and currentProfileId %}
             {% set currentProfiles = profiles | selectattr('id', 'equalto', currentProfileId) | list %}
             {{ (currentProfiles | first).name if currentProfiles|length > 0 else 'unknown' }}
@@ -60,22 +93,24 @@ template:
             unknown
           {% endif %}
         attributes:
-          profile_id: "{{ (state_attr('sensor.puzzel_user_state', 'result') or {}).get('currentProfileId') }}"
-          available_profiles: "{{ (state_attr('sensor.puzzel_user_state', 'result') or {}).get('profiles') }}"
+          profile_id: "{{ (state_attr('sensor.puzzel_user_details', 'result') or {}).get('currentProfileId') }}"
+          available_profiles: "{{ (state_attr('sensor.puzzel_user_details', 'result') or {}).get('profiles') }}"
       - name: "Puzzel State"
+        unique_id: 2ad1139e-ab89-487e-adba-3774317be3cc
         state: >-
-          {% if is_state('sensor.puzzel_user_state', 'Pause') %}
+          {% if is_state('sensor.puzzel_user_details', 'Pause') %}
             Pause
-          {% elif is_state('sensor.puzzel_user_state', 'LoggedOff') %}
+          {% elif is_state('sensor.puzzel_user_details', 'LoggedOff') %}
             Logget af
-          {% elif is_state('sensor.puzzel_user_state', 'LoggedOn') %}
+          {% elif is_state('sensor.puzzel_user_details', 'LoggedOn') %}
             Ledig
           {% else %}
             unknown
           {% endif %}
   - binary_sensor:
       - name: "Puzzel Status"
-        state: "{{ states('sensor.puzzel_user_state') in ['LoggedOn', 'Pause'] }}"
+        unique_id: dfa2a6a0-d23d-4bb5-9e99-a6c4f39fa98a
+        state: "{{ states('sensor.puzzel_user_details') in ['LoggedOn', 'Pause'] }}"
         attributes:
           profil: "{{ states('sensor.puzzel_ko') }}"
           state: "{{ states('sensor.puzzel_state') }}"
@@ -415,6 +450,7 @@ script:
 automation:
   - id: update_puzzel_user_info
     alias: Update Puzzel user info
+    initial_state: true
     mode: queued
     trigger:
       - platform: state
@@ -431,10 +467,42 @@ automation:
           seconds: 1
       - service: homeassistant.update_entity
         target:
-          entity_id: sensor.puzzel_user_state
+          entity_id: sensor.puzzel_user_details
+
+  - alias: Puzzel faster scan interval when logged on
+    id: 0a2b75b8-58d4-4dce-8894-fb09bd8aba6b
+    initial_state: true
+    mode: single
+    trigger:
+      - platform: time_pattern
+        seconds: "/5"
+    condition:
+      - condition: state
+        entity_id: binary_sensor.puzzel_status
+        state: "on"
+    action:
+      - service: homeassistant.update_entity
+        target:
+          entity_id:
+            - sensor.puzzel_user_status
+            - sensor.puzzel_user_details
+
+  - alias: Update Puzzel Requests
+    id: 7194575a-e2c6-4c54-b081-847fdf8056d2
+    initial_state: true
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: sensor.puzzel_user_status
+        not_from: null # Ignore attribute changes
+    action:
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.puzzel_user_requests
 
   - id: puzzel_state_confirmation
     alias: Puzzel state confirmation
+    initial_state: true
     mode: restart
     trigger:
       - platform: state
