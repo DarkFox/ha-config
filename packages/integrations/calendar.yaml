@@ -75,6 +75,68 @@ ics_calendar:
       days: 31
 
 template:
+  - trigger:
+      platform: event
+      event_type: calendar_updated
+      event_data:
+        calendar: Arbejdskalender
+    binary_sensor:
+      - name: Arbejdskalender
+        unique_id: 44f4d46e-d205-4197-b4e7-3bd74fe863d7
+        state: >-
+          {%- from 'agenda.jinja' import current_events -%}
+          {%- set events = trigger.event.data.get('events', [])  -%}
+          {%- set time = trigger.event.data.get('time') -%}
+          {{ 
+            'on' if current_events(events, time) | from_json
+            else 'off'
+          }}
+        attributes:
+          last_updated: "{{ now().isoformat() }}"
+          current: >-
+            {%- from 'agenda.jinja' import current_events -%}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ current_events(events, time) | from_json }}
+          next: >-
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {% from 'agenda.jinja' import coming_events %}
+            {{ coming_events(events, time) | from_json | first }}
+          agenda: >-
+            {% from 'agenda.jinja' import agenda %}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ agenda(events, time) | from_json }}
+
+      - name: Vagtskema
+        unique_id: 4358bb80-df4c-46cc-91f3-4d16696afcfe
+        state: >-
+          {%- from 'agenda.jinja' import current_events -%}
+          {%- set events = trigger.event.data.get('events', [])  -%}
+          {%- set time = trigger.event.data.get('time') -%}
+          {{ 
+            'on' if current_events(events, time, 'vagtskema') | from_json
+            else 'off'
+          }}
+        attributes:
+          last_updated: "{{ now().isoformat() }}"
+          current: >-
+            {%- from 'agenda.jinja' import current_events -%}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ current_events(events, time, 'vagtskema') | from_json }}
+          next: >-
+            {% from 'agenda.jinja' import coming_events %}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ coming_events(events, time, 'vagtskema') | from_json | first }}
+          agenda: >-
+            {% from 'agenda.jinja' import agenda %}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ agenda(events, time, 'vagtskema') | from_json }}
+
   - sensor:
       - name: Calendar Regexes
         state: "OK"
@@ -547,3 +609,55 @@ automation:
           topic: virtual/agenda/tripit/state
           retain: true
           payload: "{{ trigger.payload_json.agenda | length }}"
+
+  - alias: Update Work Calendar
+    id: ada86b2e-be99-4b82-b53f-da58547a0b3c
+    initial_state: true
+    mode: restart
+    trigger:
+      - platform: time_pattern
+        hours: "*"
+        minutes: "/15"
+        seconds: "0"
+      - platform: state
+        entity_id: calendar.arbejdskalender_ics
+      - platform: state
+        entity_id: binary_sensor.home_assistant_loaded
+        to: "on"
+    variables:
+      calendar_entity: calendar.arbejdskalender_ics
+      calendar_name: "Arbejdskalender"
+      regexes: "{{ states.sensor.calendar_regexes.attributes }}"
+      bool_attrs:
+        travel: "{{ [regexes.transit, regexes.work_bil, regexes.bil] }}"
+        bil: "{{ [regexes.work_bil, regexes.bil] }}"
+        wake: "{{ [regexes.work_bil, regexes.bil, regexes.wfh] }}"
+        vagtskema: "{{ [regexes.vagtskema] }}"
+        vagt: "{{ [regexes.vagt] }}"
+        on_site: "{{ [regexes.on_site] }}"
+        off_site: "{{ [regexes.off_site] }}"
+        rsr: "{{ [regexes.rsr] }}"
+        rsh: "{{ [regexes.rsh] }}"
+        wfh: "{{ [regexes.wfh] }}"
+        ferie: "{{ [regexes.ferie] }}"
+    action:
+      - service: calendar.get_events
+        data:
+          start_date_time: "{{ (now() + timedelta(days=-1)).strftime('%Y-%m-%d') }} 00:00:00"
+          end_date_time: "{{ (now() + timedelta(days=3)).strftime('%Y-%m-%d') }} 23:59:59"
+        target:
+          entity_id: "{{ calendar_entity}}"
+        response_variable: all_events
+      - variables:
+          agenda_events: >-
+            {% from 'agenda.jinja' import agenda_event %}
+            {% set ns = namespace(ret=[]) %}
+            {% for event in all_events[calendar_entity].events | sort(attribute='start') | list -%}
+              {% set ns.ret = ns.ret + [agenda_event(calendar_name, dict(event, location=none), regexes, bool_attrs)|from_json] %}
+            {%- endfor -%}
+            {{ ns.ret }}
+      - event: "calendar_updated"
+        event_data:
+          calendar: "{{ calendar_name }}"
+          time: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+          events: "{{ agenda_events }}"
