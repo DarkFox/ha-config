@@ -75,28 +75,51 @@ cards:
               - font-weight: bold
               - color: var(--primary-text-color)
 
-      - type: custom:button-card
-        entity: sensor.puzzel_state
-        label: "[[[ return states['sensor.puzzel_state'].state == 'Logget af' ? '' : states['sensor.puzzel_ko'].state ]]]"
-        icon: mdi:phone
-        layout: icon_state_name2nd
-        show_name: false
-        show_state: true
-        show_label: true
-        tap_action:
-          action: call-service
-          service: switch.toggle
-          service_data:
-            entity_id: switch.puzzel
-        state:
-          - value: "Ledig"
-            color: var(--label-badge-green)
-          - value: "Logget af"
-            color: var(--label-badge-red)
-            icon: mdi:phone-off
-          - value: "Pause"
-            color: var(--label-badge-yellow)
-            icon: mdi:phone-paused
+      - type: horizontal-stack
+        cards:
+          - type: custom:button-card
+            entity: sensor.puzzel_state
+            label: "[[[ return states['sensor.puzzel_state'].state == 'Logget af' ? '' : states['sensor.puzzel_ko'].state ]]]"
+            icon: mdi:phone
+            layout: icon_state_name2nd
+            show_name: false
+            show_state: true
+            show_label: true
+            tap_action:
+              action: call-service
+              service: switch.toggle
+              service_data:
+                entity_id: switch.puzzel
+            state:
+              - value: "Ledig"
+                color: var(--label-badge-green)
+              - value: "Logget af"
+                color: var(--label-badge-red)
+                icon: mdi:phone-off
+              - value: "Pause"
+                color: var(--label-badge-yellow)
+                icon: mdi:phone-paused
+            styles:
+              card:
+                - height: 100px
+                - flex-grow: 1
+                - margin-right: 10px # Add some margin for spacing
+
+          - type: custom:button-card
+            entity: automation.puzzel_robot
+            show_name: false
+            show_state: false
+            color_type: auto
+            tap_action:
+              action: call-service
+              service: automation.toggle
+              service_data:
+                entity_id: automation.puzzel_robot
+            styles:
+              card:
+                - aspect-ratio: 1/1
+                - height: 100px
+                - width: 100px
 
       - type: entities
         card_mod:
