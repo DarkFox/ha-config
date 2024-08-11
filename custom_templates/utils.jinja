@@ -167,3 +167,17 @@
     {%- endif -%}
     {{ ns.sorted_list }}
 {%- endmacro -%}
+
+{%- macro attr_has_value(entity_id, attribute) -%}
+    {#-
+    This macro checks if an entity has a specific attribute with a value.
+
+    Parameters:
+    - entity_id: The entity ID to check.
+    - attribute: The attribute to check.
+
+    Usage:
+    {{ attr_has_value('sensor.temperature', 'unit_of_measurement') }}  # Output: true or false
+    -#}
+    {{ true if states[entity_id] is defined and attribute in states[entity_id].attributes else false }}
+{%- endmacro -%}

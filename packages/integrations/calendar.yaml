@@ -70,7 +70,7 @@ ics_calendar:
       url: !secret optima_ics_url
       days: 7
 
-    - name: "TripIt"
+    - name: "Tripit"
       url: !secret tripit_calendar_url
       days: 31
 
@@ -79,10 +79,10 @@ template:
       platform: event
       event_type: calendar_updated
       event_data:
-        calendar: Arbejdskalender
+        calendar: Personlig Kalender
     binary_sensor:
-      - name: Arbejdskalender
-        unique_id: 44f4d46e-d205-4197-b4e7-3bd74fe863d7
+      - name: Personlig Kalender
+        unique_id: ccc9b0d0-6f0c-4248-abed-96fe280f4199
         state: >-
           {%- from 'agenda.jinja' import current_events -%}
           {%- set events = trigger.event.data.get('events', [])  -%}
@@ -98,6 +98,11 @@ template:
             {%- set events = trigger.event.data.get('events', [])  -%}
             {%- set time = trigger.event.data.get('time') -%}
             {{ current_events(events, time) | from_json }}
+          coming: >-
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {% from 'agenda.jinja' import coming_events %}
+            {{ coming_events(events, time) | from_json }}
           next: >-
             {%- set events = trigger.event.data.get('events', [])  -%}
             {%- set time = trigger.event.data.get('time') -%}
@@ -108,6 +113,45 @@ template:
             {%- set events = trigger.event.data.get('events', [])  -%}
             {%- set time = trigger.event.data.get('time') -%}
             {{ agenda(events, time) | from_json }}
+
+  - trigger:
+      platform: event
+      event_type: calendar_updated
+      event_data:
+        calendar: Arbejdskalender
+    binary_sensor:
+      - name: Arbejdskalender
+        unique_id: 44f4d46e-d205-4197-b4e7-3bd74fe863d7
+        state: >-
+          {%- from 'agenda.jinja' import current_events -%}
+          {%- set events = trigger.event.data.get('events', [])  -%}
+          {%- set time = trigger.event.data.get('time') -%}
+          {{ 
+            'on' if current_events(events, time, 'vagtskema', 'false') | from_json
+            else 'off'
+          }}
+        attributes:
+          last_updated: "{{ now().isoformat() }}"
+          current: >-
+            {%- from 'agenda.jinja' import current_events -%}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ current_events(events, time, 'vagtskema', 'false') | from_json }}
+          coming: >-
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {% from 'agenda.jinja' import coming_events %}
+            {{ coming_events(events, time, 'vagtskema', 'false') | from_json }}
+          next: >-
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {% from 'agenda.jinja' import coming_events %}
+            {{ coming_events(events, time, 'vagtskema', 'false') | from_json | first }}
+          agenda: >-
+            {% from 'agenda.jinja' import agenda %}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ agenda(events, time, 'vagtskema', 'false') | from_json }}
 
       - name: Vagtskema
         unique_id: 4358bb80-df4c-46cc-91f3-4d16696afcfe
@@ -126,6 +170,11 @@ template:
             {%- set events = trigger.event.data.get('events', [])  -%}
             {%- set time = trigger.event.data.get('time') -%}
             {{ current_events(events, time, 'vagtskema') | from_json }}
+          coming: >-
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {% from 'agenda.jinja' import coming_events %}
+            {{ coming_events(events, time, 'vagtskema') | from_json }}
           next: >-
             {% from 'agenda.jinja' import coming_events %}
             {%- set events = trigger.event.data.get('events', [])  -%}
@@ -137,8 +186,48 @@ template:
             {%- set time = trigger.event.data.get('time') -%}
             {{ agenda(events, time, 'vagtskema') | from_json }}
 
+  - trigger:
+      platform: event
+      event_type: calendar_updated
+      event_data:
+        calendar: Tripit Kalender
+    binary_sensor:
+      - name: Tripit Kalender
+        unique_id: 21278853-7e27-4cf4-a0d5-4cb8276b7c51
+        state: >-
+          {%- from 'agenda.jinja' import current_events -%}
+          {%- set events = trigger.event.data.get('events', [])  -%}
+          {%- set time = trigger.event.data.get('time') -%}
+          {{ 
+            'on' if current_events(events, time) | from_json
+            else 'off'
+          }}
+        attributes:
+          last_updated: "{{ now().isoformat() }}"
+          current: >-
+            {%- from 'agenda.jinja' import current_events -%}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ current_events(events, time) | from_json }}
+          coming: >-
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {% from 'agenda.jinja' import coming_events %}
+            {{ coming_events(events, time) | from_json }}
+          next: >-
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {% from 'agenda.jinja' import coming_events %}
+            {{ coming_events(events, time) | from_json | first }}
+          agenda: >-
+            {% from 'agenda.jinja' import agenda %}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ agenda(events, time) | from_json }}
+
   - sensor:
       - name: Calendar Regexes
+        unique_id: 27781f7b-68e2-4792-b662-12e48fb6ae62
         state: "OK"
         attributes:
           ferie: *ferie_regex
@@ -153,76 +242,106 @@ template:
           bil: *personlig_bil_regex
           transit: *transit_regex
 
-      - name: Agenda
+      - name: Full Agenda
+        unique_id: 8abe262f-996a-46c0-bcba-c531dfa3580b
         state: >-
-          {{ states('sensor.vagtplan_agenda')|int(0)
-            + states('sensor.arbejde_agenda')|int(0)
-            + states('sensor.personlig_agenda')|int(0)
-            + states('sensor.tripit_agenda')|int(0) }}
+          {%- from 'utils.jinja' import attr_has_value -%}
+          {%- if attr_has_value('sensor.full_agenda', 'events') == 'True' -%}
+            {{ state_attr('sensor.full_agenda', 'events') | length }}
+          {%- else -%}
+            unknown
+          {%- endif %}
         attributes:
           events: >-
-            {% if has_value('sensor.vagtplan_agenda') and 'agenda' in states.sensor.vagtplan_agenda.attributes
-              and has_value('sensor.arbejde_agenda') and 'agenda' in states.sensor.arbejde_agenda.attributes
-              and has_value('sensor.personlig_agenda') and 'agenda' in states.sensor.personlig_agenda.attributes
-              and has_value('sensor.tripit_agenda') and 'agenda' in states.sensor.tripit_agenda.attributes %}
-              {{ (state_attr('sensor.vagtplan_agenda', 'agenda')
-                + state_attr('sensor.arbejde_agenda', 'agenda')
-                + state_attr('sensor.personlig_agenda', 'agenda')
-                + state_attr('sensor.tripit_agenda', 'agenda'))|sort(attribute='start') | list }}
+            {%- from 'agenda.jinja' import gather_events -%}
+            {%- set calendars = [
+              'binary_sensor.personlig_kalender',
+              'binary_sensor.arbejdskalender',
+              'binary_sensor.vagtskema',
+              'binary_sensor.tripit_kalender'
+            ] -%}
+            {{ gather_events(calendars) }}
+
+      - name: Upcoming Events
+        unique_id: d67348e6-f91d-4bb0-9efd-b9b7f9be5c52
+        state: >-
+          {%- from 'utils.jinja' import attr_has_value -%}
+          {%- if attr_has_value('sensor.upcoming_events', 'events') == 'True' -%}
+            {{ state_attr('sensor.upcoming_events', 'events') | length }}
+          {%- else -%}
+            unknown
+          {%- endif %}
+        attributes:
+          events: >-
+            {%- from 'agenda.jinja' import gather_events -%}
+            {%- set calendars = [
+              'binary_sensor.personlig_kalender',
+              'binary_sensor.arbejdskalender',
+              'binary_sensor.vagtskema',
+              'binary_sensor.tripit_kalender'
+            ] -%}
+            {{ gather_events(calendars, 'coming') }}
+
+      - name: Agenda
+        unique_id: 8bc46f96-116a-4a6a-b2a0-ca29839a6b0f
+        state: >-
+          {%- from 'utils.jinja' import attr_has_value -%}
+          {%- if attr_has_value('sensor.agenda', 'events') == 'True' -%}
+            {{ state_attr('sensor.agenda', 'events') | length }}
+          {%- else -%}
+            unknown
+          {%- endif %}
+        attributes:
+          events: >-
+            {% set end = now().strftime('%Y-%m-%d') + " 23:59:59" %}
+            {% if has_value('sensor.full_agenda') and 'events' in states.sensor.full_agenda.attributes %}
+              {{
+                state_attr('sensor.full_agenda', 'events')
+                  | selectattr('start', 'le', end)
+                  | sort(attribute='start') | list
+              }}
             {% else %}
               []
             {% endif %}
 
       - name: Agenda Tomorrow
+        unique_id: 19ec5fa1-2339-49c4-870d-4ce02ebd5c2a
         state: >-
-          {% if has_value('sensor.vagtplan_agenda') and 'tomorrow' in states.sensor.vagtplan_agenda.attributes
-            and has_value('sensor.arbejde_agenda') and 'tomorrow' in states.sensor.arbejde_agenda.attributes
-            and has_value('sensor.personlig_agenda') and 'tomorrow' in states.sensor.personlig_agenda.attributes
-            and has_value('sensor.tripit_agenda') and 'tomorrow' in states.sensor.tripit_agenda.attributes %}
-              {{ state_attr('sensor.vagtplan_agenda', 'tomorrow')|length
-                + state_attr('sensor.arbejde_agenda', 'tomorrow')|length
-                + state_attr('sensor.personlig_agenda', 'tomorrow')|length
-                + state_attr('sensor.tripit_agenda', 'tomorrow')|length }}
-            {% else %}
-              0
-            {% endif %}
+          {%- from 'utils.jinja' import attr_has_value -%}
+          {%- if attr_has_value('sensor.agenda_tomorrow', 'events') == 'True' -%}
+            {{ state_attr('sensor.agenda_tomorrow', 'events') | length }}
+          {%- else -%}
+            unknown
+          {%- endif %}
         attributes:
           events: >-
-            {% if has_value('sensor.vagtplan_agenda') and 'tomorrow' in states.sensor.vagtplan_agenda.attributes
-              and has_value('sensor.arbejde_agenda') and 'tomorrow' in states.sensor.arbejde_agenda.attributes
-              and has_value('sensor.personlig_agenda') and 'tomorrow' in states.sensor.personlig_agenda.attributes
-              and has_value('sensor.tripit_agenda') and 'tomorrow' in states.sensor.tripit_agenda.attributes %}
-              {{ (state_attr('sensor.vagtplan_agenda', 'tomorrow')
-                + state_attr('sensor.arbejde_agenda', 'tomorrow')
-                + state_attr('sensor.personlig_agenda', 'tomorrow')
-                + state_attr('sensor.tripit_agenda', 'tomorrow'))|sort(attribute='start') | list }}
-            {% else %}
-              []
-            {% endif %}
-
-      - name: Full Agenda
-        state: >-
-          {{ states('sensor.agenda')|int(0)
-            + states('sensor.agenda_tomorrow')|int(0) }}
-        attributes:
-          events: >-
-            {% set agendas = [state_attr('sensor.agenda', 'events'),
-                              state_attr('sensor.agenda_tomorrow', 'events')] %}
-            {% if (agendas | select('!=', None) | list | length) > 0 %}
-              {{ (state_attr('sensor.agenda', 'events')
-                + state_attr('sensor.agenda_tomorrow', 'events'))|sort(attribute='start') | list }}
+            {% set start = (now()+timedelta(days=1)).strftime('%Y-%m-%d') + " 00:00:00" %}
+            {% set end = (now()+timedelta(days=1)).strftime('%Y-%m-%d') + " 23:59:59" %}
+            {% if has_value('sensor.full_agenda') and 'events' in states.sensor.full_agenda.attributes %}
+              {{
+                state_attr('sensor.full_agenda', 'events')
+                  | selectattr('end', 'ge', start)
+                  | selectattr('start', 'le', end)
+                  | sort(attribute='start') | list
+              }}
             {% else %}
               []
             {% endif %}
 
       - name: Current Event
+        unique_id: d50945ac-45ff-46e2-8d75-f84d5c51a1b5
         state: >-
           {% set event = state_attr('sensor.current_event', 'event') or {} %}
           {{ event.get('summary', 'Ingen') }}
         attributes:
           event: >-
             {% set now = now()|as_timestamp|timestamp_custom('%Y-%M-%d %H:%m:%S') %}
-            {% set event = state_attr('sensor.full_agenda', 'events')|selectattr('start', 'le', now)|selectattr('end', 'ge', now)|list|first %}
+            {% set event = state_attr('sensor.full_agenda', 'events')
+                            | selectattr('start', 'le', now)
+                            | selectattr('end', 'ge', now)
+                            | sort(attribute='duration')
+                            | list
+                            | first %}
             {{ event if event is defined else None }}
           calendar: >-
             {% set event = state_attr('sensor.current_event', 'event') or {} %}
@@ -252,363 +371,68 @@ template:
             {% set event = state_attr('sensor.current_event', 'event') or {} %}
             {{ event.get('summary', None) }}
 
-      - name: Upcoming Events
-        state: >-
-          {% set start = now().strftime('%Y-%m-%d %H:%M:%S') %}
-          {% set end = (now() + timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S') %}
-          {{ state_attr('sensor.full_agenda', 'events')|selectattr('start', 'ge', start)|selectattr('start', 'lt', end)|list|length }}
-        attributes:
-          events: >-
-            {% set start = now().strftime('%Y-%m-%d %H:%M:%S') %}
-            {% set end = (now() + timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S') %}
-            {{ state_attr('sensor.full_agenda', 'events')|selectattr('start', 'ge', start)|selectattr('start', 'lt', end)|list }}
-
-      - name: Next personal event start clock
-        unique_id: a001219d-0724-46b4-9af9-a5f13532a397
-        state: >-
-          {% if has_value('calendar.personlig') and 'start_time' in states.calendar.personlig.attributes %}
-            {{ state_attr('calendar.personlig', 'start_time').split(' ')[1][:-3] }}
-          {% else %}
-            unknown
-          {% endif %}
-
-      - name: Days to next personal event
-        state: >-
-          {% from 'easy_time.jinja' import count_the_days %}
-          {% if has_value('calendar.personlig') and 'start_time' in states.calendar.personlig.attributes %}
-            {% set start_time = state_attr('calendar.personlig', 'start_time') | as_datetime | as_local %}
-            {{ count_the_days(start_time) }}
-          {% else %}
-            unknown
-          {% endif %}
-
       - name: Next Work Event
+        unique_id: 5ce01854-aa4a-48a3-870d-2a25cf23a5bb
         state: >-
-          {% set event = state_attr('sensor.arbejde_agenda', 'agenda')|selectattr('end', 'ge', (now()|string))|list|first %}
+          {% set event = state_attr('binary_sensor.arbejdskalender', 'next')| list | first %}
           {{ event.summary if event is defined else 'Ingen' }}
         attributes:
           event: >-
-            {% set event = state_attr('sensor.arbejde_agenda', 'agenda')|selectattr('end', 'ge', (now()|string))|list|first %}
+            {% set event = state_attr('binary_sensor.arbejdskalender', 'next')| list | first %}
             {{ event if event is defined else None }}
           start_time: >-
-            {% set event = state_attr('sensor.arbejde_agenda', 'agenda')|selectattr('end', 'ge', (now()|string))|list|first %}
+            {% set event = state_attr('binary_sensor.arbejdskalender', 'next')| list | first %}
             {{ event.start.split(' ')[1][:-3] if event is defined else None }}
 
-mqtt:
-  sensor:
-    - name: Vagtplan Agenda
-      state_topic: virtual/agenda/vagtplan/state
-      json_attributes_topic: virtual/agenda/vagtplan/events
-      unit_of_measurement: "events"
-    - name: Arbejde Agenda
-      state_topic: virtual/agenda/arbejde/state
-      json_attributes_topic: virtual/agenda/arbejde/events
-      unit_of_measurement: "events"
-    - name: Personlig Agenda
-      state_topic: virtual/agenda/personlig/state
-      json_attributes_topic: virtual/agenda/personlig/events
-      unit_of_measurement: "events"
-    - name: Tripit Agenda
-      state_topic: virtual/agenda/tripit/state
-      json_attributes_topic: virtual/agenda/tripit/events
-      unit_of_measurement: "events"
-
 automation:
-  - id: update_vagtplan_agenda
-    alias: Update Vagtplan Agenda
+  - alias: Update Personal Calendar
+    id: 16e9122a-c1c4-4966-9040-1dc133e2e009
     initial_state: true
+    mode: restart
     trigger:
       - platform: time_pattern
         hours: "*"
-        minutes: "/30"
+        minutes: "/15"
         seconds: "0"
       - platform: state
-        entity_id:
-          - calendar.arbejdskalender_vagtskema
-          - calendar.arbejdskalender
+        entity_id: calendar.personlig
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
+        for:
+          seconds: 10
+      - platform: state
+        entity_id: sensor.calendar_regexes
+    variables:
+      calendar_entity: calendar.personlig
+      calendar_name: "Personlig Kalender"
+      regexes: "{{ states.sensor.calendar_regexes.attributes }}"
+      bool_attrs:
+        travel: "{{ [regexes.transit, regexes.bil] }}"
+        bil: "{{ [regexes.bil] }}"
+        transit: "{{ [regexes.transit] }}"
+        wake: "{{ [{'negate': true, 'regex': '.*(#nowake).*'}] }}"
     action:
       - service: calendar.get_events
         data:
-          start_date_time: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+          start_date_time: "{{ (now() + timedelta(days=-1)).strftime('%Y-%m-%d') }} 00:00:00"
           end_date_time: "{{ (now() + timedelta(days=1)).strftime('%Y-%m-%d') }} 23:59:59"
         target:
-          entity_id: calendar.arbejdskalender_vagtskema
+          entity_id: "{{ calendar_entity}}"
         response_variable: all_events
       - variables:
-          split_time: "{{ ((now().strftime('%Y-%m-%d') + ' 23:59:59')|as_datetime|as_local).isoformat() }}"
-          agenda: "{{ all_events['calendar.arbejdskalender_vagtskema'].events | selectattr('start', 'lt', split_time) | list }}"
-          tomorrow: "{{ all_events['calendar.arbejdskalender_vagtskema'].events | selectattr('start', 'ge', split_time) | list }}"
-      - wait_template: "{{ is_state('sensor.calendar_regexes', 'OK') }}"
-        timeout:
-          seconds: 30
-      - service: mqtt.publish
-        data:
-          topic: virtual/agenda/vagtplan/events
-          retain: true
-          payload: >
+          agenda_events: >-
             {% from 'agenda.jinja' import agenda_event %}
-            {%- set regexes = states.sensor.calendar_regexes.attributes -%}
-            {%- set bool_attrs = {
-              'travel': [regexes.transit, regexes.work_bil, regexes.bil],
-              'bil': [regexes.work_bil, regexes.bil],
-              'wake': [regexes.work_bil, regexes.bil, regexes.wfh],
-            } -%}
-            {
-              "agenda": [
-                {% for event in agenda|sort(attribute='start') | list -%}
-                  {{ agenda_event("Vagtplan", event, regexes, bool_attrs) }}{%- if not loop.last %},{% endif %}
-                {%- endfor -%}
-              ],
-              "tomorrow": [
-                {% for event in tomorrow|sort(attribute='start') | list -%}
-                  {{ agenda_event("Vagtplan", event, regexes, bool_attrs) }}{%- if not loop.last %},{% endif %}
-                {%- endfor -%}
-              ]
-            }
-
-  - id: update_vagtplan_agenda_state
-    alias: Update Vagtplan Agenda State
-    initial_state: true
-    trigger:
-      - platform: mqtt
-        topic: virtual/agenda/vagtplan/events
-    action:
-      - service: mqtt.publish
-        data:
-          topic: virtual/agenda/vagtplan/state
-          retain: true
-          payload: "{{ trigger.payload_json.agenda | length }}"
-
-  - id: update_arbejde_agenda
-    alias: Update Arbejde Agenda
-    initial_state: true
-    trigger:
-      - platform: mqtt
-        topic: virtual/agenda/vagtplan/events
-    action:
-      - delay:
-          seconds: 5
-      - variables:
-          vagtplan: "{{ (state_attr('sensor.vagtplan_agenda', 'agenda') or []) + (state_attr('sensor.vagtplan_agenda', 'tomorrow') or []) }}"
-          next_shift: "{{ vagtplan[0] if vagtplan else none }}"
-      - service: calendar.get_events
-        data:
-          start_date_time: "{{ next_shift['start'] if next_shift else '1970-01-01 00:00:00' }}"
-          end_date_time: "{{ next_shift['end'] if next_shift else '1970-01-01 00:00:00' }}"
-        target:
-          entity_id: calendar.arbejdskalender
-        response_variable: all_events
-      - variables:
-          split_time: "{{ ((now().strftime('%Y-%m-%d') + ' 23:59:59')|as_datetime|as_local).isoformat() }}"
-          agenda: "{{ all_events['calendar.arbejdskalender'].events | selectattr('start', 'lt', split_time) | list }}"
-          tomorrow: "{{ all_events['calendar.arbejdskalender'].events | selectattr('start', 'ge', split_time) | list }}"
-      - wait_template: "{{ is_state('sensor.calendar_regexes', 'OK') }}"
-        timeout:
-          seconds: 30
-      - service: mqtt.publish
-        data:
-          topic: virtual/agenda/arbejde/events
-          retain: true
-          payload: >
-            {% from 'agenda.jinja' import agenda_event %}
-            {%- set regexes = states.sensor.calendar_regexes.attributes -%}
-            {%- set bool_attrs = {
-              'travel': [regexes.transit, regexes.work_bil, regexes.bil],
-              'bil': [regexes.work_bil, regexes.bil],
-              'wake': [regexes.work_bil, regexes.bil, regexes.wfh],
-            } -%}
-            {%- set ns = namespace(events=[],tomorrow=[]) -%}
-            {%- for event in agenda|sort(attribute='start') | list -%}
-                {%- if not (event.summary|regex_match('På (RSR|RSH)|Frokost|Aftensmad|Vagt|Fri|Opstartstid')) -%}
-                  {%- set ns.events = ns.events + [event] -%}
-                {%- endif -%}
+            {% set ns = namespace(ret=[]) %}
+            {% for event in all_events[calendar_entity].events | sort(attribute='start') | list -%}
+              {% set ns.ret = ns.ret + [agenda_event(calendar_name, dict(event, location=none), regexes, bool_attrs)|from_json] %}
             {%- endfor -%}
-            {%- for event in tomorrow|sort(attribute='start') | list -%}
-                {%- if not (event.summary|regex_match('På (RSR|RSH)|Frokost|Aftensmad|Vagt|Fri|Opstartstid')) -%}
-                  {%- set ns.tomorrow = ns.tomorrow + [event] -%}
-                {%- endif -%}
-            {%- endfor -%}
-            {
-              "agenda": [
-                {% for event in ns.events %}
-                  {{ agenda_event("Arbejdskalender", event, regexes, bool_attrs) }}{%- if not loop.last %},{% endif %}
-                {% endfor %}
-              ],
-              "tomorrow": [
-                {% for event in ns.tomorrow %}
-                  {{ agenda_event("Arbejdskalender", event, regexes, bool_attrs) }}{%- if not loop.last %},{% endif %}
-                {% endfor %}
-              ]
-            }
-
-  - id: update_arbejde_agenda_state
-    alias: Update Arbejde Agenda State
-    initial_state: true
-    trigger:
-      - platform: mqtt
-        topic: virtual/agenda/arbejde/events
-    action:
-      - service: mqtt.publish
-        data:
-          topic: virtual/agenda/arbejde/state
-          retain: true
-          payload: "{{ trigger.payload_json.agenda | length }}"
-
-  - id: update_personlig_agenda
-    alias: Update Personlig Agenda
-    initial_state: true
-    trigger:
-      - platform: time_pattern
-        hours: "*"
-        minutes: "/30"
-        seconds: "0"
-      - platform: state
-        entity_id: caldndar.personlig
-      - platform: state
-        entity_id: binary_sensor.home_assistant_loaded
-        to: "on"
-    action:
-      - service: calendar.get_events
-        data:
-          start_date_time: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
-          end_date_time: "{{ (now() + timedelta(days=1)).strftime('%Y-%m-%d') }} 23:59:59"
-        target:
-          entity_id: calendar.personlig
-        response_variable: all_events
-      - variables:
-          split_time: "{{ ((now().strftime('%Y-%m-%d') + ' 23:59:59')|as_datetime|as_local).isoformat() }}"
-          agenda: "{{ all_events['calendar.personlig'].events | selectattr('start', 'lt', split_time) | list }}"
-          tomorrow: "{{ all_events['calendar.personlig'].events | selectattr('start', 'ge', split_time) | list }}"
-      - wait_template: "{{ is_state('sensor.calendar_regexes', 'OK') }}"
-        timeout:
-          seconds: 30
-      - service: mqtt.publish
-        data:
-          topic: virtual/agenda/personlig/events
-          retain: true
-          payload: >
-            {% from 'agenda.jinja' import agenda_event %}
-            {%- set regexes = states.sensor.calendar_regexes.attributes -%}
-            {%- set bool_attrs = {
-              'travel': [regexes.transit, regexes.bil],
-              'bil': [regexes.bil],
-              'transit': [regexes.transit],
-              'wake': [{
-                'negate': true,
-                'regex': '.*(#nowake).*'
-              }],
-            } -%}
-            {
-              "agenda": [
-                {% for event in agenda|sort(attribute='start') | list -%}
-                  {{ agenda_event("Personlig kalender", event, regexes, bool_attrs) }}{%- if not loop.last %},{% endif %}
-                {%- endfor -%}
-              ],
-              "tomorrow": [
-                {% for event in tomorrow|sort(attribute='start') | list -%}
-                  {{ agenda_event("Personlig kalender", event, regexes, bool_attrs) }}{%- if not loop.last %},{% endif %}
-                {%- endfor -%}
-              ]
-            }
-
-  - id: update_personlig_agenda_state
-    alias: Update Personlig Agenda State
-    initial_state: true
-    trigger:
-      - platform: mqtt
-        topic: virtual/agenda/personlig/events
-    action:
-      - service: mqtt.publish
-        data:
-          topic: virtual/agenda/personlig/state
-          retain: true
-          payload: "{{ trigger.payload_json.agenda | length }}"
-
-  - id: update_tripit_agenda
-    alias: Update Tripit Agenda
-    initial_state: true
-    trigger:
-      - platform: time_pattern
-        hours: "*"
-        minutes: "/30"
-        seconds: "0"
-      - platform: state
-        entity_id: calendar.tripit
-      - platform: state
-        entity_id: binary_sensor.home_assistant_loaded
-        to: "on"
-    action:
-      - service: calendar.get_events
-        data:
-          start_date_time: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
-          end_date_time: "{{ (now() + timedelta(days=1)).strftime('%Y-%m-%d') }} 23:59:59"
-        target:
-          entity_id: calendar.tripit
-        response_variable: all_events
-      - variables:
-          split_time: "{{ ((now().strftime('%Y-%m-%d') + ' 23:59:59')|as_datetime|as_local).isoformat() }}"
-          agenda: "{{ all_events['calendar.tripit'].events | selectattr('start', 'lt', split_time) | list }}"
-          tomorrow: "{{ all_events['calendar.tripit'].events | selectattr('start', 'ge', split_time) | list }}"
-      - wait_template: "{{ is_state('sensor.calendar_regexes', 'OK') }}"
-        timeout:
-          seconds: 30
-      - service: mqtt.publish
-        data:
-          topic: virtual/agenda/tripit/events
-          retain: true
-          payload: >
-            {% from 'agenda.jinja' import agenda_event %}
-            {%- set regexes = states.sensor.calendar_regexes.attributes -%}
-            {%- set bool_attrs = {
-              'travel': [regexes.transit, regexes.bil],
-              'bil': [regexes.bil],
-              'transit': [regexes.transit],
-              'flight': ['.*(Flight).*'],
-              'wake': [{
-                'negate': true,
-                'regex': '.*( Eberhardt is in ).*'
-              }]
-            } -%}
-            {%- set attrs = {
-              'type': '\[(.+)\](?: (?:.+) -)* (?:.+) to (?:.+)',
-              'carrier': '\[(?:.+)\](?: (.+) -)* (?:.+) to (?:.+)',
-              'from': '\[(?:.+)\](?: (?:.+) -)* (.+) to (?:.+)',
-              'to': '\[(?:.+)\](?: (?:.+) -)* (?:.+) to (.+)'
-            } -%}
-            {
-              "agenda": [
-                {% for event in agenda|sort(attribute='start') | list -%}
-                  {%- if ((event.get('end') | as_timestamp) - (event.get('start') | as_timestamp))/60/60 > 47 -%}
-                    {%- continue -%}
-                  {%- endif -%}
-                  {{ agenda_event("Tripit Kalender", event, regexes, bool_attrs, attrs) }}{%- if not loop.last %},{% endif %}
-                {%- endfor -%}
-              ],
-              "tomorrow": [
-                {% for event in tomorrow|sort(attribute='start') | list -%}
-                  {%- if ((event.get('end') | as_timestamp) - (event.get('start') | as_timestamp))/60/60 > 47 -%}
-                    {%- continue -%}
-                  {%- endif -%}
-                  {{ agenda_event("Tripit Kalender", event, regexes, bool_attrs, attrs) }}{%- if not loop.last %},{% endif %}
-                {%- endfor -%}
-              ]
-            }
-
-  - id: update_tripit_agenda_state
-    alias: Update Tripit Agenda State
-    initial_state: true
-    trigger:
-      - platform: mqtt
-        topic: virtual/agenda/tripit/events
-    action:
-      - service: mqtt.publish
-        data:
-          topic: virtual/agenda/tripit/state
-          retain: true
-          payload: "{{ trigger.payload_json.agenda | length }}"
+            {{ ns.ret }}
+      - event: "calendar_updated"
+        event_data:
+          calendar: "{{ calendar_name }}"
+          time: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+          events: "{{ agenda_events }}"
 
   - alias: Update Work Calendar
     id: ada86b2e-be99-4b82-b53f-da58547a0b3c
@@ -624,6 +448,10 @@ automation:
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
+        for:
+          seconds: 10
+      - platform: state
+        entity_id: sensor.calendar_regexes
     variables:
       calendar_entity: calendar.arbejdskalender_ics
       calendar_name: "Arbejdskalender"
@@ -644,7 +472,7 @@ automation:
       - service: calendar.get_events
         data:
           start_date_time: "{{ (now() + timedelta(days=-1)).strftime('%Y-%m-%d') }} 00:00:00"
-          end_date_time: "{{ (now() + timedelta(days=3)).strftime('%Y-%m-%d') }} 23:59:59"
+          end_date_time: "{{ (now() + timedelta(days=1)).strftime('%Y-%m-%d') }} 23:59:59"
         target:
           entity_id: "{{ calendar_entity}}"
         response_variable: all_events
@@ -654,6 +482,59 @@ automation:
             {% set ns = namespace(ret=[]) %}
             {% for event in all_events[calendar_entity].events | sort(attribute='start') | list -%}
               {% set ns.ret = ns.ret + [agenda_event(calendar_name, dict(event, location=none), regexes, bool_attrs)|from_json] %}
+            {%- endfor -%}
+            {{ ns.ret }}
+      - event: "calendar_updated"
+        event_data:
+          calendar: "{{ calendar_name }}"
+          time: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+          events: "{{ agenda_events }}"
+
+  - alias: Update Tripit Calendar
+    id: fdab31ae-dbd7-4808-a671-6fa05e331a59
+    initial_state: true
+    trigger:
+      - platform: time_pattern
+        hours: "*"
+        minutes: "/15"
+        seconds: "0"
+      - platform: state
+        entity_id: calendar.tripit
+      - platform: state
+        entity_id: binary_sensor.home_assistant_loaded
+        to: "on"
+        for:
+          seconds: 10
+      - platform: state
+        entity_id: sensor.calendar_regexes
+    variables:
+      calendar_entity: calendar.tripit
+      calendar_name: "Tripit Kalender"
+      regexes: "{{ states.sensor.calendar_regexes.attributes }}"
+      bool_attrs:
+        travel: "{{ [regexes.transit, regexes.bil] }}"
+        bil: "{{ [regexes.bil] }}"
+        transit: "{{ [regexes.transit] }}"
+        wake: "{{ [{'negate': true, 'regex': '.*( Eberhardt is in ).*'}] }}"
+      attrs:
+        type: '\[(.+)\](?: (?:.+) -)* (?:.+) to (?:.+)'
+        carrier: '\[(?:.+)\](?: (.+) -)* (?:.+) to (?:.+)'
+        from: '\[(?:.+)\](?: (?:.+) -)* (.+) to (?:.+)'
+        to: '\[(?:.+)\](?: (?:.+) -)* (?:.+) to (.+)'
+    action:
+      - service: calendar.get_events
+        data:
+          start_date_time: "{{ now().strftime('%Y-%m-%d') }} 00:00:00"
+          end_date_time: "{{ (now() + timedelta(days=1)).strftime('%Y-%m-%d') }} 23:59:59"
+        target:
+          entity_id: "{{ calendar_entity}}"
+        response_variable: all_events
+      - variables:
+          agenda_events: >-
+            {% from 'agenda.jinja' import agenda_event %}
+            {% set ns = namespace(ret=[]) %}
+            {% for event in all_events[calendar_entity].events | sort(attribute='start') | list -%}
+              {% set ns.ret = ns.ret + [agenda_event(calendar_name, dict(event, location=none), regexes, bool_attrs, attrs)|from_json] %}
             {%- endfor -%}
             {{ ns.ret }}
       - event: "calendar_updated"

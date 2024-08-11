@@ -70,10 +70,13 @@
 {% endmacro  %}
 
 {% macro agenda_event(calendar, event, regexes, bool_attrs={}, attrs={}) -%}
+    {%- set start = (event.get('start', '') or '') | as_datetime -%}
+    {%- set end = (event.get('end', '') or '') | as_datetime -%}
     {
         "calendar": "{{ calendar }}",
-        "start": "{{ ((event.get('start', '') or '') | as_datetime).strftime('%Y-%m-%d %H:%M:%S') }}",
-        "end": "{{ ((event.get('end', '') or '') | as_datetime).strftime('%Y-%m-%d %H:%M:%S') }}",
+        "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
+        "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
+        "duration": {{ (end - start).total_seconds() }},
         "location": {{ (event.get('location', '') or '') | to_json }},
         "description": {{ (event.get('description', '') or '') | to_json }},
         {% for attr in bool_attrs -%}
@@ -115,4 +118,15 @@
         | list
         | to_json
     -}}
+{%- endmacro -%}
+
+{%- macro gather_events(entity_ids, attribute='agenda') -%}
+    {%- set ns = namespace(events=[]) -%}
+    {%- for entity_id in entity_ids -%}
+        {%- set entity = states[entity_id] -%}
+        {%- if entity.attributes[attribute] is defined and entity.attributes[attribute] is list -%}
+            {%- set ns.events = ns.events + entity.attributes[attribute] -%}
+        {%- endif -%}
+    {%- endfor -%}
+    {{ ns.events | sort(attribute='start') | list }}
 {%- endmacro -%}

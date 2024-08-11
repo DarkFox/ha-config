@@ -79,14 +79,26 @@ template:
       - name: Wake Up Event Source Name
         unique_id: 8274b010-a2e6-4b07-84ce-30d3caf56e87
         state: >-
-          {{ state_attr('sensor.next_wake_event', 'calendar') }}
+          {% if is_state('binary_sensor.use_fallback_wake_up_time', 'unknown') %}
+            unknown
+          {% elif is_state('binary_sensor.use_fallback_wake_up_time', 'on') %}
+            Fallback
+          {% else %}
+            {{ state_attr('sensor.next_wake_event', 'calendar') }}
+          {% endif %}
         attributes:
           icon: mdi:calendar-clock
 
       - name: Wake Up Event Source Message
         unique_id: 1c6769cf-deec-4fdc-9f50-b51ce22c6e47
         state: >-
-          {{ state_attr('sensor.next_wake_event', 'summary') }}
+          {% if is_state('binary_sensor.use_fallback_wake_up_time', 'unknown') %}
+            unknown
+          {% elif is_state('binary_sensor.use_fallback_wake_up_time', 'on') %}
+            
+          {% else %}
+            {{ state_attr('sensor.next_wake_event', 'summary') }}
+          {% endif %}
         attributes:
           icon: mdi:calendar-clock
 
@@ -101,9 +113,13 @@ template:
         unique_id: bc455fbc-f15f-46c5-99c7-cdcb7c9bfae4
         device_class: timestamp
         state: >-
-          {% set limit = (states('input_text.last_wake_up_time')|as_datetime + timedelta(hours=8)) if has_value('input_text.last_wake_up_time') else none %}
-          {% set wake_up_time = states('sensor.next_wake_event_wake_time')|as_datetime %}
-          {{ wake_up_time if not limit or limit < wake_up_time else 'unknown' }}
+          {% if is_state('binary_sensor.use_fallback_wake_up_time', 'unknown') %}
+            unknown
+          {% elif is_state('binary_sensor.use_fallback_wake_up_time', 'on') %}
+            {{ states('sensor.fallback_wake_up_time')|as_datetime }}
+          {% else %}
+            {{ states('sensor.next_wake_event_wake_time')|as_datetime }}
+          {% endif %}
         attributes:
           icon: mdi:alarm-clock
 
@@ -148,6 +164,20 @@ template:
           icon: mdi:alarm
 
   - binary_sensor:
+      - name: Use Fallback Wake Up Time
+        unique_id: 474c9167-1aab-4298-a3ef-841a41e7eb63
+        state: >-
+          {% set limit = (states('input_text.last_wake_up_time')|as_datetime + timedelta(hours=8)) if has_value('input_text.last_wake_up_time') else none %}
+          {% set wake_up_time = states('sensor.next_wake_event_wake_time')|as_datetime %}
+          {% set fallback = states('sensor.fallback_wake_up_time')|as_datetime %}
+          {% if wake_up_time and (not limit or limit < wake_up_time) and wake_up_time < fallback %}
+            False
+          {% elif fallback and (not limit or limit < fallback) %}
+            True
+          {% else %}
+            unknown
+          {% endif %}
+
       - name: Wake Up Time
         unique_id: 4ffa2376-a5ed-4d71-9847-d37dcdc6b364
         state: >-
