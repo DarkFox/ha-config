@@ -1,13 +1,6 @@
 sun:
 
 sensor:
-  - platform: min_max
-    name: Ude Temperatur
-    type: min
-    entity_ids:
-      - sensor.altan_temperatur
-      - sensor.lille_altan_temperatur
-
   - platform: template
     sensors:
       translated_weather_title:
@@ -33,42 +26,59 @@ sensor:
 
       weather_card_name_text:
         value_template: "{{ (state_attr('weather.forecast_home', 'precipitation')|replace('.',','))+' mm. ' if state_attr('weather.forecast_home', 'precipitation') }}"
+
       wind_text:
         friendly_name: Vind
         value_template: >-
           {{ states('sensor.beaufort_beskrivelse') }}
           {{ '(' + states('sensor.beaufort_vindstod_beskrivelse') + ')' if states('sensor.beaufort_beskrivelse') != states('sensor.beaufort_vindstod_beskrivelse') }}
           {{ 'fra '+states('sensor.vindretning') if states('sensor.beaufort')|int(0) > 1 }}
+
       precip_today:
         friendly_name: Nedbør
         # TODO: Deprecated. Use service call to get forecast instead.
+        unit_of_measurement: mm
         value_template: |
           {% set forecast = state_attr('weather.forecast_home', 'forecast') %}
           {{ forecast[0].precipitation if forecast and forecast|length > 0 else '0' }}
-        unit_of_measurement: mm
       sun_elevation:
         friendly_name: "Sol Højde"
-        value_template: "{{ state_attr('sun.sun', 'elevation') }}"
         unit_of_measurement: "°"
+        value_template: "{{ state_attr('sun.sun', 'elevation') }}"
+
       sun_elevation_pct:
         # Between 0-58 (Max possible at home location) to 0-100 (Cuts out negative elevation)
         friendly_name: "Sol Elevation %"
-        value_template: "{{ 0.0 if states('sensor.sun_elevation') | float < 0 else (states('sensor.sun_elevation') | float * 100 / 58.0) | round(2) }}"
         unit_of_measurement: "%"
+        value_template: "{{ 0.0 if states('sensor.sun_elevation') | float < 0 else (states('sensor.sun_elevation') | float * 100 / 58.0) | round(2) }}"
+
       sun_azimuth:
         friendly_name: "Sol Retning"
-        value_template: "{{ state_attr('sun.sun', 'azimuth') }}"
         unit_of_measurement: "°"
+        value_template: "{{ state_attr('sun.sun', 'azimuth') }}"
 
 template:
   - sensor:
       - name: temperature
+        unique_id: 1568e9da-489e-4f58-9efe-50567167e506
+        device_class: temperature
+        unit_of_measurement: "°C"
         state: "{{ state_attr('weather.forecast_home', 'temperature') }}"
+
       - name: humidity
+        unique_id: e611e0a4-a6b2-4e42-8c4a-eb135e50869b
+        device_class: humidity
+        unit_of_measurement: "%"
         state: "{{ state_attr('weather.forecast_home', 'humidity') }}"
+
       - name: pressure
+        unique_id: d356aa5d-3c24-47d9-ac87-4f45d30e0a55
+        device_class: pressure
+        unit_of_measurement: "hPa"
         state: "{{ state_attr('weather.forecast_home', 'pressure') }}"
+
       - name: Vindretning
+        unique_id: a8ed173c-d347-415d-b731-4b4f1ac1da4f
         state: >-
           {% set dir = state_attr('weather.forecast_home', 'wind_bearing')|float %}
           {% if 11.25 < dir <= 33.75 %} NNØ
@@ -88,7 +98,9 @@ template:
           {% elif 326.25 < dir <= 348.75 %} NNV
           {% else %} N
           {% endif %}
+
       - name: Beaufort
+        unique_id: 5da60435-01ed-41ee-95b9-8a999507d906
         state: >-
           {% set ms = (state_attr('weather.forecast_home', 'wind_speed')|float)*0.2777778 %}
           {% if ms <= 0.2 %}0
@@ -105,7 +117,9 @@ template:
           {% elif 28.4 < ms <= 32.6 %}11
           {% elif 32.6 < ms %}12
           {% endif %}
+
       - name: Beaufort Beskrivelse
+        unique_id: 086aa811-47f0-40a4-a721-71a86ee97276
         state: >-
           {% set ms = (state_attr('weather.forecast_home', 'wind_speed')|float)*0.2777778 %}
           {% if ms <= 0.2 %}Stille
@@ -122,7 +136,9 @@ template:
           {% elif 28.4 < ms <= 32.6 %}Stærk storm
           {% elif 32.6 < ms %}Orkan
           {% endif %}
+
       - name: Beaufort Vindstød
+        unique_id: 64fc7536-bfbb-4efb-bfa1-ca4cfad09653
         state: >-
           {% set ms = (state_attr('weather.forecast_home', 'wind_gust_speed')|float)*0.2777778 %}
           {% if ms <= 0.2 %}0
@@ -139,7 +155,9 @@ template:
           {% elif 28.4 < ms <= 32.6 %}11
           {% elif 32.6 < ms %}12
           {% endif %}
+
       - name: Beaufort Vindstød Beskrivelse
+        unique_id: c1d4c60d-02a0-4b18-b015-0adf7263fbb7
         state: >-
           {% set ms = (state_attr('weather.forecast_home', 'wind_gust_speed')|float)*0.2777778 %}
           {% if ms <= 0.2 %}Stille
@@ -156,6 +174,13 @@ template:
           {% elif 28.4 < ms <= 32.6 %}Stærk storm
           {% elif 32.6 < ms %}Orkan
           {% endif %}
+
+thermal_comfort:
+  - sensor:
+      - name: Ude
+        unique_id: e637cf07-ecc8-4001-a41c-faa3efe8d1e9
+        temperature_sensor: sensor.temperature
+        humidity_sensor: sensor.humidity
 
 automation:
   - alias: lightning_warning

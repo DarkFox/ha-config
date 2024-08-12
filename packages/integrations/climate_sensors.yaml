@@ -136,6 +136,14 @@ sensor:
       - sensor.badevaerelse_luftfugtighed
       - sensor.kokken_luftfugtighed
 
+  - platform: min_max
+    type: min
+    name: Min Ude Temperatur
+    unique_id: 0815e86a-8caa-4600-bacb-630f0c51a8d9
+    entity_ids:
+      - sensor.altan_temperatur
+      - sensor.lille_altan_temperatur
+
   - platform: derivative
     source: sensor.badevaerelse_humidity
     name: Badeværelse Luftfugtighed ændring/min
@@ -236,6 +244,13 @@ template:
         state: >-
           {{ states('sensor.mean_inde_luftfugtighed') }}
 
+      - name: Ude Temperatur
+        unique_id: 999fcda0-864f-48bd-8788-0d923f865f07
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >-
+          {{ states('sensor.min_ude_temperatur') }}
+
       - name: Soveværelse Temperatur Føles Som
         unique_id: 4185ddd4-e9ce-45bc-bfa8-377c72f70619
         device_class: temperature
@@ -298,3 +313,34 @@ template:
           {%- set temp = states('sensor.altan_temperatur')|float(0.0) -%}
           {%- set humidity = states('sensor.humidity')|float(0.0) -%}
           {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
+
+thermal_comfort:
+  - sensor:
+      - name: Stue
+        unique_id: b5cef5ba-2acb-4f33-92fc-e26dfa47ec11
+        temperature_sensor: sensor.mean_stue_temperatur
+        humidity_sensor: sensor.mean_stue_luftfugtighed
+      - name: Kontor
+        unique_id: 8f6154da-1c0c-4a6c-b28b-104e6c0c7c1b
+        temperature_sensor: sensor.mean_kontor_temperatur
+        humidity_sensor: sensor.mean_kontor_luftfugtighed
+      - name: Soveværelse
+        unique_id: af625b0c-ee90-451e-85ee-98e0748f5d47
+        temperature_sensor: sensor.mean_sovevaerelse_temperatur
+        humidity_sensor: sensor.mean_sovevaerelse_luftfugtighed
+      - name: Værksted
+        unique_id: 70d191c1-edd6-4267-9190-8d741b5e3f15
+        temperature_sensor: sensor.mean_vaerksted_temperatur
+        humidity_sensor: sensor.mean_vaerksted_luftfugtighed
+      - name: Badeværelse
+        unique_id: 5523b891-d26a-4bdb-a8e7-babaa445bfa7
+        temperature_sensor: sensor.mean_badevaerelse_temperatur
+        humidity_sensor: sensor.mean_badevaerelse_luftfugtighed
+      - name: Køkken
+        unique_id: ad1b5fa9-9d04-49fa-b0d5-98e1112f2594
+        temperature_sensor: sensor.mean_kokken_temperatur
+        humidity_sensor: sensor.mean_kokken_luftfugtighed
+      - name: Inde
+        unique_id: 368ec6eb-ee4e-48c2-a625-55ce84a46fe8
+        temperature_sensor: sensor.mean_inde_temperatur
+        humidity_sensor: sensor.mean_inde_luftfugtighed
