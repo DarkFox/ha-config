@@ -1,19 +1,22 @@
 sensor:
   - platform: statistics
     name: "Average Balcony Brightness"
+    unique_id: 9faa21bc-f2ea-4e73-a9bf-914260fcaab9
     entity_id: sensor.altan_lysstyrke
     state_characteristic: average_linear
     sampling_size: 5
 
   - platform: statistics
     name: "Average Small Balcony Brightness"
+    unique_id: 4217d377-2a47-4042-857e-7b10a6a1a549
     entity_id: sensor.lille_altan_lysstyrke
     state_characteristic: average_linear
     sampling_size: 5
 
   - platform: min_max
     type: mean
-    name: Stue Temperatur
+    name: Mean Stue Temperatur
+    unique_id: af837de8-6160-4444-b805-98002fecb43a
     entity_ids:
       - sensor.stue_tado_temperature
       # - sensor.stue_radiator_room_temp
@@ -21,14 +24,16 @@ sensor:
 
   - platform: min_max
     type: mean
-    name: Stue Luftfugtighed
+    name: Mean Stue Luftfugtighed
+    unique_id: 2bd9f849-ccf2-47f0-85cb-09c6ed61d44a
     entity_ids:
       - sensor.stue_tado_humidity
       - sensor.stue_humidity
 
   - platform: min_max
     type: mean
-    name: Kontor Temperatur
+    name: Mean Kontor Temperatur
+    unique_id: 5c50dbca-b21a-46c3-b846-a7c334251c75
     entity_ids:
       - sensor.kontor_tado_temperature
       # - sensor.kontor_radiator_room_temp
@@ -36,14 +41,16 @@ sensor:
 
   - platform: min_max
     type: mean
-    name: Kontor Luftfugtighed
+    name: Mean Kontor Luftfugtighed
+    unique_id: db214bb0-e878-4704-8964-b7739cbecc42
     entity_ids:
       - sensor.kontor_tado_humidity
       - sensor.kontor_humidity
 
   - platform: min_max
     type: mean
-    name: Soveværelse Temperatur
+    name: Mean Soveværelse Temperatur
+    unique_id: 77aadf58-73ea-4893-8ffb-2d2b7bedd274
     entity_ids:
       - sensor.sovevaerelse_tado_temperature
       # - sensor.sovevaerelse_radiator_room_temp
@@ -51,14 +58,16 @@ sensor:
 
   - platform: min_max
     type: mean
-    name: Soveværelse Luftfugtighed
+    name: Mean Soveværelse Luftfugtighed
+    unique_id: f8886ebc-c9b9-4e0b-9392-1249e645d35c
     entity_ids:
       - sensor.sovevaerelse_tado_humidity
       - sensor.sovevaerelse_humidity
 
   - platform: min_max
     type: mean
-    name: Værksted Temperatur
+    name: Mean Værksted Temperatur
+    unique_id: 06d341ac-a47d-4224-b569-a6405d168ec5
     entity_ids:
       - sensor.vaerksted_tado_temperature
       # - sensor.vaerksted_radiator_room_temp
@@ -66,14 +75,16 @@ sensor:
 
   - platform: min_max
     type: mean
-    name: Værksted Luftfugtighed
+    name: Mean Værksted Luftfugtighed
+    unique_id: 2608acbd-569c-41af-8554-c2c33950f48c
     entity_ids:
       - sensor.vaerksted_tado_humidity
       - sensor.vaerksted_humidity
 
   - platform: min_max
     type: mean
-    name: Badeværelse Temperatur
+    name: Mean Badeværelse Temperatur
+    unique_id: a96dc66c-5608-45c3-8678-c93e26b9fc20
     entity_ids:
       - sensor.badevaerelse_tado_temperature
       # - sensor.badevaerelse_radiator_room_temp
@@ -81,26 +92,30 @@ sensor:
 
   - platform: min_max
     type: mean
-    name: Badeværelse Luftfugtighed
+    name: Mean Badeværelse Luftfugtighed
+    unique_id: 04b27837-b4c0-43ea-aa4e-03cb809706fa
     entity_ids:
       - sensor.badevaerelse_tado_humidity
       - sensor.badevaerelse_humidity
 
   - platform: min_max
     type: mean
-    name: Køkken Temperatur
+    name: Mean Køkken Temperatur
+    unique_id: 6a2e6f3d-2c6a-4851-9e22-985130e4f571
     entity_ids:
       - sensor.kokken_air_temperature
 
   - platform: min_max
     type: mean
-    name: Køkken Luftfugtighed
+    name: Mean Køkken Luftfugtighed
+    unique_id: 3516b307-66cf-482b-a18b-8764342b6d7b
     entity_ids:
       - sensor.kokken_humidity
 
   - platform: min_max
     type: mean
-    name: Inde Temperatur
+    name: Mean Inde Temperatur
+    unique_id: e200f818-cfb7-4d74-8c76-6a1d5b05121c
     entity_ids:
       - sensor.stue_temperatur
       - sensor.kontor_temperatur
@@ -111,7 +126,8 @@ sensor:
 
   - platform: min_max
     type: mean
-    name: Inde Luftfugtighed
+    name: Mean Inde Luftfugtighed
+    unique_id: ce1f78cc-b93e-4f66-8921-49da1af801e2
     entity_ids:
       - sensor.stue_luftfugtighed
       - sensor.kontor_luftfugtighed
@@ -127,53 +143,158 @@ sensor:
     unit_time: min
     time_window: "00:02:00"
 
-  - platform: template
-    sensors:
-      sovevaerelse_temperatur_feels_like:
-        friendly_name: Soveværelse Temperatur Føles Som
-        value_template: >
+template:
+  - sensor:
+      - name: Stue Temperatur
+        unique_id: b9ce54de-d373-446e-8a2f-4bfb402b10dd
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >-
+          {{ states('sensor.mean_stue_temperatur') }}
+      - name: Stue Luftfugtighed
+        unique_id: d19348d1-862a-45b0-bbe8-f94018c855bb
+        device_class: humidity
+        unit_of_measurement: "%"
+        state: >-
+          {{ states('sensor.mean_stue_luftfugtighed') }}
+
+      - name: Kontor Temperatur
+        unique_id: 5f88abc0-7595-45a7-9db4-4ac0845814bd
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >-
+          {{ states('sensor.mean_kontor_temperatur') }}
+      - name: Kontor Luftfugtighed
+        unique_id: 3f18059e-c531-4466-9716-915bdc5b938c
+        device_class: humidity
+        unit_of_measurement: "%"
+        state: >-
+          {{ states('sensor.mean_kontor_luftfugtighed') }}
+
+      - name: Soveværelse Temperatur
+        unique_id: 02f61a6e-9d73-4e1a-ba40-650cfe1b2bd7
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >-
+          {{ states('sensor.mean_sovevaerelse_temperatur') }}
+      - name: Soveværelse Luftfugtighed
+        unique_id: 74a0547f-a7f6-4e8b-9064-d3dd846cbdf2
+        device_class: humidity
+        unit_of_measurement: "%"
+        state: >-
+          {{ states('sensor.mean_sovevaerelse_luftfugtighed') }}
+
+      - name: Værksted Temperatur
+        unique_id: 98a0fc14-7e40-4bc2-81c2-b848a87bfab1
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >-
+          {{ states('sensor.mean_vaerksted_temperatur') }}
+      - name: Værksted Luftfugtighed
+        unique_id: b19c533f-f1c9-491c-aeb3-1860d619c4c9
+        device_class: humidity
+        unit_of_measurement: "%"
+        state: >-
+          {{ states('sensor.mean_vaerksted_luftfugtighed') }}
+
+      - name: Badeværelse Temperatur
+        unique_id: 1e3ac5c4-579a-4810-8cdc-dcae04626bfb
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >-
+          {{ states('sensor.mean_badevaerelse_temperatur') }}
+      - name: Badeværelse Luftfugtighed
+        unique_id: fa9c00e2-4870-4a2f-9893-570007864e80
+        device_class: humidity
+        unit_of_measurement: "%"
+        state: >-
+          {{ states('sensor.mean_badevaerelse_luftfugtighed') }}
+
+      - name: Køkken Temperatur
+        unique_id: 3c57cccf-84b1-4d2c-aaf4-9c9efc582671
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >-
+          {{ states('sensor.mean_kokken_temperatur') }}
+      - name: Køkken Luftfugtighed
+        unique_id: 124bfb12-229b-4502-871e-89df3cb073d7
+        device_class: humidity
+        unit_of_measurement: "%"
+        state: >-
+          {{ states('sensor.mean_kokken_luftfugtighed') }}
+
+      - name: Inde Temperatur
+        unique_id: 8990fc9e-acfa-4f54-a644-756671e23c60
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >-
+          {{ states('sensor.mean_inde_temperatur') }}
+      - name: Inde Luftfugtighed
+        unique_id: b0c40cfd-89a3-45da-b150-d564b61900ca
+        device_class: humidity
+        unit_of_measurement: "%"
+        state: >-
+          {{ states('sensor.mean_inde_luftfugtighed') }}
+
+      - name: Soveværelse Temperatur Føles Som
+        unique_id: 4185ddd4-e9ce-45bc-bfa8-377c72f70619
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >
           {%- set temp = states('sensor.sovevaerelse_temperatur')|float(0.0) -%}
           {%- set humidity = states('sensor.sovevaerelse_luftfugtighed')|float(0.0) -%}
           {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
 
-      badevaerelse_temperatur_feels_like:
-        friendly_name: Toilet Temperatur Føles Som
-        value_template: >
+      - name: Toilet Temperatur Føles Som
+        unique_id: f30cab76-26f6-4c0f-81bf-5b7d81d14b0c
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >
           {%- set temp = states('sensor.badevaerelse_temperatur')|float(0.0) -%}
           {%- set humidity = states('sensor.badevaerelse_luftfugtighed')|float(0.0) -%}
           {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
 
-      kokken_temperatur_feels_like:
-        friendly_name: Køkken Temperatur Føles Som
-        value_template: >
+      - name: Køkken Temperatur Føles Som
+        unique_id: dce30bfc-1a89-4970-a3e0-c6b6eb68f1a1
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >
           {%- set temp = states('sensor.kokken_temperatur')|float(0.0) -%}
           {%- set humidity = states('sensor.kokken_luftfugtighed')|float(0.0) -%}
           {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
 
-      stue_temperatur_feels_like:
-        friendly_name: Stue Temperatur Føles Som
-        value_template: >
+      - name: Stue Temperatur Føles Som
+        unique_id: 300f0a25-a33d-4f99-9626-cd9681f5fd6a
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >
           {%- set temp = states('sensor.stue_temperatur')|float(0.0) -%}
           {%- set humidity = states('sensor.stue_luftfugtighed')|float(0.0) -%}
           {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
 
-      kontor_temperatur_feels_like:
-        friendly_name: Kontor Temperatur Føles Som
-        value_template: >
+      - name: Kontor Temperatur Føles Som
+        unique_id: 40310096-97dd-45c9-9288-a05a5abe9dcd
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >
           {%- set temp = states('sensor.kontor_temperatur')|float(0.0) -%}
           {%- set humidity = states('sensor.kontor_luftfugtighed')|float(0.0) -%}
           {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
 
-      vaerksted_temperature_feels_like:
-        friendly_name: Værksted Temperatur Føles Som
-        value_template: >
+      - name: Værksted Temperatur Føles Som
+        unique_id: 7ff76432-2373-44a7-a676-f8c8ee9d9e17
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >
           {%- set temp = states('sensor.vaerksted_temperatur')|float(0.0) -%}
           {%- set humidity = states('sensor.vaerksted_luftfugtighed')|float(0.0) -%}
           {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
 
-      udenfor_temperature_feels_like:
-        friendly_name: Udenfor Temperatur Føles Som
-        value_template: >
+      - name: Udenfor Temperatur Føles Som
+        unique_id: 9bc20377-90b8-4ae0-98e8-e2e918739bad
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >
           {%- set temp = states('sensor.altan_temperatur')|float(0.0) -%}
           {%- set humidity = states('sensor.humidity')|float(0.0) -%}
           {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
