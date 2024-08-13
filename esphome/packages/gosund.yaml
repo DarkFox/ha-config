@@ -72,19 +72,6 @@ binary_sensor:
     on_press:
       - switch.toggle: relay
 
-switch:
-  # Switch to toggle the relay
-  - platform: gpio
-    id: relay
-    name: $upper_devicename
-    pin: GPIO14
-    restore_mode: $restore_mode
-    device_class: outlet
-    on_turn_on:
-      - light.turn_on: led
-    on_turn_off:
-      - light.turn_off: led
-
 output:
   # Relay state led
   - platform: esp8266_pwm
@@ -92,6 +79,23 @@ output:
     pin:
       number: GPIO1
       inverted: true
+  # Relay
+  - platform: gpio
+    id: relay_output
+    pin: GPIO14
+
+switch:
+  # Switch to toggle the relay
+  - platform: output
+    id: relay
+    name: $upper_devicename
+    output: relay_output
+    restore_mode: $restore_mode
+    device_class: outlet
+    on_turn_on:
+      - light.turn_on: led
+    on_turn_off:
+      - light.turn_off: led
 
 light:
   # Relay state light
