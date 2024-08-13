@@ -604,6 +604,11 @@ automation:
               volume_level: 0.2
               message: >-
                 {% set events = state_attr('sensor.upcoming_events', 'events') or [] %}
+                {% set end = (now()+timedelta(days=1)).strftime('%Y-%m-%d') + " 23:59:59" %}
+                {% set events = events 
+                                | selectattr('start', 'le', end)
+                                | sort(attribute='start') | list
+                %}
                 Alarm sat til klokken {{ wake_up_time }}.
                 {% if events|length > 0 %}
                   Agenda for i morgen:
