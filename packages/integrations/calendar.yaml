@@ -7,72 +7,23 @@ calendar:
     calendars:
       - Personlig
       - Helligdage
-      - Arbejdskalender
-    custom_calendars:
-      # - name: Vagt
-      #   calendar: Vagtplan
-      #   search: '((\d{2})R(\d{2})|R([W]?)) - .+'
-      # - name: Arbejde
-      #   calendar: Vagtplan
-      #   search: '^(.*)(\d+)-(\d+).+'
-      # - name: Fri
-      #   calendar: Vagtplan
-      #   search: &fri_regex "^(FRI|Afspadsering|Ferie|Andet fravær|Sygdom).+"
-      # - name: Ferie
-      #   calendar: Vagtplan
-      #   search: "^(Ferie).+"
-      - calendar: Arbejdskalender
-        name: Vagt
-        search: &vagt_regex "Vagt"
-      - calendar: Arbejdskalender
-        name: On-site
-        search: &on_site_regex "(På RSH|På RSR)"
-      - calendar: Arbejdskalender
-        name: RSR
-        search: &rsr_regex "På RSR"
-      - calendar: Arbejdskalender
-        name: RSH
-        search: &rsh_regex "På RSH"
-      - calendar: Arbejdskalender
-        name: Off-site
-        search: &off_site_regex "(Ude af huset|Kursus)"
-      - calendar: Arbejdskalender
-        name: Bil
-        search: &work_bil_regex "(På RSH|På RSR|Kursus|Ude af huset)"
-      - calendar: Arbejdskalender
-        name: WFH
-        search: &wfh_regex "(WFH|Arbejder hjemmefra)"
-      - calendar: Arbejdskalender
-        name: Vagtskema
-        search: &vagtskema_regex "(På RSH|På RSR|Vagt|WFH|Arbejder hjemmefra|Kursus|Ude af huset)"
-      - calendar: Arbejdskalender
-        name: Ferie
-        search: &ferie_regex "^(Ferie).+"
-      - calendar: Personlig
-        name: Bil
-        search: &personlig_bil_regex >-
-          \b(?:bil)\b|(?:[#([](?:bil)[)\]])
-      - calendar: Personlig
-        name: Transit
-        search: &transit_regex >-
-          \b(?:tog|rail|bus)\b|(?:[#([](?:tog|rail|bus)[)\]])
 
 ics_calendar:
   calendars:
     # TODO: Switch to ics_calendar for external calendars.
     # Filter events in agenda sensors, instead of using filters feature and retreiving the same feed multiple times
     # Make the sensors emulate calendar entities, so they can be used the same way
-    - name: "Arbejdskalender ICS"
+    - name: "Arbejdskalender"
       url: !secret work_calendar_url
-      days: 7
+      days: 15
 
     - name: "Vagtplan"
       url: !secret optima_ics_url
-      days: 7
+      days: 15
 
     - name: "Tripit"
       url: !secret tripit_calendar_url
-      days: 31
+      days: 15
 
 template:
   - trigger:
@@ -186,6 +137,204 @@ template:
             {%- set time = trigger.event.data.get('time') -%}
             {{ agenda(events, time, 'vagtskema') | from_json }}
 
+      - name: Vagtskema - Vagt
+        unique_id: 7a3f5fc7-1347-4772-9681-e1f7c086b106
+        state: >-
+          {%- from 'agenda.jinja' import current_events -%}
+          {%- set events = trigger.event.data.get('events', [])  -%}
+          {%- set time = trigger.event.data.get('time') -%}
+          {{ 
+            'on' if current_events(events, time, 'vagt') | from_json
+            else 'off'
+          }}
+        attributes:
+          last_updated: "{{ now().isoformat() }}"
+          current: >-
+            {%- from 'agenda.jinja' import current_events -%}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ current_events(events, time, 'vagt') | from_json }}
+          coming: >-
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {% from 'agenda.jinja' import coming_events %}
+            {{ coming_events(events, time, 'vagt') | from_json }}
+          next: >-
+            {% from 'agenda.jinja' import coming_events %}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ coming_events(events, time, 'vagt') | from_json | first }}
+          agenda: >-
+            {% from 'agenda.jinja' import agenda %}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ agenda(events, time, 'vagt') | from_json }}
+
+      - name: Vagtskema - On-site
+        unique_id: 297beeff-fe9a-4f2d-93d4-b96cbfb2e4ac
+        state: >-
+          {%- from 'agenda.jinja' import current_events -%}
+          {%- set events = trigger.event.data.get('events', [])  -%}
+          {%- set time = trigger.event.data.get('time') -%}
+          {{ 
+            'on' if current_events(events, time, 'on_site') | from_json
+            else 'off'
+          }}
+        attributes:
+          last_updated: "{{ now().isoformat() }}"
+          current: >-
+            {%- from 'agenda.jinja' import current_events -%}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ current_events(events, time, 'on_site') | from_json }}
+          coming: >-
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {% from 'agenda.jinja' import coming_events %}
+            {{ coming_events(events, time, 'on_site') | from_json }}
+          next: >-
+            {% from 'agenda.jinja' import coming_events %}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ coming_events(events, time, 'on_site') | from_json | first }}
+          agenda: >-
+            {% from 'agenda.jinja' import agenda %}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ agenda(events, time, 'on_site') | from_json }}
+
+      - name: Vagtskema - RSR
+        unique_id: d5ead43c-361c-476a-9437-d5fa07da01b0
+        state: >-
+          {%- from 'agenda.jinja' import current_events -%}
+          {%- set events = trigger.event.data.get('events', [])  -%}
+          {%- set time = trigger.event.data.get('time') -%}
+          {{ 
+            'on' if current_events(events, time, 'rsr') | from_json
+            else 'off'
+          }}
+        attributes:
+          last_updated: "{{ now().isoformat() }}"
+          current: >-
+            {%- from 'agenda.jinja' import current_events -%}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ current_events(events, time, 'rsr') | from_json }}
+          coming: >-
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {% from 'agenda.jinja' import coming_events %}
+            {{ coming_events(events, time, 'rsr') | from_json }}
+          next: >-
+            {% from 'agenda.jinja' import coming_events %}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ coming_events(events, time, 'rsr') | from_json | first }}
+          agenda: >-
+            {% from 'agenda.jinja' import agenda %}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ agenda(events, time, 'rsr') | from_json }}
+
+      - name: Vagtskema - RSH
+        unique_id: 5b3d26cf-6818-4f76-83f9-ded130b34142
+        state: >-
+          {%- from 'agenda.jinja' import current_events -%}
+          {%- set events = trigger.event.data.get('events', [])  -%}
+          {%- set time = trigger.event.data.get('time') -%}
+          {{ 
+            'on' if current_events(events, time, 'rsh') | from_json
+            else 'off'
+          }}
+        attributes:
+          last_updated: "{{ now().isoformat() }}"
+          current: >-
+            {%- from 'agenda.jinja' import current_events -%}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ current_events(events, time, 'rsh') | from_json }}
+          coming: >-
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {% from 'agenda.jinja' import coming_events %}
+            {{ coming_events(events, time, 'rsh') | from_json }}
+          next: >-
+            {% from 'agenda.jinja' import coming_events %}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ coming_events(events, time, 'rsh') | from_json | first }}
+          agenda: >-
+            {% from 'agenda.jinja' import agenda %}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ agenda(events, time, 'rsh') | from_json }}
+
+      - name: Vagtskema - Off-site
+        unique_id: 89d7c3fe-0e09-4b1a-ae5b-f489e678e291
+        state: >-
+          {%- from 'agenda.jinja' import current_events -%}
+          {%- set events = trigger.event.data.get('events', [])  -%}
+          {%- set time = trigger.event.data.get('time') -%}
+          {{ 
+            'on' if current_events(events, time, 'off_site') | from_json
+            else 'off'
+          }}
+        attributes:
+          last_updated: "{{ now().isoformat() }}"
+          current: >-
+            {%- from 'agenda.jinja' import current_events -%}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ current_events(events, time, 'off_site') | from_json }}
+          coming: >-
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {% from 'agenda.jinja' import coming_events %}
+            {{ coming_events(events, time, 'off_site') | from_json }}
+          next: >-
+            {% from 'agenda.jinja' import coming_events %}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ coming_events(events, time, 'off_site') | from_json | first }}
+          agenda: >-
+            {% from 'agenda.jinja' import agenda %}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ agenda(events, time, 'off_site') | from_json }}
+
+      - name: Vagtskema - WFH
+        unique_id: 32acc37c-302c-4acf-8505-3e3071a8b817
+        state: >-
+          {%- from 'agenda.jinja' import current_events -%}
+          {%- set events = trigger.event.data.get('events', [])  -%}
+          {%- set time = trigger.event.data.get('time') -%}
+          {{ 
+            'on' if current_events(events, time, 'wfh') | from_json
+            else 'off'
+          }}
+        attributes:
+          last_updated: "{{ now().isoformat() }}"
+          current: >-
+            {%- from 'agenda.jinja' import current_events -%}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ current_events(events, time, 'wfh') | from_json }}
+          coming: >-
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {% from 'agenda.jinja' import coming_events %}
+            {{ coming_events(events, time, 'wfh') | from_json }}
+          next: >-
+            {% from 'agenda.jinja' import coming_events %}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ coming_events(events, time, 'wfh') | from_json | first }}
+          agenda: >-
+            {% from 'agenda.jinja' import agenda %}
+            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- set time = trigger.event.data.get('time') -%}
+            {{ agenda(events, time, 'wfh') | from_json }}
+
   - trigger:
       platform: event
       event_type: calendar_updated
@@ -230,17 +379,19 @@ template:
         unique_id: 27781f7b-68e2-4792-b662-12e48fb6ae62
         state: "OK"
         attributes:
-          ferie: *ferie_regex
-          vagt: *vagt_regex
-          on_site: *on_site_regex
-          rsr: *rsr_regex
-          rsh: *rsh_regex
-          off_site: *off_site_regex
-          wfh: *wfh_regex
-          vagtskema: *vagtskema_regex
-          work_bil: *work_bil_regex
-          bil: *personlig_bil_regex
-          transit: *transit_regex
+          vagt: &vagt_regex "Vagt"
+          on_site: &on_site_regex "(På RSH|På RSR)"
+          rsr: &rsr_regex "På RSR"
+          rsh: &rsh_regex "På RSH"
+          off_site: &off_site_regex "(Ude af huset|Kursus)"
+          work_bil: &work_bil_regex "(På RSH|På RSR|Kursus|Ude af huset)"
+          wfh: &wfh_regex "(WFH|Arbejder hjemmefra)"
+          vagtskema: &vagtskema_regex "(På RSH|På RSR|Vagt|WFH|Arbejder hjemmefra|Kursus|Ude af huset)"
+          ferie: &ferie_regex "^(Ferie).+"
+          bil: &personlig_bil_regex >-
+            \b(?:bil)\b|(?:[#([](?:bil)[)\]])
+          transit: &transit_regex >-
+            \b(?:tog|rail|bus)\b|(?:[#([](?:tog|rail|bus)[)\]])
 
       - name: Full Agenda
         unique_id: 8abe262f-996a-46c0-bcba-c531dfa3580b
@@ -444,7 +595,7 @@ automation:
         minutes: "/15"
         seconds: "0"
       - platform: state
-        entity_id: calendar.arbejdskalender_ics
+        entity_id: calendar.arbejdskalender
       - platform: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
@@ -453,7 +604,7 @@ automation:
       - platform: state
         entity_id: sensor.calendar_regexes
     variables:
-      calendar_entity: calendar.arbejdskalender_ics
+      calendar_entity: calendar.arbejdskalender
       calendar_name: "Arbejdskalender"
       regexes: "{{ states.sensor.calendar_regexes.attributes }}"
       bool_attrs:

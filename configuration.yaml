@@ -146,25 +146,16 @@ logbook:
 template:
   - sensor:
       - name: Month Name
+        unique_id: a141453c-2624-4267-a93b-da5d54e9dc35
         state: >-
           {% set months = ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"] %}
           {{ months[now().month-1] }}
 
-binary_sensor:
-  # - platform: workday
-  #   name: Weekday
-  #   country: DK
-  - platform: template
-    sensors:
-      workday:
-        value_template: >
-          {%- if is_state('calendar.arbejdskalender_ferie', 'on') -%}
-            False
-          {%- elif is_state('binary_sensor.weekday_sensor', 'off') -%}
-            False
-          {%- else -%}
-            True
-          {%- endif -%}
+  - binary_sensor:
+      - name: Workday
+        unique_id: d582050d-a8d2-4e21-8cb1-b4f8fd1e4445
+        state: >-
+          {{ is_state('binary_sensor.working_today', 'on') }}
 
 tts:
   - platform: google_cloud

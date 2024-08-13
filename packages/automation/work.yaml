@@ -4,44 +4,24 @@ input_boolean:
     icon: mdi:badge-account-alert-outline
 
 template:
-  - sensor:
-      - name: Next work start clock
-        unique_id: 45db713c-b86c-42fd-8643-102393f1954d
-        state: >-
-          {% if has_value('calendar.arbejdskalender_vagtskema') and 'start_time' in states.calendar.arbejdskalender_vagtskema.attributes %}
-            {{ state_attr('calendar.arbejdskalender_vagtskema', 'start_time').split(' ')[1][:-3] }}
-          {% else %}
-            unknown
-          {% endif %}
-      - name: Days to next work
-        unique_id: 38769740-6d08-4958-8eed-6f9f254f468e
-        state: >-
-          {% from 'easy_time.jinja' import count_the_days %}
-          {% if has_value('calendar.arbejdskalender_vagtskema') and 'start_time' in states.calendar.arbejdskalender_vagtskema.attributes %}
-            {% set start_time = state_attr('calendar.arbejdskalender_vagtskema', 'start_time') | as_datetime | as_local %}
-            {{ count_the_days(start_time) }}
-          {% else %}
-            unavailable
-          {% endif %}
-
   - binary_sensor:
       - name: Puzzel expected state
         unique_id: 5dae538c-28da-48d6-b231-0bcd72f6b301
         state: >-
           {{
-            is_state('calendar.arbejdskalender_vagt', 'on')
-            or is_state('calendar.arbejdskalender_on_site', 'on')
-            or is_state('calendar.arbejdskalender_wfh', 'on')
+            is_state('binary_sensor.vagtskema_vagt', 'on')
+            or is_state('binary_sensor.vagtskema_on_site', 'on')
+            or is_state('binary_sensor.vagtskema_wfh', 'on')
           }}
         attributes:
           any: >-
             {%- from 'puzzel.jinja' import search_puzzel_queues -%}
-            {%- set on_call = is_state('calendar.arbejdskalender_vagt', 'on') -%}
+            {%- set on_call = is_state('binary_sensor.vagtskema_vagt', 'on') -%}
             {%- set on_call_today = is_state('binary_sensor.on_call_today', 'on') -%}
-            {%- set rsh = is_state('calendar.arbejdskalender_rsh', 'on') -%}
-            {%- set rsr = is_state('calendar.arbejdskalender_rsr', 'on') -%}
-            {%- set on_site = is_state('calendar.arbejdskalender_on_site', 'on') -%}
-            {%- set wfh = is_state('calendar.arbejdskalender_wfh', 'on') -%}
+            {%- set rsh = is_state('binary_sensor.vagtskema_rsh', 'on') -%}
+            {%- set rsr = is_state('binary_sensor.vagtskema_rsr', 'on') -%}
+            {%- set on_site = is_state('binary_sensor.vagtskema_on_site', 'on') -%}
+            {%- set wfh = is_state('binary_sensor.vagtskema_wfh', 'on') -%}
             {%- set ns = namespace(inc=[],exc=[]) -%}
             {%- if on_call -%}
               {%- set ns.exc = ['\+'] -%}
@@ -85,39 +65,40 @@ template:
             unknown
           {% endif %}
 
+      - name: Working today
+        unique_id: 809cc454-99f8-42e3-ad24-1604a8b00485
+        state: >-
+          {% from 'easy_time.jinja' import count_the_days %}
+          {% if is_state('binary_sensor.vagtskema', 'on') %}
+            true
+          {% elif has_value('binary_sensor.vagtskema') and 'next' in states.binary_sensor.vagtskema.attributes %}
+            {% set next = state_attr('binary_sensor.vagtskema', 'next') %}
+            {% if next %}
+              {% set start_time = next.start | as_datetime | as_local %}
+              {{ count_the_days(start_time)|int < 1 }}
+            {% else %}
+              false
+            {% endif %}
+          {% else %}
+            false
+          {% endif %}
+
       - name: On call today
         unique_id: 50d53d18-959d-4d86-bcbd-3ab7fec9b3cd
         state: >-
           {% from 'easy_time.jinja' import count_the_days %}
-          {% if has_value('calendar.arbejdskalender_vagt') and 'start_time' in states.calendar.arbejdskalender_vagt.attributes %}
-            {% set start_time = state_attr('calendar.arbejdskalender_vagt', 'start_time') | as_datetime | as_local %}
-            {{ count_the_days(start_time)|int < 1 }}
+          {% if has_value('binary_sensor.vagtskema_vagt') and 'next' in states.binary_sensor.vagtskema_vagt.attributes %}
+            {% set next = state_attr('binary_sensor.vagtskema_vagt', 'next') %}
+            {% if next %}
+              {% set start_time = next.start | as_datetime | as_local %}
+              {{ count_the_days(start_time)|int < 1 }}
+            {% else %}
+              false
+            {% endif %}
           {% else %}
             false
           {% endif %}
 
-      - name: Morning shift
-        unique_id: 4bc7fe62-3436-41e9-ac55-921626d96d0a
-        state: >-
-          {% if has_value('calendar.arbejdskalender_vagtskema') and 'start_time' in states.calendar.arbejdskalender_vagtskema.attributes %}
-            {% set start_time = state_attr('calendar.arbejdskalender_vagtskema', 'start_time') | as_datetime | as_local %}
-            {{ start_time.hour < 12 }}
-          {% else %}
-            false
-          {% endif %}
-      - name: Evening shift
-        unique_id: 173e2b33-6a1c-413d-ade7-227bd2f8450d
-        state: >-
-          {% if has_value('calendar.arbejdskalender_vagtskema') and 'start_time' in states.calendar.arbejdskalender_vagtskema.attributes %}
-            {% set start_time = state_attr('calendar.arbejdskalender_vagtskema', 'start_time') | as_datetime | as_local %}
-            {{ start_time.hour > 11 }}
-          {% else %}
-            false
-          {% endif %}
-
-      - name: Working From Home
-        unique_id: 3fded160-61a2-479f-a6f7-e393c0aebb45
-        state: "{{ is_state('calendar.arbejde_arbejder_hjemmefra', 'on') }}"
       - name: On Call
         unique_id: 3cc0a9a0-ccf9-4795-8e7c-51460dabc77d
         state: >-
@@ -128,19 +109,15 @@ template:
               and 'vagt' in (states('sensor.puzzel_ko')|lower)
             )
           }}
+
       - name: Scheduled On Call
         unique_id: 153b064b-3cd4-40f2-a1cc-307fc04942e8
         state: >-
           {{
             is_state('input_boolean.force_on_call', 'on')
-            or is_state('calendar.arbejdskalender_vagt', 'on')
+            or is_state('binary_sensor.vagtskema_vagt', 'on')
           }}
-      - name: Scheduled At Work
-        unique_id: e8733ab9-7177-405b-b149-71a98f40a8cf
-        state: >
-          {{
-            is_state('calendar.arbejdskalender_on_site', 'on')
-          }}
+
       - name: Location At Work
         unique_id: f01e9654-79b3-49e9-a513-40f9b6b7551c
         state: >
@@ -148,14 +125,15 @@ template:
             'RSR' in states('device_tracker.arbejdstelefon')
             or 'RSH' in states('device_tracker.arbejdstelefon')
           }}
+
       - name: Working
         unique_id: 63182272-ecd8-4a8e-90a2-f7731abb9459
         state: >
           {{
-            is_state('binary_sensor.scheduled_at_work', 'on')
+            is_state('binary_sensor.vagtskema_on_site', 'on')
             or is_state('binary_sensor.scheduled_on_call', 'on')
             or is_state('binary_sensor.location_at_work', 'on')
-            or is_state('binary_sensor.working_from_home', 'on')
+            or is_state('binary_sensor.vagskema_wfh', 'on')
           }}
 
 automation:
