@@ -181,3 +181,22 @@
     -#}
     {{ true if states[entity_id] is defined and attribute in states[entity_id].attributes else false }}
 {%- endmacro -%}
+
+{%- macro remove_double_spaces(input) -%}
+    {#-
+    Recursively removes double spaces from a string.
+
+    Parameters:
+    - input: The string to remove double spaces from.
+
+    Usage:
+    {{ remove_double_spaces('Hello  World!') }}  # Output: 'Hello World!'
+    -#}
+    {%- set output = input -%}
+    {%- set new_output = output | replace('  ', ' ') -%}
+    {%- if new_output != output -%}
+        {{ remove_double_spaces(new_output) }}
+    {%- else -%}
+        {{ output }}
+    {%- endif -%}
+{%- endmacro -%}

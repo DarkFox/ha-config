@@ -36,11 +36,12 @@ sensor:
       dmi_vejr_tts:
         value_template: "Vejrudsigt: {{ states('sensor.dmi_vejr') }}."
         attribute_templates:
-          text: >-
+          text: |
             {% if states('sensor.dmi_aktuel_varsel') %}
-              Vejr Varsel kategori {{ state_attr('sensor.dmi_aktuel_varsel', 'category') }}: {{ states('sensor.dmi_aktuel_varsel') }}.
-              {{ state_attr('sensor.dmi_aktuel_varsel', 'text') }}.
+            Vejr Varsel kategori {{ state_attr('sensor.dmi_aktuel_varsel', 'category') }}: {{ states('sensor.dmi_aktuel_varsel') }}.
+            {{ state_attr('sensor.dmi_aktuel_varsel', 'text') }}
             {% endif %}
+            {{ states('sensor.dmi_vejr') }}:
             {{ state_attr('sensor.dmi_vejr', 'content') | replace(' temp.', ' temperatur') | replace(' Temp.', ' Temperatur') | replace(' temp ', ' temperatur ') | replace(' Temp ', ' Temperatur ') }}
 
       dmi_aktuel_varsel:

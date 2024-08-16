@@ -162,6 +162,42 @@ script:
                   data:
                     volume_level: "{{ media_player_presets[room][preset] }}"
 
+  morning_briefing:
+    sequence:
+      # Attempt to get a clothing recommendation from gpt, to be added to the templated briefing. If it fails, use the default
+      - service: script.gpt_clothes_recommendation
+        response_variable: clothes_recommendation_response
+        continue_on_error: true
+      - variables:
+          clothes_recommendation: |
+            {% if clothes_recommendation_response is defined and 'recommendation' in clothes_recommendation_response %}
+              {{ clothes_recommendation_response.recommendation }}
+            {% else %}
+              {% set temp = states('sensor.ude_temperatur')|int -%}
+              Der kunne ikke genereres en anbefaling til tøjvalg i dag, men baseret på temperaturen vil jeg anbefale {% if temp < 5 -%}
+                varmt tøj, da det er koldt udenfor.
+              {% elif temp < 10 -%}
+                en varm trøje, da det er køligt udenfor.
+              {% elif temp < 15 -%}
+                en let jakke, da det er mildt udenfor.
+              {% elif temp < 20 -%}
+                en t-shirt, da det er lunt udenfor.
+              {% elif temp < 25 -%}
+                en t-shirt, da det er varmt udenfor.
+              {% else -%}
+                let tøj, da det er meget varmt udenfor.
+              {% endif -%}
+            {% endif %}
+          briefing: |
+            {% from 'utils.jinja' import remove_double_spaces %}
+            {{ state_attr('sensor.morning_briefing', 'briefing') }}
+            {{ remove_double_spaces(clothes_recommendation | replace('\n', ' ')) }}
+            Hav en god dag.
+          response: |
+            {{ {'briefing': briefing} }}
+      - stop: "Return briefing"
+        response_variable: "response"
+
   briefing_announcement:
     mode: parallel
     alias: Briefing Announcement
@@ -173,36 +209,26 @@ script:
         description: Volume level
         example: 0.5
     sequence:
-      - service: conversation.process
-        data:
-          text: >-
-            {{ state_attr('sensor.gpt_briefing_prompt', 'prompt') | regex_replace("  +", ' ') }}
-          language: DA
-          agent_id: 4e0a875b09f8a19a405e1bf3e5c4adac
-        response_variable: agent
+      - service: script.morning_briefing
+        response_variable: response
       - service: script.tts_speak
         data:
           cache: false
           entity_id: "{{ entity_id }}"
           volume_level: "{{ volume_level | default(0.5) }}"
           message: >-
-            {{ agent.response.speech.plain.speech }}
+            {{ response.briefing }}
 
   briefing_announcement_url:
     mode: parallel
     alias: Briefing Announcement URL
     sequence:
-      - service: conversation.process
-        data:
-          text: >-
-            {{ state_attr('sensor.gpt_briefing_prompt', 'prompt') | regex_replace("  +", ' ') }}
-          language: DA
-          agent_id: 4e0a875b09f8a19a405e1bf3e5c4adac
-        response_variable: agent
+      - service: script.morning_briefing
+        response_variable: response
       - service: script.tts_url
         response_variable: chime_tts
         data:
-          message: "{{ agent.response.speech.plain.speech }}"
+          message: "{{ response.briefing }}"
       - stop: "Return chime_tts"
         response_variable: "chime_tts"
 
@@ -243,13 +269,19 @@ script:
     sequence:
       - service: script.briefing_announcement_url
         response_variable: briefing_url
+        continue_on_error: true
       - service: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
           repeat: "{{ repeat | default('off') }}"
           volume_level: "{{ volume_level | default(0.5) }}"
           shuffle: false
-          playlist: "{{ [briefing_url.url] + playlist }}"
+          playlist: >-
+            {% if briefing_url is defined and 'url' in briefing_url %}
+              {{ [briefing_url.url] + playlist }}
+            {% else %}
+              {{ playlist }}
+            {% endif %}
 
   mass_playlist:
     mode: parallel
@@ -760,6 +792,30 @@ template:
           {% endif %}
 
   - sensor:
+      - name: Morning Briefing
+        state: "{{ now() }}"
+        attributes:
+          briefing: |
+            {{ states('sensor.tts_greeting') }},
+
+            Klokken er {{ states('sensor.time') }}, {{ state_attr('calendar.helligdage', 'message')+', ' if is_state('calendar.helligdage', 'on') }}{{ states('sensor.day_name') }} den {{ now().day }} {{ states('sensor.month_name') }}.
+
+            {% if state_attr('sensor.agenda', 'events') -%}
+            På kalenderen i dag har du følgende:
+            {% for event in state_attr('sensor.agenda', 'events') -%}
+              - {{ (event.start | as_datetime).strftime('%H:%M') }} - {{ (event.end | as_datetime).strftime('%H:%M') }}: {{ event.summary }}
+            {% endfor %}
+            {% else -%}
+            Du har ingen aftaler i kalenderen i dag.
+            {% endif %}
+            {% if is_state('sensor.season', 'summer') -%}
+            Udenfor er temperaturen {{ states('sensor.ude_temperatur')|replace('.',',') }}°, og Humidex indikerer: {{ state_translated('sensor.ude_humidex_perception') }}.
+            {% else -%}
+            Udenfor er temperaturen {{ states('sensor.ude_temperatur') | replace('.',',') }}°C, og Thoms discomfort perception indikerer: {{ state_translated('sensor.ude_thoms_discomfort_perception') }}.
+            {% endif %}
+            Her er den seneste vejrudsigt:
+            {{ state_attr('sensor.dmi_vejr_tts', 'text') }}
+
       - name: Sonos Group Leader
         state: >-
           {% set entity = 'group.sonos_group_leaders' %}

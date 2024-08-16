@@ -67,6 +67,22 @@ script:
           message: "{{ message }}"
           translation: "{{ translation }}"
 
+  gpt_clothes_recommendation:
+    sequence:
+      - service: conversation.process
+        data:
+          text: >-
+            Giv mig en anbefaling til min påklædning i dag, med tanke på vejret og planlagte aftaler.
+            Undlad at nævne vejret, med mindre det er direkte relateret.
+            Du behøver ikke nævne hver enkelt aftale (med mindre den påkrævede påklædning er meget forskellig), men blot give en generel anbefaling.
+          language: DA
+          agent_id: 4e0a875b09f8a19a405e1bf3e5c4adac
+        response_variable: agent
+      - variables:
+          response: "{{ {'recommendation': agent.response.speech.plain.speech} }}"
+      - stop: "Return response"
+        response_variable: response
+
 intent_script:
   AskNabu:
     action:
