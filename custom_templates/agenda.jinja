@@ -72,6 +72,7 @@
 {% macro agenda_event(calendar, event, regexes, bool_attrs={}, attrs={}) -%}
     {%- set start = (event.get('start', '') or '') | as_datetime -%}
     {%- set end = (event.get('end', '') or '') | as_datetime -%}
+    {%- set duration = (end - start).total_seconds() -%}
     {
         "calendar": "{{ calendar }}",
         "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
@@ -79,6 +80,8 @@
         "duration": {{ (end - start).total_seconds() }},
         "location": {{ (event.get('location', '') or '') | to_json }},
         "description": {{ (event.get('description', '') or '') | to_json }},
+        "all_day": {{ 'true' if duration >= 86400 and start.strftime('%H:%M:%S') == '00:00:00' and end.strftime('%H:%M:%S') == '00:00:00' else 'false' }},
+        "multi_day": {{ 'true' if duration > 86400 else 'false' }},
         {% for attr in bool_attrs -%}
         "{{ attr }}": {{ 'true' if bool(event_match_any(event, bool_attrs[attr]), false) else 'false' }},
         {% endfor -%}
