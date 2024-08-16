@@ -74,8 +74,8 @@ template:
       - name: Arbejdskalender
         unique_id: 44f4d46e-d205-4197-b4e7-3bd74fe863d7
         state: >-
-          {%- from 'agenda.jinja' import current_events -%}
-          {%- set events = trigger.event.data.get('events', [])  -%}
+          {%- from 'agenda.jinja' import current_events, filter_work_events_to_schedule -%}
+          {%- set events = filter_work_events_to_schedule(trigger.event.data.get('events', [])) | from_json  -%}
           {%- set time = trigger.event.data.get('time') -%}
           {{ 
             'on' if current_events(events, time, 'vagtskema', 'false') | from_json
@@ -84,23 +84,23 @@ template:
         attributes:
           last_updated: "{{ now().isoformat() }}"
           current: >-
-            {%- from 'agenda.jinja' import current_events -%}
-            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- from 'agenda.jinja' import current_events, filter_work_events_to_schedule -%}
+            {%- set events = filter_work_events_to_schedule(trigger.event.data.get('events', [])) | from_json  -%}
             {%- set time = trigger.event.data.get('time') -%}
             {{ current_events(events, time, 'vagtskema', 'false') | from_json }}
           coming: >-
-            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- from 'agenda.jinja' import coming_events, filter_work_events_to_schedule -%}
+            {%- set events = filter_work_events_to_schedule(trigger.event.data.get('events', [])) | from_json  -%}
             {%- set time = trigger.event.data.get('time') -%}
-            {% from 'agenda.jinja' import coming_events %}
             {{ coming_events(events, time, 'vagtskema', 'false') | from_json }}
           next: >-
-            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- from 'agenda.jinja' import coming_events, filter_work_events_to_schedule -%}
+            {%- set events = filter_work_events_to_schedule(trigger.event.data.get('events', [])) | from_json  -%}
             {%- set time = trigger.event.data.get('time') -%}
-            {% from 'agenda.jinja' import coming_events %}
             {{ coming_events(events, time, 'vagtskema', 'false') | from_json | first }}
           agenda: >-
-            {% from 'agenda.jinja' import agenda %}
-            {%- set events = trigger.event.data.get('events', [])  -%}
+            {%- from 'agenda.jinja' import agenda, filter_work_events_to_schedule -%}
+            {%- set events = filter_work_events_to_schedule(trigger.event.data.get('events', [])) | from_json  -%}
             {%- set time = trigger.event.data.get('time') -%}
             {{ agenda(events, time, 'vagtskema', 'false') | from_json }}
 
