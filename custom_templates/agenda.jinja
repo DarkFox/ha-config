@@ -92,6 +92,14 @@
     }
 {% endmacro -%}
 
+{%- macro agenda_events(all_events, calendar_entity, calendar_name, regexes, bool_attrs={}, attrs={}) -%}
+    {% set ns = namespace(ret=[]) %}
+    {% for event in all_events[calendar_entity].events | sort(attribute='start') | list -%}
+        {% set ns.ret = ns.ret + [agenda_event(calendar_name, event, regexes, bool_attrs, attrs)|from_json] %}
+    {%- endfor -%}
+    {{ ns.ret }}
+{%- endmacro -%}
+
 {%- macro current_events(events, time, selector=none, test='true') -%}
     {%- set events = events if not selector else (events | selectattr(selector, test)) -%}
     {{-

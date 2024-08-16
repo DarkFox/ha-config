@@ -566,19 +566,15 @@ automation:
     action:
       - service: calendar.get_events
         data:
-          start_date_time: "{{ (now() + timedelta(days=-1)).strftime('%Y-%m-%d') }} 00:00:00"
-          end_date_time: "{{ (now() + timedelta(days=1)).strftime('%Y-%m-%d') }} 23:59:59"
+          start_date_time: "{{ now().strftime('%Y-%m-%d') }} 00:00:00"
+          end_date_time: "{{ (now() + timedelta(days=7)).strftime('%Y-%m-%d') }} 23:59:59"
         target:
-          entity_id: "{{ calendar_entity}}"
+          entity_id: "{{ calendar_entity }}"
         response_variable: all_events
       - variables:
-          agenda_events: >-
-            {% from 'agenda.jinja' import agenda_event %}
-            {% set ns = namespace(ret=[]) %}
-            {% for event in all_events[calendar_entity].events | sort(attribute='start') | list -%}
-              {% set ns.ret = ns.ret + [agenda_event(calendar_name, dict(event, location=none), regexes, bool_attrs)|from_json] %}
-            {%- endfor -%}
-            {{ ns.ret }}
+          agenda_events: |
+            {%- from 'agenda.jinja' import agenda_events -%}
+            {{ agenda_events(all_events, calendar_entity, calendar_name, regexes, bool_attrs) }}
       - event: "calendar_updated"
         event_data:
           calendar: "{{ calendar_name }}"
@@ -622,19 +618,15 @@ automation:
     action:
       - service: calendar.get_events
         data:
-          start_date_time: "{{ (now() + timedelta(days=-1)).strftime('%Y-%m-%d') }} 00:00:00"
-          end_date_time: "{{ (now() + timedelta(days=1)).strftime('%Y-%m-%d') }} 23:59:59"
+          start_date_time: "{{ now().strftime('%Y-%m-%d') }} 00:00:00"
+          end_date_time: "{{ (now() + timedelta(days=7)).strftime('%Y-%m-%d') }} 23:59:59"
         target:
           entity_id: "{{ calendar_entity}}"
         response_variable: all_events
       - variables:
-          agenda_events: >-
-            {% from 'agenda.jinja' import agenda_event %}
-            {% set ns = namespace(ret=[]) %}
-            {% for event in all_events[calendar_entity].events | sort(attribute='start') | list -%}
-              {% set ns.ret = ns.ret + [agenda_event(calendar_name, dict(event, location=none), regexes, bool_attrs)|from_json] %}
-            {%- endfor -%}
-            {{ ns.ret }}
+          agenda_events: |
+            {%- from 'agenda.jinja' import agenda_events -%}
+            {{ agenda_events(all_events, calendar_entity, calendar_name, regexes, bool_attrs) }}
       - event: "calendar_updated"
         event_data:
           calendar: "{{ calendar_name }}"
@@ -676,18 +668,14 @@ automation:
       - service: calendar.get_events
         data:
           start_date_time: "{{ now().strftime('%Y-%m-%d') }} 00:00:00"
-          end_date_time: "{{ (now() + timedelta(days=1)).strftime('%Y-%m-%d') }} 23:59:59"
+          end_date_time: "{{ (now() + timedelta(days=7)).strftime('%Y-%m-%d') }} 23:59:59"
         target:
           entity_id: "{{ calendar_entity}}"
         response_variable: all_events
       - variables:
-          agenda_events: >-
-            {% from 'agenda.jinja' import agenda_event %}
-            {% set ns = namespace(ret=[]) %}
-            {% for event in all_events[calendar_entity].events | sort(attribute='start') | list -%}
-              {% set ns.ret = ns.ret + [agenda_event(calendar_name, dict(event, location=none), regexes, bool_attrs, attrs)|from_json] %}
-            {%- endfor -%}
-            {{ ns.ret }}
+          agenda_events: |
+            {%- from 'agenda.jinja' import agenda_events -%}
+            {{ agenda_events(all_events, calendar_entity, calendar_name, regexes, bool_attrs, attrs) }}
       - event: "calendar_updated"
         event_data:
           calendar: "{{ calendar_name }}"
