@@ -10,13 +10,37 @@ input_boolean:
 template:
   - sensor:
       - name: "Vaskemaskine Program"
-        state: "{{ state_attr('sensor.washing_machine', 'program') }}"
+        state: >-
+          {% set p = {
+            11: "Hygiejne Plus 59'",
+            13: "Blandet & Farver 59'",
+          } %}
+          {{ p.get(state_attr('sensor.washing_machine', 'program'), state_attr('sensor.washing_machine', 'program')) }}
       - name: "Vaskemaskine Program Kode"
         state: "{{ state_attr('sensor.washing_machine', 'program_code') }}"
       - name: "Vaskemaskine Temperatur"
         state: "{{ state_attr('sensor.washing_machine', 'temperature') }}"
         device_class: temperature
         unit_of_measurement: "°C"
+      - name: "Vaskemaskine Status"
+        state: >-
+          {% set t = {
+            'Idle': 'Inaktiv',
+            'Running': 'Kører',
+            'Finished': 'Færdig',
+
+            'Stopped': 'Stoppet',
+            'Wash': 'Vasker',
+            'Rinse': 'Skyller',
+            'Last rinse': 'Sidste skyl',
+          } %}
+          {% if not has_value('sensor.washing_machine') %}
+            Slukket
+          {% elif is_state('sensor.washing_machine', 'Running') %}
+            {{ t.get(states('sensor.wash_cycle_status'), states('sensor.wash_cycle_status')) }}
+          {% else %}
+            {{ t.get(states('sensor.washing_machine'), states('sensor.washing_machine')) }}
+          {% endif %}
       - name: "Vaskemaskine Centrifugering"
         state: "{{ state_attr('sensor.washing_machine', 'spin_speed') }}"
         unit_of_measurement: "RPM"
@@ -38,6 +62,11 @@ template:
   - binary_sensor:
       - name: Vaskemaskine Fjernstyring
         state: "{{ state_attr('sensor.washing_machine', 'remote_control') }}"
+      - name: Vaskemaskine
+        state: "{{ is_state('sensor.washing_machine', 'Running') }}"
+        device_class: running
+        attributes:
+          icon: "{{ 'mdi:washing-machine' if this.state == 'on' else 'mdi:washing-machine-off' }}"
       - name: Tørretumbler
         state: "{{ states('sensor.dryer_temp_delta')|int(0) > 10 and states('sensor.pow_k_l2_power')|int(0) > 900 }}"
         device_class: running

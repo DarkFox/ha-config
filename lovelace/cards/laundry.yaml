@@ -3,16 +3,43 @@ conditions:
   - entity: binary_sensor.laundry
     state: "on"
 card:
-  type: glance
-  show_name: true
-  show_icon: true
-  show_state: true
-  entities:
-    - entity: sensor.washing_machine
-    - entity: sensor.wash_cycle_status
-      name: Trin
-    - entity: sensor.wash_cycle_remaining_time
-      name: Tid Tilbage
-    - entity: binary_sensor.torretumbler
-      name: Tørretumbler
-  state_color: true
+  type: horizontal-stack
+  cards:
+    - type: custom:button-card
+      entity: binary_sensor.vaskemaskine
+      name: |
+        [[[
+          let program = states['sensor.vaskemaskine_program'].state;
+          if (['unavailable', 'unknown'].includes(program))
+            return 'Vaskemaskine';
+          return program;
+        ]]]
+      state_display: |
+        [[[
+          let status = states['sensor.vaskemaskine_status'].state;
+          if (['unavailable', 'unknown'].includes(status))
+            return ' ';
+          return status;
+        ]]]
+      label: |
+        [[[
+          let time = states['sensor.wash_cycle_remaining_time'].state;
+          if (['unavailable', 'unknown'].includes(time))
+            return ' ';
+          return "~" + time + " min tilbage";
+        ]]]
+      layout: icon_name_state2nd
+      show_state: true
+      show_label: true
+    - type: custom:button-card
+      entity: binary_sensor.torretumbler
+      layout: icon_name_state2nd
+      label: |
+        [[[
+          let status = states['binary_sensor.torretumbler'].state;
+          if (status == 'on')
+            return states['sensor.pow_k_l2_power'].state + 'W';
+          return ' ';
+        ]]]
+      show_state: true
+      show_label: true
