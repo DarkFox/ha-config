@@ -7,25 +7,25 @@ packages:
   base: !include packages/base.yaml
   gosund: !include packages/gosund.yaml
 
-light:
-  - platform: binary
-    name: "${upper_devicename} Cycle"
-    icon: mdi:cloud-percent
-    output: relay_output
-    id: cycle
+switch:
+  - platform: template
+    name: "${upper_devicename} Cycle Control"
+    id: cycle_control
+    optimistic: true
     restore_mode: "${restore_mode}"
-    effects:
-      - strobe:
-          name: Cycle
-          colors:
-            - state: true
-              duration:
-                minutes: 10
-            - state: false
-              duration:
-                minutes: 5
-    on_turn_on: 
-      then:
-        - light.turn_on:
-            id: cycle
-            effect: Cycle
+    turn_on_action:
+      - switch.turn_on: relay
+    turn_off_action:
+      - switch.turn_off: relay
+
+interval:
+  - interval: 20min
+    id: cycle_interval
+    then:
+      - if:
+          condition:
+            switch.is_on: cycle_control
+          then:
+            - switch.turn_on: relay
+            - delay: 10min
+            - switch.turn_off: relay
