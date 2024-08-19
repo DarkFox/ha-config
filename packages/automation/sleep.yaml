@@ -603,20 +603,16 @@ automation:
               entity_id: media_player.sovevaerelse
               volume_level: 0.2
               message: >-
-                {% set events = state_attr('sensor.upcoming_events', 'events') or [] %}
-                {% set end = (now()+timedelta(days=1)).strftime('%Y-%m-%d') + " 23:59:59" %}
-                {% set events = events 
-                                | selectattr('start', 'le', end)
-                                | sort(attribute='start') | list
-                %}
+                {%- set events = state_attr(('sensor.agenda' if now().strftime('%H')|int < 16 else 'sensor.agenda_tomorrow'), 'events') -%}
                 Alarm sat til klokken {{ wake_up_time }}.
-                {% if events|length > 0 %}
-                  Agenda for i morgen:
-                  {% for event in events %}
-                    - Klokken {{ (event.start | as_datetime).strftime('%H:%M') }}: {{ event.summary }}.
-                  {% endfor %}
-                {% else %}
-                  Der er ingen aftaler i morgen.
+
+                {% if events -%}
+                På kalenderen i morgen har du følgende:
+                {% for event in events -%}
+                  - {{ (event.start | as_datetime).strftime('%H:%M') }} - {{ (event.end | as_datetime).strftime('%H:%M') }}: {{ event.summary }}
+                {% endfor %}
+                {% else -%}
+                Du har ingen aftaler i kalenderen i morgen.
                 {% endif %}
           - event: set_light_profile
             event_data:

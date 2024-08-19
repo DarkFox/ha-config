@@ -192,7 +192,7 @@ script:
             {% from 'utils.jinja' import remove_double_spaces %}
             {{ state_attr('sensor.morning_briefing', 'briefing') }}
             {{ remove_double_spaces(clothes_recommendation | replace('\n', ' ')) }}
-            Hav en god dag.
+            Ha' en god dag.
           response: |
             {{ {'briefing': briefing} }}
       - stop: "Return briefing"
@@ -796,22 +796,23 @@ template:
         state: "{{ now() }}"
         attributes:
           briefing: |
+            {%- set events = state_attr('sensor.agenda', 'events') -%}
             {{ states('sensor.tts_greeting') }},
 
             Klokken er {{ states('sensor.time') }}, {{ state_attr('calendar.helligdage', 'message')+', ' if is_state('calendar.helligdage', 'on') }}{{ states('sensor.day_name') }} den {{ now().day }} {{ states('sensor.month_name') }}.
 
-            {% if state_attr('sensor.agenda', 'events') -%}
+            {% if events -%}
             På kalenderen i dag har du følgende:
-            {% for event in state_attr('sensor.agenda', 'events') -%}
+            {% for event in events -%}
               - {{ (event.start | as_datetime).strftime('%H:%M') }} - {{ (event.end | as_datetime).strftime('%H:%M') }}: {{ event.summary }}
             {% endfor %}
             {% else -%}
             Du har ingen aftaler i kalenderen i dag.
             {% endif %}
             {% if is_state('sensor.season', 'summer') -%}
-            Udenfor er temperaturen {{ states('sensor.ude_temperatur')|replace('.',',') }}°, og Humidex indikerer: {{ state_translated('sensor.ude_humidex_perception') }}.
+            Udenfor er temperaturen {{ states('sensor.ude_temperatur')|replace('.',',') }}° og Humidex indikerer: {{ state_translated('sensor.ude_humidex_perception') }}.
             {% else -%}
-            Udenfor er temperaturen {{ states('sensor.ude_temperatur') | replace('.',',') }}°C, og Thoms discomfort perception indikerer: {{ state_translated('sensor.ude_thoms_discomfort_perception') }}.
+            Udenfor er temperaturen {{ states('sensor.ude_temperatur') | replace('.',',') }}°C og Thoms discomfort perception indikerer: {{ state_translated('sensor.ude_thoms_discomfort_perception') }}.
             {% endif %}
             Her er den seneste vejrudsigt:
             {{ state_attr('sensor.dmi_vejr_tts', 'text') }}
