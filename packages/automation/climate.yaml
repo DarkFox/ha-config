@@ -169,7 +169,7 @@ sensor:
           {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
           {%- set active = is_state('binary_sensor.office_activity', 'on')
               or is_state('binary_sensor.martin_pc_activity', 'on')
-              or is_state('binary_sensor.vagskema_wfh', 'on') -%}
+              or is_state('binary_sensor.vagtskema_wfh', 'on') -%}
           {% if on %}
             {% if active %}
               {{ target }}
@@ -256,35 +256,6 @@ sensor:
           {% endif %}
 
 automation:
-  - id: turn_on_living_room_fan
-    alias: Turn On Living Room Fan
-    trigger:
-      - platform: state
-        entity_id: climate.stue
-        attribute: hvac_action
-        to: heating
-        for:
-          seconds: 30
-    action:
-      - service: switch.turn_on
-        target:
-          entity_id: switch.stue_blaeser
-
-  - id: turn_off_living_room_fan
-    alias: Turn Off Living Room Fan
-    trigger:
-      - platform: state
-        entity_id: climate.stue
-        attribute: hvac_action
-        from: heating
-        to: idle
-        for:
-          minutes: 5
-    action:
-      - service: switch.turn_off
-        target:
-          entity_id: switch.stue_blaeser
-
   # Restart Tado stick if temperature changes don't take.
   - alias: Check Climate
     initial_state: true
@@ -301,8 +272,8 @@ automation:
                 entity_id: binary_sensor.check_climate
                 state: "off"
             sequence:
-              - service: script.turn_on
-                entity_id: script.restart_tado
+              - service: automation.trigger
+                entity_id: automation.restart_tado
 
   - alias: Termostat Badeværelse
     initial_state: true

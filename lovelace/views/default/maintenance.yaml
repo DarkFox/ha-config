@@ -132,6 +132,52 @@ cards:
           - binary_sensor.office_activity
           - binary_sensor.hallway_activity
 
+      - type: markdown
+        content: >-
+          <h2> <ha-icon icon='mdi:shield-half-full'></ha-icon> Watchman report</h2>
+          <h3><ha-icon icon='mdi:cloud-alert'></ha-icon> Missing Services: {{ states.sensor.watchman_missing_services.state }} </h3>
+          {%- for item in state_attr("sensor.watchman_missing_services", "entities") %}
+          <hr><table><tr> <td> 
+          <ha-icon icon='mdi:cloud-alert'></ha-icon>
+          {{ item.id }}
+          <a title="{{item.occurrences}}">{{item.occurrences.split('/')[-1]}}</a>
+          </td></tr></table>
+          {%- endfor %}
+          {%- set missing_entities = state_attr("sensor.watchman_missing_entities", "entities") | selectattr('state', 'eq', 'missing') | list -%}
+          <h3><ha-icon icon='mdi:cloud-alert'></ha-icon> Missing Entities: {{ missing_entities | length }} </h3>
+          {%- for item in missing_entities %}
+          <hr> <table><tr> <td>
+          <ha-icon icon='mdi:cloud-alert'></ha-icon>
+          {{ item.id }} [{{item.state}}] <a title="{{item.occurrences}}">
+          {{item.occurrences.split('/')[-1]}}</a>
+          </td></tr></table>
+          {%- endfor %}
+          {%- set unavail_entities = state_attr("sensor.watchman_missing_entities", "entities") | selectattr('state', 'eq', 'unavail') | list -%}
+          <h3><ha-icon icon='mdi:cloud-off-outline'></ha-icon> Unavailable Entities: {{ unavail_entities | length }} </h3>
+          {%- for item in unavail_entities %}
+          <hr> <table><tr> <td>
+          <ha-icon icon='mdi:cloud-off-outline'></ha-icon>
+          {{ item.id }} [{{item.state}}] <a title="{{item.occurrences}}">
+          {{item.occurrences.split('/')[-1]}}</a>
+          </td></tr></table>
+          {%- endfor %}
+          {%- set unknown_entities = state_attr("sensor.watchman_missing_entities", "entities") | selectattr('state', 'eq', 'unknown') | list -%}
+          <h3><ha-icon icon='mdi:cloud-question'></ha-icon> Unknown state Entities: {{ unknown_entities | length }} </h3>
+          {%- for item in unknown_entities %}
+          <hr> <table><tr> <td>
+          <ha-icon icon='mdi:cloud-question'></ha-icon>
+          {{ item.id }} [{{item.state}}] <a title="{{item.occurrences}}">
+          {{item.occurrences.split('/')[-1]}}</a>
+          </td></tr></table>
+          {%- endfor %}
+        card_mod:
+          style:
+            ha-markdown:
+              $: |
+                ha-markdown-element:first-of-type hr{
+                  border-color: #303030;
+                }
+
   - type: vertical-stack
     view_layout:
       grid-area: right

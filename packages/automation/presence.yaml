@@ -33,11 +33,6 @@ sensor:
         friendly_name: "Distance change to Home"
         value_template: "{{ state_attr('sensor.proximity_martin_to_home_stats', 'change') }}"
         unit_of_measurement: "m"
-      martin_to_work_distance_change:
-        friendly_name: "Distance change to Work"
-        value_template: >-
-          {{ state_attr('sensor.proximity_martin_to_rsh_stats', 'change') }}
-        unit_of_measurement: "m"
 
   - platform: derivative
     name: martin_to_home_distance_change_derivative
@@ -78,7 +73,6 @@ binary_sensor:
           {{ 
             is_state('person.martin', 'home')
             or is_state('device_tracker.darkphone', 'home')
-            or "Pærevangen" in states('sensor.darkphone_geocoded_location')
             or ((is_state('binary_sensor.activity_last10', 'on') and states('sensor.home_martin_distance')|int < 2000 ))
             or (states('input_select.sleep_state') in ['in bed', 'sleeping', 'paused', 'alarm', 'waking'] and is_state('input_select.latest_motion', 'Bedroom'))
           }}

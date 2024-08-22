@@ -27,22 +27,6 @@ cards:
     cards:
       - !include ../cards/compact_clock.yaml
 
-      - type: custom:button-card
-        entity: sensor.next_work_event
-        icon: mdi:calendar-clock
-        show_icon: true
-        show_state: true
-        show_label: true
-        show_name: false
-        layout: icon_state_name2nd
-        # Label = attributes.start_time
-        label: "[[[ return states['sensor.next_work_event'].attributes.start_time ]]]"
-        styles:
-          label:
-            - font-size: 1.5em
-            - font-weight: bold
-            - color: var(--primary-text-color)
-
       - type: conditional
         conditions:
           - entity: sensor.current_work_call
@@ -225,16 +209,34 @@ cards:
 
   - type: vertical-stack
     cards:
-      - !include ../cards/transport/car.yaml
-      - type: conditional
-        conditions:
-          - entity: binary_sensor.show_parking_limit
-            state: "on"
-        card:
-          type: entities
-          entities:
-            - entity: sensor.parking_limit
-              name: Parkering udløber
+      - type: custom:button-card
+        entity: sensor.next_work_event
+        icon: mdi:calendar-clock
+        show_icon: true
+        show_state: true
+        show_label: true
+        show_name: true
+        layout: icon_name_state2nd
+        # Label = attributes.start_time
+        name: "[[[ return states['sensor.next_work_event'].attributes.start_time ]]]"
+        label: |
+          [[[
+            let event = states['sensor.2nd_next_work_event'];
+            if (!['Ingen', 'unavailable', 'unknown'].includes(event.state))
+              return event.attributes.start_time + '<br />' + event.state;
+            else
+              return '';
+          ]]]
+        styles:
+          name:
+            - font-size: 1.5em
+            - font-weight: bold
+            - color: var(--primary-text-color)
+          label:
+            - font-size: 0.8em
+            - font-weight: normal
+            - color: var(--primary-text-color)
+            - border-top: 1px solid var(--primary-text-color)
 
       - !include ../cards/gdq/compact_overview.yaml
 
@@ -248,4 +250,15 @@ cards:
 
   - type: vertical-stack
     cards:
+      - !include ../cards/transport/car.yaml
+      - type: conditional
+        conditions:
+          - entity: binary_sensor.show_parking_limit
+            state: "on"
+        card:
+          type: entities
+          entities:
+            - entity: sensor.parking_limit
+              name: Parkering udløber
+
       - !include ../cards/weather/weather_forecast.yaml

@@ -31,13 +31,6 @@ input_boolean:
   home_assistant_started:
     initial: off
 
-rest_command:
-  reload_device:
-    url: "{{ states('sensor.base_url') }}/api/config/config_entries/entry/{{ device_id }}/reload"
-    method: POST
-    headers:
-      authorization: !secret ha_api_token
-
 binary_sensor:
   - platform: template
     sensors:
@@ -88,46 +81,10 @@ sensor:
   - platform: template
     sensors:
       ha_last_restart:
-        value_template: "{{ state_attr('automation.startup_notification', 'last_triggered') | as_timestamp(0) | timestamp_custom('%b %d %X') }}"
+        value_template: "{{ state_attr('automation.set_home_assistant_started_on_startup', 'last_triggered') | as_timestamp(0) | timestamp_custom('%b %d %X') }}"
         friendly_name: HA Last Restart
 
 automation:
-  - alias: Notify HA Server Power connection lost
-    id: e9719599-d69a-40e2-9cc0-de78d4d278c3
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: binary_sensor.ha_server_status
-      to: "off"
-    action:
-      - service: notify.telegram_darkfox
-        data:
-          message: "Home Assistant serveren har mistet forbindelsen til strømstikket!"
-
-  - alias: Notify HA Server Power turned off
-    id: a4dbdd07-a7b2-430c-81cb-3c9f5d595bbf
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: switch.ha_server
-      to: "off"
-    action:
-      - service: notify.telegram_darkfox
-        data:
-          message: "Strømmen til Home Assistant serveren er blevet slukket!"
-
-  - alias: Notify HA Server Power turned on
-    id: 1d9b57e6-ef42-4073-b275-66b450437888
-    initial_state: true
-    trigger:
-      platform: state
-      entity_id: switch.ha_server
-      to: "on"
-    action:
-      - service: notify.telegram_darkfox
-        data:
-          message: "Strømmen til Home Assistant serveren er blevet tændt!"
-
   - alias: Notify HA Shutdown
     id: e87622e0-9691-421b-8691-94fdab200eef
     initial_state: true
@@ -138,28 +95,6 @@ automation:
       - service: notify.telegram_darkfox
         data:
           message: "Home Assistant er ved at lukke ned!"
-
-  - alias: Disable watchdog on expected shutdown
-    id: 182db9a6-a5ae-4f8e-a10d-039993322bb6
-    initial_state: true
-    trigger:
-      platform: homeassistant
-      event: shutdown
-    action:
-      - service: switch.turn_on
-        target:
-          entity_id: switch.disable_watchdog
-
-  - alias: Enable watchdog on startup
-    id: 5b24fffd-41c9-4d8c-a60b-8160986d828c
-    initial_state: true
-    trigger:
-      platform: homeassistant
-      event: start
-    action:
-      - service: switch.turn_off
-        target:
-          entity_id: switch.disable_watchdog
 
   - alias: Notify Of New External IP
     id: e86275ad-9c5a-4243-9428-e47f82c03586
