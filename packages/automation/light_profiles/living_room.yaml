@@ -58,7 +58,6 @@ sensor:
             {%- endif -%}
           {%-
             elif is_state('input_select.living_room_room_state', 'inactive')
-            or is_state('binary_sensor.living_room_activity_predicted', 'on')
           -%}
             {{ states('sensor.living_room_inactive_light_profile') }}
           {%- else %}
@@ -70,8 +69,6 @@ sensor:
         value_template: >-
           {%- if is_state('binary_sensor.living_room_activity', 'on') -%}
               on
-          {%- elif is_state('binary_sensor.living_room_activity_predicted', 'on') -%}
-              predicted
           {%- else -%}
               off
           {%- endif -%}
@@ -95,25 +92,11 @@ binary_sensor:
             false
           {% endif -%}
 
-      living_room_activity_predicted:
-        friendly_name: "Living Room Activity Predicted"
-        value_template: >
-          {%- 
-            if is_state('binary_sensor.moved_from_kitchen_to_hallway', 'on')
-            or is_state('binary_sensor.moved_from_bathroom_to_hallway', 'on')
-            or is_state('binary_sensor.living_room_door_activity', 'on')
-          -%}
-            true
-          {% else -%}
-            false
-          {% endif -%}
-
 group:
   living_room_activity_entities:
     name: Living Room Activity Entities
     entities:
       - input_boolean.living_room_activity_override
-      - input_select.living_room_state
       - input_select.latest_motion
       - binary_sensor.stue_motion
       - binary_sensor.stue_tilstedevarelse_alle_zoner

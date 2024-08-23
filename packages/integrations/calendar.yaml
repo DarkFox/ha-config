@@ -494,6 +494,14 @@ template:
                             | list
                             | first %}
             {{ event if event is defined else None }}
+          events: >-
+            {% set now = now()|as_timestamp|timestamp_custom('%Y-%M-%d %H:%m:%S') %}
+            {% set events = state_attr('sensor.full_agenda', 'events')
+                            | selectattr('start', 'le', now)
+                            | selectattr('end', 'ge', now)
+                            | sort(attribute='duration')
+                            | list %}
+            {{ events if events is defined else None }}
           calendar: >-
             {% set event = state_attr('sensor.current_event', 'event') or {} %}
             {{ event.get('calendar', None) }}

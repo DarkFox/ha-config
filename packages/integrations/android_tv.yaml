@@ -1,21 +1,36 @@
 script:
   shield_tv_play:
     alias: "Play URL on Shield TV"
+    fields:
+      entity_id:
+        description: "The entity_id of the Shield TV"
+        example: media_player.stue_shield_adb
+      url:
+        description: "The URL to play"
+        example: "https://www.youtube.com/watch?v=123456"
+      intent:
+        description: "(Optional) The intent to use"
+        example: "android.intent.action.VIEW"
+      activity:
+        description: "(Optional) The activity to use"
+        example: "com.google.android.youtube.tv"
+      press_enter:
+        description: "(Optional) Press enter after 10 seconds"
+        example: true
     sequence:
       - choose:
           - conditions:
-              - condition: state
-                entity_id: media_player.nvidia_shield_adb
-                state: "off"
+              - condition: template
+                value_template: "{{ is_state(entity_id, 'off') }}"
             sequence:
               - service: media_player.turn_on
                 data:
-                  entity_id: media_player.nvidia_shield_adb
+                  entity_id: "{{ entity_id }}"
               - delay:
                   seconds: 5
       - service: androidtv.adb_command
         data:
-          entity_id: media_player.nvidia_shield_adb
+          entity_id: "{{ entity_id }}"
           command: >-
             am start -a {{ intent if intent else "android.intent.action.VIEW" }} -d "{{ url }}" {{ "-n "~activity if activity else "" }}
       - condition: "{{ True if press_enter != undefined else False }}"
@@ -25,4 +40,4 @@ script:
         data:
           command: DPAD_CENTER
         target:
-          entity_id: remote.shield_android_tv
+          entity_id: "{{ entity_id.replace('media_player', 'remote') }}"

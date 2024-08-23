@@ -8,11 +8,11 @@ template:
       - name: "Climatise car for upcoming drive"
         state: >-
           {% set next_driving = is_state_attr('sensor.upcoming_travel_location', 'mode', 'driving') %}
-          {% set current_driving = is_state_attr('sensor.current_event', 'bil', true) %}
-          {% if next_driving or current_driving %}
+          {% set current_driving_event = state_attr('sensor.current_event', 'events') | selectattr('bil', 'eq', true) | list | last  %}
+          {% if next_driving or current_driving_event %}
             {% set start_time_str = states('sensor.next_scheduled_leave_at') if has_value('sensor.next_scheduled_leave_at') %}
             {% set start_time = (start_time_str|as_datetime|as_local) if start_time_str %}
-            {% set end_time_str = state_attr('sensor.current_event', 'end') if current_driving %}
+            {% set end_time_str = current_driving_event.get('end', none) if current_driving_event %}
             {% set end_time = (end_time_str|as_datetime|as_local) if end_time_str %}
             {% if start_time and end_time %}
               {% set min_time = min(start_time, end_time) %}
@@ -36,25 +36,6 @@ automation:
       - platform: state
         entity_id: binary_sensor.climatise_car_for_upcoming_drive
         to: "on"
-    action:
-      - alias: "Climatise car"
-        service: switch.turn_on
-        target:
-          entity_id: switch.id_3_pro_climatisation
-
-  - id: climatise_car_for_commute_from_work
-    alias: climatise_car_for_commute_from_work
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.going_home_soon
-        from: "off"
-        to: "on"
-    condition:
-      - alias: "If at work"
-        condition: state
-        entity_id: person.martin
-        state: RSH
     action:
       - alias: "Climatise car"
         service: switch.turn_on
