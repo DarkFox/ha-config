@@ -1,4 +1,7 @@
 """
+DISCLAIMER: This component has not been touched (or used) for a long time and might not work anymore.
+Please use it as a reference to create your own component.
+
 A component which parses DSB's info feed.
 
 Following spec from https://validator.w3.org/feed/docs/rss2.html
