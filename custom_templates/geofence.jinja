@@ -1,0 +1,37 @@
+{%- macro point_in_polygon(lat, lon, points) -%}
+{#-
+Function to check if a point is inside a polygon.
+
+:param lat: Latitude of the point
+:param lon: Longitude of the point
+:param points: The vertices of the polygon. The loop is closed automatically.
+:return: True if the point is inside the polygon, False otherwise
+
+Example usage:
+```yaml
+{{ point_in_polygon(55.734315, 12.441919, [
+    [55.734315, 12.441919],
+    [55.734315, 12.440052],
+    [55.733696, 12.440052],
+    [55.733696, 12.441919]
+]) }}
+```
+-#}
+{%- if points|length < 4 -%}
+    The polygon must have at least 3 vertices
+{%- else -%}
+    {%- set points = points + [[points[0][0], points[0][1]]] -%}
+    {%- set ns = namespace(inside = False) -%}
+    {%- for i in range(points | length - 1) -%}
+        {%- set lat1, lon1 = points[i] -%}
+        {%- set lat2, lon2 = points[i + 1] -%}
+        {%-
+            if (lon > lon1) != (lon > lon2) and 
+            (lat < (lat2 - lat1) * (lon - lon1) / (lon2 - lon1) + lat1)
+        -%}
+            {%- set ns.inside = not ns.inside -%}
+        {%- endif -%}
+    {%- endfor -%}
+    {{ ns.inside }}
+{%- endif -%}
+{%- endmacro -%}

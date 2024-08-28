@@ -7,26 +7,170 @@ input_datetime:
 
 template:
   - sensor:
-      - name: Parking Alarm
-        state: "{{ (as_timestamp(states('input_datetime.parking_timer')) + 2.75 * 60 * 60) | as_datetime }}"
-        device_class: timestamp
+      - name: Parking Lot
+        unique_id: c7d27d36-a1d6-4b62-845c-4a19c89a677f
+        icon: mdi:parking
+        state: >-
+          {% from 'geofence.jinja' import point_in_polygon %}
+          {% set lat = state_attr('device_tracker.id_3_pro_tracker', 'latitude') %}
+          {% set lon = state_attr('device_tracker.id_3_pro_tracker', 'longitude') %}
+
+          {% set parking_lots = {
+            'RSH': [
+              [55.734290, 12.441878],
+              [55.734290, 12.440001],
+              [55.733776, 12.440001],
+              [55.733776, 12.441878],
+            ],
+            'HEH P2': [
+              [55.733332, 12.445268],
+              [55.733332, 12.440081],
+              [55.732276, 12.440081],
+              [55.732276, 12.445268],
+            ],
+            'HEH P3': [
+              [55.733330, 12.440095],
+              [55.733330, 12.438647],
+              [55.731956, 12.438647],
+              [55.731956, 12.440095],
+            ],
+            'HEH P4': [
+              [55.731893, 12.442069],
+              [55.731893, 12.439720],
+              [55.730941, 12.439720],
+              [55.730941, 12.442069],
+            ],
+            'HEH P7': [
+              [55.729319, 12.440760],
+              [55.729319, 12.439634],
+              [55.728428, 12.439634],
+              [55.728428, 12.440760],
+            ],
+            'HEH P9': [
+              [55.729271, 12.442927],
+              [55.729271, 12.441393],
+              [55.728694, 12.441393],
+              [55.728694, 12.442927],
+            ],
+            'HEH Runddyssen': [
+              [55.734704, 12.444351],
+              [55.734704, 12.439395],
+              [55.734173, 12.439395],
+              [55.734173, 12.444351],
+            ],
+            'RH P-Hus': [
+              [55.699487, 12.564753],
+              [55.698846, 12.565826],
+              [55.698586, 12.565344],
+              [55.699251, 12.564271],
+            ],
+            'RH Hovedindgangen': [
+              [55.696419, 12.568442],
+              [55.695705, 12.569654],
+              [55.695034, 12.568356],
+              [55.695772, 12.567122],
+            ],
+            'RSH Varemodtagelsen': [
+              [55.699613, 12.564575],
+              [55.699480, 12.564800],
+              [55.699033, 12.563964],
+              [55.699166, 12.563733],
+            ],
+            'RH Frederik Vs Vej': [
+              [55.699862, 12.564845],
+              [55.696246, 12.570810],
+              [55.696146, 12.570617],
+              [55.699735, 12.564652],
+            ],
+            'RH Edel Sauntes Alle': [
+              [55.704858, 12.565565],
+              [55.703214, 12.563033],
+              [55.698377, 12.562218],
+              [55.700189, 12.565552],
+              [55.704589, 12.566055],
+            ],
+          } %}
+
+          {% for lot in parking_lots %}
+            {% set points = parking_lots[lot] %}
+            {% if point_in_polygon(lat, lon, points) == "True" %}
+              {{ lot }}
+              {% break %}
+            {% endif %}
+          {% endfor %}
+
+      - name: Parking Duration Limit
+        unique_id: 6eab91a5-6fe1-47fa-ac76-2f000ce2e39b
+        icon: mdi:timer
+        device_class: duration
+        unit_of_measurement: s
+        state: >
+          {% set parking_limits = {
+            'HEH P2': 3*60*60,
+            'HEH P4': 3*60*60,
+          } %}
+          {{ parking_limits.get(states('sensor.parking_lot'), 0) }}
+
       - name: Parking Limit
-        state: "{{ (as_timestamp(states('input_datetime.parking_timer')) + 3 * 60 * 60) | as_datetime }}"
+        unique_id: 18ed291c-f453-49c3-b763-68a8bbbeeb8e
         device_class: timestamp
+        state: >-
+          {% if is_state('binary_sensor.parking_limit', 'on') %}
+            {{ (as_timestamp(states('input_datetime.parking_timer')) + states('sensor.parking_duration_limit')|int) | as_datetime }}
+          {% else %}
+            unavailable
+          {% endif %}
+
+      - name: Parking Alarm
+        unique_id: 5675dfe4-8ef6-4673-a0fd-dab9242b230f
+        device_class: timestamp
+        state: >-
+          {% if is_state('binary_sensor.parking_limit', 'on') %}
+            {{ (as_timestamp(states('sensor.parking_limit')) - (15 * 60)) | as_datetime }}
+          {% else %}
+            unavailable
+          {% endif %}
+
   - binary_sensor:
-      - name: Show Parking Limit
-        state: "{{ states('device_tracker.id_3_pro_tracker') in ['RSH P2', 'RSH P4'] }}"
+      - name: Parking Limit
+        unique_id: d0c30716-e823-49f6-b4fb-a3af86f6b77b
+        state: "{{ has_value('sensor.parking_duration_limit') and not is_state('sensor.parking_duration_limit', '0') }}"
+
+      - name: Parking Lot Paid
+        unique_id: 2967a5ab-e79f-4fbf-8e26-e18ace9311da
+        icon: mdi:credit-card
+        state: >
+          {{ states('sensor.parking_lot') in [
+            'RH Frederik Vs Vej',
+            'RH Edel Sauntes Alle',
+            'RSH Varemodtagelsen',
+          ] }}
 
 automation:
-  - alias: "Parking Timer"
-    id: parking_timer
+  - alias: "Paid parking"
+    id: 9639dddf-8e3b-4321-811d-6df6b8562c24
     initial_state: True
     trigger:
       platform: state
-      entity_id: device_tracker.id_3_pro_tracker
-      to:
-        - RSH P2
-        - RSH P4
+      entity_id: binary_sensor.parking_lot_paid
+      to: "on"
+    action:
+      - service: script.notify_darkphone
+        data:
+          message: |
+            Du har parkeret på {{ states('sensor.parking_lot') }}.
+            Husk at oprette parkering i receptionen eller online.
+
+  - alias: "Set Parked Time"
+    id: c562770a-5958-46b7-ace8-3cbf4996fe88
+    initial_state: True
+    trigger:
+      platform: state
+      entity_id: binary_sensor.id_3_pro_car_is_active
+      from: "on"
+      to: "off"
+      for:
+        seconds: 10
     action:
       - service: input_datetime.set_datetime
         target:
@@ -38,12 +182,21 @@ automation:
             {% set seconds_until_next_quarter = (15 * 60) - seconds_past %}
             {% set next_quarter_timestamp = as_timestamp(now) + seconds_until_next_quarter %}
             {{ next_quarter_timestamp | timestamp_custom('%Y-%m-%d %H:%M:%S') }}
-      - delay: "00:00:05"
-        alias: "Wait for sensors to update"
+
+  - alias: "Parking Timer"
+    id: parking_timer
+    initial_state: True
+    trigger:
+      platform: numeric_state
+      entity_id: sensor.parking_duration_limit
+      above: 0
+      for:
+        seconds: 10
+    action:
       - service: script.notify_darkphone
         data:
-          message: >-
-            Parkeret på {{ states('device_tracker.id_3_pro_tracker') }}.
+          message: |
+            Parkeret på {{ states('sensor.parking_lot') }}.
             Timer sat til kl. {{ as_timestamp(states('input_datetime.parking_timer')) | timestamp_custom('%H:%M') }},
             flyt bilen inden kl. {{ as_timestamp(states('sensor.parking_limit')) | timestamp_custom('%H:%M') }}.
             Sæt alarm til kl. {{ as_timestamp(states('sensor.parking_alarm')) | timestamp_custom('%H:%M') }}.
@@ -59,3 +212,6 @@ automation:
         data:
           message: >-
             Flyt bilen!
+      - service: switch.turn_on
+        target:
+          entity_id: switch.id_3_pro_climatisation
