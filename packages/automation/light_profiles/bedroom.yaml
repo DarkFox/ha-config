@@ -428,18 +428,12 @@ automation:
         state: "Night"
     action:
       - parallel:
-          - service: script.difficult_light
-            data:
-              entity_id: light.sovevaerelse_gulv
-              state: on
-              brightness: 24
-              hs_color: [0, 100]
-              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-
           - service: scene.apply
             data:
               transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
               entities:
+                light.sovevaerelse_gulv:
+                  state: off
                 light.seng_spots_over:
                   state: off
                 light.seng_spots_under:
