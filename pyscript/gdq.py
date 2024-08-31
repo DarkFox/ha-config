@@ -1,13 +1,43 @@
 import aiohttp
 from bs4 import BeautifulSoup
 
+
+async def get_gdq_event_data():
+    base_url = 'https://tracker.gamesdonequick.com'
+    events_url = base_url + '/tracker/events/'
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(events_url) as response:
+            response.raise_for_status()
+            soup = BeautifulSoup(response.read(), 'html.parser')
+
+            gdq_events = soup.select('a.list-group-item')
+
+            if not gdq_events:
+                raise ValueError('No events found')
+
+            gdq_event = gdq_events[1]
+
+            name = gdq_event.text
+            href = gdq_event['href']
+            event_url = base_url + href
+            event_id = href.split('/')[-1]
+
+            return {
+                'name': name,
+                'url': event_url,
+                'id': event_id
+            }
+
+
 @service
 async def gdq_get_bids():
     """yaml
 name: Get GDQ Bids
 description: Get the current bids from the Games Done Quick tracker. Fires 'gdq_bids' event with the bids.
 """
-    url = 'https://tracker.gamesdonequick.com/tracker/bids/SGDQ2024'
+    event_data = await get_gdq_event_data()
+    url = f"https://tracker.gamesdonequick.com/tracker/bids/{event_data.id}"
 
     def get_full_url(url):
         return 'https://tracker.gamesdonequick.com' + url
@@ -102,3 +132,14 @@ description: Get the current bids from the Games Done Quick tracker. Fires 'gdq_
             bids = [parse_bid_row(r, all_soup=soup) for r in bid_rows]
 
             event.fire('gdq_bids', bids=bids)
+
+
+@service
+async def get_gdq_event():
+    """yaml
+name: Get GDQ Event
+description: Get the current GDQ event data
+"""
+    data = await get_gdq_event_data()
+
+    event.fire('gdq_event', event=data)
