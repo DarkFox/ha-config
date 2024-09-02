@@ -54,8 +54,10 @@
     {%- endfor -%}
 {%- endmacro -%}
 
-{% macro work_event_summary(event, regexes) -%}
-    {%- if bool(event_match(event, regexes.get('rsr', '')), false) -%}
+{% macro work_event_summary(event, regexes, calendar) -%}
+    {%- if calendar == 'Arbejdskalender' -%}
+        {{ event.summary }}
+    {%- elif bool(event_match(event, regexes.get('rsr', '')), false) -%}
         Arbejde - Rigshospitalet
     {%- elif bool(event_match(event, regexes.get('rsh', '')), false) -%}
         Arbejde - Herlev Hospital
@@ -88,7 +90,7 @@
         {% for attr in attrs -%}
         "{{ attr }}": {{ first_non_empty_string((event.get('description', '') or '') | regex_findall(attrs[attr], true)) | to_json }},
         {% endfor -%}
-        "summary": {{ work_event_summary(event, regexes) | replace(' #bil', '') | to_json }}
+        "summary": {{ work_event_summary(event, regexes, calendar) | to_json }}
     }
 {% endmacro -%}
 
