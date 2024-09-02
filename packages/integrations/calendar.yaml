@@ -379,19 +379,20 @@ template:
         unique_id: 27781f7b-68e2-4792-b662-12e48fb6ae62
         state: "OK"
         attributes:
-          vagt: &vagt_regex "Vagt"
-          on_site: &on_site_regex "(På RSH|På RSR)"
-          rsr: &rsr_regex "På RSR"
-          rsh: &rsh_regex "På RSH"
-          off_site: &off_site_regex "(Ude af huset|Kursus)"
-          work_bil: &work_bil_regex "(På RSH|På RSR|Kursus|Ude af huset)"
-          wfh: &wfh_regex "(WFH|Arbejder hjemmefra)"
-          vagtskema: &vagtskema_regex "(På RSH|På RSR|Vagt|WFH|Arbejder hjemmefra|Kursus|Ude af huset)"
-          ferie: &ferie_regex "^(Ferie).+"
-          bil: &personlig_bil_regex >-
+          vagt: "Vagt"
+          on_site: "(På RSH|På RSR)"
+          rsr: "På RSR"
+          rsh: "På RSH"
+          off_site: "(Ude af huset|Kursus)"
+          work_bil: "(På RSH|På RSR|Kursus|Ude af huset)"
+          wfh: "(WFH|Arbejder hjemmefra)"
+          vagtskema: "(På RSH|På RSR|Vagt|WFH|Arbejder hjemmefra|Kursus|Ude af huset)"
+          ferie: "^(Ferie).+"
+          bil: >-
             \b(?:bil)\b|(?:[#([](?:bil)[)\]])
-          transit: &transit_regex >-
+          transit: >-
             \b(?:tog|rail|bus)\b|(?:[#([](?:tog|rail|bus)[)\]])
+          routine: "(Opstartstid|Frokost|Aftensmad|Drift statusmøde|Overleveringsmøde|Tavlemøde)"
 
       - name: Full Agenda
         unique_id: 8abe262f-996a-46c0-bcba-c531dfa3580b
@@ -631,6 +632,7 @@ automation:
         travel: "{{ [regexes.transit, regexes.work_bil, regexes.bil] }}"
         bil: "{{ [regexes.work_bil, regexes.bil] }}"
         wake: "{{ [regexes.work_bil, regexes.bil, regexes.wfh] }}"
+        routine: "{{ [regexes.routine] }}"
         vagtskema: "{{ [regexes.vagtskema] }}"
         vagt: "{{ [regexes.vagt] }}"
         on_site: "{{ [regexes.on_site] }}"
