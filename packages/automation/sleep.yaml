@@ -602,7 +602,10 @@ automation:
               entity_id: media_player.sovevaerelse
               volume_level: 0.2
               message: >-
-                {%- set events = state_attr(('sensor.agenda' if now().strftime('%H')|int < 16 else 'sensor.agenda_tomorrow'), 'events') -%}
+                {%- set events = state_attr((
+                    'sensor.agenda' if now().strftime('%H')|int < 16
+                    else 'sensor.agenda_tomorrow'
+                  ), 'events') | selectattr('routine', 'false') |list -%}
                 Alarm sat til klokken {{ wake_up_time }}.
 
                 {% if events -%}

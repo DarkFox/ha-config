@@ -796,7 +796,7 @@ template:
         state: "{{ now() }}"
         attributes:
           briefing: |
-            {%- set events = state_attr('sensor.agenda', 'events') -%}
+            {%- set events = state_attr('sensor.agenda', 'events') | selectattr('routine', 'false') | list -%}
             {{ states('sensor.tts_greeting') }},
 
             Klokken er {{ states('sensor.time') }}, {{ state_attr('calendar.helligdage', 'message')+', ' if is_state('calendar.helligdage', 'on') }}{{ states('sensor.day_name') }} den {{ now().day }} {{ states('sensor.month_name') }}.
