@@ -1,8 +1,12 @@
 import aiohttp
 from bs4 import BeautifulSoup
 
-
-async def get_gdq_event_data():
+@service
+async def get_gdq_event():
+    """yaml
+name: Get GDQ Event
+description: Get the current GDQ event data
+"""
     base_url = 'https://tracker.gamesdonequick.com'
     events_url = base_url + '/tracker/events/'
 
@@ -17,18 +21,17 @@ async def get_gdq_event_data():
                 raise ValueError('No events found')
 
             gdq_event = gdq_events[1]
-
-            name = gdq_event.text
             href = gdq_event['href']
-            event_url = base_url + href
-            event_id = href.split('/')[-1]
+            evt_id = href.split('/')[-1]
 
-            return {
-                'name': name,
-                'url': event_url,
-                'id': event_id
+            data = {
+                'name': gdq_event.text,
+                'url': base_url + href,
+                'id': evt_id
             }
 
+            event.fire('gdq_event', event=data)
+            return data
 
 @service
 async def gdq_get_bids():
@@ -36,8 +39,8 @@ async def gdq_get_bids():
 name: Get GDQ Bids
 description: Get the current bids from the Games Done Quick tracker. Fires 'gdq_bids' event with the bids.
 """
-    event_data = await get_gdq_event_data()
-    url = f"https://tracker.gamesdonequick.com/tracker/bids/{event_data.id}"
+    data = get_gdq_event()
+    url = f"https://tracker.gamesdonequick.com/tracker/bids/{data['id']}"
 
     def get_full_url(url):
         return 'https://tracker.gamesdonequick.com' + url
@@ -127,19 +130,10 @@ description: Get the current bids from the Games Done Quick tracker. Fires 'gdq_
             bid_rows = soup.select('div.container-fluid > table > tr.small')
 
             if not bid_rows:
-                raise ValueError('No bid rows found')
+                event.fire('gdq_bids', bids=[])
+                return None
 
             bids = [parse_bid_row(r, all_soup=soup) for r in bid_rows]
 
             event.fire('gdq_bids', bids=bids)
 
-
-@service
-async def get_gdq_event():
-    """yaml
-name: Get GDQ Event
-description: Get the current GDQ event data
-"""
-    data = await get_gdq_event_data()
-
-    event.fire('gdq_event', event=data)
