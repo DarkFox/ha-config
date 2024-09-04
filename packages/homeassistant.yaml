@@ -70,13 +70,27 @@ sensor:
           {%- set weekday_names = ["Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag", "Søndag"] -%}
           {%- set weekday_name = weekday_names[now().weekday()] -%}
           {{ weekday_name }}
+      month_name:
+        value_template: >-
+          {%- set month_names = ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"] -%}
+          {%- set month_name = month_names[now().month - 1] -%}
+          {{ month_name }}
+      day_name_short:
+        value_template: >-
+          {%- set weekday_names = ["Man", "Tirs", "Ons", "Tor", "Fre", "Lør", "Søn"] -%}
+          {%- set weekday_name = weekday_names[now().weekday()] -%}
+          {{ weekday_name }}
+      month_name_short:
+        value_template: >-
+          {%- set month_names = ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"] -%}
+          {%- set month_name = month_names[now().month - 1] -%}
+          {{ month_name }}
       date_text:
         value_template: >-
-          {%- set weekday_names = ["Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag", "Søndag"] -%}
-          {%- set month_names = ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"] -%}
-          {%- set weekday_name = weekday_names[now().weekday()] -%}
-          {%- set month_name = month_names[now().month - 1] -%}
-          {{ weekday_name }}, {{ now().day }}. {{ month_name }}
+          {{ states('sensor.day_name') }}, {{ now().day }}. {{ states('sensor.month_name') }}
+      date_text_short:
+        value_template: >-
+          {{ states('sensor.day_name_short') }}., {{ now().day }}. {{ states('sensor.month_name_short') }}.
 
   - platform: template
     sensors:
