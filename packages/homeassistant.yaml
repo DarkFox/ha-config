@@ -34,8 +34,6 @@ input_boolean:
 binary_sensor:
   - platform: template
     sensors:
-      uncommitted_changes:
-        value_template: "{{ is_state('sensor.uncommitted_changes', 'on') }}"
       home_assistant_loaded:
         value_template: >-
           {{ is_state('input_boolean.home_assistant_started', 'on') }}
@@ -43,11 +41,15 @@ binary_sensor:
           seconds: 30
 
 command_line:
-  - sensor:
+  - binary_sensor:
       name: Uncommitted Changes
+      unique_id: a753ce94-8cd2-4d19-a05c-21458944bec6
+      device_class: problem
+      scan_interval: 300
       command: >
         git update-index --refresh >> /dev/null && git diff-index --quiet HEAD -- . ':!vpn-configs-contrib' || echo "on";
-      scan_interval: 300
+      payload_on: "on"
+      payload_off: ""
 
 sensor:
   - platform: rest
