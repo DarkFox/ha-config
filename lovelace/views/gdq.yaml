@@ -30,11 +30,30 @@ layout:
         "all_runs upcoming_watch"
         "bids sidebar"
 cards:
-  - type: markdown
+  - type: custom:html-card
     view_layout:
       grid-area: event
-    content: |
-        <h1 style="width: 100%; text-align: center;">Event: {{ states('sensor.gdq_event') }}</h1>
+    content: >-
+      <a
+        href="[[ sensor.gdq_event.attributes.url ]]"
+        target="_blank"
+        style="
+          text-decoration: none;
+          color: var(--primary-text-color);
+          margin: 0;
+          padding: 0;
+          display: block;
+        "
+      >
+        <h1 style="
+          width: 100%;
+          text-align: center;
+          margin: 0;
+          padding: 0;
+        ">
+            [[ sensor.gdq_event ]]
+        </h1>
+      </a>
 
   - type: vertical-stack
     view_layout:
@@ -56,18 +75,24 @@ cards:
 
   - type: custom:mini-graph-card
     entities:
-      - entity: sensor.gdq_donation_total
+      - name: Total
+        entity: sensor.gdq_donation_total
+      - name: Donations
+        entity: sensor.gdq_donation_total
+        attribute: count
+        y_axis: secondary
+        show_fill: false
     hours_to_show: 24
     points_per_hour: 30
     line_color: var(--success-color)
     line_width: 3
     font_size: 75
     decimals: 0
-    height: 140
+    height: 320
     show:
       name: false
       icon: false
-      labels: true
+      legend: false
     tap_action:
       action: fire-dom-event
       browser_mod:

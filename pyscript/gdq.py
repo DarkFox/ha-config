@@ -1,6 +1,20 @@
 import aiohttp
 from bs4 import BeautifulSoup
 
+
+async def event_has_runs(evt_url):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(evt_url) as evt_response:
+            evt_response.raise_for_status()
+            evt_soup = BeautifulSoup(evt_response.read(), 'html.parser')
+            buttons = evt_soup.select('p.center-block a.btn-block')
+            for button in buttons:
+                if 'View Runs' in button.text:
+                    runs = int(button.text.split('(')[1].split(')')[0])
+                    if runs > 0:
+                        return True
+    return False
+
 @service
 async def get_gdq_event():
     """yaml
@@ -17,21 +31,69 @@ description: Get the current GDQ event data
 
             gdq_events = soup.select('a.list-group-item')
 
+            data = {
+                'name': None,
+                'url': None,
+                'id': None
+            }
+
             if not gdq_events:
                 raise ValueError('No events found')
 
-            gdq_event = gdq_events[1]
-            href = gdq_event['href']
-            evt_id = href.split('/')[-1]
-
-            data = {
-                'name': gdq_event.text,
-                'url': base_url + href,
-                'id': evt_id
-            }
+            # Find the first event with runs
+            for gdq_event in gdq_events:
+                if 'All Events' in gdq_event.text:
+                    continue
+                
+                href = gdq_event['href']
+                event_url = base_url + href
+                has_runs = event_has_runs(event_url)
+                if has_runs:
+                    data['name'] = gdq_event.text
+                    data['url'] = event_url
+                    data['id'] = href.split('/')[-1]
+                    break
 
             event.fire('gdq_event', event=data)
             return data
+
+@service
+async def gdq_get_donation_stats():
+    """yaml
+name: Get GDQ Donation Stats
+description: Get the current donation stats from the Games Done Quick tracker. Fires 'gdq_donation_stats' event with the stats.
+"""
+    data = get_gdq_event()
+    url = f"https://tracker.gamesdonequick.com/tracker/event/{data['id']}"
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            response.raise_for_status()
+            soup = BeautifulSoup(response.read(), 'html.parser')
+            donation_stats_string = soup.select_one('h2.text-center small').text
+            
+            donation_stats = {
+                'total': None,
+                'count': None,
+                'max': None,
+                'average': None,
+                'median': None
+            }
+
+            for line in donation_stats_string.split('\n'):
+                if '(' in line:
+                    total, count = line.split('(')
+                    donation_stats['total'] = float(total.replace('$', '').replace(',', ''))
+                    donation_stats['count'] = int(count.split(')')[0])
+                elif '/' in line and 'Max' not in line:
+                    max_, avg, median = line.split('/')
+                    donation_stats['max'] = float(max_.replace('$', '').replace(',', ''))
+                    donation_stats['average'] = float(avg.replace('$', '').replace(',', ''))
+                    donation_stats['median'] = float(median.replace('$', '').replace(',', ''))
+
+            event.fire('gdq_donation_stats', stats=donation_stats)
+            return total
+
 
 @service
 async def gdq_get_bids():
