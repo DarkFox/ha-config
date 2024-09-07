@@ -804,12 +804,23 @@ template:
             {% if events -%}
             På kalenderen i dag har du følgende:
             {% for event in events -%}
-              - {{ (event.start | as_datetime).strftime('%H:%M') }} - {{ (event.end | as_datetime).strftime('%H:%M') }}: {{ event.summary }}
+                {% set start_time = (event.start | as_datetime).strftime('%H:%M') %}
+                {% set end_time = (event.end | as_datetime).strftime('%H:%M') %}
+                {% set start_day = (event.start | as_datetime).strftime('%A') %}
+                {% set end_day = (event.end | as_datetime).strftime('%A') %}
+                
+                {% if event.current %}
+                  - Lige nu: {{ event.summary }} indtil {{ end_time }}
+                {% elif start_day == end_day %}
+                  - {{ start_time }} - {{ end_time }}: {{ event.summary }}
+                {% else %}
+                  - {{ start_time }} - indtil {{ end_day }} kl. {{ end_time }}: {{ event.summary }}
+                {% endif %}
             {% endfor %}
             {% else -%}
             Du har ingen aftaler i kalenderen i dag.
             {% endif %}
-            {% if is_state('sensor.season', 'summer') -%}
+            {% if now().strftime('%m')|int in [6, 7, 8, 9] -%}
             Udenfor er temperaturen {{ states('sensor.ude_temperatur')|replace('.',',') }}° og Humidex indikerer: {{ state_translated('sensor.ude_humidex_perception') }}.
             {% else -%}
             Udenfor er temperaturen {{ states('sensor.ude_temperatur') | replace('.',',') }}°C og Thoms discomfort perception indikerer: {{ state_translated('sensor.ude_thoms_discomfort_perception') }}.

@@ -84,6 +84,7 @@
         "description": {{ (event.get('description', '') or '') | to_json }},
         "all_day": {{ 'true' if duration >= 86400 and start.strftime('%H:%M:%S') == '00:00:00' and end.strftime('%H:%M:%S') == '00:00:00' else 'false' }},
         "multi_day": {{ 'true' if duration > 86400 else 'false' }},
+        "current": {{ 'true' if start <= now() and end >= now() else 'false' }},
         {% for attr in bool_attrs -%}
         "{{ attr }}": {{ 'true' if bool(event_match_any(event, bool_attrs[attr]), false) else 'false' }},
         {% endfor -%}
@@ -103,34 +104,46 @@
 {%- endmacro -%}
 
 {%- macro current_events(events, time, selector=none, test='true') -%}
-    {%- set events = events if not selector else (events | selectattr(selector, test)) -%}
-    {{-
-        events
-        | selectattr('start', 'le', time)
-        | selectattr('end', 'gt', time)
-        | list
-        | to_json
-    -}}
+    {%- set events = (events if not selector else (events | selectattr(selector, test))) | list -%}
+    {%- if not events or events | length == 0 -%}
+        []
+    {%- else -%}
+        {{-
+            events
+            | selectattr('start', 'le', time)
+            | selectattr('end', 'gt', time)
+            | list
+            | to_json
+        -}}
+    {%- endif -%}
 {%- endmacro -%}
 
 {%- macro agenda(events, time, selector=none, test='true') -%}
-    {%- set events = events if not selector else (events | selectattr(selector, test)) -%}
-    {{-
-        events
-        | selectattr('end', 'gt', time)
-        | list
-        | to_json
-    -}}
+    {%- set events = (events if not selector else (events | selectattr(selector, test))) | list -%}
+    {%- if not events or events | length == 0 -%}
+        []
+    {%- else -%}
+        {{-
+            events
+            | selectattr('end', 'gt', time)
+            | list
+            | to_json
+        -}}
+    {%- endif -%}
 {%- endmacro -%}
 
 {%- macro coming_events(events, time, selector=none, test='true') -%}
-    {%- set events = events if not selector else (events | selectattr(selector, test)) -%}
-    {{-
-        events
-        | selectattr('start', 'gt', time)
-        | list
-        | to_json
-    -}}
+    {%- set events = (events if not selector else (events | selectattr(selector, test))) | list -%}
+    {% if not events or events | length == 0 %}
+        []
+    {% else %}
+        {{-
+            events
+            | selectattr('start', 'gt', time)
+            | list
+            | to_json
+        -}}
+    {% endif %}
 {%- endmacro -%}
 
 {%- macro filter_work_events_to_schedule(events) -%}
