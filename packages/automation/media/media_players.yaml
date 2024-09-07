@@ -804,18 +804,17 @@ template:
             {% if events -%}
             På kalenderen i dag har du følgende:
             {% for event in events -%}
-                {% set start_time = (event.start | as_datetime).strftime('%H:%M') %}
-                {% set end_time = (event.end | as_datetime).strftime('%H:%M') %}
-                {% set start_day = (event.start | as_datetime).strftime('%A') %}
-                {% set end_day = (event.end | as_datetime).strftime('%A') %}
-                
-                {% if event.current %}
-                  - Lige nu: {{ event.summary }} indtil {{ end_time }}
-                {% elif start_day == end_day %}
+                {%- set start = (event.start | as_datetime) -%}
+                {%- set end = (event.end | as_datetime) -%}
+                {%- set start_time = start.strftime('%H:%M') -%}
+                {%- set end_time = end.strftime('%H:%M') -%}
+                {%- set start_day = start.weekday() -%}
+                {%- set end_day = end.weekday() -%}
+                {%- if event.current -%}
+                  - Lige nu: {{ event.summary }} indtil {{ state_attr('sensor.day_name', 'weekday_names')[end_day] if end_day != start_day }} kl. {{ end_time }}
+                {%- else -%}
                   - {{ start_time }} - {{ end_time }}: {{ event.summary }}
-                {% else %}
-                  - {{ start_time }} - indtil {{ end_day }} kl. {{ end_time }}: {{ event.summary }}
-                {% endif %}
+                {%- endif -%}
             {% endfor %}
             {% else -%}
             Du har ingen aftaler i kalenderen i dag.

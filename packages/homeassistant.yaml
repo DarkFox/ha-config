@@ -31,15 +31,6 @@ input_boolean:
   home_assistant_started:
     initial: off
 
-binary_sensor:
-  - platform: template
-    sensors:
-      home_assistant_loaded:
-        value_template: >-
-          {{ is_state('input_boolean.home_assistant_started', 'on') }}
-        delay_on:
-          seconds: 30
-
 command_line:
   - binary_sensor:
       name: Uncommitted Changes Writer
@@ -58,6 +49,88 @@ command_line:
       payload_on: "on"
       payload_off: "off"
 
+template:
+  - sensor:
+      - name: Month Name
+        unique_id: a141453c-2624-4267-a93b-da5d54e9dc35
+        state: >-
+          {% if state_attr('sensor.month_name', 'month_names') is defined %}
+            {% set months = state_attr('sensor.month_name', 'month_names') %}
+            {{ months[now().month-1] }}
+          {% else %}
+            unknown
+          {% endif %}
+        attributes:
+          month_names: >-
+            {{ ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"] }}
+
+      - name: Month Name Short
+        unique_id: 5e2f3b19-23f8-423a-b13c-1781429522c2
+        state: >-
+          {% if state_attr('sensor.month_name_short', 'month_names_short') is defined %}
+            {% set months = state_attr('sensor.month_name_short', 'month_names_short') %}
+            {{ months[now().month-1] }}
+          {% else %}
+            unknown
+          {% endif %}
+        attributes:
+          month_names_short: >-
+            {{ ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"] }}
+
+      - name: Day Name
+        unique_id: a7c54c1f-3ed0-465e-b8d4-744cca6565ad
+        state: >-
+          {% if state_attr('sensor.day_name', 'weekday_names') is defined %}
+            {% set weekdays = state_attr('sensor.day_name', 'weekday_names') %}
+            {{ weekdays[now().weekday()] }}
+          {% else %}
+            unknown
+          {% endif %}
+        attributes:
+          weekday_names: >-
+            {{ ["Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag", "Søndag"] }}
+
+      - name: Day Name Short
+        unique_id: a9777d4e-17a6-46e6-b64f-6721aa7de45e
+        state: >-
+          {% if state_attr('sensor.day_name_short', 'weekday_names_short') is defined %}
+            {% set weekdays = state_attr('sensor.day_name_short', 'weekday_names_short') %}
+            {{ weekdays[now().weekday()] }}
+          {% else %}
+            unknown
+          {% endif %}
+        attributes:
+          weekday_names_short: >-
+            {{ ["Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"] }}
+
+      - name: Date Text
+        unique_id: fc6ff840-4ee6-4a86-a379-ec34c9d861e4
+        state: >-
+          {{ states('sensor.day_name') }}, {{ now().day }}. {{ states('sensor.month_name') }}
+
+      - name: Date Text Short
+        unique_id: 9bde0ead-3c9d-4368-9b90-7852be7c27b1
+        state: >-
+          {{ states('sensor.day_name_short') }}., {{ now().day }}. {{ states('sensor.month_name_short') }}
+
+      - name: HA Last Restart
+        unique_id: da9af7e5-6b34-46b8-b15b-70dc5de413ad
+        state: >-
+          {{ state_attr('automation.set_home_assistant_started_on_startup', 'last_triggered') | as_timestamp(0) | timestamp_custom('%b %d %X') }}
+
+  - binary_sensor:
+      - name: Workday
+        unique_id: d582050d-a8d2-4e21-8cb1-b4f8fd1e4445
+        state: >-
+          {{ is_state('binary_sensor.working_today', 'on') }}
+
+      - name: Home Assistant Loaded
+        unique_id: aad0a9c9-1236-4261-837a-943825f16aba
+        state: >-
+          {{ is_state('input_boolean.home_assistant_started', 'on') }}
+        delay_on:
+          seconds: 30
+
 sensor:
   - platform: rest
     resource: http://ip.jsontest.com
@@ -71,41 +144,6 @@ sensor:
       - "date"
       - "date_time"
       - "time_utc"
-
-  - platform: template
-    sensors:
-      day_name:
-        value_template: >-
-          {%- set weekday_names = ["Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag", "Søndag"] -%}
-          {%- set weekday_name = weekday_names[now().weekday()] -%}
-          {{ weekday_name }}
-      month_name:
-        value_template: >-
-          {%- set month_names = ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"] -%}
-          {%- set month_name = month_names[now().month - 1] -%}
-          {{ month_name }}
-      day_name_short:
-        value_template: >-
-          {%- set weekday_names = ["Man", "Tirs", "Ons", "Tor", "Fre", "Lør", "Søn"] -%}
-          {%- set weekday_name = weekday_names[now().weekday()] -%}
-          {{ weekday_name }}
-      month_name_short:
-        value_template: >-
-          {%- set month_names = ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"] -%}
-          {%- set month_name = month_names[now().month - 1] -%}
-          {{ month_name }}
-      date_text:
-        value_template: >-
-          {{ states('sensor.day_name') }}, {{ now().day }}. {{ states('sensor.month_name') }}
-      date_text_short:
-        value_template: >-
-          {{ states('sensor.day_name_short') }}., {{ now().day }}. {{ states('sensor.month_name_short') }}.
-
-  - platform: template
-    sensors:
-      ha_last_restart:
-        value_template: "{{ state_attr('automation.set_home_assistant_started_on_startup', 'last_triggered') | as_timestamp(0) | timestamp_custom('%b %d %X') }}"
-        friendly_name: HA Last Restart
 
 automation:
   - alias: Notify HA Shutdown
