@@ -1,18 +1,40 @@
 import aiohttp
 from bs4 import BeautifulSoup
 
+base_url = 'https://tracker.gamesdonequick.com'
 
-async def event_has_runs(evt_url):
+async def get_runs(uri):
+    event.fire('gdq_event_debug', message=f'Getting runs from {base_url + uri}')
     async with aiohttp.ClientSession() as session:
-        async with session.get(evt_url) as evt_response:
+        async with session.get(base_url + uri) as runs_response:
+            runs_response.raise_for_status()
+            runs_soup = BeautifulSoup(runs_response.read(), 'html.parser')
+            
+            run_headers = runs_soup.select('table.table-striped > thead > tr > th')
+            columns = [header.text.strip() for header in run_headers]
+            event.fire('gdq_event_debug', message=f'Columns: {columns}')
+
+            run_rows = runs_soup.select('table.table-striped > tr')
+            runs = []
+            for run_row in run_rows:
+                values = [cell.text.strip() for cell in run_row.select('td')]
+                run = dict(zip(columns, values))
+                runs.append(run)
+
+            event.fire('gdq_event_debug', message=f'Runs: {runs}')
+            return runs
+
+async def event_runs(uri):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(base_url + uri) as evt_response:
             evt_response.raise_for_status()
             evt_soup = BeautifulSoup(evt_response.read(), 'html.parser')
             buttons = evt_soup.select('p.center-block a.btn-block')
             for button in buttons:
                 if 'View Runs' in button.text:
-                    runs = int(button.text.split('(')[1].split(')')[0])
-                    if runs > 0:
-                        return True
+                    run_count = int(button.text.split('(')[1].split(')')[0])
+                    if run_count > 0:
+                        return button['href']
     return False
 
 @service
@@ -21,11 +43,8 @@ async def get_gdq_event():
 name: Get GDQ Event
 description: Get the current GDQ event data
 """
-    base_url = 'https://tracker.gamesdonequick.com'
-    events_url = base_url + '/tracker/events/'
-
     async with aiohttp.ClientSession() as session:
-        async with session.get(events_url) as response:
+        async with session.get(base_url + '/tracker/events/') as response:
             response.raise_for_status()
             soup = BeautifulSoup(response.read(), 'html.parser')
 
@@ -34,11 +53,13 @@ description: Get the current GDQ event data
             data = {
                 'name': None,
                 'url': None,
-                'id': None
+                'id': None,
+                'start_date': None,
+                'end_date': None
             }
 
             if not gdq_events:
-                raise ValueError('No events found')
+                return data
 
             # Find the first event with runs
             for gdq_event in gdq_events:
@@ -46,12 +67,15 @@ description: Get the current GDQ event data
                     continue
                 
                 href = gdq_event['href']
-                event_url = base_url + href
-                has_runs = event_has_runs(event_url)
-                if has_runs:
+                runs_uri = event_runs(href)
+                if runs_uri:
+                    runs = get_runs(runs_uri)
+
                     data['name'] = gdq_event.text
-                    data['url'] = event_url
+                    data['url'] = base_url + href
                     data['id'] = href.split('/')[-1]
+                    data['start_time'] = runs[0]['Start Time']
+                    data['end_time'] = runs[-1]['Start Time']
                     break
 
             event.fire('gdq_event', event=data)
@@ -64,7 +88,7 @@ name: Get GDQ Donation Stats
 description: Get the current donation stats from the Games Done Quick tracker. Fires 'gdq_donation_stats' event with the stats.
 """
     data = get_gdq_event()
-    url = f"https://tracker.gamesdonequick.com/tracker/event/{data['id']}"
+    url = f"{base_url}/tracker/event/{data['id']}"
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
@@ -102,13 +126,13 @@ name: Get GDQ Bids
 description: Get the current bids from the Games Done Quick tracker. Fires 'gdq_bids' event with the bids.
 """
     data = get_gdq_event()
-    url = f"https://tracker.gamesdonequick.com/tracker/bids/{data['id']}"
+    url = f"{base_url}/tracker/bids/{data['id']}"
 
-    def get_full_url(url):
-        return 'https://tracker.gamesdonequick.com' + url
+    def get_full_url(uri):
+        return base_url + uri
 
-    def get_bid_id(url):
-        return int(url.split('/')[-1].strip())
+    def get_bid_id(uri):
+        return int(uri.split('/')[-1].strip())
 
     def parse_amount(amount):
         amount = amount.strip().replace(',', '')
@@ -141,13 +165,13 @@ description: Get the current bids from the Games Done Quick tracker. Fires 'gdq_
 
     def parse_bid_row(row, get_options=True, all_soup=None, bid_total=None):
         columns = row.select('td')
-        relative_url = columns[0].find('a')['href']
-        bid_id = get_bid_id(relative_url)
+        uri = columns[0].find('a')['href']
+        bid_id = get_bid_id(uri)
 
         bid = {
             'id': bid_id,
             'name': parse_text(columns[0].find('a').text),
-            'link': get_full_url(relative_url),
+            'link': get_full_url(uri),
             'run': parse_text(columns[1].text),
             'description': parse_text(columns[2].text)
         }
