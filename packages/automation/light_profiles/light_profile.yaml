@@ -805,9 +805,8 @@ automation:
       - platform: event
         event_type: set_light_profile
     variables:
-      room: "{{ trigger.event.data.room }}"
+      rooms: "{{ trigger.event.data.room if trigger.event.data.room is list else [trigger.event.data.room] }}"
       profile: "{{ trigger.event.data.profile }}"
-      room_separate: "{{ not not room and is_state('input_boolean.'+room+'_separate_light_profile', 'on') }}"
       transition_time: >-
         {{-
           trigger.event.data.transition_time
@@ -817,20 +816,17 @@ automation:
             or trigger.event.data.transition_time|string|regex_match('^\\d*\\.\\d+$')
           )
         -}}
-      light_profile_entity: >
-        {%- if room_separate -%}
-          {%- if room is list -%}
-            {%- set ns = namespace(ret=[]) -%}
-            {%- for r in room -%}
-              {%- set ns.ret = ns.ret + ['input_select.'~r~'_light_profile'] -%}
-            {%- endfor -%}
-            {{ ns.ret }}
+      light_profile_entity: >-
+        {%- set ns = namespace(ret=[]) -%}
+        {%- for r in rooms -%}
+          {%- if not r or is_state('input_boolean.'+r+'_separate_light_profile', 'off') -%}
+            {%- set ns.ret = ns.ret + ['input_select.light_profile'] -%}
           {%- else -%}
-            input_select.{{ room }}_light_profile
+            {%- set ns.ret = ns.ret + ['input_select.'~r~'_light_profile'] -%}
           {%- endif -%}
-        {%- else -%}
-          input_select.light_profile
-        {%- endif -%}
+        {%- endfor -%}
+        {%- set ns.ret = ns.ret|unique|list -%}
+        {{ ns.ret }}
     action:
       - choose:
           - conditions:
@@ -840,14 +836,9 @@ automation:
               - service: input_number.set_value
                 data:
                   entity_id: "input_number.scene_transition_time"
-                  value: "{{ transition_time|float(0.0) }}"
-              - delay: 1
-
-      - event: debug
-        event_data:
-          room: "{{ room }}"
-          profile: "{{ profile }}"
-          room_separate: "{{ room_separate }}"
+                  value: "{{ transition_time|float(0.5) }}"
+              - delay:
+                  seconds: 1
 
       - service: input_select.select_option
         data:
