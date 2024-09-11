@@ -24,7 +24,7 @@ async def get_runs(uri):
             event.fire('gdq_event_debug', message=f'Runs: {runs}')
             return runs
 
-async def event_runs(uri):
+async def gdq_event_runs_uri(uri):
     async with aiohttp.ClientSession() as session:
         async with session.get(base_url + uri) as evt_response:
             evt_response.raise_for_status()
@@ -37,12 +37,7 @@ async def event_runs(uri):
                         return button['href']
     return False
 
-@service
-async def get_gdq_event():
-    """yaml
-name: Get GDQ Event
-description: Get the current GDQ event data
-"""
+async def get_gdq_event_info():
     async with aiohttp.ClientSession() as session:
         async with session.get(base_url + '/tracker/events/') as response:
             response.raise_for_status()
@@ -50,16 +45,8 @@ description: Get the current GDQ event data
 
             gdq_events = soup.select('a.list-group-item')
 
-            data = {
-                'name': None,
-                'url': None,
-                'id': None,
-                'start_date': None,
-                'end_date': None
-            }
-
             if not gdq_events:
-                return data
+                return None
 
             # Find the first event with runs
             for gdq_event in gdq_events:
@@ -67,19 +54,45 @@ description: Get the current GDQ event data
                     continue
                 
                 href = gdq_event['href']
-                runs_uri = event_runs(href)
+                runs_uri = gdq_event_runs_uri(href)
                 if runs_uri:
-                    runs = get_runs(runs_uri)
+                    return {
+                        'name': gdq_event.text,
+                        'url': base_url + href,
+                        'id': href.split('/')[-1],
+                        'runs_uri': runs_uri
+                    }
 
-                    data['name'] = gdq_event.text
-                    data['url'] = base_url + href
-                    data['id'] = href.split('/')[-1]
-                    data['start_time'] = runs[0]['Start Time']
-                    data['end_time'] = runs[-1]['Start Time']
-                    break
+    return None
 
-            event.fire('gdq_event', event=data)
-            return data
+@service
+async def get_gdq_event():
+    """yaml
+name: Get GDQ Event
+description: Get the current GDQ event data
+"""
+    data = {
+        'name': None,
+        'url': None,
+        'id': None,
+        'start_date': None,
+        'end_date': None
+    }
+    
+    event = get_gdq_event_info()
+
+    if event:
+        runs = get_runs(event['runs_uri'])
+
+        if runs:
+            data['name'] = event['name']
+            data['url'] = event['url']
+            data['id'] = event['id']
+            data['start_time'] = runs[0]['Start Time']
+            data['end_time'] = runs[-1]['Start Time']
+
+    event.fire('gdq_event', event=data)
+    return data
 
 @service
 async def gdq_get_donation_stats():
@@ -87,8 +100,10 @@ async def gdq_get_donation_stats():
 name: Get GDQ Donation Stats
 description: Get the current donation stats from the Games Done Quick tracker. Fires 'gdq_donation_stats' event with the stats.
 """
-    data = get_gdq_event()
-    url = f"{base_url}/tracker/event/{data['id']}"
+    if not sensor.gdq_event:
+        return None
+
+    url = f"{base_url}/tracker/event/{sensor.gdq_event.id}"
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
@@ -125,8 +140,10 @@ async def gdq_get_bids():
 name: Get GDQ Bids
 description: Get the current bids from the Games Done Quick tracker. Fires 'gdq_bids' event with the bids.
 """
-    data = get_gdq_event()
-    url = f"{base_url}/tracker/bids/{data['id']}"
+    if not sensor.gdq_event:
+        return None
+
+    url = f"{base_url}/tracker/bids/{sensor.gdq_event.id}"
 
     def get_full_url(uri):
         return base_url + uri
