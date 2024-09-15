@@ -1,0 +1,74 @@
+template:
+  - trigger:
+      platform: event
+      event_type: osm_geocoding_new_entry
+    sensor:
+      - name: OSM Geocoding Cache
+        state: "{{ as_timestamp(now()) | timestamp_custom('%H:%M:%S %d %b %Y', true) }}"
+        attributes:
+          entries: >
+            {% set old_results = state_attr('sensor.osm_geocoding_cache', 'entries') or {} %}
+            {% set new_query = trigger.event.data.query %}
+            {% set new_result = trigger.event.data.result %}
+            {
+              {% for query, result in old_results.items() %}
+                "{{ query }}": {{ result | to_json }},
+              {% endfor %}
+              "{{ new_query }}": {{ new_result | to_json }}
+            }
+
+script:
+  osm_geocoding_lookup:
+    fields:
+      query:
+        description: Look up an address or place in OpenStreetMap
+        example: "Paradisæblevej 111, Andeby"
+        selector:
+          text:
+      force_lookup:
+        description: Look up the address even if already cached
+        example: true
+        selector:
+          boolean:
+    sequence:
+      - choose:
+          # Check if the result is cached
+          - conditions:
+              - condition: or
+                conditions:
+                  - condition: template
+                    value_template: "{{ (force_lookup|bool(false)) }}"
+                  - condition: template
+                    value_template: >-
+                      {{
+                        true if not state_attr('sensor.osm_geocoding_cache', 'entries') 
+                          or query not in state_attr('sensor.osm_geocoding_cache', 'entries')
+                        else false
+                      }}
+            sequence:
+              - service: shell_command.curl
+                response_variable: response
+                data:
+                  url: >-
+                    https://nominatim.openstreetmap.org/search?format=json&q={{ query | urlencode }}
+                  method: get
+              - variables:
+                  result: "{{ response.get('stdout', '[]') | from_json }}"
+              - event: osm_geocoding_new_entry
+                event_data:
+                  query: "{{ query }}"
+                  result: "{{ result }}"
+              - wait_template: >-
+                  {{
+                    true if state_attr('sensor.osm_geocoding_cache', 'entries') 
+                      and query in state_attr('sensor.osm_geocoding_cache', 'entries')
+                    else false
+                  }}
+                timeout:
+                  seconds: 10
+                continue_on_timeout: false
+      - variables:
+          result: >-
+            {{ { 'results': state_attr('sensor.osm_geocoding_cache', 'entries')[query] } }}
+      - stop: Return result
+        response_variable: result
