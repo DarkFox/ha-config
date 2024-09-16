@@ -158,6 +158,20 @@ template:
             -1
           {%- endif -%}
 
+  - trigger:
+      platform: event
+      event_type: upcoming_travel_location_geocoded
+    sensor:
+      - name: Upcoming Travel Location Geocoded
+        unique_id: 441d35e6-935d-4be1-9551-4f324082fda6
+        state: >-
+          {{ trigger.event.data.get('query', 'unknown') }}
+        attributes:
+          mode: >-
+            {{ trigger.event.data.get('mode', None) }}
+          location: >-
+            {{ (trigger.event.data.get('locations', []) | first) or {} }}
+
   - binary_sensor:
       - name: Martin Next Scheduled Destination Active
         unique_id: 78ffca90-7a32-4764-932a-46ff4fb01548
@@ -222,6 +236,40 @@ sensor:
     sender: S-tog
 
 automation:
+  - alias: "Get coordinates for upcoming travel location"
+    id: 50a1744d-bede-4d52-bb25-c12bf97eaf9c
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: sensor.upcoming_travel_location
+    action:
+      - choose:
+          - conditions:
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: sensor.upcoming_travel_location
+                    state:
+                      - unknown
+                      - unavailable
+                      - ""
+            sequence:
+              - action: script.osm_geocoding_lookup
+                response_variable: response
+                data:
+                  query: "{{ states('sensor.upcoming_travel_location') }}"
+              - event: upcoming_travel_location_geocoded
+                event_data:
+                  mode: "{{ state_attr('sensor.upcoming_travel_location', 'mode') }}"
+                  locations: "{{ response.get('results', []) }}"
+                  query: "{{ states('sensor.upcoming_travel_location') }}"
+        default:
+          - event: upcoming_travel_location_geocoded
+            event_data:
+              mode: "{{ None }}"
+              locations: []
+              query: "{{ states('sensor.upcoming_travel_location') }}"
+
   - alias: "Next destination - Update sensors with high frequency when close to leave time"
     initial_state: true
     trigger:

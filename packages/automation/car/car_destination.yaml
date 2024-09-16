@@ -1,0 +1,24 @@
+automation:
+  - alias: Send upcoming travel location to car
+    id: 295f96ad-137a-4096-9bed-f2c2762fbc8c
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.upcoming_drive
+        to: "on"
+    condition:
+      - condition: template
+        value_template: "{{ True if state_attr('sensor.upcoming_travel_location_geocoded', 'location').get('lat') else False }}"
+    variables:
+      name: "{{ state_attr('sensor.upcoming_travel_location_geocoded', 'location').get('name') }}"
+      display_name: "{{ state_attr('sensor.upcoming_travel_location_geocoded', 'location').get('display_name') }}"
+      destination: "{{ name or display_name }}"
+      latitude: "{{ state_attr('sensor.upcoming_travel_location_geocoded', 'location').get('lat') }}"
+      longitude: "{{ state_attr('sensor.upcoming_travel_location_geocoded', 'location').get('lon') }}"
+    action:
+      # Sending destination not yet implemented, testing with notification for now.
+      - service: script.notify_darkphone
+        data:
+          message: |
+            Sender destination: {{ destination }}.
+            Koordinater: {{ latitude }}, {{ longitude }}.
