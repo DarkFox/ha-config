@@ -49,6 +49,36 @@ switch:
             vin: !secret vw_vin
             maximum_reduced: "maximum"
 
+script:
+  id_3_pro_send_destination:
+    alias: ID.3 Pro Send Destination
+    fields:
+      destinations:
+        name: Destinations
+        description: List of destinations to send to the car.
+        required: true
+        example: |
+          - name: VW Museum
+            geoCoordinate:
+              latitude: 52.4278793
+              longitude: 10.8077433
+          - name: Autostadt
+            geoCoordinate:
+              latitude: 52.429380
+              longitude: 10.791520
+            address:
+              country: Germany
+              street: Stadtbrücke
+              zipCode: 38440
+              city: Wolfsburg
+        selector:
+          object:
+    sequence:
+      - action: volkswagen_we_connect_id.volkswagen_id_send_destination
+        data:
+          vin: !secret vw_vin
+          destinations: "{{ destinations }}"
+
 template:
   - binary_sensor:
       - name: ID.3 Pro Locked

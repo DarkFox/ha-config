@@ -7,18 +7,83 @@ automation:
         entity_id: binary_sensor.upcoming_drive
         to: "on"
     condition:
-      - condition: template
-        value_template: "{{ True if state_attr('sensor.upcoming_travel_location_geocoded', 'location').get('lat') else False }}"
-    variables:
-      name: "{{ state_attr('sensor.upcoming_travel_location_geocoded', 'location').get('name') }}"
-      display_name: "{{ state_attr('sensor.upcoming_travel_location_geocoded', 'location').get('display_name') }}"
-      destination: "{{ name or display_name }}"
-      latitude: "{{ state_attr('sensor.upcoming_travel_location_geocoded', 'location').get('lat') }}"
-      longitude: "{{ state_attr('sensor.upcoming_travel_location_geocoded', 'location').get('lon') }}"
+      - condition: state
+        entity_id: sensor.upcoming_travel_location
+        attribute: mode
+        state: "driving"
     action:
-      # Sending destination not yet implemented, testing with notification for now.
-      - service: script.notify_darkphone
+      - action: script.send_entity_destination_to_car
         data:
-          message: |
-            Sender destination: {{ destination }}.
-            Koordinater: {{ latitude }}, {{ longitude }}.
+          entity_id: sensor.upcoming_travel_location
+
+script:
+  send_entity_destination_to_car:
+    alias: Send entity destination to car
+    fields:
+      entity_id:
+        description: Source entity for destination
+        example: zone.home
+        required: true
+    sequence:
+      - choose:
+          - alias: Entity without coordinates
+            conditions:
+              - condition: template
+                value_template: "{{ not state_attr(entity_id, 'latitude') }}"
+            sequence:
+              - service: script.osm_geocoding_lookup
+                response_variable: geocoded_data
+                data:
+                  query: "{{ states(entity_id) }}"
+              - variables:
+                  destination: >-
+                    {%- from 'osm.jinja' import geocodejson_to_vw -%}
+                    {{ geocodejson_to_vw(geocoded_data.location) if geocoded_data.get('location', None) else {} }}
+              - condition: template
+                value_template: "{{ bool(destination.get('geoCoordinate', {}).get('latitude', False)) }}"
+              - service: script.id_3_pro_send_destination
+                data:
+                  destinations: "{{ destination }}"
+        default:
+          - service: script.id_3_pro_send_destination
+            data:
+              destinations:
+                - name: "{{ state_attr(zone, 'friendly_name') }}"
+                  geoCoordinate:
+                    latitude: "{{ state_attr(zone, 'latitude') }}"
+                    longitude: "{{ state_attr(zone, 'longitude') }}"
+
+  send_home_destination:
+    alias: Send home destination to car
+    sequence:
+      - service: script.send_entity_destination_to_car
+        data:
+          entity_id: zone.home
+
+  send_rsh_destination:
+    alias: Send RSH destination to car
+    sequence:
+      - service: script.send_entity_destination_to_car
+        data:
+          entity_id: zone.rsh
+
+  send_rsr_destination:
+    alias: Send RSR destination to car
+    sequence:
+      - service: script.send_entity_destination_to_car
+        data:
+          entity_id: zone.rsr
+
+  send_graested_destination:
+    alias: Send Græsted destination to car
+    sequence:
+      - service: script.send_entity_destination_to_car
+        data:
+          entity_id: zone.graested
+
+  send_foraeldre_destination:
+    alias: Send Forældre destination to car
+    sequence:
+      - service: script.send_entity_destination_to_car
+        data:
+          entity_id: zone.foraeldre
