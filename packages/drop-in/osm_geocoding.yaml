@@ -7,15 +7,10 @@ template:
         state: "{{ as_timestamp(now()) | timestamp_custom('%H:%M:%S %d %b %Y', true) }}"
         attributes:
           entries: >
+            {% set query = trigger.event.data.query %}
+            {% set result = trigger.event.data.result | first or None %}
             {% set old_results = state_attr('sensor.osm_geocoding_cache', 'entries') or {} %}
-            {% set new_query = trigger.event.data.query %}
-            {% set new_result = trigger.event.data.result %}
-            {
-              {% for query, result in old_results.items() %}
-                "{{ query }}": {{ result | to_json }},
-              {% endfor %}
-              "{{ new_query }}": {{ new_result | to_json }}
-            }
+            {{ dict(old_results, **{ query: result}) }}
 
 script:
   osm_geocoding_lookup:
@@ -50,17 +45,19 @@ script:
                 response_variable: response
                 data:
                   url: >-
-                    https://nominatim.openstreetmap.org/search?format=json&q={{ query | urlencode }}
+                    https://nominatim.openstreetmap.org/search?format=geocodejson&addressdetails=1&q={{ query | urlencode }}
                   method: get
               - variables:
-                  result: "{{ response.get('stdout', '[]') | from_json }}"
+                  result: "{{ response.get('stdout', '{}') | from_json }}"
+                  features: "{{ result.get('features', []) }}"
               - event: osm_geocoding_new_entry
                 event_data:
                   query: "{{ query }}"
-                  result: "{{ result }}"
+                  result: "{{ features }}"
               - wait_template: >-
                   {{
-                    true if state_attr('sensor.osm_geocoding_cache', 'entries') 
+                    true if has_value('sensor.osm_geocoding_cache')
+                      and state_attr('sensor.osm_geocoding_cache', 'entries') is defined
                       and query in state_attr('sensor.osm_geocoding_cache', 'entries')
                     else false
                   }}
@@ -69,6 +66,6 @@ script:
                 continue_on_timeout: false
       - variables:
           result: >-
-            {{ { 'results': state_attr('sensor.osm_geocoding_cache', 'entries')[query] } }}
+            {{ { 'location': state_attr('sensor.osm_geocoding_cache', 'entries').get(query, {}) } if state_attr('sensor.osm_geocoding_cache', 'entries') is defined else {} }}
       - stop: Return result
         response_variable: result
