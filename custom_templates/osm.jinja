@@ -1,4 +1,4 @@
-{%- macro geocodejson_to_vw(feature) -%}
+{%- macro geocodejson_to_vw(feature, dest_name=none) -%}
     {%- set properties = feature.get('properties', {}) -%}
     {%- set geocoding = properties.get('geocoding', {}) -%}
     {%- set address = {
@@ -8,7 +8,7 @@
         'street': geocoding.get('street', '') ~ (' ' ~ geocoding.get('housenumber', '') if 'housenumber' in geocoding else '')
     } -%}
     {%- set fallback_name = address.get('street', '') ~ ', ' ~ address.get('city', '') -%}
-    {%- set name = geocoding.get('name', fallback_name) -%}
+    {%- set name = dest_name if dest_name else geocoding.get('name', fallback_name) -%}
     {%- set coordinates = feature.get('geometry', {}).get('coordinates', []) -%}
     {%- set lat = coordinates[1] if coordinates else None -%}
     {%- set lon = coordinates[0] if coordinates else None -%}

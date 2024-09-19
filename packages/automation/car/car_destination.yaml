@@ -3,9 +3,9 @@ automation:
     id: 295f96ad-137a-4096-9bed-f2c2762fbc8c
     initial_state: true
     trigger:
-      - platform: state
-        entity_id: binary_sensor.upcoming_drive
-        to: "on"
+      - platform: numeric_state
+        entity_id: sensor.next_scheduled_leave_in
+        below: 60
     condition:
       - condition: state
         entity_id: sensor.upcoming_travel_location
@@ -31,27 +31,36 @@ script:
               - condition: template
                 value_template: "{{ not state_attr(entity_id, 'latitude') }}"
             sequence:
+              - variables:
+                  query: "{{ states(entity_id) }}"
+                  name: >-
+                    {{
+                      state_attr(entity_id, 'summary')
+                      or state_attr(entity_id, 'name')
+                      or state_attr(entity_id, 'friendly_name')
+                      or none
+                    }}
               - service: script.osm_geocoding_lookup
                 response_variable: geocoded_data
                 data:
-                  query: "{{ states(entity_id) }}"
+                  query: "{{ query }}"
               - variables:
                   destination: >-
                     {%- from 'osm.jinja' import geocodejson_to_vw -%}
-                    {{ geocodejson_to_vw(geocoded_data.location) if geocoded_data.get('location', None) else {} }}
+                    {{ geocodejson_to_vw(geocoded_data.location, name) if geocoded_data.get('location', None) else {} }}
               - condition: template
                 value_template: "{{ bool(destination.get('geoCoordinate', {}).get('latitude', False)) }}"
-              - service: script.id_3_pro_send_destination
+              - service: script.id_3_pro_send_destinations
                 data:
                   destinations: "{{ destination }}"
         default:
-          - service: script.id_3_pro_send_destination
+          - service: script.id_3_pro_send_destinations
             data:
               destinations:
-                - name: "{{ state_attr(zone, 'friendly_name') }}"
+                - name: "{{ state_attr(entity_id, 'friendly_name') }}"
                   geoCoordinate:
-                    latitude: "{{ state_attr(zone, 'latitude') }}"
-                    longitude: "{{ state_attr(zone, 'longitude') }}"
+                    latitude: "{{ state_attr(entity_id, 'latitude') }}"
+                    longitude: "{{ state_attr(entity_id, 'longitude') }}"
 
   send_home_destination:
     alias: Send home destination to car
