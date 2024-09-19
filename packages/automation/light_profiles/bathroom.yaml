@@ -2,85 +2,52 @@ template:
   - sensor:
       - name: "Bathroom Selected Light Profile"
         unique_id: 393901b3-ba11-4bdc-9687-aef93046c3f4
-        state: >
-          {%- if is_state('input_boolean.bathroom_separate_light_profile', 'off') -%}
-            {{ states('input_select.light_profile') }}
-          {%- else -%}
-            {{ states('input_select.bathroom_light_profile') }}
-          {%- endif -%}
+        state: >-
+          {%- from 'light_profile.jinja' import room_selected_light_profile -%}
+          {{ room_selected_light_profile('bathroom') }}
 
       - name: "Bathroom Auto Light Profile"
         unique_id: 7bad7117-b66c-449c-a410-08b968435bfa
-        state: "{{ states('sensor.bathroom_selected_light_profile') }}"
+        state: >-
+          {%- from 'light_profile.jinja' import room_auto_light_profile -%}
+          {{ room_auto_light_profile('bathroom') }}
 
       - name: "Bathroom Light Profile"
         unique_id: b92cfc7a-57bd-4e86-b108-48bba785adb2
-        state: >
-          {%- if is_state('input_boolean.auto_light_profile', 'off') -%}
-            {{ states('sensor.bathroom_selected_light_profile') }}
-          {%- else -%}
-            {{ states('sensor.bathroom_auto_light_profile') }}
-          {%- endif -%}
+        state: >-
+          {%- from 'light_profile.jinja' import room_light_profile -%}
+          {{ room_light_profile('bathroom') }}
 
       - name: "Bathroom Inactive Light Profile"
         unique_id: 0d290d9c-7fe8-4280-abf0-5d9cbfbe536d
         state: >-
-          {% set profile = states('sensor.bathroom_light_profile') %}
-          {% set profiles = state_attr('input_select.light_profile', 'options') %}
-          {% set index = profiles.index(profile)+1 %}
-          {{ profiles[index] if index < (profiles|length) else 'Off' }}
+          {%- from 'light_profile.jinja' import room_inactive_light_profile -%}
+          {{ room_inactive_light_profile('bathroom') }}
 
       - name: "Bathroom Active Light Profile"
         unique_id: a6034772-6dcb-43ae-9c10-15846f2d8507
-        state: >
-          {%- if is_state('input_select.bathroom_room_state', 'active') -%}
-            {%- if is_state('input_boolean.party_lights', 'off') -%}
-              {{ states('sensor.bathroom_light_profile') }}
-            {%- else -%}
-              Party
-            {%- endif -%}
-          {%- elif is_state('input_select.bathroom_room_state', 'inactive')
-            or is_state('binary_sensor.bathroom_activity_predicted', 'on') -%}
-            {{ states('sensor.bathroom_inactive_light_profile') }}
-          {%- else -%}
-            Off
-          {%- endif -%}
+        state: >-
+          {%- from 'light_profile.jinja' import room_active_light_profile -%}
+          {{ room_active_light_profile('bathroom') }}
 
       - name: "Bathroom Activity State"
         unique_id: 8f982f33-1908-413f-9091-f526216c3f8e
         state: >-
-          {%- if is_state('binary_sensor.bathroom_activity', 'on') -%}
-              on
-          {%- elif is_state('binary_sensor.bathroom_activity_predicted', 'on') -%}
-              predicted
-          {%- else -%}
-              off
-          {%- endif -%}
+          {%- from 'light_profile.jinja' import room_activity_state -%}
+          {{ room_activity_state('bathroom') }}
 
   - binary_sensor:
       - name: "Bathroom Activity"
         unique_id: 284c86dd-f2b0-48db-b7dd-b7f3b831a4c9
         state: >
-          {%- if is_state('input_boolean.bathroom_activity_override', 'on') -%}
-            {{ 'true' if is_state('input_select.bathroom_room_state', 'active') else 'false' }}
-          {%- elif is_state('binary_sensor.badevaerelse_motion', 'on')
-              or is_state('binary_sensor.badevaerelse_bevaegelse', 'on')
-              or is_state('binary_sensor.bathroom_occupied', 'on')
-              or is_state('binary_sensor.badevarelse_las', 'off')
-              or is_state('input_boolean.showering', 'on')
-              or is_state('input_select.latest_motion', 'Bathroom')
-              or is_state('binary_sensor.bathroom_door_activity', 'on') -%}
-            true
-          {%- else -%}
-            false
-          {%- endif -%}
+          {%- from 'light_profile.jinja' import room_activity -%}
+          {{ room_activity('bathroom') }}
 
       - name: "Bathroom Activity Predicted"
         unique_id: b32edef2-f1c5-495e-a4e0-a6f6a994209e
         state: >
           {%- if is_state('binary_sensor.moved_from_living_room_to_hallway', 'on')
-            or is_state('binary_sensor.moved_from_bedroom_to_hallway', 'on')
-            or is_state('binary_sensor.bathroom_door_activity', 'on') -%}
+            or is_state('binary_sensor.moved_from_bedroom_to_hallway', 'on') -%}
             true
           {%- else -%}
             false

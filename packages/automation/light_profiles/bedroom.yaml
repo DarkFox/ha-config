@@ -1,113 +1,69 @@
-sensor:
-  - platform: template
-    sensors:
-      bedroom_selected_light_profile:
-        friendly_name: Bedroom Selected Light Profile
-        value_template: >
-          {%- if is_state('input_boolean.bedroom_separate_light_profile', 'off') -%}
-            {{ states('input_select.light_profile') }}
-          {%- else -%}
-            {{ states('input_select.bedroom_light_profile') }}
-          {%- endif -%}
+template:
+  - sensor:
+      - name: "Bedroom Selected Light Profile"
+        unique_id: f684cb75-976a-4331-a644-714c5e6d275c
+        state: >-
+          {%- from 'light_profile.jinja' import room_selected_light_profile -%}
+          {{ room_selected_light_profile('bedroom') }}
 
-      bedroom_auto_light_profile:
-        friendly_name: Bedroom Auto Light Profile
-        value_template: >-
-          {% set outside_lux = states('sensor.average_small_balcony_brightness')|int(0) %}
-          {% set profile = states('sensor.bedroom_selected_light_profile') %}
-          {% set profiles = state_attr('input_select.light_profile', 'options') or [] %}
-          {% if profile == 'Bright' %}
-            Bright
-          {% elif states('sensor.sovevaerelse_gardin_position')|int(0) < 40 %}
-            {{ profile }}
-          {% elif outside_lux > 700 %}
-            {{ profiles[profiles.index(profile)+2] or 'Off' }}
-          {% elif outside_lux > 400 %}
-            {{ profiles[profiles.index(profile)+1] or 'Off' }}
-          {% else %}
-            {{ profile }}
-          {% endif %}
+      - name: "Bedroom Auto Light Profile"
+        unique_id: 0af33561-ccf8-444d-95bd-fcfcf2058ec9
+        state: >-
+          {%- from 'light_profile.jinja' import room_auto_light_profile -%}
+          {%- set override_profile = '[[profile]]' if states('sensor.sovevaerelse_gardin_position')|int(0) < 40 else none -%}
+          {{ room_auto_light_profile(
+              'bedroom',
+              'sensor.average_small_balcony_brightness',
+              override_profile,
+              400,
+              700
+          ) }}
 
-      bedroom_light_profile:
-        friendly_name: Bedroom Light Profile
-        value_template: >
-          {%- if is_state('input_boolean.auto_light_profile', 'off') -%}
-            {{ states('sensor.bedroom_selected_light_profile') }}
-          {%- else -%}
-            {{ states('sensor.bedroom_auto_light_profile') }}
-          {%- endif -%}
+      - name: "Bedroom Light Profile"
+        unique_id: c29b92e0-9219-4945-b547-08e691d0120a
+        state: >-
+          {%- from 'light_profile.jinja' import room_light_profile -%}
+          {{ room_light_profile('bedroom') }}
 
-      bedroom_inactive_light_profile:
-        friendly_name: Bedroom Inactive Light Profile
-        value_template: >-
-          {% set profile = states('sensor.bedroom_light_profile') %}
-          {% set profiles = state_attr('input_select.light_profile', 'options') %}
-          {% set index = profiles.index(profile)+1 %}
-          {{ profiles[index] if index < (profiles|length) else 'Off' }}
+      - name: "Bedroom Inactive Light Profile"
+        unique_id: ea011a87-584a-48a3-a811-b6b7f1672211
+        state: >-
+          {%- from 'light_profile.jinja' import room_inactive_light_profile -%}
+          {{ room_inactive_light_profile('bedroom') }}
 
-      bedroom_active_light_profile:
-        friendly_name: Bedroom Active Light Profile
-        value_template: >
-          {%- if is_state('input_select.bedroom_room_state', 'active') -%}
-            {%- if is_state('input_boolean.party_lights', 'off') -%}
-              {{ states('sensor.bedroom_light_profile') }}
-            {%- else -%}
-              Party
-            {%- endif -%}
-          {%-
-            elif is_state('input_select.bedroom_room_state', 'inactive')
-            or is_state('binary_sensor.bedroom_activity_predicted', 'on')
-          -%}
-            {{ states('sensor.bedroom_inactive_light_profile') }}
-          {%- else %}
-            Off
-          {%- endif -%}
+      - name: "Bedroom Active Light Profile"
+        unique_id: 8fa15f04-18fc-4f47-8e1a-d378a9cd2ffb
+        state: >-
+          {%- from 'light_profile.jinja' import room_active_light_profile -%}
+          {{ room_active_light_profile('bedroom') }}
 
-      bedroom_activity_state:
-        friendly_name: Soveværelse aktivitetsstatus
-        value_template: >-
-          {%- if is_state('binary_sensor.bedroom_activity', 'on') -%}
-              on
-          {%- elif is_state('binary_sensor.bedroom_activity_predicted', 'on') -%}
-              predicted
-          {%- else -%}
-              off
-          {%- endif -%}
+      - name: "Bedroom Activity State"
+        unique_id: c4bc85c2-3fb6-4ffa-b6e1-b6733a71e880
+        state: >-
+          {%- from 'light_profile.jinja' import room_activity_state -%}
+          {{ room_activity_state('bedroom') }}
 
-binary_sensor:
-  - platform: template
-    sensors:
-      reading_light:
-        value_template: "{{ is_state('input_select.sleep_state', 'bedtime') or is_state('input_select.sleep_state', 'in bed') }}"
+  - binary_sensor:
+      - name: "Bedroom Activity"
+        unique_id: 6e7b6c27-b9ec-4800-becc-0ee3cbb51edf
+        state: >
+          {%- from 'light_profile.jinja' import room_activity -%}
+          {{ room_activity('bedroom') }}
 
-      night_light:
-        value_template: "{{ is_state('input_select.sleep_state', 'sleeping') }}"
-
-      bedroom_activity:
-        friendly_name: "Bedroom Activity"
-        value_template: >-
-          {%- if is_state('input_boolean.bedroom_activity_override', 'on') -%}
-            {{ 'true' if is_state('input_select.bedroom_room_state', 'active') else 'false' }}
-          {%- elif is_state('binary_sensor.sovevaerelse_motion', 'on')
-          or is_state('binary_sensor.sovevaerelse_gulv', 'on')
-          or is_state('input_select.latest_motion', 'Bedroom')
-          or is_state('media_player.sovevaerelse_chromecast', 'playing')
-          or states('media_player.sovevarelse_tv_dlna') not in ['unknown', 'unavailable']
-          or not (
-            is_state('input_select.sleep_state', 'awake')
-            or is_state('input_select.sleep_state', 'bedtime')
-            or is_state('input_select.sleep_state', 'unknown')
-            or is_state('input_select.sleep_state', 'unavailable')
-          ) -%}
-            true
-          {% else -%}
-            false
-          {% endif -%}
-
-      bedroom_activity_predicted:
-        friendly_name: "Bedroom Activity Predicted"
-        value_template: >-
+      - name: "bedroom Activity Predicted"
+        unique_id: b32edef2-f1c5-495e-a4e0-a6f6a994209e
+        state: >-
           {{ is_state('binary_sensor.bedroom_door_activity', 'on') }}
+
+      - name: Reading Light
+        unique_id: 3c3e9437-c0b2-4b7e-8de0-ba517b527354
+        state: >-
+          {{ is_state('input_select.sleep_state', 'bedtime') or is_state('input_select.sleep_state', 'in bed') }}
+
+      - name: Night Light
+        unique_id: 06b64703-c806-463d-a4b2-5e7ed1524651
+        state: >-
+          {{ is_state('input_select.sleep_state', 'sleeping') }}
 
 group:
   bedroom_activity_entities:
@@ -120,7 +76,7 @@ group:
       - binary_sensor.bedroom_door_activity
       - input_select.latest_motion
       - media_player.sovevaerelse_chromecast
-      - media_player.sovevarelse_tv_dlna
+      - switch.sovevaerelse_tv
       - input_select.sleep_state
 
 automation:

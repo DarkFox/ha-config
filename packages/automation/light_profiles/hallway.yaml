@@ -1,93 +1,47 @@
-sensor:
-  - platform: template
-    sensors:
-      hallway_selected_light_profile:
-        friendly_name: Hallway Selected Light Profile
-        value_template: >
-          {%- if is_state('input_boolean.hallway_separate_light_profile', 'off') -%}
-            {{ states('input_select.light_profile') }}
-          {%- else -%}
-            {{ states('input_select.hallway_light_profile') }}
-          {%- endif -%}
+template:
+  - sensor:
+      - name: "Hallway Selected Light Profile"
+        unique_id: 34bb52c3-0148-47f7-ab7d-4ee930e0c49a
+        state: >-
+          {%- from 'light_profile.jinja' import room_selected_light_profile -%}
+          {{ room_selected_light_profile('hallway') }}
 
-      hallway_auto_light_profile:
-        friendly_name: Hallway Auto Light Profile
-        value_template: "{{ states('sensor.hallway_selected_light_profile') }}"
+      - name: "Hallway Auto Light Profile"
+        unique_id: b166f0d1-86c8-4b41-95ca-92b8a42b1c76
+        state: >-
+          {%- from 'light_profile.jinja' import room_auto_light_profile -%}
+          {{ room_auto_light_profile('hallway') }}
 
-      hallway_light_profile:
-        friendly_name: Hallway Light Profile
-        value_template: >
-          {%- if is_state('input_boolean.auto_light_profile', 'off') -%}
-            {{ states('sensor.hallway_selected_light_profile') }}
-          {%- else -%}
-            {{ states('sensor.hallway_auto_light_profile') }}
-          {%- endif -%}
+      - name: "Hallway Light Profile"
+        unique_id: f174c4d8-a982-41fc-bd98-52311d04101f
+        state: >-
+          {%- from 'light_profile.jinja' import room_light_profile -%}
+          {{ room_light_profile('hallway') }}
 
-      hallway_inactive_light_profile:
-        friendly_name: Hallway Inactive Light Profile
-        value_template: >-
-          {% set profile = states('sensor.hallway_light_profile') %}
-          {% set profiles = state_attr('input_select.light_profile', 'options') %}
-          {% set index = profiles.index(profile)+1 %}
-          {{ profiles[index] if index < (profiles|length) else 'Off' }}
+      - name: "Hallway Inactive Light Profile"
+        unique_id: 9a4913e9-b454-4e04-bf24-a629c358d272
+        state: >-
+          {%- from 'light_profile.jinja' import room_inactive_light_profile -%}
+          {{ room_inactive_light_profile('hallway') }}
 
-      hallway_active_light_profile:
-        friendly_name: Hallway Active Light Profile
-        value_template: >
-          {%- if is_state('input_select.hallway_room_state', 'active') -%}
-            {%- if is_state('input_boolean.party_lights', 'off') -%}
-              {{ states('sensor.hallway_light_profile') }}
-            {%- else -%}
-              Party
-            {%- endif -%}
-          {%-
-            elif is_state('input_select.hallway_room_state', 'inactive')
-            or is_state('binary_sensor.hallway_activity_predicted', 'on')
-          -%}
-            {{ states('sensor.hallway_inactive_light_profile') }}
-          {%- else %}
-            Off
-          {%- endif -%}
+      - name: "Hallway Active Light Profile"
+        unique_id: 9e646aa4-c4ac-4e1a-a118-fbaf405684cd
+        state: >-
+          {%- from 'light_profile.jinja' import room_active_light_profile -%}
+          {{ room_active_light_profile('hallway') }}
 
-      hallway_activity_state:
-        friendly_name: Gang aktivitetsstatus
-        value_template: >-
-          {%- if is_state('binary_sensor.hallway_activity', 'on') -%}
-              on
-          {%- elif is_state('binary_sensor.hallway_activity_predicted', 'on') -%}
-              predicted
-          {%- else -%}
-              off
-          {%- endif -%}
+      - name: "Hallway Activity State"
+        unique_id: d0557ed5-106a-4a43-b88f-4953e4015892
+        state: >-
+          {%- from 'light_profile.jinja' import room_activity_state -%}
+          {{ room_activity_state('hallway') }}
 
-binary_sensor:
-  - platform: template
-    sensors:
-      hallway_activity:
-        friendly_name: "hallway Activity"
-        value_template: >
-          {%- if is_state('input_boolean.hallway_activity_override', 'on') -%}
-            {{ 'true' if is_state('input_select.hallway_room_state', 'active') else 'false' }}
-          {%- elif is_state('binary_sensor.gang_entre_bevaegelse', 'on')
-            or is_state('binary_sensor.gang_badevaerelse_bevaegelse', 'on')
-            or is_state('binary_sensor.hoveddor_access_control_window_door_is_open', 'on')
-            or is_state('binary_sensor.bathroom_door_activity', 'on') -%}
-            true
-          {% else -%}
-            false
-          {% endif -%}
-
-      hallway_activity_predicted:
-        friendly_name: "Hallway Activity Predicted"
-        value_template: >
-          {%-
-            if is_state('binary_sensor.bathroom_door_activity', 'on')
-            or is_state('binary_sensor.bedroom_door_activity', 'on')
-          -%}
-            true
-          {% else -%}
-            false
-          {% endif -%}
+  - binary_sensor:
+      - name: "Hallway Activity"
+        unique_id: fdbe245c-77ee-4470-9930-e89aa8dae438
+        state: >
+          {%- from 'light_profile.jinja' import room_activity -%}
+          {{ room_activity('hallway') }}
 
 group:
   hallway_activity_entities:
@@ -96,10 +50,10 @@ group:
       - input_boolean.hallway_activity_override
       - input_select.hallway_room_state
       - binary_sensor.hoveddor_access_control_window_door_is_open
-      - lock.hoveddor_las
       - binary_sensor.gang_entre_bevaegelse
       - binary_sensor.gang_badevaerelse_bevaegelse
       - binary_sensor.bathroom_door_activity
+      - binary_sensor.bedroom_door_activity
       - binary_sensor.moved_from_hallway_to_living_room
       - binary_sensor.moved_from_bed
 

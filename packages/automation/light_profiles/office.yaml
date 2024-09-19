@@ -1,94 +1,54 @@
-sensor:
-  - platform: template
-    sensors:
-      office_selected_light_profile:
-        friendly_name: Office Selected Light Profile
-        value_template: >
-          {%- if is_state('input_boolean.office_separate_light_profile', 'off') -%}
-            {{ states('input_select.light_profile') }}
-          {%- else -%}
-            {{ states('input_select.office_light_profile') }}
-          {%- endif -%}
+template:
+  - sensor:
+      - name: "Office Selected Light Profile"
+        unique_id: 36a18805-eef4-48de-9cb2-8e457d89267e
+        state: >-
+          {%- from 'light_profile.jinja' import room_selected_light_profile -%}
+          {{ room_selected_light_profile('office') }}
 
-      office_auto_light_profile:
-        friendly_name: Office Auto Light Profile
-        value_template: >-
-          {% set outside_lux = states('sensor.average_small_balcony_brightness')|int(0) %}
-          {% set profile = states('sensor.office_selected_light_profile') %}
-          {% set profiles = state_attr('input_select.light_profile', 'options') or [] %}
-          {% if profile == 'Bright' %}
-            Bright
-          {% elif state_attr('cover.kontor_rullegardin', 'current_position')|int(0) < 40 %}
-            {{ profile }}
-          {% elif outside_lux > 700 %}
-            {{ profiles[profiles.index(profile)+2] or 'Off' }}
-          {% elif outside_lux > 400 %}
-            {{ profiles[profiles.index(profile)+1] or 'Off' }}
-          {% else %}
-            {{ profile }}
-          {% endif %}
+      - name: "Office Auto Light Profile"
+        unique_id: 394acbc4-ea7d-4d5f-bff1-51f50f4b9c47
+        state: >-
+          {%- from 'light_profile.jinja' import room_auto_light_profile -%}
+          {%- set override_profile = '[[profile]]' if state_attr('cover.kontor_rullegardin', 'current_position')|int(0) < 40 else none -%}
+          {{ room_auto_light_profile(
+              'office',
+              'sensor.average_small_balcony_brightness',
+              override_profile,
+              400,
+              700
+          ) }}
 
-      office_light_profile:
-        friendly_name: Office Light Profile
-        value_template: >
-          {%- if is_state('input_boolean.auto_light_profile', 'off') -%}
-            {{ states('sensor.office_selected_light_profile') }}
-          {%- else -%}
-            {{ states('sensor.office_auto_light_profile') }}
-          {%- endif -%}
+      - name: "Office Light Profile"
+        unique_id: ae245075-e673-4d84-8a45-77da1476190f
+        state: >-
+          {%- from 'light_profile.jinja' import room_light_profile -%}
+          {{ room_light_profile('office') }}
 
-      office_inactive_light_profile:
-        friendly_name: Office Inactive Light Profile
-        value_template: >-
-          {% set profile = states('sensor.office_selected_light_profile') %}
-          {% set profiles = state_attr('input_select.light_profile', 'options') %}
-          {% set index = profiles.index(profile)+1 %}
-          {{ profiles[index] if index < (profiles|length) else 'Off' }}
+      - name: "Office Inactive Light Profile"
+        unique_id: 394816ec-ff0d-4b0c-9719-006f078682d5
+        state: >-
+          {%- from 'light_profile.jinja' import room_inactive_light_profile -%}
+          {{ room_inactive_light_profile('office') }}
 
-      office_active_light_profile:
-        friendly_name: Office Active Light Profile
-        value_template: >
-          {%- if is_state('input_select.office_room_state', 'active') -%}
-            {%- if is_state('input_boolean.party_lights', 'off') -%}
-              {{ states('sensor.office_selected_light_profile') }}
-            {%- else -%}
-              Party
-            {%- endif -%}
-          {%-
-            elif is_state('input_select.office_room_state', 'inactive')
-          -%}
-            {{ states('sensor.office_inactive_light_profile') }}
-          {%- else %}
-            Off
-          {%- endif -%}
+      - name: "Office Active Light Profile"
+        unique_id: 1e8d548c-4ced-4b83-8944-1ff3353bf631
+        state: >-
+          {%- from 'light_profile.jinja' import room_active_light_profile -%}
+          {{ room_active_light_profile('office') }}
 
-      office_activity_state:
-        friendly_name: Kontor aktivitetsstatus
-        value_template: >-
-          {%- if is_state('binary_sensor.office_activity', 'on') -%}
-              on
-          {%- else -%}
-              off
-          {%- endif -%}
+      - name: "Office Activity State"
+        unique_id: cb81958f-fc5c-458e-bb88-99f956167843
+        state: >-
+          {%- from 'light_profile.jinja' import room_activity_state -%}
+          {{ room_activity_state('office') }}
 
-binary_sensor:
-  - platform: template
-    sensors:
-      office_activity:
-        friendly_name: "Office Activity"
-        value_template: >
-          {%- if is_state('input_boolean.office_activity_override', 'on') -%}
-            {{ 'true' if is_state('input_select.office_room_state', 'active') else 'false' }}
-          {%- elif is_state('binary_sensor.kontor_motion', 'on')
-          or is_state('binary_sensor.kontor_gulv_bevaegelse', 'on')
-          or is_state('binary_sensor.office_door_activity', 'on')
-          or is_state('binary_sensor.martin_pc_activity', 'on')
-          or is_state('binary_sensor.vagtskema_wfh', 'on')
-          or is_state('input_select.latest_motion', 'Office') -%}
-            true
-          {%- else -%}
-            false
-          {%- endif -%}
+  - binary_sensor:
+      - name: "Office Activity"
+        unique_id: 67937a59-deb8-4752-8ff0-627c43aec085
+        state: >
+          {%- from 'light_profile.jinja' import room_activity -%}
+          {{ room_activity('office') }}
 
 group:
   office_activity_entities:

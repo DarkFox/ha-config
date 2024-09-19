@@ -1,96 +1,53 @@
-sensor:
-  - platform: template
-    sensors:
-      living_room_selected_light_profile:
-        friendly_name: Living Room Selected Light Profile
-        value_template: >
-          {%- if is_state('input_boolean.living_room_separate_light_profile', 'off') -%}
-            {{ states('input_select.light_profile') }}
-          {%- else -%}
-            {{ states('input_select.living_room_light_profile') }}
-          {%- endif -%}
+template:
+  - sensor:
+      - name: "Living Room Selected Light Profile"
+        unique_id: ca86f7a7-a43a-4a25-b4d5-6cacc35d6423
+        state: >-
+          {%- from 'light_profile.jinja' import room_selected_light_profile -%}
+          {{ room_selected_light_profile('living_room') }}
 
-      living_room_auto_light_profile:
-        friendly_name: Living Room Auto Light Profile
-        value_template: >-
-          {% set outside_lux = states('sensor.average_balcony_brightness')|int(0) %}
-          {% set profile = states('sensor.living_room_selected_light_profile') %}
-          {% set profiles = state_attr('input_select.light_profile', 'options') %}
-          {% if profile == 'Bright' %}
-            Bright
-          {% elif is_state('binary_sensor.quest_in_use_delayed', 'on') %}
-            Default
-          {% elif states('sensor.stue_gardin_position')|int(0) < 40 %}
-            {{ profile }}
-          {% elif outside_lux > 2000 %}
-            {{ profiles[profiles.index(profile)+2] or 'Off' }}
-          {% elif outside_lux > 1000 %}
-            {{ profiles[profiles.index(profile)+1] or 'Off' }}
-          {% else %}
-            {{ profile }}
-          {% endif %}
+      - name: "Living Room Auto Light Profile"
+        unique_id: b17cf83b-017a-4fbd-9430-9f6257b78837
+        state: >-
+          {%- from 'light_profile.jinja' import room_auto_light_profile -%}
+          {%- set override_profile = 'Default' if is_state('binary_sensor.quest_in_use_delayed', 'on') else none -%}
+          {%- set override_profile = '[[profile]]' if states('sensor.stue_gardin_position')|int(0) < 40 else override_profile -%}
+          {{ room_auto_light_profile(
+              'living_room',
+              'sensor.average_balcony_brightness',
+              override_profile
+          ) }}
 
-      living_room_light_profile:
-        friendly_name: Living Room Light Profile
-        value_template: >
-          {%- if is_state('input_boolean.auto_light_profile', 'off') -%}
-            {{ states('sensor.living_room_selected_light_profile') }}
-          {%- else -%}
-            {{ states('sensor.living_room_auto_light_profile') }}
-          {%- endif -%}
+      - name: "Living Room Light Profile"
+        unique_id: 93b0bd07-3bf5-4f95-9df2-4acc2bf0db31
+        state: >-
+          {%- from 'light_profile.jinja' import room_light_profile -%}
+          {{ room_light_profile('living_room') }}
 
-      living_room_inactive_light_profile:
-        friendly_name: Living Room Inactive Light Profile
-        value_template: >-
-          {% set profile = states('sensor.living_room_light_profile') %}
-          {% set profiles = state_attr('input_select.light_profile', 'options') %}
-          {% set index = profiles.index(profile)+1 %}
-          {{ profiles[index] if index < (profiles|length) else 'Off' }}
+      - name: "Living Room Inactive Light Profile"
+        unique_id: 0883338b-d4a1-4bc8-808a-478411d8b407
+        state: >-
+          {%- from 'light_profile.jinja' import room_inactive_light_profile -%}
+          {{ room_inactive_light_profile('living_room') }}
 
-      living_room_active_light_profile:
-        friendly_name: Living Room Active Light Profile
-        value_template: >
-          {%- if is_state('input_select.living_room_room_state', 'active') -%}
-            {%- if is_state('input_boolean.party_lights', 'off') -%}
-              {{ states('sensor.living_room_light_profile') }}
-            {%- else -%}
-              Party
-            {%- endif -%}
-          {%-
-            elif is_state('input_select.living_room_room_state', 'inactive')
-          -%}
-            {{ states('sensor.living_room_inactive_light_profile') }}
-          {%- else %}
-            Off
-          {%- endif -%}
+      - name: "Living Room Active Light Profile"
+        unique_id: b472e543-6c88-4095-8938-166e39b99c5a
+        state: >-
+          {%- from 'light_profile.jinja' import room_active_light_profile -%}
+          {{ room_active_light_profile('living_room') }}
 
-      living_room_activity_state:
-        friendly_name: Stue aktivitetsstatus
-        value_template: >-
-          {%- if is_state('binary_sensor.living_room_activity', 'on') -%}
-              on
-          {%- else -%}
-              off
-          {%- endif -%}
+      - name: "Living Room Activity State"
+        unique_id: 2a71154f-d7fd-41bd-bc83-dd641e4c2d1f
+        state: >-
+          {%- from 'light_profile.jinja' import room_activity_state -%}
+          {{ room_activity_state('living_room') }}
 
-binary_sensor:
-  - platform: template
-    sensors:
-      living_room_activity:
-        friendly_name: "Livingroom Activity"
-        value_template: >
-          {%- if is_state('input_boolean.living_room_activity_override', 'on') -%}
-            {{ 'true' if is_state('input_select.living_room_room_state', 'active') else 'false' }}
-          {%- elif is_state('binary_sensor.stue_motion', 'on')
-          or is_state('binary_sensor.stue_tilstedevarelse_alle_zoner', 'on')
-          or is_state('input_boolean.bar_open', 'on')
-          or is_state('media_player.stue_shield', 'playing')
-          or is_state('media_player.stue_shield', 'paused')
-          or is_state('input_select.latest_motion', 'Living Room') -%}
-            true
-          {% else -%}
-            false
-          {% endif -%}
+  - binary_sensor:
+      - name: "Living Room Activity"
+        unique_id: 19b85710-348a-4efa-bfcb-68b20b64232e
+        state: >
+          {%- from 'light_profile.jinja' import room_activity -%}
+          {{ room_activity('living_room') }}
 
 group:
   living_room_activity_entities:

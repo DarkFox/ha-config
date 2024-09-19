@@ -1,0 +1,102 @@
+{%- macro room_selected_light_profile(room) -%}
+    {%- if is_state('input_boolean.'+room+'_separate_light_profile', 'off') -%}
+        {{ states('input_select.light_profile') }}
+    {%- else -%}
+        {{ states('input_select.'+room+'_light_profile') }}
+    {%- endif -%}
+{%- endmacro -%}
+
+{%- macro room_auto_light_profile(room, lux_sensor='', override_profile=none, low_lux=1000, mid_lux=2000, high_lux=5000) -%}
+    {%- set outside_lux = states(lux_sensor)|int(0) -%}
+    {%- set profile = states('sensor.'+room+'_selected_light_profile') -%}
+    {%- set profiles = state_attr('input_select.light_profile', 'options') -%}
+    {%- if profile == 'Bright' -%}
+        Bright
+    {%- elif override_profile != none -%}
+        {{ profile if override_profile == '[[profile]]' else override_profile }}
+    {%- elif outside_lux > high_lux -%}
+        Off
+    {%- elif outside_lux > mid_lux -%}
+        {{ profiles[profiles.index(profile)+2] or 'Off' }}
+    {%- elif outside_lux > low_lux -%}
+        {{ profiles[profiles.index(profile)+1] or 'Off' }}
+    {%- else -%}
+        {{ profile }}
+    {%- endif -%}
+{%- endmacro -%}
+
+{%- macro room_light_profile(room) -%}
+    {%- if is_state('input_boolean.auto_light_profile', 'off') -%}
+        {{ states('sensor.'+room+'_selected_light_profile') }}
+    {%- else -%}
+        {{ states('sensor.'+room+'_auto_light_profile') }}
+    {%- endif -%}
+{%- endmacro -%}
+
+{%- macro room_inactive_light_profile(room) -%}
+    {%- set profile = states('sensor.'+room+'_light_profile') -%}
+    {%- set profiles = state_attr('input_select.light_profile', 'options') -%}
+    {%- set index = profiles.index(profile)+1 -%}
+    {{ profiles[index] if index < (profiles|length) else 'Off' }}
+{%- endmacro -%}
+
+{%- macro room_active_light_profile(room) -%}
+    {%- if is_state('input_select.'+room+'_room_state', 'active') -%}
+        {%- if is_state('input_boolean.party_lights', 'off') -%}
+            {{ states('sensor.'+room+'_light_profile') }}
+        {%- else -%}
+            Party
+        {%- endif -%}
+    {%- elif is_state('input_select.'+room+'_room_state', 'inactive') -%}
+        {{ states('sensor.'+room+'_inactive_light_profile') }}
+    {%- else %}
+        Off
+    {%- endif -%}
+{%- endmacro -%}
+
+{%- macro room_activity_state(room) -%}
+    {%- if is_state('binary_sensor.'+room+'_activity', 'on') -%}
+        on
+    {%- elif is_state('binary_sensor.'+room+'_activity_predicted', 'on') -%}
+        predicted
+    {%- else -%}
+        off
+    {%- endif -%}
+{%- endmacro -%}
+
+{%- macro room_group_active(room) -%}
+    {%- set entity_ids = state_attr('group.'+room+'_activity_entities', 'entity_id') -%}
+    {%- set entity_states = entity_ids | map('states') | list -%}
+    {%- set on_states = [
+        'on',
+        'true',
+
+        'playing',
+        'paused',
+
+        'in bed',
+        'sleeping',
+        'paused',
+        'smart wake',
+        'alarm',
+        'snoozing',
+        'waking',
+        room | replace('_', ' ') | title,
+    ] -%}
+    {%- set active = entity_states | select('in', on_states) | list -%}
+    {{ active | length > 0 }}
+{%- endmacro -%}
+
+{%- macro room_activity(room, force_off=false) -%}
+    {%- if is_state('input_boolean.'+room+'activity_override', 'on') -%}
+        {{ 'true' if is_state('input_select.'+room+'room_state', 'active') else 'false' }}
+    {%- elif bool(room_group_active(room), false) -%}
+        {%- if force_off -%}
+            false
+        {%- else -%}
+            true
+        {%- endif -%}
+    {%- else -%}
+        false
+    {%- endif -%}
+{%- endmacro -%}

@@ -1,125 +1,59 @@
-input_boolean:
-  balcony_activity_override:
-    icon: mdi:checkbox-multiple-marked
-    name: Balcony Activity Override
-  balcony_separate_light_profile:
-    name: Balcony Separate Light Profile
-    icon: mdi:heart-broken
+template:
+  - sensor:
+      - name: "Balcony Selected Light Profile"
+        unique_id: 5c741e7d-f65b-455b-a131-8ca330a1c968
+        state: >-
+          {%- from 'light_profile.jinja' import room_selected_light_profile -%}
+          {{ room_selected_light_profile('balcony') }}
 
-input_select:
-  balcony_room_state:
-    name: Balcony State
-    options:
-      - active
-      - inactive
-      - "off"
+      - name: "Balcony Auto Light Profile"
+        unique_id: 533a6943-b8e8-4778-847d-29e35541aea9
+        state: >-
+          {%- from 'light_profile.jinja' import room_auto_light_profile -%}
+          {{ room_auto_light_profile(
+              'balcony',
+              'sensor.average_balcony_brightness'
+          ) }}
 
-  balcony_light_profile:
-    name: Balcony Light Profile
-    options:
-      - Bright
-      - Default
-      - Dimmed
-      - Ambient
-      - Night
-      - "Off"
+      - name: "Balcony Light Profile"
+        unique_id: 4a246301-9cfd-48bd-bf09-e34306a821d9
+        state: >-
+          {%- from 'light_profile.jinja' import room_light_profile -%}
+          {{ room_light_profile('balcony') }}
 
-sensor:
-  - platform: template
-    sensors:
-      balcony_selected_light_profile:
-        friendly_name: Balcony Selected Light Profile
-        value_template: >
-          {%- if is_state('input_boolean.balcony_separate_light_profile', 'off') -%}
-            {{ states('input_select.light_profile') }}
-          {%- else -%}
-            {{ states('input_select.balcony_light_profile') }}
-          {%- endif -%}
+      - name: "Balcony Inactive Light Profile"
+        unique_id: 91a26f83-a79f-49ad-8d01-47e6310bf631
+        state: >-
+          {%- from 'light_profile.jinja' import room_inactive_light_profile -%}
+          {{ room_inactive_light_profile('balcony') }}
 
-      balcony_auto_light_profile:
-        friendly_name: Balcony Auto Light Profile
-        value_template: >-
-          {% set outside_lux = states('sensor.average_balcony_brightness')|int(0) %}
-          {% set profile = states('sensor.balcony_selected_light_profile') %}
-          {% set profiles = state_attr('input_select.light_profile', 'options') %}
-          {% if outside_lux > 5000 %}
-            Off
-          {% elif outside_lux > 3000 %}
-            {{ profiles[profiles.index(profile)+2] or 'Off' }}
-          {% elif outside_lux > 1000 %}
-            {{ profiles[profiles.index(profile)+1] or 'Off' }}
-          {% else %}
-            {{ profile }}
-          {% endif %}
+      - name: "Balcony Active Light Profile"
+        unique_id: 8467b1db-2bc9-47c7-b675-0f0ab8d8b163
+        state: >-
+          {%- from 'light_profile.jinja' import room_active_light_profile -%}
+          {{ room_active_light_profile('balcony') }}
 
-      balcony_light_profile:
-        friendly_name: Balcony Light Profile
-        value_template: >
-          {%- if is_state('input_boolean.auto_light_profile', 'off') -%}
-            {{ states('sensor.balcony_selected_light_profile') }}
-          {%- else -%}
-            {{ states('sensor.balcony_auto_light_profile') }}
-          {%- endif -%}
+      - name: "Balcony Activity State"
+        unique_id: 3def0afe-10c0-4cf3-a938-236ad5162dac
+        state: >-
+          {%- from 'light_profile.jinja' import room_activity_state -%}
+          {{ room_activity_state('balcony') }}
 
-      balcony_inactive_light_profile:
-        friendly_name: Balcony Inactive Light Profile
-        value_template: >-
-          {% set profile = states('sensor.balcony_light_profile') %}
-          {% set profiles = state_attr('input_select.light_profile', 'options') %}
-          {% set index = profiles.index(profile)+1 %}
-          {{ profiles[index] if index < (profiles|length) else 'Off' }}
+  - binary_sensor:
+      - name: "Balcony Activity"
+        unique_id: 0aec66f5-7ac9-4514-b06a-33c9f59a25a6
+        state: >
+          {%- from 'light_profile.jinja' import room_activity -%}
+          {{ room_activity('balcony', is_state('binary_sensor.stue_altandor', 'off')) }}
 
-      balcony_active_light_profile:
-        friendly_name: Balcony Active Light Profile
-        value_template: >
-          {%- if is_state('input_select.balcony_room_state', 'active') -%}
-            {%- if is_state('input_boolean.party_lights', 'off') -%}
-              {{ states('sensor.balcony_light_profile') }}
-            {%- else -%}
-              Party
-            {%- endif -%}
-          {%-
-            elif is_state('input_select.balcony_room_state', 'inactive')
-            or is_state('binary_sensor.balcony_activity_predicted', 'on')
-          -%}
-            {{ states('sensor.balcony_inactive_light_profile') }}
-          {%- else %}
-            Off
-          {%- endif -%}
-
-      balcony_activity_state:
-        friendly_name: Altan aktivitetsstatus
-        value_template: >-
-          {%- if is_state('binary_sensor.balcony_activity', 'on') -%}
-              on
-          {%- elif is_state('binary_sensor.balcony_activity_predicted', 'on') -%}
-              predicted
-          {%- else -%}
-              off
-          {%- endif -%}
-
-binary_sensor:
-  - platform: template
-    sensors:
-      balcony_activity:
-        friendly_name: "Balcony Activity"
-        value_template: >
-          {%- if is_state('input_boolean.balcony_activity_override', 'on') -%}
-            {{ 'true' if is_state('input_select.balcony_room_state', 'active') else 'false' }}
-          {%- elif (
-                is_state('binary_sensor.altan_bevaegelse', 'on')
-                or is_state('input_select.latest_motion', 'Balcony')
-              )
-              and is_state('binary_sensor.stue_altandor', 'on') -%}
+      - name: "Balcony Activity Predicted"
+        unique_id: db0aa84d-301b-412d-80c6-738dfe7a8787
+        state: >
+          {%- if is_state('binary_sensor.living_room_balcony_door_activity', 'on') -%}
             true
-          {% else -%}
+          {%- else -%}
             false
-          {% endif -%}
-
-      balcony_activity_predicted:
-        friendly_name: "Balcony Activity Predicted"
-        value_template: >-
-          {{ is_state('binary_sensor.living_room_balcony_door_activity', 'on') }}
+          {%- endif -%}
 
 group:
   balcony_activity_entities:
@@ -296,6 +230,32 @@ automation:
               state: on
               effect: "colorloop"
               brightness: 127
+
+input_boolean:
+  balcony_activity_override:
+    icon: mdi:checkbox-multiple-marked
+    name: Balcony Activity Override
+  balcony_separate_light_profile:
+    name: Balcony Separate Light Profile
+    icon: mdi:heart-broken
+
+input_select:
+  balcony_room_state:
+    name: Balcony State
+    options:
+      - active
+      - inactive
+      - "off"
+
+  balcony_light_profile:
+    name: Balcony Light Profile
+    options:
+      - Bright
+      - Default
+      - Dimmed
+      - Ambient
+      - Night
+      - "Off"
 
 light:
   - platform: template

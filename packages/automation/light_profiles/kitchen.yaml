@@ -1,91 +1,47 @@
-sensor:
-  - platform: template
-    sensors:
-      kitchen_selected_light_profile:
-        friendly_name: Kitchen Selected Light Profile
-        value_template: >
-          {%- if is_state('input_boolean.kitchen_separate_light_profile', 'off') -%}
-            {{ states('input_select.light_profile') }}
-          {%- else -%}
-            {{ states('input_select.kitchen_light_profile') }}
-          {%- endif -%}
+template:
+  - sensor:
+      - name: "Kitchen Selected Light Profile"
+        unique_id: 1659b033-3d8e-40d7-a941-34c1b990effd
+        state: >-
+          {%- from 'light_profile.jinja' import room_selected_light_profile -%}
+          {{ room_selected_light_profile('kitchen') }}
 
-      kitchen_auto_light_profile:
-        friendly_name: Kitchen Auto Light Profile
-        value_template: "{{ states('sensor.kitchen_selected_light_profile') }}"
+      - name: "Kitchen Auto Light Profile"
+        unique_id: 973914f0-525f-4d4b-88e5-5c8e88c50ae2
+        state: >-
+          {%- from 'light_profile.jinja' import room_auto_light_profile -%}
+          {{ room_auto_light_profile('kitchen') }}
 
-      kitchen_light_profile:
-        friendly_name: Kitchen Light Profile
-        value_template: >
-          {%- if is_state('input_boolean.auto_light_profile', 'off') -%}
-            {{ states('sensor.kitchen_selected_light_profile') }}
-          {%- else -%}
-            {{ states('sensor.kitchen_auto_light_profile') }}
-          {%- endif -%}
+      - name: "Kitchen Light Profile"
+        unique_id: b395b117-f02f-44be-bb6f-4a13bdb26dd0
+        state: >-
+          {%- from 'light_profile.jinja' import room_light_profile -%}
+          {{ room_light_profile('kitchen') }}
 
-      kitchen_inactive_light_profile:
-        friendly_name: Kitchen Inactive Light Profile
-        value_template: >-
-          {% set profile = states('sensor.kitchen_light_profile') %}
-          {% set profiles = state_attr('input_select.light_profile', 'options') %}
-          {% set index = profiles.index(profile)+1 %}
-          {{ profiles[index] if index < (profiles|length) else 'Off' }}
+      - name: "Kitchen Inactive Light Profile"
+        unique_id: 4a9bbe2b-56c5-4b54-a781-27d8e65dc115
+        state: >-
+          {%- from 'light_profile.jinja' import room_inactive_light_profile -%}
+          {{ room_inactive_light_profile('kitchen') }}
 
-      kitchen_active_light_profile:
-        friendly_name: Kitchen Active Light Profile
-        value_template: >
-          {%- if is_state('input_select.kitchen_room_state', 'active') -%}
-            {%- if is_state('input_boolean.party_lights', 'off') -%}
-              {{ states('sensor.kitchen_light_profile') }}
-            {%- else -%}
-              Party
-            {%- endif -%}
-          {%-
-            elif is_state('input_select.kitchen_room_state', 'inactive')
-            or is_state('binary_sensor.kitchen_activity_predicted', 'on')
-          -%}
-            {{ states('sensor.kitchen_inactive_light_profile') }}
-          {%- else %}
-            Off
-          {%- endif -%}
+      - name: "Kitchen Active Light Profile"
+        unique_id: fc8585fc-8435-46d1-a542-462505fe829b
+        state: >-
+          {%- from 'light_profile.jinja' import room_active_light_profile -%}
+          {{ room_active_light_profile('kitchen') }}
 
-      kitchen_activity_state:
-        friendly_name: Køkken aktivitetsstatus
-        value_template: >-
-          {%- if is_state('binary_sensor.kitchen_activity', 'on') -%}
-              on
-          {%- elif is_state('binary_sensor.kitchen_activity_predicted', 'on') -%}
-              predicted
-          {%- else -%}
-              off
-          {%- endif -%}
+      - name: "Kitchen Activity State"
+        unique_id: cfe7449d-eefd-4ac8-964d-86083ba04f8f
+        state: >-
+          {%- from 'light_profile.jinja' import room_activity_state -%}
+          {{ room_activity_state('kitchen') }}
 
-binary_sensor:
-  - platform: template
-    sensors:
-      kitchen_activity:
-        friendly_name: "Kitchen Activity"
-        value_template: >
-          {%- if is_state('input_boolean.kitchen_activity_override', 'on') -%}
-            {{ 'true' if is_state('input_select.kitchen_room_state', 'active') else 'false' }}
-          {%- elif is_state('binary_sensor.kokken_motion', 'on')
-          or is_state('input_select.latest_motion', 'Kitchen') -%}
-            true
-          {% else -%}
-            false
-          {% endif -%}
-
-      kitchen_activity_predicted:
-        friendly_name: "Kitchen Activity Predicted"
-        value_template: >
-          {%- 
-            if is_state('binary_sensor.moved_from_living_room_to_hallway', 'on')
-            or is_state('binary_sensor.moved_from_bedroom_to_hallway', 'on')
-          -%}
-            true
-          {% else -%}
-            false
-          {% endif -%}
+  - binary_sensor:
+      - name: "Kitchen Activity"
+        unique_id: d3549495-3a84-4ea6-8690-f9f03b0361d7
+        state: >
+          {%- from 'light_profile.jinja' import room_activity -%}
+          {{ room_activity('kitchen') }}
 
 group:
   kitchen_activity_entities:

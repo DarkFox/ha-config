@@ -1,83 +1,47 @@
-sensor:
-  - platform: template
-    sensors:
-      workshop_selected_light_profile:
-        friendly_name: Workshop Selected Light Profile
-        value_template: >
-          {%- if is_state('input_boolean.workshop_separate_light_profile', 'off') -%}
-            {{ states('input_select.light_profile') }}
-          {%- else -%}
-            {{ states('input_select.workshop_light_profile') }}
-          {%- endif -%}
+template:
+  - sensor:
+      - name: "Workshop Selected Light Profile"
+        unique_id: dde1f6a7-c01c-4c28-848c-92376ec562c2
+        state: >-
+          {%- from 'light_profile.jinja' import room_selected_light_profile -%}
+          {{ room_selected_light_profile('workshop') }}
 
-      workshop_auto_light_profile:
-        friendly_name: Workshop Auto Light Profile
-        value_template: "{{ states('sensor.workshop_selected_light_profile') }}"
+      - name: "Workshop Auto Light Profile"
+        unique_id: c4b0d322-4283-46c7-9d82-5fd8ad8ede9d
+        state: >-
+          {%- from 'light_profile.jinja' import room_auto_light_profile -%}
+          {{ room_auto_light_profile('workshop') }}
 
-      workshop_light_profile:
-        friendly_name: Workshop Light Profile
-        value_template: >
-          {%- if is_state('input_boolean.auto_light_profile', 'off') -%}
-            {{ states('sensor.workshop_selected_light_profile') }}
-          {%- else -%}
-            {{ states('sensor.workshop_auto_light_profile') }}
-          {%- endif -%}
+      - name: "Workshop Light Profile"
+        unique_id: 509c455d-9d5b-4c04-9911-abbd6d61d4e8
+        state: >-
+          {%- from 'light_profile.jinja' import room_light_profile -%}
+          {{ room_light_profile('workshop') }}
 
-      workshop_inactive_light_profile:
-        friendly_name: Workshop Inactive Light Profile
-        value_template: >-
-          {% set profile = states('sensor.workshop_light_profile') %}
-          {% set profiles = state_attr('input_select.light_profile', 'options') %}
-          {% set index = profiles.index(profile)+1 %}
-          {{ profiles[index] if index < (profiles|length) else 'Off' }}
+      - name: "Workshop Inactive Light Profile"
+        unique_id: a01b2906-dfac-4d9d-8556-a1b7966a2eb9
+        state: >-
+          {%- from 'light_profile.jinja' import room_inactive_light_profile -%}
+          {{ room_inactive_light_profile('workshop') }}
 
-      workshop_active_light_profile:
-        friendly_name: Workshop Active Light Profile
-        value_template: >
-          {%- if is_state('input_select.workshop_room_state', 'active') -%}
-            {{ states('sensor.workshop_light_profile') }}
-          {%-
-            elif is_state('input_select.workshop_room_state', 'inactive')
-            or is_state('binary_sensor.workshop_activity_predicted', 'on')
-          -%}
-            {{ states('sensor.workshop_inactive_light_profile') }}
-          {%- else %}
-            Off
-          {%- endif -%}
+      - name: "Workshop Active Light Profile"
+        unique_id: c9bfc0e5-d0e6-4206-8cff-2d79c4a06809
+        state: >-
+          {%- from 'light_profile.jinja' import room_active_light_profile -%}
+          {{ room_active_light_profile('workshop') }}
 
-      workshop_activity_state:
-        friendly_name: Værksted aktivitetsstatus
-        value_template: >-
-          {%- if is_state('binary_sensor.workshop_activity', 'on') -%}
-              on
-          {%- elif is_state('binary_sensor.workshop_activity_predicted', 'on') -%}
-              predicted
-          {%- else -%}
-              off
-          {%- endif -%}
+      - name: "Workshop Activity State"
+        unique_id: 109e9c38-d61f-4573-95bb-998e07ead06d
+        state: >-
+          {%- from 'light_profile.jinja' import room_activity_state -%}
+          {{ room_activity_state('workshop') }}
 
-binary_sensor:
-  - platform: template
-    sensors:
-      workshop_activity:
-        friendly_name: "Workshop Activity"
-        value_template: >
-          {%- if is_state('input_boolean.workshop_activity_override', 'on') -%}
-            {{ 'true' if is_state('input_select.workshop_room_state', 'active') else 'false' }}
-          {%-
-              elif is_state('binary_sensor.vaerksted_motion', 'on')
-              or is_state('binary_sensor.vaerktoejsskab', 'on')
-              or is_state('binary_sensor.workshop_door_activity', 'on')
-              or is_state('input_select.latest_motion', 'Workshop')
-          -%}
-            true
-          {%- else -%}
-            false
-          {%- endif -%}
-
-      workshop_activity_predicted:
-        friendly_name: "Workshop Activity Predicted"
-        value_template: "false"
+  - binary_sensor:
+      - name: "Workshop Activity"
+        unique_id: 686bf4df-fd9f-44f3-8e18-f101c84eb1e7
+        state: >
+          {%- from 'light_profile.jinja' import room_activity -%}
+          {{ room_activity('workshop') }}
 
 group:
   workshop_activity_entities:
