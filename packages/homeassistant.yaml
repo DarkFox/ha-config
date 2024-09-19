@@ -118,6 +118,52 @@ template:
         state: >-
           {{ state_attr('automation.set_home_assistant_started_on_startup', 'last_triggered') | as_timestamp(0) | timestamp_custom('%b %d %X') }}
 
+      - name: Add-Ons Stats
+        unique_id: 0e10d60d-b31b-4f56-9110-c69357261436
+        state: >-
+          {%- set stats = (state_attr('sensor.add_ons_stats', 'addon_stats') or {}).get('running', {}) -%}
+          {%- set running = namespace(count=0) -%}
+          {%- for key, value in stats.items() -%}
+            {%- if value -%}
+              {%- set running.count = running.count + 1 -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ running.count }}/{{ stats | length }}
+        attributes:
+          addon_stats: >-
+            {%- set hassio_entity_ids = integration_entities('hassio') -%}
+            {%- set ns = namespace(running={}, cpu={}, memory={}) -%}
+            {%- for entity_id in hassio_entity_ids -%}
+              {%- set device_name = device_attr(device_id(entity_id), 'name') -%}
+              {%- set state = states(entity_id) -%}
+              {%- if state in ['unknown', 'unavailable'] -%}
+                {%- continue -%}
+              {%- elif is_state_attr(entity_id, 'device_class', 'running') -%}
+                {%- set ns.running = dict(ns.running, **{
+                  device_name: state | bool
+                }) -%}
+              {%- elif 'cpu' in entity_id -%}
+                {%- set ns.cpu = dict(ns.cpu, **{
+                  device_name: state | float(0.0)
+                }) -%}
+              {%- elif 'memory' in entity_id or 'hukommelse' in entity_id -%}
+                {%- set ns.memory = dict(ns.memory, **{
+                  device_name: state | float(0.0)
+                }) -%}
+              {%- endif -%}
+            {%- endfor -%}
+
+            {{ {
+              'running': dict(ns.running.items() | sort(attribute=0) | sort(attribute=1, reverse=true)),
+              'cpu': dict(ns.cpu.items() | sort(attribute=0) | sort(attribute=1, reverse=true)),
+              'memory': dict(ns.memory.items() | sort(attribute=0) | sort(attribute=1, reverse=true)),
+            } }}
+
+      - name: Add-on Memory Usage
+        unique_id: 1b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b
+        state: >-
+          {%- set memory_stats = state_attr('sensor.add_ons_stats', 'addon_stats').get('memory', {}) -%}
+
   - binary_sensor:
       - name: Workday
         unique_id: d582050d-a8d2-4e21-8cb1-b4f8fd1e4445
@@ -156,6 +202,54 @@ automation:
       - service: notify.telegram_darkfox
         data:
           message: "Home Assistant er ved at lukke ned!"
+
+  - alias: Notify High Memory Usage
+    id: 9b460db9-09da-4b32-8183-7e315bd8d9d6
+    initial_state: true
+    trigger:
+      platform: numeric_state
+      entity_id: sensor.system_monitor_memory_use_percent
+      above: 85
+    variables:
+      memory_use: "{{ states('sensor.system_monitor_memory_use_percent') }}"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: |
+            Hukommelsesforbrug er højt! {{ memory_use }}%
+            Top 5 Add-ons:
+            {%- set stats = state_attr('sensor.add_ons_stats', 'addon_stats') or {} -%}
+            {%- set memory = stats.get('memory', {}) -%}
+            {%- for key, value in memory.items() %}
+              {{ key }}: {{ value }}%
+              {%- if loop.index > 4 -%}
+                {%- break -%}
+              {%- endif -%}
+            {%- endfor -%}
+
+  - alias: Notify high CPU Usage
+    id: 46d3d0e5-746b-4976-a66b-da481afbe993
+    initial_state: true
+    trigger:
+      platform: numeric_state
+      entity_id: sensor.processor_use
+      above: 55
+    variables:
+      cpu_use: "{{ states('sensor.processor_use') }}"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: |
+            CPU forbrug er højt! {{ cpu_use }}%
+            Top 5 Add-ons:
+            {%- set stats = state_attr('sensor.add_ons_stats', 'addon_stats') or {} -%}
+            {%- set cpu = stats.get('cpu', {}) -%}
+            {%- for key, value in cpu.items() %}
+              {{ key }}: {{ value }}%
+              {%- if loop.index > 4 -%}
+                {%- break -%}
+              {%- endif -%}
+            {%- endfor -%}
 
   - alias: Notify Of New External IP
     id: e86275ad-9c5a-4243-9428-e47f82c03586
