@@ -48,6 +48,8 @@ automation:
         entity_id: input_boolean.car_delayed_charging
         from: "off"
         to: "on"
+      - platform: state
+        entity_id: input_datetime.car_start_charging_at
     condition:
       - condition: state
         entity_id: input_boolean.car_delayed_charging
@@ -59,7 +61,7 @@ automation:
               entity_id: switch.id_3_pro_charging
           - service: script.notify_darkphone
             data:
-              message: "Opladning er bliver stoppet. Den starter igen kl. {{ states('input_datetime.car_start_charging_at') }}."
+              message: "Opladning er bliver stoppet. Den starter igen kl. {{ (states('input_datetime.car_start_charging_at') or '').split(':')[0:-1] | join(':') }}."
 
   - id: car_start_delayed_charging
     alias: Car Delayed Charging

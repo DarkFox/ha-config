@@ -4,7 +4,11 @@ switch:
       id_3_pro_charging:
         friendly_name: ID.3 Pro Charging
         unique_id: 8aad7bcf-89a3-48d9-88ea-2b8609617a50
-        value_template: "{{ not is_state('sensor.id_3_pro_charging_mode', 'off') }}"
+        value_template: >-
+          {{ 
+            not is_state('sensor.id_3_pro_charging_mode', 'off')
+            and not is_state('sensor.id_3_pro_plug_connection_state', 'disconnected')
+          }}
         icon_template: "{{ 'mdi:battery-charging' if not is_state('sensor.id_3_pro_charging_mode', 'off') else 'mdi:battery' }}"
         turn_on:
           service: volkswagen_we_connect_id.volkswagen_id_start_stop_charging
