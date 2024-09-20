@@ -113,6 +113,77 @@ template:
         state: >-
           {{ states('sensor.day_name_short') }}., {{ now().day }}. {{ states('sensor.month_name_short') }}
 
+      - name: Better Season
+        unique_id: 4b8020a6-d2f8-4ab5-ab5e-e23740bccccd
+        state: >-
+          {% set week = now().isocalendar()[1] %}
+          {% if week >= 9 and week <= 16 %}
+            early_spring
+          {% elif week >= 17 and week <= 24 %}
+            late_spring
+          {% elif week >= 25 and week <= 32 %}
+            summer
+          {% elif week >= 33 and week <= 40 %}
+            early_autumn
+          {% elif week >= 41 and week <= 48 %}
+            late_autumn
+          {% else %}
+            winter
+          {% endif %}
+        attributes:
+          seasons: |
+            {%- set seasons = {
+              'early_spring': {
+                'weeks': '9-16',
+                'translation': 'Tidlig Forår',
+                'description': 'Gradual warming, snow melting, early plant growth.',
+                'temp_range': '0-10°C',
+              },
+              'late_spring': {
+                'weeks': '17-24',
+                'translation': 'Sent Forår',
+                'description': 'Blooming flowers, leafing trees, warmer temperatures.',
+                'temp_range': '10-18°C',
+              },
+              'summer': {
+                'weeks': '25-32',
+                'translation': 'Sommer',
+                'description': 'Peak warmth, longest daylight, vegetation at its peak.',
+                'temp_range': '18-25°C',
+              },
+              'early_autumn': {
+                'weeks': '33-40',
+                'translation': 'Tidlig Efterår',
+                'description': 'Cooling temperatures, harvest time, leaf color change.',
+                'temp_range': '15-20°C',
+              },
+              'late_autumn': {
+                'weeks': '41-48',
+                'translation': 'Sent Efterår',
+                'description': 'Rapid cooling, more rain, trees shedding leaves.',
+                'temp_range': '5-12°C',
+              },
+              'winter': {
+                'weeks': '49-8',
+                'translation': 'Vinter',
+                'description': 'Coldest months, shortest days, potential for snow.',
+                'temp_range': '-5 to 5°C',
+              },
+            } -%}
+            {{ seasons }}
+          translation: >-
+            {%- set state = states('sensor.better_season') -%}
+            {%- set translations = state_attr('sensor.better_season', 'seasons') -%}
+            {{ translations.get(state, {}).get('translation') }}
+          description: >-
+            {%- set state = states('sensor.better_season') -%}
+            {%- set descriptions = state_attr('sensor.better_season', 'seasons') -%}
+            {{ descriptions.get(state, {}).get('description') }}
+          temp_range: >-
+            {%- set state = states('sensor.better_season') -%}
+            {%- set temps = state_attr('sensor.better_season', 'seasons') -%}
+            {{ temps.get(state, {}).get('temp_range') }}
+
       - name: HA Last Restart
         unique_id: da9af7e5-6b34-46b8-b15b-70dc5de413ad
         state: >-
