@@ -121,12 +121,16 @@ template:
         unique_id: 359fc2c0-7e2a-4836-bacf-90f7abbe3856
         unit_of_measurement: "min"
         state: >-
-          {% set on_deck = (state_attr('binary_sensor.gdq_calendar', 'current') | first or state_attr('binary_sensor.gdq_calendar', 'next')) %}
+          {% set current_runs = state_attr('binary_sensor.gdq_calendar', 'current') %}
+          {% set current = current_runs | first if current_runs else none %}
+          {% set on_deck = (current or state_attr('binary_sensor.gdq_calendar', 'next')) %}
           {{ ((on_deck.get('start') |as_datetime|as_local - now()).total_seconds() / 60) | int if on_deck else none }}
         attributes:
           icon: mdi:gamepad-right
           on_deck: >-
-            {{ (state_attr('binary_sensor.gdq_calendar', 'current') | first or state_attr('binary_sensor.gdq_calendar', 'next')) }}
+            {% set current_runs = state_attr('binary_sensor.gdq_calendar', 'current') %}
+            {% set current = current_runs | first if current_runs else none %}
+            {{ (current or state_attr('binary_sensor.gdq_calendar', 'next')) }}
           on_deck_formatted_time: >-
             {% from 'datediff.jinja' import relative_start_end_time %}
             {% set event = state_attr('sensor.gdq_on_deck', 'on_deck') %}

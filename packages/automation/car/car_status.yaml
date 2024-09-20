@@ -11,7 +11,8 @@ template:
         unique_id: 2f27b7a3-22d3-44e7-871f-bac1b42b3568
         state: >-
           {% set next_driving = is_state_attr('sensor.upcoming_travel_location', 'mode', 'driving') %}
-          {% set current_driving_event = state_attr('sensor.current_event', 'events') | selectattr('bil', 'eq', true) | list | last  %}
+          {% set current_driving_events = state_attr('sensor.current_event', 'events') | selectattr('bil', 'eq', true) | list  %}
+          {% set current_driving_event = current_driving_events | last if current_driving_events else none %}
           {% if next_driving or current_driving_event %}
             {% set start_time_str = states('sensor.next_scheduled_leave_at') if has_value('sensor.next_scheduled_leave_at') %}
             {% set start_time = (start_time_str|as_datetime|as_local) if start_time_str %}

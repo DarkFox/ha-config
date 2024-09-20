@@ -57,22 +57,22 @@ script:
       - parallel:
           - service: notify.telegram_darkfox
             data:
-              title: "{{ message_title }}"
+              title: "{{ message_title if message_title is defined and message_title }}"
               message: "{{ message_text }}"
-              data: "{{ data or {} }}"
+              data: "{{ data if data is defined and data else {} }}"
           - service: script.popup_notification
             data:
-              message_title: "{{ message_title }}"
+              message_title: "{{ message_title if message_title is defined and message_title }}"
               message: "{{ message_text }}"
               severity: "{{ severity | default(1) | int }}"
           - service: script.voice_broadcast
             data:
-              message_title: "{{ message_title }}"
+              message_title: "{{ message_title if message_title is defined and message_title }}"
               message: "{{ message }}"
               severity: "{{ severity | default(1) | int }}"
           - service: script.darkphone_tts
             data:
-              message_title: "{{ message_title }}"
+              message_title: "{{ message_title if message_title is defined and message_title }}"
               message: "{{ message_text }}"
               severity: "{{ severity | default(1) | int }}"
           - service: notify.stue_tv
@@ -87,7 +87,7 @@ script:
                 {{ message_text }}
           - service: notify.martin_pc
             data:
-              title: "{{ message_title }}"
+              title: "{{ message_title if message_title is defined and message_title }}"
               message: "{{ message_text }}"
 
   notify_darkphone:
@@ -120,14 +120,14 @@ script:
     sequence:
       - service: script.darkphone_tts
         data:
-          message_title: "{{ message_title }}"
+          message_title: "{{ message_title if message_title is defined and message_title }}"
           message: "{{ message }}"
           severity: "{{ severity | default(1) | int }}"
       - service: notify.telegram_darkfox
         data:
-          title: "{{ message_title }}"
+          title: "{{ message_title if message_title is defined and message_title }}"
           message: "{{ message }}"
-          data: "{{ data or {} }}"
+          data: "{{ data if data is defined and data else {} }}"
 
   darkphone_tts:
     alias: Read message on Darkphone if headset connected (Low priority messages are not read)
@@ -180,7 +180,7 @@ script:
           message: "TTS"
           data:
             media_stream: "{{ media_stream }}"
-            tts_text: "{{ message_title + ' - ' if message_title }}{{ message }}"
+            tts_text: "{{ message_title + ' - ' if message_title is defined and message_title }}{{ message }}"
             ttl: 0
             priority: high
 
@@ -221,7 +221,14 @@ script:
             max: 3
             step: 1
     variables:
-      severity: "{{ severity|int if (severity|replace('-','')).isdigit() else 1 }}"
+      severity: >-
+        {{
+          severity|int
+          if severity is defined
+          and severity
+          and (severity|replace('-','')).isdigit()
+          else 1
+        }}
       entity_id: >-
         {% if severity > 1 %}
           {{ state_attr('group.all_speakers', 'entity_id') }}
@@ -256,7 +263,7 @@ script:
           chime_path: "{{ chime_path }}"
           message: |
             {%- if message is list and message | selectattr('tts', 'defined') | list | length > 0 -%}
-              {{ ([{"tts": message_title}] if message_title and message_title != '' else []) + message }}
+              {{ ([{"tts": message_title}] if message_title is defined and message_title else []) + message }}
             {%- else -%}
               {{ message }}
             {%- endif -%}
@@ -281,7 +288,7 @@ script:
           autoclose: true
           timeout: 30000
           size: wide
-          title: "{{ message_title }}"
+          title: "{{ message_title if message_title is defined and message_title }}"
           content: |
             <div style="font-size: 32pt; line-height: 32pt; font-weight: bold; text-align: center; padding: 24pt 0 20pt;">
               {{ message }}

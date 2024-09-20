@@ -367,7 +367,15 @@ automation:
         entity_id: sensor.current_work_call
     condition:
       - condition: template
-        value_template: "{{ trigger.to_state.state not in ['unknown', 'unavailable', ''] }}"
+        value_template: >-
+          {{
+            trigger is defined
+            and trigger
+            and trigger.to_state
+            and trigger.to_state.state
+            and trigger.to_state.attributes
+            and trigger.to_state.state not in ['unknown', 'unavailable', '']
+          }}
     action:
       - choose:
           - conditions:

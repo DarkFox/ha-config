@@ -128,7 +128,7 @@ template:
         device_class: duration
         unit_of_measurement: min
         state: >-
-          {{ ((states('sensor.wake_up_time')|as_timestamp - now()|as_timestamp)/60)|int }}
+          {{ ((states('sensor.wake_up_time')|as_timestamp - now()|as_timestamp)/60)|int if has_value('sensor.wake_up_time') else none }}
         attributes:
           icon: mdi:alarm-clock
 
@@ -136,7 +136,7 @@ template:
         unique_id: 40cc6f30-240e-489d-9720-c04dbb477058
         device_class: timestamp
         state: >-
-          {{ states('sensor.wake_up_time')|as_datetime - timedelta(hours=8, minutes=30) if has_value('sensor.wake_up_time') else 'unknown' }}
+          {{ states('sensor.wake_up_time')|as_datetime - timedelta(hours=8, minutes=30) if has_value('sensor.wake_up_time') else none }}
         attributes:
           icon: mdi:bed-clock
 
@@ -145,21 +145,21 @@ template:
         device_class: duration
         unit_of_measurement: min
         state: >-
-          {{ ((states('sensor.bedtime')|as_timestamp - now()|as_timestamp)/60)|int }}
+          {{ ((states('sensor.bedtime')|as_timestamp - now()|as_timestamp)/60)|int if has_value('sensor.bedtime') else none }}
         attributes:
           icon: mdi:bed-clock
 
       - name: Bedtime Clock
         unique_id: 1be248a8-c637-47a1-8b79-8890660d4e5a
         state: >-
-          {{ (states('sensor.bedtime')|as_datetime|as_local).strftime('%H:%M') }}
+          {{ (states('sensor.bedtime')|as_datetime|as_local).strftime('%H:%M') if has_value('sensor.bedtime') else 'unknown' }}
         attributes:
           icon: mdi:bed-clock
 
       - name: Wake Up Time Clock
         unique_id: 7bbdffb3-2f7d-4a69-9fcc-5a72d4aea48e
         state: >-
-          {{ (states('sensor.wake_up_time')|as_datetime|as_local).strftime('%H:%M') }}
+          {{ (states('sensor.wake_up_time')|as_datetime|as_local).strftime('%H:%M') if has_value('sensor.wake_up_time') else 'unknown' }}
         attributes:
           icon: mdi:alarm
 

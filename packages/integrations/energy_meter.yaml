@@ -223,7 +223,15 @@ template:
 
       - name: Pow K Up Since
         state: >
-          {{ as_timestamp(now()) - states('sensor.pow_k_uptime_seconds') | int }}
+          {{
+            (
+              as_timestamp(states.sensor.pow_k_uptime_seconds.last_changed)
+              - states('sensor.pow_k_uptime_seconds') | int
+            ) | int | timestamp_custom('%Y-%m-%d %H:%M:%S%z')
+            if has_value('sensor.pow_k_uptime_seconds')
+            else none
+          }}
+        device_class: timestamp
         attributes:
           icon: mdi:calendar-clock
 

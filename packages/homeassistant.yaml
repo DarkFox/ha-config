@@ -54,7 +54,7 @@ template:
       - name: Month Name
         unique_id: a141453c-2624-4267-a93b-da5d54e9dc35
         state: >-
-          {% if state_attr('sensor.month_name', 'month_names') is defined %}
+          {% if state_attr('sensor.month_name', 'month_names') %}
             {% set months = state_attr('sensor.month_name', 'month_names') %}
             {{ months[now().month-1] }}
           {% else %}
@@ -67,7 +67,7 @@ template:
       - name: Month Name Short
         unique_id: 5e2f3b19-23f8-423a-b13c-1781429522c2
         state: >-
-          {% if state_attr('sensor.month_name_short', 'month_names_short') is defined %}
+          {% if state_attr('sensor.month_name_short', 'month_names_short') %}
             {% set months = state_attr('sensor.month_name_short', 'month_names_short') %}
             {{ months[now().month-1] }}
           {% else %}
@@ -80,7 +80,7 @@ template:
       - name: Day Name
         unique_id: a7c54c1f-3ed0-465e-b8d4-744cca6565ad
         state: >-
-          {% if state_attr('sensor.day_name', 'weekday_names') is defined %}
+          {% if state_attr('sensor.day_name', 'weekday_names') %}
             {% set weekdays = state_attr('sensor.day_name', 'weekday_names') %}
             {{ weekdays[now().weekday()] }}
           {% else %}
@@ -93,7 +93,7 @@ template:
       - name: Day Name Short
         unique_id: a9777d4e-17a6-46e6-b64f-6721aa7de45e
         state: >-
-          {% if state_attr('sensor.day_name_short', 'weekday_names_short') is defined %}
+          {% if state_attr('sensor.day_name_short', 'weekday_names_short') %}
             {% set weekdays = state_attr('sensor.day_name_short', 'weekday_names_short') %}
             {{ weekdays[now().weekday()] }}
           {% else %}
@@ -173,15 +173,15 @@ template:
             {{ seasons }}
           translation: >-
             {%- set state = states('sensor.better_season') -%}
-            {%- set translations = state_attr('sensor.better_season', 'seasons') -%}
+            {%- set translations = state_attr('sensor.better_season', 'seasons') or {} -%}
             {{ translations.get(state, {}).get('translation') }}
           description: >-
             {%- set state = states('sensor.better_season') -%}
-            {%- set descriptions = state_attr('sensor.better_season', 'seasons') -%}
+            {%- set descriptions = state_attr('sensor.better_season', 'seasons') or {} -%}
             {{ descriptions.get(state, {}).get('description') }}
           temp_range: >-
             {%- set state = states('sensor.better_season') -%}
-            {%- set temps = state_attr('sensor.better_season', 'seasons') -%}
+            {%- set temps = state_attr('sensor.better_season', 'seasons') or {} -%}
             {{ temps.get(state, {}).get('temp_range') }}
 
       - name: HA Last Restart

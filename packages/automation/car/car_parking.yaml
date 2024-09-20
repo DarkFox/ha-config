@@ -135,15 +135,15 @@ template:
         state: >-
           {% if is_state('binary_sensor.parking_limit', 'on') %}
             {{ (as_timestamp(states('input_datetime.parking_timer')) + states('sensor.parking_duration_limit')|int) | as_datetime }}
-          {% else %}
-            unavailable
           {% endif %}
 
       - name: Parking Limit Clock
         unique_id: 141f07b0-4205-40bf-9ede-99956e72ea15
         icon: mdi:timer
         state: >-
-          {{ states('sensor.parking_limit') | as_timestamp | timestamp_custom('%H:%M') }}
+          {% if is_state('binary_sensor.parking_limit', 'on') %}
+            {{ states('sensor.parking_limit') | as_timestamp | timestamp_custom('%H:%M') }}
+          {% endif %}
 
       - name: Parking Alarm
         unique_id: 5675dfe4-8ef6-4673-a0fd-dab9242b230f
@@ -151,15 +151,15 @@ template:
         state: >-
           {% if is_state('binary_sensor.parking_limit', 'on') %}
             {{ (as_timestamp(states('sensor.parking_limit')) - (15 * 60)) | as_datetime }}
-          {% else %}
-            unavailable
           {% endif %}
 
       - name: Parking Alarm Clock
         unique_id: 86007395-04ff-46c1-ad1a-ab3c94dd24ba
         icon: mdi:alarm
         state: >-
-          {{ states('sensor.parking_alarm') | as_timestamp | timestamp_custom('%H:%M') }}
+          {% if is_state('binary_sensor.parking_limit', 'on') %}
+            {{ states('sensor.parking_alarm') | as_timestamp | timestamp_custom('%H:%M') }}
+          {% endif %}
 
   - binary_sensor:
       - name: Parking Limit

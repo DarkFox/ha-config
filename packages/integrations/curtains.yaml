@@ -33,7 +33,7 @@ script:
                 value_template: "{{ modus == 'close' }}"
             sequence:
               - condition: template
-                value_template: "{{ states('sensor.sovevaerelse_gardin_value') == 'open' }}"
+                value_template: "{{ is_state('sensor.sovevaerelse_gardin_value', 'open') }}"
               - service: "cover.open_cover"
                 target:
                   entity_id: cover.sovevaerelse_gardin_dor
@@ -186,14 +186,14 @@ sensor:
       sovevaerelse_gardin_vindue_position:
         value_template: >-
           {% from 'utils.jinja' import map_clamp_input %}
-          {{ map_clamp_input(state_attr('cover.sovevaerelse_gardin_vindue', 'current_position'), 45, 100, 0, 100)|int }}
+          {{ map_clamp_input(state_attr('cover.sovevaerelse_gardin_vindue', 'current_position'), 45, 100, 0, 100)|int(0) }}
       sovevaerelse_gardin_dor_position:
         value_template: "{{ state_attr('cover.sovevaerelse_gardin_dor', 'current_position') }}"
       sovevaerelse_gardin_value:
         value_template: >-
           {% set states = [states('cover.sovevaerelse_gardin_vindue'), states('cover.sovevaerelse_gardin_dor')] %}
-          {% set dor_position = state_attr('cover.sovevaerelse_gardin_dor', 'current_position')|int %}
-          {% set vindue_position = state_attr('cover.sovevaerelse_gardin_vindue', 'current_position')|int %}
+          {% set dor_position = state_attr('cover.sovevaerelse_gardin_dor', 'current_position')|int(0) %}
+          {% set vindue_position = state_attr('cover.sovevaerelse_gardin_vindue', 'current_position')|int(0) %}
           {% if 'closing' in states %}
             closing
           {% elif 'opening' in states %}
