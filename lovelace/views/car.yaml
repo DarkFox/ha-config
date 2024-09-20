@@ -54,53 +54,6 @@ cards:
             icon: mdi:road
             unit: Km
 
-      - type: custom:apexcharts-card
-        header:
-          show: false
-        graph_span: 12h
-        apex_config:
-          chart:
-            height: 200px
-            offsetX: -2
-            sparkline:
-              enabled: true
-          legend:
-            show: true
-        yaxis:
-          - id: pct
-            min: 0
-            max: 100
-            apex_config:
-              labels:
-                show: false
-          - id: kw
-            min: 0
-            max: 100
-            apex_config:
-              labels:
-                show: false
-        all_series_config:
-          stroke_width: 2
-          curve: stepline
-          fill_raw: last
-          show:
-            legend_value: true
-        series:
-          - entity: sensor.id_3_pro_target_state_of_charge
-            yaxis_id: pct
-            color: lightblue
-            name: Max
-            type: area
-            opacity: 0.2
-          - entity: sensor.id_3_pro_state_of_charge
-            yaxis_id: pct
-            color: green
-            name: SoC
-          - entity: sensor.id_3_pro_charge_power
-            yaxis_id: kw
-            color: DarkOrange
-            name: kW
-
       - type: grid
         square: false
         columns: 3
@@ -166,10 +119,82 @@ cards:
         show_header_toggle: false
         state_color: false
 
+      - !include ../cards/transport/car_destinations.yaml
+
   - type: vertical-stack
     view_layout:
       grid-area: middle
     cards:
+      - !include ../cards/car_overview.yaml
+
+      - type: custom:apexcharts-card
+        header:
+          show: false
+        graph_span: 12h
+        apex_config:
+          chart:
+            height: 200px
+            offsetX: -2
+            sparkline:
+              enabled: true
+          legend:
+            show: true
+        yaxis:
+          - id: pct
+            min: 0
+            max: 100
+            apex_config:
+              labels:
+                show: false
+          - id: kw
+            min: 0
+            max: 100
+            apex_config:
+              labels:
+                show: false
+        all_series_config:
+          stroke_width: 2
+          curve: stepline
+          fill_raw: last
+          show:
+            legend_value: true
+        series:
+          - entity: sensor.id_3_pro_target_state_of_charge
+            yaxis_id: pct
+            color: lightblue
+            name: Max
+            type: area
+            opacity: 0.2
+          - entity: sensor.id_3_pro_state_of_charge
+            yaxis_id: pct
+            color: green
+            name: SoC
+          - entity: sensor.id_3_pro_charge_power
+            yaxis_id: kw
+            color: DarkOrange
+            name: kW
+
+  - type: vertical-stack
+    view_layout:
+      grid-area: right
+    cards:
+      - type: glance
+        show_name: true
+        show_icon: true
+        show_state: true
+        state_color: true
+        columns: 4
+        entities:
+          - entity: binary_sensor.id_3_pro_car_is_online
+            name: Online
+          - entity: binary_sensor.id_3_pro_car_is_active
+            name: Tænding
+
+          - entity: binary_sensor.id_3_pro_is_charging
+            name: Oplader
+          - entity: sensor.id_3_pro_plug_lock_state
+            name: Stik Lås
+
       - type: conditional
         conditions:
           - entity: binary_sensor.id_3_pro_car_is_active
@@ -216,28 +241,3 @@ cards:
           entities:
             - entity: device_tracker.id_3_pro_tracker
           hours_to_show: 6
-
-      - !include ../cards/transport/car_destinations.yaml
-
-  - type: vertical-stack
-    view_layout:
-      grid-area: right
-    cards:
-      - !include ../cards/car_overview.yaml
-
-      - type: glance
-        show_name: true
-        show_icon: true
-        show_state: true
-        state_color: true
-        columns: 4
-        entities:
-          - entity: binary_sensor.id_3_pro_car_is_online
-            name: Online
-          - entity: binary_sensor.id_3_pro_car_is_active
-            name: Tænding
-
-          - entity: binary_sensor.id_3_pro_is_charging
-            name: Oplader
-          - entity: sensor.id_3_pro_plug_lock_state
-            name: Stik Lås
