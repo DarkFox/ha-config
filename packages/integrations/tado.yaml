@@ -25,7 +25,7 @@ automation:
     mode: single
     trigger:
       - platform: time_pattern
-        minutes: "/1"
+        minutes: "/5"
         seconds: "0"
     condition:
       - condition: state
@@ -42,8 +42,7 @@ automation:
       - service: switch.turn_on
         data:
           entity_id: switch.tado
-      - delay:
-          seconds: 120
+      - wait_template: "{{ is_state('device_tracker.tado', 'home') }}"
       - event: set_climate
 
 script:
