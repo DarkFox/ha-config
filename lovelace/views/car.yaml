@@ -1,15 +1,32 @@
 title: Bil
 path: car
-type: panel
 icon: mdi:car
-badges: []
+type: custom:grid-layout
+layout:
+  grid-template-columns: 33.3% 33.3% 33.3%
+  grid-template-rows: auto
+  grid-template-areas: |
+    "header header header"
+    "left middle right"
+  mediaquery:
+    "(max-width: 800px)":
+      grid-template-columns: 100%
+      grid-template-areas: |
+        "header"
+        "left"
+        "middle"
+        "right"
+    "(max-width: 1200px)":
+      grid-template-columns: 50% 50%
+      grid-template-areas: |
+        "header header"
+        "left middle"
+        "right right"
 cards:
-  - type: custom:layout-card
-    layout_type: custom:horizontal-layout
-    layout:
-      max_cols: 3
+  - type: vertical-stack
+    view_layout:
+      grid-area: left
     cards:
-      - !include ../cards/car_overview.yaml
       - type: horizontal-stack
         cards:
           - type: gauge
@@ -36,44 +53,9 @@ cards:
             name: Rækkevidde
             icon: mdi:road
             unit: Km
-      - type: glance
-        show_name: true
-        show_icon: true
-        show_state: true
-        state_color: true
-        columns: 4
-        entities:
-          - entity: sensor.id_3_pro_charging_time_remaining
-            name: Charge Time Remaining
-          - entity: sensor.id_3_pro_charging_complete_at
-            name: Charging finished at
-          - entity: binary_sensor.id_3_pro_is_charging
-            name: Charging
-          - entity: sensor.id_3_pro_plug_connection_state
-            name: Plug Connection
-          - entity: sensor.id_3_pro_plug_lock_state
-            name: Plug Lock
-          - entity: sensor.id_3_pro_charge_type
-            name: Charge Type
-          - entity: sensor.id_3_pro_odometer
-            name: Odometer
-          - entity: binary_sensor.id_3_pro_car_is_active
-            name: Ignition
-          - entity: device_tracker.id_3_pro_tracker
-            name: Position
-          - entity: sensor.bil_placering
-            name: Parkeret
-            icon: mdi:parking
-          - entity: sensor.parking_clock
-            name: Park. kl.
-            icon: mdi:clock
-            tap_action:
-              action: perform-action
-              perform_action: browser_mod.more_info
-              data:
-                entity: input_datetime.parking_timer
-          - entity: sensor.parking_limit_clock
-            name: Park. udløber
+
+      - !include ../cards/car_overview.yaml
+
       - type: custom:mini-graph-card
         entities:
           - entity: sensor.id_3_pro_state_of_charge
@@ -97,109 +79,146 @@ cards:
         height: 200
         show:
           labels: true
-      - type: vertical-stack
+
+  - type: vertical-stack
+    view_layout:
+      grid-area: middle
+    cards:
+      - type: grid
+        square: false
+        columns: 3
         cards:
-          - type: entities
-            entities:
-              - entity: number.id_3_pro_target_state_of_charge
-                type: custom:slider-entity-row
-                full_row: true
-            show_header_toggle: false
-            state_color: false
-          - type: grid
-            square: false
-            columns: 3
-            cards:
-              - show_name: true
-                show_icon: true
-                type: button
-                tap_action:
-                  action: toggle
-                entity: switch.id_3_pro_charging
-                show_state: false
-              - type: button
-                tap_action:
-                  action: toggle
-                entity: switch.id_3_pro_reduced_ac_charging_speed
-      - type: vertical-stack
-        cards:
-          - type: entities
-            entities:
-              - entity: input_boolean.car_delayed_charging
-                name: Forsinket opladning
-              - entity: input_datetime.car_start_charging_at
-                name: Start opladning kl.
-          - type: entities
-            entities:
-              - entity: switch.id_3_pro_climatisation
-                name: Klimatisering
-              - entity: number.id_3_pro_target_climate_temperature
-                type: custom:slider-entity-row
-                full_row: true
-              - entity: input_boolean.car_keep_climatising
-                name: Hold klimatisering
-            show_header_toggle: false
-            state_color: false
-          - type: glance
-            show_name: true
-            show_icon: true
-            show_state: true
-            state_color: true
-            columns: 4
-            entities:
-              - entity: sensor.id_3_pro_climatisation_state
-                name: Climatisation
-                icon: mdi:heating-coil
-              - entity: sensor.id_3_pro_remaining_climatisation_time
-                name: Tid tilbage
-                unit: min
-                icon: mdi:update
-              - entity: binary_sensor.id_3_pro_front_window_heating_state
-                name: Front Window
-                icon: mdi:car-defrost-front
-              - entity: binary_sensor.id_3_pro_rear_window_heating_state
-                name: Rear Window
-                icon: mdi:car-defrost-rear
-              - entity: binary_sensor.id_3_pro_zone_front_left_enabled
-                name: Zone Front Left
-                icon: mdi:car-seat-heater
-              - entity: binary_sensor.id_3_pro_zone_front_right_enabled
-                name: Zone Front Right
-                icon: mdi:car-seat-heater
-              - entity: binary_sensor.id_3_pro_window_heating_enabled
-                name: Window Heating
-                icon: mdi:car-defrost-front
+          - type: button
+            entity: switch.id_3_pro_charging
+            name: Opladning
+            tap_action:
+              action: toggle
+          - type: button
+            entity: switch.id_3_pro_reduced_ac_charging_speed
+            name: Reduceret AC
+            tap_action:
+              action: toggle
+          - type: button
+            entity: input_boolean.car_delayed_charging
+            name: Forsinket Opladning
+
+      - type: conditional
+        conditions:
+          - entity: input_boolean.car_delayed_charging
+            state: "on"
+        card:
+          type: entities
+          entities:
+            - entity: input_datetime.car_start_charging_at
+              name: Start opladning kl.
+
       - type: entities
-        show_header_toggle: false
         entities:
+          - entity: number.id_3_pro_target_state_of_charge
+            type: custom:slider-entity-row
+            full_row: true
+
+      - type: conditional
+        conditions:
+          - entity: switch.id_3_pro_charging
+            state: "on"
+        card:
+          type: glance
+          show_name: true
+          show_icon: true
+          show_state: true
+          state_color: true
+          columns: 3
+          entities:
+            - entity: sensor.id_3_pro_charge_type
+              name: Opl. Type
+            - entity: sensor.id_3_pro_charging_time_remaining
+              name: Opl. Tid Tilbage
+            - entity: sensor.id_3_pro_charging_complete_at
+              name: Opl. Færdig Kl.
+
+      - type: glance
+        show_name: true
+        show_icon: true
+        show_state: true
+        state_color: true
+        columns: 4
+        entities:
+          - entity: device_tracker.id_3_pro_tracker
+            name: Position
+          - entity: sensor.bil_placering
+            name: Parkeret
+            icon: mdi:parking
+          - entity: sensor.parking_clock
+            name: Park. kl.
+            icon: mdi:clock
+            tap_action:
+              action: perform-action
+              perform_action: browser_mod.more_info
+              data:
+                entity: input_datetime.parking_timer
+          - entity: sensor.parking_limit_clock
+            name: Park. udløber
+
+      - type: conditional
+        conditions:
+          - entity: binary_sensor.dark_mode
+            state: "on"
+        card:
+          type: map
+          entities:
+            - entity: device_tracker.id_3_pro_tracker
+          hours_to_show: 6
+          dark_mode: "True"
+
+      - type: conditional
+        conditions:
+          - entity: binary_sensor.dark_mode
+            state: "off"
+        card:
+          type: map
+          entities:
+            - entity: device_tracker.id_3_pro_tracker
+          hours_to_show: 6
+
+  - type: vertical-stack
+    view_layout:
+      grid-area: right
+    cards:
+      - type: glance
+        show_name: true
+        show_icon: true
+        show_state: true
+        state_color: true
+        columns: 3
+        entities:
+          - entity: binary_sensor.id_3_pro_car_is_online
+            name: Online
           - entity: binary_sensor.id_3_pro_car_is_active
-            name: ID.3 Pro Data Aktiv
-          - binary_sensor.id_3_pro_car_is_online
+            name: Tænding
+          - entity: sensor.id_3_pro_odometer
+            name: Odometer
+
+          - entity: binary_sensor.id_3_pro_is_charging
+            name: Oplader
+          - entity: sensor.id_3_pro_plug_connection_state
+            name: Stik Tilstand
+          - entity: sensor.id_3_pro_plug_lock_state
+            name: Stik Lås
+
+      - type: entities
+        entities:
+          - entity: switch.id_3_pro_climatisation
+            name: Klimatisering
+          - entity: number.id_3_pro_target_climate_temperature
+            type: custom:slider-entity-row
+            full_row: true
+          - entity: input_boolean.car_keep_climatising
+            name: Hold klimatisering
+        show_header_toggle: false
+        state_color: false
 
       - type: vertical-stack
+        title: Destinationer
         cards:
-          - type: vertical-stack
-            title: Destinationer
-            cards:
-              - !include ../cards/transport/car_destinations.yaml
-
-          - type: conditional
-            conditions:
-              - entity: binary_sensor.dark_mode
-                state: "on"
-            card:
-              type: map
-              entities:
-                - entity: device_tracker.id_3_pro_tracker
-              hours_to_show: 6
-              dark_mode: "True"
-
-          - type: conditional
-            conditions:
-              - entity: binary_sensor.dark_mode
-                state: "off"
-            card:
-              type: map
-              entities:
-                - entity: device_tracker.id_3_pro_tracker
-              hours_to_show: 6
+          - !include ../cards/transport/car_destinations.yaml
