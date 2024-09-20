@@ -54,36 +54,53 @@ cards:
             icon: mdi:road
             unit: Km
 
-      - !include ../cards/car_overview.yaml
-
-      - type: custom:mini-graph-card
-        entities:
-          - entity: sensor.id_3_pro_state_of_charge
-            color: green
-            show_fill: false
-            name: SoC
+      - type: custom:apexcharts-card
+        header:
+          show: false
+        graph_span: 12h
+        apex_config:
+          chart:
+            height: 200px
+            offsetX: -2
+            sparkline:
+              enabled: true
+          legend:
+            show: true
+        yaxis:
+          - id: pct
+            min: 0
+            max: 100
+            apex_config:
+              labels:
+                show: false
+          - id: kw
+            min: 0
+            max: 100
+            apex_config:
+              labels:
+                show: false
+        all_series_config:
+          stroke_width: 2
+          curve: stepline
+          fill_raw: last
+          show:
+            legend_value: true
+        series:
           - entity: sensor.id_3_pro_target_state_of_charge
+            yaxis_id: pct
             color: lightblue
-            show_fill: false
-            name: Lademål
+            name: Max
+            type: area
+            opacity: 0.2
+          - entity: sensor.id_3_pro_state_of_charge
+            yaxis_id: pct
+            color: green
+            name: SoC
           - entity: sensor.id_3_pro_charge_power
+            yaxis_id: kw
             color: DarkOrange
-            show_fill: false
-            name: Batteri kW
-        icon: mdi:flash
-        line_width: 3
-        hours_to_show: 12
-        points_per_hour: 4
-        lower_bound: 0
-        upper_bound: 100
-        height: 200
-        show:
-          labels: true
+            name: kW
 
-  - type: vertical-stack
-    view_layout:
-      grid-area: middle
-    cards:
       - type: grid
         square: false
         columns: 3
@@ -137,28 +154,47 @@ cards:
             - entity: sensor.id_3_pro_charging_complete_at
               name: Opl. Færdig Kl.
 
-      - type: glance
-        show_name: true
-        show_icon: true
-        show_state: true
-        state_color: true
-        columns: 4
+      - type: entities
         entities:
-          - entity: device_tracker.id_3_pro_tracker
-            name: Position
-          - entity: sensor.bil_placering
-            name: Parkeret
-            icon: mdi:parking
-          - entity: sensor.parking_clock
-            name: Park. kl.
-            icon: mdi:clock
-            tap_action:
-              action: perform-action
-              perform_action: browser_mod.more_info
-              data:
-                entity: input_datetime.parking_timer
-          - entity: sensor.parking_limit_clock
-            name: Park. udløber
+          - entity: switch.id_3_pro_climatisation
+            name: Klimatisering
+          - entity: number.id_3_pro_target_climate_temperature
+            type: custom:slider-entity-row
+            full_row: true
+          - entity: input_boolean.car_keep_climatising
+            name: Hold klimatisering
+        show_header_toggle: false
+        state_color: false
+
+  - type: vertical-stack
+    view_layout:
+      grid-area: middle
+    cards:
+      - type: conditional
+        conditions:
+          - entity: binary_sensor.id_3_pro_car_is_active
+            state: "off"
+        card:
+          type: glance
+          show_name: true
+          show_icon: true
+          show_state: true
+          state_color: true
+          columns: 3
+          entities:
+            - entity: sensor.bil_placering
+              name: Parkeret
+              icon: mdi:parking
+            - entity: sensor.parking_clock
+              name: Park. kl.
+              icon: mdi:clock
+              tap_action:
+                action: perform-action
+                perform_action: browser_mod.more_info
+                data:
+                  entity: input_datetime.parking_timer
+            - entity: sensor.parking_limit_clock
+              name: Park. udløber
 
       - type: conditional
         conditions:
@@ -181,44 +217,27 @@ cards:
             - entity: device_tracker.id_3_pro_tracker
           hours_to_show: 6
 
+      - !include ../cards/transport/car_destinations.yaml
+
   - type: vertical-stack
     view_layout:
       grid-area: right
     cards:
+      - !include ../cards/car_overview.yaml
+
       - type: glance
         show_name: true
         show_icon: true
         show_state: true
         state_color: true
-        columns: 3
+        columns: 4
         entities:
           - entity: binary_sensor.id_3_pro_car_is_online
             name: Online
           - entity: binary_sensor.id_3_pro_car_is_active
             name: Tænding
-          - entity: sensor.id_3_pro_odometer
-            name: Odometer
 
           - entity: binary_sensor.id_3_pro_is_charging
             name: Oplader
-          - entity: sensor.id_3_pro_plug_connection_state
-            name: Stik Tilstand
           - entity: sensor.id_3_pro_plug_lock_state
             name: Stik Lås
-
-      - type: entities
-        entities:
-          - entity: switch.id_3_pro_climatisation
-            name: Klimatisering
-          - entity: number.id_3_pro_target_climate_temperature
-            type: custom:slider-entity-row
-            full_row: true
-          - entity: input_boolean.car_keep_climatising
-            name: Hold klimatisering
-        show_header_toggle: false
-        state_color: false
-
-      - type: vertical-stack
-        title: Destinationer
-        cards:
-          - !include ../cards/transport/car_destinations.yaml
