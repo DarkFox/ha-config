@@ -176,21 +176,26 @@ sensor:
       - sensor.sovevaerelse_gardin_vindue_position
       - sensor.sovevaerelse_gardin_dor_position
 
-  - platform: template
-    sensors:
-      stue_gardin_hojre_position:
-        value_template: "{{ state_attr('cover.stue_gardin_hojre', 'current_position') }}"
-      stue_gardin_venstre_position:
-        value_template: "{{ state_attr('cover.stue_gardin_venstre', 'current_position') }}"
+template:
+  - sensor:
+      - name: Stue Gardin Højre Position
+        unique_id: 3f3e72ce-d54c-498b-9867-1445a23a2059
+        state: "{{ state_attr('cover.stue_gardin_hojre', 'current_position') }}"
+      - name: Stue Gardin Venstre Position
+        unique_id: 5101a4eb-8e2b-4f60-b435-2df4e5a30916
+        state: "{{ state_attr('cover.stue_gardin_venstre', 'current_position') }}"
 
-      sovevaerelse_gardin_vindue_position:
-        value_template: >-
+      - name: Soveværelse Gardin Vindue Position
+        unique_id: a4403b53-6e2c-4cce-9d59-25a48d1b9ff6
+        state: >-
           {% from 'utils.jinja' import map_clamp_input %}
           {{ map_clamp_input(state_attr('cover.sovevaerelse_gardin_vindue', 'current_position'), 45, 100, 0, 100)|int(0) }}
-      sovevaerelse_gardin_dor_position:
-        value_template: "{{ state_attr('cover.sovevaerelse_gardin_dor', 'current_position') }}"
-      sovevaerelse_gardin_value:
-        value_template: >-
+      - name: Soveværelse Gardin Dør Position
+        unique_id: 3dd8363c-068b-4dcf-8b6a-6ecb43a9f931
+        state: "{{ state_attr('cover.sovevaerelse_gardin_dor', 'current_position') }}"
+      - name: Soveværelse Gardin Value
+        unique_id: e2f5eeac-5e1a-4eaf-a70b-b7ceee75bfa7
+        state: >-
           {% set states = [states('cover.sovevaerelse_gardin_vindue'), states('cover.sovevaerelse_gardin_dor')] %}
           {% set dor_position = state_attr('cover.sovevaerelse_gardin_dor', 'current_position')|int(0) %}
           {% set vindue_position = state_attr('cover.sovevaerelse_gardin_vindue', 'current_position')|int(0) %}
@@ -203,3 +208,20 @@ sensor:
           {% else %}
             open
           {% endif %}
+
+automation:
+  - alias: "Switchbot Curtain Battery Charged"
+    id: 37f532fe-45ec-4c48-a2be-9b8f8de1ab17
+    initial_state: "on"
+    trigger:
+      - platform: numeric_state
+        entity_id:
+          - sensor.stue_gardin_hojre_battery
+          - sensor.stue_gardin_venstre_battery
+          - sensor.sovevaerelse_gardin_vindue_battery
+          - sensor.sovevaerelse_gardin_dor_battery
+        above: 99
+    action:
+      - service: script.notify_everywhere
+        data:
+          message: "{{ trigger.to_state.name }} er opladet"
