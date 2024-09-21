@@ -50,6 +50,11 @@ template:
           {%- from 'light_profile.jinja' import room_activity -%}
           {{ room_activity('bedroom') }}
 
+      - name: "Bedroom Latest Motion"
+        unique_id: eebd308f-f018-4484-bcaa-782c80c93cc3
+        state: >-
+          {{ is_state('input_select.latest_motion', 'Bedroom')}}
+
       - name: "bedroom Activity Predicted"
         unique_id: 151273a8-5ebb-4b5e-90d5-f0a7a3859ee2
         state: >-
@@ -65,19 +70,23 @@ template:
         state: >-
           {{ is_state('input_select.sleep_state', 'sleeping') }}
 
+      - name: Soveværelse Chromecast Aktiv
+        unique_id: bd5d0a8e-2aa4-4e3e-9b02-5753d2060e32
+        state: >-
+          {{ states('media_player.sovevaerelse_chromecast') in ['playing', 'paused'] }}
+
 group:
   bedroom_activity_entities:
     name: Bedroom Activity Entities
     entities:
-      - input_boolean.bedroom_activity_override
-      - input_select.bedroom_room_state
+      - input_select.latest_motion
+      - binary_sensor.bedroom_latest_motion
       - binary_sensor.sovevaerelse_motion
       - binary_sensor.sovevaerelse_gulv
       - binary_sensor.bedroom_door_activity
-      - input_select.latest_motion
-      - media_player.sovevaerelse_chromecast
+      - binary_sensor.martin_in_bed
+      - binary_sensor.sovevaerelse_chromecast_aktiv
       - switch.sovevaerelse_tv
-      - input_select.sleep_state
 
 automation:
   - alias: activate_light_profile_bedroom_bright

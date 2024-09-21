@@ -43,23 +43,17 @@ template:
           {%- from 'light_profile.jinja' import room_activity -%}
           {{ room_activity('bathroom') }}
 
-      - name: "Bathroom Activity Predicted"
-        unique_id: b32edef2-f1c5-495e-a4e0-a6f6a994209e
-        state: >
-          {%- if is_state('binary_sensor.moved_from_living_room_to_hallway', 'on')
-            or is_state('binary_sensor.moved_from_bedroom_to_hallway', 'on') -%}
-            true
-          {%- else -%}
-            false
-          {%- endif -%}
+      - name: "Bathroom Latest Motion"
+        unique_id: c1c04e32-d63a-41d9-842d-ef8e92bb750e
+        state: >-
+          {{ is_state('input_select.latest_motion', 'Bathroom')}}
 
 group:
   bathroom_activity_entities:
     name: Bathroom Activity Entities
     entities:
-      - input_boolean.bathroom_activity_override
-      - input_select.bathroom_room_state
       - input_select.latest_motion
+      - binary_sensor.bathroom_latest_motion
       - binary_sensor.badevaerelse_motion
       - binary_sensor.badevaerelse_bevaegelse
       - binary_sensor.bathroom_door_activity

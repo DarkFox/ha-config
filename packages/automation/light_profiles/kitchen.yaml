@@ -43,14 +43,19 @@ template:
           {%- from 'light_profile.jinja' import room_activity -%}
           {{ room_activity('kitchen') }}
 
+      - name: "Kitchen Latest Motion"
+        unique_id: 867244c9-d681-4fc1-ad5e-0a0caaca6f71
+        state: >-
+          {{ is_state('input_select.latest_motion', 'Kitchen')}}
+
 group:
   kitchen_activity_entities:
     name: Kitchen Activity Entities
     entities:
-      - input_boolean.kitchen_activity_override
-      - input_select.kitchen_room_state
       - input_select.latest_motion
+      - binary_sensor.kitchen_latest_motion
       - binary_sensor.kokken_motion
+      - binary_sensor.kokken_bevaegelse_bevaegelse
 
 automation:
   - alias: activate_light_profile_kitchen_bright
@@ -74,7 +79,6 @@ automation:
           entities:
             light.kokken_loftlampe:
               state: on
-
               brightness: 255
               color_temp: 250
             light.emhaette:
@@ -94,6 +98,7 @@ automation:
             light.lyskaede:
               state: on
               brightness: 255
+              effect: "None"
       - delay:
           seconds: "{{ (states('input_number.scene_transition_time') or 1) | round(0, 'ceil')+2}}"
       - service: light.turn_on
@@ -144,6 +149,7 @@ automation:
             light.lyskaede:
               state: on
               brightness: 255
+              effect: "None"
       - delay:
           seconds: "{{ (states('input_number.scene_transition_time') or 1) | round(0, 'ceil')+2}}"
       - service: light.turn_on
@@ -195,6 +201,7 @@ automation:
             light.lyskaede:
               state: on
               brightness: 127
+              effect: "None"
       - delay:
           seconds: "{{ (states('input_number.scene_transition_time') or 1) | round(0, 'ceil')+2}}"
       - service: light.turn_on
@@ -245,6 +252,7 @@ automation:
             light.lyskaede:
               state: on
               brightness: 72
+              effect: "None"
       - delay:
           seconds: "{{ (states('input_number.scene_transition_time') or 1) | round(0, 'ceil')+2}}"
       - service: light.turn_on
@@ -294,6 +302,7 @@ automation:
             light.lyskaede:
               state: on
               brightness: 24
+              effect: "None"
 
   - alias: activate_light_profile_kitchen_off
     id: activate_light_profile_kitchen_off

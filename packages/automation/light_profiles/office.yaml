@@ -50,18 +50,28 @@ template:
           {%- from 'light_profile.jinja' import room_activity -%}
           {{ room_activity('office') }}
 
+      - name: "Office Latest Motion"
+        unique_id: be67c946-116d-4131-94d2-374a03f5d3eb
+        state: >-
+          {{ is_state('input_select.latest_motion', 'Office')}}
+
+      - name: "Kontor Shield Aktiv"
+        unique_id: e6775ea0-4ea7-4e6b-82b6-fd02603cb880
+        state: >-
+          {{ states('media_player.kontor_shield') in ['playing', 'paused'] }}
+
 group:
   office_activity_entities:
     name: Office Activity Entities
     entities:
-      - input_boolean.office_activity_override
-      - input_select.office_room_state
+      - input_select.latest_motion
+      - binary_sensor.office_latest_motion
       - binary_sensor.kontor_motion
       - binary_sensor.kontor_gulv_bevaegelse
       - binary_sensor.office_door_activity
       - binary_sensor.martin_pc_activity
+      - binary_sensor.kontor_shield_aktiv
       - binary_sensor.vagtskema_wfh
-      - input_select.latest_motion
 
 automation:
   - alias: activate_light_profile_office_bright
