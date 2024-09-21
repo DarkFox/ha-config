@@ -36,12 +36,32 @@ template:
           {%- from 'light_profile.jinja' import room_activity_state -%}
           {{ room_activity_state('bathroom') }}
 
+      - name: "Bathroom Room State"
+        unique_id: 097f2178-ab55-46ac-be08-0c2bb2642d52
+        state: >-
+          {%- from 'light_profile.jinja' import room_state -%}
+          {{ room_state('bathroom') }}
+
   - binary_sensor:
       - name: "Bathroom Activity"
         unique_id: 284c86dd-f2b0-48db-b7dd-b7f3b831a4c9
         state: >
           {%- from 'light_profile.jinja' import room_activity -%}
           {{ room_activity('bathroom') }}
+
+      - name: "Bathroom Active"
+        unique_id: 09d7e740-81ea-43ee-8f45-9654307302e5
+        state: >
+          {{ is_state('binary_sensor.bathroom_activity', 'on') }}
+        delay_off:
+          minutes: 5
+
+      - name: "Bathroom Inactive"
+        unique_id: 75201238-c1b7-4ec0-b2d8-d963454333bc
+        state: >-
+          {{ is_state('binary_sensor.bathroom_activity', 'on') }}
+        delay_off:
+          minutes: 10
 
       - name: "Bathroom Latest Motion"
         unique_id: c1c04e32-d63a-41d9-842d-ef8e92bb750e
@@ -52,16 +72,39 @@ group:
   bathroom_activity_entities:
     name: Bathroom Activity Entities
     entities:
-      - input_select.latest_motion
       - binary_sensor.bathroom_latest_motion
-      - binary_sensor.badevaerelse_motion
-      - binary_sensor.badevaerelse_bevaegelse
       - binary_sensor.bathroom_door_activity
       - binary_sensor.bathroom_occupied
-      - binary_sensor.badevarelse_las
       - input_boolean.showering
 
+  bathroom_motion_entities:
+    name: Bathroom Motion Entities
+    entities: &motion_entities
+      - binary_sensor.badevaerelse_motion
+      - binary_sensor.badevaerelse_bevaegelse
+      - binary_sensor.badevarelse_las
+
 automation:
+  - alias: Set Bathroom Latest Motion
+    id: 2d6e3e42-2e63-4466-94d9-5cc5e0167885
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *motion_entities
+        to: "on"
+    condition:
+      - condition: state
+        entity_id: vacuum.valetudo_roborocks5
+        state: "docked"
+      - condition: state
+        entity_id: person.martin
+        state: "home"
+    action:
+      service: input_select.select_option
+      data:
+        entity_id: input_select.latest_motion
+        option: "Bathroom"
+
   - alias: activate_light_profile_bathroom_bright
     id: activate_light_profile_bathroom_bright
     mode: restart

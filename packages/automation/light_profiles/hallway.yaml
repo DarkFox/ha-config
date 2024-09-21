@@ -36,6 +36,12 @@ template:
           {%- from 'light_profile.jinja' import room_activity_state -%}
           {{ room_activity_state('hallway') }}
 
+      - name: "Hallway Room State"
+        unique_id: 1858f847-18c7-4b52-9f48-a8ab1b0955ef
+        state: >-
+          {%- from 'light_profile.jinja' import room_state -%}
+          {{ room_state('hallway') }}
+
   - binary_sensor:
       - name: "Hallway Activity"
         unique_id: fdbe245c-77ee-4470-9930-e89aa8dae438
@@ -43,15 +49,33 @@ template:
           {%- from 'light_profile.jinja' import room_activity -%}
           {{ room_activity('hallway') }}
 
+      - name: "Hallway Active"
+        unique_id: 4c399b26-e581-4914-b669-2a7a3d250ed3
+        state: >
+          {{ is_state('binary_sensor.hallway_activity', 'on') }}
+        delay_off:
+          minutes: 2
+
+      - name: "Hallway Inactive"
+        unique_id: 7a6c871f-0272-4c24-9e80-6ec085b97d9f
+        state: >-
+          {{ is_state('binary_sensor.hallway_activity', 'on') }}
+        delay_off:
+          minutes: 4
+
 group:
   hallway_activity_entities:
     name: Hallway Activity Entities
     entities:
       - binary_sensor.hoveddor_access_control_window_door_is_open
-      - binary_sensor.gang_entre_bevaegelse
-      - binary_sensor.gang_badevaerelse_bevaegelse
       - binary_sensor.bathroom_door_activity
       - binary_sensor.bedroom_door_activity
+
+  hallway_motion_entities:
+    name: Hallway Motion Entities
+    entities:
+      - binary_sensor.gang_entre_bevaegelse
+      - binary_sensor.gang_badevaerelse_bevaegelse
 
 automation:
   - alias: activate_light_profile_hallway_bright

@@ -43,12 +43,32 @@ template:
           {%- from 'light_profile.jinja' import room_activity_state -%}
           {{ room_activity_state('office') }}
 
+      - name: "Office Room State"
+        unique_id: 07ef8ba9-38fc-48e4-a7ee-961690d2b3f7
+        state: >-
+          {%- from 'light_profile.jinja' import room_state -%}
+          {{ room_state('office') }}
+
   - binary_sensor:
       - name: "Office Activity"
         unique_id: 67937a59-deb8-4752-8ff0-627c43aec085
         state: >
           {%- from 'light_profile.jinja' import room_activity -%}
           {{ room_activity('office') }}
+
+      - name: "Office Active"
+        unique_id: c0583abc-28a9-42e3-828f-297e61b206e4
+        state: >
+          {{ is_state('binary_sensor.office_activity', 'on') }}
+        delay_off:
+          minutes: 2
+
+      - name: "Office Inactive"
+        unique_id: 52b5f751-8abc-4626-a298-db117bdd7d1b
+        state: >-
+          {{ is_state('binary_sensor.office_activity', 'on') }}
+        delay_off:
+          minutes: 4
 
       - name: "Office Latest Motion"
         unique_id: be67c946-116d-4131-94d2-374a03f5d3eb
@@ -64,16 +84,40 @@ group:
   office_activity_entities:
     name: Office Activity Entities
     entities:
-      - input_select.latest_motion
       - binary_sensor.office_latest_motion
-      - binary_sensor.kontor_motion
-      - binary_sensor.kontor_gulv_bevaegelse
       - binary_sensor.office_door_activity
-      - binary_sensor.martin_pc_activity
       - binary_sensor.kontor_shield_aktiv
       - binary_sensor.vagtskema_wfh
 
+  office_motion_entities:
+    name: Office Motion Entities
+    entities: &motion_entities
+      - binary_sensor.kontor_motion
+      - binary_sensor.kontor_gulv_bevaegelse
+      - binary_sensor.martin_pc_activity
+      - binary_sensor.martin_pc_activity_ping
+
 automation:
+  - alias: Set Office Latest Motion
+    id: a0b61be0-7171-4225-8d61-e40fd3c6d888
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *motion_entities
+        to: "on"
+    condition:
+      - condition: state
+        entity_id: vacuum.valetudo_roborocks5
+        state: "docked"
+      - condition: state
+        entity_id: person.martin
+        state: "home"
+    action:
+      service: input_select.select_option
+      data:
+        entity_id: input_select.latest_motion
+        option: "Office"
+
   - alias: activate_light_profile_office_bright
     id: activate_light_profile_office_bright
     mode: restart

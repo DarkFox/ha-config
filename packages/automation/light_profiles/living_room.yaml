@@ -42,12 +42,32 @@ template:
           {%- from 'light_profile.jinja' import room_activity_state -%}
           {{ room_activity_state('living_room') }}
 
+      - name: "Living Room Room State"
+        unique_id: a44dbfea-79eb-464e-bf13-1002d073ea54
+        state: >-
+          {%- from 'light_profile.jinja' import room_state -%}
+          {{ room_state('living_room') }}
+
   - binary_sensor:
       - name: "Living Room Activity"
         unique_id: 19b85710-348a-4efa-bfcb-68b20b64232e
         state: >
           {%- from 'light_profile.jinja' import room_activity -%}
           {{ room_activity('living_room') }}
+
+      - name: "Living Room Active"
+        unique_id: d7fbcd3a-d465-46f2-bdd8-a0758a827bb4
+        state: >
+          {{ is_state('binary_sensor.living_room_activity', 'on') }}
+        delay_off:
+          minutes: 2
+
+      - name: "Living Room Inactive"
+        unique_id: 6e08a700-e0bf-4578-be6f-71252d00d78e
+        state: >-
+          {{ is_state('binary_sensor.living_room_activity', 'on') }}
+        delay_off:
+          minutes: 4
 
       - name: "Living Room Latest Motion"
         unique_id: fbe08d02-9bff-4233-a622-202d9f2d58f1
@@ -63,17 +83,42 @@ group:
   living_room_activity_entities:
     name: Living Room Activity Entities
     entities:
-      - input_select.latest_motion
       - binary_sensor.living_room_latest_motion
+      - binary_sensor.stue_shield_aktiv
+      - binary_sensor.quest_in_use_delayed
+      - input_boolean.bar_open
+
+  living_room_motion_entities:
+    name: Living Room Motion Entities
+    entities: &motion_entities
       - binary_sensor.stue_motion
       - binary_sensor.stue_tilstedevarelse_alle_zoner
       - binary_sensor.stue_tilstedevarelse_bar
       - binary_sensor.stue_tilstedevarelse_spisebord
       - binary_sensor.stue_tilstedevarelse_sofa
-      - binary_sensor.stue_shield_aktiv
-      - input_boolean.bar_open
+      - binary_sensor.stue_tilstedevarelse_altandor
 
 automation:
+  - alias: Set Living Room Latest Motion
+    id: 8f82703e-c8ac-4280-bc4d-53e86c83e9bd
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *motion_entities
+        to: "on"
+    condition:
+      - condition: state
+        entity_id: vacuum.valetudo_roborocks5
+        state: "docked"
+      - condition: state
+        entity_id: person.martin
+        state: "home"
+    action:
+      service: input_select.select_option
+      data:
+        entity_id: input_select.latest_motion
+        option: "Living Room"
+
   - alias: activate_light_profile_living_room_bright
     id: activate_light_profile_living_room_bright
     mode: restart

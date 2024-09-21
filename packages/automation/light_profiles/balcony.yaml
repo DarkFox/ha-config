@@ -39,6 +39,12 @@ template:
           {%- from 'light_profile.jinja' import room_activity_state -%}
           {{ room_activity_state('balcony') }}
 
+      - name: "Balcony Room State"
+        unique_id: 1fa44669-e43e-405f-baa1-4529d93204dd
+        state: >-
+          {%- from 'light_profile.jinja' import room_state -%}
+          {{ room_state('balcony') }}
+
   - binary_sensor:
       - name: "Balcony Activity"
         unique_id: 0aec66f5-7ac9-4514-b06a-33c9f59a25a6
@@ -46,10 +52,25 @@ template:
           {%- from 'light_profile.jinja' import room_activity -%}
           {{ room_activity('balcony', is_state('binary_sensor.stue_altandor', 'off')) }}
 
+      - name: "Balcony Active"
+        unique_id: 37f515df-d96f-4af9-ae46-4aa4ff5f1f85
+        state: >
+          {{ is_state('binary_sensor.balcony_activity', 'on') }}
+        delay_off:
+          minutes: 2
+
+      - name: "Balcony Inactive"
+        unique_id: 7c040d06-8839-4fb1-b83f-b42a822230ff
+        state: >-
+          {{ is_state('binary_sensor.balcony_activity', 'on') }}
+        delay_off:
+          minutes: 4
+
       - name: "Balcony Activity Predicted"
         unique_id: db0aa84d-301b-412d-80c6-738dfe7a8787
         state: >-
-          {%- if is_state('binary_sensor.living_room_balcony_door_activity', 'on') -%}
+          {%- if is_state('binary_sensor.living_room_balcony_door_activity', 'on')
+            or is_state('binary_sensor.stue_tilstedevarelse_altandor', 'on') -%}
             true
           {%- else -%}
             false
@@ -59,8 +80,12 @@ group:
   balcony_activity_entities:
     name: Balcony Activity Entities
     entities:
+      - binary_sensor.living_room_balcony_door_activity
+
+  balcony_motion_entities:
+    name: Balcony Motion Entities
+    entities:
       - binary_sensor.altan_bevaegelse
-      - binary_sensor.stue_altandor
 
 automation:
   - alias: activate_light_profile_balcony_bright

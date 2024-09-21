@@ -41,13 +41,26 @@
 {%- endmacro -%}
 
 {%- macro room_active_light_profile(room) -%}
-    {%- if is_state('input_select.'+room+'_room_state', 'active') -%}
+    {%- if is_state('sensor.'+room+'_room_state', 'active') -%}
         {{ states('sensor.'+room+'_light_profile') }}
-    {%- elif is_state('input_select.'+room+'_room_state', 'inactive') -%}
+    {%- elif is_state('sensor.'+room+'_room_state', 'inactive') -%}
         {{ states('sensor.'+room+'_inactive_light_profile') }}
     {%- else %}
         Off
     {%- endif -%}
+{%- endmacro -%}
+
+{%- macro room_group_active(room) -%}
+    {%- set activity_entity_ids = state_attr('group.'+room+'_activity_entities', 'entity_id') or [] -%}
+    {%- set motion_entity_ids = state_attr('group.'+room+'_motion_entities', 'entity_id') or [] -%}
+    {%- set entity_ids = activity_entity_ids + motion_entity_ids -%}
+    {%- set entity_states = entity_ids | map('states') | list -%}
+    {%- set on_states = [
+        'on',
+        'true',
+    ] -%}
+    {%- set active = entity_states | select('in', on_states) | list -%}
+    {{ active | length > 0 }}
 {%- endmacro -%}
 
 {%- macro room_activity_state(room) -%}
@@ -60,20 +73,9 @@
     {%- endif -%}
 {%- endmacro -%}
 
-{%- macro room_group_active(room) -%}
-    {%- set entity_ids = state_attr('group.'+room+'_activity_entities', 'entity_id') -%}
-    {%- set entity_states = entity_ids | map('states') | list -%}
-    {%- set on_states = [
-        'on',
-        'true',
-    ] -%}
-    {%- set active = entity_states | select('in', on_states) | list -%}
-    {{ active | length > 0 }}
-{%- endmacro -%}
-
 {%- macro room_activity(room, force_off=false) -%}
-    {%- if is_state('input_boolean.'+room+'activity_override', 'on') -%}
-        {{ 'true' if is_state('input_select.'+room+'room_state', 'active') else 'false' }}
+    {%- if is_state('input_boolean.'+room+'_activity_override', 'on') -%}
+        {{ 'true' if is_state('input_select.'+room+'_room_state', 'active') else 'false' }}
     {%- elif bool(room_group_active(room), false) -%}
         {%- if force_off -%}
             false
@@ -82,5 +84,17 @@
         {%- endif -%}
     {%- else -%}
         false
+    {%- endif -%}
+{%- endmacro -%}
+
+{%- macro room_state(room) -%}
+    {%- if is_state('input_boolean.'+room+'_activity_override', 'on') -%}
+        {{ states('input_select.'+room+'_room_state') }}
+    {%- elif is_state('binary_sensor.'+room+'_active', 'on') -%}
+        active
+    {%- elif is_state('binary_sensor.'+room+'_inactive', 'on') -%}
+        inactive
+    {%- else -%}
+        off
     {%- endif -%}
 {%- endmacro -%}

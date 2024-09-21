@@ -36,12 +36,32 @@ template:
           {%- from 'light_profile.jinja' import room_activity_state -%}
           {{ room_activity_state('workshop') }}
 
+      - name: "Workshop Room State"
+        unique_id: be88229d-f506-4323-b58e-f92dba3d4726
+        state: >-
+          {%- from 'light_profile.jinja' import room_state -%}
+          {{ room_state('workshop') }}
+
   - binary_sensor:
       - name: "Workshop Activity"
         unique_id: 686bf4df-fd9f-44f3-8e18-f101c84eb1e7
         state: >
           {%- from 'light_profile.jinja' import room_activity -%}
           {{ room_activity('workshop') }}
+
+      - name: "Workshop Active"
+        unique_id: cf4d0597-2bc4-4353-a3bc-494217bc26c3
+        state: >
+          {{ is_state('binary_sensor.workshop_activity', 'on') }}
+        delay_off:
+          minutes: 2
+
+      - name: "Workshop Inactive"
+        unique_id: aac8fc98-cac5-4693-a020-13736d6309d7
+        state: >-
+          {{ is_state('binary_sensor.workshop_activity', 'on') }}
+        delay_off:
+          minutes: 4
 
       - name: "Workshop Latest Motion"
         unique_id: 972a41e7-b510-4e54-a57a-9bd6d60041a6
@@ -52,12 +72,35 @@ group:
   workshop_activity_entities:
     name: Workshop Activity Entities
     entities:
-      - input_select.latest_motion
       - binary_sensor.workshop_latest_motion
+
+  workshop_motion_entities:
+    name: Workshop Motion Entities
+    entities: &motion_entities
       - binary_sensor.vaerksted_motion
       - binary_sensor.vaerktoejsskab
 
 automation:
+  - alias: Set Workshop Latest Motion
+    id: ccf9375e-f45f-4845-927a-7dc0743e7c0c
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *motion_entities
+        to: "on"
+    condition:
+      - condition: state
+        entity_id: vacuum.valetudo_roborocks5
+        state: "docked"
+      - condition: state
+        entity_id: person.martin
+        state: "home"
+    action:
+      service: input_select.select_option
+      data:
+        entity_id: input_select.latest_motion
+        option: "Workshop"
+
   - alias: activate_light_profile_workshop_bright
     id: activate_light_profile_workshop_bright
     mode: restart

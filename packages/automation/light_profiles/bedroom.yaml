@@ -43,6 +43,12 @@ template:
           {%- from 'light_profile.jinja' import room_activity_state -%}
           {{ room_activity_state('bedroom') }}
 
+      - name: "Bedroom Room State"
+        unique_id: ee2d79b0-7f83-4c53-9490-c466d74d5eac
+        state: >-
+          {%- from 'light_profile.jinja' import room_state -%}
+          {{ room_state('bedroom') }}
+
   - binary_sensor:
       - name: "Bedroom Activity"
         unique_id: 6e7b6c27-b9ec-4800-becc-0ee3cbb51edf
@@ -50,12 +56,26 @@ template:
           {%- from 'light_profile.jinja' import room_activity -%}
           {{ room_activity('bedroom') }}
 
+      - name: "Bedroom Active"
+        unique_id: cdbcaaa5-cf1d-40c0-b629-346b76424581
+        state: >
+          {{ is_state('binary_sensor.bedroom_activity', 'on') }}
+        delay_off:
+          minutes: 2
+
+      - name: "Bedroom Inactive"
+        unique_id: f9f5b863-ee76-48a7-a30f-4e410b0381e7
+        state: >-
+          {{ is_state('binary_sensor.bedroom_activity', 'on') }}
+        delay_off:
+          minutes: 4
+
       - name: "Bedroom Latest Motion"
         unique_id: eebd308f-f018-4484-bcaa-782c80c93cc3
         state: >-
           {{ is_state('input_select.latest_motion', 'Bedroom')}}
 
-      - name: "bedroom Activity Predicted"
+      - name: "Bedroom Activity Predicted"
         unique_id: 151273a8-5ebb-4b5e-90d5-f0a7a3859ee2
         state: >-
           {{ is_state('binary_sensor.bedroom_door_activity', 'on') }}
@@ -79,16 +99,39 @@ group:
   bedroom_activity_entities:
     name: Bedroom Activity Entities
     entities:
-      - input_select.latest_motion
       - binary_sensor.bedroom_latest_motion
-      - binary_sensor.sovevaerelse_motion
-      - binary_sensor.sovevaerelse_gulv
-      - binary_sensor.bedroom_door_activity
       - binary_sensor.martin_in_bed
       - binary_sensor.sovevaerelse_chromecast_aktiv
       - switch.sovevaerelse_tv
 
+  bedroom_motion_entities:
+    name: Bedroom Motion Entities
+    entities: &motion_entities
+      - binary_sensor.sovevaerelse_motion
+      - binary_sensor.sovevaerelse_gulv
+      - binary_sensor.bathroom_door_activity
+
 automation:
+  - alias: Set Bedroom Latest Motion
+    id: bf4a1137-12a0-4e56-8029-2355e1f64c84
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *motion_entities
+        to: "on"
+    condition:
+      - condition: state
+        entity_id: vacuum.valetudo_roborocks5
+        state: "docked"
+      - condition: state
+        entity_id: person.martin
+        state: "home"
+    action:
+      service: input_select.select_option
+      data:
+        entity_id: input_select.latest_motion
+        option: "Bedroom"
+
   - alias: activate_light_profile_bedroom_bright
     id: activate_light_profile_bedroom_bright
     mode: restart
