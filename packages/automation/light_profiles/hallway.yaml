@@ -323,48 +323,6 @@ automation:
             light.hallway_tablet:
               state: off
 
-  - alias: activate_light_profile_hallway_party
-    id: activate_light_profile_hallway_party
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Party"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Party"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.gang_loftlampe:
-              state: on
-              effect: "colorloop"
-              brightness: 127
-            light.gang_spots:
-              state: on
-              effect: "colorloop"
-              brightness: 127
-            light.skoskab:
-              state: on
-              effect: "Twinklefox"
-              brightness: 255
-            light.gang_kommode:
-              state: on
-              effect: "Rainbow"
-              brightness: 255
-            light.gang_skab:
-              state: on
-              effect: "Twinklefox"
-              brightness: 255
-            light.hallway_tablet:
-              state: on
-
   - alias: activate_light_profile_hallway_candle_lights
     id: activate_light_profile_hallway_candle_lights
     mode: restart
@@ -478,18 +436,6 @@ script:
           entities:
             light.lysestager:
               state: off
-
-  hallway_candle_lights_party:
-    alias: "Hallway Candle Lights Party"
-    sequence:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.lysestager:
-              state: on
-              effect: "colorloop"
-              brightness: 127
 
 input_boolean:
   hallway_activity_override:

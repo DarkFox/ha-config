@@ -356,55 +356,6 @@ automation:
         target:
           entity_id: light.bathroom_tablet
 
-  - alias: activate_light_profile_bathroom_party
-    id: activate_light_profile_bathroom_party
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Party"
-        variables:
-          previous: "{{ trigger.from_state.state }}"
-      - platform: event
-        event_type: refresh_light_profile
-        variables:
-          previous: "{{ states('sensor.bathroom_active_light_profile') }}"
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Party"
-    action:
-      - parallel:
-          - service: script.difficult_light
-            data:
-              entity_id: light.badevaerelse_skab
-              state: on
-              brightness: 255
-              hs_color: [29, 15]
-              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          - service: script.difficult_light
-            data:
-              entity_id: light.badevaerelse_loft
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_eglo') }}"
-              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          - service: scene.apply
-            data:
-              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-              entities:
-                light.badevaerelse_lampe:
-                  state: on
-                  brightness: 255
-                  color_temp: 370
-
-          - service: light.turn_on
-            target:
-              entity_id: light.bathroom_tablet
-            data:
-              brightness: 127
-
 input_boolean:
   bathroom_activity_override:
     icon: mdi:checkbox-multiple-marked

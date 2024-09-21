@@ -485,80 +485,6 @@ automation:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entity_id: group.living_room_lights
 
-  - alias: activate_light_profile_living_room_party
-    id: activate_light_profile_living_room_party
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Party"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Party"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.sofa_laeselampe:
-              state: on
-              effect: "colorloop"
-              brightness: 127
-            light.stue_tv:
-              state: on
-              brightness: 32
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-
-            light.sofa_uplight:
-              state: on
-              effect: "colorloop"
-              brightness: 127
-            light.sofalampe:
-              state: on
-              brightness: 32
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-
-            light.skaenk_lampe:
-              state: on
-              brightness: 32
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-
-            light.globe:
-              state: on
-              brightness: 32
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-
-            light.stue_spots:
-              state: on
-              brightness: 32
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-
-            light.stue_tv_bund:
-              state: on
-              brightness: 32
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-
-            light.tv_mobel:
-              state: on
-              effect: "Twinklefox"
-              brightness: 255
-            light.stue_gardinstang:
-              state: on
-              effect: "Twinklefox"
-              brightness: 255
-            light.stue_skaenk_gulv:
-              state: on
-              effect: "Twinklefox"
-              brightness: 255
-            light.stue_skaenk:
-              state: on
-              brightness: 24
-              effect: "Pulse Pop Beats"
-
   - alias: activate_light_profile_living_room_dining_table
     id: activate_light_profile_living_room_dining_table
     mode: restart
@@ -691,18 +617,6 @@ script:
           entities:
             light.spisebord:
               state: off
-
-  dining_table_lights_party:
-    alias: "Dining Table Lights Party"
-    sequence:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.spisebord:
-              state: on
-              brightness: 32
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
 
   bar_lights_open:
     alias: "Bar Lights Open"
@@ -935,39 +849,6 @@ script:
               state: off
             light.barbord:
               state: off
-
-  bar_lights_party:
-    alias: "Bar Lights Party"
-    sequence:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.barskab_under:
-              state: on
-              brightness: 16
-            light.barskab_over:
-              state: on
-              brightness: 16
-            light.bar_hylde_spots:
-              state: on
-              brightness: 16
-            light.bar_spots:
-              state: on
-              brightness: 16
-            light.bar_uplight:
-              state: on
-              brightness: 16
-            light.bar_skuffer:
-              state: off
-            light.bar:
-              state: on
-              effect: "Twinklefox"
-              brightness: 255
-            light.barbord:
-              state: on
-              effect: "Twinklefox"
-              brightness: 255
 
 input_boolean:
   living_room_activity_override:

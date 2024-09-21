@@ -319,55 +319,6 @@ automation:
             light.kitchen_tablet:
               state: off
 
-  - alias: activate_light_profile_kitchen_party
-    id: activate_light_profile_kitchen_party
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Party"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Party"
-    action:
-      - service: light.turn_on
-        data:
-          transition: 0
-          color_temp: 400
-          entity_id:
-            - light.emhaette
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.kitchen_tablet:
-              state: on
-              brightness: 25
-            light.kokken_loftlampe:
-              state: on
-
-              brightness: 200
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-            light.emhaette:
-              state: on
-              brightness: 127
-            light.kokkenbord:
-              state: on
-              brightness: 200
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-            light.kokken_spots:
-              state: on
-              brightness: 200
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-            light.lyskaede:
-              state: on
-              brightness: 255
-              effect: Candle
-
 input_boolean:
   kitchen_activity_override:
     icon: mdi:checkbox-multiple-marked
