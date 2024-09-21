@@ -51,65 +51,88 @@ input_boolean:
     name: Te Ur Færdig
     icon: mdi:tea
 
-sensor:
-  - platform: template
-    sensors:
-      timer_kitchen_1_state:
-        value_template: >-
+template:
+  - sensor:
+      - name: Timer Kitchen 1 State
+        unique_id: 4884f1e1-a4df-40cb-b27e-f143bd8065a0
+        state: >-
           {%- if is_state('input_boolean.timer_kitchen_1_finished', 'on') -%}
             finished
           {%- else -%}
             {{ states('timer.kitchen_1') }}
           {%- endif -%}
-      timer_kitchen_2_state:
-        value_template: >-
+      - name: Timer Kitchen 2 State
+        unique_id: 39e4c98e-e12d-4d12-aa9b-867a3b457dc8
+        state: >-
           {%- if is_state('input_boolean.timer_kitchen_2_finished', 'on') -%}
             finished
           {%- else -%}
             {{ states('timer.kitchen_2') }}
           {%- endif -%}
-      timer_kitchen_3_state:
-        value_template: >-
+      - name: Timer Kitchen 3 State
+        unique_id: 0a698fbf-f400-4662-8c3b-49802a3fb513
+        state: >-
           {%- if is_state('input_boolean.timer_kitchen_3_finished', 'on') -%}
             finished
           {%- else -%}
             {{ states('timer.kitchen_3') }}
           {%- endif -%}
 
-binary_sensor:
-  - platform: template
-    sensors:
-      kitchen_timer_finished:
-        friendly_name: "Køkken Ur Færdig"
-        value_template: >-
+  - binary_sensor:
+      - name: Kitchen Timer Finished
+        unique_id: 2be11899-a937-47ae-bb9d-a47dd688137e
+        state: >-
           {{
             is_state('input_boolean.timer_kitchen_1_finished', 'on')
             or is_state('input_boolean.timer_kitchen_2_finished', 'on')
             or is_state('input_boolean.timer_kitchen_3_finished', 'on')
           }}
-      kitchen_timer_1_active:
-        value_template: >-
+      - name: Kitchen Timer 1 Active
+        unique_id: 9ba558ef-cb51-41f9-997c-95f514657799
+        state: >-
           {{
             not is_state('timer.kitchen_1', 'idle')
             or is_state('input_boolean.timer_kitchen_1_finished', 'on')
           }}
-      kitchen_timer_2_active:
-        value_template: >-
+      - name: Kitchen Timer 2 Active
+        unique_id: 8226db43-5502-4e22-a214-4dfdd239e7fb
+        state: >-
           {{
             not is_state('timer.kitchen_2', 'idle')
             or is_state('input_boolean.timer_kitchen_2_finished', 'on')
           }}
-          }}
-      kitchen_timer_3_active:
-        value_template: >-
+      - name: Kitchen Timer 3 Active
+        unique_id: 846ee954-9907-4200-b93a-5dbc062c9d56
+        state: >-
           {{
             not is_state('timer.kitchen_3', 'idle')
             or is_state('input_boolean.timer_kitchen_3_finished', 'on')
           }}
 
+light:
+  - platform: group
+    name: Timer and Alarm Lights
+    entities: &timer_lights # Effect: Fade
+      - light.blyant
+      - light.kontor_hylde
+      - light.hobbybord_vaerktojsskab
+      - light.gang_kommode
+      - light.gang_skab
+      - light.tv_mobel
+      - light.skoskab
+      - light.lyskaede
+      - light.seng_hylder_ned
+      - light.bar
+      # Effect: Opal
+      - light.badevaerelse_lampe_hojre
+      - light.globe
+      - light.skaenk_lampe
+
 automation:
   - alias: kitchen_timer_finished_event
+    id: ddee7c3a-5809-44ba-97fd-297a63076b9c
     initial_state: true
+    mode: parallel
     trigger:
       - platform: event
         event_type: timer.finished
@@ -132,31 +155,55 @@ automation:
           message: "{{ state_attr(trigger.event.data.entity_id, 'friendly_name') }} er færdig!"
 
   - alias: kitchen_timer_finished
+    id: 7b9af13b-fd32-4ff1-83c2-90a5981b13a7
+    initial_state: true
+    mode: queued
     trigger:
       - platform: state
         entity_id: binary_sensor.kitchen_timer_finished
         to: "on"
+      - platform: state
+        entity_id: *timer_lights
+        to:
+          - "on"
+          - "off"
+      - platform: state
+        entity_id: *timer_lights
+        attribute: effect
+    condition:
+      - condition: state
+        entity_id: binary_sensor.kitchen_timer_finished
+        state: "on"
     action:
-      - service: scene.create
-        data:
-          scene_id: before_timer
-          snapshot_entities:
-            - light.blyant
-            - light.badevaerelse_skab
-      - service: light.turn_on
-        data:
-          brightness: 255
-          effect: "Fade"
-          entity_id:
-            - light.blyant
-            - light.badevaerelse_skab
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ 'light' in trigger.to_state.entity_id }}"
+            sequence:
+              - service: light.turn_on
+                target:
+                  entity_id: "{{ trigger.to_state.entity_id }}"
+                data:
+                  brightness_pct: 100
+                  effect: "{{ 'Fade' if 'Fade' in state_attr(trigger.to_state.entity_id, 'effect_list') else 'opal' }}"
+        default:
+          - repeat:
+              for_each: *timer_lights
+              sequence:
+                - action: light.turn_on
+                  target:
+                    entity_id: "{{ repeat.item }}"
+                  data:
+                    brightness_pct: 100
+                    effect: "{{ 'Fade' if 'Fade' in state_attr(repeat.item, 'effect_list') else 'opal' }}"
 
   - alias: kitchen_timer_dismissed
+    id: 1cc6a65e-b3c0-4e26-89b3-55bf7a260c7d
+    initial_state: true
+    mode: queued
     trigger:
       - platform: state
         entity_id: binary_sensor.kitchen_timer_finished
         to: "off"
     action:
-      - service: scene.turn_on
-        data:
-          entity_id: scene.before_timer
+      - event: refresh_light_profile
