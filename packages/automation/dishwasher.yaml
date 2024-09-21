@@ -27,19 +27,26 @@ automation:
         data:
           message: "Vand under opvaskemaskinen!"
 
+  - alias: Opvaskemaskine Vasker
+    id: cf1540ed-f3ec-4cdd-bd16-1b5ca4066547
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: sensor.opvaskemaskine_operationstate
+        to: "Running"
+    action:
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.dishwasher_state
+          option: "Vasker"
+
   - id: dishwasher_done
     alias: Opvaskemaskine Færdig
     initial_state: true
     trigger:
       - platform: state
-        entity_id: sensor.dishwasher_state
-        to: "idle"
-        for:
-          minutes: 30
-    condition:
-      - condition: state
-        entity_id: input_select.dishwasher_state
-        state: "Vasker"
+        entity_id: sensor.opvaskemaskine_operationstate
+        to: "Finished"
     action:
       - service: input_select.select_option
         data:
@@ -48,17 +55,14 @@ automation:
       - service: notify.telegram_darkfox
         data:
           message: Opvaskemaskinen er færdig.
-      - service: input_select.select_option
-        data:
-          entity_id: "input_select.dishwasher_program"
-          option: Intet
 
   - id: dishwasher_emptied
     alias: Opvaskemaskine Tømt
     initial_state: true
     trigger:
       platform: state
-      entity_id: binary_sensor.opvaskemaskine_dor
+      entity_id: binary_sensor.opvaskemaskine_doorstate
+      from: "on"
       to: "off"
     condition:
       - condition: state
@@ -75,7 +79,8 @@ automation:
     initial_state: true
     trigger:
       platform: state
-      entity_id: binary_sensor.opvaskemaskine_dor
+      entity_id: binary_sensor.opvaskemaskine_doorstate
+      from: "on"
       to: "off"
     condition:
       - condition: state
