@@ -42,6 +42,14 @@ template:
             {%- set month = state_attr('sensor.month_name_short', 'month_names_short')[datetime.month-1] -%}
             {{ datetime.day }}. {{ month }}
 
+  - binary_sensor:
+      - name: GDQ Event Active
+        unique_id: 0546ee5c-bc1b-4a64-a272-b2cf535f9363
+        state: >-
+          {% set start_time = state_attr('sensor.gdq_event', 'start_time') | as_datetime %}
+          {% set end_time = state_attr('sensor.gdq_event', 'end_time') | as_datetime %}
+          {{ 'on' if start_time <= now() <= end_time else 'off' }}
+
   - trigger:
       platform: event
       event_type: gdq_donation_stats
@@ -50,6 +58,7 @@ template:
         unique_id: 626ea760-4cb6-4eb9-b6d2-2c95cf765463
         state: "{{ trigger.event.data.stats.get('total', 0) }}"
         unit_of_measurement: "USD"
+        device_class: "monetary"
         attributes:
           count: "{{ trigger.event.data.stats.get('count', 0) }}"
           max: "{{ trigger.event.data.stats.get('max', 0) }}"
@@ -211,6 +220,17 @@ script:
             - automation.refresh_gdq_bids
 
 automation:
+  - alias: "Toggle GDQ on event state"
+    id: 5d6fc4e6-291f-43f0-b555-831251da9ac5
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.gdq_event_active
+    action:
+      - service: "input_boolean.turn_{{ states('binary_sensor.gdq_event_active') }}"
+        target:
+          entity_id: input_boolean.gdq_enable
+
   - alias: "Turn on GDQ"
     id: turn_on_gdq
     initial_state: true
