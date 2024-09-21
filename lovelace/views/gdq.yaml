@@ -8,27 +8,31 @@ layout:
   grid-template-rows: auto
   grid-template-areas: |
     "event    event          event      donation_total"
-    "on_deck  up_next        next_watch donation_total"
+    "on_deck  up_next        next_watch donation_graph"
     "all_runs upcoming_watch bids       sidebar"
   mediaquery:
     "(max-width: 800px)":
       grid-template-columns: 100%
       grid-template-areas: |
+        "event"
         "on_deck"
         "up_next"
         "next_watch"
         "donation_total"
+        "donation_graph"
         "bids"
         "all_runs"
         "upcoming_watch"
         "sidebar"
     "(max-width: 1200px)":
-      grid-template-columns: 50% 50%
+      grid-template-columns: 25% 25% 25% 25%
       grid-template-areas: |
-        "on_deck up_next"
-        "next_watch donation_total"
-        "all_runs upcoming_watch"
-        "bids sidebar"
+        "event event event donation_total"
+        "on_deck on_deck donation_graph donation_graph"
+        "up_next up_next next_watch next_watch"
+        "all_runs all_runs upcoming_watch upcoming_watch"
+        "bids bids sidebar sidebar"
+
 cards:
   - type: custom:html-card
     view_layout:
@@ -73,34 +77,60 @@ cards:
     cards:
       - !include ../cards/gdq/next_to_watch.yaml
 
-  - type: custom:mini-graph-card
-    entities:
-      - name: Total
-        entity: sensor.gdq_donation_total
-      - name: Donations
-        entity: sensor.gdq_donation_total
-        attribute: count
-        y_axis: secondary
-        show_fill: false
-    hours_to_show: 24
-    points_per_hour: 30
-    line_color: var(--success-color)
-    line_width: 3
-    font_size: 75
-    decimals: 0
-    height: 320
-    show:
-      name: false
-      icon: false
-      legend: false
-    tap_action:
-      action: fire-dom-event
-      browser_mod:
-        service: browser_mod.javascript
-        data:
-          code: "window.open('https://gdqstats.com/', '_blank');"
+  - type: markdown
     view_layout:
       grid-area: donation_total
+    content: >-
+      <center>${{ '{:,}'.format(states('sensor.gdq_donation_total') | int) | replace(',', '.') }}</center>
+    card_mod:
+      style: |
+        ha-card {
+          font-size: 2em;
+          font-weight: bold;
+        }
+
+  - type: custom:apexcharts-card
+    view_layout:
+      grid-area: donation_graph
+    graph_span: 24h
+    apex_config:
+      chart:
+        height: 195px
+        offsetX: -2
+        sparkline:
+          enabled: true
+      legend:
+        show: true
+    yaxis:
+      - id: total
+        apex_config:
+          labels:
+            show: false
+      - id: donations
+        apex_config:
+          labels:
+            show: false
+    all_series_config:
+      stroke_width: 3
+      curve: smooth
+      fill_raw: last
+    series:
+      - entity: sensor.gdq_donation_total
+        yaxis_id: total
+        name: Total
+        type: area
+        color: var(--success-color)
+        opacity: 0.2
+        show:
+          legend_value: false
+      - entity: sensor.gdq_donation_total
+        yaxis_id: donations
+        name: Donations
+        unit: donations
+        attribute: count
+        type: line
+        stroke_width: 1
+        color: var(--primary-color)
     card_mod:
       style:
         .: |
