@@ -1,6 +1,11 @@
 card:
   type: vertical-stack
   cards:
+    - type: custom:decluttering-card
+      template: room_state_and_light_profile
+      variables:
+        - room: "[[room]]"
+
     - type: custom:auto-entities
       filter:
         include:
@@ -21,15 +26,106 @@ card:
       title: Status
       entities:
         - "input_select.latest_motion"
-        - "binary_sensor.[[room]]_latest_motion"
-        - "binary_sensor.[[room]]_activity"
-        - "binary_sensor.[[room]]_active"
-        - "binary_sensor.[[room]]_inactive"
-        - "binary_sensor.[[room]]_predicted"
-        - "sensor.[[room]]_selected_light_profile"
-        - "sensor.[[room]]_auto_light_profile"
-        - "sensor.[[room]]_light_profile"
-        - "sensor.[[room]]_inactive_light_profile"
-        - "sensor.[[room]]_active_light_profile"
-        - "sensor.[[room]]_activity_state"
-        - "sensor.[[room]]_room_state"
+
+    - type: grid
+      square: false
+      columns: 4
+      cards:
+        - type: custom:button-card
+          entity: "binary_sensor.[[room]]_latest_motion"
+          name: Latest Motion
+          icon: mdi:walk
+          show_state: true
+          styles:
+            grid: &grid
+              - grid-template-areas: '"n" "i" "s"'
+              - grid-template-columns: 1fr
+              - grid-template-rows: min-content min-content min-content
+
+        - type: custom:button-card
+          entity: "binary_sensor.[[room]]_activity"
+          name: Activity
+          icon: mdi:run
+          show_state: true
+          styles:
+            grid: *grid
+
+        - type: custom:button-card
+          entity: "binary_sensor.[[room]]_active"
+          name: Active
+          icon: mdi:run-fast
+          show_state: true
+          styles:
+            grid: *grid
+
+        - type: custom:button-card
+          entity: "binary_sensor.[[room]]_inactive"
+          name: Inactive
+          icon: mdi:sleep
+          show_state: true
+          styles:
+            grid: *grid
+
+        - type: custom:button-card
+          entity: "binary_sensor.[[room]]_predicted"
+          name: Predicted
+          icon: mdi:help-circle
+          show_state: true
+          styles:
+            grid: *grid
+
+        - type: custom:button-card
+          entity: "sensor.[[room]]_activity_state"
+          name: Activity State
+          icon: mdi:list-box
+          show_state: true
+          styles:
+            grid: *grid
+
+        - type: custom:button-card
+          entity: "sensor.[[room]]_room_state"
+          name: Room State
+          icon: mdi:state-machine
+          show_state: true
+          styles:
+            grid: *grid
+
+        - type: custom:button-card
+          entity: "sensor.[[room]]_active_light_profile"
+          name: Active Profile
+          icon: mdi:lightbulb-on
+          show_state: true
+          styles:
+            grid: *grid
+
+        - type: custom:button-card
+          entity: "sensor.[[room]]_auto_light_profile"
+          name: Auto Profile
+          icon: mdi:lightbulb-auto
+          show_state: true
+          styles:
+            grid: *grid
+
+        - type: custom:button-card
+          entity: "sensor.[[room]]_selected_light_profile"
+          name: Selected Profile
+          icon: mdi:brightness-7
+          show_state: true
+          styles:
+            grid: *grid
+
+        - type: custom:button-card
+          entity: "sensor.[[room]]_light_profile"
+          name: Profile
+          icon: mdi:lightbulb
+          show_state: true
+          styles:
+            grid: *grid
+
+        - type: custom:button-card
+          entity: "sensor.[[room]]_inactive_light_profile"
+          name: Inactive Profile
+          icon: mdi:lightbulb-off
+          show_state: true
+          styles:
+            grid: *grid
