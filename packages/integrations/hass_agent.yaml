@@ -1,24 +1,37 @@
-binary_sensor:
-  - platform: template
-    sensors:
-      martin_pc:
-        value_template: >-
-          {{
-            is_state('sensor.martin_pc_satellite_lastsystemstatechange', 'ApplicationStarted')
-          }}
-      martin_pc_unlocked:
-        value_template: >-
-          {{
-            is_state('sensor.martin_pc_sessionstate', 'Unlocked')
-          }}
-      martin_pc_activity:
-        friendly_name: "Martin PC Activity"
-        value_template: >-
+template:
+  - binary_sensor:
+      - name: Martin PC
+        unique_id: 98bac15b-619e-4626-be93-d4f61f3cb7d2
+        state: >-
+          {{ states('sensor.martin_pc_satellite_lastsystemstatechange') in [
+            'ApplicationStarted',
+            'SessionUnlock',
+          ] }}
+
+      - name: Martin PC Unlocked
+        unique_id: cd94651a-2680-4521-b072-30d0080d158a
+        state: "{{ is_state('sensor.martin_pc_sessionstate', 'Unlocked') }}"
+
+      - name: Martin PC Activity
+        unique_id: 63675f4b-e97e-42be-b8dc-aa237bfe616f
+        state: >-
           {{
             not is_state('sensor.martin_pc_lastactive', 'unavailable')
             and not is_state('sensor.martin_pc_lastactive', 'unknown')
             and as_timestamp(now()) - (as_timestamp(states('sensor.martin_pc_lastactive'))|int) < 300
           }}
+
+  - trigger:
+      platform: event
+      event_type: state_changed
+      event_data:
+        entity_id: sensor.martin_pc_lastactive
+    binary_sensor:
+      - name: Martin PC Activity Ping
+        unique_id: ae7fe058-b8de-4613-927b-b801a1320e9a
+        state: "{{ (states('sensor.martin_pc_lastactive') | as_timestamp) - (now() | as_timestamp) | int < 15 }}"
+        device_class: motion
+        auto_off: 1
 
 automation:
   - id: refresh_hass_agent_on_startup
