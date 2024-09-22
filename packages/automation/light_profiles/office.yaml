@@ -1,85 +1,3 @@
-template:
-  - sensor:
-      - name: "Office Selected Light Profile"
-        unique_id: 36a18805-eef4-48de-9cb2-8e457d89267e
-        state: >-
-          {%- from 'light_profile.jinja' import room_selected_light_profile -%}
-          {{ room_selected_light_profile('office') }}
-
-      - name: "Office Auto Light Profile"
-        unique_id: 394acbc4-ea7d-4d5f-bff1-51f50f4b9c47
-        state: >-
-          {%- from 'light_profile.jinja' import room_auto_light_profile -%}
-          {%- set override_profile = '[[profile]]' if state_attr('cover.kontor_rullegardin', 'current_position')|int(0) < 40 else none -%}
-          {{ room_auto_light_profile(
-              'office',
-              'sensor.average_small_balcony_brightness',
-              override_profile,
-              400,
-              700
-          ) }}
-
-      - name: "Office Light Profile"
-        unique_id: ae245075-e673-4d84-8a45-77da1476190f
-        state: >-
-          {%- from 'light_profile.jinja' import room_light_profile -%}
-          {{ room_light_profile('office') }}
-
-      - name: "Office Inactive Light Profile"
-        unique_id: 394816ec-ff0d-4b0c-9719-006f078682d5
-        state: >-
-          {%- from 'light_profile.jinja' import room_inactive_light_profile -%}
-          {{ room_inactive_light_profile('office') }}
-
-      - name: "Office Active Light Profile"
-        unique_id: 1e8d548c-4ced-4b83-8944-1ff3353bf631
-        state: >-
-          {%- from 'light_profile.jinja' import room_active_light_profile -%}
-          {{ room_active_light_profile('office') }}
-
-      - name: "Office Activity State"
-        unique_id: cb81958f-fc5c-458e-bb88-99f956167843
-        state: >-
-          {%- from 'light_profile.jinja' import room_activity_state -%}
-          {{ room_activity_state('office') }}
-
-      - name: "Office Room State"
-        unique_id: 07ef8ba9-38fc-48e4-a7ee-961690d2b3f7
-        state: >-
-          {%- from 'light_profile.jinja' import room_state -%}
-          {{ room_state('office') }}
-
-  - binary_sensor:
-      - name: "Office Activity"
-        unique_id: 67937a59-deb8-4752-8ff0-627c43aec085
-        state: >
-          {%- from 'light_profile.jinja' import room_activity -%}
-          {{ room_activity('office') }}
-
-      - name: "Office Active"
-        unique_id: c0583abc-28a9-42e3-828f-297e61b206e4
-        state: >
-          {{ is_state('binary_sensor.office_activity', 'on') }}
-        delay_off:
-          minutes: 2
-
-      - name: "Office Inactive"
-        unique_id: 52b5f751-8abc-4626-a298-db117bdd7d1b
-        state: >-
-          {{ is_state('binary_sensor.office_activity', 'on') }}
-        delay_off:
-          minutes: 4
-
-      - name: "Office Latest Motion"
-        unique_id: be67c946-116d-4131-94d2-374a03f5d3eb
-        state: >-
-          {{ is_state('input_select.latest_motion', 'Office')}}
-
-      - name: "Kontor Shield Aktiv"
-        unique_id: e6775ea0-4ea7-4e6b-82b6-fd02603cb880
-        state: >-
-          {{ states('media_player.kontor_shield') in ['playing', 'paused'] }}
-
 group:
   office_activity_entities:
     name: Office Activity Entities
@@ -501,6 +419,88 @@ automation:
           seconds: 30
     action:
       - event: refresh_light_profile
+
+template:
+  - sensor:
+      - name: "Office Selected Light Profile"
+        unique_id: 36a18805-eef4-48de-9cb2-8e457d89267e
+        state: >-
+          {%- from 'light_profile.jinja' import room_selected_light_profile -%}
+          {{ room_selected_light_profile('office') }}
+
+      - name: "Office Auto Light Profile"
+        unique_id: 394acbc4-ea7d-4d5f-bff1-51f50f4b9c47
+        state: >-
+          {%- from 'light_profile.jinja' import room_auto_light_profile -%}
+          {%- set override_profile = '[[profile]]' if state_attr('cover.kontor_rullegardin', 'current_position')|int(0) < 40 else none -%}
+          {{ room_auto_light_profile(
+              'office',
+              'sensor.average_small_balcony_brightness',
+              override_profile,
+              400,
+              700
+          ) }}
+
+      - name: "Office Light Profile"
+        unique_id: ae245075-e673-4d84-8a45-77da1476190f
+        state: >-
+          {%- from 'light_profile.jinja' import room_light_profile -%}
+          {{ room_light_profile('office') }}
+
+      - name: "Office Inactive Light Profile"
+        unique_id: 394816ec-ff0d-4b0c-9719-006f078682d5
+        state: >-
+          {%- from 'light_profile.jinja' import room_inactive_light_profile -%}
+          {{ room_inactive_light_profile('office') }}
+
+      - name: "Office Active Light Profile"
+        unique_id: 1e8d548c-4ced-4b83-8944-1ff3353bf631
+        state: >-
+          {%- from 'light_profile.jinja' import room_active_light_profile -%}
+          {{ room_active_light_profile('office') }}
+
+      - name: "Office Activity State"
+        unique_id: cb81958f-fc5c-458e-bb88-99f956167843
+        state: >-
+          {%- from 'light_profile.jinja' import room_activity_state -%}
+          {{ room_activity_state('office') }}
+
+      - name: "Office Room State"
+        unique_id: 07ef8ba9-38fc-48e4-a7ee-961690d2b3f7
+        state: >-
+          {%- from 'light_profile.jinja' import room_state -%}
+          {{ room_state('office') }}
+
+  - binary_sensor:
+      - name: "Office Activity"
+        unique_id: 67937a59-deb8-4752-8ff0-627c43aec085
+        state: >
+          {%- from 'light_profile.jinja' import room_activity -%}
+          {{ room_activity('office') }}
+
+      - name: "Office Active"
+        unique_id: c0583abc-28a9-42e3-828f-297e61b206e4
+        state: >
+          {{ is_state('binary_sensor.office_activity', 'on') }}
+        delay_off:
+          minutes: 2
+
+      - name: "Office Inactive"
+        unique_id: 52b5f751-8abc-4626-a298-db117bdd7d1b
+        state: >-
+          {{ is_state('binary_sensor.office_activity', 'on') }}
+        delay_off:
+          minutes: 4
+
+      - name: "Office Latest Motion"
+        unique_id: be67c946-116d-4131-94d2-374a03f5d3eb
+        state: >-
+          {{ is_state('input_select.latest_motion', 'Office')}}
+
+      - name: "Kontor Shield Aktiv"
+        unique_id: e6775ea0-4ea7-4e6b-82b6-fd02603cb880
+        state: >-
+          {{ states('media_player.kontor_shield') in ['playing', 'paused'] }}
 
 input_boolean:
   office_activity_override:

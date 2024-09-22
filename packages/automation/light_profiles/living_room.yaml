@@ -1,84 +1,3 @@
-template:
-  - sensor:
-      - name: "Living Room Selected Light Profile"
-        unique_id: ca86f7a7-a43a-4a25-b4d5-6cacc35d6423
-        state: >-
-          {%- from 'light_profile.jinja' import room_selected_light_profile -%}
-          {{ room_selected_light_profile('living_room') }}
-
-      - name: "Living Room Auto Light Profile"
-        unique_id: b17cf83b-017a-4fbd-9430-9f6257b78837
-        state: >-
-          {%- from 'light_profile.jinja' import room_auto_light_profile -%}
-          {%- set override_profile = 'Default' if is_state('binary_sensor.quest_in_use_delayed', 'on') else none -%}
-          {%- set override_profile = '[[profile]]' if states('sensor.stue_gardin_position')|int(0) < 40 else override_profile -%}
-          {{ room_auto_light_profile(
-              'living_room',
-              'sensor.average_balcony_brightness',
-              override_profile
-          ) }}
-
-      - name: "Living Room Light Profile"
-        unique_id: 93b0bd07-3bf5-4f95-9df2-4acc2bf0db31
-        state: >-
-          {%- from 'light_profile.jinja' import room_light_profile -%}
-          {{ room_light_profile('living_room') }}
-
-      - name: "Living Room Inactive Light Profile"
-        unique_id: 0883338b-d4a1-4bc8-808a-478411d8b407
-        state: >-
-          {%- from 'light_profile.jinja' import room_inactive_light_profile -%}
-          {{ room_inactive_light_profile('living_room') }}
-
-      - name: "Living Room Active Light Profile"
-        unique_id: b472e543-6c88-4095-8938-166e39b99c5a
-        state: >-
-          {%- from 'light_profile.jinja' import room_active_light_profile -%}
-          {{ room_active_light_profile('living_room') }}
-
-      - name: "Living Room Activity State"
-        unique_id: 2a71154f-d7fd-41bd-bc83-dd641e4c2d1f
-        state: >-
-          {%- from 'light_profile.jinja' import room_activity_state -%}
-          {{ room_activity_state('living_room') }}
-
-      - name: "Living Room Room State"
-        unique_id: a44dbfea-79eb-464e-bf13-1002d073ea54
-        state: >-
-          {%- from 'light_profile.jinja' import room_state -%}
-          {{ room_state('living_room') }}
-
-  - binary_sensor:
-      - name: "Living Room Activity"
-        unique_id: 19b85710-348a-4efa-bfcb-68b20b64232e
-        state: >
-          {%- from 'light_profile.jinja' import room_activity -%}
-          {{ room_activity('living_room') }}
-
-      - name: "Living Room Active"
-        unique_id: d7fbcd3a-d465-46f2-bdd8-a0758a827bb4
-        state: >
-          {{ is_state('binary_sensor.living_room_activity', 'on') }}
-        delay_off:
-          minutes: 2
-
-      - name: "Living Room Inactive"
-        unique_id: 6e08a700-e0bf-4578-be6f-71252d00d78e
-        state: >-
-          {{ is_state('binary_sensor.living_room_activity', 'on') }}
-        delay_off:
-          minutes: 4
-
-      - name: "Living Room Latest Motion"
-        unique_id: fbe08d02-9bff-4233-a622-202d9f2d58f1
-        state: >-
-          {{ is_state('input_select.latest_motion', 'Living Room')}}
-
-      - name: "Stue Shield Aktiv"
-        unique_id: 301bea46-cd74-4f71-99fd-ba8e4c78983f
-        state: >-
-          {{ states('media_player.stue_shield') in ['playing', 'paused'] }}
-
 group:
   living_room_activity_entities:
     name: Living Room Activity Entities
@@ -857,6 +776,87 @@ script:
               state: off
             light.barbord:
               state: off
+
+template:
+  - sensor:
+      - name: "Living Room Selected Light Profile"
+        unique_id: ca86f7a7-a43a-4a25-b4d5-6cacc35d6423
+        state: >-
+          {%- from 'light_profile.jinja' import room_selected_light_profile -%}
+          {{ room_selected_light_profile('living_room') }}
+
+      - name: "Living Room Auto Light Profile"
+        unique_id: b17cf83b-017a-4fbd-9430-9f6257b78837
+        state: >-
+          {%- from 'light_profile.jinja' import room_auto_light_profile -%}
+          {%- set override_profile = 'Default' if is_state('binary_sensor.quest_in_use_delayed', 'on') else none -%}
+          {%- set override_profile = '[[profile]]' if states('sensor.stue_gardin_position')|int(0) < 40 else override_profile -%}
+          {{ room_auto_light_profile(
+              'living_room',
+              'sensor.average_balcony_brightness',
+              override_profile
+          ) }}
+
+      - name: "Living Room Light Profile"
+        unique_id: 93b0bd07-3bf5-4f95-9df2-4acc2bf0db31
+        state: >-
+          {%- from 'light_profile.jinja' import room_light_profile -%}
+          {{ room_light_profile('living_room') }}
+
+      - name: "Living Room Inactive Light Profile"
+        unique_id: 0883338b-d4a1-4bc8-808a-478411d8b407
+        state: >-
+          {%- from 'light_profile.jinja' import room_inactive_light_profile -%}
+          {{ room_inactive_light_profile('living_room') }}
+
+      - name: "Living Room Active Light Profile"
+        unique_id: b472e543-6c88-4095-8938-166e39b99c5a
+        state: >-
+          {%- from 'light_profile.jinja' import room_active_light_profile -%}
+          {{ room_active_light_profile('living_room') }}
+
+      - name: "Living Room Activity State"
+        unique_id: 2a71154f-d7fd-41bd-bc83-dd641e4c2d1f
+        state: >-
+          {%- from 'light_profile.jinja' import room_activity_state -%}
+          {{ room_activity_state('living_room') }}
+
+      - name: "Living Room Room State"
+        unique_id: a44dbfea-79eb-464e-bf13-1002d073ea54
+        state: >-
+          {%- from 'light_profile.jinja' import room_state -%}
+          {{ room_state('living_room') }}
+
+  - binary_sensor:
+      - name: "Living Room Activity"
+        unique_id: 19b85710-348a-4efa-bfcb-68b20b64232e
+        state: >
+          {%- from 'light_profile.jinja' import room_activity -%}
+          {{ room_activity('living_room') }}
+
+      - name: "Living Room Active"
+        unique_id: d7fbcd3a-d465-46f2-bdd8-a0758a827bb4
+        state: >
+          {{ is_state('binary_sensor.living_room_activity', 'on') }}
+        delay_off:
+          minutes: 2
+
+      - name: "Living Room Inactive"
+        unique_id: 6e08a700-e0bf-4578-be6f-71252d00d78e
+        state: >-
+          {{ is_state('binary_sensor.living_room_activity', 'on') }}
+        delay_off:
+          minutes: 4
+
+      - name: "Living Room Latest Motion"
+        unique_id: fbe08d02-9bff-4233-a622-202d9f2d58f1
+        state: >-
+          {{ is_state('input_select.latest_motion', 'Living Room')}}
+
+      - name: "Stue Shield Aktiv"
+        unique_id: 301bea46-cd74-4f71-99fd-ba8e4c78983f
+        state: >-
+          {{ states('media_player.stue_shield') in ['playing', 'paused'] }}
 
 input_boolean:
   living_room_activity_override:
