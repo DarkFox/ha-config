@@ -167,6 +167,22 @@ automation:
           - switch.pc_tilbehor_afbryder
           - switch.printer_afbryder
 
+  - alias: Turn PC Printer on when print queue not empty
+    id: e5d8426d-2ded-49af-adf8-6f39e98a9bc2
+    initial_state: true
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.martin_pc_martin_pc_printers_npid634ed_hpcolorlaserjetm255dw
+        above: 0
+    condition:
+      - condition: state
+        entity_id: switch.printer_afbryder
+        state: "off"
+    action:
+      - service: switch.turn_on
+        target:
+          entity_id: switch.printer_afbryder
+
   - alias: pc_speaker_output
     id: pc_speaker_output
     initial_state: true
