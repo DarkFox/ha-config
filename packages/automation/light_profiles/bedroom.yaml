@@ -289,16 +289,16 @@ automation:
                       entities:
                         light.seng_laeselampe:
                           state: on
-                          brightness: 172
+                          brightness: 51
                           color_temp: 460
 
                         light.seng_spots_over:
                           state: on
-                          brightness: 32
+                          brightness: 2
                           effect: "None"
                         light.seng_spots_under:
                           state: on
-                          brightness: 32
+                          brightness: 2
                           effect: "None"
                         light.sovevaerelse_reol_spots:
                           state: on
@@ -306,39 +306,45 @@ automation:
                           effect: "None"
                         light.sovevaerelse_loft_segment_1:
                           state: on
-                          brightness: 24
+                          brightness: 12
                           hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
                           effect: "Solid"
                         light.sovevaerelse_loft_segment_2:
                           state: on
-                          brightness: 24
+                          brightness: 12
                           hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
                           effect: "Solid"
                         light.seng_hylder_op:
                           state: on
-                          brightness: 32
+                          brightness: 4
                           hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
                           effect: "Solid"
                         light.seng_hylder_ned:
                           state: on
-                          brightness: 32
+                          brightness: 4
                           hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
                           effect: "Solid"
                         light.blyant:
                           state: on
-                          brightness: 96
+                          brightness: 64
                           hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
                           effect: "Solid"
                   - service: light.turn_on
                     target:
                       entity_id: light.bedroom_tablet
                     data:
-                      brightness: 127
+                      brightness: 64
 
           - conditions:
               - condition: template
                 value_template: "{{ profile == 'Ambient' }}"
             sequence:
+              - service: select.select_option
+                data:
+                  entity_id:
+                    - select.seng_hylder_preset
+                  option: Ambient
+              - delay: 0.5
               - parallel:
                   - service: script.difficult_light
                     data:
@@ -374,12 +380,10 @@ automation:
                           state: on
                           brightness: 2
                           hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
-                          effect: "Solid"
                         light.seng_hylder_ned:
                           state: on
                           brightness: 2
                           hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-                          effect: "Solid"
                         light.seng_laeselampe:
                           state: on
                           brightness: 2
@@ -397,10 +401,23 @@ automation:
                     data:
                       brightness: 32
 
+              - service: select.select_option
+                data:
+                  entity_id:
+                    - select.seng_hylder_preset
+                  option: Ambient
+
           - conditions:
               - condition: template
                 value_template: "{{ profile == 'Night' }}"
             sequence:
+              - service: select.select_option
+                data:
+                  entity_id:
+                    - select.sovevaerelse_loft_preset
+                    - select.seng_hylder_preset
+                  option: Night
+              - delay: 0.5
               - parallel:
                   - service: scene.apply
                     data:
@@ -431,17 +448,14 @@ automation:
                           state: on
                           brightness: 1
                           rgb_color: [255, 0, 0]
-                          effect: "Solid"
                         light.sovevaerelse_loft_segment_1:
                           state: on
                           brightness: 5
                           rgb_color: [255, 0, 0]
-                          effect: "Solid"
                         light.sovevaerelse_loft_segment_2:
                           state: on
                           brightness: 5
                           rgb_color: [255, 0, 0]
-                          effect: "Solid"
 
                   - service: light.turn_on
                     target:
@@ -449,15 +463,12 @@ automation:
                     data:
                       brightness: 1
 
-                  - sequence:
-                      - delay: "{{ (states('input_number.scene_transition_time') | float or 0.5) + 2 }}"
-                      - service: scene.apply
-                        data:
-                          entities:
-                            select.sovevaerelse_loft_preset:
-                              state: Night
-                            select.seng_hylder_preset:
-                              state: Night
+              - service: select.select_option
+                data:
+                  entity_id:
+                    - select.sovevaerelse_loft_preset
+                    - select.seng_hylder_preset
+                  option: Night
 
           - conditions:
               - condition: template
