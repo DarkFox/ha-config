@@ -339,12 +339,6 @@ automation:
               - condition: template
                 value_template: "{{ profile == 'Ambient' }}"
             sequence:
-              - service: select.select_option
-                data:
-                  entity_id:
-                    - select.seng_hylder_preset
-                  option: Ambient
-              - delay: 0.5
               - parallel:
                   - service: script.difficult_light
                     data:
@@ -376,14 +370,18 @@ automation:
                           state: on
                           brightness: 32
                           effect: "None"
+                        select.seng_hylder_preset:
+                          option: Ambient
                         light.seng_hylder_op:
                           state: on
                           brightness: 2
                           hs_color: "{{ state_attr('sensor.theme', 'primary_color') }}"
+                          effect: "Solid Pattern"
                         light.seng_hylder_ned:
                           state: on
                           brightness: 2
                           hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                          effect: "Solid Pattern"
                         light.seng_laeselampe:
                           state: on
                           brightness: 2
@@ -401,23 +399,10 @@ automation:
                     data:
                       brightness: 32
 
-              - service: select.select_option
-                data:
-                  entity_id:
-                    - select.seng_hylder_preset
-                  option: Ambient
-
           - conditions:
               - condition: template
                 value_template: "{{ profile == 'Night' }}"
             sequence:
-              - service: select.select_option
-                data:
-                  entity_id:
-                    - select.sovevaerelse_loft_preset
-                    - select.seng_hylder_preset
-                  option: Night
-              - delay: 0.5
               - parallel:
                   - service: scene.apply
                     data:
@@ -442,12 +427,17 @@ automation:
                           brightness: 24
                           rgb_color: [255, 0, 0]
                           effect: "Solid"
+                        select.seng_hylder_preset:
+                          option: Night
                         light.seng_hylder_op:
                           state: off
                         light.seng_hylder_ned:
                           state: on
                           brightness: 1
                           rgb_color: [255, 0, 0]
+                          effect: "Solid Pattern"
+                        select.sovevaerelse_loft_preset:
+                          option: Night
                         light.sovevaerelse_loft_segment_1:
                           state: on
                           brightness: 5
@@ -462,13 +452,6 @@ automation:
                       entity_id: light.bedroom_tablet
                     data:
                       brightness: 1
-
-              - service: select.select_option
-                data:
-                  entity_id:
-                    - select.sovevaerelse_loft_preset
-                    - select.seng_hylder_preset
-                  option: Night
 
           - conditions:
               - condition: template
