@@ -1,0 +1,48 @@
+{%- macro room_group_active(room) -%}
+    {%- set activity_entity_ids = state_attr('group.'+room+'_activity_entities', 'entity_id') or [] -%}
+    {%- set motion_entity_ids = state_attr('group.'+room+'_motion_entities', 'entity_id') or [] -%}
+    {%- set entity_ids = activity_entity_ids + motion_entity_ids -%}
+    {%- set entity_states = entity_ids | map('states') | list -%}
+    {%- set on_states = [
+        'on',
+        'true',
+    ] -%}
+    {%- set active = entity_states | select('in', on_states) | list -%}
+    {{ active | length > 0 }}
+{%- endmacro -%}
+
+{%- macro room_activity_state(room) -%}
+    {%- if is_state('binary_sensor.'+room+'_activity', 'on') -%}
+        on
+    {%- elif is_state('binary_sensor.'+room+'_activity_predicted', 'on') -%}
+        predicted
+    {%- else -%}
+        off
+    {%- endif -%}
+{%- endmacro -%}
+
+{%- macro room_activity(room, force_off=false) -%}
+    {%- if is_state('input_boolean.'+room+'_activity_override', 'on') -%}
+        {{ 'true' if is_state('input_select.'+room+'_room_state', 'active') else 'false' }}
+    {%- elif bool(room_group_active(room), false) -%}
+        {%- if force_off -%}
+            false
+        {%- else -%}
+            true
+        {%- endif -%}
+    {%- else -%}
+        false
+    {%- endif -%}
+{%- endmacro -%}
+
+{%- macro room_state(room) -%}
+    {%- if is_state('input_boolean.'+room+'_activity_override', 'on') -%}
+        {{ states('input_select.'+room+'_room_state') }}
+    {%- elif is_state('binary_sensor.'+room+'_active', 'on') -%}
+        active
+    {%- elif is_state('binary_sensor.'+room+'_inactive', 'on') -%}
+        inactive
+    {%- else -%}
+        off
+    {%- endif -%}
+{%- endmacro -%}
