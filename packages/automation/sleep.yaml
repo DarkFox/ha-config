@@ -1020,6 +1020,34 @@ automation:
                   {% endif %}
               {% endfor %}
 
+  - alias: Turn on tablet extra dim on sleep
+    id: 10d61b0d-3f8e-40ea-8393-6058c79b189c
+    trigger:
+      - platform: state
+        entity_id: input_select.sleep_state
+        to:
+          - "in bed"
+          - "sleeping"
+    action:
+      - service: script.trigger_tasker_task
+        data:
+          action: notify.mobile_app_foxtablet
+          task_id: "SET_EXTRA_DIM"
+          extra_data: "state:true"
+
+  - alias: Turn off tablet extra dim on waking
+    id: 1e67b4e2-cae9-4942-b465-41381052fc4b
+    trigger:
+      - platform: state
+        entity_id: input_select.sleep_state
+        to: "waking"
+    action:
+      - service: script.trigger_tasker_task
+        data:
+          action: notify.mobile_app_foxtablet
+          task_id: "SET_EXTRA_DIM"
+          extra_data: "state:false"
+
   - id: turn_off_fan_on_sleep
     alias: turn_off_fan_on_sleep
     trigger:

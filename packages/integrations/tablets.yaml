@@ -31,6 +31,35 @@ script:
           seconds: 20
       - event: refresh_light_profile
 
+  trigger_tasker_task:
+    alias: "Trigger Tasker Task"
+    fields:
+      action:
+        description: The Mobile App to send the command to
+        example: "notify.mobile_app_foxtablet"
+        selector:
+          action:
+      task_id:
+        description: The Tasker task to trigger
+        example: "TASK_NAME"
+        selector:
+          text:
+      extra_data:
+        description: Extra data to send to Tasker
+        example: "KEY1=:=VALUE1;KEY2=:=VALUE2"
+        selector:
+          text:
+    sequence:
+      - service: "{{ action }}"
+        data:
+          message: "command_broadcast_intent"
+          data:
+            intent_package_name: "net.dinglisch.android.taskerm"
+            intent_action: "net.dinglisch.android.taskerm.{{ task_id }}"
+            intent_extras: "{{ extra_data if extra_data is defined else none }}"
+            ttl: 0
+            priority: high
+
 automation:
   - alias: charge_kitchen_tablet
     trigger:
