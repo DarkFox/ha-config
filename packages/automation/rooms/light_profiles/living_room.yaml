@@ -1,49 +1,4 @@
-group:
-  living_room_activity_entities:
-    name: Living Room Activity Entities
-    entities:
-      - binary_sensor.living_room_latest_motion
-      - binary_sensor.stue_shield_aktiv
-      - binary_sensor.quest_in_use_delayed
-      - input_boolean.bar_open
-
-  living_room_motion_entities:
-    name: Living Room Motion Entities
-    entities: &motion_entities
-      - binary_sensor.stue_motion
-      - binary_sensor.stue_tilstedevarelse_alle_zoner
-      - binary_sensor.stue_tilstedevarelse_bar
-      - binary_sensor.stue_tilstedevarelse_spisebord
-      - binary_sensor.stue_tilstedevarelse_sofa
-      - binary_sensor.stue_tilstedevarelse_altandor
-
-  living_room_extra_entities:
-    name: Living Room Extra Entities
-    entities:
-      - sensor.stue_gardin_position
-      - sensor.average_balcony_brightness
-
 automation:
-  - alias: Set Living Room Latest Motion
-    id: 8f82703e-c8ac-4280-bc4d-53e86c83e9bd
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *motion_entities
-        to: "on"
-    condition:
-      - condition: state
-        entity_id: vacuum.valetudo_roborocks5
-        state: "docked"
-      - condition: state
-        entity_id: person.martin
-        state: "home"
-    action:
-      service: input_select.select_option
-      data:
-        entity_id: input_select.latest_motion
-        option: "Living Room"
-
   - alias: activate_light_profile_living_room
     id: 0f9e2d9a-7d28-484c-a0de-6bef156ac906
     mode: restart
@@ -815,65 +770,12 @@ template:
           {%- from 'light_profile.jinja' import room_active_light_profile -%}
           {{ room_active_light_profile('living_room') }}
 
-      - name: "Living Room Activity State"
-        unique_id: 2a71154f-d7fd-41bd-bc83-dd641e4c2d1f
-        state: >-
-          {%- from 'light_profile.jinja' import room_activity_state -%}
-          {{ room_activity_state('living_room') }}
-
-      - name: "Living Room Room State"
-        unique_id: a44dbfea-79eb-464e-bf13-1002d073ea54
-        state: >-
-          {%- from 'light_profile.jinja' import room_state -%}
-          {{ room_state('living_room') }}
-
-  - binary_sensor:
-      - name: "Living Room Activity"
-        unique_id: 19b85710-348a-4efa-bfcb-68b20b64232e
-        state: >
-          {%- from 'light_profile.jinja' import room_activity -%}
-          {{ room_activity('living_room') }}
-
-      - name: "Living Room Active"
-        unique_id: d7fbcd3a-d465-46f2-bdd8-a0758a827bb4
-        state: >
-          {{ is_state('binary_sensor.living_room_activity', 'on') }}
-        delay_off:
-          minutes: 2
-
-      - name: "Living Room Inactive"
-        unique_id: 6e08a700-e0bf-4578-be6f-71252d00d78e
-        state: >-
-          {{ is_state('binary_sensor.living_room_activity', 'on') }}
-        delay_off:
-          minutes: 4
-
-      - name: "Living Room Latest Motion"
-        unique_id: fbe08d02-9bff-4233-a622-202d9f2d58f1
-        state: >-
-          {{ is_state('input_select.latest_motion', 'Living Room')}}
-
-      - name: "Stue Shield Aktiv"
-        unique_id: 301bea46-cd74-4f71-99fd-ba8e4c78983f
-        state: >-
-          {{ states('media_player.stue_shield') in ['playing', 'paused'] }}
-
 input_boolean:
-  living_room_activity_override:
-    icon: mdi:checkbox-multiple-marked
-    name: Livingroom Activity Override
   living_room_separate_light_profile:
     name: Living Room Separate Light Profile
     icon: mdi:heart-broken
 
 input_select:
-  living_room_room_state:
-    name: Livingroom State
-    options:
-      - active
-      - inactive
-      - "off"
-
   living_room_light_profile:
     name: living room Light Profile
     options:
@@ -887,19 +789,6 @@ input_select:
 light:
   - platform: template
     lights:
-      living_room_activity_override:
-        friendly_name: Light Living Room Activity Override
-        icon_template: mdi:checkbox-multiple-marked
-        value_template: "{{ is_state('input_boolean.living_room_activity_override', 'on') }}"
-        turn_on:
-          service: input_boolean.turn_on
-          data:
-            entity_id: input_boolean.living_room_activity_override
-        turn_off:
-          service: input_boolean.turn_off
-          data:
-            entity_id: input_boolean.living_room_activity_override
-
       living_room_separate_light_profile:
         friendly_name: Light Living Room Separate Light Profile
         icon_template: mdi:heart-broken

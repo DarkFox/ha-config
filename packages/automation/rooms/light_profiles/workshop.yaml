@@ -1,36 +1,4 @@
-group:
-  workshop_activity_entities:
-    name: Workshop Activity Entities
-    entities:
-      - binary_sensor.workshop_latest_motion
-
-  workshop_motion_entities:
-    name: Workshop Motion Entities
-    entities: &motion_entities
-      - binary_sensor.vaerksted_motion
-      - binary_sensor.vaerktoejsskab
-
 automation:
-  - alias: Set Workshop Latest Motion
-    id: ccf9375e-f45f-4845-927a-7dc0743e7c0c
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *motion_entities
-        to: "on"
-    condition:
-      - condition: state
-        entity_id: vacuum.valetudo_roborocks5
-        state: "docked"
-      - condition: state
-        entity_id: person.martin
-        state: "home"
-    action:
-      service: input_select.select_option
-      data:
-        entity_id: input_select.latest_motion
-        option: "Workshop"
-
   - alias: activate_light_profile_workshop
     id: b95904b0-7a60-4c6e-bdaf-1c6fe7a98df2
     mode: restart
@@ -193,60 +161,12 @@ template:
           {%- from 'light_profile.jinja' import room_active_light_profile -%}
           {{ room_active_light_profile('workshop') }}
 
-      - name: "Workshop Activity State"
-        unique_id: 109e9c38-d61f-4573-95bb-998e07ead06d
-        state: >-
-          {%- from 'light_profile.jinja' import room_activity_state -%}
-          {{ room_activity_state('workshop') }}
-
-      - name: "Workshop Room State"
-        unique_id: be88229d-f506-4323-b58e-f92dba3d4726
-        state: >-
-          {%- from 'light_profile.jinja' import room_state -%}
-          {{ room_state('workshop') }}
-
-  - binary_sensor:
-      - name: "Workshop Activity"
-        unique_id: 686bf4df-fd9f-44f3-8e18-f101c84eb1e7
-        state: >
-          {%- from 'light_profile.jinja' import room_activity -%}
-          {{ room_activity('workshop') }}
-
-      - name: "Workshop Active"
-        unique_id: cf4d0597-2bc4-4353-a3bc-494217bc26c3
-        state: >
-          {{ is_state('binary_sensor.workshop_activity', 'on') }}
-        delay_off:
-          minutes: 2
-
-      - name: "Workshop Inactive"
-        unique_id: aac8fc98-cac5-4693-a020-13736d6309d7
-        state: >-
-          {{ is_state('binary_sensor.workshop_activity', 'on') }}
-        delay_off:
-          minutes: 4
-
-      - name: "Workshop Latest Motion"
-        unique_id: 972a41e7-b510-4e54-a57a-9bd6d60041a6
-        state: >-
-          {{ is_state('input_select.latest_motion', 'Workshop')}}
-
 input_boolean:
-  workshop_activity_override:
-    icon: mdi:checkbox-multiple-marked
-    name: Workshop Activity Override
   workshop_separate_light_profile:
     name: Workshop Separate Light Profile
     icon: mdi:heart-broken
 
 input_select:
-  workshop_room_state:
-    name: Workshop State
-    options:
-      - active
-      - inactive
-      - "off"
-
   workshop_light_profile:
     name: Workshop Light Profile
     options:
@@ -260,19 +180,6 @@ input_select:
 light:
   - platform: template
     lights:
-      workshop_activity_override:
-        friendly_name: Light Workshop Activity Override
-        icon_template: mdi:checkbox-multiple-marked
-        value_template: "{{ is_state('input_boolean.workshop_activity_override', 'on') }}"
-        turn_on:
-          service: input_boolean.turn_on
-          data:
-            entity_id: input_boolean.workshop_activity_override
-        turn_off:
-          service: input_boolean.turn_off
-          data:
-            entity_id: input_boolean.workshop_activity_override
-
       workshop_separate_light_profile:
         friendly_name: Light Workshop Separate Light Profile
         icon_template: mdi:heart-broken

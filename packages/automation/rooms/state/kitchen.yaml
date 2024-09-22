@@ -1,0 +1,101 @@
+group:
+  kitchen_activity_entities:
+    name: Kitchen Activity Entities
+    entities:
+      - binary_sensor.kitchen_latest_motion
+
+  kitchen_motion_entities:
+    name: Kitchen Motion Entities
+    entities: &motion_entities
+      - binary_sensor.kokken_motion
+      - binary_sensor.kokken_bevaegelse
+
+automation:
+  - alias: Set Kitchen Latest Motion
+    id: 13ec133d-2e48-4b94-891b-7d3e08bc24a3
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: *motion_entities
+        to: "on"
+    condition:
+      - condition: state
+        entity_id: vacuum.valetudo_roborocks5
+        state: "docked"
+      - condition: state
+        entity_id: person.martin
+        state: "home"
+    action:
+      service: input_select.select_option
+      data:
+        entity_id: input_select.latest_motion
+        option: "Kitchen"
+
+template:
+  - sensor:
+      - name: "Kitchen Activity State"
+        unique_id: cfe7449d-eefd-4ac8-964d-86083ba04f8f
+        state: >-
+          {%- from 'light_profile.jinja' import room_activity_state -%}
+          {{ room_activity_state('kitchen') }}
+
+      - name: "Kitchen Room State"
+        unique_id: c9cf835b-7cab-4ec9-acd0-9184f8711d97
+        state: >-
+          {%- from 'light_profile.jinja' import room_state -%}
+          {{ room_state('kitchen') }}
+
+  - binary_sensor:
+      - name: "Kitchen Activity"
+        unique_id: d3549495-3a84-4ea6-8690-f9f03b0361d7
+        state: >
+          {%- from 'light_profile.jinja' import room_activity -%}
+          {{ room_activity('kitchen') }}
+
+      - name: "Kitchen Active"
+        unique_id: 9d903bbd-6034-453e-a19d-4f593340eb0d
+        state: >
+          {{ is_state('binary_sensor.kitchen_activity', 'on') }}
+        delay_off:
+          minutes: 2
+
+      - name: "Kitchen Inactive"
+        unique_id: 2ab35b42-8b18-48e3-aaac-6a996ec8b69a
+        state: >-
+          {{ is_state('binary_sensor.kitchen_activity', 'on') }}
+        delay_off:
+          minutes: 4
+
+      - name: "Kitchen Latest Motion"
+        unique_id: 867244c9-d681-4fc1-ad5e-0a0caaca6f71
+        state: >-
+          {{ is_state('input_select.latest_motion', 'Kitchen')}}
+
+input_boolean:
+  kitchen_activity_override:
+    icon: mdi:checkbox-multiple-marked
+    name: Kitchen Activity Override
+
+input_select:
+  kitchen_room_state:
+    name: Kitchen State
+    options:
+      - active
+      - inactive
+      - "off"
+
+light:
+  - platform: template
+    lights:
+      kitchen_activity_override:
+        friendly_name: Light Kitchen Activity Override
+        icon_template: mdi:checkbox-multiple-marked
+        value_template: "{{ is_state('input_boolean.kitchen_activity_override', 'on') }}"
+        turn_on:
+          service: input_boolean.turn_on
+          data:
+            entity_id: input_boolean.kitchen_activity_override
+        turn_off:
+          service: input_boolean.turn_off
+          data:
+            entity_id: input_boolean.kitchen_activity_override
