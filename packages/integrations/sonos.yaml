@@ -1,0 +1,337 @@
+script:
+  group_mute_toggle:
+    mode: parallel
+    fields:
+      group:
+        description: Group to mute or unmute
+        example: "stue"
+    variables:
+      group_members: "{{ state_attr('media_player.'+group, 'group_members') }}"
+      mute_states: >-
+        {% set group_members = state_attr('media_player.'+group, 'group_members') %}
+        [
+        {% for member in group_members %}
+          {{ state_attr(member, 'is_volume_muted') }}{{ ',' if not loop.last }}
+        {% endfor %}
+        ]
+      any_muted: "{{ mute_states | select('equalto', true) | list | length > 0 }}"
+    sequence:
+      - service: media_player.volume_mute
+        target:
+          entity_id: "{{ group_members }}"
+        data:
+          is_volume_muted: "{{ not any_muted }}"
+
+  join_unjoin_sonos_group:
+    mode: parallel
+    fields:
+      entity_id:
+        description: Media Player that will be joined or unjoined
+        example: media_player.stue
+      leader_entity_id:
+        description: Media Player that the entity will be joined to (optional, current group leader if not given)
+        example: media_player.stue
+    variables:
+      group_leader_entity: "{{ leader_entity_id or states('sensor.sonos_group_leader') }}"
+    sequence:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ (state_attr(entity_id, 'group_members')|length) > 1 }}"
+            sequence:
+              - service: media_player.unjoin
+                target:
+                  entity_id: "{{ entity_id }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ not not group_leader_entity }}"
+            sequence:
+              - service: media_player.join
+                target:
+                  entity_id: "{{ group_leader_entity }}"
+                data:
+                  group_members: >-
+                    {{ [entity_id] + state_attr(group_leader_entity, 'group_members') }}
+
+automation:
+  - id: adjust_speaker_group_volume
+    alias: Adjust Speaker Group Volume
+    mode: parallel
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id:
+          - input_number.stue_group_volume
+          - input_number.kokken_group_volume
+          - input_number.kontor_group_volume
+          - input_number.sovevaerelse_group_volume
+          - input_number.badevaerelse_group_volume
+          - input_number.roam_group_volume
+    action:
+      repeat:
+        for_each: "{{ state_attr((trigger.entity_id|replace('input_number','media_player')|replace('_group_volume', '')), 'group_members') }}"
+        sequence:
+          - service: media_player.volume_set
+            target:
+              entity_id: "{{ repeat.item }}"
+            data:
+              volume_level: "{{ trigger.to_state.state|int/100 }}"
+
+input_number:
+  stue_group_volume:
+    name: Stue Gruppe Lydstyrke
+    min: 0
+    max: 100
+    step: 1
+  kokken_group_volume:
+    name: Køkken Gruppe Lydstyrke
+    min: 0
+    max: 100
+    step: 1
+  kontor_group_volume:
+    name: Kontor Gruppe Lydstyrke
+    min: 0
+    max: 100
+    step: 1
+  sovevaerelse_group_volume:
+    name: Sovevaerelse Gruppe Lydstyrke
+    min: 0
+    max: 100
+    step: 1
+  badevaerelse_group_volume:
+    name: Badevaerelse Gruppe Lydstyrke
+    min: 0
+    max: 100
+    step: 1
+  roam_group_volume:
+    name: Roam Gruppe Lydstyrke
+    min: 0
+    max: 100
+    step: 1
+
+template:
+  - binary_sensor:
+      - name: Stue Group Leader
+        state: >-
+          {% set entity = 'media_player.stue' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {% if (group_members|length) > 1 %}
+            {{ group_members[0] == entity }}
+          {% else %}
+            {{ is_state(entity, 'playing') }}
+          {% endif %}
+
+      - name: Køkken Group Leader
+        state: >-
+          {% set entity = 'media_player.kokken' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {% if (group_members|length) > 1 %}
+            {{ group_members[0] == entity }}
+          {% else %}
+            {{ is_state(entity, 'playing') }}
+          {% endif %}
+
+      - name: Kontor Group Leader
+        state: >-
+          {% set entity = 'media_player.kontor' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {% if (group_members|length) > 1 %}
+            {{ group_members[0] == entity }}
+          {% else %}
+            {{ is_state(entity, 'playing') }}
+          {% endif %}
+
+      - name: Sovevaerelse Group Leader
+        state: >-
+          {% set entity = 'media_player.sovevaerelse' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {% if (group_members|length) > 1 %}
+            {{ group_members[0] == entity }}
+          {% else %}
+            {{ is_state(entity, 'playing') }}
+          {% endif %}
+
+      - name: Badevaerelse Group Leader
+        state: >-
+          {% set entity = 'media_player.badevaerelse' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {% if (group_members|length) > 1 %}
+            {{ group_members[0] == entity }}
+          {% else %}
+            {{ is_state(entity, 'playing') }}
+          {% endif %}
+
+      - name: Roam Group Leader
+        state: >-
+          {% set entity = 'media_player.roam' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {% if (group_members|length) > 1 %}
+            {{ group_members[0] == entity }}
+          {% else %}
+            {{ is_state(entity, 'playing') }}
+          {% endif %}
+
+  - sensor:
+      - name: Sonos Group Leader
+        state: >-
+          {% set entity = 'group.sonos_group_leaders' %}
+          {% set group_members = state_attr(entity, 'entity_id') %}
+          {% set ns = namespace(grouped=[],playing=[]) %}
+          {% for entity_id in group_members %}
+            {% set media_player_entity_id = 'media_player.'+entity_id|replace('binary_sensor.', '')|replace('_group_leader','') %}
+            {% if is_state(entity_id, 'on') %}
+              {% set ns.grouped = ns.grouped + [media_player_entity_id] %}
+            {% endif %}
+          {% endfor %}
+          {% for media_player_entity_id in ns.grouped %}
+            {% if is_state(media_player_entity_id, 'playing') %}
+              {% set ns.playing = ns.playing + [media_player_entity_id] %}
+            {% endif %}
+          {% endfor %}
+          {% if ns.playing|length > 0 or ns.grouped|length > 0 %}
+            {{ ns.playing[0] if (ns.playing|length) > 0 else ns.grouped[0] }}
+          {% endif %}
+
+      - name: Sonos Group Leader Room
+        state: "{{ states('sensor.sonos_group_leader').split('.')[1] if states('sensor.sonos_group_leader') not in ['unknown', 'unavailable', '', none] }}"
+
+      - name: Stue Speaker Lead By
+        state: >-
+          {% set entity = 'media_player.stue' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {{ group_members[0] }}
+
+      - name: Køkken Speaker Lead By
+        state: >-
+          {% set entity = 'media_player.kokken' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {{ group_members[0] }}
+
+      - name: Kontor Speaker Lead By
+        state: >-
+          {% set entity = 'media_player.kontor' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {{ group_members[0] }}
+
+      - name: Sovevaerelse Speaker Lead By
+        state: >-
+          {% set entity = 'media_player.sovevaerelse' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {{ group_members[0] }}
+
+      - name: Badevaerelse Speaker Lead By
+        state: >-
+          {% set entity = 'media_player.badevaerelse' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {{ group_members[0] }}
+
+      - name: Roam Speaker Lead By
+        state: >-
+          {% set entity = 'media_player.roam' %}
+          {% set group_members = state_attr(entity, 'group_members') %}
+          {{ group_members[0] }}
+
+      - name: Stue Speaker Group State
+        state: >-
+          {%- set room = 'stue' -%}
+          {%- if is_state('binary_sensor.'+room+'_group_leader', 'on') -%}
+            leader
+          {%- elif not is_state('sensor.'+room+'_speaker_lead_by', 'media_player.'+room) -%}
+            member
+          {%- else -%}
+            solo
+          {%- endif %} - {{ states('sensor.'+room+'_speaker_lead_by') }}
+
+      - name: Køkken Speaker Group State
+        state: >-
+          {%- set room = 'kokken' -%}
+          {%- if is_state('binary_sensor.'+room+'_group_leader', 'on') -%}
+            leader
+          {%- elif not is_state('sensor.'+room+'_speaker_lead_by', 'media_player.'+room) -%}
+            member
+          {%- else -%}
+            solo
+          {%- endif %} - {{ states('sensor.'+room+'_speaker_lead_by') }}
+
+      - name: Kontor Speaker Group State
+        state: >-
+          {%- set room = 'kontor' -%}
+          {%- if is_state('binary_sensor.'+room+'_group_leader', 'on') -%}
+            leader
+          {%- elif not is_state('sensor.'+room+'_speaker_lead_by', 'media_player.'+room) -%}
+            member
+          {%- else -%}
+            solo
+          {%- endif %} - {{ states('sensor.'+room+'_speaker_lead_by') }}
+
+      - name: Sovevaerelse Speaker Group State
+        state: >-
+          {%- set room = 'sovevaerelse' -%}
+          {%- if is_state('binary_sensor.'+room+'_group_leader', 'on') -%}
+            leader
+          {%- elif not is_state('sensor.'+room+'_speaker_lead_by', 'media_player.'+room) -%}
+            member
+          {%- else -%}
+            solo
+          {%- endif %} - {{ states('sensor.'+room+'_speaker_lead_by') }}
+
+      - name: Badevaerelse Speaker Group State
+        state: >-
+          {%- set room = 'badevaerelse' -%}
+          {%- if is_state('binary_sensor.'+room+'_group_leader', 'on') -%}
+            leader
+          {%- elif not is_state('sensor.'+room+'_speaker_lead_by', 'media_player.'+room) -%}
+            member
+          {%- else -%}
+            solo
+          {%- endif %} - {{ states('sensor.'+room+'_speaker_lead_by') }}
+
+      - name: Roam Speaker Group State
+        state: >-
+          {%- set room = 'roam' -%}
+          {%- if is_state('binary_sensor.'+room+'_group_leader', 'on') -%}
+            leader
+          {%- elif not is_state('sensor.'+room+'_speaker_lead_by', 'media_player.'+room) -%}
+            member
+          {%- else -%}
+            solo
+          {%- endif %} - {{ states('sensor.'+room+'_speaker_lead_by') }}
+
+      - name: Stue Speaker Entity Picture
+        state: "ok"
+        attributes:
+          entity_picture: >-
+            {% if is_state_attr('media_player.stue', 'source', 'TV') %}
+              {{ state_attr('media_player.stue_shield_adb', 'entity_picture') }}
+            {% else %}
+              {{ state_attr('media_player.stue', 'entity_picture') }}
+            {% endif %}
+
+      - name: Kontor Speaker Entity Picture
+        state: "ok"
+        attributes:
+          entity_picture: >-
+            {% if is_state_attr('media_player.kontor', 'source', 'TV') %}
+              {{ state_attr('media_player.kontor_shield_adb', 'entity_picture') }}
+            {% else %}
+              {{ state_attr('media_player.kontor', 'entity_picture') }}
+            {% endif %}
+
+group:
+  sonos_group_leaders:
+    entities:
+      - binary_sensor.badevaerelse_group_leader
+      - binary_sensor.kokken_group_leader
+      - binary_sensor.kontor_group_leader
+      - binary_sensor.roam_group_leader
+      - binary_sensor.sovevaerelse_group_leader
+      - binary_sensor.stue_group_leader
+  sonos:
+    name: Sonos Højttalere
+    entities:
+      - media_player.badevaerelse
+      - media_player.kokken
+      - media_player.kontor
+      - media_player.roam
+      - media_player.sovevaerelse
+      - media_player.stue
