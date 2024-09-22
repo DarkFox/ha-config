@@ -88,147 +88,99 @@ group:
       - binary_sensor.altan_bevaegelse
 
 automation:
-  - alias: activate_light_profile_balcony_bright
-    id: activate_light_profile_balcony_bright
+  - alias: activate_light_profile_balcony
+    id: cd9e9d2a-a821-4adb-b29c-8cb577077ded
     mode: restart
     initial_state: true
     trigger:
       - platform: state
-        entity_id: &room_light_profile sensor.balcony_active_light_profile
-        to: "Bright"
+        entity_id: sensor.balcony_active_light_profile
       - platform: event
         event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Bright"
+    variables:
+      profile: "{{ states('sensor.balcony_active_light_profile') }}"
     action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.altan:
-              state: on
-              brightness: 255
-              color_temp: 250
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Bright' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.altan:
+                      state: on
+                      brightness: 255
+                      color_temp: 250
 
-  - alias: activate_light_profile_balcony_default
-    id: activate_light_profile_balcony_default
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Default"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Default"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.altan:
-              state: on
-              brightness: 255
-              color_temp: 350
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Default' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.altan:
+                      state: on
+                      brightness: 255
+                      color_temp: 350
 
-  - alias: activate_light_profile_balcony_dimmed
-    id: activate_light_profile_balcony_dimmed
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Dimmed"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Dimmed"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.altan:
-              state: on
-              brightness: 128
-              color_temp: 500
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Dimmed' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.altan:
+                      state: on
+                      brightness: 128
+                      color_temp: 500
 
-  - alias: activate_light_profile_balcony_ambient
-    id: activate_light_profile_balcony_ambient
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Ambient"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Ambient"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.altan:
-              state: on
-              brightness: 128
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Ambient' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.altan:
+                      state: on
+                      brightness: 128
+                      hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
 
-  - alias: activate_light_profile_balcony_night
-    id: activate_light_profile_balcony_night
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Night"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Night"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.altan:
-              state: on
-              brightness: 2
-              rgb_color: [255, 0, 0]
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Night' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.altan:
+                      state: on
+                      brightness: 2
+                      rgb_color: [255, 0, 0]
 
-  - alias: activate_light_profile_balcony_off
-    id: activate_light_profile_balcony_off
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Off"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Off"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.altan:
-              state: off
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Off' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.altan:
+                      state: off
 
 input_boolean:
   balcony_activity_override:

@@ -119,426 +119,373 @@ automation:
         entity_id: input_select.latest_motion
         option: "Living Room"
 
-  - alias: activate_light_profile_living_room_bright
-    id: activate_light_profile_living_room_bright
+  - alias: activate_light_profile_living_room
+    id: 0f9e2d9a-7d28-484c-a0de-6bef156ac906
     mode: restart
     initial_state: true
     trigger:
       - platform: state
-        entity_id: &room_light_profile sensor.living_room_active_light_profile
-        to: "Bright"
+        entity_id: sensor.living_room_active_light_profile
       - platform: event
         event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Bright"
+    variables:
+      profile: "{{ states('sensor.living_room_active_light_profile') }}"
     action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            group.living_room_lights:
-              state: on
-              brightness: 255
-              color_temp: 250
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Bright' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    group.living_room_lights:
+                      state: on
+                      brightness: 255
+                      color_temp: 250
 
-  - alias: activate_light_profile_living_room_default
-    id: activate_light_profile_living_room_default
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Default"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Default"
-    action:
-      - service: script.turn_on
-        target:
-          entity_id: script.hue_scene_or_light_profile
-        data:
-          variables:
-            room: Stue
-            scene: "{{ states('sensor.theme') }}"
-            fallback_scene:
-              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-              entities:
-                light.stue_spots:
-                  state: on
-                  brightness: 128
-                  color_temp: 430
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Default' }}"
+            sequence:
+              - service: script.turn_on
+                target:
+                  entity_id: script.hue_scene_or_light_profile
+                data:
+                  variables:
+                    room: Stue
+                    scene: "{{ states('sensor.theme') }}"
+                    fallback_scene:
+                      transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                      entities:
+                        light.stue_spots:
+                          state: on
+                          brightness: 128
+                          color_temp: 430
 
-                light.sofa_laeselampe:
-                  state: on
-                  brightness: 172
-                  color_temp: 390
+                        light.sofa_laeselampe:
+                          state: on
+                          brightness: 172
+                          color_temp: 390
 
-                light.sofalampe:
-                  state: on
-                  brightness: 128
-                  color_temp: 430
+                        light.sofalampe:
+                          state: on
+                          brightness: 128
+                          color_temp: 430
 
-                light.skaenk_lampe:
-                  state: on
-                  brightness: 128
-                  color_temp: 430
+                        light.skaenk_lampe:
+                          state: on
+                          brightness: 128
+                          color_temp: 430
 
-                light.sofa_uplight:
-                  state: on
-                  brightness: 255
-                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                        light.sofa_uplight:
+                          state: on
+                          brightness: 255
+                          hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
 
-                light.globe:
-                  state: on
-                  brightness: 192
-                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+                        light.globe:
+                          state: on
+                          brightness: 192
+                          hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
 
-                light.stue_tv:
-                  state: on
-                  brightness: 192
-                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                        light.stue_tv:
+                          state: on
+                          brightness: 192
+                          hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
 
-                light.stue_tv_bund:
-                  state: on
-                  brightness: 255
-                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+                        light.stue_tv_bund:
+                          state: on
+                          brightness: 255
+                          hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
 
-      - service: script.turn_on
-        target:
-          entity_id: script.wled_preset_or_light_profile
-        data:
-          variables:
-            preset: "{{ states('sensor.theme') }}"
-            entities:
-              light.stue_gardinstang:
-                state: on
-                brightness: 96
-                hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
-                effect: "Solid"
-              light.tv_mobel:
-                state: on
-                brightness: 127
-                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-                effect: "Solid"
-              light.stue_skaenk_gulv:
-                state: on
-                brightness: 127
-                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-                effect: "Solid"
+              - service: script.turn_on
+                target:
+                  entity_id: script.wled_preset_or_light_profile
+                data:
+                  variables:
+                    preset: "{{ states('sensor.theme') }}"
+                    entities:
+                      light.stue_gardinstang:
+                        state: on
+                        brightness: 96
+                        hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
+                        effect: "Solid"
+                      light.tv_mobel:
+                        state: on
+                        brightness: 127
+                        hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                        effect: "Solid"
+                      light.stue_skaenk_gulv:
+                        state: on
+                        brightness: 127
+                        hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                        effect: "Solid"
 
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.stue_skaenk:
-              state: on
-              brightness: 128
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-              effect: "{{ states('sensor.theme') if states('sensor.theme') is in state_attr('light.stue_skaenk', 'effect_list') else '' }}"
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.stue_skaenk:
+                      state: on
+                      brightness: 128
+                      hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                      effect: "{{ states('sensor.theme') if states('sensor.theme') is in state_attr('light.stue_skaenk', 'effect_list') else '' }}"
 
-  - alias: activate_light_profile_living_room_dimmed
-    id: activate_light_profile_living_room_dimmed
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Dimmed"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Dimmed"
-    action:
-      - service: script.turn_on
-        target:
-          entity_id: script.hue_scene_or_light_profile
-        data:
-          variables:
-            room: Stue
-            scene: "{{ states('sensor.theme') }}"
-            fallback_scene:
-              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-              entities:
-                light.globe:
-                  state: on
-                  brightness: 127
-                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Dimmed' }}"
+            sequence:
+              - service: script.turn_on
+                target:
+                  entity_id: script.hue_scene_or_light_profile
+                data:
+                  variables:
+                    room: Stue
+                    scene: "{{ states('sensor.theme') }}"
+                    fallback_scene:
+                      transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                      entities:
+                        light.globe:
+                          state: on
+                          brightness: 127
+                          hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
 
-                light.sofa_laeselampe:
-                  state: on
-                  brightness: 76
-                  color_temp: 454
+                        light.sofa_laeselampe:
+                          state: on
+                          brightness: 76
+                          color_temp: 454
 
-                light.sofa_uplight:
-                  state: on
-                  brightness: 172
-                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                        light.sofa_uplight:
+                          state: on
+                          brightness: 172
+                          hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
 
-                light.sofalampe:
-                  state: on
-                  brightness: 76
-                  color_temp: 454
+                        light.sofalampe:
+                          state: on
+                          brightness: 76
+                          color_temp: 454
 
-                light.skaenk_lampe:
-                  state: on
-                  brightness: 76
-                  color_temp: 454
+                        light.skaenk_lampe:
+                          state: on
+                          brightness: 76
+                          color_temp: 454
 
-                light.stue_spot_1:
-                  state: on
-                  brightness: 127
-                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+                        light.stue_spot_1:
+                          state: on
+                          brightness: 127
+                          hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
 
-                light.stue_spot_2:
-                  state: on
-                  brightness: 127
-                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+                        light.stue_spot_2:
+                          state: on
+                          brightness: 127
+                          hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
 
-                light.stue_spot_3:
-                  state: on
-                  brightness: 76
-                  color_temp: 454
+                        light.stue_spot_3:
+                          state: on
+                          brightness: 76
+                          color_temp: 454
 
-                light.stue_tv:
-                  state: on
-                  brightness: 127
-                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                        light.stue_tv:
+                          state: on
+                          brightness: 127
+                          hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
 
-                light.stue_tv_bund:
-                  state: on
-                  brightness: 127
-                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+                        light.stue_tv_bund:
+                          state: on
+                          brightness: 127
+                          hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
 
-      - service: script.turn_on
-        target:
-          entity_id: script.wled_preset_or_light_profile
-        data:
-          variables:
-            preset: "{{ states('sensor.theme') }}"
-            entities:
-              light.stue_gardinstang:
-                state: on
-                brightness: 48
-                hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
-                effect: "Solid"
-              light.tv_mobel:
-                state: on
-                brightness: 48
-                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-                effect: "Solid"
-              light.stue_skaenk_gulv:
-                state: on
-                brightness: 64
-                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-                effect: "Solid"
+              - service: script.turn_on
+                target:
+                  entity_id: script.wled_preset_or_light_profile
+                data:
+                  variables:
+                    preset: "{{ states('sensor.theme') }}"
+                    entities:
+                      light.stue_gardinstang:
+                        state: on
+                        brightness: 48
+                        hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
+                        effect: "Solid"
+                      light.tv_mobel:
+                        state: on
+                        brightness: 48
+                        hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                        effect: "Solid"
+                      light.stue_skaenk_gulv:
+                        state: on
+                        brightness: 64
+                        hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                        effect: "Solid"
 
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.stue_skaenk:
-              state: on
-              brightness: 64
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-              effect: "{{ states('sensor.theme') if states('sensor.theme') is in state_attr('light.stue_skaenk', 'effect_list') else '' }}"
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.stue_skaenk:
+                      state: on
+                      brightness: 64
+                      hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                      effect: "{{ states('sensor.theme') if states('sensor.theme') is in state_attr('light.stue_skaenk', 'effect_list') else '' }}"
 
-  - alias: activate_light_profile_living_room_ambient
-    id: activate_light_profile_living_room_ambient
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Ambient"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Ambient"
-    action:
-      - service: script.turn_on
-        target:
-          entity_id: script.hue_scene_or_light_profile
-        data:
-          variables:
-            room: Stue
-            scene: "{{ states('sensor.theme') }}"
-            fallback_scene:
-              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-              entities:
-                light.stue_spots:
-                  state: off
-                light.sofa_laeselampe:
-                  state: on
-                  brightness: 32
-                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Ambient' }}"
+            sequence:
+              - service: script.turn_on
+                target:
+                  entity_id: script.hue_scene_or_light_profile
+                data:
+                  variables:
+                    room: Stue
+                    scene: "{{ states('sensor.theme') }}"
+                    fallback_scene:
+                      transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                      entities:
+                        light.stue_spots:
+                          state: off
+                        light.sofa_laeselampe:
+                          state: on
+                          brightness: 32
+                          hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
 
-                light.sofa_uplight:
-                  state: on
-                  brightness: 86
-                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                        light.sofa_uplight:
+                          state: on
+                          brightness: 86
+                          hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
 
-                light.sofalampe:
-                  state: on
-                  brightness: 32
-                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+                        light.sofalampe:
+                          state: on
+                          brightness: 32
+                          hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
 
-                light.skaenk_lampe:
-                  state: on
-                  brightness: 32
-                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                        light.skaenk_lampe:
+                          state: on
+                          brightness: 32
+                          hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
 
-                light.globe:
-                  state: on
-                  brightness: 32
-                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+                        light.globe:
+                          state: on
+                          brightness: 32
+                          hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
 
-                light.stue_tv:
-                  state: on
-                  brightness: 32
-                  hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                        light.stue_tv:
+                          state: on
+                          brightness: 32
+                          hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
 
-                light.stue_tv_bund:
-                  state: on
-                  brightness: 32
-                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+                        light.stue_tv_bund:
+                          state: on
+                          brightness: 32
+                          hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
 
-      - service: script.turn_on
-        target:
-          entity_id: script.wled_preset_or_light_profile
-        data:
-          variables:
-            preset: "{{ states('sensor.theme') }}"
-            entities:
-              light.stue_gardinstang:
-                state: on
-                brightness: 16
-                hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
-                effect: "Solid"
-              light.tv_mobel:
-                state: on
-                brightness: 8
-                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-                effect: "Solid"
-              light.stue_skaenk_gulv:
-                state: on
-                brightness: 8
-                hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-                effect: "Solid"
+              - service: script.turn_on
+                target:
+                  entity_id: script.wled_preset_or_light_profile
+                data:
+                  variables:
+                    preset: "{{ states('sensor.theme') }}"
+                    entities:
+                      light.stue_gardinstang:
+                        state: on
+                        brightness: 16
+                        hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
+                        effect: "Solid"
+                      light.tv_mobel:
+                        state: on
+                        brightness: 8
+                        hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                        effect: "Solid"
+                      light.stue_skaenk_gulv:
+                        state: on
+                        brightness: 8
+                        hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                        effect: "Solid"
 
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.stue_skaenk:
-              state: on
-              brightness: 16
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-              effect: "{{ states('sensor.theme') if states('sensor.theme') is in state_attr('light.stue_skaenk', 'effect_list') else '' }}"
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.stue_skaenk:
+                      state: on
+                      brightness: 16
+                      hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                      effect: "{{ states('sensor.theme') if states('sensor.theme') is in state_attr('light.stue_skaenk', 'effect_list') else '' }}"
 
-  - alias: activate_light_profile_living_room_night
-    id: activate_light_profile_living_room_night
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Night"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Night"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.globe:
-              state: on
-              brightness: 12
-              rgb_color: [255, 0, 0]
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Night' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.globe:
+                      state: on
+                      brightness: 12
+                      rgb_color: [255, 0, 0]
 
-            light.tv_mobel:
-              state: on
-              brightness: 4
-              rgb_color: [255, 0, 0]
-              effect: "Solid"
-            light.stue_gardinstang:
-              state: on
-              brightness: 6
-              rgb_color: [255, 0, 0]
-              effect: "Solid"
-            light.sofa_laeselampe:
-              state: on
-              brightness: 12
-              rgb_color: [255, 0, 0]
+                    light.tv_mobel:
+                      state: on
+                      brightness: 4
+                      rgb_color: [255, 0, 0]
+                      effect: "Solid"
+                    light.stue_gardinstang:
+                      state: on
+                      brightness: 6
+                      rgb_color: [255, 0, 0]
+                      effect: "Solid"
+                    light.sofa_laeselampe:
+                      state: on
+                      brightness: 12
+                      rgb_color: [255, 0, 0]
 
-            light.sofa_uplight:
-              state: on
-              brightness: 12
-              rgb_color: [255, 0, 0]
+                    light.sofa_uplight:
+                      state: on
+                      brightness: 12
+                      rgb_color: [255, 0, 0]
 
-            light.stue_spots:
-              state: off
-            light.sofalampe:
-              state: on
-              brightness: 2
-              rgb_color: [255, 0, 0]
+                    light.stue_spots:
+                      state: off
+                    light.sofalampe:
+                      state: on
+                      brightness: 2
+                      rgb_color: [255, 0, 0]
 
-            light.skaenk_lampe:
-              state: on
-              brightness: 2
-              rgb_color: [255, 0, 0]
+                    light.skaenk_lampe:
+                      state: on
+                      brightness: 2
+                      rgb_color: [255, 0, 0]
 
-            light.stue_skaenk_gulv:
-              state: on
-              brightness: 4
-              rgb_color: [255, 0, 0]
-              effect: "Solid"
-            light.stue_tv:
-              state: on
-              brightness: 2
-              rgb_color: [255, 0, 0]
+                    light.stue_skaenk_gulv:
+                      state: on
+                      brightness: 4
+                      rgb_color: [255, 0, 0]
+                      effect: "Solid"
+                    light.stue_tv:
+                      state: on
+                      brightness: 2
+                      rgb_color: [255, 0, 0]
 
-            light.stue_tv_bund:
-              state: on
-              brightness: 2
-              rgb_color: [255, 0, 0]
+                    light.stue_tv_bund:
+                      state: on
+                      brightness: 2
+                      rgb_color: [255, 0, 0]
 
-            light.stue_skaenk:
-              state: on
-              brightness: 8
-              rgb_color: [255, 0, 0]
+                    light.stue_skaenk:
+                      state: on
+                      brightness: 8
+                      rgb_color: [255, 0, 0]
 
-  - alias: activate_light_profile_living_room_off
-    id: activate_light_profile_living_room_off
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Off"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Off"
-    action:
-      - service: light.turn_off
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entity_id: group.living_room_lights
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Off' }}"
+            sequence:
+              - service: light.turn_off
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entity_id: group.living_room_lights
 
   - alias: activate_light_profile_living_room_dining_table
     id: activate_light_profile_living_room_dining_table
@@ -546,7 +493,7 @@ automation:
     initial_state: true
     trigger:
       - platform: state
-        entity_id: *room_light_profile
+        entity_id: sensor.living_room_active_light_profile
       - platform: state
         entity_id: binary_sensor.stue_tilstedevarelse_spisebord
         to: "on"
@@ -573,7 +520,7 @@ automation:
     initial_state: true
     trigger:
       - platform: state
-        entity_id: *room_light_profile
+        entity_id: sensor.living_room_active_light_profile
       - platform: state
         entity_id: input_boolean.bar_open
       - platform: state

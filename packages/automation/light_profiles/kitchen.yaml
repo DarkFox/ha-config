@@ -101,275 +101,222 @@ automation:
         entity_id: input_select.latest_motion
         option: "Kitchen"
 
-  - alias: activate_light_profile_kitchen_bright
-    id: activate_light_profile_kitchen_bright
+  - alias: activate_light_profile_kitchen
+    id: df388f52-33fe-4ab4-82ae-4690df1d906c
     mode: restart
     initial_state: true
     trigger:
       - platform: state
-        entity_id: &room_light_profile sensor.kitchen_active_light_profile
-        to: "Bright"
+        entity_id: sensor.kitchen_active_light_profile
       - platform: event
         event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Bright"
+    variables:
+      profile: "{{ states('sensor.kitchen_active_light_profile') }}"
     action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.kokken_loftlampe:
-              state: on
-              brightness: 255
-              color_temp: 250
-            light.emhaette:
-              state: on
-              brightness: 255
-            light.kokkenbord:
-              state: on
-              brightness: 255
-              color_temp: 250
-            light.kokken_spots:
-              state: on
-              brightness: 255
-              color_temp: 250
-            light.kitchen_tablet:
-              state: on
-              brightness: 255
-            light.lyskaede:
-              state: on
-              brightness: 255
-              effect: "None"
-      - delay:
-          seconds: "{{ (states('input_number.scene_transition_time') or 1) | round(0, 'ceil')+2}}"
-      - service: light.turn_on
-        data:
-          transition: 0
-          kelvin: 3500
-          entity_id:
-            - light.emhaette
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Bright' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.kokken_loftlampe:
+                      state: on
+                      brightness: 255
+                      color_temp: 250
+                    light.emhaette:
+                      state: on
+                      brightness: 255
+                    light.kokkenbord:
+                      state: on
+                      brightness: 255
+                      color_temp: 250
+                    light.kokken_spots:
+                      state: on
+                      brightness: 255
+                      color_temp: 250
+                    light.kitchen_tablet:
+                      state: on
+                      brightness: 255
+                    light.lyskaede:
+                      state: on
+                      brightness: 255
+                      effect: "None"
+              - delay:
+                  seconds: "{{ (states('input_number.scene_transition_time') or 1) | round(0, 'ceil')+2}}"
+              - service: light.turn_on
+                data:
+                  transition: 0
+                  kelvin: 3500
+                  entity_id:
+                    - light.emhaette
 
-  - alias: activate_light_profile_kitchen_default
-    id: activate_light_profile_kitchen_default
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Default"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Default"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.kokken_loftlampe:
-              state: on
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Default' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.kokken_loftlampe:
+                      state: on
 
-              brightness: 127
-              color_temp: 325
-            light.emhaette:
-              state: on
-              brightness: 255
-            light.kokkenbord:
-              state: on
-              brightness: 200
-              color_temp: 325
-            light.kokken_spots:
-              state: on
-              brightness: 200
-              color_temp: 325
-            light.kitchen_tablet:
-              state: on
-              brightness: 172
-            light.lyskaede:
-              state: on
-              brightness: 255
-              effect: "None"
-      - delay:
-          seconds: "{{ (states('input_number.scene_transition_time') or 1) | round(0, 'ceil')+2}}"
-      - service: light.turn_on
-        data:
-          transition: 0
-          kelvin: 3500
-          entity_id:
-            - light.emhaette
+                      brightness: 127
+                      color_temp: 325
+                    light.emhaette:
+                      state: on
+                      brightness: 255
+                    light.kokkenbord:
+                      state: on
+                      brightness: 200
+                      color_temp: 325
+                    light.kokken_spots:
+                      state: on
+                      brightness: 200
+                      color_temp: 325
+                    light.kitchen_tablet:
+                      state: on
+                      brightness: 172
+                    light.lyskaede:
+                      state: on
+                      brightness: 255
+                      effect: "None"
+              - delay:
+                  seconds: "{{ (states('input_number.scene_transition_time') or 1) | round(0, 'ceil')+2}}"
+              - service: light.turn_on
+                data:
+                  transition: 0
+                  kelvin: 3500
+                  entity_id:
+                    - light.emhaette
 
-  - alias: activate_light_profile_kitchen_dimmed
-    id: activate_light_profile_kitchen_dimmed
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Dimmed"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Dimmed"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.kokken_loftlampe:
-              state: on
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Dimmed' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.kokken_loftlampe:
+                      state: on
 
-              brightness: 72
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-            light.emhaette:
-              state: on
-              brightness: 72
-              color_temp: 400
-            light.kokkenbord:
-              state: on
-              brightness: 72
-              color_temp: 400
-            light.kokken_spots:
-              state: on
-              brightness: 72
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-            light.kitchen_tablet:
-              state: on
-              brightness: 127
-            light.lyskaede:
-              state: on
-              brightness: 127
-              effect: "None"
-      - delay:
-          seconds: "{{ (states('input_number.scene_transition_time') or 1) | round(0, 'ceil')+2}}"
-      - service: light.turn_on
-        data:
-          transition: 0
-          color_temp: 400
-          entity_id:
-            - light.emhaette
+                      brightness: 72
+                      hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                    light.emhaette:
+                      state: on
+                      brightness: 72
+                      color_temp: 400
+                    light.kokkenbord:
+                      state: on
+                      brightness: 72
+                      color_temp: 400
+                    light.kokken_spots:
+                      state: on
+                      brightness: 72
+                      hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                    light.kitchen_tablet:
+                      state: on
+                      brightness: 127
+                    light.lyskaede:
+                      state: on
+                      brightness: 127
+                      effect: "None"
+              - delay:
+                  seconds: "{{ (states('input_number.scene_transition_time') or 1) | round(0, 'ceil')+2}}"
+              - service: light.turn_on
+                data:
+                  transition: 0
+                  color_temp: 400
+                  entity_id:
+                    - light.emhaette
 
-  - alias: activate_light_profile_kitchen_ambient
-    id: activate_light_profile_kitchen_ambient
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Ambient"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Ambient"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.kokken_loftlampe:
-              state: on
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Ambient' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.kokken_loftlampe:
+                      state: on
 
-              brightness: 48
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-            light.emhaette:
-              state: on
-              brightness: 48
-            light.kokkenbord:
-              state: on
-              brightness: 48
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-            light.kokken_spots:
-              state: on
-              brightness: 48
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-            light.kitchen_tablet:
-              state: on
-              brightness: 72
-            light.lyskaede:
-              state: on
-              brightness: 72
-              effect: "None"
-      - delay:
-          seconds: "{{ (states('input_number.scene_transition_time') or 1) | round(0, 'ceil')+2}}"
-      - service: light.turn_on
-        data:
-          transition: 0
-          color_temp: 400
-          entity_id:
-            - light.emhaette
+                      brightness: 48
+                      hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                    light.emhaette:
+                      state: on
+                      brightness: 48
+                    light.kokkenbord:
+                      state: on
+                      brightness: 48
+                      hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+                    light.kokken_spots:
+                      state: on
+                      brightness: 48
+                      hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                    light.kitchen_tablet:
+                      state: on
+                      brightness: 72
+                    light.lyskaede:
+                      state: on
+                      brightness: 72
+                      effect: "None"
+              - delay:
+                  seconds: "{{ (states('input_number.scene_transition_time') or 1) | round(0, 'ceil')+2}}"
+              - service: light.turn_on
+                data:
+                  transition: 0
+                  color_temp: 400
+                  entity_id:
+                    - light.emhaette
 
-  - alias: activate_light_profile_kitchen_night
-    id: activate_light_profile_kitchen_night
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Night"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Night"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.kokken_loftlampe:
-              state: on
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Night' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.kokken_loftlampe:
+                      state: on
 
-              brightness: 2
-              rgb_color: [255, 0, 0]
-            light.emhaette:
-              state: off
-            light.kokkenbord:
-              state: on
-              brightness: 8
-              rgb_color: [255, 0, 0]
-            light.kokken_spots:
-              state: on
-              brightness: 16
-              rgb_color: [255, 0, 0]
-            light.kitchen_tablet:
-              state: on
-              brightness: 1
-            light.lyskaede:
-              state: on
-              brightness: 24
-              effect: "None"
+                      brightness: 2
+                      rgb_color: [255, 0, 0]
+                    light.emhaette:
+                      state: off
+                    light.kokkenbord:
+                      state: on
+                      brightness: 8
+                      rgb_color: [255, 0, 0]
+                    light.kokken_spots:
+                      state: on
+                      brightness: 16
+                      rgb_color: [255, 0, 0]
+                    light.kitchen_tablet:
+                      state: on
+                      brightness: 1
+                    light.lyskaede:
+                      state: on
+                      brightness: 24
+                      effect: "None"
 
-  - alias: activate_light_profile_kitchen_off
-    id: activate_light_profile_kitchen_off
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Off"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Off"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            group.kitchen_lights:
-              state: off
-            light.kitchen_tablet:
-              state: off
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Off' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    group.kitchen_lights:
+                      state: off
+                    light.kitchen_tablet:
+                      state: off
 
 input_boolean:
   kitchen_activity_override:

@@ -101,188 +101,135 @@ automation:
         entity_id: input_select.latest_motion
         option: "Workshop"
 
-  - alias: activate_light_profile_workshop_bright
-    id: activate_light_profile_workshop_bright
+  - alias: activate_light_profile_workshop
+    id: b95904b0-7a60-4c6e-bdaf-1c6fe7a98df2
     mode: restart
     initial_state: true
     trigger:
       - platform: state
-        entity_id: &room_light_profile sensor.workshop_active_light_profile
-        to: "Bright"
+        entity_id: sensor.workshop_active_light_profile
       - platform: event
         event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Bright"
+    variables:
+      profile: "{{ states('sensor.workshop_active_light_profile') }}"
     action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.vaerksted_loftlampe:
-              state: on
-              brightness: 255
-              color_temp: 250
-            light.hobbybord_bord:
-              state: on
-              brightness: 255
-              effect: "None"
-            light.hobbybord_vaerktojsskab:
-              state: on
-              brightness: 255
-              effect: "None"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Bright' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.vaerksted_loftlampe:
+                      state: on
+                      brightness: 255
+                      color_temp: 250
+                    light.hobbybord_bord:
+                      state: on
+                      brightness: 255
+                      effect: "None"
+                    light.hobbybord_vaerktojsskab:
+                      state: on
+                      brightness: 255
+                      effect: "None"
 
-  - alias: activate_light_profile_workshop_default
-    id: activate_light_profile_workshop_default
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Default"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Default"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.vaerksted_loftlampe:
-              state: on
-              brightness: 255
-              color_temp: 250
-            light.hobbybord_bord:
-              state: on
-              brightness: 255
-              effect: "None"
-            light.hobbybord_vaerktojsskab:
-              state: on
-              brightness: 255
-              effect: "None"
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Default' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.vaerksted_loftlampe:
+                      state: on
+                      brightness: 255
+                      color_temp: 250
+                    light.hobbybord_bord:
+                      state: on
+                      brightness: 255
+                      effect: "None"
+                    light.hobbybord_vaerktojsskab:
+                      state: on
+                      brightness: 255
+                      effect: "None"
 
-  - alias: activate_light_profile_workshop_dimmed
-    id: activate_light_profile_workshop_dimmed
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Dimmed"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Dimmed"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.vaerksted_loftlampe:
-              state: on
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Dimmed' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.vaerksted_loftlampe:
+                      state: on
 
-              brightness: 72
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-            light.hobbybord_bord:
-              state: on
-              brightness: 48
-              effect: "None"
-            light.hobbybord_vaerktojsskab:
-              state: on
-              brightness: 48
-              effect: "None"
+                      brightness: 72
+                      hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                    light.hobbybord_bord:
+                      state: on
+                      brightness: 48
+                      effect: "None"
+                    light.hobbybord_vaerktojsskab:
+                      state: on
+                      brightness: 48
+                      effect: "None"
 
-  - alias: activate_light_profile_workshop_ambient
-    id: activate_light_profile_workshop_ambient
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Ambient"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Ambient"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.vaerksted_loftlampe:
-              state: on
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Ambient' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.vaerksted_loftlampe:
+                      state: on
 
-              brightness: 48
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
-            light.hobbybord_bord:
-              state: on
-              brightness: 36
-              effect: "None"
-            light.hobbybord_vaerktojsskab:
-              state: on
-              brightness: 36
-              effect: "None"
+                      brightness: 48
+                      hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                    light.hobbybord_bord:
+                      state: on
+                      brightness: 36
+                      effect: "None"
+                    light.hobbybord_vaerktojsskab:
+                      state: on
+                      brightness: 36
+                      effect: "None"
 
-  - alias: activate_light_profile_workshop_night
-    id: activate_light_profile_workshop_night
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Night"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Night"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.vaerksted_loftlampe:
-              state: on
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Night' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.vaerksted_loftlampe:
+                      state: on
 
-              brightness: 2
-              rgb_color: [255, 0, 0]
-            light.hobbybord_bord:
-              state: on
-              brightness: 8
-              effect: "None"
-            light.hobbybord_vaerktojsskab:
-              state: off
+                      brightness: 2
+                      rgb_color: [255, 0, 0]
+                    light.hobbybord_bord:
+                      state: on
+                      brightness: 8
+                      effect: "None"
+                    light.hobbybord_vaerktojsskab:
+                      state: off
 
-  - alias: activate_light_profile_workshop_off
-    id: activate_light_profile_workshop_off
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Off"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Off"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.vaerksted_lys:
-              state: off
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Off' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.vaerksted_lys:
+                      state: off
 
 input_boolean:
   workshop_activity_override:

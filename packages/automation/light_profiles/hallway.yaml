@@ -78,270 +78,218 @@ group:
       - binary_sensor.gang_badevaerelse_bevaegelse
 
 automation:
-  - alias: activate_light_profile_hallway_bright
-    id: activate_light_profile_hallway_bright
+  - alias: activate_light_profile_hallway
+    id: b586de7c-ccd2-4714-86a6-ae75a946f913
     mode: restart
     initial_state: true
     trigger:
       - platform: state
-        entity_id: &room_light_profile sensor.hallway_active_light_profile
-        to: "Bright"
+        entity_id: sensor.hallway_active_light_profile
       - platform: event
         event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Bright"
+    variables:
+      profile: "{{ states('sensor.hallway_active_light_profile') }}"
     action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.gang_loftlampe:
-              state: on
-              brightness: 255
-              color_temp: 256
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Bright' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.gang_loftlampe:
+                      state: on
+                      brightness: 255
+                      color_temp: 256
 
-            light.gang_spots:
-              state: on
-              brightness: 255
-              color_temp: 256
+                    light.gang_spots:
+                      state: on
+                      brightness: 255
+                      color_temp: 256
 
-            light.skoskab:
-              state: on
-              brightness: 255
-              color_temp: 256
-              effect: "Solid"
-            light.gang_kommode:
-              state: on
-              brightness: 255
-              color_temp: 256
-              effect: "None"
-            light.gang_skab:
-              state: on
-              brightness: 255
-              color_temp: 256
-              effect: "Solid"
-            light.hallway_tablet:
-              state: on
-              brightness: 255
-  - alias: activate_light_profile_hallway_default
-    id: activate_light_profile_hallway_default
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Default"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Default"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.gang_loftlampe:
-              state: on
-              brightness: 255
-              color_temp: 330
+                    light.skoskab:
+                      state: on
+                      brightness: 255
+                      color_temp: 256
+                      effect: "Solid"
+                    light.gang_kommode:
+                      state: on
+                      brightness: 255
+                      color_temp: 256
+                      effect: "None"
+                    light.gang_skab:
+                      state: on
+                      brightness: 255
+                      color_temp: 256
+                      effect: "Solid"
+                    light.hallway_tablet:
+                      state: on
+                      brightness: 255
 
-            light.gang_spots:
-              state: on
-              brightness: 255
-              color_temp: 330
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Default' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.gang_loftlampe:
+                      state: on
+                      brightness: 255
+                      color_temp: 330
 
-            light.skoskab:
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.gang_kommode:
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "None"
-            light.gang_skab:
-              state: on
-              brightness: 172
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.hallway_tablet:
-              state: on
-              brightness: 172
+                    light.gang_spots:
+                      state: on
+                      brightness: 255
+                      color_temp: 330
 
-  - alias: activate_light_profile_hallway_dimmed
-    id: activate_light_profile_hallway_dimmed
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Dimmed"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Dimmed"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.gang_loftlampe:
-              state: on
-              brightness: 127
-              color_temp: 330
+                    light.skoskab:
+                      state: on
+                      brightness: 255
+                      hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                      effect: "Solid"
+                    light.gang_kommode:
+                      state: on
+                      brightness: 255
+                      hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                      effect: "None"
+                    light.gang_skab:
+                      state: on
+                      brightness: 172
+                      hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                      effect: "Solid"
+                    light.hallway_tablet:
+                      state: on
+                      brightness: 172
 
-            light.gang_spots:
-              state: on
-              brightness: 127
-              color_temp: 330
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Dimmed' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.gang_loftlampe:
+                      state: on
+                      brightness: 127
+                      color_temp: 330
 
-            light.skoskab:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.gang_kommode:
-              state: on
-              brightness: 127
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "None"
-            light.gang_skab:
-              state: on
-              brightness: 72
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.hallway_tablet:
-              state: on
-              brightness: 127
+                    light.gang_spots:
+                      state: on
+                      brightness: 127
+                      color_temp: 330
 
-  - alias: activate_light_profile_hallway_ambient
-    id: activate_light_profile_hallway_ambient
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Ambient"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Ambient"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.gang_loftlampe:
-              state: on
-              brightness: 46
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+                    light.skoskab:
+                      state: on
+                      brightness: 127
+                      hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                      effect: "Solid"
+                    light.gang_kommode:
+                      state: on
+                      brightness: 127
+                      hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                      effect: "None"
+                    light.gang_skab:
+                      state: on
+                      brightness: 72
+                      hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                      effect: "Solid"
+                    light.hallway_tablet:
+                      state: on
+                      brightness: 127
 
-            light.gang_spots:
-              state: on
-              brightness: 46
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Ambient' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.gang_loftlampe:
+                      state: on
+                      brightness: 46
+                      hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
 
-            light.skoskab:
-              state: on
-              brightness: 42
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.gang_kommode:
-              state: on
-              brightness: 72
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "None"
-            light.gang_skab:
-              state: on
-              brightness: 8
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
-              effect: "Solid"
-            light.hallway_tablet:
-              state: on
-              brightness: 72
+                    light.gang_spots:
+                      state: on
+                      brightness: 46
+                      hs_color: "{{ state_attr('sensor.theme', 'primary_color_hue') }}"
 
-  - alias: activate_light_profile_hallway_night
-    id: activate_light_profile_hallway_night
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Night"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Night"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.gang_loftlampe:
-              state: off
-            light.gang_spots:
-              state: off
-            light.skoskab:
-              state: on
-              brightness: 48
-              rgb_color: [255, 0, 0]
-              effect: "Solid"
-            light.gang_kommode:
-              state: on
-              brightness: 48
-              rgb_color: [255, 0, 0]
-              effect: "None"
-            light.gang_skab:
-              state: on
-              brightness: 4
-              rgb_color: [255, 0, 0]
-              effect: "Solid"
-            light.hallway_tablet:
-              state: on
-              brightness: 1
+                    light.skoskab:
+                      state: on
+                      brightness: 42
+                      hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                      effect: "Solid"
+                    light.gang_kommode:
+                      state: on
+                      brightness: 72
+                      hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                      effect: "None"
+                    light.gang_skab:
+                      state: on
+                      brightness: 8
+                      hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
+                      effect: "Solid"
+                    light.hallway_tablet:
+                      state: on
+                      brightness: 72
 
-  - alias: activate_light_profile_hallway_off
-    id: activate_light_profile_hallway_off
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Off"
-      - platform: event
-        event_type: refresh_light_profile
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Off"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.gang_spots:
-              state: off
-            light.gang_loftlampe:
-              state: off
-            light.skoskab:
-              state: off
-            light.gang_kommode:
-              state: off
-            light.gang_skab:
-              state: off
-            light.hallway_tablet:
-              state: off
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Night' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.gang_loftlampe:
+                      state: off
+                    light.gang_spots:
+                      state: off
+                    light.skoskab:
+                      state: on
+                      brightness: 48
+                      rgb_color: [255, 0, 0]
+                      effect: "Solid"
+                    light.gang_kommode:
+                      state: on
+                      brightness: 48
+                      rgb_color: [255, 0, 0]
+                      effect: "None"
+                    light.gang_skab:
+                      state: on
+                      brightness: 4
+                      rgb_color: [255, 0, 0]
+                      effect: "Solid"
+                    light.hallway_tablet:
+                      state: on
+                      brightness: 1
+
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Off' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.gang_spots:
+                      state: off
+                    light.gang_loftlampe:
+                      state: off
+                    light.skoskab:
+                      state: off
+                    light.gang_kommode:
+                      state: off
+                    light.gang_skab:
+                      state: off
+                    light.hallway_tablet:
+                      state: off
 
   - alias: activate_light_profile_hallway_candle_lights
     id: activate_light_profile_hallway_candle_lights
@@ -349,7 +297,7 @@ automation:
     initial_state: true
     trigger:
       - platform: state
-        entity_id: *room_light_profile
+        entity_id: sensor.hallway_active_light_profile
       - platform: state
         entity_id: binary_sensor.badevarelse_las
       - platform: event

@@ -74,7 +74,6 @@ group:
     entities:
       - binary_sensor.bathroom_latest_motion
       - binary_sensor.bathroom_door_activity
-      - binary_sensor.bathroom_occupied
       - input_boolean.showering
 
   bathroom_motion_entities:
@@ -82,7 +81,7 @@ group:
     entities: &motion_entities
       - binary_sensor.badevaerelse_motion
       - binary_sensor.badevaerelse_bevaegelse
-      - binary_sensor.badevarelse_las
+      - binary_sensor.bathroom_occupied
 
 automation:
   - alias: Set Bathroom Latest Motion
@@ -105,293 +104,217 @@ automation:
         entity_id: input_select.latest_motion
         option: "Bathroom"
 
-  - alias: activate_light_profile_bathroom_bright
-    id: activate_light_profile_bathroom_bright
+  - alias: activate_light_profile_bathroom
+    id: 4a9ce9a3-eb04-4bc8-8732-3ab0a988cb5e
     mode: restart
     initial_state: true
     trigger:
       - platform: state
-        entity_id: &room_light_profile sensor.bathroom_active_light_profile
-        to: "Bright"
-        variables:
-          previous: "{{ trigger.from_state.state }}"
+        entity_id: sensor.bathroom_active_light_profile
       - platform: event
         event_type: refresh_light_profile
-        variables:
-          previous: "{{ states('sensor.bathroom_active_light_profile') }}"
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Bright"
+    variables:
+      profile: "{{ states('sensor.bathroom_active_light_profile') }}"
     action:
-      - parallel:
-          - service: script.difficult_light
-            data:
-              entity_id: light.badevaerelse_skab
-              state: on
-              brightness: 255
-              hs_color: [29, 15]
-              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          - service: script.difficult_light
-            data:
-              entity_id: light.badevaerelse_loft
-              state: on
-              brightness: 255
-              color_temp: 153
-              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          - service: scene.apply
-            data:
-              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-              entities:
-                light.badevaerelse_lampe:
-                  state: on
-                  brightness: 255
-                  color_temp: 240
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Bright' }}"
+            sequence:
+              - parallel:
+                  - service: script.difficult_light
+                    data:
+                      entity_id: light.badevaerelse_skab
+                      state: on
+                      brightness: 255
+                      hs_color: [29, 15]
+                      transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  - service: script.difficult_light
+                    data:
+                      entity_id: light.badevaerelse_loft
+                      state: on
+                      brightness: 255
+                      color_temp: 153
+                      transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  - service: scene.apply
+                    data:
+                      transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                      entities:
+                        light.badevaerelse_lampe:
+                          state: on
+                          brightness: 255
+                          color_temp: 240
 
-          - service: light.turn_on
-            target:
-              entity_id: light.bathroom_tablet
-            data:
-              brightness: 255
+                  - service: light.turn_on
+                    target:
+                      entity_id: light.bathroom_tablet
+                    data:
+                      brightness: 255
 
-  - alias: activate_light_profile_bathroom_default
-    id: activate_light_profile_bathroom_default
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Default"
-        variables:
-          previous: "{{ trigger.from_state.state }}"
-      - platform: event
-        event_type: refresh_light_profile
-        variables:
-          previous: "{{ states('sensor.bathroom_active_light_profile') }}"
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Default"
-    action:
-      - parallel:
-          - service: script.difficult_light
-            data:
-              entity_id: light.badevaerelse_skab
-              state: on
-              brightness: 255
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          - service: script.difficult_light
-            data:
-              entity_id: light.badevaerelse_loft
-              state: on
-              brightness: 230
-              color_temp: 333
-              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          - service: scene.apply
-            data:
-              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-              entities:
-                light.badevaerelse_lampe:
-                  state: on
-                  brightness: 255
-                  color_temp: 240
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Default' }}"
+            sequence:
+              - parallel:
+                  - service: script.difficult_light
+                    data:
+                      entity_id: light.badevaerelse_skab
+                      state: on
+                      brightness: 255
+                      hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+                      transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  - service: script.difficult_light
+                    data:
+                      entity_id: light.badevaerelse_loft
+                      state: on
+                      brightness: 230
+                      color_temp: 333
+                      transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  - service: scene.apply
+                    data:
+                      transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                      entities:
+                        light.badevaerelse_lampe:
+                          state: on
+                          brightness: 255
+                          color_temp: 240
 
-          - service: light.turn_on
-            target:
-              entity_id: light.bathroom_tablet
-            data:
-              brightness: 255
+                  - service: light.turn_on
+                    target:
+                      entity_id: light.bathroom_tablet
+                    data:
+                      brightness: 255
 
-  - alias: activate_light_profile_bathroom_dimmed
-    id: activate_light_profile_bathroom_dimmed
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        variables:
-          previous: "{{ trigger.from_state.state }}"
-      - platform: event
-        event_type: refresh_light_profile
-        variables:
-          previous: "{{ states('sensor.bathroom_active_light_profile') }}"
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Dimmed"
-    action:
-      - parallel:
-          - service: script.difficult_light
-            data:
-              entity_id: light.badevaerelse_skab
-              state: on
-              brightness: 96
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          - service: script.difficult_light
-            data:
-              entity_id: light.badevaerelse_loft
-              state: on
-              brightness: 168
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_eglo') }}"
-              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          - service: scene.apply
-            data:
-              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-              entities:
-                light.badevaerelse_lampe:
-                  state: on
-                  brightness: 127
-                  color_temp: 370
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Dimmed' }}"
+            sequence:
+              - parallel:
+                  - service: script.difficult_light
+                    data:
+                      entity_id: light.badevaerelse_skab
+                      state: on
+                      brightness: 96
+                      hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+                      transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  - service: script.difficult_light
+                    data:
+                      entity_id: light.badevaerelse_loft
+                      state: on
+                      brightness: 168
+                      hs_color: "{{ state_attr('sensor.theme', 'primary_color_eglo') }}"
+                      transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  - service: scene.apply
+                    data:
+                      transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                      entities:
+                        light.badevaerelse_lampe:
+                          state: on
+                          brightness: 127
+                          color_temp: 370
 
-          - service: light.turn_on
-            target:
-              entity_id: light.bathroom_tablet
-            data:
-              brightness: 127
+                  - service: light.turn_on
+                    target:
+                      entity_id: light.bathroom_tablet
+                    data:
+                      brightness: 127
 
-  - alias: activate_light_profile_bathroom_ambient
-    id: activate_light_profile_bathroom_ambient
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Ambient"
-        variables:
-          previous: "{{ trigger.from_state.state }}"
-      - platform: event
-        event_type: refresh_light_profile
-        variables:
-          previous: "{{ states('sensor.bathroom_active_light_profile') }}"
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Ambient"
-    action:
-      - parallel:
-          - service: script.difficult_light
-            data:
-              entity_id: light.badevaerelse_skab
-              state: on
-              brightness: 32
-              hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
-              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          - service: script.difficult_light
-            data:
-              entity_id: light.badevaerelse_loft
-              state: on
-              brightness: 68
-              hs_color: "{{ state_attr('sensor.theme', 'primary_color_eglo') }}"
-              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          - service: scene.apply
-            data:
-              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-              entities:
-                light.badevaerelse_lampe:
-                  state: on
-                  brightness: 64
-                  hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Ambient' }}"
+            sequence:
+              - parallel:
+                  - service: script.difficult_light
+                    data:
+                      entity_id: light.badevaerelse_skab
+                      state: on
+                      brightness: 32
+                      hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
+                      transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  - service: script.difficult_light
+                    data:
+                      entity_id: light.badevaerelse_loft
+                      state: on
+                      brightness: 68
+                      hs_color: "{{ state_attr('sensor.theme', 'primary_color_eglo') }}"
+                      transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  - service: scene.apply
+                    data:
+                      transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                      entities:
+                        light.badevaerelse_lampe:
+                          state: on
+                          brightness: 64
+                          hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
 
-          - service: light.turn_on
-            target:
-              entity_id: light.bathroom_tablet
-            data:
-              brightness: 64
+                  - service: light.turn_on
+                    target:
+                      entity_id: light.bathroom_tablet
+                    data:
+                      brightness: 64
 
-  - alias: activate_light_profile_bathroom_night
-    id: activate_light_profile_bathroom_night
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Night"
-        variables:
-          previous: "{{ trigger.from_state.state }}"
-      - platform: event
-        event_type: refresh_light_profile
-        variables:
-          previous: "{{ states('sensor.bathroom_active_light_profile') }}"
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Night"
-    action:
-      - parallel:
-          - service: script.difficult_light
-            data:
-              entity_id: light.badevaerelse_skab
-              state: on
-              brightness: 24
-              hs_color: [0, 100]
-              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          - service: script.difficult_light
-            data:
-              entity_id: light.badevaerelse_loft
-              state: on
-              brightness: 32
-              hs_color: [0, 100]
-              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          - service: scene.apply
-            data:
-              transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-              entities:
-                light.badevaerelse_lampe:
-                  state: on
-                  brightness: 2
-                  color_temp: 454
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Night' }}"
+            sequence:
+              - parallel:
+                  - service: script.difficult_light
+                    data:
+                      entity_id: light.badevaerelse_skab
+                      state: on
+                      brightness: 24
+                      hs_color: [0, 100]
+                      transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  - service: script.difficult_light
+                    data:
+                      entity_id: light.badevaerelse_loft
+                      state: on
+                      brightness: 32
+                      hs_color: [0, 100]
+                      transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  - service: scene.apply
+                    data:
+                      transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                      entities:
+                        light.badevaerelse_lampe:
+                          state: on
+                          brightness: 2
+                          color_temp: 454
 
-          - service: light.turn_on
-            target:
-              entity_id: light.bathroom_tablet
-            data:
-              brightness: 24
+                  - service: light.turn_on
+                    target:
+                      entity_id: light.bathroom_tablet
+                    data:
+                      brightness: 24
 
-  - alias: activate_light_profile_bathroom_off
-    id: activate_light_profile_bathroom_off
-    mode: restart
-    initial_state: true
-    trigger:
-      - platform: state
-        entity_id: *room_light_profile
-        to: "Off"
-        variables:
-          previous: "{{ trigger.from_state.state }}"
-      - platform: event
-        event_type: refresh_light_profile
-        variables:
-          previous: "{{ states('sensor.bathroom_active_light_profile') }}"
-    condition:
-      - condition: state
-        entity_id: *room_light_profile
-        state: "Off"
-    action:
-      - service: scene.apply
-        data:
-          transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
-          entities:
-            light.badevaerelse_loft:
-              state: off
-            light.badevaerelse_lampe:
-              state: off
-            light.badevaerelse_skab:
-              state: off
-      - delay: "{{ (states('input_number.scene_transition_time') | float or 0.5) + 1 }}"
-      - condition: "{{ is_state('sensor.bathroom_selected_light_profile', 'Off') }}"
-      - service: light.turn_off
-        target:
-          entity_id: light.badevaerelse_loft
-      # For some reason the light will still zombie a minute after turning off. So we kill it again.
-      - delay: 00:01:00
-      - condition: "{{ is_state('sensor.bathroom_selected_light_profile', 'Off') }}"
-      - service: light.turn_off
-        target:
-          entity_id: light.badevaerelse_loft
-      - service: light.turn_off
-        target:
-          entity_id: light.bathroom_tablet
+          - conditions:
+              - condition: template
+                value_template: "{{ profile == 'Off' }}"
+            sequence:
+              - service: scene.apply
+                data:
+                  transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
+                  entities:
+                    light.badevaerelse_loft:
+                      state: off
+                    light.badevaerelse_lampe:
+                      state: off
+                    light.badevaerelse_skab:
+                      state: off
+              - delay: "{{ (states('input_number.scene_transition_time') | float or 0.5) + 1 }}"
+              - condition: "{{ is_state('sensor.bathroom_selected_light_profile', 'Off') }}"
+              - service: light.turn_off
+                target:
+                  entity_id: light.badevaerelse_loft
+              # For some reason the light will still zombie a minute after turning off. So we kill it again.
+              - delay: 00:01:00
+              - condition: "{{ is_state('sensor.bathroom_selected_light_profile', 'Off') }}"
+              - service: light.turn_off
+                target:
+                  entity_id: light.badevaerelse_loft
+              - service: light.turn_off
+                target:
+                  entity_id: light.bathroom_tablet
 
 input_boolean:
   bathroom_activity_override:
