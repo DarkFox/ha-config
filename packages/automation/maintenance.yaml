@@ -76,3 +76,39 @@ automation:
             {% set e = v|join('\n- ') if v else '' %}
             {% set m = 'Lavt batteri på {} enheder:\n- {}'.format(n, e) %}
             {{ m }}
+
+  - alias: "Check for duplicate package names"
+    id: f9814b8f-6cd7-42bc-9cf2-138832c4b484
+    initial_state: true
+    trigger:
+      - platform: time_pattern
+        hours: "*"
+        minutes: "/5"
+        seconds: "0"
+    action:
+      - service: pyscript.find_duplicate_package_names
+
+  - alias: "Notify of duplicate package names"
+    id: b606263a-6423-4b66-b0b4-dfbbd0358ff9
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: duplicate_package_names
+    condition:
+      - condition: template
+        value_template: "{{ trigger.event.data.get('duplicates', {})|length > 0 }}"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: |
+            {%- set duplicates = trigger.event.data.get('duplicates', {}) -%}
+            {%- set n = duplicates|length -%}
+            Found {{ n }} duplicate package names:
+            {%- for name, entities in duplicates.items() %}
+              - {{ name }}:
+                {%- for entity in entities %}
+                  - {{ entity }}
+                {%- endfor %}
+            {% endfor %}
+          data:
+            parse_mode: "html"
