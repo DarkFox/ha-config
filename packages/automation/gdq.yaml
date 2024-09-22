@@ -31,6 +31,12 @@ template:
         attributes:
           id: "{{ trigger.event.data.event.get('id', '') }}"
           url: "{{ trigger.event.data.event.get('url', '') }}"
+          donation_url: >-
+            {%- set id = trigger.event.data.event.get('id') -%}
+            {{ "https://tracker.gamesdonequick.com/tracker/ui/donate/" + id if id else none }}
+          prizes_url: >-
+            {%- set id = trigger.event.data.event.get('id') -%}
+            {{ "https://tracker.gamesdonequick.com/tracker/ui/events/"+id+"/prizes" if id else none }}
           start_time: "{{ trigger.event.data.event.get('start_time', '') | as_datetime | as_local }}"
           start_date: >-
             {%- set datetime = trigger.event.data.event.get('start_time', '') | as_datetime | as_local -%}
@@ -60,6 +66,7 @@ template:
         unit_of_measurement: "USD"
         device_class: "monetary"
         attributes:
+          formatted_total: "{{ '{:,}'.format(trigger.event.data.stats.get('total', 0) | int) | replace(',', '.') }}"
           count: "{{ trigger.event.data.stats.get('count', 0) }}"
           max: "{{ trigger.event.data.stats.get('max', 0) }}"
           average: "{{ trigger.event.data.stats.get('average', 0) }}"

@@ -77,17 +77,30 @@ cards:
     cards:
       - !include ../cards/gdq/next_to_watch.yaml
 
-  - type: markdown
+  - type: custom:html-card
     view_layout:
       grid-area: donation_total
     content: >-
-      <center>${{ '{:,}'.format(states('sensor.gdq_donation_total') | int) | replace(',', '.') }}</center>
-    card_mod:
-      style: |
-        ha-card {
-          font-size: 2em;
-          font-weight: bold;
-        }
+      <a
+        href="[[ sensor.gdq_event.attributes.donation_url ]]"
+        target="_blank"
+        style="
+          text-decoration: none;
+          color: var(--primary-text-color);
+          margin: 0;
+          padding: 0;
+          display: block;
+        "
+      >
+        <h1 style="
+          width: 100%;
+          text-align: center;
+          margin: 0;
+          padding: 0;
+        ">
+            $[[ sensor.gdq_donation_total.attributes.formatted_total ]]
+        </h1>
+      </a>
 
   - type: custom:apexcharts-card
     view_layout:
@@ -411,22 +424,36 @@ cards:
     cards:
       - type: horizontal-stack
         cards:
-          - type: custom:button-card
-            aspect_ratio: 1/1
-            name: Donate
-            icon: mdi:cash
-            color: var(--success-color)
-            tap_action:
-              action: url
-              url_path: https://tracker.gamesdonequick.com/tracker/ui/donate/48
-          - type: custom:button-card
-            aspect_ratio: 1/1
-            name: Prizes
-            icon: mdi:gift
-            color: var(--blue-color)
-            tap_action:
-              action: url
-              url_path: https://tracker.gamesdonequick.com/tracker/ui/events/48/prizes
+          - type: custom:config-template-card
+            entities:
+              - sensor.gdq_event
+            config_templates: default
+            variables:
+              URL: states["sensor.gdq_event"].attributes.donation_url
+            card:
+              type: custom:button-card
+              aspect_ratio: 1/1
+              name: Donate
+              icon: mdi:cash
+              color: var(--success-color)
+              tap_action:
+                action: url
+                url_path: ${URL}
+          - type: custom:config-template-card
+            entities:
+              - sensor.gdq_event
+            config_templates: default
+            variables:
+              URL: states["sensor.gdq_event"].attributes.prizes_url
+            card:
+              type: custom:button-card
+              aspect_ratio: 1/1
+              name: Prizes
+              icon: mdi:gift
+              color: var(--blue-color)
+              tap_action:
+                action: url
+                url_path: ${URL}
           - type: custom:button-card
             aspect_ratio: 1/1
             entity: script.refresh_gdq_agenda
