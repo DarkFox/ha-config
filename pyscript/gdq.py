@@ -3,16 +3,15 @@ from bs4 import BeautifulSoup
 
 base_url = 'https://tracker.gamesdonequick.com'
 
+
 async def get_runs(uri):
-    event.fire('gdq_event_debug', message=f'Getting runs from {base_url + uri}')
     async with aiohttp.ClientSession() as session:
         async with session.get(base_url + uri) as runs_response:
             runs_response.raise_for_status()
             runs_soup = BeautifulSoup(runs_response.read(), 'html.parser')
-            
+
             run_headers = runs_soup.select('table.table-striped > thead > tr > th')
             columns = [header.text.strip() for header in run_headers]
-            event.fire('gdq_event_debug', message=f'Columns: {columns}')
 
             run_rows = runs_soup.select('table.table-striped > tr')
             runs = []
@@ -21,8 +20,8 @@ async def get_runs(uri):
                 run = dict(zip(columns, values))
                 runs.append(run)
 
-            event.fire('gdq_event_debug', message=f'Runs: {runs}')
             return runs
+
 
 async def gdq_event_runs_uri(uri):
     async with aiohttp.ClientSession() as session:
@@ -36,6 +35,7 @@ async def gdq_event_runs_uri(uri):
                     if run_count > 0:
                         return button['href']
     return False
+
 
 async def get_gdq_event_info():
     async with aiohttp.ClientSession() as session:
@@ -52,7 +52,7 @@ async def get_gdq_event_info():
             for gdq_event in gdq_events:
                 if 'All Events' in gdq_event.text:
                     continue
-                
+
                 href = gdq_event['href']
                 runs_uri = gdq_event_runs_uri(href)
                 if runs_uri:
@@ -64,6 +64,7 @@ async def get_gdq_event_info():
                     }
 
     return None
+
 
 @service
 async def get_gdq_event():
@@ -78,21 +79,22 @@ description: Get the current GDQ event data
         'start_date': None,
         'end_date': None
     }
-    
-    event = get_gdq_event_info()
 
-    if event:
-        runs = get_runs(event['runs_uri'])
+    gdq_event = get_gdq_event_info()
+
+    if gdq_event:
+        runs = get_runs(gdq_event['runs_uri'])
 
         if runs:
-            data['name'] = event['name']
-            data['url'] = event['url']
-            data['id'] = event['id']
+            data['name'] = gdq_event['name']
+            data['url'] = gdq_event['url']
+            data['id'] = gdq_event['id']
             data['start_time'] = runs[0]['Start Time']
             data['end_time'] = runs[-1]['Start Time']
 
     event.fire('gdq_event', event=data)
     return data
+
 
 @service
 async def gdq_get_donation_stats():
@@ -110,7 +112,7 @@ description: Get the current donation stats from the Games Done Quick tracker. F
             response.raise_for_status()
             soup = BeautifulSoup(response.read(), 'html.parser')
             donation_stats_string = soup.select_one('h2.text-center small').text
-            
+
             donation_stats = {
                 'total': None,
                 'count': None,
@@ -161,14 +163,14 @@ description: Get the current bids from the Games Done Quick tracker. Fires 'gdq_
     def format_currency(amount):
         # Split the number into integer and decimal parts
         integer_part, decimal_part = f'{amount:.2f}'.split('.')
-        
+
         # Reverse the integer part and group by thousands
         integer_part = integer_part[::-1]
         grouped_integer = '.'.join([integer_part[i:i+3] for i in range(0, len(integer_part), 3)])
-        
+
         # Reverse back and combine with the decimal part
         formatted_amount = f'{grouped_integer[::-1]},{decimal_part}'
-        
+
         return formatted_amount
 
     def parse_text(text) -> str:
@@ -239,4 +241,3 @@ description: Get the current bids from the Games Done Quick tracker. Fires 'gdq_
             bids = [parse_bid_row(r, all_soup=soup) for r in bid_rows]
 
             event.fire('gdq_bids', bids=bids)
-
