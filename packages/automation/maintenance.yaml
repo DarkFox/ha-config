@@ -47,6 +47,128 @@ template:
             {{ ns.ret }}
 
 automation:
+  - alias: Notify HA Shutdown
+    id: e87622e0-9691-421b-8691-94fdab200eef
+    initial_state: true
+    trigger:
+      platform: homeassistant
+      event: shutdown
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Home Assistant er ved at lukke ned!"
+
+  - alias: Notify High Memory Usage
+    id: 9b460db9-09da-4b32-8183-7e315bd8d9d6
+    initial_state: true
+    mode: single
+    trigger:
+      platform: numeric_state
+      entity_id: sensor.system_monitor_memory_use_percent
+      above: 85
+    variables:
+      memory_use: "{{ states('sensor.system_monitor_memory_use_percent') }}"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: |
+            Hukommelsesforbrug er højt! {{ memory_use }}%
+            Top 5 Add-ons:
+            {%- set stats = state_attr('sensor.add_ons_stats', 'addon_stats') or {} -%}
+            {%- set memory = stats.get('memory', {}) -%}
+            {%- for key, value in memory.items() %}
+              {{ key }}: {{ value }}%
+              {%- if loop.index > 4 -%}
+                {%- break -%}
+              {%- endif -%}
+            {%- endfor -%}
+      - delay:
+          minutes: 15
+
+  - alias: Notify high CPU Usage
+    id: 46d3d0e5-746b-4976-a66b-da481afbe993
+    initial_state: true
+    mode: single
+    trigger:
+      platform: numeric_state
+      entity_id: sensor.processor_use
+      above: 65
+    variables:
+      cpu_use: "{{ states('sensor.processor_use') }}"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: |
+            CPU forbrug er højt! {{ cpu_use }}%
+            Top 5 Add-ons:
+            {%- set stats = state_attr('sensor.add_ons_stats', 'addon_stats') or {} -%}
+            {%- set cpu = stats.get('cpu', {}) -%}
+            {%- for key, value in cpu.items() %}
+              {{ key }}: {{ value }}%
+              {%- if loop.index > 4 -%}
+                {%- break -%}
+              {%- endif -%}
+            {%- endfor -%}
+      - delay:
+          minutes: 15
+
+  - alias: Notify Of New External IP
+    id: e86275ad-9c5a-4243-9428-e47f82c03586
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: sensor.external_ip
+    condition:
+      - condition: template
+        value_template: "{{ trigger.from_state and trigger.to_state }}"
+      - condition: template
+        value_template: "{{ not trigger.from_state.state == 'unknown' }}"
+      - condition: template
+        value_template: "{{ not trigger.to_state.state == 'unknown' }}"
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Din eksterne IP har ændret sig fra {{ trigger.from_state.state }} til {{ trigger.to_state.state }}"
+
+  - alias: Uncommitted Changes Notification
+    id: bc36b25e-030a-4f15-a0e1-65cf739b7c37
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.uncommitted_changes
+        to: "on"
+        for:
+          hours: 2
+      - platform: state
+        entity_id: input_select.sleep_state
+        to: "awake"
+        for:
+          hours: 2
+    condition:
+      - condition: state
+        entity_id: binary_sensor.uncommitted_changes
+        state: "on"
+        for:
+          hours: 2
+    action:
+      - service: notify.telegram_darkfox
+        data:
+          message: "Uncommitted changes!"
+
+  - alias: Clear TTS Cache
+    id: ac4fb256-a4c2-4a83-ba9c-edf92df19852
+    initial_state: true
+    trigger:
+      platform: time
+      at: "04:45:00"
+    action:
+      - service: chime_tts.clear_cache
+        data:
+          clear_temp_tts_cache: true
+          clear_www_tts_cache: true
+          clear_chimes_cache: false
+          clear_ha_tts_cache: false
+
   - alias: "Low Battery"
     id: "low_battery"
     initial_state: true
