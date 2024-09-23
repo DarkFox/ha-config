@@ -137,20 +137,6 @@ automation:
         data:
           entity_id: switch.gang_tablet_lader
 
-  - alias: bedroom_tablet_screensaver_webhook
-    initial_state: True
-    trigger:
-      platform: webhook
-      webhook_id: !secret bedroom_tablet_screensaver_webhook
-      local_only: true
-      allowed_methods:
-        - GET
-        - POST
-    action:
-      service: "input_boolean.turn_{{ trigger.json.state }}"
-      data:
-        entity_id: input_boolean.bedroom_tablet_screensaver
-
   - alias: charge_bedroom_tablet
     trigger:
       - platform: numeric_state
@@ -184,20 +170,6 @@ automation:
         data:
           entity_id: switch.bedroom_tablet_charger
 
-rest_command:
-  kitchen_tablet_command:
-    url: "http://{{ states('sensor.kokken_tablet_wifi_ip_address') }}:1817/?message={{ command }}"
-    method: GET
-  bathroom_tablet_command:
-    url: "http://{{ states('sensor.badevaerelse_tablet_wifi_ip_address') }}:1817/?message={{ command }}"
-    method: GET
-  bedroom_tablet_command:
-    url: "http://{{ states('sensor.sovevaerelse_tablet_wifi_ip_address') }}:1817/?message={{ command }}"
-    method: GET
-  hallway_tablet_command:
-    url: "http://{{ states('sensor.gang_tablet_wifi_ip_address') }}:1817/?message={{ command }}"
-    method: GET
-
 light:
   - platform: template
     lights:
@@ -214,9 +186,11 @@ light:
                 ttl: 0
                 priority: high
         turn_off:
-          - service: rest_command.kitchen_tablet_command
+          - service: script.trigger_tasker_task
             data:
-              command: "screen=:=off"
+              action: notify.mobile_app_kokken_tablet
+              task_id: "SCREEN_OFF"
+              extra_data: "state:false"
         set_level:
           - service: notify.mobile_app_kokken_tablet
             data:
@@ -255,9 +229,11 @@ light:
                 ttl: 0
                 priority: high
         turn_off:
-          - service: rest_command.hallway_tablet_command
+          - service: script.trigger_tasker_task
             data:
-              command: "screen=:=off"
+              action: notify.mobile_app_gang_tablet
+              task_id: "SCREEN_OFF"
+              extra_data: "state:false"
         set_level:
           - service: notify.mobile_app_gang_tablet
             data:
@@ -286,7 +262,7 @@ light:
       bathroom_tablet:
         friendly_name: "Bathroom Tablet"
         level_template: "{{ states('sensor.badevaerelse_tablet_screen_brightness')|int }}"
-        value_template: "{{ states('binary_sensor.badevaerelse_tablet_interactive') }}"
+        value_template: "{{ is_state('binary_sensor.badevaerelse_tablet_interactive', 'on') }}"
         turn_on:
           - service: notify.mobile_app_badevaerelse_tablet
             data:
@@ -296,9 +272,11 @@ light:
                 ttl: 0
                 priority: high
         turn_off:
-          - service: rest_command.bathroom_tablet_command
+          - service: script.trigger_tasker_task
             data:
-              command: "screen=:=off"
+              action: notify.mobile_app_badevaerelse_tablet
+              task_id: "SCREEN_OFF"
+              extra_data: "state:false"
         set_level:
           - service: notify.mobile_app_badevaerelse_tablet
             data:
@@ -327,7 +305,7 @@ light:
       bedroom_tablet:
         friendly_name: "Bedroom Tablet"
         level_template: "{{ states('sensor.sovevaerelse_tablet_screen_brightness')|int }}"
-        value_template: "{{ states('binary_sensor.sovevaerelse_tablet_interactive') }}"
+        value_template: "{{ is_state('binary_sensor.sovevaerelse_tablet_interactive', 'on') }}"
         turn_on:
           - service: notify.mobile_app_sovevaerelse_tablet
             data:
@@ -337,9 +315,11 @@ light:
                 ttl: 0
                 priority: high
         turn_off:
-          - service: rest_command.bedroom_tablet_command
+          - service: script.trigger_tasker_task
             data:
-              command: "screen=:=off"
+              action: notify.mobile_app_sovevaerelse_tablet
+              task_id: "SCREEN_OFF"
+              extra_data: "state:false"
         set_level:
           - service: notify.mobile_app_sovevaerelse_tablet
             data:
@@ -367,12 +347,20 @@ light:
 
       bedroom_tablet_screensaver:
         friendly_name: "Bedroom Tablet Screensaver"
-        value_template: "{{ states('input_boolean.bedroom_tablet_screensaver') or 'off' }}"
+        value_template: >-
+          {{
+            states('sensor.sovevaerelse_tablet_last_used_app') in ['com.firebirdberlin.nightdream']
+            and is_state('binary_sensor.sovevaerelse_tablet_interactive', 'on')
+          }}
         turn_on:
-          - service: rest_command.bedroom_tablet_command
+          - service: script.trigger_tasker_task
             data:
-              command: "screensaver=:=on"
+              action: notify.mobile_app_sovevaerelse_tablet
+              task_id: "SCREENSAVER"
+              extra_data: "state:true"
         turn_off:
-          - service: rest_command.bedroom_tablet_command
+          - service: script.trigger_tasker_task
             data:
-              command: "screensaver=:=off"
+              action: notify.mobile_app_sovevaerelse_tablet
+              task_id: "SCREENSAVER"
+              extra_data: "state:false"
