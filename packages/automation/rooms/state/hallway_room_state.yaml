@@ -9,13 +9,15 @@ group:
   hallway_motion_entities:
     name: Hallway Motion Entities
     entities:
-      - binary_sensor.gang_entre_bevaegelse
+      - binary_sensor.begge_gang_sensorer_aktive
       - binary_sensor.gang_badevaerelse_bevaegelse
       - binary_sensor.apartment_door_unlocked
 
   hallway_extra_entities:
     name: Hallway Extra Entities
     entities:
+      - binary_sensor.gang_entre_bevaegelse
+      - binary_sensor.gang_skabe_bevaegelse
       - lock.hoveddor_las
 
 template:
@@ -52,6 +54,15 @@ template:
           {{ is_state('binary_sensor.hallway_activity', 'on') }}
         delay_off:
           minutes: 4
+
+      - name: "Begge Gang Sensorer Aktive"
+        unique_id: 25d8a877-92f3-47ff-8a1b-9a10cf0fdd96
+        device_class: motion
+        state: >-
+          {{
+            is_state('binary_sensor.gang_entre_bevaegelse', 'on')
+            and is_state('binary_sensor.gang_skabe_bevaegelse', 'on')
+          }}
 
       - name: "Apartment Door Unlocked"
         unique_id: 1a1c6800-86ff-4037-9102-9b6904ae1df6

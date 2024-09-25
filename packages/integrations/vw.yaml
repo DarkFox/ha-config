@@ -78,9 +78,14 @@ script:
         selector:
           object:
     sequence:
+      - variables:
+          destinations: "{{ destinations if destinations is list else [destinations] }}"
       - action: volkswagen_we_connect_id.volkswagen_id_send_destinations
         data:
           vin: !secret vw_vin
+          destinations: "{{ destinations }}"
+      - event: id_3_pro_destinations_sent
+        event_data:
           destinations: "{{ destinations }}"
 
 template:
@@ -127,8 +132,21 @@ template:
           icon: mdi:clock-end
         device_class: timestamp
 
+  - trigger:
+      - platform: event
+        event_type: id_3_pro_destinations_sent
+    sensor:
+      - name: "ID.3 Pro Last Destinations Sent"
+        unique_id: d10d7e15-db1c-423e-9c7f-b74e938282ba
+        state: "{{ now() }}"
+        device_class: timestamp
+        attributes:
+          destinations: "{{ trigger.event.data.get('destinations', []) }}"
+          final_destination: "{{ trigger.event.data.get('destinations', [])|last }}"
+
 automation:
   - alias: Force VW data update on phone notification
+    id: 748368fc-75e1-4931-b0a4-63bb9f0e15e5
     initial_state: true
     mode: single
     trigger:
@@ -142,3 +160,31 @@ automation:
       - service: homeassistant.update_entity
         target:
           entity_id: sensor.id_3_pro_charging_mode
+
+  - alias: "ID.3 Pro Notify destinations sent"
+    id: 5b33950a-780e-4708-94b5-9276239e4a80
+    initial_state: true
+    trigger:
+      - platform: event
+        event_type: id_3_pro_destinations_sent
+    variables:
+      destinations: "{{ trigger.event.data.get('destinations', []) }}"
+      parts: "{{ destinations|length }}"
+      final: "{{ destinations|last }}"
+    action:
+      - action: notify.telegram_darkfox
+        data:
+          message: |
+            {{ parts }} destination{{ 'er' if parts > 1 }} sendt til bilen:
+            {% for d in destinations %}
+              {%- set address = d.get('address') -%}
+              - {{ d.get('name', 'Destination') }}{{ ': '~address.values()|list|join(', ') if address }}
+            {% endfor %}
+      - delay: 0.5
+      - action: notify.telegram_darkfox
+        data:
+          message: "Destination"
+          data:
+            location:
+              latitude: "{{ final.get('geoCoordinate', {}).get('latitude') }}"
+              longitude: "{{ final.get('geoCoordinate', {}).get('longitude')}}"

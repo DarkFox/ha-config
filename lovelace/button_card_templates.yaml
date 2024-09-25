@@ -34,3 +34,46 @@ inkwell:
               ? 'pulse ease-in-out 1s infinite'
               : 'none'
           ]]]
+
+name_icon_state:
+  show_state: true
+  styles:
+    grid:
+      - grid-template-areas: '"n" "i" "s"'
+      - grid-template-columns: 1fr
+      - grid-template-rows: min-content min-content min-content
+    name:
+      - padding-bottom: 0.2em
+    state:
+      - padding-top: 0.2em
+
+good_bad:
+  show_state: true
+  state_display: >-
+    [[[
+      if (variables?.on_label && variables?.off_label) {
+        return entity.state == 'on' ? variables.on_label : variables.off_label;
+      } else if (entity.attributes.device_class === 'occupancy') {
+        return entity.state == 'on' ? 'Optaget' : 'Frit';
+      } else if (entity.attributes.device_class === 'opening') {
+        return entity.state == 'on' ? 'Åben' : 'Lukket';
+      } else {
+        return entity.state;
+      }
+    ]]]
+  styles:
+    state:
+      - font-weight: "bold"
+    icon:
+      - color: "#FFFFFF"
+    card:
+      - color: "#FFFFFF"
+  state:
+    - value: "on"
+      styles:
+        card:
+          - background-color: "#FF2600AA"
+    - value: "off"
+      styles:
+        card:
+          - background-color: "#8EFA00AA"
