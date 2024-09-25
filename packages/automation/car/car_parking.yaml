@@ -111,11 +111,28 @@ template:
             {{ state_translated('device_tracker.id_3_pro_tracker') }}
           {% endif %}
 
+      - name: Parkeringsskive
+        unique_id: ede9dcb5-8cd0-49f9-a08c-93a7fe81d806
+        icon: mdi:clock-time-eight-outline
+        device_class: timestamp
+        state: >-
+          {% set parked = state_attr('device_tracker.id_3_pro_tracker', 'last_captured') | as_datetime | as_local %}
+          {% set seconds_past = (parked.minute % 15) * 60 + parked.second %}
+          {% set seconds_until_next_quarter = (15 * 60) - seconds_past %}
+          {% set next_quarter_timestamp = as_timestamp(parked) + seconds_until_next_quarter %}
+          {% set car_parking_timer = next_quarter_timestamp | as_datetime %}
+          {% set manual_parking_timer = states('input_datetime.parking_timer') | as_datetime | as_local if has_value('input_datetime.parking_timer') %}
+          {% if manual_parking_timer and car_parking_timer < manual_parking_timer %}
+            {{ manual_parking_timer }}
+          {% else %}
+            {{ car_parking_timer }}
+          {% endif %}
+
       - name: Parking Clock
         unique_id: 1b039e84-9fbe-46f5-9ff9-f34ac68a34f7
         icon: mdi:parking
         state: >-
-          {{ states('input_datetime.parking_timer') | as_timestamp | timestamp_custom('%H:%M') }}
+          {{ states('sensor.parkeringsskive') | as_timestamp | timestamp_custom('%H:%M') }}
 
       - name: Parking Duration Limit
         unique_id: 6eab91a5-6fe1-47fa-ac76-2f000ce2e39b
@@ -134,7 +151,7 @@ template:
         device_class: timestamp
         state: >-
           {% if is_state('binary_sensor.parking_limit', 'on') %}
-            {{ (as_timestamp(states('input_datetime.parking_timer')) + states('sensor.parking_duration_limit')|int) | as_datetime }}
+            {{ (as_timestamp(states('sensor.parkeringsskive')) + states('sensor.parking_duration_limit')|int) | as_datetime }}
           {% endif %}
 
       - name: Parking Limit Clock
@@ -196,26 +213,10 @@ automation:
     initial_state: True
     trigger:
       platform: state
-      entity_id: sensor.parking_lot
-      not_to:
-        - ""
-        - "unknown"
-        - "unavailable"
+      entity_id: sensor.parkeringsskive
       for:
         seconds: 10
     action:
-      - service: input_datetime.set_datetime
-        target:
-          entity_id: input_datetime.parking_timer
-        data:
-          datetime: >
-            {% set now = now() %}
-            {% set seconds_past = (now.minute % 15) * 60 + now.second %}
-            {% set seconds_until_next_quarter = (15 * 60) - seconds_past %}
-            {% set next_quarter_timestamp = as_timestamp(now) + seconds_until_next_quarter %}
-            {{ next_quarter_timestamp | timestamp_custom('%Y-%m-%d %H:%M:%S') }}
-      - delay:
-          seconds: 1
       - condition:
           - condition: numeric_state
             entity_id: sensor.parking_duration_limit
@@ -224,7 +225,7 @@ automation:
         data:
           message: |
             Parkeret på {{ states('sensor.parking_lot') }}.
-            Timer sat til kl. {{ as_timestamp(states('input_datetime.parking_timer')) | timestamp_custom('%H:%M') }}, flyt bilen inden kl. {{ as_timestamp(states('sensor.parking_limit')) | timestamp_custom('%H:%M') }}.
+            Timer sat til kl. {{ as_timestamp(states('sensor.parkeringsskive')) | timestamp_custom('%H:%M') }}, flyt bilen inden kl. {{ as_timestamp(states('sensor.parking_limit')) | timestamp_custom('%H:%M') }}.
             Sæt alarm til kl. {{ as_timestamp(states('sensor.parking_alarm')) | timestamp_custom('%H:%M') }}.
 
   - alias: "Parking Alarm"
