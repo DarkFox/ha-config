@@ -33,7 +33,17 @@ script:
             sequence:
               - variables:
                   query: "{{ states(entity_id) }}"
+                  start_time: >-
+                    {{
+                      state_attr(entity_id, 'start_time')
+                      or state_attr(entity_id, 'start')
+                      or none
+                    }}
                   name: >-
+                    {{
+                      (start_time|as_datetime|as_local).strftime('%H:%M')~':' if start_time
+                      else ''
+                    }}
                     {{
                       state_attr(entity_id, 'summary')
                       or state_attr(entity_id, 'name')
