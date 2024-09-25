@@ -58,7 +58,8 @@ template:
       - name: Arbejdskalender
         unique_id: 44f4d46e-d205-4197-b4e7-3bd74fe863d7
         state: >-
-          {%- from 'agenda.jinja' import current_events, filter_work_events_to_schedule -%}
+          {%- from 'agenda.jinja' import current_events -%}
+          {%- from 'work_schedule.jinja' import filter_work_events_to_schedule -%}
           {%- set events = filter_work_events_to_schedule(trigger.event.data.get('events', [])) | from_json  -%}
           {%- set time = trigger.event.data.get('time') -%}
           {{ 
@@ -68,23 +69,27 @@ template:
         attributes:
           last_updated: "{{ now().isoformat() }}"
           current: >-
-            {%- from 'agenda.jinja' import current_events, filter_work_events_to_schedule -%}
+            {%- from 'agenda.jinja' import current_events -%}
+            {%- from 'work_schedule.jinja' import filter_work_events_to_schedule -%}
             {%- set events = filter_work_events_to_schedule(trigger.event.data.get('events', [])) | from_json  -%}
             {%- set time = trigger.event.data.get('time') -%}
             {{ current_events(events, time, 'vagtskema', 'false') | from_json }}
           coming: >-
-            {%- from 'agenda.jinja' import coming_events, filter_work_events_to_schedule -%}
+            {%- from 'agenda.jinja' import coming_events -%}
+            {%- from 'work_schedule.jinja' import filter_work_events_to_schedule -%}
             {%- set events = filter_work_events_to_schedule(trigger.event.data.get('events', [])) | from_json  -%}
             {%- set time = trigger.event.data.get('time') -%}
             {{ coming_events(events, time, 'vagtskema', 'false') | from_json }}
           next: >-
-            {%- from 'agenda.jinja' import coming_events, filter_work_events_to_schedule -%}
+            {%- from 'agenda.jinja' import coming_events -%}
+            {%- from 'work_schedule.jinja' import filter_work_events_to_schedule -%}
             {%- set events = filter_work_events_to_schedule(trigger.event.data.get('events', [])) | from_json  -%}
             {%- set time = trigger.event.data.get('time') -%}
             {%- set filtered_events = coming_events(events, time, 'vagtskema', 'false') | from_json -%}
             {{ filtered_events | first if filtered_events else none }}
           agenda: >-
-            {%- from 'agenda.jinja' import agenda, filter_work_events_to_schedule -%}
+            {%- from 'agenda.jinja' import agenda -%}
+            {%- from 'work_schedule.jinja' import filter_work_events_to_schedule -%}
             {%- set events = filter_work_events_to_schedule(trigger.event.data.get('events', [])) | from_json  -%}
             {%- set time = trigger.event.data.get('time') -%}
             {{ agenda(events, time, 'vagtskema', 'false') | from_json }}
@@ -650,6 +655,47 @@ automation:
           agenda_events: |
             {%- from 'agenda.jinja' import agenda_events -%}
             {{ agenda_events(all_events, calendar_entity, calendar_name, regexes, bool_attrs) }}
+      - event: "calendar_updated"
+        event_data:
+          calendar: "{{ calendar_name }}"
+          time: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+          events: "{{ agenda_events }}"
+
+  - alias: Update Work Schedule
+    id: e565f087-c440-4619-ab51-b18d535dbfac
+    initial_state: true
+    mode: restart
+    trigger:
+      - platform: time_pattern
+        hours: "*"
+        minutes: "/15"
+        seconds: "0"
+      - platform: state
+        entity_id: calendar.vagtplan
+      - platform: state
+        entity_id: binary_sensor.home_assistant_loaded
+        to: "on"
+        for:
+          seconds: 10
+      - platform: state
+        entity_id: sensor.calendar_regexes
+    variables:
+      calendar_entity: calendar.vagtplan
+      calendar_name: "Vagtplan"
+      regexes: "{{ states.sensor.calendar_regexes.attributes }}"
+    action:
+      - service: calendar.get_events
+        data:
+          start_date_time: "{{ now().strftime('%Y-%m-%d') }} 00:00:00"
+          end_date_time: "{{ (now() + timedelta(days=15)).strftime('%Y-%m-%d') }} 23:59:59"
+        target:
+          entity_id: "{{ calendar_entity }}"
+        response_variable: all_events
+      - variables:
+          agenda_events: |
+            {%- from 'agenda.jinja' import agenda_events -%}
+            {%- from 'work_schedule.jinja' import parse_work_schedule_event -%}
+            {{ agenda_events(all_events, calendar_entity, calendar_name, regexes, preprocessor=parse_work_schedule_event) }}
       - event: "calendar_updated"
         event_data:
           calendar: "{{ calendar_name }}"

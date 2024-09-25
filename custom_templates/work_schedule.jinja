@@ -1,0 +1,164 @@
+{%- macro parse_work_schedule_time(time_str) -%}
+    {%- set time_parts = time_str.split('R') -%}
+    {%- set shift_parts = time_parts[0].split('-') -%}
+    {%- set ns = namespace(ret={
+        "shift_start": shift_parts[0].replace('.', ''),
+        "shift_end": shift_parts[1].replace('.', ''),
+    }) -%}
+    {%- if time_parts|length > 1 -%}
+        {%- set ns.ret = dict(ns.ret, **({
+            "on_call_start": shift_parts[1].replace('.', ''),
+            "on_call_end": time_parts[1].replace('.', ''),
+        })) -%}
+    {%- endif -%}
+
+    {%- for key, value in ns.ret.items() -%}
+        {%- if value is not none -%}
+            {%- if value | length == 1 -%}
+                {%- set ns.ret = dict(ns.ret, **{key: '0'~value~':00'}) -%}
+            {%- elif value | length == 2 -%}
+                {%- set ns.ret = dict(ns.ret, **{key: value~':00'}) -%}
+            {%- elif value | length == 3 -%}
+                {%- set ns.ret = dict(ns.ret, **{key: '0'~value[0]~':'~value[1:]}) -%}
+            {%- elif value | length == 4 -%}
+                {%- set ns.ret = dict(ns.ret, **{key: value[0:2]~':'~value[2:]}) -%}
+            {%- endif -%}
+        {%- endif -%}
+    {%- endfor -%}
+
+    {{ ns.ret | to_json }}
+{%- endmacro -%}
+
+{%- macro parse_work_schedule_summary(summary) -%}
+    {%- set parts = summary.split(' - ') -%}
+    {%- set c = parts|length -%}
+    {%- set shift_name = parts[0] -%}
+    {%- set shift_type = parts[1] if c > 2
+        else 'Vagt' if c > 1 and '(d)' in parts[1]
+        else 'Ukendt'
+    -%}
+    
+    {%- set ns = namespace(ret={
+        "summary": shift_name | trim | title,
+        "type": shift_type | trim,
+        "original_summary": summary,
+        "confirmed": parts[-1] | trim | lower not in ['ønsket', 'afvist'],
+    }) -%}
+
+    {%- if shift_name|lower in ['fri', 'afspadsering', 'sygdom'] -%}
+        {%- set ns.ret = dict(ns.ret, **{
+            "routine": true,
+        }) -%}
+    {%- elif 'ferie' in shift_name|lower -%}
+        {%- set ns.ret = dict(ns.ret, **{
+            "vacation": true,
+            "routine": true,
+        }) -%}
+    {%- elif 'kursus' in shift_name|lower -%}
+        {%- set ns.ret = dict(ns.ret, **{
+            "work": true,
+            "wake": true,
+            "bil": true,
+            "travel": true,
+            "off_site": true,
+        }) -%}
+    {%- elif 'tilkald' in shift_name|lower -%}
+        {%- set ns.ret = dict(ns.ret, **{
+            "work_call": true,
+        }) -%}
+    {%- elif shift_name == 'RW' -%}
+        {%- set ns.ret = dict(ns.ret, **{
+            "work": true,
+            "on_site": true,
+            "on_call": true,
+            "weekend": true,
+            "on_call_start": '00:00',
+            "on_call_end": '23:59',
+            "summary": 'Weekend rådighedsvagt'
+        }) -%}
+    {%- elif shift_name|regex_match("^(\d+)-(\d+)R(\d+)$") -%}
+        {%- set shift_times = parse_work_schedule_time(shift_name) | from_json -%}
+        {%- set ns.ret = dict(ns.ret, **shift_times) -%}
+        {%- set evening = shift_times.get('shift_end', '0') | replace(':', '.') | float > 17.0 -%}
+        {%- set weekend = shift_times.get('on_call_end', '0') | replace(':', '.') | float == 24.0 -%}
+        {%- set name = 'Aftenvagt' if evening else 'Dagvagt' -%}
+        {%- set ns.ret = dict(ns.ret, **{
+            "work": true,
+            "wake": true,
+            "bil": true,
+            "travel": true,
+            "on_site": true,
+            "rsh": true,
+            "on_call": true,
+            "evening": evening,
+            "day": not evening,
+            "summary": name~' med'~(' weekend' if weekend)~ ' rådighedsvagt fra kl. '~shift_times.get('on_call_start', '0')
+        }) -%}
+    {%- elif shift_name|regex_match("^(\d+)-(\d+)$") -%}
+        {%- set shift_times = parse_work_schedule_time(shift_name) | from_json -%}
+        {%- set ns.ret = dict(ns.ret, **shift_times) -%}
+        {%- set evening = shift_times.get('shift_end', '0') | replace(':', '.') | float > 17.0 -%}
+        {%- set name = 'Aftenvagt' if evening else 'Dagvagt' -%}
+        {%- set ns.ret = dict(ns.ret, **{
+            "work": true,
+            "wake": true,
+            "bil": true,
+            "travel": true,
+            "on_site": true,
+            "rsh": true,
+            "evening": evening,
+            "day": not evening,
+            "summary": name
+        }) -%}
+    {%- endif -%}
+    {{ ns.ret | to_json }}
+{%- endmacro -%}
+
+
+{%- macro parse_work_schedule_event(event) -%}
+    {%- set event = dict(event, **{
+        "vagtskema": true,
+    }) -%}
+
+    {%- set summary = event.get('summary') -%}
+    {%- set parsed_summary = parse_work_schedule_summary(summary) | from_json if summary else {} -%}
+    {%- set event = dict(event, **parsed_summary) -%}
+    {%- set event = dict(event, **{
+        "description": event.get('description')~'\n\n'~event.get('original_summary') if event.get('description')
+                        else event.get('original_summary'),
+    }) -%}
+
+    {%- set site = 'RSR' if event.get('rsr') else
+                    'RSH' if event.get('rsh') else
+                    none -%}
+
+    {%- set event = dict(event, **{
+        "summary": (site~' - ' if site)~event.get('summary'),
+        "location": 'Henrik Harpestrengsvej 13, 2100 København Ø' if site == 'RSR' else
+                    'Borgmester Ib Juuls Vej 56, 2730 Herlev, Denmark' if site == 'RSH' else
+                    '',
+    }) -%}
+
+    {{ event | to_json }}
+{%- endmacro -%}
+
+
+{%- macro filter_work_events_to_schedule(events) -%}
+    {#- Remove all events that isn't scheduled within an event with "vagtskema" == true -#}
+    {%- set vagtskema_events = events | selectattr('vagtskema', 'equalto', true) | list -%}
+    {%- set ns = namespace(output = [], i_vagt=false) -%}
+    {%- for event in events -%}
+        {%- set ns.i_vagt = false -%}
+        {%- for vagt_event in vagtskema_events -%}
+            {%- if event.start >= vagt_event.start and event.end <= vagt_event.end -%}
+                {%- set ns.i_vagt = true -%}
+                {%- break -%}
+            {%- endif -%}
+        {%- endfor -%}
+        {%- if ns.i_vagt -%}
+            {%- set ns.output = ns.output + [event] -%}
+        {%- endif -%}
+    {%- endfor -%}
+    {{ ns.output | list | to_json }}
+{%- endmacro -%}
+

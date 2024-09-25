@@ -95,10 +95,11 @@
     }
 {% endmacro -%}
 
-{%- macro agenda_events(all_events, calendar_entity, calendar_name, regexes, bool_attrs={}, attrs={}) -%}
-    {% set ns = namespace(ret=[]) %}
-    {% for event in all_events[calendar_entity].events | sort(attribute='start') | list -%}
-        {% set ns.ret = ns.ret + [agenda_event(calendar_name, event, regexes, bool_attrs, attrs)|from_json] %}
+{%- macro agenda_events(all_events, calendar_entity, calendar_name, regexes, bool_attrs={}, attrs={}, preprocessor=none) -%}
+    {%- set ns = namespace(ret=[]) -%}
+    {%- for event in all_events[calendar_entity].events | sort(attribute='start') | list -%}
+        {%- set event = preprocessor(event) | from_json if preprocessor else event -%}
+        {%- set ns.ret = ns.ret + [dict(event, **agenda_event(calendar_name, event, regexes, bool_attrs, attrs)|from_json)] -%}
     {%- endfor -%}
     {{ ns.ret }}
 {%- endmacro -%}
@@ -144,25 +145,6 @@
             | to_json
         -}}
     {% endif %}
-{%- endmacro -%}
-
-{%- macro filter_work_events_to_schedule(events) -%}
-    {#- Remove all events that isn't scheduled within an event with "vagtskema" == true -#}
-    {%- set vagtskema_events = events | selectattr('vagtskema', 'equalto', true) | list -%}
-    {%- set ns = namespace(output = [], i_vagt=false) -%}
-    {%- for event in events -%}
-        {%- set ns.i_vagt = false -%}
-        {%- for vagt_event in vagtskema_events -%}
-            {%- if event.start >= vagt_event.start and event.end <= vagt_event.end -%}
-                {%- set ns.i_vagt = true -%}
-                {%- break -%}
-            {%- endif -%}
-        {%- endfor -%}
-        {%- if ns.i_vagt -%}
-            {%- set ns.output = ns.output + [event] -%}
-        {%- endif -%}
-    {%- endfor -%}
-    {{ ns.output | list | to_json }}
 {%- endmacro -%}
 
 {%- macro gather_events(entity_ids, attribute='agenda') -%}
