@@ -1,72 +1,87 @@
-type: vertical-stack
+type: horizontal-stack
 cards:
-  - type: horizontal-stack
+  - type: vertical-stack
     cards:
-      - type: custom:button-card
-        entity: sensor.bedtime_clock
+      - type: "custom:button-card"
+        entity: input_select.sleep_state
+        icon: mdi:sleep
+        size: 40px
         layout: icon_state
         show_state: true
         show_name: false
+        color: auto
+        tap_action:
+          action: call-service
+          service: input_select.select_next
+          service_data:
+            entity_id: input_select.sleep_state
+        hold_action:
+          action: call-service
+          service: input_select.select_previous
+          service_data:
+            entity_id: input_select.sleep_state
         styles:
           state:
-            - font-size: 20pt
-      - type: custom:button-card
-        entity: sensor.wake_up_time_clock
-        layout: icon_state
-        show_state: true
-        show_name: false
-        styles:
-          state:
-            - font-size: 20pt
-
-  - type: horizontal-stack
-    cards:
-      - type: vertical-stack
-        cards:
-          - type: custom:stack-in-card
-            mode: vertical
-            cards:
-              - type: custom:button-card
-                entity: sensor.wake_up_event_source_name
-                layout: icon_state
-                show_state: true
-                show_name: false
-              - type: custom:button-card
-                entity: sensor.wake_up_event_source_message
-                layout: vertical
-                show_state: true
-                show_name: false
-                show_label: true
-                show_icon: false
-                label: "[[[ return states['sensor.wake_up_time_clock'].state ]]]"
-                styles:
-                  state:
-                    - font-size: 9pt
-
-          - type: "custom:button-card"
-            entity: input_select.sleep_state
+            - text-transform: capitalize
+            - font-size: 1.5em
+        state:
+          - value: awake
+            icon: mdi:eye
+          - value: bedtime
+            icon: mdi:weather-night
+          - value: in bed
+            icon: mdi:bed
+          - value: sleeping
             icon: mdi:sleep
-            size: 40px
+          - value: paused
+            icon: mdi:pause
+          - value: smart wake
+            icon: mdi:brain
+          - value: alarm
+            icon: mdi:alarm
+          - value: snoozing
+            icon: mdi:alarm-snooze
+          - value: waking
+            icon: mdi:alarm-light
+
+      - type: custom:button-card
+        entity: sensor.wake_up_event_source_message
+        layout: vertical
+        show_state: true
+        show_name: true
+        show_label: true
+        show_icon: false
+        name: "[[[ return states['sensor.wake_up_event_source_name'].state ]]]"
+        label: "[[[ return states['sensor.wake_up_event_time_clock'].state ]]]"
+        styles:
+          name:
+            - font-size: 1.2em
+          state:
+            - font-size: 0.8em
+
+  - type: vertical-stack
+    cards:
+      - type: horizontal-stack
+        cards:
+          - type: custom:button-card
+            entity: sensor.bedtime_clock
+            size: 20px
             layout: icon_state
             show_state: true
             show_name: false
-            color: auto
-            tap_action:
-              action: call-service
-              service: input_select.select_next
-              service_data:
-                entity_id: input_select.sleep_state
-            hold_action:
-              action: call-service
-              service: input_select.select_previous
-              service_data:
-                entity_id: input_select.sleep_state
 
-      - type: vertical-stack
-        cards:
-          - type: custom:time-picker-card
-            entity: input_datetime.fallback_wake_up_time
-            name: Standard
-            layout:
-              align_controls: center
-              thin: true
+          - type: custom:button-card
+            entity: sensor.wake_up_time_clock
+            size: 20px
+            layout: icon_state
+            show_state: true
+            show_name: false
+
+      - type: custom:time-picker-card
+        entity: input_datetime.fallback_wake_up_time
+        name: Standard
+        layout:
+          align_controls: center
+          thin: true
+        hide:
+          name: true
