@@ -3,11 +3,11 @@ path: kiosk
 icon: "mdi:tablet"
 type: custom:grid-layout
 layout:
-  grid-template-columns: 50% 50%
+  grid-template-columns: calc(50% - 40px) calc(50% - 40px) 80px
   grid-template-rows: auto
   grid-template-areas: |
-    "header header"
-    "left right"
+    "header header header"
+    "left   right  sidebar"
 cards:
   - type: conditional
     view_layout:
@@ -17,23 +17,31 @@ cards:
         entity: sensor.next_scheduled_leave_in
         above: -1
         below: 61
-    card: !include ../../cards/time_to_leave_countdown.yaml
+    card: !include /config/lovelace/cards/time_to_leave_countdown.yaml
 
   - type: vertical-stack
     view_layout:
       grid-area: left
     cards:
-      - !include ../../cards/weather/simple_weather.yaml
+      - !include /config/lovelace/cards/weather/simple_weather.yaml
 
-      - !include ../../cards/fridge.yaml
+      - type: conditional
+        conditions:
+          - entity: switch.elkedel
+            state: "on"
+        card: !include /config/lovelace/cards/kettle.yaml
 
       - !include ../../cards/conditional_timers.yaml
 
       - !include ../../cards/gdq/compact_overview.yaml
 
-      - !include ../../cards/vacuum.yaml
-
       - !include ../../cards/laundry.yaml
+
+      - type: conditional
+        conditions:
+          - entity: input_boolean.vacuum_show_card
+            state: "on"
+        card: !include /config/lovelace/cards/vacuum_map.yaml
 
       - type: conditional
         conditions:
@@ -45,9 +53,9 @@ cards:
         conditions:
           - entity: binary_sensor.octoprint_printing
             state: "on"
-        card: !include ../../cards/3d_printer/preview.yaml
+        card: !include /config/lovelace/cards/3d_printer/preview.yaml
 
-      - !include ../../cards/power_gauges.yaml
+      - !include /config/lovelace/cards/weather/weather_radar_small.yaml
 
   - type: vertical-stack
     view_layout:
@@ -59,49 +67,56 @@ cards:
             template: currently_playing
             variables:
               - room: kokken
-          - !include ../../cards/compact_clock.yaml
+          - !include /config/lovelace/cards/compact_clock.yaml
 
       - type: custom:decluttering-card
         template: speaker_control_v2
         variables:
           - room: kokken
 
+      - !include /config/lovelace/cards/climate/target_temperature.yaml
+
+      - !include /config/lovelace/cards/fridge.yaml
+
+      - !include /config/lovelace/cards/vacuum_controls.yaml
+
+      - !include /config/lovelace/cards/power_gauges.yaml
+
+  - type: vertical-stack
+    view_layout:
+      grid-area: sidebar
+    cards:
       - type: custom:decluttering-card
-        template: room_state_and_light_profile
+        template: room_light_profile
         variables:
+          - orientation: vertical
           - room: kitchen
 
-      - !include ../../cards/climate/target_temperature.yaml
+      - type: "custom:button-card"
+        entity: switch.mikroovn
+        name: Mikroovn
+        color: auto
+        tap_action:
+          action: toggle
+        hold_action:
+          action: more-info
 
-      - type: conditional
-        conditions:
-          - entity: switch.elkedel
-            state: "on"
-        card: !include ../../cards/kettle.yaml
+      - type: "custom:button-card"
+        entity: switch.elkedel
+        name: Elkedel
+        color: auto
+        tap_action:
+          action: toggle
+        hold_action:
+          action: more-info
 
-      - type: grid
-        square: false
-        cards:
-          - type: "custom:button-card"
-            entity: switch.mikroovn
-            name: Mikroovn
-            color: auto
-            tap_action:
-              action: toggle
-            hold_action:
-              action: more-info
-          - type: "custom:button-card"
-            entity: switch.elkedel
-            name: Elkedel
-            color: auto
-
-          - type: "custom:button-card"
-            name: Timere
-            icon: mdi:timer
-            tap_action:
-              action: fire-dom-event
-              browser_mod:
-                service: browser_mod.popup
-                data:
-                  title: Timers
-                  content: !include ../../cards/kitchen_timers.yaml
+      - type: "custom:button-card"
+        name: Timere
+        icon: mdi:timer
+        tap_action:
+          action: fire-dom-event
+          browser_mod:
+            service: browser_mod.popup
+            data:
+              title: Timers
+              content: !include /config/lovelace/cards/kitchen_timers.yaml

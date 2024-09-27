@@ -3,11 +3,11 @@ path: kiosk
 icon: "mdi:tablet"
 type: custom:grid-layout
 layout:
-  grid-template-columns: 33.33% 33.33% 33.33%
+  grid-template-columns: calc(50% - 40px) calc(50% - 40px) 80px
   grid-template-rows: auto
   grid-template-areas: |
     "header header header"
-    "left center right"
+    "left   right  sidebar"
 cards:
   - type: conditional
     view_layout:
@@ -29,25 +29,6 @@ cards:
           - !include ../../cards/compact_clock.yaml
 
       - !include ../../cards/media_players/active_media_player_controls.yaml
-
-      - type: custom:decluttering-card
-        template: room_state_and_light_profile
-        variables:
-          - room: hallway
-
-      - !include ../../cards/hoveddor.yaml
-
-      - !include ../../cards/climate/target_temperature.yaml
-
-      - !include ../../cards/vacuum.yaml
-
-      - !include ../../cards/mode_toggles.yaml
-
-  - type: vertical-stack
-    view_layout:
-      grid-area: center
-    cards:
-      - !include ../../cards/transport/car.yaml
 
       - type: conditional
         conditions:
@@ -78,15 +59,27 @@ cards:
           - entity: binary_sensor.s_train_message_present
             state: "on"
         card: !include /config/lovelace/cards/s_train_status.yaml
+
       - type: custom:rejseplanen-stog-card
         entity: sensor.s_tog_malov
         title: " "
         max_entries: 4
 
+      - !include ../../cards/climate/target_temperature.yaml
+
+      - !include ../../cards/vacuum.yaml
+
+      - type: custom:decluttering-card
+        template: light_groups
+        variables:
+          - rum: gang
+
   - type: vertical-stack
     view_layout:
       grid-area: right
     cards:
+      - !include ../../cards/transport/car.yaml
+
       - type: conditional
         conditions:
           - entity: binary_sensor.martin_next_scheduled_destination_leave_soon
@@ -100,3 +93,18 @@ cards:
       - !include ../../cards/weather/weather_hourly_forecast.yaml
 
       - !include ../../cards/weather/weather_radar_small.yaml
+
+  - type: vertical-stack
+    view_layout:
+      grid-area: sidebar
+    cards:
+      - !include ../../cards/dorklokke.yaml
+      - !include ../../cards/hoveddor_laas.yaml
+
+      - type: custom:decluttering-card
+        template: room_light_profile
+        variables:
+          - orientation: vertical
+          - room: hallway
+
+      - !include ../../cards/mode_toggles_vertical.yaml

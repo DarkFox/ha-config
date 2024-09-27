@@ -3,11 +3,11 @@ path: kiosk
 icon: mdi:tablet
 type: custom:grid-layout
 layout:
-  grid-template-columns: 50% 50%
+  grid-template-columns: calc(50% - 40px) calc(50% - 40px) 80px
   grid-template-rows: auto
   grid-template-areas: |
-    "header header"
-    "left right"
+    "header header header"
+    "left   right  sidebar"
 cards:
   - type: conditional
     view_layout:
@@ -25,20 +25,11 @@ cards:
     cards:
       - !include ../../cards/weather/simple_weather.yaml
 
-      - type: custom:decluttering-card
-        template: room_light_profile
-        variables:
-          - room: bedroom
-
-      - type: horizontal-stack
-        cards:
-          - !include ../../cards/hoveddor_laas.yaml
-
-          - !include ../../cards/dorklokke.yaml
-
-          - type: custom:button-card
-            entity: fan.sovevaerelse_blaeser
-            name: Blæser
+      - type: conditional
+        conditions:
+          - entity: input_boolean.guests
+            state: "off"
+        card: !include ../../cards/calendar_compact.yaml
 
       - type: horizontal-stack
         cards:
@@ -70,54 +61,6 @@ cards:
                     type: vertical-stack
                     cards:
                       - !include ../../cards/climate/temp_graph.yaml
-
-      - type: horizontal-stack
-        cards:
-          - type: custom:button-card
-            entity: cover.sovevaerelse_gardin
-            name: Gardin
-            template: compact
-            tap_action:
-              action: toggle
-            double_tap_action:
-              action: call-service
-              service: cover.stop_cover
-              service_data:
-                entity_id: cover.sovevaerelse_gardin
-            hold_action:
-              action: more-info
-          - type: custom:button-card
-            entity: cover.sovevaerelse_gardin_dor
-            name: Dør
-            template: compact
-            tap_action:
-              action: toggle
-            double_tap_action:
-              action: call-service
-              service: cover.stop_cover
-              service_data:
-                entity_id: cover.sovevaerelse_gardin_dor
-            hold_action:
-              action: more-info
-          - type: custom:button-card
-            entity: cover.sovevaerelse_gardin_vindue
-            name: Vindue
-            template: compact
-            tap_action:
-              action: toggle
-            double_tap_action:
-              action: call-service
-              service: cover.stop_cover
-              service_data:
-                entity_id: cover.sovevaerelse_gardin_vindue
-            hold_action:
-              action: more-info
-          - type: custom:button-card
-            entity: switch.bedroom_curtain_automations
-            name: Auto
-            template: compact
-            tap_action:
-              action: toggle
 
       - type: custom:decluttering-card
         template: light_groups
@@ -200,8 +143,64 @@ cards:
 
       - !include ../../cards/sleep.yaml
 
-      - type: conditional
-        conditions:
-          - entity: input_boolean.guests
-            state: "off"
-        card: !include ../../cards/calendar_compact.yaml
+  - type: vertical-stack
+    view_layout:
+      grid-area: sidebar
+    cards:
+      - !include ../../cards/dorklokke.yaml
+      - !include ../../cards/hoveddor_laas.yaml
+      - type: custom:button-card
+        entity: fan.sovevaerelse_blaeser
+        name: Blæser
+
+      - type: custom:decluttering-card
+        template: room_light_profile
+        variables:
+          - orientation: vertical
+          - room: bedroom
+
+      - type: custom:button-card
+        entity: cover.sovevaerelse_gardin
+        name: Gardin
+        # template: compact
+        tap_action:
+          action: toggle
+        double_tap_action:
+          action: call-service
+          service: cover.stop_cover
+          service_data:
+            entity_id: cover.sovevaerelse_gardin
+        hold_action:
+          action: more-info
+      - type: custom:button-card
+        entity: cover.sovevaerelse_gardin_dor
+        name: Dør
+        # template: compact
+        tap_action:
+          action: toggle
+        double_tap_action:
+          action: call-service
+          service: cover.stop_cover
+          service_data:
+            entity_id: cover.sovevaerelse_gardin_dor
+        hold_action:
+          action: more-info
+      - type: custom:button-card
+        entity: cover.sovevaerelse_gardin_vindue
+        name: Vindue
+        # template: compact
+        tap_action:
+          action: toggle
+        double_tap_action:
+          action: call-service
+          service: cover.stop_cover
+          service_data:
+            entity_id: cover.sovevaerelse_gardin_vindue
+        hold_action:
+          action: more-info
+      - type: custom:button-card
+        entity: switch.bedroom_curtain_automations
+        name: Auto
+        # template: compact
+        tap_action:
+          action: toggle
