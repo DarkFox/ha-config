@@ -231,6 +231,7 @@ automation:
             entity_id: sensor.parking_duration_limit
             above: 0
       - variables:
+          parked_time: "{{ as_timestamp(state_attr('device_tracker.id_3_pro_tracker', 'last_captured')) | timestamp_custom('%H:%M') }}"
           parkeringsskive: "{{ as_timestamp(states('sensor.parkeringsskive')) | timestamp_custom('%H:%M') }}"
           parking_limit: "{{ as_timestamp(states('sensor.parking_limit')) | timestamp_custom('%H:%M') }}"
           parking_alarm: "{{ as_timestamp(states('sensor.parking_alarm')) | timestamp_custom('%H:%M') }}"
@@ -243,7 +244,7 @@ automation:
       - service: script.notify_darkphone
         data:
           message: |
-            Parkeret på {{ states('sensor.parking_lot') }}.
+            Parkeret på {{ states('sensor.parking_lot') }} klokken {{ parked_time }}.
             Timer sat til kl. {{ parkeringsskive }}, flyt bilen inden kl. {{ parking_limit }}.
             Alarm sat til kl. {{ parking_alarm }}.
 
