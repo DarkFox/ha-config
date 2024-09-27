@@ -325,16 +325,13 @@ automation:
         minutes: "/1"
         seconds: "0"
     action:
-      - condition: template
-        # Pyscript is slow to load the services, so we need to check if it's missing using watchman
-        value_template: >-
-          {{
-            'entities' in states.sensor.watchman_missing_services.attributes
-            and state_attr('sensor.watchman_missing_services', 'entities') | selectattr('id', 'eq', 'pyscript.gdq_get_bids') | list | length == 0
-          }}
       - parallel:
-          - service: pyscript.gdq_get_bids
-          - service: pyscript.gdq_get_donation_stats
+          - action: script.run_pyscript
+            data:
+              action: pyscript.gdq_get_bids
+          - action: script.run_pyscript
+            data:
+              action: pyscript.gdq_get_donation_stats
 
   - alias: "Refresh GDQ Runs Regex"
     id: refresh_gdq_runs_regex

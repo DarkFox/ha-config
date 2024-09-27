@@ -21,29 +21,6 @@ binary_sensor:
 sensor:
   - platform: template
     sensors:
-      dmi_vejr:
-        friendly_name: "DMI Vejr"
-        value_template: >-
-          {{ states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text | regex_findall_index("<overskriftkoebenhavnognordsjaelland.+><text>(.*?)<\/text><\/overskriftkoebenhavnognordsjaelland>", 0) }}
-        attribute_templates:
-          date: >-
-            {{ states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text | regex_findall_index("<dato.+><text>(.*?)<\/text><\/dato>", 0) }}
-          validity: >-
-            {{ states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text | regex_findall_index("<reggyld.+><text>(.*?)<\/text><\/reggyld>", 0) }}
-          content: >-
-            {{ states.sensor.dmi_weather_raw.attributes.regiondata[0].products[0].text | regex_findall_index("<koebenhavnognordsjaelland.+><text>(.*?)<\/text><\/koebenhavnognordsjaelland>", 0) }}
-
-      dmi_vejr_tts:
-        value_template: "Vejrudsigt: {{ states('sensor.dmi_vejr') }}."
-        attribute_templates:
-          text: |
-            {% if states('sensor.dmi_aktuel_varsel') %}
-            Vejr Varsel kategori {{ state_attr('sensor.dmi_aktuel_varsel', 'category') }}: {{ states('sensor.dmi_aktuel_varsel') }}.
-            {{ state_attr('sensor.dmi_aktuel_varsel', 'text') }}
-            {% endif %}
-            {{ states('sensor.dmi_vejr') }}:
-            {{ state_attr('sensor.dmi_vejr', 'content') | replace(' temp.', ' temperatur') | replace(' Temp.', ' Temperatur') | replace(' temp ', ' temperatur ') | replace(' Temp ', ' Temperatur ') }}
-
       dmi_aktuel_varsel:
         friendly_name: "DMI Aktuel Varsel"
         value_template: >-
@@ -76,23 +53,12 @@ sensor:
             {{ '/local/downloads/dmi_warning_icons/'+state_attr('sensor.dmi_aktuel_varsel', 'raw')['icon'] if state_attr('sensor.dmi_aktuel_varsel', 'raw') }}
 
   - platform: rest
-    name: dmi_weather_raw
-    # https://dmi.dk/dmidk_byvejrWS/rest/texts/[ID from dmi.dk location weather URL]
-    resource: !secret dmi_weather_url
-    headers:
-      User-Agent: !secret user_agent
-    scan_interval: 300
-    value_template: "{{ value_json.regiondata[0].products[0].timestamp }}"
-    json_attributes:
-      - regiondata
-
-  - platform: rest
     name: dmi_warnings_raw
     # https://dmi.dk/dmidk_byvejrWS/rest/texts/varsler/geonameid/[ID from dmi.dk location weather URL]
     resource: !secret dmi_warnings_url
     headers:
       User-Agent: !secret user_agent
-    scan_interval: 300
+    scan_interval: 900
     force_update: True
     value_template: "{{ 0 if value_json.warnings|length < 1 else value_json.warnings[0].time }}"
     json_attributes:
@@ -119,21 +85,93 @@ sensor:
       - actualWarnings
       - fivedayWarnings
 
+template:
+  - trigger:
+      - platform: event
+        event_type: dmi_weather_report
+    sensor:
+      - name: "DMI Vejr"
+        unique_id: 94a62da3-3a00-43e4-9318-e7ef57326f8b
+        state: "{{ trigger.event.data.weather_report.get('title', '') }}"
+        attributes:
+          location: "{{ trigger.event.data.weather_report.get('location', '') }}"
+          municipality: "{{ trigger.event.data.weather_report.get('municipality', '') }}"
+          region: "{{ trigger.event.data.weather_report.get('region', '') }}"
+          timestamp: >-
+            {% set timestamp_str = trigger.event.data.weather_report.get('timestamp', '') %}
+            {{ timestamp_str | as_datetime if timestamp_str != '' else now() }}
+          date: "{{ trigger.event.data.weather_report.get('date', '') }}"
+          validity: "{{ trigger.event.data.weather_report.get('validity', '') }}"
+          content: "{{ trigger.event.data.weather_report.get('content', '') }}"
+
+  - trigger:
+      - platform: event
+        event_type: dmi_severe_weather_warnings
+    sensor:
+      - name: "DMI Vejr Varsler"
+        unique_id: 1aa440ad-8c2e-41a3-8a07-aa554553e19e
+        state: "{{ trigger.event.data.severe_weather_warnings.get('warnings', []) | length }}"
+        unit_of_measurement: "varsler"
+        attributes:
+          name: "{{ trigger.event.data.severe_weather_warnings.get('name') }}"
+          area: "{{ trigger.event.data.severe_weather_warnings.get('area') }}"
+          day0: "{{ trigger.event.data.severe_weather_warnings.get('day0') }}"
+          day1: "{{ trigger.event.data.severe_weather_warnings.get('day1') }}"
+          day2: "{{ trigger.event.data.severe_weather_warnings.get('day2') }}"
+          day3: "{{ trigger.event.data.severe_weather_warnings.get('day3') }}"
+          day4: "{{ trigger.event.data.severe_weather_warnings.get('day4') }}"
+          day5: "{{ trigger.event.data.severe_weather_warnings.get('day5') }}"
+          vandstand: "{{ trigger.event.data.severe_weather_warnings.get('vandstand') }}"
+          favorite: "{{ trigger.event.data.severe_weather_warnings.get('favorite') }}"
+          warnings: "{{ trigger.event.data.severe_weather_warnings.get('warnings', []) }}"
+          location_warnings: "{{ trigger.event.data.severe_weather_warnings.get('locationWarnings', []) }}"
+          actual_warnings: "{{ trigger.event.data.severe_weather_warnings.get('actualWarnings', []) }}"
+          fiveday_warnings: "{{ trigger.event.data.severe_weather_warnings.get('fivedayWarnings', []) }}"
+          raw: "{{ trigger.event.data.severe_weather_warnings.get('raw') }}"
+
+  - sensor:
+      - name: "DMI Vejr TTS"
+        unique_id: b3456e8a-6181-45a0-aef8-54f7ee46c571
+        state: "Vejrudsigt: {{ states('sensor.dmi_vejr') }}."
+        attributes:
+          text: |
+            {%- from 'utils.jinja' import replace_list -%}
+            {%- set needles = [' temp.', ' Temp.', ' temp ', ' Temp '] -%}
+            {% if states('sensor.dmi_aktuel_varsel') %}
+            Vejr Varsel kategori {{ state_attr('sensor.dmi_aktuel_varsel', 'category') }}: {{ states('sensor.dmi_aktuel_varsel') }}.
+            {{ state_attr('sensor.dmi_aktuel_varsel', 'text') }}
+            {% endif %}
+            {{ states('sensor.dmi_vejr') }}:
+            {{ replace_list(state_attr('sensor.dmi_vejr', 'content'), needles, ' temperatur') }}
+
 automation:
-  # - alias: update_dmi_weather_radar
-  #   trigger:
-  #     - platform: state
-  #       entity_id: sensor.dmi_weather_raw
-  #     - platform: state
-  #       entity_id: binary_sensor.home_assistant_loaded
-  #       to: "on"
-  #   action:
-  #     - service: downloader.download_file
-  #       data:
-  #         url: "https://www.dmi.dk/dmidk_byvejrWS/rest/image/gif/Radar/"
-  #         filename: radar.gif
-  #         subdir: dmi_weather_radar
-  #         overwrite: true
+  - alias: get_dmi_weather_report
+    id: 4db44655-fc7d-4808-b8fd-90ada6708c54
+    initial_state: true
+    mode: restart
+    trigger:
+      - platform: time_pattern
+        minutes: "/15"
+    action:
+      - action: script.run_pyscript
+        data:
+          action: pyscript.get_dmi_weather_report
+          data:
+            location_id: !secret dmi_location_id
+
+  - alias: get_dmi_severe_weather_warnings
+    id: 4db44655-fc7d-4808-b8fd-90ada6708c54
+    initial_state: true
+    mode: restart
+    trigger:
+      - platform: time_pattern
+        minutes: "/15"
+    action:
+      - action: script.run_pyscript
+        data:
+          action: pyscript.get_dmi_severe_weather_warnings
+          data:
+            location_id: !secret dmi_location_id
 
   - alias: severe_weather_warning
     initial_state: true

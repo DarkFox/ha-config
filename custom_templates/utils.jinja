@@ -200,3 +200,22 @@
         {{ output }}
     {%- endif -%}
 {%- endmacro -%}
+
+
+{%- macro replace_list(value, needles, replacements) -%}
+    {#-
+    Replaces multiple values in a string with corresponding replacements.
+
+    Parameters:
+    - value: The string to replace values in.
+    - needles: A list of values to replace.
+    - replacements: A list of replacement values, or a single value to replace all needles with.
+    -#}
+    {%- set ns = namespace(ret=value) -%}
+    {%- for i in range(needles | length) -%}
+        {%- set needle = needles[i] -%}
+        {%- set replacement = replacements[i] if replacements is list else replacements -%}
+        {%- set ns.ret = ns.ret | replace(needle, replacement) -%}
+    {%- endfor -%}
+    {{ ns.ret }}
+{%- endmacro -%}

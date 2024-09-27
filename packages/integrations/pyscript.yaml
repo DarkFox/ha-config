@@ -1,3 +1,29 @@
 pyscript:
   allow_all_imports: true
   hass_is_global: true
+
+script:
+  run_pyscript:
+    mode: parallel
+    fields:
+      action:
+        description: "Pyscript to run"
+        example: "pyscript.my_script"
+        selector:
+          action:
+      data:
+        description: "Data to pass to the pyscript"
+        example: "{'key': 'value'}"
+        selector:
+          object:
+    sequence:
+      # Pyscript is slow to load the services, so we need to check if it's missing using watchman
+      - wait_template: >-
+          {{
+            'entities' in states.sensor.watchman_missing_services.attributes
+            and state_attr('sensor.watchman_missing_services', 'entities') | selectattr('id', 'eq', action) | list | length == 0
+          }}
+        timeout: 00:00:30
+        continue_on_timeout: false
+      - action: "{{ action }}"
+        data: "{{ data or {} }}"
