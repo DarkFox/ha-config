@@ -9,14 +9,14 @@ script:
         example: "my/topic/#"
     sequence:
       # Dump retained messages to /config/mqtt_dump.txt
-      - service: mqtt.dump
+      - action: mqtt.dump
         data:
           topic: "{{ topic }}"
           duration: 1
       # Read the dump
       - delay:
           seconds: 2
-      - service: shell_command.read_mqtt_dump
+      - action: shell_command.read_mqtt_dump
         response_variable: mqtt_dump
       - variables:
           topics: >-
@@ -37,7 +37,7 @@ script:
                 topic: "{{ topics[repeat.index-1] }}"
             - condition: template
               value_template: "{{ topic and topic != '' }}"
-            - service: mqtt.publish
+            - action: mqtt.publish
               data:
                 topic: "{{ topic }}"
                 payload: ""

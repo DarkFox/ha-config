@@ -14,10 +14,10 @@ script:
         "workshop": "værksted"
         "hallway": "gang"
     sequence:
-      - service: input_boolean.toggle
+      - action: input_boolean.toggle
         data:
           entity_id: "input_boolean.{{ room }}_activity_override"
-      - service: script.tts_speak
+      - action: script.tts_speak
         data:
           cache: true
           entity_id: "{{ state_attr('group.'+room+'_speakers' , 'entity_id') }}"
@@ -32,10 +32,10 @@ script:
     variables:
       room_name_translation: *room_name_translation
     sequence:
-      - service: input_boolean.toggle
+      - action: input_boolean.toggle
         data:
           entity_id: "input_boolean.{{ room }}_separate_light_profile"
-      - service: script.tts_speak
+      - action: script.tts_speak
         data:
           cache: true
           entity_id: "{{ state_attr('group.'+room+'_speakers' , 'entity_id') }}"
@@ -58,7 +58,7 @@ script:
                     and is_state('input_boolean.' + room + '_room_state', 'off')
                   }}
             sequence:
-              - service: input_select.select_option
+              - action: input_select.select_option
                 data:
                   entity_id: "input_select.{{ room }}_room_state"
                   option: "active"
@@ -80,7 +80,7 @@ script:
                 value_template: >-
                   {{ is_state('input_boolean.' + room + '_activity_override', 'on') }}
             sequence:
-              - service: input_select.select_option
+              - action: input_select.select_option
                 data:
                   entity_id: "input_select.{{ room }}_room_state"
                   option: "off"
@@ -108,7 +108,7 @@ automation:
     variables:
       room: "{{ trigger.event.data.id | replace('_medie_fjernbetjening', '') }}"
     action:
-      # Button | Action | Event (firmware 1.0.35) | Desired result (service call)
+      # Button | Action | Event (firmware 1.0.35) | Desired result (action call)
       # -- | -- | -- | --
       # Play | press | 1002 | media_player.play_pause
       # Next Track | press | 5002 | media_player.media_next_track
@@ -134,70 +134,70 @@ automation:
               - condition: template
                 value_template: "{{ trigger.event.data.event == 1002 }}"
             sequence:
-              - service: media_player.media_play_pause
+              - action: media_player.media_play_pause
                 data:
                   entity_id: "media_player.{{ room }}"
           - conditions:
               - condition: template
                 value_template: "{{ trigger.event.data.event == 5002 }}"
             sequence:
-              - service: media_player.media_next_track
+              - action: media_player.media_next_track
                 data:
                   entity_id: "media_player.{{ room }}"
           - conditions:
               - condition: template
                 value_template: "{{ trigger.event.data.event == 4002 }}"
             sequence:
-              - service: media_player.media_previous_track
+              - action: media_player.media_previous_track
                 data:
                   entity_id: "media_player.{{ room }}"
           - conditions:
               - condition: template
                 value_template: "{{ trigger.event.data.event == 2002 }}"
             sequence:
-              - service: media_player.volume_up
+              - action: media_player.volume_up
                 data:
                   entity_id: "media_player.{{ room }}"
           - conditions:
               - condition: template
                 value_template: "{{ trigger.event.data.event == 2001 }}"
             sequence:
-              - service: media_player.volume_up
+              - action: media_player.volume_up
                 data:
                   entity_id: "media_player.{{ room }}"
           - conditions:
               - condition: template
                 value_template: "{{ trigger.event.data.event == 3002 }}"
             sequence:
-              - service: media_player.volume_down
+              - action: media_player.volume_down
                 data:
                   entity_id: "media_player.{{ room }}"
           - conditions:
               - condition: template
                 value_template: "{{ trigger.event.data.event == 3001 }}"
             sequence:
-              - service: media_player.volume_down
+              - action: media_player.volume_down
                 data:
                   entity_id: "media_player.{{ room }}"
           - conditions:
               - condition: template
                 value_template: "{{ trigger.event.data.event == 6002 }}"
             sequence:
-              - service: script.play_dr_p3
+              - action: script.play_dr_p3
                 data:
                   entity_id: "media_player.{{ room }}_mass"
           - conditions:
               - condition: template
                 value_template: "{{ trigger.event.data.event == 6004 }}"
             sequence:
-              - service: script.briefing_announcement
+              - action: script.briefing_announcement
                 data:
                   entity_id: "media_player.{{ room }}"
           - conditions:
               - condition: template
                 value_template: "{{ trigger.event.data.event == 6003 }}"
             sequence:
-              - service: script.mass_playlist
+              - action: script.mass_playlist
                 data:
                   entity_id: "media_player.{{ room }}_mass"
                   playlist:
@@ -209,21 +209,21 @@ automation:
               - condition: template
                 value_template: "{{ trigger.event.data.event == 7002 }}"
             sequence:
-              - service: script.play_chillhop_playlist
+              - action: script.play_chillhop_playlist
                 data:
                   entity_id: "media_player.{{ room }}_mass"
           - conditions:
               - condition: template
                 value_template: "{{ trigger.event.data.event == 7004 }}"
             sequence:
-              - service: script.play_hardstyle_playlist
+              - action: script.play_hardstyle_playlist
                 data:
                   entity_id: "media_player.{{ room }}_mass"
           - conditions:
               - condition: template
                 value_template: "{{ trigger.event.data.event == 7003 }}"
             sequence:
-              - service: script.play_seasonal_playlist
+              - action: script.play_seasonal_playlist
                 data:
                   entity_id: "media_player.{{ room }}_mass"
 
@@ -269,7 +269,7 @@ automation:
                       - condition: template
                         value_template: "{{ trigger.event.data.event in [ 1002, 1003 ] }}"
                     sequence:
-                      - service: script.remote_switch_on
+                      - action: script.remote_switch_on
                         data:
                           room: "{{ room_remote_mapping[trigger.event.data.id] }}"
                   - alias: "Off button click/hold"
@@ -277,7 +277,7 @@ automation:
                       - condition: template
                         value_template: "{{ trigger.event.data.event in [ 2002, 2003 ] }}"
                     sequence:
-                      - service: script.remote_switch_off
+                      - action: script.remote_switch_off
                         data:
                           room: "{{ room_remote_mapping[trigger.event.data.id] }}"
         default:
@@ -288,7 +288,7 @@ automation:
                   - condition: template
                     value_template: "{{ trigger.event.data.event == 1002 }}"
                 sequence:
-                  - service: script.remote_switch_on
+                  - action: script.remote_switch_on
                     data:
                       room: "{{ room_remote_mapping[trigger.event.data.id] }}"
               - alias: "Off button click"
@@ -296,7 +296,7 @@ automation:
                   - condition: template
                     value_template: "{{ trigger.event.data.event == 2002 }}"
                 sequence:
-                  - service: script.remote_switch_off
+                  - action: script.remote_switch_off
                     data:
                       room: "{{ room_remote_mapping[trigger.event.data.id] }}"
               - alias: "On button hold"
@@ -304,7 +304,7 @@ automation:
                   - condition: template
                     value_template: "{{ trigger.event.data.event == 1003 }}"
                 sequence:
-                  - service: script.toggle_activity_override
+                  - action: script.toggle_activity_override
                     data:
                       room: "{{ room_remote_mapping[trigger.event.data.id] }}"
               - alias: "Off button hold"
@@ -312,7 +312,7 @@ automation:
                   - condition: template
                     value_template: "{{ trigger.event.data.event == 2003 }}"
                 sequence:
-                  - service: script.toggle_separate_light_profile
+                  - action: script.toggle_separate_light_profile
                     data:
                       room: "{{ room_remote_mapping[trigger.event.data.id] }}"
 
@@ -371,7 +371,7 @@ automation:
           id: gang_fjernbetjening
           event: 4002
     action:
-      service: switch.toggle
+      action: switch.toggle
       data:
         entity_id: switch.dorklokke_forstyr_ikke
 
@@ -384,7 +384,7 @@ automation:
           id: gang_fjernbetjening
           event: 5002
     action:
-      service: lock.lock
+      action: lock.lock
       target:
         entity_id: lock.hoveddor_las
 
@@ -397,7 +397,7 @@ automation:
           id: gang_fjernbetjening
           event: 5003
     action:
-      service: lock.unlock
+      action: lock.unlock
       target:
         entity_id: lock.hoveddor_las
 
@@ -461,7 +461,7 @@ automation:
           id: sovevaerelse_fjernbetjening
           event: 4002
     action:
-      service: cover.open_cover
+      action: cover.open_cover
       data:
         entity_id: cover.sovevaerelse_gardin
 
@@ -474,7 +474,7 @@ automation:
           id: sovevaerelse_fjernbetjening
           event: 5002
     action:
-      service: cover.close_cover
+      action: cover.close_cover
       data:
         entity_id: cover.sovevaerelse_gardin
 
@@ -487,7 +487,7 @@ automation:
           id: sovevaerelse_fjernbetjening
           event: 5003
     action:
-      service: cover.toggle
+      action: cover.toggle
       data:
         entity_id: cover.sovevaerelse_gardin_vindue
 
@@ -500,7 +500,7 @@ automation:
           id: sovevaerelse_fjernbetjening
           event: 4003
     action:
-      service: cover.toggle
+      action: cover.toggle
       data:
         entity_id: cover.sovevaerelse_gardin_dor
 
@@ -514,7 +514,7 @@ automation:
           id: kontor_gardin_fjernbetjening
           event: 1002
     action:
-      - service: cover.open_cover
+      - action: cover.open_cover
         data:
           entity_id:
             - cover.kontor_rullegardin
@@ -529,7 +529,7 @@ automation:
           id: kontor_gardin_fjernbetjening
           event: 2002
     action:
-      - service: cover.close_cover
+      - action: cover.close_cover
         data:
           entity_id:
             - cover.kontor_rullegardin
@@ -549,7 +549,7 @@ automation:
           id: kontor_gardin_fjernbetjening
           event: 2003
     action:
-      - service: cover.set_cover_position
+      - action: cover.set_cover_position
         data:
           entity_id:
             - cover.kontor_rullegardin
@@ -575,7 +575,7 @@ automation:
                 entity_id: input_select.workshop_room_state
                 state: "off"
             sequence:
-              - service: input_select.select_option
+              - action: input_select.select_option
                 data:
                   entity_id: input_select.workshop_room_state
                   option: "active"
@@ -594,7 +594,7 @@ automation:
           id: vaerksted_fjernbetjening
           event: 1003
     action:
-      - service: script.toggle_activity_override
+      - action: script.toggle_activity_override
         data:
           room: workshop
 
@@ -649,7 +649,7 @@ automation:
                 entity_id: input_boolean.workshop_activity_override
                 state: "on"
             sequence:
-              - service: input_select.select_option
+              - action: input_select.select_option
                 data:
                   entity_id: input_select.workshop_room_state
                   option: "off"
@@ -668,7 +668,7 @@ automation:
           id: vaerksted_fjernbetjening
           event: 4003
     action:
-      - service: script.toggle_separate_light_profile
+      - action: script.toggle_separate_light_profile
         data:
           room: workshop
 
@@ -727,7 +727,7 @@ automation:
           id: stue_fjernbetjening
           event: 4002
     action:
-      service: cover.open_cover
+      action: cover.open_cover
       data:
         entity_id: cover.stue_gardin
 
@@ -740,7 +740,7 @@ automation:
           id: stue_fjernbetjening
           event: 5002
     action:
-      service: cover.close_cover
+      action: cover.close_cover
       data:
         entity_id: cover.stue_gardin
 
@@ -753,7 +753,7 @@ automation:
           id: stue_fjernbetjening
           event: 5003
     action:
-      service: cover.toggle
+      action: cover.toggle
       data:
         entity_id: cover.stue_gardin_hojre
 
@@ -766,7 +766,7 @@ automation:
           id: stue_fjernbetjening
           event: 4003
     action:
-      service: cover.toggle
+      action: cover.toggle
       data:
         entity_id: cover.stue_gardin_venstre
 
@@ -847,7 +847,7 @@ automation:
           id: kokken_fjernbetjening
           event: 2003
     action:
-      - service: script.toggle_activity_override
+      - action: script.toggle_activity_override
         data:
           room: kitchen
 
@@ -860,7 +860,7 @@ automation:
           id: kokken_fjernbetjening
           event: 3003
     action:
-      - service: script.toggle_separate_light_profile
+      - action: script.toggle_separate_light_profile
         data:
           room: kitchen
 
@@ -885,6 +885,6 @@ automation:
           id: kokken_fjernbetjening
           event: 5003
     action:
-      service: switch.toggle
+      action: switch.toggle
       data:
         entity_id: switch.elkedel

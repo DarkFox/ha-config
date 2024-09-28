@@ -3,7 +3,7 @@ blueprint:
   name: Update Map Extractor camera
   description: |-
     Controls update interval of a Map Extractor camera.
-    
+
     There are 4 modes available:
       - Two intervals - automation controls camera updates both when vacuum is cleaning or docked. To use with `auto_update: false` in camera's configuration.
       - Turn off when docked - completely turns off vacuum updates when the vacuum is docked. Uses default interval when cleaning.
@@ -132,7 +132,7 @@ action:
   - choose:
       - conditions: "{{ is_interval_docked_trigger or is_interval_cleaning_trigger or is_vacuum_docked_trigger }}"
         sequence:
-          - service: homeassistant.update_entity
+          - action: homeassistant.update_entity
             entity_id: !input camera
       - conditions: "{{ is_vacuum_state_trigger }}"
         sequence:
@@ -142,12 +142,12 @@ action:
                     mode_to_handle in ['turn_off_when_docked', 'default_when_cleaning']
                   }}
                 sequence:
-                  - service: "camera.{{ is_vacuum_docked | iif('turn_off', 'turn_on') }}"
+                  - action: "camera.{{ is_vacuum_docked | iif('turn_off', 'turn_on') }}"
                     entity_id: !input camera
               - conditions: |-
                   {{
                     mode_to_handle in ['default_when_docked']
                   }}
                 sequence:
-                  - service: "camera.{{ is_vacuum_docked | iif('turn_on', 'turn_off') }}"
+                  - action: "camera.{{ is_vacuum_docked | iif('turn_on', 'turn_off') }}"
                     entity_id: !input camera

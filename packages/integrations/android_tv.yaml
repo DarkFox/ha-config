@@ -23,12 +23,12 @@ script:
               - condition: template
                 value_template: "{{ is_state(entity_id, 'off') }}"
             sequence:
-              - service: media_player.turn_on
+              - action: media_player.turn_on
                 data:
                   entity_id: "{{ entity_id }}"
               - delay:
                   seconds: 5
-      - service: androidtv.adb_command
+      - action: androidtv.adb_command
         data:
           entity_id: "{{ entity_id }}"
           command: >-
@@ -36,7 +36,7 @@ script:
       - condition: "{{ True if press_enter != undefined else False }}"
       - delay:
           seconds: 10
-      - service: remote.send_command
+      - action: remote.send_command
         data:
           command: DPAD_CENTER
         target:

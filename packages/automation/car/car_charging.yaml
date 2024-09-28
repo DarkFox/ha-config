@@ -56,10 +56,10 @@ automation:
         state: "on"
     action:
       - parallel:
-          - service: switch.turn_off
+          - action: switch.turn_off
             target:
               entity_id: switch.id_3_pro_charging
-          - service: script.notify_darkphone
+          - action: script.notify_darkphone
             data:
               message: "Opladning er bliver stoppet. Den starter igen kl. {{ (states('input_datetime.car_start_charging_at') or '').split(':')[0:-1] | join(':') }}."
 
@@ -75,13 +75,13 @@ automation:
         state: "on"
     action:
       - parallel:
-          - service: input_boolean.turn_off
+          - action: input_boolean.turn_off
             target:
               entity_id: input_boolean.car_delayed_charging
-          - service: switch.turn_on
+          - action: switch.turn_on
             target:
               entity_id: switch.id_3_pro_charging
-          - service: script.notify_darkphone
+          - action: script.notify_darkphone
             data:
               message: "Forsinket opladningstidspunkt er nået. Genstarter opladning."
 
@@ -94,7 +94,7 @@ automation:
         to: "connected"
     action:
       - alias: "Set Car Charging Started to now"
-        service: input_text.set_value
+        action: input_text.set_value
         target:
           entity_id: input_text.car_charging_started
         data:
@@ -111,7 +111,7 @@ automation:
           - dc
     action:
       - alias: "Set latest charge type"
-        service: input_text.set_value
+        action: input_text.set_value
         target:
           entity_id: input_text.car_charging_type
         data:
@@ -125,13 +125,13 @@ automation:
         to: "disconnected"
     action:
       - alias: "Clear charge type"
-        service: input_text.set_value
+        action: input_text.set_value
         target:
           entity_id: input_text.car_charging_type
         data:
           value: ""
       - alias: "Clear Car Charging Started to now"
-        service: input_text.set_value
+        action: input_text.set_value
         target:
           entity_id: input_text.car_charging_started
         data:
@@ -153,7 +153,7 @@ automation:
           {{ (from_time - to_time > 5 or to_time - from_time > 5) }}
     action:
       - delay: "00:00:05"
-      - service: script.notify_darkphone
+      - action: script.notify_darkphone
         data:
           message: >
             Bilen lader op fra {{ states('sensor.id_3_pro_state_of_charge') }}% til {{ states('sensor.id_3_pro_target_state_of_charge') }}%.
@@ -172,7 +172,7 @@ automation:
         entity_id: sensor.id_3_pro_charging_state
         state: "charging"
     action:
-      - service: script.notify_darkphone
+      - action: script.notify_darkphone
         data:
           message: >-
             Bilen er ladt op til {{ states('sensor.id_3_pro_state_of_charge') }}/{{ states('sensor.id_3_pro_target_state_of_charge') }}%.
@@ -192,6 +192,6 @@ automation:
             entity_id: sensor.id_3_pro_charging_state
             state: "unavailable"
     action:
-      - service: script.notify_darkphone
+      - action: script.notify_darkphone
         data:
           message: "Oplading afsluttet. Bilen er ladt op til {{ states('sensor.id_3_pro_state_of_charge') }}%."

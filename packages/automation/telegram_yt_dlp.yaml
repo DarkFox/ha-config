@@ -8,7 +8,7 @@ script:
     alias: "yt-dlp"
     mode: parallel
     sequence:
-      - service: shell_command.yt_dlp
+      - action: shell_command.yt_dlp
         data:
           url: "{{ url }}"
           format_prefs: "best[ext=mp4]/bestvideo[height<=?720][ext=mp4][vcodec=avc1]+bestaudio[ext=m4a]/best"
@@ -26,12 +26,12 @@ automation:
       event_data:
         command: "/yt-dlp"
     action:
-      - service: shell_command.yt_dlp
+      - action: shell_command.yt_dlp
         response_variable: file_path
         data:
           url: "{{ trigger.event.data.text }}"
       # Send the file to the user as uncompressed file
-      - service: telegram_bot.send_document
+      - action: telegram_bot.send_document
         data:
           target: "{{ trigger.event.data.chat_id }}"
           document: "{{ file_path }}"

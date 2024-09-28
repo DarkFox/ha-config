@@ -16,7 +16,7 @@ script:
         ]
       any_muted: "{{ mute_states | select('equalto', true) | list | length > 0 }}"
     sequence:
-      - service: media_player.volume_mute
+      - action: media_player.volume_mute
         target:
           entity_id: "{{ group_members }}"
         data:
@@ -39,14 +39,14 @@ script:
               - condition: template
                 value_template: "{{ (state_attr(entity_id, 'group_members')|length) > 1 }}"
             sequence:
-              - service: media_player.unjoin
+              - action: media_player.unjoin
                 target:
                   entity_id: "{{ entity_id }}"
           - conditions:
               - condition: template
                 value_template: "{{ not not group_leader_entity }}"
             sequence:
-              - service: media_player.join
+              - action: media_player.join
                 target:
                   entity_id: "{{ group_leader_entity }}"
                 data:
@@ -71,7 +71,7 @@ automation:
       repeat:
         for_each: "{{ state_attr((trigger.entity_id|replace('input_number','media_player')|replace('_group_volume', '')), 'group_members') }}"
         sequence:
-          - service: media_player.volume_set
+          - action: media_player.volume_set
             target:
               entity_id: "{{ repeat.item }}"
             data:

@@ -483,7 +483,7 @@ script:
   select_new_years_theme:
     alias: Select New Years Theme
     sequence:
-      - service: input_select.select_option
+      - action: input_select.select_option
         data:
           entity_id: input_select.theme
           option: New Years
@@ -506,7 +506,7 @@ script:
               - condition: template
                 value_template: "{{ new_mode == 'white' }}"
             sequence:
-              - service: light.turn_on
+              - action: light.turn_on
                 target:
                   entity_id: "{{ entity_id }}"
                 data:
@@ -514,7 +514,7 @@ script:
                   color_temp: "{{ color_temp }}"
                   transition: 0
               - delay: 0.5
-              - service: light.turn_on
+              - action: light.turn_on
                 target:
                   entity_id: "{{ entity_id }}"
                 data:
@@ -525,7 +525,7 @@ script:
               - condition: template
                 value_template: "{{ new_mode == 'color' }}"
             sequence:
-              - service: light.turn_on
+              - action: light.turn_on
                 target:
                   entity_id: "{{ entity_id }}"
                 data:
@@ -533,7 +533,7 @@ script:
                   hs_color: "{{ hs_color }}"
                   transition: 0
               - delay: 0.5
-              - service: light.turn_on
+              - action: light.turn_on
                 target:
                   entity_id: "{{ entity_id }}"
                 data:
@@ -586,18 +586,18 @@ script:
               - condition: template
                 value_template: "{{ states(room_entity) != 'unknown' and scene in state_attr(room_entity, 'hue_scenes') }}"
             sequence:
-              - service: hue.hue_activate_scene
+              - action: hue.hue_activate_scene
                 data:
                   group_name: "{{ room }}"
                   scene_name: "{{ scene }}"
                   dynamic: true
               - delay:
                   seconds: 1
-              - service: scene.apply
+              - action: scene.apply
                 data:
                   entities: "{{ hue_scene_states }}"
         default:
-          - service: scene.apply
+          - action: scene.apply
             data:
               transition: "{{ fallback_scene.transition }}"
               entities: "{{ fallback_scene.entities }}"
@@ -664,7 +664,7 @@ script:
       - repeat:
           for_each: "{{ preset_entities.keys()|unique|list }}"
           sequence:
-            - service: script.turn_on
+            - action: script.turn_on
               target:
                 entity_id: script.wled_preset
               data:
@@ -683,7 +683,7 @@ script:
                         }{{ ',' if not loop.last }}
                       {% endfor %}
                     }
-      - service: scene.apply
+      - action: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities: >-
@@ -714,13 +714,13 @@ script:
             "effect": "None"
           }
     sequence:
-      - service: select.select_option
+      - action: select.select_option
         data:
           entity_id: "{{ preset_select_entity }}"
           option: "{{ preset }}"
       - delay:
           seconds: 1
-      - service: scene.apply
+      - action: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities: >-
@@ -744,7 +744,7 @@ automation:
       platform: template
       value_template: "{% if as_timestamp(now()) - as_timestamp(states.input_number.scene_transition_time.last_updated) > 60 %}true{% endif %}"
     action:
-      - service: input_number.set_value
+      - action: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
           value: 0.5
@@ -765,7 +765,7 @@ automation:
       platform: homeassistant
       event: start
     action:
-      - service: light.turn_on
+      - action: light.turn_on
         data:
           entity_id: light.apartment_light_level
           brightness: 127
@@ -787,7 +787,7 @@ automation:
         above: 135
     action:
       - event: "{{ 'decrease' if states.light.apartment_light_level.attributes.brightness | int < 120 else 'increase' }}_light_profile"
-      - service: light.turn_on
+      - action: light.turn_on
         data:
           entity_id: light.apartment_light_level
           brightness: 127
@@ -838,14 +838,14 @@ automation:
               - condition: template
                 value_template: "{{ transition_time }}"
             sequence:
-              - service: input_number.set_value
+              - action: input_number.set_value
                 data:
                   entity_id: "input_number.scene_transition_time"
                   value: "{{ transition_time|float(0.5) }}"
               - delay:
                   seconds: 1
 
-      - service: input_select.select_option
+      - action: input_select.select_option
         data:
           entity_id: "{{ light_profile_entity }}"
           option: "{{ profile }}"
@@ -857,7 +857,7 @@ automation:
             sequence:
               - delay:
                   seconds: 2
-              - service: automation.trigger
+              - action: automation.trigger
                 data:
                   entity_id: "automation.reset_scene_transition_time"
 
@@ -882,7 +882,7 @@ automation:
       - condition: template
         value_template: "{{ current_light_profile != 'Bright' }}"
     action:
-      - service: input_select.select_previous
+      - action: input_select.select_previous
         data:
           entity_id: "{{ light_profile_entity }}"
 
@@ -907,7 +907,7 @@ automation:
       - condition: template
         value_template: "{{ current_light_profile != 'Off' }}"
     action:
-      - service: input_select.select_next
+      - action: input_select.select_next
         data:
           entity_id: "{{ light_profile_entity }}"
 
@@ -934,7 +934,7 @@ automation:
               - condition: template
                 value_template: "{{ current_light_profile == 'Bright' }}"
             sequence:
-              - service: input_select.select_option
+              - action: input_select.select_option
                 data:
                   option: Night
                   entity_id: "{{ light_profile_entity }}"
@@ -942,12 +942,12 @@ automation:
               - condition: template
                 value_template: "{{ current_light_profile == 'Off' }}"
             sequence:
-              - service: input_select.select_option
+              - action: input_select.select_option
                 data:
                   option: Default
                   entity_id: "{{ light_profile_entity }}"
         default:
-          - service: input_select.select_previous
+          - action: input_select.select_previous
             data:
               entity_id: "{{ light_profile_entity }}"
 
@@ -969,7 +969,7 @@ automation:
     variables:
       room: "{{ trigger.entity_id.replace('input_boolean.', '').replace('_separate_light_profile', '') }}"
     action:
-      - service: input_select.select_option
+      - action: input_select.select_option
         data:
           entity_id: "input_select.{{ room }}_light_profile"
           option: "{{ states('input_select.light_profile') }}"

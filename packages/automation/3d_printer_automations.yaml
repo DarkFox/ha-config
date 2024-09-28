@@ -18,7 +18,7 @@ automation:
           - "on"
           - "off"
     action:
-      service: "light.turn_{{ states('binary_sensor.3d_printer_lys') }}"
+      action: "light.turn_{{ states('binary_sensor.3d_printer_lys') }}"
       target:
         entity_id: light.3d_printer_enclosure_light
 
@@ -30,7 +30,7 @@ automation:
         entity_id: binary_sensor.3d_printer_skab
         to: "off"
     action:
-      - service: switch.turn_on
+      - action: switch.turn_on
         target:
           entity_id: switch.filament_affugter
 
@@ -55,7 +55,7 @@ automation:
                     and states('sensor.octoprint_current_state') in ['Printing', 'Pausing', 'Resuming']
                   }}
             sequence:
-              - service: scene.apply
+              - action: scene.apply
                 data:
                   entities:
                     climate.3d_printer:
@@ -70,14 +70,14 @@ automation:
                     and states('sensor.octoprint_current_state') not in ['Printing', 'Pausing', 'Resuming']
                   }}
             sequence:
-              - service: scene.apply
+              - action: scene.apply
                 data:
                   entities:
                     climate.3d_printer:
                       state: "cool"
                       temperature: 20
         default:
-          - service: climate.turn_off
+          - action: climate.turn_off
             target:
               entity_id: climate.3d_printer
 
@@ -90,7 +90,7 @@ automation:
         attribute: hvac_action
         to: "off"
     action:
-      service: fan.turn_off
+      action: fan.turn_off
       target:
         entity_id:
           - fan.3d_printer_enclosure_ind
@@ -105,18 +105,18 @@ automation:
         attribute: hvac_action
         to: "idle"
     action:
-      - service: fan.turn_on
+      - action: fan.turn_on
         target:
           entity_id:
             - fan.3d_printer_enclosure_ind
             - fan.3d_printer_enclosure_ud
-      - service: fan.set_percentage
+      - action: fan.set_percentage
         target:
           entity_id:
             - fan.3d_printer_enclosure_ind
         data:
           percentage: 5
-      - service: fan.set_percentage
+      - action: fan.set_percentage
         target:
           entity_id:
             - fan.3d_printer_enclosure_ud
@@ -132,12 +132,12 @@ automation:
         attribute: hvac_action
         to: "cooling"
     action:
-      - service: fan.turn_on
+      - action: fan.turn_on
         target:
           entity_id:
             - fan.3d_printer_enclosure_ind
             - fan.3d_printer_enclosure_ud
-      - service: fan.set_percentage
+      - action: fan.set_percentage
         target:
           entity_id:
             - fan.3d_printer_enclosure_ind
@@ -161,7 +161,7 @@ automation:
         entity_id: sensor.octoprint_current_state
         state: "Printing"
     action:
-      - service: notify.mobile_app_darkphone
+      - action: notify.mobile_app_darkphone
         data:
           title: "3D Print Progress {{ states('sensor.octoprint_print_progress') }}% - {{ states('sensor.octoprint_current_state') }}"
           message: >-
@@ -185,13 +185,13 @@ automation:
         entity_id: sensor.octoprint_current_state
         from: "Printing"
     action:
-      - service: notify.mobile_app_darkphone
+      - action: notify.mobile_app_darkphone
         data:
           message: "clear_notification"
           data:
             tag: "3d_print_status_notification"
             channel: "3D Printer Status"
-      - service: script.translate
+      - action: script.translate
         data:
           message: "{{ states('sensor.octoprint_current_state') }}"
         response_variable: output
@@ -199,7 +199,7 @@ automation:
           seconds: 1
       - variables:
           message: "3D Printer {{ states('sensor.3d_printer_status') }}"
-      - service: notify.mobile_app_darkphone
+      - action: notify.mobile_app_darkphone
         data:
           title: "{{ message }}"
           message: ""
@@ -208,7 +208,7 @@ automation:
             channel: "3D Printer Alerts"
             importance: high
             image: /api/camera_proxy/camera.3d_printer
-      - service: script.voice_broadcast
+      - action: script.voice_broadcast
         data:
           message: "{{ message }}"
 
@@ -219,7 +219,7 @@ automation:
         entity_id: binary_sensor.3d_printer_aktiv
         to: "on"
     action:
-      - service: automation.turn_on
+      - action: automation.turn_on
         target:
           entity_id: automation.3d_printer_swap_cameras
 
@@ -232,10 +232,10 @@ automation:
         for:
           minutes: 15
     action:
-      - service: switch.turn_off
+      - action: switch.turn_off
         target:
           entity_id: switch.3d_printer_afbryder
-      - service: automation.turn_off
+      - action: automation.turn_off
         target:
           entity_id: automation.3d_printer_swap_cameras
 
@@ -245,6 +245,6 @@ automation:
       - platform: time_pattern
         seconds: "/15"
     action:
-      - service: input_boolean.toggle
+      - action: input_boolean.toggle
         target:
           entity_id: input_boolean.3d_printer_swap_cameras

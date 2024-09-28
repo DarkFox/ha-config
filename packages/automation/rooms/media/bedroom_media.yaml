@@ -6,29 +6,29 @@ media_player:
       - media_player.sovevaerelse_soundbar_songpal
     commands:
       turn_on:
-        service: switch.turn_on
+        action: switch.turn_on
         target:
           entity_id: switch.sovevaerelse_tv
       turn_off:
-        service: switch.turn_off
+        action: switch.turn_off
         target:
           entity_id: switch.sovevaerelse_tv
       volume_up:
-        service: media_player.volume_up
+        action: media_player.volume_up
         target:
           entity_id: media_player.sovevaerelse_soundbar_songpal
       volume_down:
-        service: media_player.volume_down
+        action: media_player.volume_down
         target:
           entity_id: media_player.sovevaerelse_soundbar_songpal
       volume_set:
-        service: media_player.volume_set
+        action: media_player.volume_set
         target:
           entity_id: media_player.sovevaerelse_soundbar_songpal
         data:
           volume_level: "{{ volume_level }}"
       volume_mute:
-        service: media_player.volume_mute
+        action: media_player.volume_mute
         target:
           entity_id: media_player.sovevaerelse_soundbar_songpal
         data:
@@ -59,11 +59,11 @@ switch:
         icon_template: mdi:television
         value_template: "{{ not is_state('media_player.sovevarelse_tv_dlna', 'unavailable') }}"
         turn_on:
-          service: switch.turn_on
+          action: switch.turn_on
           target:
             entity_id: switch.sovevaerelse_tv_power
         turn_off:
-          service: switch.turn_off
+          action: switch.turn_off
           target:
             entity_id: switch.sovevaerelse_tv_power
       sovevaerelse_tv_night_mode:
@@ -71,11 +71,11 @@ switch:
         icon_template: mdi:weather-night
         value_template: "{{ is_state('input_boolean.sovevaerelse_tv_night_mode_state', 'on') }}"
         turn_on:
-          service: script.turn_on
+          action: script.turn_on
           target:
             entity_id: script.sovevaerelse_tv_enable_night_mode
         turn_off:
-          service: script.turn_on
+          action: script.turn_on
           target:
             entity_id: script.sovevaerelse_tv_disable_night_mode
       sovevaerelse_soundbar_night_mode:
@@ -83,23 +83,23 @@ switch:
         icon_template: mdi:weather-night-partly-cloudy
         value_template: "{{ is_state('input_boolean.sovevaerelse_soundbar_night_mode_state', 'on') }}"
         turn_on:
-          - service: songpal.set_sound_setting
+          - action: songpal.set_sound_setting
             target:
               entity_id: media_player.sovevaerelse_soundbar_songpal
             data:
               name: nightMode
               value: "on"
-          - service: input_boolean.turn_on
+          - action: input_boolean.turn_on
             target:
               entity_id: input_boolean.sovevaerelse_soundbar_night_mode_state
         turn_off:
-          - service: songpal.set_sound_setting
+          - action: songpal.set_sound_setting
             target:
               entity_id: media_player.sovevaerelse_soundbar_songpal
             data:
               name: nightMode
               value: "off"
-          - service: input_boolean.turn_off
+          - action: input_boolean.turn_off
             target:
               entity_id: input_boolean.sovevaerelse_soundbar_night_mode_state
 
@@ -120,7 +120,7 @@ script:
       - condition: state
         entity_id: switch.sovevaerelse_tv
         state: "on"
-      - service: remote.send_command
+      - action: remote.send_command
         target:
           entity_id: remote.sovevarelse_ir_remote
         data:
@@ -128,7 +128,7 @@ script:
           command: Options
       - delay:
           milliseconds: 500
-      - service: remote.send_command
+      - action: remote.send_command
         target:
           entity_id: remote.sovevarelse_ir_remote
         data:
@@ -136,7 +136,7 @@ script:
           command: OK
       - delay:
           milliseconds: 3000
-      - service: remote.send_command
+      - action: remote.send_command
         target:
           entity_id: remote.sovevarelse_ir_remote
         data:
@@ -144,7 +144,7 @@ script:
           command: Down
       - delay:
           milliseconds: 500
-      - service: remote.send_command
+      - action: remote.send_command
         target:
           entity_id: remote.sovevarelse_ir_remote
         data:
@@ -152,7 +152,7 @@ script:
           command: OK
       - delay:
           milliseconds: 1000
-      - service: remote.send_command
+      - action: remote.send_command
         target:
           entity_id: remote.sovevarelse_ir_remote
         data:
@@ -160,7 +160,7 @@ script:
           command: Up
       - delay:
           milliseconds: 500
-      - service: remote.send_command
+      - action: remote.send_command
         target:
           entity_id: remote.sovevarelse_ir_remote
         data:
@@ -168,13 +168,13 @@ script:
           command: Return
       - delay:
           milliseconds: 250
-      - service: remote.send_command
+      - action: remote.send_command
         target:
           entity_id: remote.sovevarelse_ir_remote
         data:
           device: Soveværelse TV
           command: Return
-      - service: input_boolean.turn_on
+      - action: input_boolean.turn_on
         target:
           entity_id: input_boolean.sovevaerelse_tv_night_mode_state
 
@@ -183,7 +183,7 @@ script:
       - condition: state
         entity_id: switch.sovevaerelse_tv
         state: "on"
-      - service: remote.send_command
+      - action: remote.send_command
         target:
           entity_id: remote.sovevarelse_ir_remote
         data:
@@ -191,7 +191,7 @@ script:
           command: Options
       - delay:
           milliseconds: 500
-      - service: remote.send_command
+      - action: remote.send_command
         target:
           entity_id: remote.sovevarelse_ir_remote
         data:
@@ -199,7 +199,7 @@ script:
           command: OK
       - delay:
           milliseconds: 3000
-      - service: remote.send_command
+      - action: remote.send_command
         target:
           entity_id: remote.sovevarelse_ir_remote
         data:
@@ -207,7 +207,7 @@ script:
           command: Down
       - delay:
           milliseconds: 500
-      - service: remote.send_command
+      - action: remote.send_command
         target:
           entity_id: remote.sovevarelse_ir_remote
         data:
@@ -215,7 +215,7 @@ script:
           command: OK
       - delay:
           milliseconds: 1000
-      - service: remote.send_command
+      - action: remote.send_command
         target:
           entity_id: remote.sovevarelse_ir_remote
         data:
@@ -223,7 +223,7 @@ script:
           command: Down
       - delay:
           milliseconds: 500
-      - service: remote.send_command
+      - action: remote.send_command
         target:
           entity_id: remote.sovevarelse_ir_remote
         data:
@@ -231,13 +231,13 @@ script:
           command: Return
       - delay:
           milliseconds: 250
-      - service: remote.send_command
+      - action: remote.send_command
         target:
           entity_id: remote.sovevarelse_ir_remote
         data:
           device: Soveværelse TV
           command: Return
-      - service: input_boolean.turn_off
+      - action: input_boolean.turn_off
         target:
           entity_id: input_boolean.sovevaerelse_tv_night_mode_state
 
@@ -252,7 +252,7 @@ automation:
           - "unavailable"
           - "unknown"
     action:
-      - service: switch.turn_on
+      - action: switch.turn_on
         data:
           entity_id: switch.sovevaerelse_tv
 
@@ -267,7 +267,7 @@ automation:
         for:
           minutes: 2
     action:
-      - service: switch.turn_off
+      - action: switch.turn_off
         data:
           entity_id: switch.sovevaerelse_tv
 
@@ -282,7 +282,7 @@ automation:
         entity_id: binary_sensor.sovevaerelse_video_out
         state: "on"
     action:
-      - service: media_player.volume_mute
+      - action: media_player.volume_mute
         data:
           entity_id: media_player.sovevaerelse_soundbar_songpal
           is_volume_muted: true
@@ -298,7 +298,7 @@ automation:
         entity_id: binary_sensor.sovevaerelse_video_out
         state: "on"
     action:
-      - service: media_player.volume_mute
+      - action: media_player.volume_mute
         data:
           entity_id: media_player.sovevaerelse_soundbar_songpal
           is_volume_muted: false
@@ -312,7 +312,7 @@ automation:
           id: sovevaerelse_volumeknap
           event: 2001
     action:
-      service: input_select.select_option
+      action: input_select.select_option
       data:
         entity_id: input_select.sovevaerelse_soundbar_volume_remote_state
         option: "up"
@@ -326,7 +326,7 @@ automation:
           id: sovevaerelse_volumeknap
           event: 3001
     action:
-      service: input_select.select_option
+      action: input_select.select_option
       data:
         entity_id: input_select.sovevaerelse_soundbar_volume_remote_state
         option: "down"
@@ -352,7 +352,7 @@ automation:
         for:
           seconds: 10
     action:
-      service: input_select.select_option
+      action: input_select.select_option
       data:
         entity_id: input_select.sovevaerelse_soundbar_volume_remote_state
         option: "off"
@@ -372,12 +372,12 @@ automation:
                 entity_id: media_player.sovevaerelse
                 state: "playing"
             sequence:
-              - service: media_player.volume_mute
+              - action: media_player.volume_mute
                 data:
                   entity_id: media_player.sovevaerelse
                   is_volume_muted: "{{ not state_attr('media_player.sovevaerelse', 'is_volume_muted') }}"
         default:
-          - service: media_player.volume_mute
+          - action: media_player.volume_mute
             data:
               entity_id: media_player.sovevaerelse_soundbar_songpal
               is_volume_muted: "{{ not state_attr('media_player.sovevaerelse_soundbar_songpal', 'is_volume_muted') }}"
@@ -400,11 +400,11 @@ automation:
                       entity_id: media_player.sovevaerelse
                       state: "playing"
                   sequence:
-                    - service: media_player.volume_up
+                    - action: media_player.volume_up
                       data:
                         entity_id: media_player.sovevaerelse
               default:
-                - service: media_player.volume_up
+                - action: media_player.volume_up
                   data:
                     entity_id: media_player.sovevaerelse_soundbar_songpal
             - delay:
@@ -437,11 +437,11 @@ automation:
                       entity_id: media_player.sovevaerelse
                       state: "playing"
                   sequence:
-                    - service: media_player.volume_down
+                    - action: media_player.volume_down
                       data:
                         entity_id: media_player.sovevaerelse
               default:
-                - service: media_player.volume_down
+                - action: media_player.volume_down
                   data:
                     entity_id: media_player.sovevaerelse_soundbar_songpal
             - delay:

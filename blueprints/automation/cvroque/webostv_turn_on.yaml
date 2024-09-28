@@ -1,8 +1,9 @@
 blueprint:
   name: LG webOS Smart TV - Turn On Action
-  description: "\n## LG webOS Smart TV - Turn On Action for 2022.2+\n\nThis blueprint\
+  description:
+    "\n## LG webOS Smart TV - Turn On Action for 2022.2+\n\nThis blueprint\
     \ will run anytime the user turns the media player on through Home Assistant (UI\
-    \ or service).\n\nAdding this blueprint will allow the user to turn on the LG\
+    \ or action).\n\nAdding this blueprint will allow the user to turn on the LG\
     \ webOS TV through the UI after updating to HA 2022.2, without this blueprint\
     \ or similar automation the Turn On button won't be displayed due to a breaking\
     \ change. This is basically a shortcut to manually adding the automation described\
@@ -28,51 +29,55 @@ blueprint:
           multiple: false
     webostv_mac:
       name: LG webOS TV MAC address
-      description: The MAC address of the selected TV. You can get this information
+      description:
+        The MAC address of the selected TV. You can get this information
         on your TV network settings or through your router.
       default: AA-BB-CC-DD-EE-FF
     on_action:
       name: Actions to run after TV is turned On (Optional)
-      description: Select actions to run after the TV is turned on. Useful for setting
+      description:
+        Select actions to run after the TV is turned on. Useful for setting
         a default volume or changing source automatically.
       default: []
       selector:
         action: {}
     select_action:
       name: Enable Custom Actions?
-      description: When Off the default action is to send a magic packet, when On
+      description:
+        When Off the default action is to send a magic packet, when On
         the custom actions will replace the magic packet.
       default: false
       selector:
         boolean: {}
     custom_action:
       name: Custom Actions (Optional)
-      description: When custom actions are enabled the actions added here will replace
+      description:
+        When custom actions are enabled the actions added here will replace
         the magic packet. Useful for TVs being turned on through an IR remote, script
         or similar.
       default: []
       selector:
         action: {}
 variables:
-  select_action: !input 'select_action'
+  select_action: !input "select_action"
 trigger:
-- platform: webostv.turn_on
-  entity_id: !input 'webostv'
+  - platform: webostv.turn_on
+    entity_id: !input "webostv"
 action:
-- choose:
-  - conditions:
-    - '{{ select_action }}'
-    sequence: !input 'custom_action'
-  default:
-  - service: wake_on_lan.send_magic_packet
-    data:
-      mac: !input 'webostv_mac'
-- wait_for_trigger:
-  - platform: state
-    entity_id: !input 'webostv'
-    to: 'on'
-  timeout: 00:00:30
-- choose: []
-  default: !input 'on_action'
+  - choose:
+      - conditions:
+          - "{{ select_action }}"
+        sequence: !input "custom_action"
+    default:
+      - action: wake_on_lan.send_magic_packet
+        data:
+          mac: !input "webostv_mac"
+  - wait_for_trigger:
+      - platform: state
+        entity_id: !input "webostv"
+        to: "on"
+    timeout: 00:00:30
+  - choose: []
+    default: !input "on_action"
 mode: queued
 max_exceeded: silent

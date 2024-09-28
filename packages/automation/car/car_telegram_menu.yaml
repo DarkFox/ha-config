@@ -12,7 +12,7 @@ automation:
         event_data:
           command: "/bil"
     action:
-      - service: notify.telegram_darkfox
+      - action: notify.telegram_darkfox
         data:
           message: >
             {% if is_state('sensor.id_3_pro_charging_state', 'charging') -%}
@@ -26,7 +26,7 @@ automation:
             {%- else -%}
               Klimatisering afsluttet.
             {%- endif -%}
-      - service: notify.telegram_darkfox
+      - action: notify.telegram_darkfox
         data:
           message: "Menu:"
           data:
@@ -48,7 +48,7 @@ automation:
     variables:
       temp: "{{ states('sensor.id_3_pro_target_temperature')|int }}"
     action:
-      - service: notify.telegram_darkfox
+      - action: notify.telegram_darkfox
         data:
           message: "Klimatisering Menu"
           data:
@@ -70,12 +70,12 @@ automation:
         event_data:
           command: "/car_climatisation_set"
     action:
-      - service: number.set_value
+      - action: number.set_value
         target:
           entity_id: number.id_3_pro_target_climate_temperature
         data:
           temperature: "{{ trigger.event.data['args'][0] }}"
-      - service: notify.telegram_darkfox
+      - action: notify.telegram_darkfox
         data:
           message: >-
             Temperatur sat til {{ trigger.event.data['args'][0] }}°.
@@ -93,7 +93,7 @@ automation:
         event_data:
           command: "/car_climatisation_on"
     action:
-      - service: switch.turn_on
+      - action: switch.turn_on
         target:
           entity_id: switch.id_3_pro_climatisation
 
@@ -110,7 +110,7 @@ automation:
         event_data:
           command: "/car_climatisation_off"
     action:
-      - service: switch.turn_off
+      - action: switch.turn_off
         target:
           entity_id: switch.id_3_pro_climatisation
 
@@ -127,7 +127,7 @@ automation:
         event_data:
           command: "/car_charging"
     action:
-      - service: notify.telegram_darkfox
+      - action: notify.telegram_darkfox
         data:
           message: "Opladning Menu"
           data:

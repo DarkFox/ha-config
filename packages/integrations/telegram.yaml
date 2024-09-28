@@ -28,7 +28,7 @@ automation:
       platform: homeassistant
       event: start
     action:
-      - service: notify.telegram_darkfox
+      - action: notify.telegram_darkfox
         data:
           message: "Home Assistant er genstartet!"
           data:
@@ -45,13 +45,13 @@ automation:
         event_data:
           chat_id: !secret telegram_darkfox_id
     action:
-      - service: conversation.process
+      - action: conversation.process
         data:
           text: "{{ trigger.event.data.text }}"
           language: "da"
           agent_id: 4e0a875b09f8a19a405e1bf3e5c4adac
         response_variable: agent
-      - service: telegram_bot.send_message
+      - action: telegram_bot.send_message
         data:
           target: "{{ trigger.event.data.chat_id }}"
           message: "{{ agent.response.speech.plain.speech }}"

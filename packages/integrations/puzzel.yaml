@@ -123,18 +123,18 @@ switch:
         friendly_name: "Puzzel"
         value_template: "{{ is_state('binary_sensor.puzzel_status', 'on') }}"
         turn_on:
-          service: script.puzzel_log_on
+          action: script.puzzel_log_on
           data:
             queue_id: "{{ state_attr('sensor.puzzel_ko', 'profile_id') }}"
         turn_off:
-          service: script.puzzel_log_off
+          action: script.puzzel_log_off
       puzzel_pause:
         friendly_name: "Puzzel Pause"
         value_template: "{{ is_state('sensor.puzzel_state', 'Pause') }}"
         turn_on:
-          service: script.puzzel_pause_on
+          action: script.puzzel_pause_on
         turn_off:
-          service: script.puzzel_pause_off
+          action: script.puzzel_pause_off
 
 script:
   puzzel_contacts_lookup:
@@ -149,7 +149,7 @@ script:
           # Take only the last 8 digits of the phone number.
           phone_number: "{{ (phone_number|string)[-8:] }}"
 
-      - service: shell_command.curl
+      - action: shell_command.curl
         response_variable: result
         data:
           url: "https://agent.puzzel.com/contactcentre5/{{ states('sensor.puzzel_customer_key') }}/users/{{ states('sensor.puzzel_user_id')|string }}/catalog/contacts/search"
@@ -181,7 +181,7 @@ script:
           # Take only the last 8 digits of the phone number.
           phone_number: "{{ (phone_number|string)[-8:] }}"
 
-      - service: shell_command.curl
+      - action: shell_command.curl
         response_variable: result
         data:
           url: "https://agent.puzzel.com/contactcentre5/{{ states('sensor.puzzel_customer_key') }}/users/{{ states('sensor.puzzel_user_id')|string }}/usersearch"
@@ -214,7 +214,7 @@ script:
           # Take only the last 8 digits of the phone number.
           phone_number: "{{ (phone_number|string)[-8:] }}"
 
-      - service: shell_command.curl
+      - action: shell_command.curl
         response_variable: result
         data:
           url: "https://agent.puzzel.com/contactcentre5/{{ states('sensor.puzzel_customer_key') }}/externalcontact/contacts/search"
@@ -269,17 +269,17 @@ script:
         alias: "phone_number must be 8 digits"
         value_template: "{{ phone_number | string | regex_match('^[0-9]{8}$') }}"
 
-      - service: script.puzzel_contacts_lookup
+      - action: script.puzzel_contacts_lookup
         response_variable: puzzel_contacts_lookup_result
         data:
           phone_number: "{{ phone_number }}"
 
-      - service: script.puzzel_users_lookup
+      - action: script.puzzel_users_lookup
         response_variable: puzzel_users_lookup_result
         data:
           phone_number: "{{ phone_number }}"
 
-      - service: script.puzzel_external_contacts_lookup
+      - action: script.puzzel_external_contacts_lookup
         response_variable: puzzel_external_contacts_lookup_result
         data:
           phone_number: "{{ phone_number }}"
@@ -299,7 +299,7 @@ script:
               {}
             {% endif %}
 
-      - service: script.puzzel_extract_caller_info
+      - action: script.puzzel_extract_caller_info
         response_variable: caller
         data:
           caller_info: "{{ caller_info }}"
@@ -311,7 +311,7 @@ script:
     mode: parallel
     alias: "Puzzel Get Current Request"
     sequence:
-      - service: shell_command.curl
+      - action: shell_command.curl
         response_variable: result
         data:
           url: "https://agent.puzzel.com/contactcentre5/{{ states('sensor.puzzel_customer_key') }}/users/{{ states('sensor.puzzel_user_id') }}/stateinformation/extended?personalQueue=true&request=true"
@@ -331,7 +331,7 @@ script:
           current_request: "{{ ongoing_request or incoming_request }}"
           phone_number: "{{ ongoing_request_phone_number or incoming_request_phone_number }}"
 
-      - service: script.puzzel_lookup_caller
+      - action: script.puzzel_lookup_caller
         response_variable: puzzel_caller
         data:
           phone_number: "{{ phone_number }}"
@@ -374,12 +374,12 @@ script:
                   - "Ledig"
                   - "Pause"
             sequence:
-              - service: script.turn_on
+              - action: script.turn_on
                 target:
                   entity_id: script.puzzel_log_off
               - delay:
                   seconds: 2
-      - service: shell_command.curl
+      - action: shell_command.curl
         data:
           url: "https://agent.puzzel.com/contactcentre5/{{ states('sensor.puzzel_customer_key') }}/users/{{ states('sensor.puzzel_user_id')|string }}/logon"
           method: post
@@ -392,14 +392,14 @@ script:
             phoneNumber: "{{ phone_number|string }}"
       - delay:
           seconds: 1
-      - service: automation.trigger
+      - action: automation.trigger
         target:
           entity_id: automation.update_puzzel_user_info
 
   puzzel_log_off:
     alias: "Log off Puzzel"
     sequence:
-      - service: shell_command.curl
+      - action: shell_command.curl
         data:
           url: "https://agent.puzzel.com/contactcentre5/{{ states('sensor.puzzel_customer_key') }}/users/{{ states('sensor.puzzel_user_id') }}/logoff"
           method: post
@@ -409,14 +409,14 @@ script:
           payload_string: "{}"
       - delay:
           seconds: 1
-      - service: automation.trigger
+      - action: automation.trigger
         target:
           entity_id: automation.update_puzzel_user_info
 
   puzzel_pause_on:
     alias: "Puzzel Pause On"
     sequence:
-      - service: shell_command.curl
+      - action: shell_command.curl
         data:
           url: "https://agent.puzzel.com/contactcentre5/{{ states('sensor.puzzel_customer_key') }}/users/{{ states('sensor.puzzel_user_id') }}/pauseon"
           method: post
@@ -426,14 +426,14 @@ script:
           payload_string: "{}"
       - delay:
           seconds: 1
-      - service: automation.trigger
+      - action: automation.trigger
         target:
           entity_id: automation.update_puzzel_user_info
 
   puzzel_pause_off:
     alias: "Puzzel Pause Off"
     sequence:
-      - service: shell_command.curl
+      - action: shell_command.curl
         data:
           url: "https://agent.puzzel.com/contactcentre5/{{ states('sensor.puzzel_customer_key') }}/users/{{ states('sensor.puzzel_user_id') }}/pauseoff"
           method: post
@@ -443,7 +443,7 @@ script:
           payload_string: "{}"
       - delay:
           seconds: 1
-      - service: automation.trigger
+      - action: automation.trigger
         target:
           entity_id: automation.update_puzzel_user_info
 
@@ -460,12 +460,12 @@ automation:
     action:
       - delay:
           seconds: 1
-      - service: homeassistant.update_entity
+      - action: homeassistant.update_entity
         target:
           entity_id: sensor.puzzel_user
       - delay:
           seconds: 1
-      - service: homeassistant.update_entity
+      - action: homeassistant.update_entity
         target:
           entity_id: sensor.puzzel_user_details
 
@@ -481,7 +481,7 @@ automation:
         entity_id: binary_sensor.puzzel_status
         state: "on"
     action:
-      - service: homeassistant.update_entity
+      - action: homeassistant.update_entity
         target:
           entity_id:
             - sensor.puzzel_user_status
@@ -496,7 +496,7 @@ automation:
         entity_id: sensor.puzzel_user_status
         not_from: null # Ignore attribute changes
     action:
-      - service: homeassistant.update_entity
+      - action: homeassistant.update_entity
         target:
           entity_id: sensor.puzzel_user_requests
 
@@ -533,7 +533,7 @@ automation:
     action:
       - delay:
           seconds: 5
-      - service: script.notify_darkphone
+      - action: script.notify_darkphone
         data:
           message: >-
             {% if is_state('binary_sensor.puzzel_status', 'on') %}
@@ -553,7 +553,7 @@ automation:
         entity_id: sensor.puzzel_state
         attribute: state
     action:
-      - service: notify.mobile_app_arbejdstelefon
+      - action: notify.mobile_app_arbejdstelefon
         data:
           title: "Puzzel Status: {{ 'Logget af' if is_state('sensor.puzzel_profil', 'Logget af') else 'Logget på' }}"
           message: "Profil: {{ states('sensor.puzzel_profil') }}. Status: {{ states('sensor.puzzel_state') }}"
@@ -593,7 +593,7 @@ automation:
         event_data:
           action: "puzzel_switch"
     action:
-      - service: switch.toggle
+      - action: switch.toggle
         target:
           entity_id: switch.puzzel
 
@@ -606,7 +606,7 @@ automation:
         event_data:
           action: "puzzel_pause"
     action:
-      - service: switch.toggle
+      - action: switch.toggle
         target:
           entity_id: switch.puzzel_pause
 
@@ -623,7 +623,7 @@ automation:
         event_data:
           command: "/puzzel"
     action:
-      - service: notify.telegram_darkfox
+      - action: notify.telegram_darkfox
         data:
           message: >-
             {% if is_state('sensor.puzzel_profil', 'Logget af') %}
@@ -661,11 +661,11 @@ automation:
         event_data:
           command: "/puzzel_log_off"
     action:
-      - service: telegram_bot.answer_callback_query
+      - action: telegram_bot.answer_callback_query
         data:
           callback_query_id: "{{ trigger.event.data.id }}"
           message: "Logger af Puzzel..."
-      - service: script.puzzel_log_off
+      - action: script.puzzel_log_off
 
   - id: telegram_bot_log_on_puzzel
     alias: "Telegram bot log on Puzzel"
@@ -685,7 +685,7 @@ automation:
               - condition: template
                 value_template: "{{ not trigger.event.data['args'] }}"
             sequence:
-              - service: notify.telegram_darkfox
+              - action: notify.telegram_darkfox
                 data:
                   message: "Log på Puzzel?"
                   data:
@@ -704,19 +704,19 @@ automation:
                   - condition: template
                     value_template: "{{ profile is not none }}"
                 sequence:
-                  - service: telegram_bot.answer_callback_query
+                  - action: telegram_bot.answer_callback_query
                     data:
                       callback_query_id: "{{ trigger.event.data.id }}"
                       message: "Logger på {{ profile.name }}..."
-                  - service: script.puzzel_log_on
+                  - action: script.puzzel_log_on
                     data:
                       queue_id: "{{ queue_id }}"
             default:
-              - service: telegram_bot.answer_callback_query
+              - action: telegram_bot.answer_callback_query
                 data:
                   callback_query_id: "{{ trigger.event.data.id }}"
                   message: "Kø ikke fundet"
-              - service: automation.trigger
+              - action: automation.trigger
                 target:
                   entity_id: automation.telegram_bot_log_on_puzzel
 
@@ -738,17 +738,17 @@ automation:
               - condition: template
                 value_template: "{{ not trigger.event.data['args'] }}"
             sequence:
-              - service: telegram_bot.answer_callback_query
+              - action: telegram_bot.answer_callback_query
                 data:
                   callback_query_id: "{{ trigger.event.data.id }}"
                   message: "Sætter på pause..."
-              - service: script.puzzel_pause_on
+              - action: script.puzzel_pause_on
           - conditions:
               - condition: template
                 value_template: "{{ trigger.event.data['args'][0] == 'off' }}"
             sequence:
-              - service: telegram_bot.answer_callback_query
+              - action: telegram_bot.answer_callback_query
                 data:
                   callback_query_id: "{{ trigger.event.data.id }}"
                   message: "Sætter ledig..."
-              - service: script.puzzel_pause_off
+              - action: script.puzzel_pause_off

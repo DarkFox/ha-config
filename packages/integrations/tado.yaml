@@ -34,12 +34,12 @@ automation:
         for:
           minutes: 2
     action:
-      - service: switch.turn_off
+      - action: switch.turn_off
         data:
           entity_id: switch.tado
       - delay:
           seconds: 60
-      - service: switch.turn_on
+      - action: switch.turn_on
         data:
           entity_id: switch.tado
       - wait_template: "{{ is_state('device_tracker.tado', 'home') }}"
@@ -49,14 +49,14 @@ script:
   increase_temperature:
     alias: Increase Temperature
     sequence:
-      - service: climate.set_temperature
+      - action: climate.set_temperature
         data:
           entity_id: "{{ entity }}"
           temperature: "{{ state_attr(entity, 'temperature')|float + 1.0 }}"
   decrease_temperature:
     alias: Decrease Temperature
     sequence:
-      - service: climate.set_temperature
+      - action: climate.set_temperature
         data:
           entity_id: "{{ entity }}"
           temperature: "{{ state_attr(entity, 'temperature')|float - 1.0 }}"

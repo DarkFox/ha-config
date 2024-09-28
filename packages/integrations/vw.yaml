@@ -11,12 +11,12 @@ switch:
           }}
         icon_template: "{{ 'mdi:battery-charging' if not is_state('sensor.id_3_pro_charging_mode', 'off') else 'mdi:battery' }}"
         turn_on:
-          service: volkswagen_we_connect_id.volkswagen_id_start_stop_charging
+          action: volkswagen_we_connect_id.volkswagen_id_start_stop_charging
           data:
             vin: !secret vw_vin
             start_stop: "start"
         turn_off:
-          service: volkswagen_we_connect_id.volkswagen_id_start_stop_charging
+          action: volkswagen_we_connect_id.volkswagen_id_start_stop_charging
           data:
             vin: !secret vw_vin
             start_stop: "stop"
@@ -27,12 +27,12 @@ switch:
         value_template: "{{ is_state('binary_sensor.id_3_pro_klimatisering', 'on') }}"
         icon_template: "{{ 'mdi:hvac' if is_state('binary_sensor.id_3_pro_klimatisering', 'on') else 'mdi:hvac-off' }}"
         turn_on:
-          service: volkswagen_we_connect_id.volkswagen_id_set_climatisation
+          action: volkswagen_we_connect_id.volkswagen_id_set_climatisation
           data:
             vin: !secret vw_vin
             start_stop: "start"
         turn_off:
-          service: volkswagen_we_connect_id.volkswagen_id_set_climatisation
+          action: volkswagen_we_connect_id.volkswagen_id_set_climatisation
           data:
             vin: !secret vw_vin
             start_stop: "stop"
@@ -43,12 +43,12 @@ switch:
         value_template: "{{ is_state('sensor.id_3_pro_max_charge_current_ac', 'reduced') }}"
         icon_template: mdi:flash
         turn_on:
-          service: volkswagen_we_connect_id.volkswagen_id_set_ac_charge_speed
+          action: volkswagen_we_connect_id.volkswagen_id_set_ac_charge_speed
           data:
             vin: !secret vw_vin
             maximum_reduced: "reduced"
         turn_off:
-          service: volkswagen_we_connect_id.volkswagen_id_set_ac_charge_speed
+          action: volkswagen_we_connect_id.volkswagen_id_set_ac_charge_speed
           data:
             vin: !secret vw_vin
             maximum_reduced: "maximum"
@@ -157,7 +157,7 @@ automation:
         entity_id: sensor.darkphone_last_notification
         state: "com.volkswagen.weconnect"
     action:
-      - service: homeassistant.update_entity
+      - action: homeassistant.update_entity
         target:
           entity_id: sensor.id_3_pro_charging_mode
 

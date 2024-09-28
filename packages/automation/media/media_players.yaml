@@ -6,7 +6,7 @@ script:
         description: Media Player that will be mute or unmuted
         example: media_player.stue
     sequence:
-      - service: media_player.volume_mute
+      - action: media_player.volume_mute
         target:
           entity_id: "{{ entity_id }}"
         data:
@@ -25,11 +25,11 @@ script:
               - condition: template
                 value_template: "{{ state_attr(entity_id, 'source') == 'TV' }}"
             sequence:
-              - service: script.toggle_mute
+              - action: script.toggle_mute
                 data:
                   entity_id: "{{ entity_id }}"
         default:
-          - service: media_player.media_play_pause
+          - action: media_player.media_play_pause
             target:
               entity_id: "{{ entity_id }}"
 
@@ -91,7 +91,7 @@ script:
               - condition: template
                 value_template: "{{ room in media_player_presets.keys() }}"
             sequence:
-              - service: media_player.volume_set
+              - action: media_player.volume_set
                 target:
                   entity_id: "media_player.{{ room }}"
                 data:
@@ -102,7 +102,7 @@ script:
               sequence:
                 - variables:
                     room: "{{ (media_player_presets.keys()|list)[repeat.index-1] }}"
-                - service: media_player.volume_set
+                - action: media_player.volume_set
                   target:
                     entity_id: "media_player.{{ room }}"
                   data:
@@ -111,7 +111,7 @@ script:
   morning_briefing:
     sequence:
       # Attempt to get a clothing recommendation from gpt, to be added to the templated briefing. If it fails, use the default
-      - service: script.gpt_clothes_recommendation
+      - action: script.gpt_clothes_recommendation
         response_variable: clothes_recommendation_response
         continue_on_error: true
       - variables:
@@ -155,9 +155,9 @@ script:
         description: Volume level
         example: 0.5
     sequence:
-      - service: script.morning_briefing
+      - action: script.morning_briefing
         response_variable: response
-      - service: script.tts_speak
+      - action: script.tts_speak
         data:
           cache: false
           entity_id: "{{ entity_id }}"
@@ -169,9 +169,9 @@ script:
     mode: parallel
     alias: Briefing Announcement URL
     sequence:
-      - service: script.morning_briefing
+      - action: script.morning_briefing
         response_variable: response
-      - service: script.tts_url
+      - action: script.tts_url
         response_variable: chime_tts
         data:
           message: "{{ response.briefing }}"
@@ -213,10 +213,10 @@ script:
             max: 1
             step: 0.01
     sequence:
-      - service: script.briefing_announcement_url
+      - action: script.briefing_announcement_url
         response_variable: briefing_url
         continue_on_error: true
-      - service: script.mass_playlist
+      - action: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
           repeat: "{{ repeat | default('off') }}"
@@ -278,22 +278,22 @@ script:
             max: 1
             step: 0.01
     sequence:
-      - service: media_player.volume_set
+      - action: media_player.volume_set
         target:
           entity_id: "{{ entity_id }}"
         data:
           volume_level: "{{ volume_level | default(0.5) }}"
-      - service: media_player.repeat_set
+      - action: media_player.repeat_set
         target:
           entity_id: "{{ entity_id }}"
         data:
           repeat: "{{ repeat | default('off') }}"
-      - service: media_player.shuffle_set
+      - action: media_player.shuffle_set
         target:
           entity_id: "{{ entity_id }}"
         data:
           shuffle: "{{ shuffle | default(false) }}"
-      - service: mass.play_media
+      - action: mass.play_media
         target:
           entity_id: "{{ entity_id }}"
         data:
@@ -304,7 +304,7 @@ script:
     mode: parallel
     alias: Play DR P1
     sequence:
-      - service: script.mass_playlist
+      - action: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
           playlist:
@@ -314,7 +314,7 @@ script:
     mode: parallel
     alias: Play DR P3
     sequence:
-      - service: script.mass_playlist
+      - action: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
           playlist:
@@ -324,7 +324,7 @@ script:
     mode: parallel
     alias: Play DR P4
     sequence:
-      - service: script.mass_playlist
+      - action: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
           playlist:
@@ -334,7 +334,7 @@ script:
     mode: parallel
     alias: "Play SomaFM: Groove Salad"
     sequence:
-      - service: script.mass_playlist
+      - action: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
           playlist:
@@ -344,7 +344,7 @@ script:
     mode: parallel
     alias: "Play SomaFM: PopTron"
     sequence:
-      - service: script.mass_playlist
+      - action: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
           playlist:
@@ -354,7 +354,7 @@ script:
     mode: parallel
     alias: "Play SomaFM: Beat Blender"
     sequence:
-      - service: script.mass_playlist
+      - action: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
           playlist:
@@ -364,7 +364,7 @@ script:
     mode: parallel
     alias: "Play SomaFM: Xmas in Frisko"
     sequence:
-      - service: script.mass_playlist
+      - action: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
           playlist:
@@ -374,7 +374,7 @@ script:
     mode: parallel
     alias: Play Chillhop Playlist
     sequence:
-      - service: script.mass_playlist
+      - action: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
           shuffle: true
@@ -385,7 +385,7 @@ script:
     mode: parallel
     alias: Play Hardstyle Playlist
     sequence:
-      - service: script.mass_playlist
+      - action: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
           shuffle: true
@@ -396,7 +396,7 @@ script:
     mode: parallel
     alias: Play 80's Playlist
     sequence:
-      - service: script.mass_playlist
+      - action: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
           shuffle: true
@@ -407,7 +407,7 @@ script:
     mode: parallel
     alias: Play 90's Playlist
     sequence:
-      - service: script.mass_playlist
+      - action: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
           shuffle: true
@@ -418,7 +418,7 @@ script:
     mode: parallel
     alias: Play Supermix Playlist
     sequence:
-      - service: script.mass_playlist
+      - action: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
           shuffle: true
@@ -429,7 +429,7 @@ script:
     mode: parallel
     alias: Play Closing Time Playlist
     sequence:
-      - service: script.mass_playlist
+      - action: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
           enqueue: add
@@ -463,7 +463,7 @@ script:
               {# christmas #}
               library://playlist/5
             {% endif %}
-      - service: script.mass_playlist
+      - action: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
           shuffle: true
@@ -478,7 +478,7 @@ script:
         description: URL to play
         example: "https://www.youtube.com/watch?v=5qap5aO4i9A"
     sequence:
-      - service: media_player.play_media
+      - action: media_player.play_media
         data:
           entity_id: "{{ entity_id }}"
           media_content_id: >
@@ -511,7 +511,7 @@ script:
         description: Query to search for
         example: "The Office"
     sequence:
-      - service: media_player.play_media
+      - action: media_player.play_media
         continue_on_error: true
         target:
           entity_id: "{{entity_id}}"
@@ -530,7 +530,7 @@ script:
       - if:
           - "{{ not wait.completed }}"
         then:
-          - service: media_player.play_media
+          - action: media_player.play_media
             continue_on_error: true
             target:
               entity_id: "{{entity_id}}"
@@ -546,7 +546,7 @@ script:
     mode: parallel
     alias: Vejrudsigt
     sequence:
-      - service: script.tts_speak
+      - action: script.tts_speak
         data:
           cache: false
           entity_id: "{{ entity_id }}"
@@ -556,14 +556,14 @@ script:
     mode: parallel
     alias: Rapport
     sequence:
-      - service: conversation.process
+      - action: conversation.process
         data:
           text: >-
             {{ state_attr('sensor.gpt_briefing_prompt', 'prompt') | regex_replace("  +", ' ') }}
           language: DA
           agent_id: 4e0a875b09f8a19a405e1bf3e5c4adac
         response_variable: agent
-      - service: script.tts_speak
+      - action: script.tts_speak
         data:
           cache: false
           entity_id: "{{ entity_id }}"
@@ -588,7 +588,7 @@ automation:
         for:
           minutes: 5
     action:
-      - service: input_boolean.turn_off
+      - action: input_boolean.turn_off
         target:
           entity_id: "{{ trigger.entity_id }}"
 

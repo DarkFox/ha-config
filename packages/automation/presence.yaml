@@ -105,7 +105,7 @@ automation:
         from: "off"
         to: "on"
     action:
-      - service: script.debug_notification
+      - action: script.debug_notification
         data:
           message: "Presence: {{ states('binary_sensor.martin_presence') }}"
           title: "Presence"
@@ -121,7 +121,7 @@ automation:
         from: "off"
         to: "on"
     action:
-      - service: script.debug_notification
+      - action: script.debug_notification
         data:
           message: "Home Soon: {{ states('binary_sensor.martin_home_soon') }}"
           title: "Home Soon"
@@ -181,12 +181,12 @@ automation:
               - condition: template
                 value_template: "{{ transition_allowed }}"
             sequence:
-              - service: input_datetime.set_datetime
+              - action: input_datetime.set_datetime
                 target:
                   entity_id: input_datetime.martin_state_changed
                 data:
                   timestamp: "{{ now().isoformat() }}"
-              - service: input_select.select_option
+              - action: input_select.select_option
                 target:
                   entity_id: input_select.martin_state
                 data:
@@ -195,7 +195,7 @@ automation:
               - condition: template
                 value_template: "{{ not transition_allowed }}"
             sequence:
-              - service: script.debug_notification
+              - action: script.debug_notification
                 data:
                   message: "Invalid state transition from {{ current_state }} to {{ new_state }}"
                   title: "Martin State: Invalid State Transition"

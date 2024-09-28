@@ -2,10 +2,10 @@ script:
   timer_add_time:
     alias: Add time to a timer
     sequence:
-      - service: timer.pause
+      - action: timer.pause
         data:
           entity_id: "{{ entity_id }}"
-      - service: script.start_timer_with_duration
+      - action: script.start_timer_with_duration
         data:
           entity_id: "{{ entity_id }}"
           duration: >
@@ -21,10 +21,10 @@ script:
   start_timer_with_duration:
     alias: Start or restart a timer with a new time
     sequence:
-      - service: timer.cancel
+      - action: timer.cancel
         data:
           entity_id: "{{ entity_id }}"
-      - service: timer.start
+      - action: timer.start
         data:
           entity_id: "{{ entity_id }}"
           duration: "{{ duration }}"
@@ -147,10 +147,10 @@ automation:
         event_data:
           entity_id: timer.kitchen_3
     action:
-      - service: input_boolean.turn_on
+      - action: input_boolean.turn_on
         data:
           entity_id: "input_boolean.timer_{{ trigger.event.data.entity_id | replace('timer.', '') }}_finished"
-      - service: script.notify_everywhere
+      - action: script.notify_everywhere
         data:
           message: "{{ state_attr(trigger.event.data.entity_id, 'friendly_name') }} er færdig!"
 
@@ -180,7 +180,7 @@ automation:
               - condition: template
                 value_template: "{{ 'light' in trigger.to_state.entity_id }}"
             sequence:
-              - service: light.turn_on
+              - action: light.turn_on
                 target:
                   entity_id: "{{ trigger.to_state.entity_id }}"
                 data:

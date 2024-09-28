@@ -10,7 +10,7 @@ automation:
         - sun
         - wed
     action:
-      - service: auto_backup.backup
+      - action: auto_backup.backup
         data:
           name: "Automated Backup {{ now().strftime('%Y-%m-%d') }}"
           keep_days: 7
@@ -23,7 +23,7 @@ automation:
       platform: event
       event_type: auto_backup.backup_start
     action:
-      service: persistent_notification.create
+      action: persistent_notification.create
       data:
         title: "Backup Started."
         message: |-
@@ -34,13 +34,13 @@ automation:
       platform: event
       event_type: auto_backup.backup_successful
     action:
-      - service: persistent_notification.create
+      - action: persistent_notification.create
         data:
           title: "Backup Complete. Syncing to Dropbox"
           message: |-
             Name: {{ trigger.event.data.name }}
             Slug: {{ trigger.event.data.slug }}
-      - service: hassio.addon_stdin
+      - action: hassio.addon_stdin
         data:
           addon: 719b45ef_dropback
           input: sync
@@ -54,7 +54,7 @@ automation:
         - "unavailable"
         - ""
     action:
-      service: persistent_notification.create
+      action: persistent_notification.create
       data:
         title: "Backup Sync started."
         message: |-
@@ -69,7 +69,7 @@ automation:
         - "unavailable"
         - ""
     action:
-      service: persistent_notification.create
+      action: persistent_notification.create
       data:
         title: "Backup Synced."
         message: |-
@@ -80,7 +80,7 @@ automation:
       platform: event
       event_type: auto_backup.backup_failed
     action:
-      service: persistent_notification.create
+      action: persistent_notification.create
       data:
         title: "Backup Failed."
         message: |-
@@ -93,7 +93,7 @@ automation:
       entity_id: sensor.dropback_status
       to: "Error"
     action:
-      service: persistent_notification.create
+      action: persistent_notification.create
       data:
         title: "Backup Sync error."
         message: |-

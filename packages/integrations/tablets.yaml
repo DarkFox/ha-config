@@ -12,7 +12,7 @@ script:
   reload_lovelace_on_tablets:
     alias: "Reload lovelace on all tablets"
     sequence:
-      - service: light.turn_on
+      - action: light.turn_on
         target:
           entity_id:
             - light.kitchen_tablet
@@ -21,12 +21,12 @@ script:
             - light.hallway_tablet
       - delay:
           seconds: 5
-      - service: browser_mod.javascript
+      - action: browser_mod.javascript
         data:
           code: "lovelace_reload();"
       - delay:
           seconds: 10
-      - service: browser_mod.refresh
+      - action: browser_mod.refresh
       - delay:
           seconds: 20
       - event: refresh_light_profile
@@ -50,7 +50,7 @@ script:
         selector:
           text:
     sequence:
-      - service: "{{ action }}"
+      - action: "{{ action }}"
         data:
           message: "command_broadcast_intent"
           data:
@@ -79,7 +79,7 @@ automation:
         entity_id: sensor.kokken_tablet_battery_level
         below: 60
     action:
-      - service: switch.turn_on
+      - action: switch.turn_on
         data:
           entity_id: switch.kokken_tablet_lader
   - alias: discharge_kokken_tablet
@@ -95,7 +95,7 @@ automation:
         entity_id: sensor.kokken_tablet_battery_level
         above: 80
     action:
-      - service: switch.turn_off
+      - action: switch.turn_off
         data:
           entity_id: switch.kokken_tablet_lader
 
@@ -117,7 +117,7 @@ automation:
         entity_id: sensor.gang_tablet_battery_level
         below: 60
     action:
-      - service: switch.turn_on
+      - action: switch.turn_on
         data:
           entity_id: switch.gang_tablet_lader
   - alias: discharge_gang_tablet
@@ -133,7 +133,7 @@ automation:
         entity_id: sensor.gang_tablet_battery_level
         above: 80
     action:
-      - service: switch.turn_off
+      - action: switch.turn_off
         data:
           entity_id: switch.gang_tablet_lader
 
@@ -145,7 +145,7 @@ light:
         level_template: "{{ states('sensor.kokken_tablet_screen_brightness')|int }}"
         value_template: "{{ is_state('binary_sensor.kokken_tablet_interactive', 'on') }}"
         turn_on:
-          - service: notify.mobile_app_kokken_tablet
+          - action: notify.mobile_app_kokken_tablet
             data:
               message: "command_screen_on"
               data:
@@ -153,20 +153,20 @@ light:
                 ttl: 0
                 priority: high
         turn_off:
-          - service: script.trigger_tasker_task
+          - action: script.trigger_tasker_task
             data:
               action: notify.mobile_app_kokken_tablet
               task_id: "SCREEN_OFF"
               extra_data: "state:false"
         set_level:
-          - service: notify.mobile_app_kokken_tablet
+          - action: notify.mobile_app_kokken_tablet
             data:
               message: "command_screen_on"
               data:
                 command: "keep_screen_on"
                 ttl: 0
                 priority: high
-          - service: notify.mobile_app_kokken_tablet
+          - action: notify.mobile_app_kokken_tablet
             data:
               message: "command_screen_brightness_level"
               data:
@@ -175,7 +175,7 @@ light:
                 priority: high
           - delay:
               seconds: 1
-          - service: notify.mobile_app_kokken_tablet
+          - action: notify.mobile_app_kokken_tablet
             data:
               message: "command_screen_brightness_level"
               data:
@@ -188,7 +188,7 @@ light:
         level_template: "{{ states('sensor.gang_tablet_screen_brightness')|int }}"
         value_template: "{{ is_state('binary_sensor.gang_tablet_interactive', 'on') }}"
         turn_on:
-          - service: notify.mobile_app_gang_tablet
+          - action: notify.mobile_app_gang_tablet
             data:
               message: "command_screen_on"
               data:
@@ -196,20 +196,20 @@ light:
                 ttl: 0
                 priority: high
         turn_off:
-          - service: script.trigger_tasker_task
+          - action: script.trigger_tasker_task
             data:
               action: notify.mobile_app_gang_tablet
               task_id: "SCREEN_OFF"
               extra_data: "state:false"
         set_level:
-          - service: notify.mobile_app_gang_tablet
+          - action: notify.mobile_app_gang_tablet
             data:
               message: "command_screen_on"
               data:
                 command: "keep_screen_on"
                 ttl: 0
                 priority: high
-          - service: notify.mobile_app_gang_tablet
+          - action: notify.mobile_app_gang_tablet
             data:
               message: "command_screen_brightness_level"
               data:
@@ -218,7 +218,7 @@ light:
                 priority: high
           - delay:
               seconds: 1
-          - service: notify.mobile_app_gang_tablet
+          - action: notify.mobile_app_gang_tablet
             data:
               message: "command_screen_brightness_level"
               data:
@@ -231,7 +231,7 @@ light:
         level_template: "{{ states('sensor.badevaerelse_tablet_screen_brightness')|int }}"
         value_template: "{{ is_state('binary_sensor.badevaerelse_tablet_interactive', 'on') }}"
         turn_on:
-          - service: notify.mobile_app_badevaerelse_tablet
+          - action: notify.mobile_app_badevaerelse_tablet
             data:
               message: "command_screen_on"
               data:
@@ -239,20 +239,20 @@ light:
                 ttl: 0
                 priority: high
         turn_off:
-          - service: script.trigger_tasker_task
+          - action: script.trigger_tasker_task
             data:
               action: notify.mobile_app_badevaerelse_tablet
               task_id: "SCREEN_OFF"
               extra_data: "state:false"
         set_level:
-          - service: notify.mobile_app_badevaerelse_tablet
+          - action: notify.mobile_app_badevaerelse_tablet
             data:
               message: "command_screen_on"
               data:
                 command: "keep_screen_on"
                 ttl: 0
                 priority: high
-          - service: notify.mobile_app_badevaerelse_tablet
+          - action: notify.mobile_app_badevaerelse_tablet
             data:
               message: "command_screen_brightness_level"
               data:
@@ -261,7 +261,7 @@ light:
                 priority: high
           - delay:
               seconds: 1
-          - service: notify.mobile_app_badevaerelse_tablet
+          - action: notify.mobile_app_badevaerelse_tablet
             data:
               message: "command_screen_brightness_level"
               data:
@@ -274,7 +274,7 @@ light:
         level_template: "{{ states('sensor.sovevaerelse_tablet_screen_brightness')|int }}"
         value_template: "{{ is_state('binary_sensor.sovevaerelse_tablet_interactive', 'on') }}"
         turn_on:
-          - service: notify.mobile_app_sovevaerelse_tablet
+          - action: notify.mobile_app_sovevaerelse_tablet
             data:
               message: "command_screen_on"
               data:
@@ -282,20 +282,20 @@ light:
                 ttl: 0
                 priority: high
         turn_off:
-          - service: script.trigger_tasker_task
+          - action: script.trigger_tasker_task
             data:
               action: notify.mobile_app_sovevaerelse_tablet
               task_id: "SCREEN_OFF"
               extra_data: "state:false"
         set_level:
-          - service: notify.mobile_app_sovevaerelse_tablet
+          - action: notify.mobile_app_sovevaerelse_tablet
             data:
               message: "command_screen_on"
               data:
                 command: "keep_screen_on"
                 ttl: 0
                 priority: high
-          - service: notify.mobile_app_sovevaerelse_tablet
+          - action: notify.mobile_app_sovevaerelse_tablet
             data:
               message: "command_screen_brightness_level"
               data:
@@ -304,7 +304,7 @@ light:
                 priority: high
           - delay:
               seconds: 1
-          - service: notify.mobile_app_sovevaerelse_tablet
+          - action: notify.mobile_app_sovevaerelse_tablet
             data:
               message: "command_screen_brightness_level"
               data:
@@ -320,13 +320,13 @@ light:
             and is_state('binary_sensor.sovevaerelse_tablet_interactive', 'on')
           }}
         turn_on:
-          - service: script.trigger_tasker_task
+          - action: script.trigger_tasker_task
             data:
               action: notify.mobile_app_sovevaerelse_tablet
               task_id: "SCREENSAVER"
               extra_data: "state:true"
         turn_off:
-          - service: script.trigger_tasker_task
+          - action: script.trigger_tasker_task
             data:
               action: notify.mobile_app_sovevaerelse_tablet
               task_id: "SCREENSAVER"

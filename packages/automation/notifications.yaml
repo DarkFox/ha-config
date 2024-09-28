@@ -55,37 +55,37 @@ script:
               {{ message }}
             {%- endif -%}
       - parallel:
-          - service: notify.telegram_darkfox
+          - action: notify.telegram_darkfox
             data:
               title: "{{ message_title if message_title is defined and message_title }}"
               message: "{{ message_text }}"
               data: "{{ data if data is defined and data else {} }}"
-          - service: script.popup_notification
+          - action: script.popup_notification
             data:
               message_title: "{{ message_title if message_title is defined and message_title }}"
               message: "{{ message_text }}"
               severity: "{{ severity | default(1) | int }}"
-          - service: script.voice_broadcast
+          - action: script.voice_broadcast
             data:
               message_title: "{{ message_title if message_title is defined and message_title }}"
               message: "{{ message }}"
               severity: "{{ severity | default(1) | int }}"
-          - service: script.darkphone_tts
+          - action: script.darkphone_tts
             data:
               message_title: "{{ message_title if message_title is defined and message_title }}"
               message: "{{ message_text }}"
               severity: "{{ severity | default(1) | int }}"
-          - service: notify.stue_tv
+          - action: notify.stue_tv
             data:
               message: |
                 {{ message_title if message_title is defined and message_title else '' }}
                 {{ message_text }}
-          - service: notify.kontor_tv
+          - action: notify.kontor_tv
             data:
               message: |
                 {{ message_title if message_title is defined and message_title else '' }}
                 {{ message_text }}
-          - service: notify.martin_pc
+          - action: notify.martin_pc
             data:
               title: "{{ message_title if message_title is defined and message_title }}"
               message: "{{ message_text }}"
@@ -118,12 +118,12 @@ script:
         selector:
           object:
     sequence:
-      - service: script.darkphone_tts
+      - action: script.darkphone_tts
         data:
           message_title: "{{ message_title if message_title is defined and message_title }}"
           message: "{{ message }}"
           severity: "{{ severity | default(1) | int }}"
-      - service: notify.telegram_darkfox
+      - action: notify.telegram_darkfox
         data:
           title: "{{ message_title if message_title is defined and message_title }}"
           message: "{{ message }}"
@@ -175,7 +175,7 @@ script:
           - condition: state
             entity_id: binary_sensor.darkphone_android_auto
             state: "on"
-      - service: notify.mobile_app_darkphone
+      - action: notify.mobile_app_darkphone
         data:
           message: "TTS"
           data:
@@ -256,7 +256,7 @@ script:
         entity_id: binary_sensor.martin_presence
         state: "on"
       - condition: "{{ states('input_select.sleep_state') not in ['sleeping', 'paused', 'smart wake'] }}"
-      - service: script.tts_speak
+      - action: script.tts_speak
         data:
           entity_id: "{{ entity_id }}"
           volume_level: "{{ volume_level | default(default_volume) }}"
@@ -283,7 +283,7 @@ script:
         selector:
           text:
     sequence:
-      - service: browser_mod.popup
+      - action: browser_mod.popup
         data:
           autoclose: true
           timeout: 30000
@@ -305,7 +305,7 @@ automation:
         for:
           minutes: 10
     action:
-      - service: script.notify_everywhere
+      - action: script.notify_everywhere
         data:
           message: "Koldt vand løber!"
           severity: 2
@@ -320,7 +320,7 @@ automation:
         for:
           minutes: 10
     action:
-      - service: script.notify_everywhere
+      - action: script.notify_everywhere
         data:
           message: "Varmt vand løber!"
           severity: 2
@@ -335,7 +335,7 @@ automation:
       for:
         minutes: 3
     action:
-      - service: script.notify_everywhere
+      - action: script.notify_everywhere
         data:
           message: "Hoveddøren er ikke låst!"
           severity: 2
@@ -350,7 +350,7 @@ automation:
       for:
         minutes: 3
     action:
-      - service: script.notify_everywhere
+      - action: script.notify_everywhere
         data:
           message: "Fryseren står åben!"
           severity: 2
@@ -365,7 +365,7 @@ automation:
       for:
         minutes: 3
     action:
-      - service: script.notify_everywhere
+      - action: script.notify_everywhere
         data:
           message: "Køleskabet står åben!"
           severity: 2
@@ -378,6 +378,6 @@ automation:
       entity_id: sensor.darkwatch_battery_level
       above: 98
     action:
-      - service: script.notify_everywhere
+      - action: script.notify_everywhere
         data:
           message: "Ur er fuldt opladet!"

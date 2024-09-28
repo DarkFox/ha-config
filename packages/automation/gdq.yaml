@@ -215,13 +215,13 @@ script:
     alias: Refresh GDQ Agenda
     icon: mdi:calendar-refresh
     sequence:
-      - service: homeassistant.update_entity
+      - action: homeassistant.update_entity
         target:
           entity_id:
             - calendar.gdq_schedule
       - delay:
           seconds: 5
-      - service: automation.trigger
+      - action: automation.trigger
         target:
           entity_id:
             - automation.refresh_gdq_bids
@@ -237,7 +237,7 @@ automation:
           - "on"
           - "off"
     action:
-      - service: "input_boolean.turn_{{ states('binary_sensor.gdq_event_active') }}"
+      - action: "input_boolean.turn_{{ states('binary_sensor.gdq_event_active') }}"
         target:
           entity_id: input_boolean.gdq_enable
 
@@ -251,13 +251,13 @@ automation:
           - "on"
           - "off"
     action:
-      - service: "homeassistant.turn_{{ states('input_boolean.gdq_enable') }}"
+      - action: "homeassistant.turn_{{ states('input_boolean.gdq_enable') }}"
         target:
           entity_id: group.gdq_automations
       - condition: state
         entity_id: input_boolean.gdq_enable
         state: "on"
-      - service: automation.trigger
+      - action: automation.trigger
         target:
           entity_id:
             - automation.refresh_gdq_runs_regex
@@ -272,8 +272,8 @@ automation:
         seconds: "0"
     action:
       - parallel:
-          - service: pyscript.get_gdq_event
-          - service: script.refresh_gdq_agenda
+          - action: pyscript.get_gdq_event
+          - action: script.refresh_gdq_agenda
 
   - alias: "Fast update GDQ"
     id: 57c88a86-3264-4163-b3ca-3839707bbf05
@@ -281,7 +281,7 @@ automation:
       - platform: time_pattern
         minutes: "/5"
     action:
-      - service: script.refresh_gdq_agenda
+      - action: script.refresh_gdq_agenda
 
   - alias: "Notify GDQ Run Coming Up"
     id: notify_gdq_run_coming_up
@@ -302,7 +302,7 @@ automation:
         {% from 'easy_time.jinja' import custom_relative_time %}
         {{ custom_relative_time(state_attr('sensor.gdq_next_watch_run', 'next_run').get('start', ''), 'day, hour, minute') }}
     action:
-      - service: script.notify_everywhere
+      - action: script.notify_everywhere
         data:
           message:
             - tts: "Næste GDQ spil: "
@@ -341,7 +341,7 @@ automation:
       - platform: state
         entity_id: todo.gdq_runs
     action:
-      - service: todo.get_items
+      - action: todo.get_items
         data:
           status: needs_action
         target:
@@ -352,7 +352,7 @@ automation:
           todo_items: "{{ todo_items }}"
       - delay:
           seconds: 5
-      - service: script.refresh_gdq_agenda
+      - action: script.refresh_gdq_agenda
 
   - id: update_gdq_calendar
     alias: Update GDQ Calendar
@@ -373,12 +373,12 @@ automation:
       bool_attrs:
         watch: "{{ [(state_attr('sensor.gdq_runs_regex', 'regex') or '')] }}"
     action:
-      - service: homeassistant.update_entity
+      - action: homeassistant.update_entity
         target:
           entity_id: calendar.gdq_schedule
       - delay:
           seconds: 5
-      - service: calendar.get_events
+      - action: calendar.get_events
         data:
           start_date_time: "{{ (now() + timedelta(days=-1)).strftime('%Y-%m-%d') }} 00:00:00"
           end_date_time: "{{ (now() + timedelta(days=days)).strftime('%Y-%m-%d') }} 23:59:59"

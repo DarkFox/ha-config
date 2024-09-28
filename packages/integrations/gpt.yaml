@@ -24,13 +24,13 @@ script:
             sequence:
               - variables:
                   translation: "{{ state_attr('sensor.translation_cache', 'translations')[message] }}"
-              - service: input_text.set_value
+              - action: input_text.set_value
                 target:
                   entity_id: input_text.translation_output
                 data:
                   value: "{{ translation }}"
         default:
-          - service: conversation.process
+          - action: conversation.process
             data:
               text: "Oversæt dette til dansk (returner kun den oversatte tekst): {{message}}"
               language: DA
@@ -42,7 +42,7 @@ script:
             event_data:
               message: "{{ message }}"
               translation: "{{ translation }}"
-          - service: input_text.set_value
+          - action: input_text.set_value
             target:
               entity_id: input_text.translation_output
             data:
@@ -69,7 +69,7 @@ script:
 
   gpt_clothes_recommendation:
     sequence:
-      - service: conversation.process
+      - action: conversation.process
         data:
           text: >-
             {%- set time = 'dag' if now().strftime('%H')|int < 16 else 'aften og i morgen' -%}
@@ -92,7 +92,7 @@ script:
 intent_script:
   AskNabu:
     action:
-      - service: conversation.process
+      - action: conversation.process
         data:
           text: "{{query}}"
           language: DA

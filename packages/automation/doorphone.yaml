@@ -12,7 +12,7 @@ automation:
         entity_id: input_boolean.doorphone_ringing
         to: "on"
     action:
-      - service: script.turn_on
+      - action: script.turn_on
         entity_id: script.alert_lights
 
   - alias: Answering Door
@@ -29,13 +29,13 @@ automation:
         entity_id: input_boolean.doorphone_ringing
         state: "on"
     action:
-      - service: input_boolean.turn_on
+      - action: input_boolean.turn_on
         data:
           entity_id: input_boolean.answering_door
-      - service: input_boolean.turn_off
+      - action: input_boolean.turn_off
         data:
           entity_id: input_boolean.doorphone_ringing
-      - service: script.turn_on
+      - action: script.turn_on
         entity_id: script.alert_lights_restore
 
   - alias: Ignoring Door Phone
@@ -47,9 +47,9 @@ automation:
         for:
           minutes: 2
     action:
-      - service: script.turn_on
+      - action: script.turn_on
         entity_id: script.alert_lights_restore
-      - service: input_boolean.turn_off
+      - action: input_boolean.turn_off
         data:
           entity_id: input_boolean.doorphone_ringing
       - choose:
@@ -58,7 +58,7 @@ automation:
                 entity_id: input_boolean.guests
                 state: "off"
             sequence:
-              - service: script.turn_on
+              - action: script.turn_on
                 entity_id: script.resume_all_media
 
   - alias: Door Answered
@@ -75,7 +75,7 @@ automation:
         entity_id: input_boolean.answering_door
         state: "on"
     action:
-      - service: input_boolean.turn_off
+      - action: input_boolean.turn_off
         data:
           entity_id: input_boolean.answering_door
       - choose:
@@ -86,7 +86,7 @@ automation:
             sequence:
               - delay:
                   seconds: 5
-              - service: script.turn_on
+              - action: script.turn_on
                 entity_id: script.resume_all_media
 
 script:
@@ -95,25 +95,25 @@ script:
   doorphone_ringing:
     alias: "Dørtelefon Ringer"
     sequence:
-      - service: input_boolean.turn_on
+      - action: input_boolean.turn_on
         data:
           entity_id: input_boolean.doorphone_ringing
 
   alert_lights:
     sequence:
-      - service: scene.create
+      - action: scene.create
         data:
           scene_id: before_alert_lights
           snapshot_entities:
             - light.blyant
             - light.skoskab
-      - service: light.turn_on
+      - action: light.turn_on
         data:
           brightness: 255
           effect: "Strobe"
           entity_id:
             - light.blyant
-      - service: light.turn_on
+      - action: light.turn_on
         data:
           brightness: 255
           effect: "Strobe Mega"
@@ -125,14 +125,14 @@ script:
                 entity_id: input_boolean.guests
                 state: "off"
             sequence:
-              - service: script.turn_on
+              - action: script.turn_on
                 entity_id: script.pause_all_media
-      - service: script.notify_everywhere
+      - action: script.notify_everywhere
         data:
           message: "Dørtelefonen Ringer!"
 
   alert_lights_restore:
     sequence:
-      - service: scene.turn_on
+      - action: scene.turn_on
         data:
           entity_id: scene.before_alert_lights

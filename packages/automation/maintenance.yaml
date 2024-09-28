@@ -54,7 +54,7 @@ automation:
       platform: homeassistant
       event: shutdown
     action:
-      - service: notify.telegram_darkfox
+      - action: notify.telegram_darkfox
         data:
           message: "Home Assistant er ved at lukke ned!"
 
@@ -69,10 +69,10 @@ automation:
     variables:
       memory_use: "{{ states('sensor.system_monitor_memory_use_percent') }}"
     action:
-      - service: homeassistant.update_entity
+      - action: homeassistant.update_entity
         entity_id: sensor.add_ons_stats
       - delay: 1
-      - service: notify.telegram_darkfox
+      - action: notify.telegram_darkfox
         data:
           message: |
             Hukommelsesforbrug er højt! {{ memory_use }}%
@@ -99,10 +99,10 @@ automation:
     variables:
       cpu_use: "{{ states('sensor.processor_use') }}"
     action:
-      - service: homeassistant.update_entity
+      - action: homeassistant.update_entity
         entity_id: sensor.add_ons_stats
       - delay: 1
-      - service: notify.telegram_darkfox
+      - action: notify.telegram_darkfox
         data:
           message: |
             CPU forbrug er højt! {{ cpu_use }}%
@@ -132,7 +132,7 @@ automation:
       - condition: template
         value_template: "{{ not trigger.to_state.state == 'unknown' }}"
     action:
-      - service: notify.telegram_darkfox
+      - action: notify.telegram_darkfox
         data:
           message: "Din eksterne IP har ændret sig fra {{ trigger.from_state.state }} til {{ trigger.to_state.state }}"
 
@@ -157,7 +157,7 @@ automation:
         for:
           hours: 2
     action:
-      - service: notify.telegram_darkfox
+      - action: notify.telegram_darkfox
         data:
           message: "Uncommitted changes!"
 
@@ -168,7 +168,7 @@ automation:
       platform: time
       at: "04:45:00"
     action:
-      - service: chime_tts.clear_cache
+      - action: chime_tts.clear_cache
         data:
           clear_temp_tts_cache: true
           clear_www_tts_cache: true
@@ -196,7 +196,7 @@ automation:
         entity_id: input_select.sleep_state
         state: "awake"
     action:
-      - service: notify.telegram_darkfox
+      - action: notify.telegram_darkfox
         data:
           message: |
             {% set v = (state_attr('sensor.low_battery', 'entities') or []) | map('state_attr', 'friendly_name') | list %}
@@ -214,7 +214,7 @@ automation:
         minutes: "/5"
         seconds: "0"
     action:
-      - service: pyscript.find_duplicate_package_names
+      - action: pyscript.find_duplicate_package_names
 
   - alias: "Notify of duplicate package names"
     id: b606263a-6423-4b66-b0b4-dfbbd0358ff9
@@ -226,7 +226,7 @@ automation:
       - condition: template
         value_template: "{{ trigger.event.data.get('duplicates', {})|length > 0 }}"
     action:
-      - service: notify.telegram_darkfox
+      - action: notify.telegram_darkfox
         data:
           message: |
             {%- set duplicates = trigger.event.data.get('duplicates', {}) -%}

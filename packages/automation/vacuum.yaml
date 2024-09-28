@@ -11,24 +11,24 @@ script:
                 state: "docked"
             sequence:
               - alias: "Start cleaning"
-                service: vacuum.start
+                action: vacuum.start
                 target:
                   entity_id: vacuum.valetudo_roborocks5
         default:
           - alias: "Back to dock"
-            service: vacuum.return_to_base
+            action: vacuum.return_to_base
             target:
               entity_id: vacuum.valetudo_roborocks5
 
   send_vacuum_to_emptying_position:
     alias: "Send støvsuger til tømmeposition"
     sequence:
-      - service: script.valetudo_go_to_target
+      - action: script.valetudo_go_to_target
         data:
           x_coord: 2710
           y_coord: 2449
       - alias: "update last empty count"
-        service: input_text.set_value
+        action: input_text.set_value
         data:
           entity_id: input_text.vacuum_last_empty
           value: "{{ (states('sensor.valetudo_roborocks5_total_statistics_area')|float)/10000 }}"
@@ -41,7 +41,7 @@ script:
       y_coord:
         name: Y coordinate
     sequence:
-      service: script.valetudo_send_vacuum_command
+      action: script.valetudo_send_vacuum_command
       data:
         mqtt_payload: |-
           {
@@ -135,7 +135,7 @@ automation:
         entity_id: vacuum.valetudo_roborocks5
         from: cleaning
     action:
-      - service: input_datetime.set_datetime
+      - action: input_datetime.set_datetime
         target:
           entity_id: input_datetime.vacuum_last_clean
         data:
@@ -154,7 +154,7 @@ automation:
           - returning
           - error
     action:
-      - service: input_boolean.turn_on
+      - action: input_boolean.turn_on
         target:
           entity_id: input_boolean.vacuum_show_card
 
@@ -166,7 +166,7 @@ automation:
         entity_id: vacuum.valetudo_roborocks5
         to: "docked"
     action:
-      - service: input_boolean.turn_off
+      - action: input_boolean.turn_off
         target:
           entity_id: input_boolean.vacuum_show_card
 
@@ -206,7 +206,7 @@ automation:
         value_template: >-
           {{ states('input_datetime.vacuum_last_clean')|as_timestamp < now()|as_timestamp - 8*60*60 }}
     action:
-      - service: vacuum.start
+      - action: vacuum.start
         target:
           entity_id: vacuum.valetudo_roborocks5
 
@@ -233,12 +233,12 @@ automation:
               - condition: template
                 value_template: "{{ states('sensor.vacuum_area_cleaned_since_last_empty')|int > states('input_number.vacuum_m2_before_empty')|int }}"
             sequence:
-              - service: script.send_vacuum_to_emptying_position
+              - action: script.send_vacuum_to_emptying_position
         default:
           # Go to dock if not going to empty, and not docked already
           - condition: template
             value_template: "{{ not is_state('vacuum.valetudo_roborocks5', 'docked') }}"
-          - service: vacuum.return_to_base
+          - action: vacuum.return_to_base
 
   - id: vacuum_error_notification
     alias: Vacuum Error Notification
@@ -250,11 +250,11 @@ automation:
       - condition: template
         value_template: "{{ (trigger.to_state.state|lower) not in ['no error', 'unknown', 'unavailable'] }}"
     action:
-      - service: script.translate
+      - action: script.translate
         data:
           message: "{{ trigger.to_state.state }}"
         response_variable: output
-      - service: script.notify_everywhere
+      - action: script.notify_everywhere
         data:
           message: >-
             Støvsuger fejl: {{ output.translation }}

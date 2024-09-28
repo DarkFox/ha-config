@@ -211,7 +211,7 @@ automation:
       entity_id: binary_sensor.parking_lot_paid
       to: "on"
     action:
-      - service: script.notify_darkphone
+      - action: script.notify_darkphone
         data:
           message: |
             Du har parkeret på {{ states('sensor.parking_lot') }}.
@@ -237,11 +237,11 @@ automation:
           parking_alarm: "{{ as_timestamp(states('sensor.parking_alarm')) | timestamp_custom('%H:%M') }}"
       - action: script.android_set_alarm
         data:
-          service: notify.mobile_app_darkphone
+          action: notify.mobile_app_darkphone
           timehour: "{{ parking_alarm.split(':')[0] }}"
           timemin: "{{ parking_alarm.split(':')[1] }}"
           message: Flyt bilen!
-      - service: script.notify_darkphone
+      - action: script.notify_darkphone
         data:
           message: |
             Parkeret på {{ states('sensor.parking_lot') }} klokken {{ parked_time }}.
@@ -255,10 +255,10 @@ automation:
       platform: time
       at: sensor.parking_alarm
     action:
-      - service: script.notify_darkphone
+      - action: script.notify_darkphone
         data:
           message: >-
             Flyt bilen!
-      - service: switch.turn_on
+      - action: switch.turn_on
         target:
           entity_id: switch.id_3_pro_climatisation

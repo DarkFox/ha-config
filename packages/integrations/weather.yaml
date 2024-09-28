@@ -36,7 +36,7 @@ sensor:
 
       precip_today:
         friendly_name: Nedbør
-        # TODO: Deprecated. Use service call to get forecast instead.
+        # TODO: Deprecated. Use action call to get forecast instead.
         unit_of_measurement: mm
         value_template: |
           {% set forecast = state_attr('weather.forecast_home', 'forecast') %}
@@ -214,7 +214,7 @@ automation:
       platform: state
       entity_id: weather.forecast_home
     action:
-      - service: weather.get_forecasts
+      - action: weather.get_forecasts
         response_variable: forecast
         target:
           entity_id: weather.forecast_home
@@ -238,7 +238,7 @@ automation:
           and (states('sensor.blitzortung_lightning_distance') | int) < 10
         }}
     action:
-      - service: script.notify_darkphone
+      - action: script.notify_darkphone
         data:
           message_title: "Vejr Varsel: Torden"
           message: "Lynnedslag {{ states('sensor.blitzortung_lightning_distance') }} {{ state_attr('sensor.blitzortung_lightning_distance', 'unit_of_measurement') }} væk."

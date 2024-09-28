@@ -6,11 +6,11 @@ switch:
         icon_template: mdi:desktop-classic
         value_template: "{{ is_state('device_tracker.martin_pc', 'home') }}"
         turn_on:
-          service: button.press
+          action: button.press
           target:
             entity_id: button.martin_pc_wol
         turn_off:
-          service: button.press
+          action: button.press
           target:
             entity_id: button.martin_pc_shutdown
       kontor_soundbar_pc_output:
@@ -24,28 +24,28 @@ switch:
                     entity_id: media_player.kontor
                     state: "off"
                 sequence:
-                  - service: media_player.turn_on
+                  - action: media_player.turn_on
                     target:
                       entity_id: media_player.kontor
                   - wait_for_trigger:
                       - platform: state
                         entity_id: media_player.kontor
                         to: "idle"
-          - service: media_player.select_source
+          - action: media_player.select_source
             target:
               entity_id: media_player.kontor
             data:
               source: TV
-          - service: script.set_volume_preset
+          - action: script.set_volume_preset
             data:
               room: "kontor"
               preset: high
         turn_off:
-          - service: script.set_volume_preset
+          - action: script.set_volume_preset
             data:
               room: "kontor"
               preset: medium
-          - service: media_player.media_stop
+          - action: media_player.media_stop
             target:
               entity_id: media_player.kontor
 
@@ -54,7 +54,7 @@ switch:
           - delay:
               seconds: 0
         turn_on:
-          - service: media_player.media_previous_track
+          - action: media_player.media_previous_track
             target:
               entity_id: media_player.kontor_shield_remote
 
@@ -63,7 +63,7 @@ switch:
           - delay:
               seconds: 0
         turn_on:
-          - service: media_player.media_next_track
+          - action: media_player.media_next_track
             target:
               entity_id: media_player.kontor_shield_remote
 
@@ -72,7 +72,7 @@ switch:
           - delay:
               seconds: 0
         turn_on:
-          - service: remote.send_command
+          - action: remote.send_command
             data:
               command: DPAD_CENTER
             target:
@@ -83,7 +83,7 @@ switch:
           - delay:
               seconds: 0
         turn_on:
-          - service: media_player.media_play_pause
+          - action: media_player.media_play_pause
             target:
               entity_id: media_player.kontor_shield_remote
 
@@ -107,7 +107,7 @@ automation:
           or is_state('switch.martin_pc', 'on')
         }}
     action:
-      service: switch.turn_on
+      action: switch.turn_on
       data:
         entity_id: switch.pc_afbryder
 
@@ -129,7 +129,7 @@ automation:
         entity_id: binary_sensor.quest_in_use_delayed
         state: "off"
     action:
-      service: switch.turn_off
+      action: switch.turn_off
       data:
         entity_id: switch.pc_afbryder
 
@@ -144,7 +144,7 @@ automation:
           or is_state('binary_sensor.vagtskema_wfh', 'on')
         }}
     action:
-      service: switch.turn_on
+      action: switch.turn_on
       data:
         entity_id: switch.pc_tilbehor_afbryder
 
@@ -161,7 +161,7 @@ automation:
             and is_state('binary_sensor.quest_in_use_delayed', 'off')
           }}
     action:
-      service: switch.turn_off
+      action: switch.turn_off
       data:
         entity_id:
           - switch.pc_tilbehor_afbryder
@@ -179,7 +179,7 @@ automation:
         entity_id: switch.printer_afbryder
         state: "off"
     action:
-      - service: switch.turn_on
+      - action: switch.turn_on
         target:
           entity_id: switch.printer_afbryder
 
@@ -194,7 +194,7 @@ automation:
           - GET
           - POST
     action:
-      - service: "switch.{{ trigger.query.action }}"
+      - action: "switch.{{ trigger.query.action }}"
         target:
           entity_id: switch.kontor_soundbar_pc_output
 
@@ -209,7 +209,7 @@ automation:
           - GET
           - POST
     action:
-      - service: "media_player.{{ trigger.query.action }}"
+      - action: "media_player.{{ trigger.query.action }}"
         target:
           entity_id: media_player.kontor_shield_remote
 
@@ -223,7 +223,7 @@ automation:
           - media_player.kontor_shield_remote
         to: "off"
     action:
-      - service: button.press
+      - action: button.press
         target:
           entity_id: button.martin_pc_mute_tv
 
@@ -235,7 +235,7 @@ automation:
         entity_id: media_player.kontor_tv
         to: "on"
     action:
-      - service: button.press
+      - action: button.press
         target:
           entity_id: button.martin_pc_unmute_tv
 
@@ -257,7 +257,7 @@ automation:
         entity_id: switch.martin_pc
         state: "off"
     action:
-      - service: webostv.select_sound_output
+      - action: webostv.select_sound_output
         data:
           entity_id: media_player.kontor_tv
           sound_output: "tv_speaker"
@@ -280,7 +280,7 @@ automation:
         entity_id: switch.martin_pc
         state: "on"
     action:
-      - service: webostv.select_sound_output
+      - action: webostv.select_sound_output
         data:
           entity_id: media_player.kontor_tv
           sound_output: "external_optical"

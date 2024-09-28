@@ -50,7 +50,7 @@ script:
                       or state_attr(entity_id, 'friendly_name')
                       or none
                     }}
-              - service: script.osm_geocoding_lookup
+              - action: script.osm_geocoding_lookup
                 response_variable: geocoded_data
                 data:
                   query: "{{ query }}"
@@ -60,11 +60,11 @@ script:
                     {{ geocodejson_to_vw(geocoded_data.location, name) if geocoded_data.get('location', None) else {} }}
               - condition: template
                 value_template: "{{ bool(destination.get('geoCoordinate', {}).get('latitude', False)) }}"
-              - service: script.id_3_pro_send_destinations
+              - action: script.id_3_pro_send_destinations
                 data:
                   destinations: "{{ destination }}"
         default:
-          - service: script.id_3_pro_send_destinations
+          - action: script.id_3_pro_send_destinations
             data:
               destinations:
                 - name: "{{ state_attr(entity_id, 'friendly_name') }}"
@@ -75,41 +75,41 @@ script:
   send_home_destination:
     alias: Send home destination to car
     sequence:
-      - service: script.send_entity_destination_to_car
+      - action: script.send_entity_destination_to_car
         data:
           entity_id: zone.home
 
   send_rsh_destination:
     alias: Send RSH destination to car
     sequence:
-      - service: script.send_entity_destination_to_car
+      - action: script.send_entity_destination_to_car
         data:
           entity_id: zone.rsh
 
   send_rsr_destination:
     alias: Send RSR destination to car
     sequence:
-      - service: script.send_entity_destination_to_car
+      - action: script.send_entity_destination_to_car
         data:
           entity_id: zone.rsr
 
   send_graested_destination:
     alias: Send Græsted destination to car
     sequence:
-      - service: script.send_entity_destination_to_car
+      - action: script.send_entity_destination_to_car
         data:
           entity_id: zone.graested
 
   send_foraeldre_destination:
     alias: Send Forældre destination to car
     sequence:
-      - service: script.send_entity_destination_to_car
+      - action: script.send_entity_destination_to_car
         data:
           entity_id: zone.foraeldre
 
   send_upcoming_travel_location:
     alias: Send upcoming travel location to car
     sequence:
-      - service: script.send_entity_destination_to_car
+      - action: script.send_entity_destination_to_car
         data:
           entity_id: sensor.upcoming_travel_location

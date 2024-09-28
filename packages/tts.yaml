@@ -82,7 +82,7 @@ script:
             {% else %}
               bells
             {% endif %}
-      - service: chime_tts.say
+      - action: chime_tts.say
         target:
           entity_id: "{{ entity_id }}"
         data:
@@ -125,7 +125,7 @@ script:
             {% else %}
               bells
             {% endif %}
-      - service: chime_tts.say_url
+      - action: chime_tts.say_url
         response_variable: chime_tts
         data:
           message: "{{ [dict(message[0], offset=offset)] + message[1:] if is_segments else message }}"
@@ -187,7 +187,7 @@ script:
         {{ text }}
         ```
     sequence:
-      - service: conversation.process
+      - action: conversation.process
         data:
           text: "{{ prompt }}"
           language: EN
@@ -217,7 +217,7 @@ script:
         description: "The message to speak"
         example: "Hello world"
     sequence:
-      - service: script.ai_language_detection
+      - action: script.ai_language_detection
         response_variable: response
         data:
           text: "{{ message }}"
@@ -254,7 +254,7 @@ automation:
     action:
       - variables:
           saved_option: "{{ states('input_text.notification_sound') }}"
-      - service: input_select.set_options
+      - action: input_select.set_options
         data_template:
           entity_id: input_select.notification_sound
           options: >
@@ -268,7 +268,7 @@ automation:
               {% set ns.ret = ns.ret + [title+': '+file] %}
             {%- endfor -%}
             {{ ns.ret }}
-      - service: input_select.select_option
+      - action: input_select.select_option
         data_template:
           entity_id: input_select.notification_sound
           option: "{{ saved_option }}"
@@ -285,7 +285,7 @@ automation:
         entity_id: binary_sensor.home_assistant_loaded
         state: "on"
     action:
-      - service: input_text.set_value
+      - action: input_text.set_value
         data_template:
           entity_id: input_text.notification_sound
           value: "{{ states('input_select.notification_sound') }}"
@@ -299,6 +299,6 @@ automation:
         - "unknown"
         - "unavailable"
     action:
-      - service: script.voice_broadcast
+      - action: script.voice_broadcast
         data:
           message: "Notifikationslyd ændret"

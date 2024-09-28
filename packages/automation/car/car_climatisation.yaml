@@ -13,7 +13,7 @@ automation:
         to: "on"
     action:
       - alias: "Climatise car"
-        service: switch.turn_on
+        action: switch.turn_on
         target:
           entity_id: switch.id_3_pro_climatisation
 
@@ -37,7 +37,7 @@ automation:
         state: "on"
     action:
       - alias: "Climatise car"
-        service: switch.turn_on
+        action: switch.turn_on
         target:
           entity_id: switch.id_3_pro_climatisation
 
@@ -51,7 +51,7 @@ automation:
         to: "off"
     action:
       - alias: "Stop climatising car"
-        service: switch.turn_off
+        action: switch.turn_off
         target:
           entity_id: switch.id_3_pro_climatisation
 
@@ -66,7 +66,7 @@ automation:
         entity_id: sensor.id_3_pro_remaining_climatisation_time
         above: 6
     action:
-      - service: script.notify_darkphone
+      - action: script.notify_darkphone
         data:
           message: |
             Klimatiserer bilen til {{ states('sensor.id_3_pro_target_temperature') }}°.
@@ -74,7 +74,7 @@ automation:
           data:
             inline_keyboard:
               - "Stop klimatisering:/car_climatisation_off"
-      - service: automation.turn_on
+      - action: automation.turn_on
         target:
           entity_id: automation.notify_car_climatisation_end
 
@@ -86,9 +86,9 @@ automation:
         entity_id: binary_sensor.id_3_pro_klimatisering
         to: "off"
     action:
-      - service: script.notify_darkphone
+      - action: script.notify_darkphone
         data:
           message: "Klimatisering afsluttet."
-      - service: automation.turn_off
+      - action: automation.turn_off
         target:
           entity_id: automation.notify_car_climatisation_end

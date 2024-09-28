@@ -165,7 +165,7 @@ automation:
                 entity_id: binary_sensor.location_at_work
                 state: "on"
             sequence:
-              - service: script.puzzel_log_on
+              - action: script.puzzel_log_on
                 data:
                   queue_id: >-
                     {% set current_profile_id = state_attr('sensor.puzzel_ko', 'profile_id')|int %}
@@ -184,7 +184,7 @@ automation:
                 entity_id: binary_sensor.location_at_work
                 state: "off"
             sequence:
-              - service: script.notify_darkphone
+              - action: script.notify_darkphone
                 data:
                   message: "Log på Puzzel?"
                   data:
@@ -202,7 +202,7 @@ automation:
                 entity_id: binary_sensor.location_at_work
                 state: "on"
             sequence:
-              - service: script.notify_darkphone
+              - action: script.notify_darkphone
                 data:
                   message: "Du er stadig logget på Puzzel"
                   data:
@@ -216,7 +216,7 @@ automation:
                 entity_id: binary_sensor.location_at_work
                 state: "off"
             sequence:
-              - service: script.puzzel_log_off
+              - action: script.puzzel_log_off
 
   - alias: "Ignore Incorrect Puzzel State"
     id: 9b773b63-18d4-4c98-b743-683bc9d5cad9
@@ -231,13 +231,13 @@ automation:
         event_data:
           command: "/puzzel_ignore_incorrect"
     action:
-      - service: automation.turn_off
+      - action: automation.turn_off
         target:
           entity_id: automation.puzzel_robot
-      - service: automation.turn_on
+      - action: automation.turn_on
         target:
           entity_id: automation.reset_ignore_incorrect_puzzel_state
-      - service: telegram_bot.answer_callback_query
+      - action: telegram_bot.answer_callback_query
         data:
           callback_query_id: "{{ trigger.event.data.id }}"
           message: "Ignorerer forkert Puzzel status indtil næste skift"
@@ -251,10 +251,10 @@ automation:
           - "unknown"
           - "unavailable"
     action:
-      - service: automation.turn_on
+      - action: automation.turn_on
         target:
           entity_id: automation.puzzel_robot
-      - service: automation.turn_off
+      - action: automation.turn_off
         target:
           entity_id: automation.reset_ignore_incorrect_puzzel_state
 
@@ -282,14 +282,14 @@ automation:
                     is_state('binary_sensor.working', 'on')
                   }}
             sequence:
-              - service: notify.mobile_app_arbejdstelefon
+              - action: notify.mobile_app_arbejdstelefon
                 data:
                   message: "command_ringer_mode"
                   data:
                     command: normal
                     ttl: 0
                     priority: high
-              - service: notify.mobile_app_arbejdstelefon
+              - action: notify.mobile_app_arbejdstelefon
                 data:
                   message: "command_dnd"
                   data:
@@ -304,14 +304,14 @@ automation:
                     is_state('binary_sensor.working', 'off')
                   }}
             sequence:
-              - service: notify.mobile_app_arbejdstelefon
+              - action: notify.mobile_app_arbejdstelefon
                 data:
                   message: "command_ringer_mode"
                   data:
                     command: "vibrate"
                     ttl: 0
                     priority: high
-              - service: notify.mobile_app_arbejdstelefon
+              - action: notify.mobile_app_arbejdstelefon
                 data:
                   message: "command_dnd"
                   data:

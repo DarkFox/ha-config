@@ -26,9 +26,9 @@ script:
   mobile_app_configure_ble_transmitter:
     mode: queued
     fields:
-      service:
-        name: "Service"
-        description: "The service to send the command to. Must be a mobile app notify service. Ignored if device is set"
+      action:
+        name: "Action"
+        description: "The action to send the command to. Must be a mobile app notify action. Ignored if device is set"
         example: "notify.mobile_app_watch"
         selector:
           text:
@@ -95,8 +95,8 @@ script:
             max: 65535
             step: 1
     variables:
-      service: >-
-        {{ ('notify.mobile_app_'~device_attr(device, 'name') | slugify) if device is defined else service }}
+      action: >-
+        {{ ('notify.mobile_app_'~device_attr(device, 'name') | slugify) if device is defined else action }}
       settings:
         ble_advertise: "{{ ble_advertise }}"
         ble_transmit: "{{ ble_transmit }}"
@@ -126,7 +126,7 @@ script:
       - repeat:
           for_each: "{{ commands }}"
           sequence:
-            - service: "{{ service }}"
+            - action: "{{ action }}"
               data:
                 message: "command_ble_transmitter"
                 data: "{{ repeat.item }}"

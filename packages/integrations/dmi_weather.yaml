@@ -180,7 +180,7 @@ automation:
       platform: template
       value_template: "{{ (state_attr('sensor.dmi_aktuel_varsel', 'category') | int(0)) > 1 }}"
     action:
-      - service: script.notify_darkphone
+      - action: script.notify_darkphone
         data:
           title: "Vejr Varsel: {{ states('sensor.dmi_aktuel_varsel') }}"
           message: "{{ state_attr('sensor.dmi_aktuel_varsel', 'text') }}"
@@ -198,7 +198,7 @@ automation:
       - condition: template
         value_template: "{{ states.sensor.dmi_warnings_raw.attributes.warnings|length > 0 }}"
     action:
-      - service: homeassistant.update_entity
+      - action: homeassistant.update_entity
         data:
           entity_id: sensor.dmi_warnings_specific_raw
 
@@ -231,14 +231,14 @@ automation:
               []
             {% endif %}
 
-      - service: mqtt.publish
+      - action: mqtt.publish
         data:
           topic: "dmi_current_warnings/state"
           retain: True
           payload: >-
             {{ actualWarnings | length }}
 
-      - service: mqtt.publish
+      - action: mqtt.publish
         data:
           topic: "dmi_current_warnings/attributes"
           retain: True
@@ -253,14 +253,14 @@ automation:
               }
             {% endif %}
 
-      - service: mqtt.publish
+      - action: mqtt.publish
         data:
           topic: "dmi_future_warnings/state"
           retain: True
           payload: >-
             {{ fivedayWarnings|length }}
 
-      - service: mqtt.publish
+      - action: mqtt.publish
         data:
           topic: "dmi_future_warnings/attributes"
           retain: True
@@ -278,7 +278,7 @@ automation:
       - condition: template
         value_template: "{{ actualWarnings|length > 0 }}"
 
-      - service: downloader.download_file
+      - action: downloader.download_file
         data:
           url: "https://www.dmi.dk/fileadmin/assets/Varselsikoner/{{ actualWarnings[0].icon }}"
           subdir: dmi_warning_icons

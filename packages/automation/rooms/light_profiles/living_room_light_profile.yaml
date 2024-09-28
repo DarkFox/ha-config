@@ -16,7 +16,7 @@ automation:
               - condition: template
                 value_template: "{{ profile == 'Bright' }}"
             sequence:
-              - service: scene.apply
+              - action: scene.apply
                 data:
                   transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
                   entities:
@@ -29,7 +29,7 @@ automation:
               - condition: template
                 value_template: "{{ profile == 'Default' }}"
             sequence:
-              - service: script.turn_on
+              - action: script.turn_on
                 target:
                   entity_id: script.hue_scene_or_light_profile
                 data:
@@ -79,7 +79,7 @@ automation:
                           brightness: 255
                           hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
 
-              - service: script.turn_on
+              - action: script.turn_on
                 target:
                   entity_id: script.wled_preset_or_light_profile
                 data:
@@ -102,7 +102,7 @@ automation:
                         hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
                         effect: "Solid"
 
-              - service: scene.apply
+              - action: scene.apply
                 data:
                   transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
                   entities:
@@ -116,7 +116,7 @@ automation:
               - condition: template
                 value_template: "{{ profile == 'Dimmed' }}"
             sequence:
-              - service: script.turn_on
+              - action: script.turn_on
                 target:
                   entity_id: script.hue_scene_or_light_profile
                 data:
@@ -176,7 +176,7 @@ automation:
                           brightness: 127
                           hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
 
-              - service: script.turn_on
+              - action: script.turn_on
                 target:
                   entity_id: script.wled_preset_or_light_profile
                 data:
@@ -199,7 +199,7 @@ automation:
                         hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
                         effect: "Solid"
 
-              - service: scene.apply
+              - action: scene.apply
                 data:
                   transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
                   entities:
@@ -213,7 +213,7 @@ automation:
               - condition: template
                 value_template: "{{ profile == 'Ambient' }}"
             sequence:
-              - service: script.turn_on
+              - action: script.turn_on
                 target:
                   entity_id: script.hue_scene_or_light_profile
                 data:
@@ -260,7 +260,7 @@ automation:
                           brightness: 32
                           hs_color: "{{ state_attr('sensor.theme', 'secondary_color_hue') }}"
 
-              - service: script.turn_on
+              - action: script.turn_on
                 target:
                   entity_id: script.wled_preset_or_light_profile
                 data:
@@ -283,7 +283,7 @@ automation:
                         hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
                         effect: "Solid"
 
-              - service: scene.apply
+              - action: scene.apply
                 data:
                   transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
                   entities:
@@ -297,7 +297,7 @@ automation:
               - condition: template
                 value_template: "{{ profile == 'Night' }}"
             sequence:
-              - service: scene.apply
+              - action: scene.apply
                 data:
                   transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
                   entities:
@@ -362,7 +362,7 @@ automation:
               - condition: template
                 value_template: "{{ profile == 'Off' }}"
             sequence:
-              - service: light.turn_off
+              - action: light.turn_off
                 data:
                   transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
                   entity_id: group.living_room_lights
@@ -385,7 +385,7 @@ automation:
       - platform: event
         event_type: refresh_light_profile
     action:
-      - service: script.turn_on
+      - action: script.turn_on
         target:
           entity_id: >-
             {% if (states('sensor.living_room_selected_light_profile')|lower) not in ['night', 'off'] and is_state('binary_sensor.stue_tilstedevarelse_spisebord', 'on') %}
@@ -414,7 +414,7 @@ automation:
       - platform: event
         event_type: refresh_light_profile
     action:
-      - service: script.turn_on
+      - action: script.turn_on
         target:
           entity_id: >-
             {% 
@@ -433,7 +433,7 @@ script:
   dining_table_lights_active:
     alias: "Dining Table Lights Active"
     sequence:
-      - service: scene.apply
+      - action: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
@@ -445,7 +445,7 @@ script:
   dining_table_lights_default:
     alias: "Dining Table Lights Default"
     sequence:
-      - service: scene.apply
+      - action: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
@@ -457,7 +457,7 @@ script:
   dining_table_lights_dimmed:
     alias: "Dining Table Lights Dimmed"
     sequence:
-      - service: scene.apply
+      - action: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
@@ -469,7 +469,7 @@ script:
   dining_table_lights_ambient:
     alias: "Dining Table Lights Ambient"
     sequence:
-      - service: scene.apply
+      - action: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
@@ -481,7 +481,7 @@ script:
   dining_table_lights_night:
     alias: "Dining Table Lights Night"
     sequence:
-      - service: scene.apply
+      - action: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
@@ -493,7 +493,7 @@ script:
   dining_table_lights_off:
     alias: "Dining Table Lights Off"
     sequence:
-      - service: scene.apply
+      - action: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
@@ -503,7 +503,7 @@ script:
   bar_lights_open:
     alias: "Bar Lights Open"
     sequence:
-      - service: script.turn_on
+      - action: script.turn_on
         target:
           entity_id: script.wled_preset_or_light_profile
         data:
@@ -521,7 +521,7 @@ script:
                 hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
                 effect: "Solid"
 
-      - service: scene.apply
+      - action: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
@@ -552,7 +552,7 @@ script:
   bar_lights_default:
     alias: "Bar Lights Default"
     sequence:
-      - service: script.turn_on
+      - action: script.turn_on
         target:
           entity_id: script.wled_preset_or_light_profile
         data:
@@ -570,7 +570,7 @@ script:
                 hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
                 effect: "Solid"
 
-      - service: scene.apply
+      - action: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
@@ -600,7 +600,7 @@ script:
   bar_lights_dimmed:
     alias: "Bar Lights Dimmed"
     sequence:
-      - service: script.turn_on
+      - action: script.turn_on
         target:
           entity_id: script.wled_preset_or_light_profile
         data:
@@ -618,7 +618,7 @@ script:
                 hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
                 effect: "Solid"
 
-      - service: scene.apply
+      - action: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
@@ -643,7 +643,7 @@ script:
   bar_lights_ambient:
     alias: "Bar Lights Ambient"
     sequence:
-      - service: script.turn_on
+      - action: script.turn_on
         target:
           entity_id: script.wled_preset_or_light_profile
         data:
@@ -661,7 +661,7 @@ script:
                 hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
                 effect: "Solid"
 
-      - service: scene.apply
+      - action: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
@@ -681,7 +681,7 @@ script:
   bar_lights_night:
     alias: "Bar Lights Night"
     sequence:
-      - service: scene.apply
+      - action: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
@@ -711,7 +711,7 @@ script:
   bar_lights_off:
     alias: "Bar Lights Off"
     sequence:
-      - service: scene.apply
+      - action: scene.apply
         data:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
@@ -794,11 +794,11 @@ light:
         icon_template: mdi:heart-broken
         value_template: "{{ is_state('input_boolean.living_room_separate_light_profile', 'on') }}"
         turn_on:
-          service: input_boolean.turn_on
+          action: input_boolean.turn_on
           data:
             entity_id: input_boolean.living_room_separate_light_profile
         turn_off:
-          service: input_boolean.turn_off
+          action: input_boolean.turn_off
           data:
             entity_id: input_boolean.living_room_separate_light_profile
 

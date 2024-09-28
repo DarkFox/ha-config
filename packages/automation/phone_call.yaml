@@ -120,7 +120,7 @@ automation:
             or is_state('binary_sensor.working', 'on')
           }}
     action:
-      - service: script.turn_on
+      - action: script.turn_on
         entity_id: script.pause_all_media
 
   - alias: Unpause On Phone Call Finished
@@ -137,7 +137,7 @@ automation:
         entity_id: binary_sensor.martin_presence
         state: "on"
     action:
-      - service: script.turn_on
+      - action: script.turn_on
         entity_id: script.resume_all_media
 
   - alias: On Call Ringing While Sleeping
@@ -163,7 +163,7 @@ automation:
                   - "sleeping"
                   - "smart wake"
             sequence:
-              - service: input_select.select_option
+              - action: input_select.select_option
                 data:
                   entity_id: input_select.sleep_state
                   option: paused
@@ -247,7 +247,7 @@ automation:
                 event_data:
                   room: bedroom
                   profile: "Off"
-              - service: input_select.select_option
+              - action: input_select.select_option
                 data:
                   entity_id: input_select.sleep_state
                   option: sleeping
@@ -283,7 +283,7 @@ automation:
                 event_data:
                   room: bedroom
                   profile: "Off"
-              - service: input_select.select_option
+              - action: input_select.select_option
                 data:
                   entity_id: input_select.sleep_state
                   option: sleeping
@@ -305,12 +305,12 @@ automation:
     action:
       - variables:
           phone_number: "{{ states('input_text.work_phone_caller')[-8:] }}"
-      - service: script.puzzel_lookup_caller
+      - action: script.puzzel_lookup_caller
         response_variable: caller
         data:
           phone_number: "{{ phone_number }}"
 
-      - service: script.puzzel_get_current_request
+      - action: script.puzzel_get_current_request
         response_variable: puzzel_request
 
       - variables:
@@ -333,7 +333,7 @@ automation:
         entity_id: sensor.arbejdstelefon_phone_state
         to: offhook
     action:
-      - service: input_boolean.turn_on
+      - action: input_boolean.turn_on
         data:
           entity_id: input_boolean.work_phone_picked_up
 
@@ -357,11 +357,11 @@ automation:
             line: "{{ state_attr('sensor.current_work_call', 'line') }}"
             start: "{{ state_attr('sensor.current_work_call', 'start') }}"
             picked_up: "{{ is_state('input_boolean.work_phone_picked_up', 'on') }}"
-      - service: input_text.set_value
+      - action: input_text.set_value
         data:
           entity_id: input_text.work_phone_caller
           value: ""
-      - service: input_boolean.turn_off
+      - action: input_boolean.turn_off
         data:
           entity_id: input_boolean.work_phone_picked_up
 
@@ -397,7 +397,7 @@ automation:
                   formatted_phone: "{{ trigger.to_state.attributes.formatted_phone }}"
                   line: "{{ trigger.to_state.attributes.line }}"
 
-              - service: notify.mobile_app_arbejdstelefon
+              - action: notify.mobile_app_arbejdstelefon
                 data:
                   title: "{{ name }}"
                   message: |
@@ -414,7 +414,7 @@ automation:
                     persistent: false
                     clickAction: noAction
                     notification_icon: mdi:phone-classic
-              - service: notify.telegram_darkfox
+              - action: notify.telegram_darkfox
                 data:
                   message: |
                     Arbejdspkald fra {{ name }}
@@ -424,7 +424,7 @@ automation:
                     {{ 'Linje: ' + line if line != '' }}
 
         default:
-          - service: notify.telegram_darkfox
+          - action: notify.telegram_darkfox
             data:
               message: >-
                 Arbejdsopkald fra ukendt nummer: {{ trigger.to_state.attributes.formatted_phone }}
@@ -436,7 +436,7 @@ script:
       phone_number:
         description: "The phone number of the unknown caller"
     sequence:
-      - service: notify.telegram_darkfox
+      - action: notify.telegram_darkfox
         data:
           message: >-
             Arbejdsopkald fra ukendt nummer: {{ phone_number | string | regex_findall(find='..') | join(' ') }}
@@ -460,7 +460,7 @@ script:
       - variables:
           formatted_phone: "{{ phone | string | regex_findall(find='..') | join(' ') }}"
 
-      - service: notify.mobile_app_arbejdstelefon
+      - action: notify.mobile_app_arbejdstelefon
         data:
           title: "{{ name }}"
           message: |
@@ -476,7 +476,7 @@ script:
             persistent: false
             clickAction: noAction
             notification_icon: mdi:phone-classic
-      - service: notify.telegram_darkfox
+      - action: notify.telegram_darkfox
         data:
           message: |
             Arbejdspkald fra {{ name }}
@@ -493,11 +493,11 @@ script:
   pause_all_media:
     alias: "Sæt afspilning på pause"
     sequence:
-      - service: input_text.set_value
+      - action: input_text.set_value
         data:
           entity_id: input_text.active_media_player
           value: "{{ states('sensor.active_media_player') }}"
-      - service: input_text.set_value
+      - action: input_text.set_value
         data:
           entity_id: input_text.active_media_type
           value: "{{ 'file' if state_attr(states('sensor.active_media_player'), 'media_duration') else 'stream' }}"
@@ -507,7 +507,7 @@ script:
                 entity_id: input_text.active_media_type
                 state: "file"
             sequence:
-              - service: "media_player.media_pause"
+              - action: "media_player.media_pause"
                 data:
                   entity_id: "{{ states('input_text.active_media_player') }}"
           - conditions:
@@ -515,7 +515,7 @@ script:
                 entity_id: input_text.active_media_type
                 state: "stream"
             sequence:
-              - service: "media_player.volume_mute"
+              - action: "media_player.volume_mute"
                 data:
                   entity_id: "{{ states('input_text.active_media_player') }}"
                   is_volume_muted: true
@@ -529,7 +529,7 @@ script:
                 entity_id: input_text.active_media_type
                 state: "file"
             sequence:
-              - service: "media_player.media_play"
+              - action: "media_player.media_play"
                 data:
                   entity_id: "{{ states('input_text.active_media_player') }}"
           - conditions:
@@ -537,7 +537,7 @@ script:
                 entity_id: input_text.active_media_type
                 state: "stream"
             sequence:
-              - service: "media_player.volume_mute"
+              - action: "media_player.volume_mute"
                 data:
                   entity_id: "{{ states('input_text.active_media_player') }}"
                   is_volume_muted: false
