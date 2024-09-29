@@ -26,6 +26,7 @@ binary_sensor:
 
 automation:
   - alias: living_room_tv_on
+    id: 9c31a41b-1c54-469b-8cec-77d4f46fde2a
     initial_state: true
     trigger:
       - platform: state
@@ -33,11 +34,18 @@ automation:
         to: "on"
     action:
       - action: media_player.turn_on
-        data:
+        target:
           entity_id:
             - media_player.stue_tv
+      - condition: template
+        value_template: "{{ is_state('select.sync_box_hdmi_input', 'Nvidia Shield') }}"
+      - action: remote.turn_on
+        target:
+          entity_id:
+            - remote.stue_shield
 
   - alias: living_room_tv_off
+    id: 53c454fa-09d9-4b69-9862-a5de30a24ec1
     initial_state: true
     trigger:
       - platform: state
@@ -58,6 +66,7 @@ automation:
             - media_player.stue_tv
 
   - alias: living_room_soundbar_night_mode
+    id: d603bbac-037c-48a2-97d3-89a594565dbd
     initial_state: true
     trigger:
       - platform: state
@@ -92,6 +101,7 @@ automation:
           volume_level: 0.40
 
   - alias: living_room_soundbar_day_mode
+    id: 13f5dd4a-ee3f-4839-bbe7-90350f00cf89
     initial_state: true
     trigger:
       - platform: state
@@ -113,7 +123,19 @@ automation:
         data:
           entity_id: switch.stue_night_sound
 
+  - alias: Notify Night Sound toggled on Living Room TV
+    id: 30e2883f-068f-47a3-a8ff-efd4a6265a8c
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: switch.stue_night_sound
+    action:
+      - action: notify.stue_tv
+        data:
+          message: "Natlyd slået {{ 'til' if is_state('switch.stue_night_sound', 'on') else 'fra' }}"
+
   - alias: stue_soundbar_volume_remote_state_up
+    id: 7de1afd1-3f66-4dab-ba66-7a8a4b9bcd56
     initial_state: true
     trigger:
       - platform: event
@@ -128,6 +150,7 @@ automation:
         option: "up"
 
   - alias: stue_soundbar_volume_remote_state_down
+    id: 4ea62154-a80f-486d-8f7d-4bf9f729fde5
     initial_state: true
     trigger:
       - platform: event
@@ -142,6 +165,7 @@ automation:
         option: "down"
 
   - alias: stue_soundbar_volume_remote_state_off
+    id: 749f7ecc-de86-40e1-bf0e-3af575ae3c0e
     initial_state: true
     trigger:
       - platform: event
@@ -168,6 +192,7 @@ automation:
         option: "off"
 
   - alias: stue_soundbar_volume_remote_mute
+    id: e110dccc-ced5-470b-acb5-61e32838129f
     initial_state: true
     trigger:
       - platform: event
@@ -182,6 +207,7 @@ automation:
         is_volume_muted: "{{ not state_attr('media_player.stue', 'is_volume_muted') }}"
 
   - alias: stue_soundbar_volume_remote_up
+    id: 9b8892b4-f1a6-4dc6-917c-eab704b11fe9
     initial_state: true
     trigger:
       - platform: state
@@ -209,6 +235,7 @@ automation:
                   state: "down"
 
   - alias: stue_soundbar_volume_remote_down
+    id: 5b75a048-f99c-4ca6-a108-2372959539ae
     initial_state: true
     trigger:
       - platform: state
@@ -236,6 +263,7 @@ automation:
                   state: "up"
 
   - alias: living_room_media_unmute
+    id: 5812551d-5044-4e94-a6e9-b141b1773316
     initial_state: true
     trigger:
       - platform: state
@@ -258,6 +286,7 @@ automation:
           is_volume_muted: false
 
   - alias: living_room_media_mute
+    id: 053305bf-7d7f-4500-9d2d-d4ca67e738c9
     initial_state: true
     trigger:
       - platform: state

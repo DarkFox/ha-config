@@ -5,15 +5,106 @@ panel: true
 cards:
   - type: vertical-stack
     cards:
+      - type: custom:decluttering-card
+        template: room_light_profile
+        variables:
+          - room: living_room
+
+      - type: conditional
+        conditions:
+          - entity: remote.stue_shield
+            state_not: "off"
+        card:
+          type: custom:decluttering-card
+          template: android_tv_remote
+          variables:
+            - media_player_id: media_player.stue
+            - remote_id: "remote.stue_shield"
+            - slider_id: "media_player.stue"
+            - keyboard_id: "media_player.stue_shield_adb"
+
       - !include ../cards/media_players/living_room_media.yaml
 
+      - type: horizontal-stack
+        cards:
+          - type: custom:decluttering-card
+            template: currently_playing
+            variables:
+              - room: stue
+
+          - !include ../cards/compact_clock.yaml
+
       - type: custom:decluttering-card
-        template: speaker_control_active_or_room
+        template: speaker_control_v2
         variables:
           - room: stue
 
-      - type: entities
-        show_header_toggle: false
-        entities:
-          - entity: switch.stue_tv_afbryder
-            name: TV
+      - type: horizontal-stack
+        cards:
+          - type: custom:button-card
+            entity: switch.bedroom_curtain_automations
+            name: Auto
+            tap_action:
+              action: toggle
+          - type: custom:button-card
+            entity: cover.stue_gardin_venstre
+            name: Dør
+            tap_action:
+              action: toggle
+            double_tap_action:
+              action: call-service
+              service: cover.stop_cover
+              service_data:
+                entity_id: cover.stue_gardin_venstre
+            hold_action:
+              action: more-info
+          - type: custom:button-card
+            entity: cover.stue_gardin_hojre
+            name: Vindue
+            tap_action:
+              action: toggle
+            double_tap_action:
+              action: call-service
+              service: cover.stop_cover
+              service_data:
+                entity_id: cover.stue_gardin_hojre
+            hold_action:
+              action: more-info
+          - type: custom:button-card
+            entity: cover.stue_gardin
+            name: Gardin
+            tap_action:
+              action: toggle
+            double_tap_action:
+              action: call-service
+              service: cover.stop_cover
+              service_data:
+                entity_id: cover.stue_gardin
+            hold_action:
+              action: more-info
+
+      - !include ../cards/media_players/synx_box_controls.yaml
+
+      - type: custom:mini-media-player
+        entity: media_player.stue_tv
+        artwork: cover
+        hide:
+          icon: true
+
+      - type: custom:mini-media-player
+        entity: media_player.stue_shield
+        artwork: cover
+        hide:
+          icon: true
+
+      - type: custom:mini-media-player
+        name: Soundbar
+        entity: media_player.stue
+        hide:
+          icon: true
+          controls: true
+
+      - type: custom:decluttering-card
+        template: set_browser_id
+        variables:
+          - browser_id: "living-room-remote"

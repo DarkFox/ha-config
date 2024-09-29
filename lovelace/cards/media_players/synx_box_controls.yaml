@@ -1,0 +1,62 @@
+type: vertical-stack
+cards:
+  - type: horizontal-stack
+    cards:
+      - show_name: true
+        show_icon: true
+        type: button
+        tap_action:
+          action: toggle
+        entity: switch.sync_box_power
+        name: Sync Box
+      - show_name: true
+        show_icon: true
+        type: button
+        tap_action:
+          action: toggle
+        entity: switch.sync_box_light_sync
+        name: Light Sync
+      - show_name: true
+        show_icon: true
+        type: button
+        tap_action:
+          action: call-service
+          service: select.select_option
+          target:
+            entity_id: select.sync_box_entertainment_area
+          data:
+            option: Stue TV Ambilight
+        entity: select.sync_box_entertainment_area
+        show_state: false
+        name: "Gruppe: TV"
+        icon: mdi:television
+      - show_name: true
+        show_icon: true
+        type: button
+        tap_action:
+          action: call-service
+          service: select.select_option
+          target:
+            entity_id: select.sync_box_entertainment_area
+          data:
+            option: Stue Gruppe
+        entity: select.sync_box_entertainment_area
+        show_state: false
+        name: "Gruppe: Stue"
+        icon: ""
+
+  - type: conditional
+    conditions:
+      - entity: switch.sync_box_power
+        state: "on"
+    card:
+      type: entities
+      entities:
+        - type: custom:slider-entity-row
+          entity: number.sync_box_brightness
+          name: Brightness
+          show_icon: true
+          full_row: true
+        - entity: select.sync_box_hdmi_input
+        - entity: select.sync_box_sync_mode
+        - entity: select.sync_box_intensity

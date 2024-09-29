@@ -71,6 +71,79 @@ cards:
 
       - type: horizontal-stack
         cards:
+          - type: custom:button-card
+            size: 50px
+            icon: mdi:volume-minus
+            tap_action:
+              action: call-service
+              service: media_player.volume_down
+              service_data:
+                entity_id: media_player.stue
+          - type: custom:button-card
+            size: 50px
+            icon: mdi:volume-plus
+            tap_action:
+              action: call-service
+              service: media_player.volume_up
+              service_data:
+                entity_id: media_player.stue
+          - type: "custom:button-card"
+            size: 50px
+            color: auto
+            entity: switch.stue_night_sound
+            show_name: false
+
+      - type: conditional
+        conditions:
+          - entity: media_player.stue_shield
+            state_not: "off"
+        card:
+          type: vertical-stack
+          cards:
+            - type: custom:mini-media-player
+              name: Nvidia Shield
+              artwork: cover
+              entity: media_player.stue_shield
+              info: scroll
+              hide:
+                name: true
+                volume: true
+                controls: true
+            - type: horizontal-stack
+              cards:
+                - type: "custom:button-card"
+                  entity: media_player.stue_shield
+                  icon: mdi:skip-previous
+                  show_name: false
+                  tap_action:
+                    action: call-service
+                    service: media_player.media_previous_track
+                    service_data:
+                      entity_id: media_player.stue_shield
+                - type: "custom:button-card"
+                  entity: media_player.stue_shield
+                  icon: mdi:play
+                  show_name: false
+                  state:
+                    - value: "playing"
+                      icon: mdi:pause
+                  tap_action:
+                    action: call-service
+                    service: media_player.media_play_pause
+                    service_data:
+                      entity_id: media_player.stue_shield
+                - type: "custom:button-card"
+                  entity: media_player.stue_shield
+                  icon: mdi:skip-next
+                  show_name: false
+                  tap_action:
+                    action: call-service
+                    service: media_player.media_next_track
+                    service_data:
+                      entity_id: media_player.stue_shield
+
+      - type: horizontal-stack
+        cards:
           - type: "custom:button-card"
             entity: switch.living_room_curtain_automations
             name: Auto Gardin
@@ -103,60 +176,14 @@ cards:
     view_layout:
       grid-area: right
     cards:
-      - type: horizontal-stack
-        cards:
-          - show_name: true
-            show_icon: true
-            type: button
-            tap_action:
-              action: toggle
-            entity: switch.sync_box_power
-            name: Sync Box
-          - show_name: true
-            show_icon: true
-            type: button
-            tap_action:
-              action: toggle
-            entity: switch.sync_box_light_sync
-            name: Light Sync
-          - show_name: true
-            show_icon: true
-            type: button
-            tap_action:
-              action: call-service
-              service: select.select_option
-              target:
-                entity_id: select.sync_box_entertainment_area
-              data:
-                option: Stue TV Ambilight
-            entity: select.sync_box_entertainment_area
-            show_state: false
-            name: "Gruppe: TV"
-            icon: mdi:television
-          - show_name: true
-            show_icon: true
-            type: button
-            tap_action:
-              action: call-service
-              service: select.select_option
-              target:
-                entity_id: select.sync_box_entertainment_area
-              data:
-                option: Stue Gruppe
-            entity: select.sync_box_entertainment_area
-            show_state: false
-            name: "Gruppe: Stue"
-            icon: ""
-      - type: entities
-        entities:
-          - type: custom:slider-entity-row
-            entity: number.sync_box_brightness
-            name: Brightness
-            show_icon: true
-            full_row: true
-          - entity: select.sync_box_hdmi_input
-          - entity: select.sync_box_sync_mode
-          - entity: select.sync_box_intensity
+      - !include ../../cards/media_players/synx_box_controls.yaml
+
+      - type: custom:mini-media-player
+        name: Soundbar
+        entity: media_player.stue
+        hide:
+          icon: true
+          controls: true
 
       - type: custom:mini-media-player
         entity: media_player.stue_tv

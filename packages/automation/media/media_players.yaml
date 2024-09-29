@@ -1,4 +1,52 @@
 script:
+  open_drtv_app:
+    mode: parallel
+    alias: Open DR TV App
+    fields:
+      media_player_entity_id:
+        description: Media Player that will open the app
+        example: media_player.stue_shield
+        selector:
+          entity:
+            filter:
+              - integration: androidtv_remote
+                domain: media_player
+      remote_entity_id:
+        description: Remote that will send the command
+        example: remote.stue_shield_remote
+        selector:
+          entity:
+            filter:
+              - integration: androidtv_remote
+                domain: remote
+    variables:
+      media_player_entity_id: >-
+        {{
+          media_player_entity_id if media_player_entity_id is defined
+          else (remote_entity_id | replace('remote.', 'media_player.'))~'_remote'
+        }}
+      remote_entity_id: >-
+        {{
+          remote_entity_id if remote_entity_id is defined
+          else media_player_entity_id | replace('media_player.', 'remote.') | replace('_remote', '')
+        }}
+    sequence:
+      - action: media_player.play_media
+        target:
+          entity_id: "{{ media_player_entity_id }}"
+        data:
+          media_content_type: app
+          media_content_id: dk.dr.tvplayer
+      - wait_template: "{{ is_state_attr(media_player_entity_id, 'app_id', 'com.android.vending') }}"
+        timeout: 00:00:30
+        continue_on_timeout: false
+      - delay: 1
+      - action: remote.send_command
+        target:
+          entity_id: "{{ remote_entity_id }}"
+        data:
+          command: DPAD_CENTER
+
   toggle_mute:
     mode: parallel
     fields:
