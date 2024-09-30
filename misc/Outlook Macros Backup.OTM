@@ -1,0 +1,368 @@
+'Email Makroer
+Public Sub VagtAendringer()
+    Dim NewMail As Outlook.MailItem
+
+    'Change the template file folder path according to your case
+    Set NewMail = Application.CreateItemFromTemplate("H:\Skabeloner\Vagtplan for sidste uge.oft")
+    
+    
+    With NewMail
+        theBody = .HTMLBody
+        
+        theBody = Replace(theBody, "{{uge}}", Format(Now, "ww"))
+        theBody = Replace(theBody, "{{dato}}", Format(Now, "dd.mm.yyyy"))
+        theBody = Replace(theBody, "{{dag}}", WeekdayName(Weekday(Now, vbMonday)))
+        
+        .HTMLBody = theBody
+    End With
+    
+    NewMail.Display
+
+    Set NewMail = Nothing
+End Sub
+
+'Kalender Makroer
+Public Sub RSR1(Optional startDate = "QJZ")
+    'Fri 7-9
+    CreateEventFromTemplateWithTime startDate, "07:00", 2, "H:\Skabeloner\Fri.oft"
+    '9-17
+    CreateEventFromTemplateWithTime startDate, "09:00", 8, "H:\Skabeloner\På RSR.oft"
+    'Opstartstid 9:30-10
+    CreateEventFromTemplateWithTime startDate, "09:00", 0.5, "H:\Skabeloner\Opstartstid.oft"
+    'Frokost 11:30-12
+    CreateEventFromTemplateWithTime startDate, "13:00", 0.5, "H:\Skabeloner\Frokost.oft"
+    'Fri 15-23
+    CreateEventFromTemplateWithTime startDate, "17:00", 6, "H:\Skabeloner\Fri.oft"
+End Sub
+
+Public Sub RSH1(Optional startDate = "QJZ")
+    'Fri 7-9
+    CreateEventFromTemplateWithTime startDate, "07:00", 2, "H:\Skabeloner\Fri.oft"
+    '9-17
+    CreateEventFromTemplateWithTime startDate, "09:00", 8, "H:\Skabeloner\På RSH.oft"
+    'Opstartstid 9:30-10
+    CreateEventFromTemplateWithTime startDate, "09:00", 0.5, "H:\Skabeloner\Opstartstid.oft"
+    'Frokost 11:30-12
+    CreateEventFromTemplateWithTime startDate, "13:00", 0.5, "H:\Skabeloner\Frokost.oft"
+    'Fri 15-23
+    CreateEventFromTemplateWithTime startDate, "17:00", 6, "H:\Skabeloner\Fri.oft"
+End Sub
+
+Public Sub AR1(Optional startDate = "QJZ")
+    'Fri 7-15
+    CreateEventFromTemplateWithTime startDate, "07:00", 8, "H:\Skabeloner\Fri.oft"
+    '15-23
+    CreateEventFromTemplateWithTime startDate, "15:00", 8, "H:\Skabeloner\På RSH.oft"
+    'Aftensmad 18:30-19
+    CreateEventFromTemplateWithTime startDate, "18:30", 0.5, "H:\Skabeloner\Aftensmad.oft"
+    'Vagt 23-7
+    CreateEventFromTemplateWithTime startDate, "23:00", 6.5, "H:\Skabeloner\Vagt.oft"
+End Sub
+
+Public Sub A1(Optional startDate = "QJZ")
+    'Fri 7-14
+    CreateEventFromTemplateWithTime startDate, "07:00", 7, "H:\Skabeloner\Fri.oft"
+    '14-22
+    CreateEventFromTemplateWithTime startDate, "14:00", 8, "H:\Skabeloner\På RSH.oft"
+    'Aftensmad 18:30-19
+    CreateEventFromTemplateWithTime startDate, "18:30", 0.5, "H:\Skabeloner\Aftensmad.oft"
+    'Fri 22-23
+    CreateEventFromTemplateWithTime startDate, "22:00", 1, "H:\Skabeloner\Fri.oft"
+End Sub
+
+Public Sub A2(Optional startDate = "QJZ")
+    'Fri 7-13
+    CreateEventFromTemplateWithTime startDate, "07:00", 6, "H:\Skabeloner\Fri.oft"
+    '13-22
+    CreateEventFromTemplateWithTime startDate, "13:00", 9, "H:\Skabeloner\På RSH.oft"
+    'Aftensmad 18:30-19
+    CreateEventFromTemplateWithTime startDate, "18:30", 0.5, "H:\Skabeloner\Aftensmad.oft"
+    'Fri 22-23
+    CreateEventFromTemplateWithTime startDate, "22:00", 1, "H:\Skabeloner\Fri.oft"
+End Sub
+
+Public Sub AR3(Optional startDate = "QJZ")
+    'Fri 7-15
+    CreateEventFromTemplateWithTime startDate, "07:00", 8, "H:\Skabeloner\Fri.oft"
+    '15-23
+    CreateEventFromTemplateWithTime startDate, "15:00", 8, "H:\Skabeloner\På RSH.oft"
+    'Aftensmad 18:30-19
+    CreateEventFromTemplateWithTime startDate, "18:30", 0.5, "H:\Skabeloner\Aftensmad.oft"
+    'Vagt 23-7
+    CreateEventFromTemplateWithTime startDate, "23:00", 54.5, "H:\Skabeloner\Vagt.oft"
+End Sub
+
+Public Sub Fri(Optional startDate = "QJZ")
+    'Fri 7-23
+    CreateEventFromTemplateWithTime startDate, "07:00", 16, "H:\Skabeloner\Fri.oft"
+End Sub
+
+Public Sub EventRSR()
+    CreateEventFromTemplate "H:\Skabeloner\På RSR.oft"
+End Sub
+
+Public Sub EventRSH()
+    CreateEventFromTemplate "H:\Skabeloner\På RSH.oft"
+End Sub
+
+Public Sub EventWFH()
+    CreateEventFromTemplate "H:\Skabeloner\Arbejder Hjemmefra.oft"
+End Sub
+
+Public Sub EventOffSite()
+    CreateEventFromTemplate "H:\Skabeloner\Ude af huset.oft"
+End Sub
+
+Public Sub EventVagt()
+    CreateEventFromTemplate "H:\Skabeloner\Vagt.oft"
+End Sub
+
+Public Sub EventFri()
+    CreateEventFromTemplate "H:\Skabeloner\Fri.oft"
+End Sub
+
+Public Sub EventSendVagtskema()
+    CreateEventFromTemplate "H:\Skabeloner\Send Vagtskema.oft"
+End Sub
+
+Public Sub EventFrokost()
+    CreateEventFromTemplate "H:\Skabeloner\Frokost.oft"
+End Sub
+
+Public Sub EventAftensmad()
+    CreateEventFromTemplate "H:\Skabeloner\Aftensmad.oft"
+End Sub
+
+Public Sub EventOpstartstid()
+    CreateEventFromTemplate "H:\Skabeloner\Opstartstid.oft"
+End Sub
+
+Private Sub CreateEventFromTemplate(templatePath)
+    On Error GoTo eh
+    
+    Dim datStart As Date
+    Dim datEnd As Date
+    Dim oView As Outlook.view
+    Dim oCalView As Outlook.CalendarView
+    Dim oExpl As Outlook.Explorer
+    Dim oFolder As Outlook.Folder
+    Const datNull As Date = #1/1/4501#
+    
+    Set newEvent = Application.CreateItemFromTemplate(templatePath)
+    
+    Set oExpl = Application.activeExplorer
+    Set oFolder = Application.activeExplorer.CurrentFolder
+    Set oView = oExpl.CurrentView
+
+    If oView.ViewType = olCalendarView Then
+        Set oCalView = oExpl.CurrentView
+
+        datStart = oCalView.SelectedStartTime
+        datEnd = oCalView.SelectedEndTime
+
+        If datStart <> datNull And datEnd <> datNull Then
+            newEvent.Start = datStart
+            newEvent.End = datEnd
+        End If
+    End If
+
+    'newEvent.Display
+    newEvent.Save
+    Set newEvent = Nothing
+Done:
+    Exit Sub
+eh:
+    MsgBox "The following error occurred: " & Err.Description
+End Sub
+
+
+
+Private Sub CreateEventFromTemplateWithTime(startDate, startTime, duration, templatePath)
+    On Error GoTo eh
+    
+    Dim datStart As Date
+    Dim datEnd As Date
+    Dim oView As Outlook.view
+    Dim oCalView As Outlook.CalendarView
+    Dim oExpl As Outlook.Explorer
+    Dim oFolder As Outlook.Folder
+    Const datNull As Date = #1/1/4501#
+    
+    Set newEvent = Application.CreateItemFromTemplate(templatePath)
+    
+    Set oExpl = Application.activeExplorer
+    Set oFolder = Application.activeExplorer.CurrentFolder
+    Set oView = oExpl.CurrentView
+
+    If startDate = "QJZ" Then
+        Set oCalView = oExpl.CurrentView
+        startDate = DateValue(oCalView.SelectedStartTime)
+    End If
+    
+    If oView.ViewType = olCalendarView Then
+        datStart = startDate + TimeValue(startTime)
+        datEnd = datStart + (duration / 24)
+
+        If datStart <> datNull And datEnd <> datNull Then
+            newEvent.Start = datStart
+            newEvent.End = datEnd
+        End If
+    End If
+
+    'newEvent.Display
+    newEvent.Save
+    Set newEvent = Nothing
+Done:
+    Exit Sub
+eh:
+    MsgBox "The following error occurred: " & Err.Description
+End Sub
+
+
+Public Sub CreateEventsFromSelection()
+    Dim myOlExp As Outlook.Explorer
+    Dim oAppt As Outlook.AppointmentItem
+    Dim oCalendarFolder As Outlook.Folder
+    Dim calendarItems As Outlook.Items
+    Dim filteredItems As Outlook.Items
+    Dim apptSubject As String
+    Dim apptStartDate As Date
+    Dim startDate As Date
+    Dim endDate As Date
+    Dim filter As String
+    Dim view As Outlook.view
+    
+    ' Set the active explorer and view
+    Set myOlExp = Application.activeExplorer
+    Set view = myOlExp.CurrentView
+    
+    ' Ensure the user is in a Calendar view
+    If Not TypeOf view Is Outlook.CalendarView Then
+        MsgBox "Please ensure you're viewing a calendar."
+        Exit Sub
+    End If
+    
+    ' Get the selected date range from the Calendar view
+    With view
+        startDate = .SelectedStartTime
+        endDate = .SelectedEndTime
+    End With
+    
+    ' Access the "Vagtplan" calendar (subfolder of your main Calendar)
+    Set ns = Application.GetNamespace("MAPI")
+    On Error Resume Next
+    Set oCalendarFolder = ns.Folders("XXXXX@XXXXX").Folders("Kalender").Folders("Vagtplan")
+    On Error GoTo 0
+    
+    If oCalendarFolder Is Nothing Then
+        MsgBox "The 'Vagtplan' calendar could not be found."
+        Exit Sub
+    End If
+    
+    ' Get the items in the calendar and filter them by the selected date range
+    Set calendarItems = oCalendarFolder.Items
+    calendarItems.Sort "[Start]", False
+    
+    ' Create a filter to get items within the selected date range
+    filter = "[Start] >= '" & Format(startDate, "MM/DD/YYYY HH:NN AM/PM") & "' AND [End] <= '" & Format(endDate, "MM/DD/YYYY HH:NN AM/PM") & "'"
+    Set filteredItems = calendarItems.Restrict(filter)
+    
+    ' Loop through the filtered items
+    For Each oAppt In filteredItems
+        If oAppt.Class = OlObjectClass.olAppointment Then
+            apptSubject = oAppt.Subject
+            apptStartDate = DateValue(oAppt.Start)
+            
+            ' Check the subject and call appropriate subroutine based on matching pattern
+            If apptSubject Like "RSR *" Then
+                RSR1 apptStartDate
+            ElseIf apptSubject Like "7-15 *" Then
+                RSH1 apptStartDate
+            ElseIf apptSubject Like "9-17 *" Then
+                RSH1 apptStartDate
+            ElseIf apptSubject Like "14-22 *" Then
+                A1 apptStartDate
+            ElseIf apptSubject Like "13-22 *" Then
+                A2 apptStartDate
+            ElseIf apptSubject Like "15-23R07 *" Then
+                AR1 apptStartDate
+            ElseIf apptSubject Like "15-23R24 *" Then
+                AR3 apptStartDate
+            ElseIf apptSubject Like "FRI *" Then
+                Fri apptStartDate
+            ElseIf apptSubject Like "Fri *" Then
+                Fri apptStartDate
+            ElseIf apptSubject Like "Afspadsering *" Then
+                Fri apptStartDate
+            ElseIf apptSubject Like "Ferie *" Then
+                Fri apptStartDate
+            End If
+        End If
+    Next oAppt
+    
+    MsgBox "Processing complete."
+End Sub
+
+Public Sub DeleteScheduleEvents()
+    DeleteCalendarEventsByDescription "#ScheduleMacro"
+End Sub
+
+Sub DeleteCalendarEventsByDescription(searchString)
+    Dim outlookApp As Outlook.Application
+    Dim calendarFolder As Outlook.Folder
+    Dim calendarItems As Outlook.Items
+    Dim filteredItems As Outlook.Items
+    Dim eventItem As Object
+    Dim startDate As Date
+    Dim endDate As Date
+    Dim filter As String
+    Dim activeExplorer As Outlook.Explorer
+    Dim view As Outlook.view
+    Dim i As Long
+    
+    ' Initialize Outlook application and get the active explorer
+    Set outlookApp = Outlook.Application
+    Set activeExplorer = outlookApp.activeExplorer
+    
+    ' Ensure the active explorer is the calendar view
+    If activeExplorer.CurrentFolder.DefaultItemType <> olAppointmentItem Then
+        MsgBox "Please select the Calendar view."
+        Exit Sub
+    End If
+    
+    ' Get the currently selected date range from the active calendar view
+    Set view = activeExplorer.CurrentView
+    If TypeOf view Is Outlook.CalendarView Then
+        With view
+            startDate = .SelectedStartTime
+            endDate = .SelectedEndTime
+        End With
+    Else
+        MsgBox "Please make sure you're in the calendar view."
+        Exit Sub
+    End If
+    
+    ' Get the Calendar folder
+    Set calendarFolder = outlookApp.Session.GetDefaultFolder(olFolderCalendar)
+    
+    ' Create a filter for the date range
+    filter = "[Start] >= '" & Format(startDate, "MM/DD/YYYY HH:NN AM/PM") & "' AND [End] <= '" & Format(endDate, "MM/DD/YYYY HH:NN AM/PM") & "'"
+    
+    ' Get calendar items within the date range
+    Set calendarItems = calendarFolder.Items
+    calendarItems.Sort "[Start]", False
+    Set filteredItems = calendarItems.Restrict(filter)
+    
+    ' Loop through the filtered items in reverse order to safely delete items
+    For i = filteredItems.Count To 1 Step -1
+        Set eventItem = filteredItems.Item(i)
+        ' Check if the event has a description and if it contains the search string
+        If TypeOf eventItem Is Outlook.AppointmentItem Then
+            If InStr(1, eventItem.Body, searchString, vbTextCompare) > 0 Then
+                ' Delete the event if the string is found in the description
+                eventItem.Delete
+            End If
+        End If
+    Next i
+End Sub
+
