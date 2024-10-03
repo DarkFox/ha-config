@@ -3,7 +3,41 @@ button_card_templates: !include lovelace/button_card_templates.yaml
 
 kiosk_mode:
   non_admin_settings:
-    kiosk: true
+    hide_notifications: true
+    hide_account: true
+    hide_overflow: true
+
+header_cards:
+  justify: space-between
+  replace_tabs: true
+  cards:
+    - type: markdown
+      content: |
+        {{ states('sensor.time') }}
+      card_mod:
+        style: |
+          ha-card {
+            background: rgba(0,0,0,0) !important;
+            box-shadow: none !important;
+            color: var(--app-header-text-color,#fff);
+            font-size: 120%;
+          }
+    - type: custom:button-card
+      name: "Assist"
+      icon: mdi:chat-processing-outline
+      show_name: false
+      show_state: false
+      tap_action:
+        action: assist
+      size: 75%
+      styles:
+        card:
+          - height: var(--mdc-icon-button-size,52px)
+          - width: var(--mdc-icon-button-size,52px)
+          - background: rgba(0,0,0,0)
+          - box-shadow: none
+        icon:
+          - color: var(--app-header-text-color,#fff)
 
 views:
   - !include lovelace/views/living_room_remote.yaml

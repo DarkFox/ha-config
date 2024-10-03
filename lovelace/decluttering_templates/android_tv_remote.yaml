@@ -2,10 +2,43 @@ default:
   - navigation: "touchpad"
 card:
   type: custom:android-tv-card
-  media_player_id: "[[media_player_id]]"
   remote_id: "[[remote_id]]"
-  slider_id: "[[slider_id]]"
+  media_player_id: "[[speaker_id]]"
+  slider_id: "[[speaker_id]]"
   keyboard_id: "[[keyboard_id]]"
+  title: >-
+    {%- set media_artist = state_attr('[[media_player_id]]', 'media_artist') %}
+    {%- set media_title = state_attr('[[media_player_id]]', 'media_title') %}
+    {%- set app_name = state_attr('[[media_player_id]]', 'app_name') %}
+    {%- set device_name = state_attr('[[media_player_id]]', 'friendly_name') -%}
+    {%- if media_artist and media_title %}
+      {{ media_artist }} - {{ media_title }}
+    {%- elif media_title %}
+      {{ media_title }}
+    {%- elif app_name %}
+      {{ app_name }}
+    {%- else -%}
+      {{ device_name }}
+    {%- endif %}
+  styles: |
+    #row-2 {
+      justify-content: space-between;
+      align-items: start;
+    }
+  card_mod:
+    style:
+      $: |
+        .card-header {
+          line-height: 1.2em !important;
+          padding: 0 0 0.5em !important;
+          overflow: hidden !important;
+          text-align: center !important;
+          text-wrap: nowrap !important;
+          text-overflow: ellipsis !important;
+          white-space: nowrap !important;
+          font-size: 120% !important;
+        }
+
   rows:
     - - dr
       - plex
@@ -13,12 +46,12 @@ card:
       - s0und
       - smarttube
     - - volume_mute
-      - slider
       - night_sound
-    - - "[[navigation]]"
-    - - search
+      - search
       - keyboard
-      - home
+    - - slider
+      - "[[navigation]]"
+    - - home
       - back
     - - rewind
       - previous
@@ -32,18 +65,56 @@ card:
       tap_action:
         action: source
         source: com.teamsmart.videomanager.tv
+      styles: |-
+        .icon {
+          padding: 0.2em; border-radius: 10%;
+          {{
+            "color: #FF0000; background-color: #FFFFFF;"
+            if is_state_attr('[[remote_id]]', 'current_activity', 'com.teamsmart.videomanager.tv')
+          }}
+        }
     - type: button
       name: s0und
       icon: mdi:twitch
       tap_action:
         action: source
         source: com.s0und.s0undtv
+      styles: |-
+        .icon {
+          padding: 0.2em; border-radius: 10%;
+          {{
+            "color: #6441A4; background-color: #FFFFFF;"
+            if is_state_attr('[[remote_id]]', 'current_activity', 'com.s0und.s0undtv')
+          }}
+        }
     - type: button
       name: dropout
       icon: dropout
       tap_action:
         action: source
         source: com.collegehumor.chdropout
+      styles: |-
+        .icon {
+          padding: 0.2em; border-radius: 10%;
+          {{
+            "color: #FEEA3B; background-color: #222222;"
+            if is_state_attr('[[remote_id]]', 'current_activity', 'com.collegehumor.chdropout')
+          }}
+        }
+    - type: button
+      name: plex
+      icon: plex
+      tap_action:
+        action: source
+        source: com.plexapp.android
+      styles: |-
+        .icon {
+          padding: 0.2em; border-radius: 10%;
+          {{
+            "color: #EBAF00; background-color: #4C4C4C;"
+            if is_state_attr('[[remote_id]]', 'current_activity', 'com.plexapp.android')
+          }}
+        }
     - type: button
       name: dr
       icon: drtv
@@ -52,6 +123,14 @@ card:
         perform_action: script.open_drtv_app
         data:
           remote_entity_id: "[[remote_id]]"
+      styles: |-
+        .icon {
+          padding: 0.2em; border-radius: 10%;
+          {{
+            "color: #ff001e; background-color: #FFFFFF;"
+            if is_state_attr('[[remote_id]]', 'current_activity', 'dk.dr.tvplayer') 
+          }}
+        }
     - type: button
       name: night_sound
       entity_id: switch.stue_night_sound
@@ -60,6 +139,36 @@ card:
         action: toggle
         target:
           entity_id: switch.stue_night_sound
+      styles: |-
+        .icon {
+          {{ "color: var(--state-active-color);" if is_state('switch.stue_night_sound', 'on') }}
+        }
+    - type: button
+      name: volume_mute
+      icon: mdi:volume-mute
+      tap_action:
+        action: perform-action
+        perform_action: script.toggle_mute
+        data:
+          entity_id: "[[speaker_id]]"
+      styles: |-
+        {{ ".icon {
+          color: var(--red-color);
+        }" if is_state_attr('[[speaker_id]]', 'is_volume_muted', true) else "" }}
+    - type: slider
+      name: slider
+      icon: mdi:volume-high
+      range:
+        - 0
+        - 1
+      step: 0.01
+      value_attribute: volume_level
+      tap_action:
+        action: perform-action
+        perform_action: media_player.volume_set
+        data:
+          volume_level: "{{ value | float }}"
+      vertical: true
     - type: touchpad
       name: touchpad
       tap_action:
@@ -152,3 +261,13 @@ card:
         2.7799.0205 2.9468-.0063 2.8507-.0031 3.2303-.0819.6347-.1323 1.0474-.4584
         1.2222-.9655.0913-.263.1307-.7056.0945-1.0253-.0993-.8521-.5466-1.2694-1.5341-1.4301-.1449-.0236-.4332-.0268-2.9768-.0315l-2.8145-.0063-.0158.0425c-.011.0268-.0142.6379-.0126
         1.7451.0047 1.4395.0079 1.7104.0268 1.7325Z
+    - path: >-
+        M5.125 2.1C3.4569 2.1 2.1 3.4569 2.1 5.125L2.1 18.875C2.1 20.5432 3.4569
+        21.9 5.125 21.9L18.875 21.9C20.5432 21.9 21.9 20.5432 21.9 18.875L21.9
+        5.125C21.9 3.4569 20.5432 2.1 18.875 2.1L5.125 2.1zM5.125 3.75 18.875
+        3.75C19.6329 3.75 20.25 4.3671 20.25 5.125L20.25 18.875C20.25 19.6329
+        19.6329 20.25 18.875 20.25L5.125 20.25C4.3671 20.25 3.75 19.6329 3.75
+        18.875L3.75 5.125C3.75 4.3671 4.3671 3.75 5.125 3.75zM8.7924 5.9908
+        12.6585 12 8.7924 18.0092 12.3545 18.0092 16.2647 12 12.3545 5.9908 8.7924
+        5.9908z
+      name: plex
