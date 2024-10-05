@@ -8,7 +8,7 @@ kiosk_mode:
     hide_overflow: true
 
 header_cards:
-  justify: space-between
+  justify_content: space-between
   replace_tabs: true
   cards:
     - type: markdown
@@ -21,23 +21,37 @@ header_cards:
             box-shadow: none !important;
             color: var(--app-header-text-color,#fff);
             font-size: 120%;
+            font-weight: 500;
           }
-    - type: custom:button-card
-      name: "Assist"
-      icon: mdi:chat-processing-outline
-      show_name: false
-      show_state: false
-      tap_action:
-        action: assist
-      size: 75%
-      styles:
-        card:
-          - height: var(--mdc-icon-button-size,52px)
-          - width: var(--mdc-icon-button-size,52px)
-          - background: rgba(0,0,0,0)
-          - box-shadow: none
-        icon:
-          - color: var(--app-header-text-color,#fff)
+    - type: custom:mushroom-entity-card
+      entity: sensor.stue_fjernbetjening_battery_level
+      primary_info: state
+      secondary_info: none
+      card_mod:
+        style:
+          .: |
+            ha-card {
+              background: rgba(0,0,0,0) !important;
+              box-shadow: none !important;
+            }
+            mushroom-shape-icon {
+              --icon-color:rgb(var(
+                {%- set lvl = states('sensor.stue_fjernbetjening_battery_level') | int -%}
+                {%- if lvl < 10 -%}
+                  --rgb-red
+                {%- elif lvl < 20 -%}
+                  --rgb-orange
+                {%- else -%}
+                  --rgb-green
+                {%- endif -%}
+              )) !important;
+              --shape-color: var(--ha-card-background,var(--card-background-color,#fff)) !important;
+            }
+          "mushroom-state-info$": |
+            .container .primary {
+              color: var(--app-header-text-color,#fff);
+              font-size: 120%;
+            }
 
 views:
   - !include lovelace/views/living_room_remote.yaml
