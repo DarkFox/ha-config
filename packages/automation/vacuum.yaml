@@ -126,12 +126,30 @@ template:
               {% endfor %}
             ]
 
+  - trigger:
+      trigger: state
+      entity_id: sensor.valetudo_roborocks5_error
+    sensor:
+      - name: Vacuum Errors
+        unique_id: 8a645f9a-8dcb-43ee-a1d3-c0c400ff1583
+        state: "{{ state_attr('sensor.vacuum_errors', 'errors') | default([]) | length }}"
+        unit_of_measurement: "errors"
+        attributes:
+          errors: >-
+            {% set state = trigger.to_state.state %}
+            {% if state|lower in ['no error', 'unknown', 'unavailable'] %}
+              {{ [] }}
+            {% else %}
+              {% set errors = (state_attr('sensor.vacuum_errors', 'errors') | default([])) + [state] %}
+              {{ ns.errors | unique | list }}
+            {% endif %}
+
 automation:
   - id: update_vacuum_last_clean
     alias: Update Vacuum Last Clean
     initial_state: true
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: vacuum.valetudo_roborocks5
         from: cleaning
     action:
@@ -145,7 +163,7 @@ automation:
     alias: Vacuum Show Menu When Undocked
     initial_state: true
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: vacuum.valetudo_roborocks5
         to:
           - cleaning
@@ -162,7 +180,7 @@ automation:
     alias: Vacuum Hide Menu When Docked
     initial_state: true
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: vacuum.valetudo_roborocks5
         to: "docked"
     action:
@@ -174,11 +192,11 @@ automation:
     alias: Vacuum While Away
     initial_state: true
     trigger:
-      - platform: time_pattern
+      - trigger: time_pattern
         hours: "11"
         minutes: "/5"
         seconds: "0"
-      - platform: time_pattern
+      - trigger: time_pattern
         hours: "15"
         minutes: "/5"
         seconds: "0"
@@ -214,13 +232,13 @@ automation:
     alias: Vacuum Stop Before Coming Home
     initial_state: true
     trigger:
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.martin_home_soon
         from: "off"
         to: "on"
         for:
           minutes: 5
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.martin_presence
         from: "off"
         to: "on"
@@ -244,17 +262,27 @@ automation:
     alias: Vacuum Error Notification
     initial_state: true
     trigger:
-      - platform: state
-        entity_id: sensor.valetudo_roborocks5_error
-    condition:
-      - condition: template
-        value_template: "{{ (trigger.to_state.state|lower) not in ['no error', 'unknown', 'unavailable'] }}"
-    action:
-      - action: script.translate
-        data:
-          message: "{{ trigger.to_state.state }}"
-        response_variable: output
+      - trigger: numeric_state
+        entity_id: sensor.vacuum_errors
+        above: 0
+        for:
+          seconds: 10
+    variables:
+      errors: "{{ state_attr('sensor.vacuum_errors', 'errors') }}"
+      t: "{{ state_attr('sensor.translation_cache', 'translations') | default({}) }}"
+    actions:
+      - repeat:
+          for_each: "{{ errors }}"
+          sequence:
+            - action: script.translate
+              data:
+                message: "{{ repeat.item }}"
+      - delay:
+          seconds: 1
       - action: script.notify_everywhere
         data:
-          message: >-
-            Støvsuger fejl: {{ output.translation }}
+          message: |-
+            Støvsuger fejl:
+            {% for error in errors %}
+              - {{ t.get(error, error) }}
+            {% endfor %}
