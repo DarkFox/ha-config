@@ -94,10 +94,10 @@ automation:
     id: medie_fjernbetjening
     initial_state: true
     mode: parallel
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
-    condition:
+    conditions:
       - condition: template
         value_template: >-
           {{
@@ -107,7 +107,7 @@ automation:
           }}
     variables:
       room: "{{ trigger.event.data.id | replace('_medie_fjernbetjening', '') }}"
-    action:
+    actions:
       # Button | Action | Event (firmware 1.0.35) | Desired result (action call)
       # -- | -- | -- | --
       # Play | press | 1002 | media_player.play_pause
@@ -230,10 +230,10 @@ automation:
   - alias: Tryk
     initial_state: true
     mode: parallel
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
-    condition:
+    conditions:
       - condition: template
         value_template: >-
           {{
@@ -254,7 +254,7 @@ automation:
         badevaerelse_tryk: bathroom
         badevaerelse_yderside_tryk: bathroom
         altan_tryk: balcony
-    action:
+    actions:
       - alias: "Guest more or regular"
         choose:
           - conditions:
@@ -319,13 +319,13 @@ automation:
   # gang_fjernbetjening #
   - alias: hallway_dimmer_on
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: gang_fjernbetjening
           event: 1002
-    action:
+    actions:
       - event: set_light_profile
         event_data:
           room: hallway
@@ -338,65 +338,65 @@ automation:
 
   - alias: hallway_dimmer_up
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: gang_fjernbetjening
           event: 2002
-    action:
+    actions:
       - event: increase_light_profile
         event_data:
           room: hallway
 
   - alias: hallway_dimmer_down
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: gang_fjernbetjening
           event: 3002
-    action:
+    actions:
       - event: decrease_light_profile
         event_data:
           room: hallway
 
   - alias: hallway_dimmer_left
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: gang_fjernbetjening
           event: 4002
-    action:
+    actions:
       action: switch.toggle
       data:
         entity_id: switch.dorklokke_forstyr_ikke
 
   - alias: hallway_dimmer_right
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: gang_fjernbetjening
           event: 5002
-    action:
+    actions:
       action: lock.lock
       target:
         entity_id: lock.hoveddor_las
 
   - alias: hallway_dimmer_right_hold
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: gang_fjernbetjening
           event: 5003
-    action:
+    actions:
       action: lock.unlock
       target:
         entity_id: lock.hoveddor_las
@@ -404,13 +404,13 @@ automation:
   # Bedroom Remote, ID: sovevaerelse_fjernbetjening #
   - alias: bedroom_dimmer_on
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: sovevaerelse_fjernbetjening
           event: 1002
-    action:
+    actions:
       - event: set_light_profile
         event_data:
           room: bedroom
@@ -423,83 +423,83 @@ automation:
 
   - alias: bedroom_dimmer_up
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: sovevaerelse_fjernbetjening
           event: 2002
-    action:
+    actions:
       - event: increase_light_profile
         event_data:
           room: bedroom
 
   - alias: bedroom_dimmer_down
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: sovevaerelse_fjernbetjening
           event: 3002
-    condition:
+    conditions:
       condition: and
       conditions:
         - condition: template
           value_template: "{{ (states('input_select.sleep_state') not in ['smart wake', 'alarm', 'snoozing', 'waking']) }}"
-    action:
+    actions:
       - event: decrease_light_profile
         event_data:
           room: bedroom
 
   - alias: bedroom_dimmer_left
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: sovevaerelse_fjernbetjening
           event: 4002
-    action:
+    actions:
       action: cover.open_cover
       data:
         entity_id: cover.sovevaerelse_gardin
 
   - alias: bedroom_dimmer_right
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: sovevaerelse_fjernbetjening
           event: 5002
-    action:
+    actions:
       action: cover.close_cover
       data:
         entity_id: cover.sovevaerelse_gardin
 
   - alias: bedroom_dimmer_hold_right
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: sovevaerelse_fjernbetjening
           event: 5003
-    action:
+    actions:
       action: cover.toggle
       data:
         entity_id: cover.sovevaerelse_gardin_vindue
 
   - alias: bedroom_dimmer_hold_left
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: sovevaerelse_fjernbetjening
           event: 4003
-    action:
+    actions:
       action: cover.toggle
       data:
         entity_id: cover.sovevaerelse_gardin_dor
@@ -507,13 +507,13 @@ automation:
   # Office Blind Remote kontor_gardin_fjernbetjening #
   - alias: kontor_gardin_fjernbetjening_up
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: kontor_gardin_fjernbetjening
           event: 1002
-    action:
+    actions:
       - action: cover.open_cover
         data:
           entity_id:
@@ -522,13 +522,13 @@ automation:
 
   - alias: kontor_gardin_fjernbetjening_dn
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: kontor_gardin_fjernbetjening
           event: 2002
-    action:
+    actions:
       - action: cover.close_cover
         data:
           entity_id:
@@ -537,18 +537,18 @@ automation:
 
   - alias: kontor_gardin_fjernbetjening_hold
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: kontor_gardin_fjernbetjening
           event: 1003
-      - platform: event
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: kontor_gardin_fjernbetjening
           event: 2003
-    action:
+    actions:
       - action: cover.set_cover_position
         data:
           entity_id:
@@ -559,13 +559,13 @@ automation:
   # Værksted Remote (Hue Dimmer) vaerksted_fjernbetjening #
   - alias: vaerksted_fjernbetjening_on
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: vaerksted_fjernbetjening
           event: 1002
-    action:
+    actions:
       - choose:
           - conditions:
               - condition: state
@@ -587,62 +587,62 @@ automation:
 
   - alias: vaerksted_fjernbetjening_on_hold
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: vaerksted_fjernbetjening
           event: 1003
-    action:
+    actions:
       - action: script.toggle_activity_override
         data:
           room: workshop
 
   - alias: vaerksted_fjernbetjening_up
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: vaerksted_fjernbetjening
           event: 2002
-      - platform: event
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: vaerksted_fjernbetjening
           event: 2001
-    action:
+    actions:
       - event: increase_light_profile
         event_data:
           room: workshop
 
   - alias: vaerksted_fjernbetjening_dn
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: vaerksted_fjernbetjening
           event: 3002
-      - platform: event
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: vaerksted_fjernbetjening
           event: 3001
-    action:
+    actions:
       - event: decrease_light_profile
         event_data:
           room: workshop
 
   - alias: vaerksted_fjernbetjening_off
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: vaerksted_fjernbetjening
           event: 4002
-    action:
+    actions:
       - choose:
           - conditions:
               - condition: state
@@ -661,13 +661,13 @@ automation:
 
   - alias: vaerksted_fjernbetjening_off_hold
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: vaerksted_fjernbetjening
           event: 4003
-    action:
+    actions:
       - action: script.toggle_separate_light_profile
         data:
           room: workshop
@@ -675,13 +675,13 @@ automation:
   # Living room IKEA remote, ID: stue_fjernbetjening #
   - alias: living_room_dimmer_on
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: stue_fjernbetjening
           event: 1002
-    action:
+    actions:
       - event: set_light_profile
         event_data:
           room: living_room
@@ -694,78 +694,78 @@ automation:
 
   - alias: living_room_dimmer_up
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: stue_fjernbetjening
           event: 2002
-    action:
+    actions:
       - event: increase_light_profile
         event_data:
           room: living_room
 
   - alias: living_room_dimmer_down
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: stue_fjernbetjening
           event: 3002
-    action:
+    actions:
       - event: decrease_light_profile
         event_data:
           room: living_room
 
   - alias: living_room_dimmer_left
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: stue_fjernbetjening
           event: 4002
-    action:
+    actions:
       action: cover.open_cover
       data:
         entity_id: cover.stue_gardin
 
   - alias: living_room_dimmer_right
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: stue_fjernbetjening
           event: 5002
-    action:
+    actions:
       action: cover.close_cover
       data:
         entity_id: cover.stue_gardin
 
   - alias: living_room_dimmer_hold_right
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: stue_fjernbetjening
           event: 5003
-    action:
+    actions:
       action: cover.toggle
       data:
         entity_id: cover.stue_gardin_hojre
 
   - alias: living_room_dimmer_hold_left
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: stue_fjernbetjening
           event: 4003
-    action:
+    actions:
       action: cover.toggle
       data:
         entity_id: cover.stue_gardin_venstre
@@ -773,13 +773,13 @@ automation:
   # Kitchen IKEA remote, ID: kokken_fjernbetjening #
   - alias: kokken_dimmer_on
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: kokken_fjernbetjening
           event: 1002
-    action:
+    actions:
       - event: set_light_profile
         event_data:
           room: kitchen
@@ -792,99 +792,99 @@ automation:
 
   - alias: kokken_dimmer_up
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: kokken_fjernbetjening
           event: 2002
-    action:
+    actions:
       - event: increase_light_profile
         event_data:
           room: kitchen
 
   - alias: kokken_dimmer_down
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: kokken_fjernbetjening
           event: 3002
-    action:
+    actions:
       - event: decrease_light_profile
         event_data:
           room: kitchen
 
   - alias: kokken_dimmer_left
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: kokken_fjernbetjening
           event: 4002
-    action:
+    actions:
       delay: 0
 
   - alias: kokken_dimmer_right
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: kokken_fjernbetjening
           event: 5002
-    action:
+    actions:
       delay: 0
 
   - alias: kokken_dimmer_hold_up
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: kokken_fjernbetjening
           event: 2003
-    action:
+    actions:
       - action: script.toggle_activity_override
         data:
           room: kitchen
 
   - alias: kokken_dimmer_hold_down
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: kokken_fjernbetjening
           event: 3003
-    action:
+    actions:
       - action: script.toggle_separate_light_profile
         data:
           room: kitchen
 
   - alias: kokken_dimmer_hold_left
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: kokken_fjernbetjening
           event: 4003
-    action:
+    actions:
       - delay:
           seconds: 0
 
   - alias: kokken_dimmer_hold_right
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: kokken_fjernbetjening
           event: 5003
-    action:
+    actions:
       action: switch.toggle
       data:
         entity_id: switch.elkedel

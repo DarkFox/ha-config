@@ -145,11 +145,11 @@ automation:
   - id: update_vacuum_last_clean
     alias: Update Vacuum Last Clean
     initial_state: true
-    trigger:
+    triggers:
       - trigger: state
         entity_id: vacuum.valetudo_roborocks5
         from: cleaning
-    action:
+    actions:
       - action: input_datetime.set_datetime
         target:
           entity_id: input_datetime.vacuum_last_clean
@@ -159,7 +159,7 @@ automation:
   - id: vacuum_show_menu_when_undocked
     alias: Vacuum Show Menu When Undocked
     initial_state: true
-    trigger:
+    triggers:
       - trigger: state
         entity_id: vacuum.valetudo_roborocks5
         to:
@@ -168,7 +168,7 @@ automation:
           - idle
           - returning
           - error
-    action:
+    actions:
       - action: input_boolean.turn_on
         target:
           entity_id: input_boolean.vacuum_show_card
@@ -176,11 +176,11 @@ automation:
   - id: vacuum_hide_menu_when_docked
     alias: Vacuum Hide Menu When Docked
     initial_state: true
-    trigger:
+    triggers:
       - trigger: state
         entity_id: vacuum.valetudo_roborocks5
         to: "docked"
-    action:
+    actions:
       - action: input_boolean.turn_off
         target:
           entity_id: input_boolean.vacuum_show_card
@@ -188,7 +188,7 @@ automation:
   - id: vacuum_while_away
     alias: Vacuum While Away
     initial_state: true
-    trigger:
+    triggers:
       - trigger: time_pattern
         hours: "11"
         minutes: "/5"
@@ -197,7 +197,7 @@ automation:
         hours: "15"
         minutes: "/5"
         seconds: "0"
-    condition:
+    conditions:
       - condition: state
         entity_id:
           - calendar.helligdage
@@ -220,7 +220,7 @@ automation:
         alias: "At least 8 hours since last clean"
         value_template: >-
           {{ states('input_datetime.vacuum_last_clean')|as_timestamp < now()|as_timestamp - 8*60*60 }}
-    action:
+    actions:
       - action: vacuum.start
         target:
           entity_id: vacuum.valetudo_roborocks5
@@ -228,7 +228,7 @@ automation:
   - id: vacuum_stop_before_coming_home
     alias: Vacuum Stop Before Coming Home
     initial_state: true
-    trigger:
+    triggers:
       - trigger: state
         entity_id: binary_sensor.martin_home_soon
         from: "off"
@@ -241,7 +241,7 @@ automation:
         to: "on"
         for:
           minutes: 1
-    action:
+    actions:
       - alias: "Go to empty position if more than 120m2 since last empty"
         choose:
           - conditions:
@@ -258,7 +258,7 @@ automation:
   - id: vacuum_error_notification
     alias: Vacuum Error Notification
     initial_state: true
-    trigger:
+    triggers:
       - trigger: numeric_state
         entity_id: sensor.vacuum_errors
         above: 0

@@ -246,14 +246,14 @@ automation:
   - alias: sleep_state_bedtime
     id: sleep_state_bedtime
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.martin_presence_delayed
         to: "on"
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.bedtime
         to: "on"
-    condition:
+    conditions:
       condition: and
       conditions:
         - condition: state
@@ -265,7 +265,7 @@ automation:
         - condition: state
           entity_id: input_select.sleep_state
           state: "awake"
-    action:
+    actions:
       action: input_select.select_option
       data:
         entity_id: input_select.sleep_state
@@ -274,14 +274,14 @@ automation:
   - alias: sleep_state_in_bed
     id: sleep_state_in_bed
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_select.sleep_state
         to: "bedtime"
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.sovevaerelse_gulv
         to: "off"
-    condition:
+    conditions:
       condition: and
       conditions:
         - condition: state
@@ -299,7 +299,7 @@ automation:
         - condition: state
           entity_id: binary_sensor.martin_presence_delayed
           state: "on"
-    action:
+    actions:
       action: input_select.select_option
       data:
         entity_id: input_select.sleep_state
@@ -308,16 +308,16 @@ automation:
   - alias: sleep_state_sleeping
     id: sleep_state_sleeping
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: sleep_as_android
         event_data:
           event: sleep_tracking_started
-      - platform: event
+      - trigger: event
         event_type: sleep_as_android
         event_data:
           event: sleep_tracking_resumed
-    condition:
+    conditions:
       condition: and
       conditions:
         - condition: state
@@ -341,7 +341,7 @@ automation:
                     - condition: state
                       entity_id: binary_sensor.sovevaerelse_motion
                       state: "on"
-    action:
+    actions:
       - action: input_select.select_option
         data:
           entity_id: input_select.sleep_state
@@ -350,12 +350,12 @@ automation:
   - alias: sleep_state_sleeping_cancelled
     id: sleep_state_sleeping_cancelled
     initial_state: true
-    trigger:
-      platform: event
+    triggers:
+      trigger: event
       event_type: sleep_as_android
       event_data:
         event: sleep_tracking_stopped
-    condition:
+    conditions:
       condition: and
       conditions:
         - condition: state
@@ -372,7 +372,7 @@ automation:
             - condition: state
               entity_id: input_select.sleep_state
               state: paused
-    action:
+    actions:
       - action: input_select.select_option
         data:
           entity_id: input_select.sleep_state
@@ -381,19 +381,19 @@ automation:
   - alias: sleep_state_paused_event
     id: sleep_state_paused_event
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: sleep_as_android
         event_data:
           event: sleep_tracking_paused
-    condition:
+    conditions:
       - condition: state
         entity_id: binary_sensor.martin_presence_delayed
         state: "on"
       - condition: state
         entity_id: input_select.sleep_state
         state: sleeping
-    action:
+    actions:
       action: input_select.select_option
       data:
         entity_id: input_select.sleep_state
@@ -402,19 +402,19 @@ automation:
   - alias: sleep_state_paused
     id: sleep_state_paused
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id:
           - binary_sensor.sovevaerelse_gulv
         to: "on"
-    condition:
+    conditions:
       - condition: state
         entity_id: binary_sensor.martin_presence_delayed
         state: "on"
       - condition: state
         entity_id: input_select.sleep_state
         state: sleeping
-    action:
+    actions:
       action: input_select.select_option
       data:
         entity_id: input_select.sleep_state
@@ -423,11 +423,11 @@ automation:
   - alias: sleep_state_unpause
     id: sleep_state_unpause
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.sovevaerelse_gulv
         to: "off"
-    condition:
+    conditions:
       - condition: state
         entity_id: input_select.sleep_state
         state: "paused"
@@ -437,7 +437,7 @@ automation:
       - condition: state
         entity_id: binary_sensor.sovevaerelse_dor
         state: "off"
-    action:
+    actions:
       action: input_select.select_option
       data:
         entity_id: input_select.sleep_state
@@ -446,12 +446,12 @@ automation:
   - alias: sleep_state_smart_wake
     id: sleep_state_smart_wake
     initial_state: true
-    trigger:
-      platform: event
+    triggers:
+      trigger: event
       event_type: sleep_as_android
       event_data:
         event: smart_period
-    condition:
+    conditions:
       condition: and
       conditions:
         - condition: state
@@ -468,7 +468,7 @@ automation:
             - condition: state
               entity_id: input_select.sleep_state
               state: paused
-    action:
+    actions:
       - action: input_select.select_option
         data:
           entity_id: input_select.sleep_state
@@ -477,12 +477,12 @@ automation:
   - alias: sleep_state_alarm
     id: sleep_state_alarm
     initial_state: true
-    trigger:
-      platform: event
+    triggers:
+      trigger: event
       event_type: sleep_as_android
       event_data:
         event: alarm_alert_start
-    condition:
+    conditions:
       condition: and
       conditions:
         - condition: state
@@ -502,7 +502,7 @@ automation:
             - condition: state
               entity_id: input_select.sleep_state
               state: smart wake
-    action:
+    actions:
       - action: input_select.select_option
         data:
           entity_id: input_select.sleep_state
@@ -511,12 +511,12 @@ automation:
   - alias: sleep_state_snoozing
     id: sleep_state_snoozing
     initial_state: true
-    trigger:
-      platform: event
+    triggers:
+      trigger: event
       event_type: sleep_as_android
       event_data:
         event: alarm_snooze_clicked
-    action:
+    actions:
       - condition: state
         entity_id: binary_sensor.martin_presence_delayed
         state: "on"
@@ -531,20 +531,20 @@ automation:
   - alias: sleep_state_waking
     id: sleep_state_waking
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: sleep_as_android
         event_data:
           event: alarm_alert_dismiss
-      - platform: event
+      - trigger: event
         event_type: sleep_as_android
         event_data:
           event: alarm_snooze_cancelled
-      - platform: event
+      - trigger: event
         event_type: sleep_as_android
         event_data:
           event: sleep_tracking_stopped
-    condition:
+    conditions:
       condition: or
       conditions:
         - condition: state
@@ -553,7 +553,7 @@ automation:
         - condition: state
           entity_id: input_select.sleep_state
           state: snoozing
-    action:
+    actions:
       - action: input_select.select_option
         data:
           entity_id: input_select.sleep_state
@@ -562,16 +562,16 @@ automation:
   - alias: sleep_state_awake
     id: sleep_state_awake
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id:
           - binary_sensor.gang_entre_bevaegelse
           - binary_sensor.gang_badevaerelse_bevaegelse
         to: "on"
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.sovevaerelse_dor
         to: "on"
-    condition:
+    conditions:
       - condition: state
         entity_id: binary_sensor.sovevaerelse_dor
         state: "on"
@@ -586,7 +586,7 @@ automation:
           - condition: state
             entity_id: input_select.sleep_state
             state: waking
-    action:
+    actions:
       - action: input_select.select_option
         data:
           entity_id: input_select.sleep_state
@@ -599,11 +599,11 @@ automation:
   - alias: bedtime_action
     id: bedtime_action
     initial_state: true
-    trigger:
-      platform: state
+    triggers:
+      trigger: state
       entity_id: input_select.sleep_state
       to: "bedtime"
-    action:
+    actions:
       - action: notify.telegram_darkfox
         data:
           message: "Sengetid! Alarm kl. {{ states('sensor.wake_up_time_clock') }}"
@@ -619,13 +619,13 @@ automation:
   - alias: in_bed_action
     id: in_bed_action
     initial_state: true
-    trigger:
-      platform: state
+    triggers:
+      trigger: state
       entity_id: input_select.sleep_state
       to: "in bed"
     variables:
       wake_up_time: "{{ states('sensor.wake_up_time_clock') }}"
-    action:
+    actions:
       - parallel:
           - action: script.turn_on
             continue_on_error: true
@@ -675,12 +675,12 @@ automation:
   - alias: sleeping_action
     id: sleeping_action
     initial_state: true
-    trigger:
-      platform: state
+    triggers:
+      trigger: state
       entity_id: input_select.sleep_state
       to: "sleeping"
       from: "in bed"
-    action:
+    actions:
       - action: switch.turn_on
         target:
           entity_id: switch.dorklokke_forstyr_ikke
@@ -702,11 +702,11 @@ automation:
   - alias: sleep_paused_action
     id: sleep_paused_action
     initial_state: true
-    trigger:
-      platform: state
+    triggers:
+      trigger: state
       entity_id: input_select.sleep_state
       to: "paused"
-    action:
+    actions:
       - action: script.turn_on
         target:
           entity_id: script.sleep_as_android_pause_tracking
@@ -718,12 +718,12 @@ automation:
   - alias: resume_sleep_action
     id: resume_sleep_action
     initial_state: true
-    trigger:
-      platform: state
+    triggers:
+      trigger: state
       entity_id: input_select.sleep_state
       to: "sleeping"
       from: "paused"
-    action:
+    actions:
       - action: script.turn_on
         target:
           entity_id: script.sleep_as_android_start_tracking
@@ -735,11 +735,11 @@ automation:
   - alias: smart_wake_action
     id: smart_wake_action
     initial_state: true
-    trigger:
-      platform: state
+    triggers:
+      trigger: state
       entity_id: input_select.sleep_state
       to: "smart wake"
-    action:
+    actions:
       - action: switch.turn_off
         target:
           entity_id: switch.dorklokke_forstyr_ikke
@@ -752,11 +752,11 @@ automation:
   - alias: alarm_action_media
     id: alarm_action_media
     initial_state: true
-    trigger:
-      platform: state
+    triggers:
+      trigger: state
       entity_id: input_select.sleep_state
       to: "alarm"
-    action:
+    actions:
       - action: media_player.unjoin
         target:
           entity_id:
@@ -796,11 +796,11 @@ automation:
   - alias: alarm_action
     id: alarm_action
     initial_state: true
-    trigger:
-      platform: state
+    triggers:
+      trigger: state
       entity_id: input_select.sleep_state
       to: "alarm"
-    action:
+    actions:
       - action: input_text.set_value
         target:
           entity_id: input_text.last_wake_up_time
@@ -877,11 +877,11 @@ automation:
   - alias: waking_action_media
     id: waking_action_media
     initial_state: true
-    trigger:
-      platform: state
+    triggers:
+      trigger: state
       entity_id: input_select.sleep_state
       to: "waking"
-    action:
+    actions:
       - action: script.mass_playlist
         data:
           entity_id: media_player.sovevaerelse_mass
@@ -899,11 +899,11 @@ automation:
   - alias: waking_action
     id: waking_action
     initial_state: true
-    trigger:
-      platform: state
+    triggers:
+      trigger: state
       entity_id: input_select.sleep_state
       to: "waking"
-    action:
+    actions:
       - parallel:
           - event: set_light_profile
             event_data:
@@ -929,12 +929,12 @@ automation:
   - alias: awake_action_media
     id: awake_action_media
     initial_state: true
-    trigger:
-      platform: state
+    triggers:
+      trigger: state
       entity_id: input_select.sleep_state
       to: "awake"
       from: "waking"
-    action:
+    actions:
       - action: media_player.join
         target:
           entity_id: media_player.sovevaerelse
@@ -972,12 +972,12 @@ automation:
   - alias: awake_action
     id: awake_action
     initial_state: true
-    trigger:
-      platform: state
+    triggers:
+      trigger: state
       entity_id: input_select.sleep_state
       to: "awake"
       from: "waking"
-    action:
+    actions:
       - parallel:
           - action: switch.turn_off
             target:
@@ -1012,25 +1012,25 @@ automation:
 
   - id: pause_tablet_on_sleep
     alias: Pause Tablet On Sleep
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: sleep_as_android
         event_data:
           event: light_sleep
-      - platform: event
+      - trigger: event
         event_type: sleep_as_android
         event_data:
           event: deep_sleep
-      - platform: event
+      - trigger: event
         event_type: sleep_as_android
         event_data:
           event: rem
-    condition:
+    conditions:
       - alias: "Media is playing on tablet"
         condition: state
         entity_id: binary_sensor.foxtablet_music_active
         state: "on"
-    action:
+    actions:
       - action: notify.mobile_app_foxtablet
         data:
           message: "command_media"
@@ -1049,13 +1049,13 @@ automation:
 
   - alias: Turn on tablet extra dim on sleep
     id: 10d61b0d-3f8e-40ea-8393-6058c79b189c
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_select.sleep_state
         to:
           - "in bed"
           - "sleeping"
-    action:
+    actions:
       - action: script.trigger_tasker_task
         data:
           action: notify.mobile_app_foxtablet
@@ -1064,11 +1064,11 @@ automation:
 
   - alias: Turn off tablet extra dim on waking
     id: 1e67b4e2-cae9-4942-b465-41381052fc4b
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_select.sleep_state
         to: "waking"
-    action:
+    actions:
       - action: script.trigger_tasker_task
         data:
           action: notify.mobile_app_foxtablet
@@ -1077,20 +1077,20 @@ automation:
 
   - id: turn_off_fan_on_sleep
     alias: turn_off_fan_on_sleep
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: sleep_as_android
         event_data:
           event: light_sleep
-      - platform: event
+      - trigger: event
         event_type: sleep_as_android
         event_data:
           event: deep_sleep
-      - platform: event
+      - trigger: event
         event_type: sleep_as_android
         event_data:
           event: rem
-    action:
+    actions:
       - alias: "turn off fan"
         action: fan.turn_off
         target:
@@ -1099,21 +1099,21 @@ automation:
   - id: notify_phone_not_charging_on_sleep
     alias: Notify phone not charging on sleep
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_select.sleep_state
         to: "sleeping"
-      - platform: state
+      - trigger: state
         entity_id: sensor.darkphone_charger_type
         to: "none"
         for:
           seconds: 10
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.darkphone_interactive
         to: "off"
         for:
           seconds: 10
-    condition:
+    conditions:
       - condition: state
         entity_id: input_select.sleep_state
         state: "sleeping"
@@ -1123,7 +1123,7 @@ automation:
       - condition: state
         entity_id: binary_sensor.darkphone_interactive
         state: "off"
-    action:
+    actions:
       - action: script.voice_broadcast
         data:
           entity_id: media_player.sovevaerelse

@@ -59,7 +59,7 @@ sensor:
 
 template:
   - trigger:
-      platform: event
+      trigger: event
       event_type: weather_forecast
     sensor:
       - name: Weather Forecast
@@ -210,10 +210,10 @@ automation:
     id: c220f137-3ea0-4a9e-9531-5db7e025168c
     initial_state: true
     mode: single
-    trigger:
-      platform: state
+    triggers:
+      trigger: state
       entity_id: weather.forecast_home
-    action:
+    actions:
       - action: weather.get_forecasts
         response_variable: forecast
         target:
@@ -229,15 +229,15 @@ automation:
     id: 7abec12c-5464-4934-93aa-6decdc94186a
     initial_state: true
     mode: single
-    trigger:
-      platform: template
+    triggers:
+      trigger: template
       value_template: >-
         {{
           not is_state('sensor.blitzortung_lightning_distance', 'unknown')
           and not is_state('sensor.blitzortung_lightning_distance', 'unavailable')
           and (states('sensor.blitzortung_lightning_distance') | int) < 10
         }}
-    action:
+    actions:
       - action: script.notify_darkphone
         data:
           message_title: "Vejr Varsel: Torden"

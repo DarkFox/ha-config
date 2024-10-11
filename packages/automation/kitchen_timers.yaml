@@ -133,20 +133,20 @@ automation:
     id: ddee7c3a-5809-44ba-97fd-297a63076b9c
     initial_state: true
     mode: parallel
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: timer.finished
         event_data:
           entity_id: timer.kitchen_1
-      - platform: event
+      - trigger: event
         event_type: timer.finished
         event_data:
           entity_id: timer.kitchen_2
-      - platform: event
+      - trigger: event
         event_type: timer.finished
         event_data:
           entity_id: timer.kitchen_3
-    action:
+    actions:
       - action: input_boolean.turn_on
         data:
           entity_id: "input_boolean.timer_{{ trigger.event.data.entity_id | replace('timer.', '') }}_finished"
@@ -158,23 +158,23 @@ automation:
     id: 7b9af13b-fd32-4ff1-83c2-90a5981b13a7
     initial_state: true
     mode: queued
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.kitchen_timer_finished
         to: "on"
-      - platform: state
+      - trigger: state
         entity_id: *timer_lights
         to:
           - "on"
           - "off"
-      - platform: state
+      - trigger: state
         entity_id: *timer_lights
         attribute: effect
-    condition:
+    conditions:
       - condition: state
         entity_id: binary_sensor.kitchen_timer_finished
         state: "on"
-    action:
+    actions:
       - choose:
           - conditions:
               - condition: template
@@ -201,9 +201,9 @@ automation:
     id: 1cc6a65e-b3c0-4e26-89b3-55bf7a260c7d
     initial_state: true
     mode: queued
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.kitchen_timer_finished
         to: "off"
-    action:
+    actions:
       - event: refresh_light_profile

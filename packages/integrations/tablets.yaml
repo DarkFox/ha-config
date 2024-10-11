@@ -34,7 +34,7 @@ script:
   trigger_tasker_task:
     alias: "Trigger Tasker Task"
     fields:
-      action:
+      actions:
         description: The Mobile App to send the command to
         example: "notify.mobile_app_foxtablet"
         selector:
@@ -62,77 +62,77 @@ script:
 
 automation:
   - alias: charge_kitchen_tablet
-    trigger:
-      - platform: numeric_state
+    triggers:
+      - trigger: numeric_state
         entity_id: sensor.kokken_tablet_battery_level
         below: 60
-      - platform: state
+      - trigger: state
         entity_id: sensor.kokken_tablet_battery_level
         to:
           - "unknown"
           - "unavailable"
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
-    condition:
+    conditions:
       - condition: numeric_state
         entity_id: sensor.kokken_tablet_battery_level
         below: 60
-    action:
+    actions:
       - action: switch.turn_on
         data:
           entity_id: switch.kokken_tablet_lader
   - alias: discharge_kokken_tablet
-    trigger:
-      - platform: numeric_state
+    triggers:
+      - trigger: numeric_state
         entity_id: sensor.kokken_tablet_battery_level
         above: 80
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
-    condition:
+    conditions:
       - condition: numeric_state
         entity_id: sensor.kokken_tablet_battery_level
         above: 80
-    action:
+    actions:
       - action: switch.turn_off
         data:
           entity_id: switch.kokken_tablet_lader
 
   - alias: charge_hallway_tablet
-    trigger:
-      - platform: numeric_state
+    triggers:
+      - trigger: numeric_state
         entity_id: sensor.gang_tablet_battery_level
         below: 60
-      - platform: state
+      - trigger: state
         entity_id: sensor.gang_tablet_battery_level
         to:
           - "unknown"
           - "unavailable"
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
-    condition:
+    conditions:
       - condition: numeric_state
         entity_id: sensor.gang_tablet_battery_level
         below: 60
-    action:
+    actions:
       - action: switch.turn_on
         data:
           entity_id: switch.gang_tablet_lader
   - alias: discharge_gang_tablet
-    trigger:
-      - platform: numeric_state
+    triggers:
+      - trigger: numeric_state
         entity_id: sensor.gang_tablet_battery_level
         above: 80
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
-    condition:
+    conditions:
       - condition: numeric_state
         entity_id: sensor.gang_tablet_battery_level
         above: 80
-    action:
+    actions:
       - action: switch.turn_off
         data:
           entity_id: switch.gang_tablet_lader

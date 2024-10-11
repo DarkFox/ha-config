@@ -87,7 +87,7 @@ sensor:
 
 template:
   - trigger:
-      - platform: event
+      - trigger: event
         event_type: dmi_weather_report
     sensor:
       - name: "DMI Vejr"
@@ -105,7 +105,7 @@ template:
           content: "{{ trigger.event.data.weather_report.get('content', '') }}"
 
   - trigger:
-      - platform: event
+      - trigger: event
         event_type: dmi_severe_weather_warnings
     sensor:
       - name: "DMI Vejr Varsler"
@@ -149,10 +149,10 @@ automation:
     id: 4db44655-fc7d-4808-b8fd-90ada6708c54
     initial_state: true
     mode: restart
-    trigger:
-      - platform: time_pattern
+    triggers:
+      - trigger: time_pattern
         minutes: "/15"
-    action:
+    actions:
       - action: script.run_pyscript
         data:
           action: pyscript.get_dmi_weather_report
@@ -163,10 +163,10 @@ automation:
     id: 4db44655-fc7d-4808-b8fd-90ada6708c54
     initial_state: true
     mode: restart
-    trigger:
-      - platform: time_pattern
+    triggers:
+      - trigger: time_pattern
         minutes: "/15"
-    action:
+    actions:
       - action: script.run_pyscript
         data:
           action: pyscript.get_dmi_severe_weather_warnings
@@ -176,10 +176,10 @@ automation:
   - alias: severe_weather_warning
     initial_state: true
     mode: queued
-    trigger:
-      platform: template
+    triggers:
+      trigger: template
       value_template: "{{ (state_attr('sensor.dmi_aktuel_varsel', 'category') | int(0)) > 1 }}"
-    action:
+    actions:
       - action: script.notify_darkphone
         data:
           title: "Vejr Varsel: {{ states('sensor.dmi_aktuel_varsel') }}"
@@ -188,16 +188,16 @@ automation:
   - alias: update_dmi_warning_specific_sensor
     initial_state: true
     mode: queued
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.dmi_warnings_raw
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
-    condition:
+    conditions:
       - condition: template
         value_template: "{{ states.sensor.dmi_warnings_raw.attributes.warnings|length > 0 }}"
-    action:
+    actions:
       - action: homeassistant.update_entity
         data:
           entity_id: sensor.dmi_warnings_specific_raw
@@ -205,13 +205,13 @@ automation:
   - alias: update_dmi_warning_sensor
     initial_state: true
     mode: queued
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.dmi_warnings_raw
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
-    action:
+    actions:
       - delay:
           seconds: 5
 

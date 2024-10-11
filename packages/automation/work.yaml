@@ -139,23 +139,23 @@ template:
 automation:
   - alias: Puzzel Robot
     id: c3d79ebf-18c1-4e2a-8776-a7fdddf87de1
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.puzzel_state_incorrect
         to: "on"
         for:
           seconds: 10
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.location_at_work
         for:
           minutes: 5
-      - platform: time_pattern
+      - trigger: time_pattern
         minutes: "/30"
-    condition:
+    conditions:
       - condition: state
         entity_id: binary_sensor.puzzel_state_incorrect
         state: "on"
-    action:
+    actions:
       - choose:
           - conditions:
               - condition: state
@@ -221,16 +221,16 @@ automation:
   - alias: "Ignore Incorrect Puzzel State"
     id: 9b773b63-18d4-4c98-b743-683bc9d5cad9
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: telegram_callback
         event_data:
           command: "/puzzel_ignore_incorrect"
-      - platform: event
+      - trigger: event
         event_type: telegram_command
         event_data:
           command: "/puzzel_ignore_incorrect"
-    action:
+    actions:
       - action: automation.turn_off
         target:
           entity_id: automation.puzzel_robot
@@ -244,13 +244,13 @@ automation:
 
   - alias: Reset Ignore Incorrect Puzzel State
     id: efca9026-7293-4d95-8ae9-7cc084b3e244
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.puzzel_state_incorrect
         not_from:
           - "unknown"
           - "unavailable"
-    action:
+    actions:
       - action: automation.turn_on
         target:
           entity_id: automation.puzzel_robot
@@ -261,18 +261,18 @@ automation:
   - id: set_work_phone_modes
     initial_state: true
     alias: Set Work Phone Modes
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.arbejdstelefon_phone_state
         to:
           - ringing
           - offhook
-      - platform: state
+      - trigger: state
         entity_id:
           - binary_sensor.working
           - sensor.arbejdstelefon_do_not_disturb_sensor
           - sensor.arbejdstelefon_ringer_mode
-    action:
+    actions:
       - choose:
           - conditions:
               - alias: "Prevent silencing phone when on call or at work"

@@ -739,10 +739,10 @@ automation:
   - alias: Reset Scene Transition Time
     id: reset_scene_transition_time
     initial_state: true
-    trigger:
-      platform: template
+    triggers:
+      trigger: template
       value_template: "{% if as_timestamp(now()) - as_timestamp(states.input_number.scene_transition_time.last_updated) > 60 %}true{% endif %}"
-    action:
+    actions:
       - action: input_number.set_value
         data:
           entity_id: "input_number.scene_transition_time"
@@ -751,19 +751,19 @@ automation:
   - alias: Refresh Light Profile Event On Theme Change
     id: refresh_light_profile_event_on_theme_change
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_select.theme
-    action:
+    actions:
       - event: refresh_light_profile
 
   - alias: Apartment light level initializer
     id: apartment_light_level_initializer
     initial_state: true
-    trigger:
-      platform: homeassistant
+    triggers:
+      trigger: homeassistant
       event: start
-    action:
+    actions:
       - action: light.turn_on
         data:
           entity_id: light.apartment_light_level
@@ -775,16 +775,16 @@ automation:
   - alias: Apartment light level setter
     id: apartment_light_level_setter
     initial_state: true
-    trigger:
-      - platform: numeric_state
+    triggers:
+      - trigger: numeric_state
         entity_id: light.apartment_light_level
         value_template: "{{ state.attributes.brightness }}"
         below: 120
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: light.apartment_light_level
         value_template: "{{ state.attributes.brightness }}"
         above: 135
-    action:
+    actions:
       - event: "{{ 'decrease' if states.light.apartment_light_level.attributes.brightness | int < 120 else 'increase' }}_light_profile"
       - action: light.turn_on
         data:
@@ -805,8 +805,8 @@ automation:
     id: set_light_profile
     initial_state: true
     mode: queued
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: set_light_profile
     variables:
       rooms: "{{ trigger.event.data.room if trigger.event.data.room is list else [trigger.event.data.room] }}"
@@ -831,7 +831,7 @@ automation:
         {%- endfor -%}
         {%- set ns.ret = ns.ret|unique|list -%}
         {{ ns.ret }}
-    action:
+    actions:
       - choose:
           - conditions:
               - condition: template
@@ -864,8 +864,8 @@ automation:
     id: increase_light_profile
     initial_state: true
     mode: queued
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: increase_light_profile
     variables:
       room: "{{ trigger.event.data.room }}"
@@ -877,10 +877,10 @@ automation:
         {%- else -%}
           input_select.light_profile
         {%- endif -%}
-    condition:
+    conditions:
       - condition: template
         value_template: "{{ current_light_profile != 'Bright' }}"
-    action:
+    actions:
       - action: input_select.select_previous
         data:
           entity_id: "{{ light_profile_entity }}"
@@ -889,8 +889,8 @@ automation:
     id: decrease_light_profile
     initial_state: true
     mode: queued
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: decrease_light_profile
     variables:
       room: "{{ trigger.event.data.room }}"
@@ -902,10 +902,10 @@ automation:
         {%- else -%}
           input_select.light_profile
         {%- endif -%}
-    condition:
+    conditions:
       - condition: template
         value_template: "{{ current_light_profile != 'Off' }}"
-    action:
+    actions:
       - action: input_select.select_next
         data:
           entity_id: "{{ light_profile_entity }}"
@@ -914,8 +914,8 @@ automation:
     id: cycle_light_profile
     initial_state: true
     mode: queued
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: cycle_light_profile
     variables:
       room: "{{ trigger.event.data.room }}"
@@ -927,7 +927,7 @@ automation:
         {%- else -%}
           input_select.light_profile
         {%- endif -%}
-    action:
+    actions:
       - choose:
           - conditions:
               - condition: template
@@ -954,8 +954,8 @@ automation:
     id: room_separate_light_profile
     initial_state: true
     mode: parallel
-    trigger:
-      platform: state
+    triggers:
+      trigger: state
       entity_id:
         - input_boolean.bathroom_separate_light_profile
         - input_boolean.bedroom_separate_light_profile
@@ -967,7 +967,7 @@ automation:
         - input_boolean.balcony_separate_light_profile
     variables:
       room: "{{ trigger.entity_id.replace('input_boolean.', '').replace('_separate_light_profile', '') }}"
-    action:
+    actions:
       - action: input_select.select_option
         data:
           entity_id: "input_select.{{ room }}_light_profile"

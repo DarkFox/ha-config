@@ -3,14 +3,14 @@ automation:
     id: efe4262d-9e2d-4649-a756-fd61c97185bf
     mode: restart
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.office_active_light_profile
-      - platform: event
+      - trigger: event
         event_type: refresh_light_profile
     variables:
       profile: "{{ states('sensor.office_active_light_profile') }}"
-    action:
+    actions:
       - choose:
           - conditions:
               - condition: template
@@ -363,8 +363,8 @@ automation:
   - alias: refresh_lights_after_openrgb_becomes_available
     initial_state: true
     mode: single
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id:
           - light.gpu_stand
           - light.gigabyte_rtx3070_ti_gaming_oc_8g_0
@@ -374,7 +374,7 @@ automation:
         from: unavailable
         for:
           seconds: 30
-    action:
+    actions:
       - event: refresh_light_profile
 
 template:

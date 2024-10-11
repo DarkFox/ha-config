@@ -38,57 +38,57 @@ binary_sensor:
 automation:
   - id: close_bar_after_no_activity
     alias: Close bar after 4 hours with no activity
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.stue_tilstedevarelse_bar
         to: "off"
         for:
           hours: 4
-    condition:
+    conditions:
       - condition: state
         entity_id: input_boolean.bar_open
         state: "on"
-    action:
+    actions:
       - action: input_boolean.turn_off
         target:
           entity_id: input_boolean.bar_open
 
   - id: living_room_curtains_open
     alias: living_room_curtains_open
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sun.sun
         to: above_horizon
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.martin_presence_delayed
         to: "on"
-    condition:
+    conditions:
       - condition: state
         entity_id: sun.sun
         state: above_horizon
       - condition: state
         entity_id: binary_sensor.martin_presence_delayed
         state: "on"
-    action:
+    actions:
       - action: cover.open_cover
         entity_id: cover.stue_gardin
 
   - id: living_room_curtains_close
     alias: living_room_curtains_close
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sun.sun
         to: below_horizon
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.average_balcony_brightness
         below: 5
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.martin_presence_delayed
         to: "off"
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.average_balcony_brightness
         above: 3000
-    condition:
+    conditions:
       - condition: or
         conditions:
           - condition: and
@@ -107,34 +107,34 @@ automation:
               - condition: numeric_state
                 entity_id: sensor.average_balcony_brightness
                 above: 3000
-    action:
+    actions:
       - action: cover.close_cover
         entity_id: cover.stue_gardin
 
   - alias: living_room_curtains_open_balcony_door
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.stue_tilstedevarelse_altandor
         to: "on"
-    condition:
+    conditions:
       - condition: state
         entity_id: cover.stue_gardin_venstre
         state: "closed"
-    action:
+    actions:
       - action: script.turn_on
         target:
           entity_id: script.stue_gardin_aabn_dor
 
   - alias: living_room_curtains_close_balcony_door
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.stue_tilstedevarelse_altandor
         to: "off"
         for:
           minutes: 1
-    condition:
+    conditions:
       - condition: state
         entity_id: cover.stue_gardin_venstre
         state: "open"
@@ -144,77 +144,77 @@ automation:
       - condition: state
         entity_id: binary_sensor.stue_altandor
         state: "off"
-    action:
+    actions:
       - action: cover.close_cover
         target:
           entity_id: cover.stue_gardin_venstre
 
   - alias: bar_switch_on
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: bar_fjernbetjening
           event: 1002
-    action:
+    actions:
       - action: input_boolean.turn_on
         target:
           entity_id: input_boolean.bar_open
 
   - alias: bar_switch_off
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: bar_fjernbetjening
           event: 2002
-    action:
+    actions:
       - action: input_boolean.turn_off
         target:
           entity_id: input_boolean.bar_open
 
   - alias: Bar åbnet
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_boolean.bar_open
         to: "on"
-    action:
+    actions:
       - event: refresh_light_profile
 
   - alias: Bar lukket
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_boolean.bar_open
         to: "off"
-    action:
+    actions:
       - event: refresh_light_profile
 
   - id: bar_close_timeout
     alias: "Bar luk ved idle"
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.living_room_activity
         to: "off"
         for:
           hours: 4
-    action:
+    actions:
       - action: input_boolean.turn_off
         target:
           entity_id: input_boolean.bar_open
 
   - id: living_room_balcony_door_open_reminder
     alias: living_room_balcony_door_open_reminder
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.living_room_activity_state
         to: "off"
         for:
           minutes: 15
-    condition:
+    conditions:
       - alias: "Balcony door open"
         condition: state
         entity_id: binary_sensor.stue_altandor
@@ -223,7 +223,7 @@ automation:
         condition: numeric_state
         entity_id: sensor.altan_temperatur
         below: 18
-    action:
+    actions:
       - action: script.notify_everywhere
         data:
           message: Stue altandør står åben!

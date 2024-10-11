@@ -24,10 +24,10 @@ automation:
   - id: update_telegram_keyboard
     alias: Update Telegram Keyboard
     initial_state: true
-    trigger:
-      platform: homeassistant
+    triggers:
+      trigger: homeassistant
       event: start
-    action:
+    actions:
       - action: notify.telegram_darkfox
         data:
           message: "Home Assistant er genstartet!"
@@ -39,12 +39,12 @@ automation:
   - alias: "Handle Telegram Message"
     id: handle_telegram_message
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: telegram_text
         event_data:
           chat_id: !secret telegram_darkfox_id
-    action:
+    actions:
       - action: conversation.process
         data:
           text: "{{ trigger.event.data.text }}"

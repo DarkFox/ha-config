@@ -28,7 +28,7 @@ switch:
                     target:
                       entity_id: media_player.kontor
                   - wait_for_trigger:
-                      - platform: state
+                      - trigger: state
                         entity_id: media_player.kontor
                         to: "idle"
           - action: media_player.select_source
@@ -98,23 +98,23 @@ input_select:
 automation:
   - alias: Office PC active trigger
     initial_state: true
-    trigger:
-      platform: template
+    triggers:
+      trigger: template
       value_template: >-
         {{
           is_state('sensor.office_room_state', 'active')
           or is_state('binary_sensor.martin_pc_activity', 'on')
           or is_state('switch.martin_pc', 'on')
         }}
-    action:
+    actions:
       action: switch.turn_on
       data:
         entity_id: switch.pc_afbryder
 
   - alias: Office PC inactive trigger
     initial_state: true
-    trigger:
-      - platform: template
+    triggers:
+      - trigger: template
         value_template: >-
           {{
             is_state('sensor.office_room_state', 'off') 
@@ -123,35 +123,35 @@ automation:
           }}
         for:
           minutes: 5
-    condition:
+    conditions:
       - alias: "Quest not in use"
         condition: state
         entity_id: binary_sensor.quest_in_use_delayed
         state: "off"
-    action:
+    actions:
       action: switch.turn_off
       data:
         entity_id: switch.pc_afbryder
 
   - alias: Office Speaker/PC Accessories active trigger
     initial_state: true
-    trigger:
-      platform: template
+    triggers:
+      trigger: template
       value_template: >-
         {{
           states('sensor.pc_afbryder_forbrug')|float > 0.03
           or is_state('binary_sensor.martin_pc_activity', 'on')
           or is_state('binary_sensor.vagtskema_wfh', 'on')
         }}
-    action:
+    actions:
       action: switch.turn_on
       data:
         entity_id: switch.pc_tilbehor_afbryder
 
   - alias: Office Speaker/PC Accessories inactive trigger
     initial_state: true
-    trigger:
-      - platform: template
+    triggers:
+      - trigger: template
         value_template: >-
           {{
             is_state('switch.pc_afbryder', 'off')
@@ -160,7 +160,7 @@ automation:
             and is_state('binary_sensor.vagtskema_wfh', 'off')
             and is_state('binary_sensor.quest_in_use_delayed', 'off')
           }}
-    action:
+    actions:
       action: switch.turn_off
       data:
         entity_id:
@@ -170,15 +170,15 @@ automation:
   - alias: Turn PC Printer on when print queue not empty
     id: e5d8426d-2ded-49af-adf8-6f39e98a9bc2
     initial_state: true
-    trigger:
-      - platform: numeric_state
+    triggers:
+      - trigger: numeric_state
         entity_id: sensor.martin_pc_martin_pc_printers_npid634ed_hpcolorlaserjetm255dw
         above: 0
-    condition:
+    conditions:
       - condition: state
         entity_id: switch.printer_afbryder
         state: "off"
-    action:
+    actions:
       - action: switch.turn_on
         target:
           entity_id: switch.printer_afbryder
@@ -186,14 +186,14 @@ automation:
   - alias: pc_speaker_output
     id: pc_speaker_output
     initial_state: true
-    trigger:
-      - platform: webhook
+    triggers:
+      - trigger: webhook
         webhook_id: !secret pc_speaker_output_webhook
         local_only: true
         allowed_methods:
           - GET
           - POST
-    action:
+    actions:
       - action: "switch.{{ trigger.query.action }}"
         target:
           entity_id: switch.kontor_soundbar_pc_output
@@ -201,14 +201,14 @@ automation:
   - alias: pc_media_control
     id: pc_media_control
     initial_state: true
-    trigger:
-      - platform: webhook
+    triggers:
+      - trigger: webhook
         webhook_id: !secret pc_media_control_webhook
         local_only: true
         allowed_methods:
           - GET
           - POST
-    action:
+    actions:
       - action: "media_player.{{ trigger.query.action }}"
         target:
           entity_id: media_player.kontor_shield_remote
@@ -216,13 +216,13 @@ automation:
   - alias: Mute PC TV line in on Office TV off
     id: mute_pc_tv_line_in_on_office_tv_off
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id:
           - media_player.kontor_tv
           - media_player.kontor_shield_remote
         to: "off"
-    action:
+    actions:
       - action: button.press
         target:
           entity_id: button.martin_pc_mute_tv
@@ -230,11 +230,11 @@ automation:
   - alias: Unute PC TV line in on Office TV on
     id: unute_pc_tv_line_in_on_office_tv_on
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: media_player.kontor_tv
         to: "on"
-    action:
+    actions:
       - action: button.press
         target:
           entity_id: button.martin_pc_unmute_tv
@@ -242,21 +242,21 @@ automation:
   - alias: Switch Office TV speaker output to internal when PC off
     id: switch_office_tv_speaker_output_to_internal_when_pc_off
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: switch.martin_pc
         to: "off"
-      - platform: state
+      - trigger: state
         entity_id: media_player.kontor_tv
         to: "on"
-    condition:
+    conditions:
       - condition: state
         entity_id: media_player.kontor_tv
         state: "on"
       - condition: state
         entity_id: switch.martin_pc
         state: "off"
-    action:
+    actions:
       - action: webostv.select_sound_output
         data:
           entity_id: media_player.kontor_tv
@@ -265,21 +265,21 @@ automation:
   - alias: Switch Office TV Speaker Output to optical when PC on
     id: switch_office_tv_speaker_output_to_optical_when_pc_on
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: switch.martin_pc
         to: "on"
-      - platform: state
+      - trigger: state
         entity_id: media_player.kontor_tv
         to: "on"
-    condition:
+    conditions:
       - condition: state
         entity_id: media_player.kontor_tv
         state: "on"
       - condition: state
         entity_id: switch.martin_pc
         state: "on"
-    action:
+    actions:
       - action: webostv.select_sound_output
         data:
           entity_id: media_player.kontor_tv

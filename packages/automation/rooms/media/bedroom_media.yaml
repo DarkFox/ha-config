@@ -244,44 +244,44 @@ script:
 automation:
   - alias: Soveværelse TV on
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: media_player.sovevaerelse_chromecast
         not_to:
           - "off"
           - "unavailable"
           - "unknown"
-    action:
+    actions:
       - action: switch.turn_on
         data:
           entity_id: switch.sovevaerelse_tv
 
   - alias: Soveværelse TV off
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: media_player.sovevaerelse_chromecast
         to:
           - "off"
           - "idle"
         for:
           minutes: 2
-    action:
+    actions:
       - action: switch.turn_off
         data:
           entity_id: switch.sovevaerelse_tv
 
   - alias: bedroom_media_mute
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.bedroom_room_state
         to: "off"
-    condition:
+    conditions:
       - condition: state
         entity_id: binary_sensor.sovevaerelse_video_out
         state: "on"
-    action:
+    actions:
       - action: media_player.volume_mute
         data:
           entity_id: media_player.sovevaerelse_soundbar_songpal
@@ -289,15 +289,15 @@ automation:
 
   - alias: bedroom_media_unmute
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.bedroom_room_state
         to: "active"
-    condition:
+    conditions:
       - condition: state
         entity_id: binary_sensor.sovevaerelse_video_out
         state: "on"
-    action:
+    actions:
       - action: media_player.volume_mute
         data:
           entity_id: media_player.sovevaerelse_soundbar_songpal
@@ -305,13 +305,13 @@ automation:
 
   - alias: sovevaerelse_soundbar_volume_remote_state_up
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: sovevaerelse_volumeknap
           event: 2001
-    action:
+    actions:
       action: input_select.select_option
       data:
         entity_id: input_select.sovevaerelse_soundbar_volume_remote_state
@@ -319,13 +319,13 @@ automation:
 
   - alias: sovevaerelse_soundbar_volume_remote_state_down
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: sovevaerelse_volumeknap
           event: 3001
-    action:
+    actions:
       action: input_select.select_option
       data:
         entity_id: input_select.sovevaerelse_soundbar_volume_remote_state
@@ -333,25 +333,25 @@ automation:
 
   - alias: sovevaerelse_soundbar_volume_remote_state_off
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: sovevaerelse_volumeknap
           event: 2003
-      - platform: event
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: sovevaerelse_volumeknap
           event: 3003
-      - platform: state
+      - trigger: state
         entity_id: input_select.sovevaerelse_soundbar_volume_remote_state
         to:
           - "up"
           - "down"
         for:
           seconds: 10
-    action:
+    actions:
       action: input_select.select_option
       data:
         entity_id: input_select.sovevaerelse_soundbar_volume_remote_state
@@ -359,13 +359,13 @@ automation:
 
   - alias: sovevaerelse_soundbar_volume_remote_mute
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: sovevaerelse_volumeknap
           event: 1002
-    action:
+    actions:
       - choose:
           - conditions:
               - condition: state
@@ -384,14 +384,14 @@ automation:
 
   - alias: sovevaerelse_soundbar_volume_remote_up
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_select.sovevaerelse_soundbar_volume_remote_state
         to: up
         for:
           milliseconds: 75
     mode: single
-    action:
+    actions:
       - repeat:
           sequence:
             - choose:
@@ -421,14 +421,14 @@ automation:
 
   - alias: sovevaerelse_soundbar_volume_remote_down
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_select.sovevaerelse_soundbar_volume_remote_state
         to: down
         for:
           milliseconds: 75
     mode: single
-    action:
+    actions:
       - repeat:
           sequence:
             - choose:

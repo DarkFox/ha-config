@@ -7,11 +7,11 @@ binary_sensor:
 automation:
   - alias: Mikroovn startet
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.microwave_running
         to: "on"
-    action:
+    actions:
       - action: automation.turn_off
         data:
           entity_id: automation.sluk_mikroovn_hvis_ikke_startet_efter_dor_lukket
@@ -19,23 +19,23 @@ automation:
 
   - alias: Mikroovn Færdig
     initial_state: true
-    trigger:
-      platform: state
+    triggers:
+      trigger: state
       entity_id: binary_sensor.microwave_running
       from: "on"
       to: "off"
-    action:
+    actions:
       - action: script.notify_everywhere
         data:
           message: Mikroovnen er færdig.
 
   - alias: Tænd mikroovn når dør åbnes
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.mikroovn_dor
         to: "on"
-    action:
+    actions:
       - action: switch.turn_on
         data:
           entity_id: switch.mikroovn
@@ -45,17 +45,17 @@ automation:
 
   - alias: Sluk mikroovn hvis ikke startet efter dør lukket
     initial_state: false
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.mikroovn_dor
         to: "off"
         for:
           minutes: 1
-    condition:
+    conditions:
       - condition: state
         entity_id: binary_sensor.microwave_running
         state: "off"
-    action:
+    actions:
       - action: switch.turn_off
         data:
           entity_id: switch.mikroovn

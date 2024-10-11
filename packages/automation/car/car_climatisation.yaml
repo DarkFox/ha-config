@@ -7,11 +7,11 @@ automation:
   - id: climatise_car_for_upcoming_drive
     alias: climatise_car_for_upcoming_drive
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.upcoming_drive
         to: "on"
-    action:
+    actions:
       - alias: "Climatise car"
         action: switch.turn_on
         target:
@@ -20,22 +20,22 @@ automation:
   - id: car_keep_climatising
     alias: Car Keep Climatising
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_boolean.car_keep_climatising
         from: "off"
         to: "on"
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.id_3_pro_klimatisering
         from: "off"
         to: "on"
         for:
           minutes: 5
-    condition:
+    conditions:
       - condition: state
         entity_id: input_boolean.car_keep_climatising
         state: "on"
-    action:
+    actions:
       - alias: "Climatise car"
         action: switch.turn_on
         target:
@@ -44,12 +44,12 @@ automation:
   - id: car_keep_klimatising_off
     alias: Car Keep Climatising Off
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_boolean.car_keep_climatising
         from: "on"
         to: "off"
-    action:
+    actions:
       - alias: "Stop climatising car"
         action: switch.turn_off
         target:
@@ -57,15 +57,15 @@ automation:
 
   - alias: notify_car_climatising
     id: notify_car_climatising
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.id_3_pro_klimatisering
         to: "on"
-    condition:
+    conditions:
       - condition: numeric_state
         entity_id: sensor.id_3_pro_remaining_climatisation_time
         above: 6
-    action:
+    actions:
       - action: script.notify_darkphone
         data:
           message: |
@@ -81,11 +81,11 @@ automation:
   - alias: notify_car_climatisation_end
     id: notify_car_climatisation_end
     initial_state: false
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.id_3_pro_klimatisering
         to: "off"
-    action:
+    actions:
       - action: script.notify_darkphone
         data:
           message: "Klimatisering afsluttet."

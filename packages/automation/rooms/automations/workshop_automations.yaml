@@ -16,8 +16,8 @@ binary_sensor:
 automation:
   - alias: workshop_door_activity_on
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.vaerksted_dor
         to:
           - "on"
@@ -25,50 +25,50 @@ automation:
         not_from:
           - "unavailable"
           - "unknown"
-    action:
+    actions:
       - action: input_boolean.turn_on
         data:
           entity_id: input_boolean.workshop_door_activity
 
   - alias: workshop_door_activity_off
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_boolean.workshop_door_activity
         to: "on"
         for:
           seconds: 5
-    action:
+    actions:
       - action: input_boolean.turn_off
         data:
           entity_id: input_boolean.workshop_door_activity
 
   - alias: workshop_desk_power_reminder
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.workshop_activity
         to: "off"
         for:
           minutes: 15
-    condition:
+    conditions:
       - condition: numeric_state
         entity_id: sensor.hobbybord_afbryder_forbrug
         above: 0.05 # kW
-    action:
+    actions:
       - action: script.notify_everywhere
         data:
           message: "Loddekolben eller andet er muligvis tændt på hobbybordet. Husk at slukke for strømmen."
 
   - alias: workshop_desk_power_off
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.workshop_activity
         to: "off"
         for:
           minutes: 30
-    action:
+    actions:
       - action: switch.turn_off
         data:
           entity_id: switch.hobbybord_afbryder

@@ -202,10 +202,10 @@ automation:
 
   - alias: Sleep as Android MQTT event
     initial_state: True
-    trigger:
-      - platform: mqtt
+    triggers:
+      - trigger: mqtt
         topic: "SleepAsAndroid"
-    action:
+    actions:
       - event: sleep_as_android
         event_data:
           event: "{{ trigger.payload_json.event }}"
@@ -220,12 +220,12 @@ automation:
 
   - alias: sleep_as_android_state_bedtime
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: sleep_as_android
         event_data:
           event: time_to_bed_alarm_alert
-    condition:
+    conditions:
       condition: and
       conditions:
         - condition: state
@@ -234,7 +234,7 @@ automation:
         - condition: state
           entity_id: input_select.sleep_as_android_state
           state: "awake"
-    action:
+    actions:
       action: input_select.select_option
       data:
         entity_id: input_select.sleep_as_android_state
@@ -242,16 +242,16 @@ automation:
 
   - alias: sleep_as_android_state_sleeping
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: sleep_as_android
         event_data:
           event: sleep_tracking_started
-      - platform: event
+      - trigger: event
         event_type: sleep_as_android
         event_data:
           event: sleep_tracking_resumed
-    condition:
+    conditions:
       - condition: or
         conditions:
           - condition: state
@@ -260,7 +260,7 @@ automation:
           - condition: state
             entity_id: input_select.sleep_as_android_state
             state: paused
-    action:
+    actions:
       - action: input_select.select_option
         data:
           entity_id: input_select.sleep_as_android_state
@@ -268,12 +268,12 @@ automation:
 
   - alias: sleep_as_android_state_sleeping_cancelled
     initial_state: true
-    trigger:
-      platform: event
+    triggers:
+      trigger: event
       event_type: sleep_as_android
       event_data:
         event: sleep_tracking_stopped
-    condition:
+    conditions:
       condition: and
       conditions:
         - condition: time
@@ -287,7 +287,7 @@ automation:
             - condition: state
               entity_id: input_select.sleep_as_android_state
               state: paused
-    action:
+    actions:
       - action: input_select.select_option
         data:
           entity_id: input_select.sleep_as_android_state
@@ -295,16 +295,16 @@ automation:
 
   - alias: sleep_as_android_state_paused
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: sleep_as_android
         event_data:
           event: sleep_tracking_paused
-    condition:
+    conditions:
       - condition: state
         entity_id: input_select.sleep_as_android_state
         state: sleeping
-    action:
+    actions:
       action: input_select.select_option
       data:
         entity_id: input_select.sleep_as_android_state
@@ -312,12 +312,12 @@ automation:
 
   - alias: sleep_as_android_state_smart_wake
     initial_state: true
-    trigger:
-      platform: event
+    triggers:
+      trigger: event
       event_type: sleep_as_android
       event_data:
         event: smart_period
-    condition:
+    conditions:
       - condition: or
         conditions:
           - condition: state
@@ -326,7 +326,7 @@ automation:
           - condition: state
             entity_id: input_select.sleep_as_android_state
             state: paused
-    action:
+    actions:
       - action: input_select.select_option
         data:
           entity_id: input_select.sleep_as_android_state
@@ -334,12 +334,12 @@ automation:
 
   - alias: sleep_as_android_state_alarm
     initial_state: true
-    trigger:
-      platform: event
+    triggers:
+      trigger: event
       event_type: sleep_as_android
       event_data:
         event: alarm_alert_start
-    condition:
+    conditions:
       - condition: or
         conditions:
           - condition: state
@@ -351,7 +351,7 @@ automation:
           - condition: state
             entity_id: input_select.sleep_as_android_state
             state: smart wake
-    action:
+    actions:
       - action: input_select.select_option
         data:
           entity_id: input_select.sleep_as_android_state
@@ -359,16 +359,16 @@ automation:
 
   - alias: sleep_as_android_state_snoozing
     initial_state: true
-    trigger:
-      platform: event
+    triggers:
+      trigger: event
       event_type: sleep_as_android
       event_data:
         event: alarm_snooze_clicked
-    condition:
+    conditions:
       - condition: state
         entity_id: input_select.sleep_as_android_state
         state: alarm
-    action:
+    actions:
       - action: input_select.select_option
         data:
           entity_id: input_select.sleep_as_android_state
@@ -376,20 +376,20 @@ automation:
 
   - alias: sleep_as_android_state_awake
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: sleep_as_android
         event_data:
           event: alarm_alert_dismiss
-      - platform: event
+      - trigger: event
         event_type: sleep_as_android
         event_data:
           event: alarm_snooze_cancelled
-      - platform: event
+      - trigger: event
         event_type: sleep_as_android
         event_data:
           event: sleep_tracking_stopped
-    condition:
+    conditions:
       condition: or
       conditions:
         - condition: state
@@ -401,7 +401,7 @@ automation:
         - condition: state
           entity_id: input_select.sleep_as_android_state
           state: snoozing
-    action:
+    actions:
       - action: input_select.select_option
         data:
           entity_id: input_select.sleep_as_android_state
@@ -410,24 +410,24 @@ automation:
   # Snooze Counter
   - alias: sleep_as_android_reset_snooze_counter
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: sleep_as_android
         event_data:
           event: alarm_snooze_clicked
-    action:
+    actions:
       - action: counter.reset
         data:
           entity_id: counter.snooze_counter
 
   - alias: sleep_as_android_snoozing
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: sleep_as_android
         event_data:
           event: sleep_tracking_started
-    action:
+    actions:
       - action: counter.increment
         data:
           entity_id: counter.snooze_counter

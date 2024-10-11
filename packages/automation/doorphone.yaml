@@ -7,28 +7,28 @@ input_boolean:
 automation:
   - alias: Door Phone Ringing
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_boolean.doorphone_ringing
         to: "on"
-    action:
+    actions:
       - action: script.turn_on
         entity_id: script.alert_lights
 
   - alias: Answering Door
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.hoveddor_access_control_window_door_is_open
         to: "on"
-      - platform: state
+      - trigger: state
         entity_id: lock.hoveddor_las
         to: "unlocked"
-    condition:
+    conditions:
       - condition: state
         entity_id: input_boolean.doorphone_ringing
         state: "on"
-    action:
+    actions:
       - action: input_boolean.turn_on
         data:
           entity_id: input_boolean.answering_door
@@ -40,13 +40,13 @@ automation:
 
   - alias: Ignoring Door Phone
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_boolean.doorphone_ringing
         to: "on"
         for:
           minutes: 2
-    action:
+    actions:
       - action: script.turn_on
         entity_id: script.alert_lights_restore
       - action: input_boolean.turn_off
@@ -63,18 +63,18 @@ automation:
 
   - alias: Door Answered
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.hoveddor_access_control_window_door_is_open
         to: "off"
-      - platform: state
+      - trigger: state
         entity_id: lock.hoveddor_las
         to: "locked"
-    condition:
+    conditions:
       - condition: state
         entity_id: input_boolean.answering_door
         state: "on"
-    action:
+    actions:
       - action: input_boolean.turn_off
         data:
           entity_id: input_boolean.answering_door

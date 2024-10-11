@@ -35,18 +35,18 @@ template:
 automation:
   - id: alert_car_unlocked
     alias: Alert car unlocked
-    trigger:
-      - platform: numeric_state
+    triggers:
+      - trigger: numeric_state
         entity_id: sensor.car_distance_to_martin
         above: 0.1
         for:
           seconds: 30
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.id_3_pro_locked
         to: "on"
         for:
           minutes: 5
-    condition:
+    conditions:
       - alias: "Car unlocked"
         condition: state
         entity_id: binary_sensor.id_3_pro_locked
@@ -55,7 +55,7 @@ automation:
         condition: state
         entity_id: binary_sensor.id_3_pro_car_is_active
         state: "off"
-    action:
+    actions:
       - action: automation.turn_on
         target:
           entity_id: automation.notify_car_locked
@@ -66,11 +66,11 @@ automation:
 
   - id: notify_car_locked
     alias: Notify car locked
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.id_3_pro_locked
         to: "off"
-    action:
+    actions:
       - action: script.notify_everywhere
         data:
           message: Bilen er låst.

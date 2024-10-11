@@ -10,7 +10,7 @@ calendar:
 
 template:
   - trigger:
-      platform: event
+      trigger: event
       event_type: calendar_updated
       event_data:
         calendar: Personlig Kalender
@@ -50,7 +50,7 @@ template:
             {{ agenda(events, time) | from_json }}
 
   - trigger:
-      platform: event
+      trigger: event
       event_type: calendar_updated
       event_data:
         calendar: Arbejdskalender
@@ -333,7 +333,7 @@ template:
             {{ agenda(events, time, 'wfh') | from_json }}
 
   - trigger:
-      platform: event
+      trigger: event
       event_type: calendar_updated
       event_data:
         calendar: Tripit Kalender
@@ -562,21 +562,21 @@ automation:
     id: 16e9122a-c1c4-4966-9040-1dc133e2e009
     initial_state: true
     mode: restart
-    trigger:
-      - platform: time_pattern
+    triggers:
+      - trigger: time_pattern
         hours: "*"
         minutes: "/15"
         seconds: "0"
-      - platform: state
+      - trigger: state
         entity_id: calendar.personlig
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
         for:
           seconds: 10
-      - platform: state
+      - trigger: state
         entity_id: sensor.calendar_regexes
-    condition:
+    conditions:
       - condition: state
         entity_id: sensor.calendar_regexes
         state: "OK"
@@ -590,7 +590,7 @@ automation:
         transit: "{{ [regexes.transit] }}"
         wake: "{{ [{'negate': true, 'regex': '.*(#nowake).*'}] }}"
         routine: "{{ [regexes.routine] }}"
-    action:
+    actions:
       - action: calendar.get_events
         data:
           start_date_time: "{{ now().strftime('%Y-%m-%d') }} 00:00:00"
@@ -612,19 +612,19 @@ automation:
     id: ada86b2e-be99-4b82-b53f-da58547a0b3c
     initial_state: true
     mode: restart
-    trigger:
-      - platform: time_pattern
+    triggers:
+      - trigger: time_pattern
         hours: "*"
         minutes: "/15"
         seconds: "0"
-      - platform: state
+      - trigger: state
         entity_id: calendar.arbejdskalender
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
         for:
           seconds: 10
-      - platform: state
+      - trigger: state
         entity_id: sensor.calendar_regexes
     variables:
       calendar_entity: calendar.arbejdskalender
@@ -643,7 +643,7 @@ automation:
         rsh: "{{ [regexes.rsh] }}"
         wfh: "{{ [regexes.wfh] }}"
         ferie: "{{ [regexes.ferie] }}"
-    action:
+    actions:
       - action: calendar.get_events
         data:
           start_date_time: "{{ now().strftime('%Y-%m-%d') }} 00:00:00"
@@ -665,25 +665,25 @@ automation:
     id: e565f087-c440-4619-ab51-b18d535dbfac
     initial_state: true
     mode: restart
-    trigger:
-      - platform: time_pattern
+    triggers:
+      - trigger: time_pattern
         hours: "*"
         minutes: "/15"
         seconds: "0"
-      - platform: state
+      - trigger: state
         entity_id: calendar.vagtplan
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
         for:
           seconds: 10
-      - platform: state
+      - trigger: state
         entity_id: sensor.calendar_regexes
     variables:
       calendar_entity: calendar.vagtplan
       calendar_name: "Vagtplan"
       regexes: "{{ states.sensor.calendar_regexes.attributes }}"
-    action:
+    actions:
       - action: calendar.get_events
         data:
           start_date_time: "{{ now().strftime('%Y-%m-%d') }} 00:00:00"
@@ -705,19 +705,19 @@ automation:
   - alias: Update Tripit Calendar
     id: fdab31ae-dbd7-4808-a671-6fa05e331a59
     initial_state: true
-    trigger:
-      - platform: time_pattern
+    triggers:
+      - trigger: time_pattern
         hours: "*"
         minutes: "/15"
         seconds: "0"
-      - platform: state
+      - trigger: state
         entity_id: calendar.tripit
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
         for:
           seconds: 10
-      - platform: state
+      - trigger: state
         entity_id: sensor.calendar_regexes
     variables:
       calendar_entity: calendar.tripit
@@ -734,7 +734,7 @@ automation:
         carrier: '\[(?:.+)\](?: (.+) -)* (?:.+) to (?:.+)'
         from: '\[(?:.+)\](?: (?:.+) -)* (.+) to (?:.+)'
         to: '\[(?:.+)\](?: (?:.+) -)* (?:.+) to (.+)'
-    action:
+    actions:
       - action: calendar.get_events
         data:
           start_date_time: "{{ now().strftime('%Y-%m-%d') }} 00:00:00"

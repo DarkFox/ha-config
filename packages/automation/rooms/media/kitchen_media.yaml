@@ -9,13 +9,13 @@ input_select:
 automation:
   - alias: kokken_soundbar_volume_remote_state_up
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: kokken_volumeknap
           event: 2001
-    action:
+    actions:
       action: input_select.select_option
       data:
         entity_id: input_select.kokken_soundbar_volume_remote_state
@@ -23,13 +23,13 @@ automation:
 
   - alias: kokken_soundbar_volume_remote_state_down
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: kokken_volumeknap
           event: 3001
-    action:
+    actions:
       action: input_select.select_option
       data:
         entity_id: input_select.kokken_soundbar_volume_remote_state
@@ -37,25 +37,25 @@ automation:
 
   - alias: kokken_soundbar_volume_remote_state_off
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: kokken_volumeknap
           event: 2003
-      - platform: event
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: kokken_volumeknap
           event: 3003
-      - platform: state
+      - trigger: state
         entity_id: input_select.kokken_soundbar_volume_remote_state
         to:
           - "up"
           - "down"
         for:
           seconds: 10
-    action:
+    actions:
       action: input_select.select_option
       data:
         entity_id: input_select.kokken_soundbar_volume_remote_state
@@ -63,13 +63,13 @@ automation:
 
   - alias: kokken_soundbar_volume_remote_mute
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: deconz_event
         event_data:
           id: kokken_volumeknap
           event: 1002
-    action:
+    actions:
       - action: media_player.volume_mute
         data:
           entity_id: media_player.kokken
@@ -77,14 +77,14 @@ automation:
 
   - alias: kokken_soundbar_volume_remote_up
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_select.kokken_soundbar_volume_remote_state
         to: up
         for:
           milliseconds: 75
     mode: single
-    action:
+    actions:
       - repeat:
           sequence:
             - action: media_player.volume_up
@@ -104,14 +104,14 @@ automation:
 
   - alias: kokken_soundbar_volume_remote_down
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_select.kokken_soundbar_volume_remote_state
         to: down
         for:
           milliseconds: 75
     mode: single
-    action:
+    actions:
       - repeat:
           sequence:
             - action: media_player.volume_down

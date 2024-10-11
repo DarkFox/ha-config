@@ -244,14 +244,14 @@ script:
 automation:
   - alias: "Set notification sounds options"
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id:
           - sensor.chime_tts_sounds
           - sensor.notification_sounds
-      - platform: homeassistant
+      - trigger: homeassistant
         event: start
-    action:
+    actions:
       - variables:
           saved_option: "{{ states('input_text.notification_sound') }}"
       - action: input_select.set_options
@@ -275,16 +275,16 @@ automation:
 
   - alias: "Save new notification sound"
     initial_state: true
-    trigger:
-      platform: state
+    triggers:
+      trigger: state
       entity_id: input_select.notification_sound
       for:
         seconds: 1
-    condition:
+    conditions:
       - condition: state
         entity_id: binary_sensor.home_assistant_loaded
         state: "on"
-    action:
+    actions:
       - action: input_text.set_value
         data_template:
           entity_id: input_text.notification_sound
@@ -292,13 +292,13 @@ automation:
 
   - alias: "Announce notification sound changed"
     initial_state: true
-    trigger:
-      platform: state
+    triggers:
+      trigger: state
       entity_id: sensor.chime_path
       not_from:
         - "unknown"
         - "unavailable"
-    action:
+    actions:
       - action: script.voice_broadcast
         data:
           message: "Notifikationslyd ændret"

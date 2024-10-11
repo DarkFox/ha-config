@@ -133,7 +133,7 @@ template:
         device_class: timestamp
 
   - trigger:
-      - platform: event
+      - trigger: event
         event_type: id_3_pro_destinations_sent
     sensor:
       - name: "ID.3 Pro Last Destinations Sent"
@@ -149,14 +149,14 @@ automation:
     id: 748368fc-75e1-4931-b0a4-63bb9f0e15e5
     initial_state: true
     mode: single
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.darkphone_last_notification_post_time
-    condition:
+    conditions:
       - condition: state
         entity_id: sensor.darkphone_last_notification
         state: "com.volkswagen.weconnect"
-    action:
+    actions:
       - action: homeassistant.update_entity
         target:
           entity_id: sensor.id_3_pro_charging_mode
@@ -164,14 +164,14 @@ automation:
   - alias: "ID.3 Pro Notify destinations sent"
     id: 5b33950a-780e-4708-94b5-9276239e4a80
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: id_3_pro_destinations_sent
     variables:
       destinations: "{{ trigger.event.data.get('destinations', []) }}"
       parts: "{{ destinations|length }}"
       final: "{{ destinations|last }}"
-    action:
+    actions:
       - action: notify.telegram_darkfox
         data:
           message: |

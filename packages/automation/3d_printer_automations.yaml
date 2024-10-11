@@ -8,8 +8,8 @@ automation:
   - id: toggle_3d_printer_light
     alias: Toggle 3D printer light
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.3d_printer_lys
         from:
           - "on"
@@ -17,7 +17,7 @@ automation:
         to:
           - "on"
           - "off"
-    action:
+    actions:
       action: "light.turn_{{ states('binary_sensor.3d_printer_lys') }}"
       target:
         entity_id: light.3d_printer_enclosure_light
@@ -25,11 +25,11 @@ automation:
   - alias: Dehumidifier on after enclosure door closed
     id: 0a95a5cd-b3ea-4fa1-b392-93bc9cce5379
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.3d_printer_skab
         to: "off"
-    action:
+    actions:
       - action: switch.turn_on
         target:
           entity_id: switch.filament_affugter
@@ -38,13 +38,13 @@ automation:
     alias: 3d Printer Set Thermostat
     initial_state: true
     mode: queued
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id:
           - sensor.3d_printer_build_volume_temperature
           - binary_sensor.3d_printer_aktiv
           - sensor.octoprint_current_state
-    action:
+    actions:
       - choose:
           - alias: Printing
             conditions:
@@ -84,12 +84,12 @@ automation:
   - id: 3d_printer_ventilation_off
     alias: 3d Printer Ventilation Off
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: climate.3d_printer
         attribute: hvac_action
         to: "off"
-    action:
+    actions:
       action: fan.turn_off
       target:
         entity_id:
@@ -99,12 +99,12 @@ automation:
   - id: 3d_printer_ventilation_low
     alias: 3d Printer Ventilation Low
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: climate.3d_printer
         attribute: hvac_action
         to: "idle"
-    action:
+    actions:
       - action: fan.turn_on
         target:
           entity_id:
@@ -126,12 +126,12 @@ automation:
   - id: 3d_printer_ventilation_high
     alias: 3d Printer Ventilation High
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: climate.3d_printer
         attribute: hvac_action
         to: "cooling"
-    action:
+    actions:
       - action: fan.turn_on
         target:
           entity_id:
@@ -148,19 +148,19 @@ automation:
   - id: 3d_print_status_notification
     alias: 3D Print status notification
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.octoprint_current_state
         to: "Printing"
-      - platform: time_pattern
+      - trigger: time_pattern
         minutes: "/5"
         seconds: "0"
-    condition:
+    conditions:
       - alias: "Print active"
         condition: state
         entity_id: sensor.octoprint_current_state
         state: "Printing"
-    action:
+    actions:
       - action: notify.mobile_app_darkphone
         data:
           title: "3D Print Progress {{ states('sensor.octoprint_print_progress') }}% - {{ states('sensor.octoprint_current_state') }}"
@@ -180,11 +180,11 @@ automation:
   - id: 3d_print_stopped_notification
     alias: 3D Print stopped notification
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.octoprint_current_state
         from: "Printing"
-    action:
+    actions:
       - action: notify.mobile_app_darkphone
         data:
           message: "clear_notification"
@@ -214,24 +214,24 @@ automation:
 
   - id: 3d_printer_active
     alias: 3D Printer Aktiv
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.3d_printer_aktiv
         to: "on"
-    action:
+    actions:
       - action: automation.turn_on
         target:
           entity_id: automation.3d_printer_swap_cameras
 
   - id: 3d_printer_auto_shutdown
     alias: 3d Printer Auto Shutdown
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.3d_printer_aktiv
         to: "off"
         for:
           minutes: 15
-    action:
+    actions:
       - action: switch.turn_off
         target:
           entity_id: switch.3d_printer_afbryder
@@ -241,10 +241,10 @@ automation:
 
   - id: 3d_printer_swap_cameras
     alias: 3D Printer Swap Cameras
-    trigger:
-      - platform: time_pattern
+    triggers:
+      - trigger: time_pattern
         seconds: "/15"
-    action:
+    actions:
       - action: input_boolean.toggle
         target:
           entity_id: input_boolean.3d_printer_swap_cameras

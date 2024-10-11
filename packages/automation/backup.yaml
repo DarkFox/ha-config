@@ -1,15 +1,15 @@
 automation:
   - alias: Automatic Backup
     initial_state: true
-    trigger:
-      platform: time
+    triggers:
+      trigger: time
       at: "03:00:00"
-    condition:
+    conditions:
       condition: time
       weekday:
         - sun
         - wed
-    action:
+    actions:
       - action: auto_backup.backup
         data:
           name: "Automated Backup {{ now().strftime('%Y-%m-%d') }}"
@@ -19,10 +19,10 @@ automation:
               - media
 
   - alias: "Notify Backup Started"
-    trigger:
-      platform: event
+    triggers:
+      trigger: event
       event_type: auto_backup.backup_start
-    action:
+    actions:
       action: persistent_notification.create
       data:
         title: "Backup Started."
@@ -30,10 +30,10 @@ automation:
           Name: {{ trigger.event.data.name }}
 
   - alias: "Notify Backup Completed"
-    trigger:
-      platform: event
+    triggers:
+      trigger: event
       event_type: auto_backup.backup_successful
-    action:
+    actions:
       - action: persistent_notification.create
         data:
           title: "Backup Complete. Syncing to Dropbox"
@@ -46,14 +46,14 @@ automation:
           input: sync
 
   - alias: "Notify Backup Sync Started"
-    trigger:
-      platform: state
+    triggers:
+      trigger: state
       entity_id: sensor.dropback_sync
       not_to:
         - "unknown"
         - "unavailable"
         - ""
-    action:
+    actions:
       action: persistent_notification.create
       data:
         title: "Backup Sync started."
@@ -61,14 +61,14 @@ automation:
           Name: {{ trigger.to_state.state }}
 
   - alias: "Notify Backup Sync Complete"
-    trigger:
-      platform: state
+    triggers:
+      trigger: state
       entity_id: sensor.dropback_sync
       not_from:
         - "unknown"
         - "unavailable"
         - ""
-    action:
+    actions:
       action: persistent_notification.create
       data:
         title: "Backup Synced."
@@ -76,10 +76,10 @@ automation:
           Name: {{ trigger.from_state.state }}
 
   - alias: "Notify Backup Failure"
-    trigger:
-      platform: event
+    triggers:
+      trigger: event
       event_type: auto_backup.backup_failed
-    action:
+    actions:
       action: persistent_notification.create
       data:
         title: "Backup Failed."
@@ -88,11 +88,11 @@ automation:
           Error: {{ trigger.event.data.error }}
 
   - alias: "Notify Backup Sync Failed"
-    trigger:
-      platform: state
+    triggers:
+      trigger: state
       entity_id: sensor.dropback_status
       to: "Error"
-    action:
+    actions:
       action: persistent_notification.create
       data:
         title: "Backup Sync error."

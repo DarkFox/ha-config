@@ -36,21 +36,21 @@ binary_sensor:
 automation:
   - id: office_blinds_open_at_sunup
     alias: office_blinds_open_at_sunup
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sun.sun
         to: above_horizon
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.martin_presence
         to: "on"
-    condition:
+    conditions:
       - condition: state
         entity_id: sun.sun
         state: above_horizon
       - condition: state
         entity_id: binary_sensor.martin_presence
         state: "on"
-    action:
+    actions:
       - action: cover.open_cover
         entity_id:
           - cover.kontor_rullegardin
@@ -58,21 +58,21 @@ automation:
 
   - id: office_blinds_close_at_sundown
     alias: office_blinds_close_at_sundown
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sun.sun
         to: below_horizon
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.average_small_balcony_brightness
         below: 5
-    condition:
+    conditions:
       - condition: state
         entity_id: sun.sun
         state: below_horizon
       - condition: numeric_state
         entity_id: sensor.average_small_balcony_brightness
         below: 5
-    action:
+    actions:
       - action: cover.close_cover
         entity_id:
           - cover.kontor_rullegardin
@@ -80,13 +80,13 @@ automation:
 
   - id: office_balcony_door_open_reminder
     alias: office_balcony_door_open_reminder
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.office_activity_state
         to: "off"
         for:
           minutes: 15
-    condition:
+    conditions:
       - alias: "Balcony door open"
         condition: state
         entity_id: binary_sensor.kontor_altandor
@@ -95,30 +95,30 @@ automation:
         condition: numeric_state
         entity_id: sensor.lille_altan_temperatur
         below: 18
-    action:
+    actions:
       - action: script.notify_everywhere
         data:
           message: Kontor altandør står åben!
 #   - alias: office_door_activity_on
 #     initial_state: true
-#     trigger:
-#       - platform: state
+#     triggers:
+#       - trigger: state
 #         entity_id: binary_sensor.kontor_dor
 #         to: "on"
-#     action:
+#     actions:
 #       - action: input_boolean.turn_on
 #         data:
 #           entity_id: input_boolean.office_door_activity
 
 #   - alias: office_door_activity_off
 #     initial_state: true
-#     trigger:
-#       - platform: state
+#     triggers:
+#       - trigger: state
 #         entity_id: input_boolean.office_door_activity
 #         to: "on"
 #         for:
 #           seconds: 5
-#     action:
+#     actions:
 #       - action: input_boolean.turn_off
 #         data:
 #           entity_id: input_boolean.office_door_activity

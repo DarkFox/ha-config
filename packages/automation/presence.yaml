@@ -95,32 +95,32 @@ binary_sensor:
 automation:
   #   ## Notifications ##
   - alias: presence notification
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.martin_presence
         from: "on"
         to: "off"
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.martin_presence
         from: "off"
         to: "on"
-    action:
+    actions:
       - action: script.debug_notification
         data:
           message: "Presence: {{ states('binary_sensor.martin_presence') }}"
           title: "Presence"
 
   - alias: home soon notification
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.martin_home_soon
         from: "on"
         to: "off"
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.martin_home_soon
         from: "off"
         to: "on"
-    action:
+    actions:
       - action: script.debug_notification
         data:
           message: "Home Soon: {{ states('binary_sensor.martin_home_soon') }}"
@@ -143,8 +143,8 @@ automation:
     id: martin_state_machine
     initial_state: true
     mode: queued
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: martin_state_change
     variables:
       current_state: "{{ states('input_select.martin_state') }}"
@@ -175,7 +175,7 @@ automation:
           - home_soon
           - just_arrived
       transition_allowed: "{{ new_state in allowed_transitions[current_state] }}"
-    action:
+    actions:
       - choose:
           - conditions:
               - condition: template
@@ -204,57 +204,57 @@ automation:
 
   # Time based triggers
   - alias: Martin State Machine - Trigger Home
-    trigger:
-      - platform: numeric_state
+    triggers:
+      - trigger: numeric_state
         entity_id: sensor.martin_state_changed_minutes_ago
         above: 5
-    condition:
+    conditions:
       - condition: state
         entity_id: input_select.martin_state
         state: "just_arrived"
-    action:
+    actions:
       - event: martin_state_change
         event_data:
           state: home
 
   - alias: Martin State Machine - Trigger Just Left
-    trigger:
-      - platform: numeric_state
+    triggers:
+      - trigger: numeric_state
         entity_id: sensor.martin_state_changed_minutes_ago
         above: 5
-    condition:
+    conditions:
       - condition: state
         entity_id: input_select.martin_state
         state: "leaving"
-    action:
+    actions:
       - event: martin_state_change
         event_data:
           state: just_left
 
   - alias: Martin State Machine - Trigger Away
-    trigger:
-      - platform: numeric_state
+    triggers:
+      - trigger: numeric_state
         entity_id: sensor.martin_state_changed_minutes_ago
         above: 30
-    condition:
+    conditions:
       - condition: state
         entity_id: input_select.martin_state
         state: "just_left"
-    action:
+    actions:
       - event: martin_state_change
         event_data:
           state: away
 
   - alias: Martin State Machine - Trigger Away Long
-    trigger:
-      - platform: numeric_state
+    triggers:
+      - trigger: numeric_state
         entity_id: sensor.martin_state_changed_minutes_ago
         above: 1080
-    condition:
+    conditions:
       - condition: state
         entity_id: input_select.martin_state
         state: "away"
-    action:
+    actions:
       - event: martin_state_change
         event_data:
           state: away_long

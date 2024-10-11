@@ -86,18 +86,18 @@ automation:
   - id: notify_washing_machine_started
     alias: Notify Washing Machine Started
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.washing_machine
         to: "Running"
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.wash_cycle_remaining_time
         above: 5
-    condition:
+    conditions:
       - condition: state
         entity_id: sensor.washing_machine
         state: "Running"
-    action:
+    actions:
       - action: script.notify_everywhere
         data:
           message: "Vaskemaskine startet. Færdig ca. kl. {{ states('sensor.vaskemaskine_faerdig') | as_timestamp | timestamp_custom('%H:%M') }}"
@@ -105,15 +105,15 @@ automation:
   - id: notify_washing_machine_almost_finished
     alias: Notify Washing Machine Almost Finished
     initial_state: true
-    trigger:
-      - platform: numeric_state
+    triggers:
+      - trigger: numeric_state
         entity_id: sensor.wash_cycle_remaining_time
         below: 11
-    condition:
+    conditions:
       - condition: state
         entity_id: sensor.washing_machine
         state: "Running"
-    action:
+    actions:
       - action: script.notify_everywhere
         data:
           message: "Vaskemaskine færdig om 10 minutter."
@@ -121,11 +121,11 @@ automation:
   - id: washing_machine_finished
     alias: Washing Machine Finished
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.washing_machine
         to: "Finished"
-    action:
+    actions:
       - action: input_boolean.turn_on
         target:
           entity_id: input_boolean.washing_machine_finished
@@ -136,15 +136,15 @@ automation:
   - id: washing_machine_finished_reset
     alias: washing_machine_finished_reset
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.vaskemaskine_dor
         to: "on"
-    condition:
+    conditions:
       - condition: state
         entity_id: input_boolean.washing_machine_finished
         state: "on"
-    action:
+    actions:
       - action: input_boolean.turn_off
         target:
           entity_id: input_boolean.washing_machine_finished
@@ -152,39 +152,39 @@ automation:
   - id: washing_machine_finished_reminder
     alias: Washing Machine Finished Reminder
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_boolean.washing_machine_finished
         to: "on"
         for:
           minutes: 15
-      - platform: state
+      - trigger: state
         entity_id: input_boolean.washing_machine_finished
         to: "on"
         for:
           minutes: 30
-      - platform: state
+      - trigger: state
         entity_id: input_boolean.washing_machine_finished
         to: "on"
         for:
           minutes: 60
-      - platform: state
+      - trigger: state
         entity_id: input_boolean.washing_machine_finished
         to: "on"
         for:
           minutes: 120
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.bathroom_activity
         to: "on"
         for:
           seconds: 10
-    condition:
+    conditions:
       - condition: state
         entity_id: input_boolean.washing_machine_finished
         state: "on"
         for:
           minutes: 10
-    action:
+    actions:
       - action: script.notify_everywhere
         data:
           message: "Husk at tømme vaskemaskinen"
@@ -192,14 +192,14 @@ automation:
   - id: dryer_finished
     alias: Dryer Finished
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.torretumbler
         from: "on"
         to: "off"
         for:
           minutes: 10
-    action:
+    actions:
       - action: input_boolean.turn_on
         target:
           entity_id: input_boolean.dryer_finished
@@ -210,15 +210,15 @@ automation:
   - id: dryer_finished_reset
     alias: dryer_finished_reset
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.torretumbler_dor
         to: "on"
-    condition:
+    conditions:
       - condition: state
         entity_id: input_boolean.dryer_finished
         state: "on"
-    action:
+    actions:
       - action: input_boolean.turn_off
         target:
           entity_id: input_boolean.dryer_finished
@@ -226,39 +226,39 @@ automation:
   - id: dryer_finished_reminder
     alias: Dryer Finished Reminder
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_boolean.dryer_finished
         to: "on"
         for:
           minutes: 15
-      - platform: state
+      - trigger: state
         entity_id: input_boolean.dryer_finished
         to: "on"
         for:
           minutes: 30
-      - platform: state
+      - trigger: state
         entity_id: input_boolean.dryer_finished
         to: "on"
         for:
           minutes: 60
-      - platform: state
+      - trigger: state
         entity_id: input_boolean.dryer_finished
         to: "on"
         for:
           minutes: 120
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.bathroom_activity
         to: "on"
         for:
           seconds: 10
-    condition:
+    conditions:
       - condition: state
         entity_id: input_boolean.dryer_finished
         state: "on"
         for:
           minutes: 10
-    action:
+    actions:
       - action: script.notify_everywhere
         data:
           message: "Husk at tømme tørretumbleren"

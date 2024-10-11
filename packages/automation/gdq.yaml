@@ -5,7 +5,7 @@ input_boolean:
 
 template:
   - trigger:
-      platform: event
+      trigger: event
       event_type: gdq_runs_updated
     sensor:
       - name: GDQ Runs Regex
@@ -22,7 +22,7 @@ template:
             .*({{ ns.escaped_runs | join('|') }}).*
 
   - trigger:
-      platform: event
+      trigger: event
       event_type: gdq_event
     sensor:
       - name: GDQ Event
@@ -57,7 +57,7 @@ template:
           {{ 'on' if start_time <= now() <= end_time else 'off' }}
 
   - trigger:
-      platform: event
+      trigger: event
       event_type: gdq_donation_stats
     sensor:
       - name: GDQ Donation Total
@@ -73,7 +73,7 @@ template:
           median: "{{ trigger.event.data.stats.get('median', 0) }}"
 
   - trigger:
-      platform: event
+      trigger: event
       event_type: gdq_bids
     sensor:
       - name: GDQ Bids
@@ -95,7 +95,7 @@ template:
             {{ sort_list_by_attr(bid_wars, 'run', games) }}
 
   - trigger:
-      platform: event
+      trigger: event
       event_type: gdq_calendar_updated
     binary_sensor:
       - name: GDQ Calendar
@@ -230,13 +230,13 @@ automation:
   - alias: "Toggle GDQ on event state"
     id: 5d6fc4e6-291f-43f0-b555-831251da9ac5
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.gdq_event_active
         to:
           - "on"
           - "off"
-    action:
+    actions:
       - action: "input_boolean.turn_{{ states('binary_sensor.gdq_event_active') }}"
         target:
           entity_id: input_boolean.gdq_enable
@@ -244,13 +244,13 @@ automation:
   - alias: "Turn on GDQ"
     id: turn_on_gdq
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_boolean.gdq_enable
         to:
           - "on"
           - "off"
-    action:
+    actions:
       - action: "homeassistant.turn_{{ states('input_boolean.gdq_enable') }}"
         target:
           entity_id: group.gdq_automations
@@ -265,34 +265,34 @@ automation:
   - alias: "Slow update GDQ"
     id: dc222bee-ba1b-49b4-80cf-7dee61761268
     initial_state: true
-    trigger:
-      - platform: time_pattern
+    triggers:
+      - trigger: time_pattern
         hours: "0"
         minutes: "0"
         seconds: "0"
-    action:
+    actions:
       - parallel:
           - action: pyscript.get_gdq_event
           - action: script.refresh_gdq_agenda
 
   - alias: "Fast update GDQ"
     id: 57c88a86-3264-4163-b3ca-3839707bbf05
-    trigger:
-      - platform: time_pattern
+    triggers:
+      - trigger: time_pattern
         minutes: "/5"
-    action:
+    actions:
       - action: script.refresh_gdq_agenda
 
   - alias: "Notify GDQ Run Coming Up"
     id: notify_gdq_run_coming_up
-    trigger:
-      - platform: numeric_state
+    triggers:
+      - trigger: numeric_state
         entity_id: sensor.gdq_next_watch_run
         below: 30
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.gdq_next_watch_run
         below: 15
-      - platform: numeric_state
+      - trigger: numeric_state
         entity_id: sensor.gdq_next_watch_run
         below: 5
     variables:
@@ -301,7 +301,7 @@ automation:
       time: >-
         {% from 'easy_time.jinja' import custom_relative_time %}
         {{ custom_relative_time(state_attr('sensor.gdq_next_watch_run', 'next_run').get('start', ''), 'day, hour, minute') }}
-    action:
+    actions:
       - action: script.notify_everywhere
         data:
           message:
@@ -319,12 +319,12 @@ automation:
   - alias: "Refresh GDQ Bids"
     id: refresh_gdq_bids
     mode: single
-    trigger:
-      - platform: time_pattern
+    triggers:
+      - trigger: time_pattern
         hours: "*"
         minutes: "/1"
         seconds: "0"
-    action:
+    actions:
       - parallel:
           - action: script.run_pyscript
             data:
@@ -337,10 +337,10 @@ automation:
     id: refresh_gdq_runs_regex
     initial_state: true
     mode: restart
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: todo.gdq_runs
-    action:
+    actions:
       - action: todo.get_items
         data:
           status: needs_action
@@ -357,14 +357,14 @@ automation:
   - id: update_gdq_calendar
     alias: Update GDQ Calendar
     mode: restart
-    trigger:
-      - platform: time_pattern
+    triggers:
+      - trigger: time_pattern
         hours: "*"
         minutes: "/1"
         seconds: "0"
-      - platform: state
+      - trigger: state
         entity_id: calendar.gdq_schedule
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.home_assistant_loaded
         to: "on"
     variables:
@@ -372,7 +372,7 @@ automation:
       regexes: "{{ states.sensor.calendar_regexes.attributes }}"
       bool_attrs:
         watch: "{{ [(state_attr('sensor.gdq_runs_regex', 'regex') or '')] }}"
-    action:
+    actions:
       - action: homeassistant.update_entity
         target:
           entity_id: calendar.gdq_schedule

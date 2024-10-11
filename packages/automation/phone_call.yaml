@@ -10,7 +10,7 @@ input_boolean:
 
 template:
   - trigger:
-      platform: event
+      trigger: event
       event_type:
         - work_call_received
         - work_call_ended
@@ -25,7 +25,7 @@ template:
           start: "{{ as_timestamp(now()) | timestamp_custom('%Y-%m-%d %H:%M:%S', true) if trigger.event.event_type == 'work_call_received' }}"
 
   - trigger:
-      platform: event
+      trigger: event
       event_type:
         - work_call_ended
         - clear_work_call_log
@@ -100,8 +100,8 @@ automation:
   - alias: Pause Media On Phone Call
     id: pause_media_on_phone_call
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id:
           - sensor.arbejdstelefon_phone_state
           - sensor.darkphone_phone_state
@@ -109,7 +109,7 @@ automation:
           - ringing
           - offhook
         from: idle
-    condition:
+    conditions:
       - condition: state
         entity_id: binary_sensor.martin_presence
         state: "on"
@@ -119,42 +119,42 @@ automation:
             trigger.to_state.entity_id == 'sensor.darkphone_phone_state'
             or is_state('binary_sensor.working', 'on')
           }}
-    action:
+    actions:
       - action: script.turn_on
         entity_id: script.pause_all_media
 
   - alias: Unpause On Phone Call Finished
     id: unpause_media_on_phone_call_finished
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id:
           - sensor.arbejdstelefon_phone_state
           - sensor.darkphone_phone_state
         to: idle
-    condition:
+    conditions:
       - condition: state
         entity_id: binary_sensor.martin_presence
         state: "on"
-    action:
+    actions:
       - action: script.turn_on
         entity_id: script.resume_all_media
 
   - alias: On Call Ringing While Sleeping
     id: on_call_ringing_while_sleeping
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.arbejdstelefon_phone_state
         to: ringing
-    condition:
+    conditions:
       - condition: state
         entity_id: binary_sensor.martin_presence
         state: "on"
       - condition: state
         entity_id: binary_sensor.on_call
         state: "on"
-    action:
+    actions:
       - choose:
           - conditions:
               - condition: state
@@ -175,11 +175,11 @@ automation:
   - alias: On Call Picked Up
     id: on_call_picked_up
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.arbejdstelefon_phone_state
         to: offhook
-    condition:
+    conditions:
       - condition: state
         entity_id: binary_sensor.martin_presence
         state: "on"
@@ -192,7 +192,7 @@ automation:
           - "sleeping"
           - "smart wake"
           - "paused"
-    action:
+    actions:
       - event: set_light_profile
         event_data:
           room: bedroom
@@ -210,19 +210,19 @@ automation:
   - alias: On Call Done
     id: on_call_done
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.arbejdstelefon_phone_state
         from: "offhook"
         to: "idle"
         for:
           minutes: 2
-      - platform: state
+      - trigger: state
         entity_id: device_tracker.pc074805
         to: "not_home"
         for:
           seconds: 30
-    condition:
+    conditions:
       - condition: state
         entity_id: binary_sensor.martin_presence
         state: "on"
@@ -235,7 +235,7 @@ automation:
       - condition: state
         entity_id: sensor.arbejdstelefon_phone_state
         state: "idle"
-    action:
+    actions:
       - choose:
           - conditions:
               - condition: state
@@ -255,13 +255,13 @@ automation:
   - alias: On Call Not Picked Up
     id: on_call_not_picked_up
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_boolean.work_phone_ringing
         to: "off"
         for:
           seconds: 5
-    condition:
+    conditions:
       - condition: state
         entity_id: sensor.arbejdstelefon_phone_state
         state: "idle"
@@ -271,7 +271,7 @@ automation:
       - condition: state
         entity_id: binary_sensor.on_call
         state: "on"
-    action:
+    actions:
       - choose:
           - conditions:
               - condition: state
@@ -291,10 +291,10 @@ automation:
   - alias: Work phone caller lookup
     id: work_phone_caller_lookup
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_text.work_phone_caller
-    condition:
+    conditions:
       - condition: template
         value_template: "{{ trigger.to_state.state not in ['', 'unavailable', 'unknown'] }}"
       - condition: state
@@ -302,7 +302,7 @@ automation:
         state:
           - "ringing"
           - "offhook"
-    action:
+    actions:
       - variables:
           phone_number: "{{ states('input_text.work_phone_caller')[-8:] }}"
       - action: script.puzzel_lookup_caller
@@ -328,11 +328,11 @@ automation:
   - alias: Work call picked up
     id: work_call_picked_up
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.arbejdstelefon_phone_state
         to: offhook
-    action:
+    actions:
       - action: input_boolean.turn_on
         data:
           entity_id: input_boolean.work_phone_picked_up
@@ -340,14 +340,14 @@ automation:
   - alias: Work call ended
     id: work_call_ended
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.arbejdstelefon_phone_state
         to: idle
         from:
           - ringing
           - offhook
-    action:
+    actions:
       - event: work_call_ended
         event_data:
           call_info:
@@ -368,10 +368,10 @@ automation:
   - alias: Notify Work Call
     id: notify_work_call
     initial_state: true
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.current_work_call
-    condition:
+    conditions:
       - condition: template
         value_template: >-
           {{
@@ -382,7 +382,7 @@ automation:
             and trigger.to_state.attributes
             and trigger.to_state.state not in ['unknown', 'unavailable', '']
           }}
-    action:
+    actions:
       - choose:
           - conditions:
               - condition: template

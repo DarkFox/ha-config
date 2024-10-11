@@ -2,12 +2,12 @@ automation:
   - alias: Light Profile Frontend Theme Setter
     id: light_profile_frontend_theme_setter
     initial_state: True
-    trigger:
-      - platform: homeassistant
+    triggers:
+      - trigger: homeassistant
         event: start
-      - platform: state
+      - trigger: state
         entity_id: input_select.light_profile
-      - platform: template
+      - trigger: template
         alias: Set current mode when a browser becomes available
         value_template: >-
           [
@@ -18,7 +18,7 @@ automation:
     variables:
       browser_id: >-
         {{ [trigger.to_state.attributes.browserID] if trigger.platform == 'template' and trigger.to_state.state != 'unavailable' else [] }}
-    action:
+    actions:
       - choose:
           - conditions:
               - condition: state

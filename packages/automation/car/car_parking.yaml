@@ -162,7 +162,7 @@ template:
           {% endif %}
 
   - trigger:
-      - platform: state
+      - trigger: state
         entity_id:
           - device_tracker.id_3_pro_tracker
           - input_datetime.parking_timer
@@ -206,11 +206,11 @@ automation:
   - alias: "Paid parking"
     id: 9639dddf-8e3b-4321-811d-6df6b8562c24
     initial_state: True
-    trigger:
-      platform: state
+    triggers:
+      trigger: state
       entity_id: binary_sensor.parking_lot_paid
       to: "on"
-    action:
+    actions:
       - action: script.notify_darkphone
         data:
           message: |
@@ -220,12 +220,12 @@ automation:
   - alias: "Set Parked Time"
     id: c562770a-5958-46b7-ace8-3cbf4996fe88
     initial_state: True
-    trigger:
-      platform: state
+    triggers:
+      trigger: state
       entity_id: sensor.parkeringsskive
       for:
         seconds: 10
-    action:
+    actions:
       - condition: numeric_state
         entity_id: sensor.parking_duration_limit
         above: 0
@@ -250,10 +250,10 @@ automation:
   - alias: "Parking Alarm"
     id: parking_alarm
     initial_state: True
-    trigger:
-      platform: time
+    triggers:
+      trigger: time
       at: sensor.parking_alarm
-    action:
+    actions:
       - action: script.notify_darkphone
         data:
           message: >-

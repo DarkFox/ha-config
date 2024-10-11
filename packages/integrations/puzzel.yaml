@@ -459,12 +459,12 @@ automation:
     alias: Update Puzzel user info
     initial_state: true
     mode: queued
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.puzzel_login
-      - platform: homeassistant
+      - trigger: homeassistant
         event: start
-    action:
+    actions:
       - delay:
           seconds: 1
       - action: homeassistant.update_entity
@@ -480,14 +480,14 @@ automation:
     id: 0a2b75b8-58d4-4dce-8894-fb09bd8aba6b
     initial_state: true
     mode: single
-    trigger:
-      - platform: time_pattern
+    triggers:
+      - trigger: time_pattern
         seconds: "/5"
-    condition:
+    conditions:
       - condition: state
         entity_id: binary_sensor.puzzel_status
         state: "on"
-    action:
+    actions:
       - action: homeassistant.update_entity
         target:
           entity_id:
@@ -498,11 +498,11 @@ automation:
     id: 7194575a-e2c6-4c54-b081-847fdf8056d2
     initial_state: true
     mode: single
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.puzzel_user_status
         not_from: null # Ignore attribute changes
-    action:
+    actions:
       - action: homeassistant.update_entity
         target:
           entity_id: sensor.puzzel_user_requests
@@ -511,8 +511,8 @@ automation:
     alias: Puzzel state confirmation
     initial_state: true
     mode: restart
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.puzzel_profil
         not_from:
           - "unknown"
@@ -520,7 +520,7 @@ automation:
         not_to:
           - "unknown"
           - "unavailable"
-      - platform: state
+      - trigger: state
         entity_id: binary_sensor.puzzel_status
         attribute: state
         not_from:
@@ -529,7 +529,7 @@ automation:
         not_to:
           - "unknown"
           - "unavailable"
-    condition:
+    conditions:
       - condition: template
         alias: "Not to or from unknown or unavailable state"
         value_template: >-
@@ -537,7 +537,7 @@ automation:
             has_value('sensor.puzzel_state')
             and has_value('sensor.puzzel_profil')
           }}
-    action:
+    actions:
       - delay:
           seconds: 5
       - action: script.notify_darkphone
@@ -553,13 +553,13 @@ automation:
     alias: Puzzel State Notification
     initial_state: true
     mode: queued
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.puzzel_profil
-      - platform: state
+      - trigger: state
         entity_id: sensor.puzzel_state
         attribute: state
-    action:
+    actions:
       - action: notify.mobile_app_arbejdstelefon
         data:
           title: "Puzzel Status: {{ 'Logget af' if is_state('sensor.puzzel_profil', 'Logget af') else 'Logget på' }}"
@@ -594,12 +594,12 @@ automation:
   - id: notification_action_puzzel_switch
     alias: Notification Action Puzzel Switch
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: mobile_app_notification_action
         event_data:
           action: "puzzel_switch"
-    action:
+    actions:
       - action: switch.toggle
         target:
           entity_id: switch.puzzel
@@ -607,12 +607,12 @@ automation:
   - id: notification_action_puzzel_pause
     alias: Notification Action Puzzel Pause
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: mobile_app_notification_action
         event_data:
           action: "puzzel_pause"
-    action:
+    actions:
       - action: switch.toggle
         target:
           entity_id: switch.puzzel_pause
@@ -620,16 +620,16 @@ automation:
   - id: telegram_bot_puzzel_menu
     initial_state: true
     alias: Puzzel menu
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: telegram_callback
         event_data:
           command: "/puzzel"
-      - platform: event
+      - trigger: event
         event_type: telegram_command
         event_data:
           command: "/puzzel"
-    action:
+    actions:
       - action: notify.telegram_darkfox
         data:
           message: >-
@@ -658,16 +658,16 @@ automation:
   - id: telegram_bot_log_off_puzzel
     alias: "Telegram bot log off puzzel"
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: telegram_callback
         event_data:
           command: "/puzzel_log_off"
-      - platform: event
+      - trigger: event
         event_type: telegram_command
         event_data:
           command: "/puzzel_log_off"
-    action:
+    actions:
       - action: telegram_bot.answer_callback_query
         data:
           callback_query_id: "{{ trigger.event.data.id }}"
@@ -677,16 +677,16 @@ automation:
   - id: telegram_bot_log_on_puzzel
     alias: "Telegram bot log on Puzzel"
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: telegram_callback
         event_data:
           command: "/puzzel_login"
-      - platform: event
+      - trigger: event
         event_type: telegram_command
         event_data:
           command: "/puzzel_login"
-    action:
+    actions:
       - choose:
           - conditions:
               - condition: template
@@ -730,16 +730,16 @@ automation:
   - id: telegram_bot_pause_puzzel
     alias: "Telegram bot pause Puzzel"
     initial_state: true
-    trigger:
-      - platform: event
+    triggers:
+      - trigger: event
         event_type: telegram_callback
         event_data:
           command: "/puzzel_pause"
-      - platform: event
+      - trigger: event
         event_type: telegram_command
         event_data:
           command: "/puzzel_pause"
-    action:
+    actions:
       - choose:
           - conditions:
               - condition: template
