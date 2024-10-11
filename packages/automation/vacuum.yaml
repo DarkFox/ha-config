@@ -77,20 +77,17 @@ input_number:
     max: 500
     step: 10
 
-sensor:
-  - platform: template
-    sensors:
-      vacuum_area_cleaned_since_last_empty:
-        friendly_name: "Areal støvsuget siden sidste tømning"
-        value_template: "{{ ((states('sensor.valetudo_roborocks5_total_statistics_area')|float/10000) - (states('input_text.vacuum_last_empty')|float)) | round(1) }}"
-        unit_of_measurement: m2
-      vacuum_current_room:
-        friendly_name: "Støvsuger Rum"
-        value_template: >-
-          {{ (state_attr('camera.valetudo_s5_camera', 'vacuum_position') or {}).get('in_room', 'unknown') }}
-
 template:
   - sensor:
+      - name: Vaccum Area Cleaned Since Last Empty
+        unique_id: a826e687-2c46-42d0-8d7f-3f4ab7e44e8d
+        state: "{{ ((states('sensor.valetudo_roborocks5_total_statistics_area')|float/10000) - (states('input_text.vacuum_last_empty')|float)) | round(1) }}"
+        unit_of_measurement: "m2"
+
+      - name: Vacuum Current Room
+        unique_id: a62cc7c9-3942-4de2-8919-a270bcd00309
+        state: "{{ (state_attr('camera.valetudo_s5_camera', 'vacuum_position') or {}).get('in_room', 'unknown') }}"
+
       - name: "Valetudo segments mapping"
         unique_id: 0eff51a2-7e39-4eb2-b744-33323d128e3e
         state: "OK"
