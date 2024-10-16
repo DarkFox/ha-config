@@ -1,390 +1,42 @@
 title: Home
 icon: mdi:printer-3d
-panel: true
 path: home
+type: custom:grid-layout
+layout:
+  grid-template-columns: 70% 30%
+  grid-template-rows: auto
+  grid-template-areas: |
+    "camera1 stats"
+  mediaquery:
+    "(max-width: 800px)":
+      grid-template-columns: 100%
+      grid-template-areas: |
+        "camera1"
+        "stats"
 cards:
+  - type: custom:webrtc-camera
+    view_layout:
+      grid-area: camera1
+    entity: camera.3d_printer_head
+    style: ".mode {display: none;} .screenshot {display: none;}"
+    intersection: 0.25
+    ui: true
+    digital_ptz:
+      mouse_drag_pan: true
+      mouse_wheel_zoom: true
+      mouse_double_click_zoom: true
+      touch_drag_pan: true
+      touch_pinch_zoom: true
+      touch_tap_drag_zoom: true
+
   - type: vertical-stack
+    view_layout:
+      grid-area: stats
     cards:
-      - type: custom:layout-card
-        layout_type: custom:grid-layout
-        layout:
-          grid-template-columns: 50% 50%
-          grid-template-rows: auto
-          mediaquery:
-            "(max-width: 800px)":
-              grid-template-columns: 100%
-        cards:
-          - type: custom:webrtc-camera
-            entity: camera.3d_printer
-            style: ".mode {display: none;} .screenshot {display: none;}"
-            intersection: 0.25
-            ui: true
-            digital_ptz:
-              mouse_drag_pan: true
-              mouse_wheel_zoom: true
-              mouse_double_click_zoom: true
-              touch_drag_pan: true
-              touch_pinch_zoom: true
-              touch_tap_drag_zoom: true
-
-          - type: custom:webrtc-camera
-            entity: camera.3d_printer_head
-            style: ".mode {display: none;} .screenshot {display: none;}"
-            intersection: 0.25
-            ui: true
-            digital_ptz:
-              mouse_drag_pan: true
-              mouse_wheel_zoom: true
-              mouse_double_click_zoom: true
-              touch_drag_pan: true
-              touch_pinch_zoom: true
-              touch_tap_drag_zoom: true
-
-      - type: custom:layout-card
-        layout_type: custom:grid-layout
-        layout:
-          grid-template-columns: 20% 60% 20%
-          grid-template-rows: auto
-          mediaquery:
-            "(max-width: 800px)":
-              grid-template-columns: 100%
+      - type: horizontal-stack
         cards:
           - type: vertical-stack
             cards:
-              - type: custom:button-card
-                tap_action:
-                  action: url
-                  url_path: http://192.168.42.210/
-                name: |
-                  [[[
-                    return states['sensor.octoprint_print_progress'].state.replace('.', ',') + '% - ' + states['sensor.3d_printer_materiale'].state
-                  ]]]
-                entity: sensor.3d_printer_print_name
-                icon: mdi:cube
-                layout: icon_name_state2nd
-                show_state: true
-                show_icon: true
-                show_name: true
-                show_label: true
-                size: 25px
-
-              - show_state: false
-                show_name: false
-                camera_view: auto
-                type: picture-entity
-                entity: camera.3d_printer_model_image
-                camera_image: camera.3d_printer_model_image
-                tap_action:
-                  action: call-service
-                  service: script.turn_on
-                  service_data:
-                    entity_id: script.update_model_image
-
-          - type: vertical-stack
-            cards:
-              - type: horizontal-stack
-                cards:
-                  - type: custom:button-card
-                    entity: sensor.octoprint_print_status
-                    name: |
-                      [[[
-                        return states['sensor.3d_printer_afbryder_forbrug'].state +
-                        ' W'
-                      ]]]
-                    icon: mdi:printer-3d
-                    layout: icon_name_state2nd
-                    show_state: true
-                    show_name: true
-                    size: 25px
-                    tap_action:
-                      action: more-info
-                      entity: sensor.3d_printer_afbryder_forbrug
-
-                  - type: custom:button-card
-                    entity: sensor.octoprint_tool_0_target
-                    name: |
-                      [[[
-                        return states['sensor.octoprint_tool_0_temperature'].state +
-                        ' °C /'
-                      ]]]
-                    icon: mdi:printer-3d-nozzle
-                    layout: icon_name_state2nd
-                    show_state: true
-                    show_name: true
-                    show_label: true
-                    size: 25px
-                    tap_action:
-                      action: fire-dom-event
-                      browser_mod:
-                        service: browser_mod.popup
-                        data:
-                          title: 3D Printer
-                          content:
-                            type: custom:mini-graph-card
-                            points_per_hour: 30
-                            hours_to_show: 6
-                            hour24: true
-                            line_width: 2
-                            height: 400
-                            show:
-                              name: false
-                              icon: false
-                              labels: true
-                              labels_secondary: true
-                            entities:
-                              - entity: sensor.octoprint_tool_0_temperature
-                                show_fill: false
-                                show_legend: false
-                              - entity: sensor.octoprint_tool_0_target
-                                show_fill: true
-                                show_line: false
-                                show_legend: false
-
-                  - type: custom:button-card
-                    entity: sensor.octoprint_bed_target
-                    name: |
-                      [[[
-                        return states['sensor.octoprint_bed_temperature'].state +
-                        ' °C /'
-                      ]]]
-                    icon: mdi:radiator
-                    layout: icon_name_state2nd
-                    show_state: true
-                    show_name: true
-                    show_label: true
-                    size: 25px
-                    tap_action:
-                      action: fire-dom-event
-                      browser_mod:
-                        service: browser_mod.popup
-                        data:
-                          title: 3D Printer
-                          content:
-                            type: custom:mini-graph-card
-                            points_per_hour: 30
-                            hours_to_show: 6
-                            hour24: true
-                            line_width: 2
-                            height: 400
-                            show:
-                              name: false
-                              icon: false
-                              labels: true
-                              labels_secondary: true
-                            entities:
-                              - entity: sensor.octoprint_bed_temperature
-                                show_fill: false
-                                show_legend: false
-                              - entity: sensor.octoprint_bed_target
-                                show_fill: true
-                                show_line: false
-                                show_legend: false
-
-              - type: horizontal-stack
-                cards:
-                  - type: custom:button-card
-                    entity: sensor.octoprint_print_time
-                    name: |
-                      [[[
-                        return 'Kl. ' + (['unavailable', 'unknown', ''].includes(states['sensor.3d_printer_finish_time'].state) ? ' ' : states['sensor.3d_printer_finish_time'].state)
-                      ]]]
-                    # Convert from seconds to HH:MM:SS
-                    label: |
-                      [[[
-                        return (['unavailable', 'unknown', ''].includes(states['sensor.octoprint_print_time_left'].state) ? ' ' : '/' + new Date(states['sensor.octoprint_print_time_left'].state * 1000).toISOString().substr(11, 8))
-                      ]]]
-                    layout: icon_name_state2nd
-                    show_state: true
-                    show_icon: true
-                    show_name: true
-                    show_label: true
-                    size: 25px
-                    tap_action:
-                      # Graph time left against time spent
-                      action: fire-dom-event
-                      browser_mod:
-                        service: browser_mod.popup
-                        data:
-                          title: 3D Printer
-                          content: !include ../cards/3d_printer/print_time_graph.yaml
-
-                  - type: custom:button-card
-                    entity: sensor.3d_printer_build_volume_temperature
-                    name: |
-                      [[[
-                        return states['sensor.3d_printer_temperature'].state +
-                        ' °C / '
-                      ]]]
-                    label: |
-                      [[[
-                        return states['sensor.3d_printer_humidity'].state +
-                        '%'
-                      ]]]
-                    icon: mdi:cube-scan
-                    layout: icon_name_state2nd
-                    show_state: true
-                    show_name: true
-                    show_label: true
-                    size: 25px
-                    tap_action:
-                      action: fire-dom-event
-                      browser_mod:
-                        service: browser_mod.popup
-                        data:
-                          title: 3D Printer
-                          content:
-                            type: custom:mini-graph-card
-                            points_per_hour: 30
-                            hours_to_show: 6
-                            hour24: true
-                            line_width: 2
-                            height: 400
-                            show:
-                              name: false
-                              icon: false
-                              labels: true
-                              labels_secondary: true
-                            entities:
-                              - entity: sensor.3d_printer_temperature
-                                show_fill: false
-                                # show_legend: false
-                                color: "#FF7500"
-
-                              - entity: sensor.3d_printer_build_volume_temperature
-                                show_fill: false
-                                # show_legend: false
-                                color: "#BBBBBB"
-
-                              - entity: sensor.vaerksted_temperatur
-                                show_fill: false
-                                # show_legend: false
-                                color: "#000000"
-
-                              - entity: sensor.3d_printer_humidity
-                                show_fill: false
-                                # show_legend: false
-                                y_axis: secondary
-
-                  - type: custom:button-card
-                    entity: sensor.filament_hylde_humidity
-                    name: |
-                      [[[
-                        return states['sensor.filament_hylde_temperature'].state +
-                        ' °C'
-                      ]]]
-                    label: |
-                      [[[
-                        return parseFloat(states['sensor.filament_hylde_absolute_humidity'].state).toFixed(2) +
-                        ' g/m³'
-                      ]]]
-                    icon: mdi:movie-roll
-                    layout: icon_name_state2nd
-                    show_state: true
-                    show_name: true
-                    show_label: true
-                    size: 25px
-                    tap_action:
-                      action: fire-dom-event
-                      browser_mod:
-                        service: browser_mod.popup
-                        data:
-                          title: Filament Hylde
-                          size: wide
-                          content:
-                            type: custom:apexcharts-card
-                            graph_span: 1d
-                            apex_config:
-                              chart:
-                                height: 600px
-                            header:
-                              show: true
-                              title: Filament Hylde
-                              show_states: true
-                            yaxis:
-                              - id: temperature
-                                decimals: 1
-                                min: 15
-                                max: 40
-                                opposite: false
-                                apex_config:
-                                  title:
-                                    text: "°C"
-                              - id: humidity
-                                decimals: 1
-                                min: 15
-                                max: 50
-                                opposite: true
-                                apex_config:
-                                  title:
-                                    text: "%"
-                              - id: absolute_humidity
-                                decimals: 2
-                                min: 5
-                                max: 20
-                                opposite: true
-                                apex_config:
-                                  title:
-                                    text: "g/m³"
-                              - id: dehumidifier
-                                decimals: 0
-                                min: 0
-                                max: 1
-                                opposite: true
-                                apex_config:
-                                  title:
-                                    text: ""
-                                  labels:
-                                    show: false
-                            series:
-                              - entity: sensor.filament_hylde_temperature
-                                name: Temperatur
-                                unit: "°C"
-                                fill_raw: last
-                                stroke_width: 2
-                                color: "#FF7500"
-                                yaxis_id: temperature
-                              - entity: sensor.filament_hylde_humidity
-                                name: Luftfugtighed
-                                unit: "%"
-                                fill_raw: last
-                                stroke_width: 2
-                                color: "#0075FF"
-                                yaxis_id: humidity
-                              - entity: sensor.filament_hylde_absolute_humidity
-                                name: Absolut Luftfugtighed
-                                unit: "g/m³"
-                                fill_raw: last
-                                stroke_width: 2
-                                color: "#00FF75"
-                                yaxis_id: absolute_humidity
-                              - entity: switch.filament_affugter
-                                name: Affugture Tændt
-                                transform: "return x === 'on' ? 1 : 0;"
-                                unit: ""
-                                fill_raw: last
-                                curve: stepline
-                                stroke_width: 0
-                                type: area
-                                color: "#FFCC00"
-                                opacity: 0.2
-                                extend_to: false
-                                show:
-                                  datalabels: false
-                                yaxis_id: dehumidifier
-
-                  - type: custom:button-card
-                    tap_action:
-                      action: more-info
-                    entity: sensor.octoprint_soc_temperature
-                    name: SoC
-                    label: " "
-                    layout: icon_name_state2nd
-                    show_state: true
-                    show_icon: true
-                    show_name: true
-                    show_label: true
-                    size: 25px
-
               - type: horizontal-stack
                 cards:
                   - type: custom:button-card
@@ -412,6 +64,8 @@ cards:
                         - color: "#D00"
                     size: 60px
 
+              - type: horizontal-stack
+                cards:
                   - type: custom:button-card
                     tap_action:
                       action: none
@@ -419,6 +73,7 @@ cards:
                       action: toggle
                       confirmation:
                         text: Er du sikker på at du vil slukke for printeren?
+                    name: Afbryder
                     entity: switch.3d_printer_afbryder
                     size: 60px
 
@@ -429,57 +84,89 @@ cards:
                       action: toggle
                       confirmation:
                         text: Er du sikker på at du vil afbryde forbindelsen til printeren?
-                    name: Connect to Printer
+                    name: Forbindelse
                     entity: switch.octoprint_connect_to_printer
                     size: 60px
 
-              - type: horizontal-stack
-                cards:
-                  - type: vertical-stack
-                    cards:
-                      - type: custom:mushroom-climate-card
-                        entity: climate.3d_printer
-                        hvac_modes:
-                          - "off"
-                          - cool
-                        show_temperature_control: true
-                        collapsible_controls: false
-                        primary_info: state
-                        secondary_info: none
-                        fill_container: false
-                        layout: horizontal
+              - type: custom:button-card
+                entity: sensor.octoprint_print_status
+                name: |
+                  [[[
+                    return states['sensor.3d_printer_afbryder_forbrug'].state +
+                    ' W'
+                  ]]]
+                icon: mdi:printer-3d
+                layout: icon_name_state2nd
+                show_state: true
+                show_name: true
+                size: 25px
+                tap_action:
+                  action: more-info
+                  entity: sensor.3d_printer_afbryder_forbrug
 
-                      - type: custom:mushroom-light-card
-                        entity: light.3d_printer_enclosure_light
-                        fill_container: true
-                        name: Printer Lys
-                        layout: horizontal
-                        show_brightness_control: true
-                        secondary_info: none
-                        primary_info: none
-                        icon_type: icon
-                        icon: mdi:printer-3d
-                        collapsible_controls: true
+          - show_state: false
+            show_name: false
+            camera_view: auto
+            type: picture-entity
+            entity: camera.3d_printer_model_image
+            camera_image: camera.3d_printer_model_image
+            tap_action:
+              action: call-service
+              service: script.turn_on
+              service_data:
+                entity_id: script.update_model_image
 
-                  - type: vertical-stack
-                    cards:
-                      - type: custom:mushroom-fan-card
-                        entity: fan.3d_printer_enclosure_ind
-                        fill_container: true
-                        show_percentage_control: true
-                        primary_info: none
-                        secondary_info: none
-                        layout: horizontal
-                        icon: mdi:fan-chevron-up
+      - type: custom:button-card
+        tap_action:
+          action: url
+          url_path: http://192.168.42.210/
+        name: |
+          [[[
+            return states['sensor.octoprint_print_progress'].state.replace('.', ',') + '% - ' + states['sensor.3d_printer_materiale'].state
+          ]]]
+        entity: sensor.3d_printer_print_name
+        icon: mdi:cube
+        layout: icon_name_state2nd
+        show_state: true
+        show_icon: true
+        show_name: true
+        show_label: true
+        size: 25px
+        styles:
+          grid:
+            - grid-template-areas: '"i n" "i s"'
+            - grid-template-columns: 20% 1fr
+            - grid-template-rows: 1fr 1fr
 
-                      - type: custom:mushroom-fan-card
-                        entity: fan.3d_printer_enclosure_ud
-                        fill_container: true
-                        show_percentage_control: true
-                        primary_info: none
-                        secondary_info: none
-                        layout: horizontal
-                        icon: mdi:fan-chevron-down
+      - type: horizontal-stack
+        cards:
+          - type: vertical-stack
+            cards:
+              - type: custom:button-card
+                entity: sensor.octoprint_print_time
+                name: |
+                  [[[
+                    return 'Kl. ' + (['unavailable', 'unknown', ''].includes(states['sensor.3d_printer_finish_time'].state) ? ' ' : states['sensor.3d_printer_finish_time'].state)
+                  ]]]
+                # Convert from seconds to HH:MM:SS
+                label: |
+                  [[[
+                    return (['unavailable', 'unknown', ''].includes(states['sensor.octoprint_print_time_left'].state) ? ' ' : '/' + new Date(states['sensor.octoprint_print_time_left'].state * 1000).toISOString().substr(11, 8))
+                  ]]]
+                layout: icon_name_state2nd
+                show_state: true
+                show_icon: true
+                show_name: true
+                show_label: true
+                size: 25px
+                tap_action:
+                  # Graph time left against time spent
+                  action: fire-dom-event
+                  browser_mod:
+                    service: browser_mod.popup
+                    data:
+                      title: 3D Printer
+                      content: !include ../cards/3d_printer/print_time_graph.yaml
 
           - type: vertical-stack
             cards:
@@ -488,21 +175,290 @@ cards:
                   action: more-info
                 entity: sensor.octoprint_current_z
                 name: Z-Højde
+                label: " "
                 layout: icon_name_state2nd
                 show_state: true
                 show_icon: true
                 show_name: true
+                show_label: true
                 size: 25px
 
-              - type: custom:webrtc-camera
-                entity: camera.3d_printer_filament
-                style: ".mode {display: none;} .screenshot {display: none;}"
-                intersection: 0.25
-                ui: true
-                digital_ptz:
-                  mouse_drag_pan: true
-                  mouse_wheel_zoom: true
-                  mouse_double_click_zoom: true
-                  touch_drag_pan: true
-                  touch_pinch_zoom: true
-                  touch_tap_drag_zoom: true
+      - type: vertical-stack
+        cards:
+          - type: horizontal-stack
+            cards:
+              - type: custom:button-card
+                entity: sensor.octoprint_tool_0_target
+                state_display: |-
+                  [[[
+                    return states['sensor.octoprint_tool_0_temperature'].state +
+                    ' °C / ' +
+                    states['sensor.octoprint_tool_0_target'].state +
+                    ' °C'
+                  ]]]
+                icon: mdi:printer-3d-nozzle
+                layout: icon_name_state2nd
+                show_state: true
+                show_name: false
+                show_label: false
+                size: 25px
+                styles:
+                  custom_fields:
+                    graph:
+                      - overflow: unset
+                  card:
+                    - padding-bottom: 0
+                    - overflow: unset
+                  grid:
+                    - grid-template-areas: '"i s" "graph graph"'
+                    - grid-template-columns: 30px 1fr
+                    - grid-template-rows: 1fr min-content
+                custom_fields:
+                  graph:
+                    card:
+                      type: custom:mini-graph-card
+                      points_per_hour: 30
+                      hours_to_show: 6
+                      hour24: true
+                      line_width: 2
+                      height: 150
+                      show:
+                        state: false
+                        name: false
+                        icon: false
+                        labels: false
+                        labels_secondary: false
+                      card_mod:
+                        style:
+                          .: |
+                            ha-card {
+                              padding-top: 0px !important;
+                            }
+                      entities: &3d_printer_tool_graph_entities
+                        - entity: sensor.octoprint_tool_0_temperature
+                          show_fill: false
+                          show_legend: false
+                          show_points: false
+                          color: "#EB3223"
+                        - entity: sensor.octoprint_tool_0_target
+                          show_fill: true
+                          show_line: false
+                          show_legend: false
+                          show_points: false
+                          color: "#F08784"
+                tap_action:
+                  action: fire-dom-event
+                  browser_mod:
+                    service: browser_mod.popup
+                    data:
+                      title: 3D Printer
+                      content:
+                        type: custom:mini-graph-card
+                        points_per_hour: 30
+                        hours_to_show: 6
+                        hour24: true
+                        line_width: 2
+                        height: 400
+                        show:
+                          name: false
+                          icon: false
+                          labels: true
+                          labels_secondary: true
+                        entities: *3d_printer_tool_graph_entities
+
+              - type: custom:button-card
+                entity: sensor.octoprint_bed_target
+                state_display: |-
+                  [[[
+                    return states['sensor.octoprint_bed_temperature'].state +
+                    ' °C / ' +
+                    states['sensor.octoprint_bed_target'].state +
+                    ' °C'
+                  ]]]
+                icon: mdi:radiator
+                layout: icon_name_state2nd
+                show_state: true
+                show_name: false
+                show_label: false
+                size: 25px
+                styles:
+                  custom_fields:
+                    graph:
+                      - overflow: unset
+                  card:
+                    - padding-bottom: 0
+                    - overflow: unset
+                  grid:
+                    - grid-template-areas: '"i s" "graph graph"'
+                    - grid-template-columns: 30px 1fr
+                    - grid-template-rows: 1fr min-content
+                custom_fields:
+                  graph:
+                    card:
+                      type: custom:mini-graph-card
+                      points_per_hour: 30
+                      hours_to_show: 6
+                      hour24: true
+                      line_width: 2
+                      height: 150
+                      show:
+                        state: false
+                        name: false
+                        icon: false
+                        labels: false
+                        labels_secondary: false
+                      card_mod:
+                        style:
+                          .: |
+                            ha-card {
+                              padding-top: 0px !important;
+                            }
+                      entities: &3d_printer_bed_graph_entities
+                        - entity: sensor.octoprint_bed_temperature
+                          show_fill: false
+                          show_legend: false
+                          show_points: false
+                          color: "#0027F5"
+                        - entity: sensor.octoprint_bed_target
+                          show_fill: true
+                          show_line: false
+                          show_legend: false
+                          show_points: false
+                          color: "#7E84F7"
+                tap_action:
+                  action: fire-dom-event
+                  browser_mod:
+                    service: browser_mod.popup
+                    data:
+                      title: 3D Printer
+                      content:
+                        type: custom:mini-graph-card
+                        points_per_hour: 30
+                        hours_to_show: 6
+                        hour24: true
+                        line_width: 2
+                        height: 400
+                        show:
+                          name: false
+                          icon: false
+                          labels: true
+                          labels_secondary: true
+                        entities: *3d_printer_bed_graph_entities
+
+          - type: horizontal-stack
+            cards:
+              - type: custom:button-card
+                entity: sensor.3d_printer_build_volume_temperature
+                name: |
+                  [[[
+                    return states['sensor.3d_printer_temperature'].state +
+                    ' °C / '
+                  ]]]
+                label: |
+                  [[[
+                    return states['sensor.3d_printer_humidity'].state +
+                    '%'
+                  ]]]
+                icon: mdi:cube-scan
+                layout: icon_name_state2nd
+                show_state: true
+                show_name: true
+                show_label: true
+                size: 25px
+                tap_action:
+                  action: fire-dom-event
+                  browser_mod:
+                    service: browser_mod.popup
+                    data:
+                      title: 3D Printer
+                      content:
+                        type: custom:mini-graph-card
+                        points_per_hour: 30
+                        hours_to_show: 6
+                        hour24: true
+                        line_width: 2
+                        height: 400
+                        show:
+                          name: false
+                          icon: false
+                          labels: true
+                          labels_secondary: true
+                        entities:
+                          - entity: sensor.3d_printer_temperature
+                            show_fill: false
+                            # show_legend: false
+                            color: "#FF7500"
+
+                          - entity: sensor.3d_printer_build_volume_temperature
+                            show_fill: false
+                            # show_legend: false
+                            color: "#BBBBBB"
+
+                          - entity: sensor.vaerksted_temperatur
+                            show_fill: false
+                            # show_legend: false
+                            color: "#000000"
+
+                          - entity: sensor.3d_printer_humidity
+                            show_fill: false
+                            # show_legend: false
+                            y_axis: secondary
+
+              - type: custom:button-card
+                tap_action:
+                  action: more-info
+                entity: sensor.octoprint_soc_temperature
+                name: SoC
+                label: " "
+                layout: icon_name_state2nd
+                show_state: true
+                show_icon: true
+                show_name: true
+                show_label: true
+                size: 25px
+
+          - type: horizontal-stack
+            cards:
+              - type: vertical-stack
+                cards:
+                  - type: custom:mushroom-climate-card
+                    entity: climate.3d_printer
+                    hvac_modes:
+                      - "off"
+                      - cool
+                    show_temperature_control: true
+                    collapsible_controls: false
+                    primary_info: state
+                    secondary_info: none
+                    fill_container: false
+                    layout: horizontal
+
+                  - type: custom:mushroom-light-card
+                    entity: light.3d_printer_enclosure_light
+                    fill_container: true
+                    name: Printer Lys
+                    layout: horizontal
+                    show_brightness_control: true
+                    secondary_info: none
+                    primary_info: none
+                    icon_type: icon
+                    icon: mdi:printer-3d
+                    collapsible_controls: true
+
+                  - type: custom:mushroom-fan-card
+                    entity: fan.3d_printer_enclosure_ind
+                    fill_container: true
+                    show_percentage_control: true
+                    primary_info: none
+                    secondary_info: none
+                    layout: horizontal
+                    icon: mdi:fan-chevron-up
+
+                  - type: custom:mushroom-fan-card
+                    entity: fan.3d_printer_enclosure_ud
+                    fill_container: true
+                    show_percentage_control: true
+                    primary_info: none
+                    secondary_info: none
+                    layout: horizontal
+                    icon: mdi:fan-chevron-down
