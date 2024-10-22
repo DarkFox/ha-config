@@ -117,17 +117,26 @@ script:
         example: "{'inline_keyboard': {'text': 'Click me', 'url': 'https://www.home-assistant.io'}}"
         selector:
           object:
+    variables:
+      data: |
+        {% set input_data = data if data is defined and data else {} %}
+        {% if severity is defined and severity == 0 %}
+          {{ dict(input_data, **{ 'disable_notification': True}) }}
+        {% else %}
+          {{ input_data }}
+        {% endif %}
     sequence:
-      - action: script.darkphone_tts
-        data:
-          message_title: "{{ message_title if message_title is defined and message_title }}"
-          message: "{{ message }}"
-          severity: "{{ severity | default(1) | int }}"
-      - action: notify.telegram_darkfox
-        data:
-          title: "{{ message_title if message_title is defined and message_title }}"
-          message: "{{ message }}"
-          data: "{{ data if data is defined and data else {} }}"
+      - parallel:
+          - action: script.darkphone_tts
+            data:
+              message_title: "{{ message_title if message_title is defined and message_title }}"
+              message: "{{ message }}"
+              severity: "{{ severity | default(1) | int }}"
+          - action: notify.telegram_darkfox
+            data:
+              title: "{{ message_title if message_title is defined and message_title }}"
+              message: "{{ message }}"
+              data: "{{ data if data is defined and data else {} }}"
 
   darkphone_tts:
     alias: Read message on Darkphone if headset connected (Low priority messages are not read)
