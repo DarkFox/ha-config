@@ -229,6 +229,7 @@ sensor:
 
 automation:
   - alias: "Next destination - Update sensors with high frequency when close to leave time"
+    id: e342768f-0119-453a-8301-201282f58103
     initial_state: true
     triggers:
       - trigger: time_pattern
@@ -252,11 +253,16 @@ automation:
                 target:
                   entity_id: sensor.martin_til_destination_transit
 
-  - alias: "Next destination - Update sensors slowly 12 hours before"
+  - alias: "Next destination - Update sensors slowly 12 hours before or when destination changes"
+    id: f4eb3d8f-daf0-487b-91d0-d0f8d89d6fa7
     initial_state: true
     triggers:
       - trigger: time_pattern
         minutes: "/20"
+      - trigger: state
+        entity_id:
+          - sensor.upcoming_travel_location
+          - binary_sensor.martin_next_scheduled_destination_active
     conditions:
       - condition: state
         entity_id: binary_sensor.martin_next_scheduled_destination_active
