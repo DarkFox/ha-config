@@ -16,6 +16,22 @@ automation:
         data:
           entity_id: sensor.upcoming_travel_location
 
+  - alias: Send home destination to car
+    id: 5f90a704-bfc1-4f60-a525-6af990b697ed
+    initial_state: true
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.upcoming_drive
+        to: "on"
+    conditions:
+      - condition: numeric_state
+        entity_id: sensor.next_scheduled_leave_in
+        above: 60
+    actions:
+      - action: script.send_home_destination
+        data:
+          entity_id: zone.home
+
 script:
   send_entity_destination_to_car:
     alias: Send entity destination to car

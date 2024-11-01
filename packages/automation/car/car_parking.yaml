@@ -261,3 +261,22 @@ automation:
       - action: switch.turn_on
         target:
           entity_id: switch.id_3_pro_climatisation
+
+  - alias: "Stop Climatisation on parking"
+    id: 45fa7427-0498-4f77-a9f4-3e5983c15dc3
+    initial_state: True
+    triggers:
+      trigger: state
+      entity_id: sensor.bil_placering
+      not_to:
+        - "Away"
+        - "unknown"
+        - "unavailable"
+    conditions:
+      condition: state
+      entity_id: switch.id_3_pro_climatisation
+      state: "on"
+    actions:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.id_3_pro_climatisation
