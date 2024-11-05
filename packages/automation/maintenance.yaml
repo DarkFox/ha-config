@@ -159,9 +159,11 @@ automation:
         for:
           hours: 2
     actions:
-      - action: notify.telegram_darkfox
+      - action: persistent_notification.create
         data:
-          message: "Uncommitted changes!"
+          notification_id: "uncommitted_changes"
+          title: "Uncommitted changes!"
+          message: "You have uncommitted changes in your configuration!"
 
   - alias: Clear TTS Cache
     id: ac4fb256-a4c2-4a83-ba9c-edf92df19852
@@ -197,17 +199,19 @@ automation:
       - condition: state
         entity_id: input_select.sleep_state
         state: "awake"
+    variables:
+      entities: "{{ state_attr('sensor.low_battery', 'entities') or [] }}"
+      friendly_names: "{{ entities | map('state_attr', 'friendly_name') | list }}"
+      entity_count: "{{ friendly_names | length }}"
+      entity_list: "{{ friendly_names | join('\n- ') }}"
     actions:
-      - action: notify.telegram_darkfox
+      - action: persistent_notification.create
         data:
+          notification_id: "low_battery"
+          title: |
+            Lavt batteri på {{ entity_count }} enhed{{ 'er' if entity_count > 1 else '' }}
           message: |
-            {% set v = (state_attr('sensor.low_battery', 'entities') or []) | map('state_attr', 'friendly_name') | list %}
-            {% set n = v|length if v else 0 %}
-            {% set e = v|join('\n- ') if v else '' %}
-            {% set m = 'Lavt batteri på {} enheder:\n- {}'.format(n, e) %}
-            {{ m }}
-          data:
-            disable_notification: True
+            - {{ entity_list }}
 
   - alias: "Check for duplicate package names"
     id: f9814b8f-6cd7-42bc-9cf2-138832c4b484
@@ -232,8 +236,10 @@ automation:
       - condition: template
         value_template: "{{ trigger.event.data.get('duplicates', {})|length > 0 }}"
     actions:
-      - action: notify.telegram_darkfox
+      - action: persistent_notification.create
         data:
+          notification_id: "duplicate_package_names"
+          title: "Duplicate Package Names"
           message: |
             {%- set duplicates = trigger.event.data.get('duplicates', {}) -%}
             {%- set n = duplicates|length -%}
@@ -244,5 +250,3 @@ automation:
                   - {{ entity }}
                 {%- endfor %}
             {% endfor %}
-          data:
-            parse_mode: "html"
