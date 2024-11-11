@@ -134,3 +134,25 @@ automation:
             inline_keyboard:
               - "{{ 'Stop opladning:/car_charging_off' if is_state('sensor.id_3_pro_charging_state', 'charging') else 'Start opladning:/car_charging_on' }}"
               - "50%:/car_charging_set 50, 60%:/car_charging_set 60, 70%:/car_charging_set 70, 80%:/car_charging_set 80, 90%:/car_charging_set 90, 100%:/car_charging_set 100"
+
+  - initial_state: true
+    alias: Send destination til bil
+    id: 80abd8c2-ff5b-490e-9abd-411f10c0ad12
+    triggers:
+      - trigger: event
+        event_type: telegram_callback
+        event_data:
+          command: "/destination"
+      - trigger: event
+        event_type: telegram_command
+        event_data:
+          command: "/destination"
+    variables:
+      dest_parts: "{{ (trigger.event.data['args'] | join(' ')).split(' - ') }}"
+      name: "{{ dest_parts[0] if dest_parts|length > 1 else None }}"
+      destination: "{{ dest_parts[1] if dest_parts|length > 1 else dest_parts[0] }}"
+    actions:
+      - action: script.send_destination_to_car
+        data:
+          name: "{{ name }}"
+          destination: "{{ destination }}"

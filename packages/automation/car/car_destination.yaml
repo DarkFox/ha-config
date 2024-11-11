@@ -33,6 +33,44 @@ automation:
           entity_id: zone.home
 
 script:
+  send_destination_to_car:
+    alias: Send destination to car
+    fields:
+      name:
+        description: Name of destination
+        example: "Anders And"
+        selector:
+          text:
+      destination:
+        description: Destination to send to car
+        example: "Paradisæblevej 111, 1234 Andeby"
+        selector:
+          text:
+    sequence:
+      - condition: template
+        alias: "Ensure either destination or name is set"
+        value_template: "{{ not not ((destination is defined and destination) or (name is defined and name)) }}"
+      - action: script.osm_geocoding_lookup
+        response_variable: geocoded_data
+        data:
+          query: "{{ destination or name }}"
+      - variables:
+          destination: >-
+            {%- from 'osm.jinja' import geocodejson_to_vw -%}
+            {{ geocodejson_to_vw(geocoded_data.location, name) if geocoded_data.get('location', None) else {} }}
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ bool(destination.get('geoCoordinate', {}).get('latitude', False)) }}"
+            sequence:
+              - action: script.id_3_pro_send_destinations
+                data:
+                  destinations: "{{ destination }}"
+        default:
+          - action: notify.telegram_darkfox
+            data:
+              message: "Could not find coordinates for destination '{{ destination or name }}'"
+
   send_entity_destination_to_car:
     alias: Send entity destination to car
     fields:
