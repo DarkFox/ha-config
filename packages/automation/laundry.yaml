@@ -10,6 +10,7 @@ input_boolean:
 template:
   - sensor:
       - name: "Vaskemaskine Program"
+        unique_id: 18c78472-47ac-4083-8d25-b0da47aea354
         state: >-
           {% set p = {
             11: "Hygiejne Plus 59'",
@@ -17,12 +18,15 @@ template:
           } %}
           {{ p.get(state_attr('sensor.washing_machine', 'program'), state_attr('sensor.washing_machine', 'program')) }}
       - name: "Vaskemaskine Program Kode"
+        unique_id: d2874614-2299-4629-88a7-887dc65cdaa3
         state: "{{ state_attr('sensor.washing_machine', 'program_code') }}"
       - name: "Vaskemaskine Temperatur"
+        unique_id: b2be3a79-d5bc-436e-b7af-41ce3eec260f
         state: "{{ state_attr('sensor.washing_machine', 'temperature') }}"
         device_class: temperature
         unit_of_measurement: "°C"
       - name: "Vaskemaskine Status"
+        unique_id: ab7315c0-0e1a-43a8-a8b5-a362a249e3e7
         state: >-
           {% set t = {
             'Idle': 'Inaktiv',
@@ -42,12 +46,15 @@ template:
             {{ t.get(states('sensor.washing_machine'), states('sensor.washing_machine')) }}
           {% endif %}
       - name: "Vaskemaskine Centrifugering"
+        unique_id: 2e84e356-51d1-40c4-bda2-4f7cc9c60323
         state: "{{ state_attr('sensor.washing_machine', 'spin_speed') }}"
         unit_of_measurement: "RPM"
       - name: "Vaskemaskine Fyldningsgrad"
+        unique_id: c6e7174a-d074-40cd-a2e2-9966dad24c1b
         state: "{{ state_attr('sensor.washing_machine', 'fill_percent') }}"
         unit_of_measurement: "%"
       - name: "Vaskemaskine Færdig"
+        unique_id: 6ec2f9c3-38ed-4757-977d-b0d9dc25ceaf
         state: |
           {% if states('sensor.wash_cycle_remaining_time') not in ['unavailable', 'unknown'] %}
             {{ as_datetime(as_timestamp(now())|int + states('sensor.wash_cycle_remaining_time')|int*60) }}
@@ -56,18 +63,22 @@ template:
           {% endif %}
         device_class: timestamp
       - name: dryer_temp_delta
+        unique_id: aaaebf4d-5d5e-4a12-8caf-38f0711457e0
         state: "{{ states('sensor.torretumbler_temperature')|float(0.0) - states('sensor.badevaerelse_temperatur')|float(0.0) }}"
         device_class: temperature
         unit_of_measurement: "°C"
   - binary_sensor:
       - name: Vaskemaskine Fjernstyring
+        unique_id: 9eb4666f-c332-47d8-9c2a-8bb054c77c41
         state: "{{ state_attr('sensor.washing_machine', 'remote_control') }}"
       - name: Vaskemaskine
+        unique_id: 9c8562c1-bc0f-40e3-ae8a-958cd6d78cae
         state: "{{ is_state('sensor.washing_machine', 'Running') }}"
         device_class: running
         attributes:
           icon: "{{ 'mdi:washing-machine' if this.state == 'on' else 'mdi:washing-machine-off' }}"
       - name: Tørretumbler
+        unique_id: 7e13ec58-a50b-41fb-a78c-16491cd17fb9
         state: "{{ states('sensor.dryer_temp_delta')|int(0) > 10 and states('sensor.pow_k_l2_power')|int(0) > 900 }}"
         device_class: running
         attributes:
@@ -76,11 +87,15 @@ template:
           temperature_derivative: "{{ states('sensor.sensor_torretumbler_temperature_derivative') }}"
           l2_power: "{{ states('sensor.pow_k_l2_power') }}"
       - name: laundry
+        unique_id: a655c463-65a1-48b1-9d62-19408b156b31
         state: >-
           {{
             not is_state('sensor.washing_machine', 'unavailable')
             or is_state('binary_sensor.torretumbler', 'on')
           }}
+      - name: Vaskemaskine skal tømmes
+        unique_id: 4409ff7c-eb9e-4afb-b2a1-4b9d7e091ce2
+        state: "{{ is_state('input_boolean.washing_machine_finished', 'on') and not is_state('binary_sensor.torretumbler', 'on') }}"
 
 automation:
   - id: notify_washing_machine_started
@@ -154,22 +169,22 @@ automation:
     initial_state: true
     triggers:
       - trigger: state
-        entity_id: input_boolean.washing_machine_finished
+        entity_id: binary_sensor.vaskemaskine_skal_tommes
         to: "on"
         for:
           minutes: 15
       - trigger: state
-        entity_id: input_boolean.washing_machine_finished
+        entity_id: binary_sensor.vaskemaskine_skal_tommes
         to: "on"
         for:
           minutes: 30
       - trigger: state
-        entity_id: input_boolean.washing_machine_finished
+        entity_id: binary_sensor.vaskemaskine_skal_tommes
         to: "on"
         for:
           minutes: 60
       - trigger: state
-        entity_id: input_boolean.washing_machine_finished
+        entity_id: binary_sensor.vaskemaskine_skal_tommes
         to: "on"
         for:
           minutes: 120
@@ -180,7 +195,7 @@ automation:
           seconds: 10
     conditions:
       - condition: state
-        entity_id: input_boolean.washing_machine_finished
+        entity_id: binary_sensor.vaskemaskine_skal_tommes
         state: "on"
         for:
           minutes: 10
