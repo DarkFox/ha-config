@@ -164,48 +164,45 @@ cards:
           - orientation: vertical
           - room: bedroom
 
+      - type: custom:decluttering-card
+        template: vertical_thermostat
+        variables:
+          - rum: sovevaerelse
+
       - type: custom:button-card
         entity: cover.sovevaerelse_gardin
         name: Gardin
-        # template: compact
         tap_action:
           action: toggle
-        double_tap_action:
-          action: call-service
-          service: cover.stop_cover
-          service_data:
-            entity_id: cover.sovevaerelse_gardin
         hold_action:
-          action: more-info
-      - type: custom:button-card
-        entity: cover.sovevaerelse_gardin_dor
-        name: Dør
-        # template: compact
-        tap_action:
-          action: toggle
-        double_tap_action:
-          action: call-service
-          service: cover.stop_cover
-          service_data:
-            entity_id: cover.sovevaerelse_gardin_dor
-        hold_action:
-          action: more-info
-      - type: custom:button-card
-        entity: cover.sovevaerelse_gardin_vindue
-        name: Vindue
-        # template: compact
-        tap_action:
-          action: toggle
-        double_tap_action:
-          action: call-service
-          service: cover.stop_cover
-          service_data:
-            entity_id: cover.sovevaerelse_gardin_vindue
-        hold_action:
-          action: more-info
-      - type: custom:button-card
-        entity: switch.bedroom_curtain_automations
-        name: Auto
-        # template: compact
-        tap_action:
-          action: toggle
+          action: fire-dom-event
+          browser_mod:
+            service: browser_mod.popup
+            data:
+              title: Soveværelse Gardiner
+              content:
+                type: vertical-stack
+                cards:
+                  - type: custom:mushroom-cover-card
+                    entity: cover.sovevaerelse_gardin
+                    show_position_control: false
+                    show_buttons_control: true
+
+                  - type: custom:mushroom-cover-card
+                    entity: cover.sovevaerelse_gardin_vindue
+                    show_position_control: false
+                    show_buttons_control: true
+
+                  - type: custom:mushroom-cover-card
+                    entity: cover.sovevaerelse_gardin_dor
+                    show_position_control: false
+                    show_buttons_control: true
+
+                  - type: grid
+                    cards:
+                      - type: custom:button-card
+                        entity: switch.bedroom_curtain_automations
+                        name: Auto
+                        # template: compact
+                        tap_action:
+                          action: toggle

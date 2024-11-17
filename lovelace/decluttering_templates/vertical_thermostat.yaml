@@ -1,0 +1,52 @@
+card:
+  type: custom:stack-in-card
+  mode: vertical
+  cards:
+    - type: custom:button-card
+      icon: mdi:arrow-up
+      aspect_ratio: 5/4
+      tap_action:
+        action: perform-action
+        perform_action: input_number.increment
+        target:
+          entity_id: input_number.target_temperature
+
+    - type: custom:button-card
+      entity: climate.[[rum]]
+      state_display: >
+        [[[
+        if (!Object.keys(states).includes('sensor.[[rum]]_temperatur') && !Object.keys(states).includes('climate.[[rum]]'))
+          return Math.round(states['input_number.target_temperature'].state) + '°';
+        let output = '';
+        if (Object.keys(states).includes('sensor.[[rum]]_temperatur'))
+          output += Math.round(states['sensor.[[rum]]_temperatur'].state) + '/';
+        if (Object.keys(states).includes('climate.[[rum]]'))
+          output += Math.round(states['climate.[[rum]]'].attributes['temperature']);
+        else
+          output += Math.round(states['input_number.target_temperature'].state);
+        return output + '°';
+        ]]]
+      label: >
+        [[[
+        if (!Object.keys(states).includes('sensor.[[rum]]_temperatur') && !Object.keys(states).includes('climate.[[rum]]'))
+          return '';
+        return '(' + Math.round(states['input_number.target_temperature'].state) + '°)';
+        ]]]
+      show_state: true
+      show_name: false
+      show_icon: false
+      show_label: true
+      tap_action:
+        action: more-info
+      styles:
+        label:
+          - color: var(--secondary-text-color)
+
+    - type: custom:button-card
+      icon: mdi:arrow-down
+      aspect_ratio: 5/4
+      tap_action:
+        action: perform-action
+        perform_action: input_number.decrement
+        target:
+          entity_id: input_number.target_temperature
