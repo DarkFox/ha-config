@@ -3,25 +3,26 @@ path: hallway
 icon: "mdi:door"
 type: custom:grid-layout
 layout:
-  grid-template-columns: 33.3% 33.3% 33.3%
+  place-items: stretch stretch
+  grid-template-columns: calc(33.3% - 40px) calc(33.3% - 40px) 33.3% 80px
   grid-template-rows: auto
   grid-template-areas: |
-    "header header header"
-    "left middle right"
+    "header header header sidebar"
+    "left   middle right  sidebar"
   mediaquery:
     "(max-width: 800px)":
-      grid-template-columns: 100%
+      grid-template-columns: calc(100% - 80px) 80px
       grid-template-areas: |
-        "header"
-        "left"
-        "middle"
-        "right"
-    "(max-width: 1200px)":
-      grid-template-columns: 50% 50%
-      grid-template-areas: |
-        "header header"
-        "left middle"
+        "header sidebar"
+        "left sidebar"
+        "middle sidebar"
         "right right"
+    "(max-width: 1200px)":
+      grid-template-columns: calc(50% - 40px) calc(50% - 40px) 80px
+      grid-template-areas: |
+        "header header sidebar"
+        "left   middle sidebar"
+        "right  right  sidebar"
 cards:
   - type: vertical-stack
     view_layout:
@@ -40,15 +41,6 @@ cards:
         variables:
           - room: roam
 
-      - type: custom:decluttering-card
-        template: room_state_and_light_profile
-        variables:
-          - room: hallway
-
-  - type: vertical-stack
-    view_layout:
-      grid-area: middle
-    cards:
       - type: horizontal-stack
         cards:
           - type: custom:button-card
@@ -61,12 +53,43 @@ cards:
         variables:
           - rum: gang
 
-  - type: vertical-stack
-    view_layout:
-      grid-area: right
-    cards:
       - type: picture-entity
         entity: camera.gang_tablet_kamera
         camera_image: camera.gang_tablet_kamera
         show_state: false
         show_name: false
+
+  - type: vertical-stack
+    view_layout:
+      grid-area: middle
+    cards:
+      - type: custom:button-card
+        color_type: blank-card
+
+  - type: vertical-stack
+    view_layout:
+      grid-area: right
+    cards:
+      - type: custom:button-card
+        color_type: blank-card
+
+  - type: vertical-stack
+    view_layout:
+      grid-area: sidebar
+    cards:
+      - type: custom:decluttering-card
+        template: room_light_profile
+        variables:
+          - orientation: vertical
+          - room: hallway
+
+      - type: custom:decluttering-card
+        template: vertical_thermostat
+        variables:
+          - rum: gang
+
+      - type: custom:decluttering-card
+        template: room_state
+        variables:
+          - orientation: vertical
+          - room: hallway

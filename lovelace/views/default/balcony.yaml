@@ -3,25 +3,26 @@ path: balcony
 icon: "mdi:balcony"
 type: custom:grid-layout
 layout:
-  grid-template-columns: 33.3% 33.3% 33.3%
+  place-items: stretch stretch
+  grid-template-columns: calc(33.3% - 40px) calc(33.3% - 40px) 33.3% 80px
   grid-template-rows: auto
   grid-template-areas: |
-    "header header header"
-    "left middle right"
+    "header header header sidebar"
+    "left   middle right  sidebar"
   mediaquery:
     "(max-width: 800px)":
-      grid-template-columns: 100%
+      grid-template-columns: calc(100% - 80px) 80px
       grid-template-areas: |
-        "header"
-        "left"
-        "middle"
-        "right"
-    "(max-width: 1200px)":
-      grid-template-columns: 50% 50%
-      grid-template-areas: |
-        "header header"
-        "left middle"
+        "header sidebar"
+        "left sidebar"
+        "middle sidebar"
         "right right"
+    "(max-width: 1200px)":
+      grid-template-columns: calc(50% - 40px) calc(50% - 40px) 80px
+      grid-template-areas: |
+        "header header sidebar"
+        "left   middle sidebar"
+        "right  right  sidebar"
 cards:
   - type: vertical-stack
     view_layout:
@@ -39,11 +40,6 @@ cards:
         template: speaker_control_v2
         variables:
           - room: roam
-
-      - type: custom:decluttering-card
-        template: room_state_and_light_profile
-        variables:
-          - room: balcony
 
       - type: custom:decluttering-card
         template: light_groups
@@ -158,3 +154,24 @@ cards:
           - temperature_sensor: sensor.temperature
           - humidity_sensor: sensor.humidity
           - sensor: ude
+
+  - type: vertical-stack
+    view_layout:
+      grid-area: sidebar
+    cards:
+      - type: custom:decluttering-card
+        template: room_light_profile
+        variables:
+          - orientation: vertical
+          - room: balcony
+
+      - type: custom:decluttering-card
+        template: vertical_thermostat
+        variables:
+          - rum: altan
+
+      - type: custom:decluttering-card
+        template: room_state
+        variables:
+          - orientation: vertical
+          - room: balcony

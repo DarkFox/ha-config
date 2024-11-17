@@ -15,25 +15,26 @@ badges:
     entity: sensor.vaerksted_lysstyrke
     color: amber
 layout:
-  grid-template-columns: 33.3% 33.3% 33.3%
+  place-items: stretch stretch
+  grid-template-columns: calc(33.3% - 40px) calc(33.3% - 40px) 33.3% 80px
   grid-template-rows: auto
   grid-template-areas: |
-    "header header header"
-    "left middle right"
+    "header header header sidebar"
+    "left   middle right  sidebar"
   mediaquery:
     "(max-width: 800px)":
-      grid-template-columns: 100%
+      grid-template-columns: calc(100% - 80px) 80px
       grid-template-areas: |
-        "header"
-        "left"
-        "middle"
-        "right"
-    "(max-width: 1200px)":
-      grid-template-columns: 50% 50%
-      grid-template-areas: |
-        "header header"
-        "left middle"
+        "header sidebar"
+        "left sidebar"
+        "middle sidebar"
         "right right"
+    "(max-width: 1200px)":
+      grid-template-columns: calc(50% - 40px) calc(50% - 40px) 80px
+      grid-template-areas: |
+        "header header sidebar"
+        "left   middle sidebar"
+        "right  right  sidebar"
 cards:
   - type: vertical-stack
     view_layout:
@@ -52,11 +53,6 @@ cards:
         variables:
           - room: roam
 
-      - type: custom:decluttering-card
-        template: room_state_and_light_profile
-        variables:
-          - room: workshop
-
       - type: grid
         columns: 4
         square: false
@@ -64,6 +60,11 @@ cards:
           - type: button
             entity: switch.hobbybord_afbryder
             name: Hobbybord
+
+      - type: custom:decluttering-card
+        template: light_groups
+        variables:
+          - rum: vaerksted
 
   - type: vertical-stack
     view_layout:
@@ -75,17 +76,36 @@ cards:
           - rum: vaerksted
 
       - type: custom:decluttering-card
-        template: light_groups
-        variables:
-          - rum: vaerksted
-
-  - type: vertical-stack
-    view_layout:
-      grid-area: right
-    cards:
-      - type: custom:decluttering-card
         template: thermal_comfort
         variables:
           - temperature_sensor: sensor.vaerksted_temperatur
           - humidity_sensor: sensor.vaerksted_luftfugtighed
           - sensor: vaerksted
+
+  - type: vertical-stack
+    view_layout:
+      grid-area: right
+    cards:
+      - type: custom:button-card
+        color_type: blank-card
+
+  - type: vertical-stack
+    view_layout:
+      grid-area: sidebar
+    cards:
+      - type: custom:decluttering-card
+        template: room_light_profile
+        variables:
+          - orientation: vertical
+          - room: workshop
+
+      - type: custom:decluttering-card
+        template: vertical_thermostat
+        variables:
+          - rum: vaerksted
+
+      - type: custom:decluttering-card
+        template: room_state
+        variables:
+          - orientation: vertical
+          - room: workshop
