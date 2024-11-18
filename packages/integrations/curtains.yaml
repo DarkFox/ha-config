@@ -105,6 +105,23 @@ script:
         data:
           position: "{{position}}"
 
+  kontor_gardin:
+    sequence:
+      - action: "cover.{{modus}}_cover"
+        target:
+          entity_id:
+            - cover.kontor_rullegardin
+            - cover.kontor_altandor_gardin
+  kontor_gardin_position:
+    sequence:
+      - action: cover.set_cover_position
+        target:
+          entity_id:
+            - cover.kontor_rullegardin
+            - cover.kontor_altandor_gardin
+        data:
+          position: "{{position}}"
+
 cover:
   - platform: template
     covers:
@@ -144,8 +161,6 @@ cover:
           data:
             position: "{{ position }}"
 
-  - platform: template
-    covers:
       sovevaerelse_gardin:
         friendly_name: "Soveværelse Gardin"
         device_class: curtain
@@ -165,6 +180,40 @@ cover:
             modus: "stop"
         set_cover_position:
           action: script.sovevaerelse_gardin_position
+          data:
+            position: "{{ position }}"
+
+      kontor_gardin:
+        friendly_name: "Kontor Gardin"
+        device_class: shade
+        position_template: "{{ (state_attr('cover.kontor_rullegardin', 'current_position')|int(0)) + (state_attr('cover.kontor_altandor_gardin', 'current_position')|int(0)) }}"
+        value_template: |
+          {% set states = [states('cover.kontor_rullegardin'), states('cover.kontor_altandor_gardin')] %}
+          {% set dor_position = state_attr('cover.kontor_altandor_gardin', 'current_position')|int(0) %}
+          {% set vindue_position = state_attr('cover.kontor_rullegardin', 'current_position')|int(0) %}
+          {% if 'closing' in states %}
+            closing
+          {% elif 'opening' in states %}
+            opening
+          {% elif dor_position == 0 and vindue_position < 45 %}
+            closed
+          {% else %}
+            open
+          {% endif %}
+        open_cover:
+          action: script.kontor_gardin
+          data:
+            modus: "open"
+        close_cover:
+          action: script.kontor_gardin
+          data:
+            modus: "close"
+        stop_cover:
+          action: script.kontor_gardin
+          data:
+            modus: "stop"
+        set_cover_position:
+          action: script.kontor_gardin_position
           data:
             position: "{{ position }}"
 
