@@ -5,25 +5,25 @@ type: custom:grid-layout
 layout:
   place-items: start stretch
   place-content: start stretch
-  grid-template-columns: calc(33.3% - 40px) calc(33.3% - 40px) 33.3% 80px
+  grid-template-columns: 80px calc(33.3% - 40px) calc(33.3% - 40px) 33.3%
   grid-template-rows: auto
   grid-template-areas: |
     "header header header header"
-    "left   middle right  sidebar"
+    "sidebar left middle right"
   mediaquery:
     "(max-width: 800px)":
-      grid-template-columns: calc(100% - 80px) 80px
+      grid-template-columns: calc(100% - 60px) 60px
       grid-template-areas: |
         "header header"
         "left sidebar"
-        "middle sidebar"
+        "middle middle"
         "right right"
     "(max-width: 1200px)":
-      grid-template-columns: calc(50% - 40px) calc(50% - 40px) 80px
+      grid-template-columns: 80px calc(50% - 40px) calc(50% - 40px)
       grid-template-areas: |
         "header header header"
-        "left   middle sidebar"
-        "right  right  sidebar"
+        "sidebar left middle"
+        "sidebar right right"
 cards:
   - type: vertical-stack
     view_layout:
@@ -47,29 +47,11 @@ cards:
         variables:
           - rum: gang
 
-      - type: horizontal-stack
-        cards:
-          - type: custom:button-card
-            entity: light.hallway_tablet
-          - !include ../../cards/dorklokke.yaml
-          - !include ../../cards/hoveddor_laas.yaml
-
-  - type: vertical-stack
-    view_layout:
-      grid-area: middle
-    cards:
       - type: picture-entity
         entity: camera.gang_tablet_kamera
         camera_image: camera.gang_tablet_kamera
         show_state: false
         show_name: false
-
-  - type: vertical-stack
-    view_layout:
-      grid-area: right
-    cards:
-      - type: custom:button-card
-        color_type: blank-card
 
   - type: vertical-stack
     view_layout:
@@ -86,8 +68,12 @@ cards:
         variables:
           - rum: gang
 
-      - type: custom:decluttering-card
-        template: room_state
-        variables:
-          - orientation: vertical
-          - room: hallway
+      - type: custom:button-card
+        entity: light.hallway_tablet
+        show_name: false
+        icon: mdi:tablet-dashboard
+        size: 40px
+
+      - !include ../../cards/dorklokke.yaml
+
+      - !include ../../cards/hoveddor_laas.yaml

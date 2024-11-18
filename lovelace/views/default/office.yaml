@@ -16,25 +16,25 @@ badges:
     color: amber
 layout:
   place-items: stretch stretch
-  grid-template-columns: calc(33.3% - 40px) calc(33.3% - 40px) 33.3% 80px
+  grid-template-columns: 80px calc(33.3% - 40px) calc(33.3% - 40px) 33.3%
   grid-template-rows: auto
   grid-template-areas: |
     "header header header header"
-    "left   middle right  sidebar"
+    "sidebar left middle right"
   mediaquery:
     "(max-width: 800px)":
-      grid-template-columns: calc(100% - 80px) 80px
+      grid-template-columns: calc(100% - 60px) 60px
       grid-template-areas: |
         "header header"
         "left sidebar"
-        "middle sidebar"
+        "middle middle"
         "right right"
     "(max-width: 1200px)":
-      grid-template-columns: calc(50% - 40px) calc(50% - 40px) 80px
+      grid-template-columns: 80px calc(50% - 40px) calc(50% - 40px)
       grid-template-areas: |
         "header header header"
-        "left   middle sidebar"
-        "right  right  sidebar"
+        "sidebar left middle"
+        "sidebar right right"
 cards:
   - type: vertical-stack
     view_layout:
@@ -68,6 +68,49 @@ cards:
     view_layout:
       grid-area: middle
     cards:
+      - type: conditional
+        conditions:
+          - entity: switch.martin_pc
+            state: "on"
+        card:
+          type: vertical-stack
+          cards:
+            - type: horizontal-stack
+              cards:
+                - type: custom:mini-graph-card
+                  name: CPU
+                  entities:
+                    - entity: sensor.martin_pc_cpuload
+                      color: "#FF6347"
+                  hours_to_show: 0.5
+                  points_per_hour: 240
+                - type: custom:mini-graph-card
+                  name: GPU
+                  icon: mdi:chart-areaspline
+                  entities:
+                    - entity: sensor.martin_pc_gpuload
+                      color: "#4682B4"
+                  hours_to_show: 0.5
+                  points_per_hour: 240
+            - type: horizontal-stack
+              cards:
+                - type: custom:mini-graph-card
+                  name: CPU Frequency
+                  entities:
+                    - entity: sensor.martin_pc_martin_pc_currentclockspeed
+                      color: "#32CD32"
+                  hours_to_show: 0.5
+                  points_per_hour: 240
+                - type: custom:mini-graph-card
+                  name: RAM
+                  entities:
+                    - entity: sensor.martin_pc_memoryusage
+                      color: "#9932CC"
+                  hours_to_show: 0.5
+                  points_per_hour: 240
+
+      - !include ../../cards/printer.yaml
+
       - type: entities
         title: PC
         show_header_toggle: false
@@ -81,63 +124,6 @@ cards:
           - switch.printer_afbryder
           - sensor.steam_76561197970641649
           - sensor.steam_game
-
-      - type: vertical-stack
-        cards:
-          - type: horizontal-stack
-            cards:
-              - type: custom:mini-graph-card
-                name: CPU
-                entities:
-                  - entity: sensor.martin_pc_cpuload
-                    color: "#FF6347"
-                hours_to_show: 0.5
-                points_per_hour: 240
-              - type: custom:mini-graph-card
-                name: GPU
-                icon: mdi:chart-areaspline
-                entities:
-                  - entity: sensor.martin_pc_gpuload
-                    color: "#4682B4"
-                hours_to_show: 0.5
-                points_per_hour: 240
-          - type: horizontal-stack
-            cards:
-              - type: custom:mini-graph-card
-                name: CPU Frequency
-                entities:
-                  - entity: sensor.martin_pc_martin_pc_currentclockspeed
-                    color: "#32CD32"
-                hours_to_show: 0.5
-                points_per_hour: 240
-              - type: custom:mini-graph-card
-                name: RAM
-                entities:
-                  - entity: sensor.martin_pc_memoryusage
-                    color: "#9932CC"
-                hours_to_show: 0.5
-                points_per_hour: 240
-
-      - !include ../../cards/printer.yaml
-
-      - type: entities
-        entities:
-          - entity: switch.office_curtain_automations
-            name: Auto Gardin
-
-      - type: custom:mushroom-cover-card
-        entity: cover.kontor_rullegardin
-        show_position_control: false
-        name: Vindue
-        show_buttons_control: true
-        layout: horizontal
-
-      - type: custom:mushroom-cover-card
-        entity: cover.kontor_altandor_gardin
-        show_position_control: false
-        name: Dør
-        show_buttons_control: true
-        layout: horizontal
 
   - type: vertical-stack
     view_layout:
@@ -251,8 +237,4 @@ cards:
         variables:
           - rum: kontor
 
-      - type: custom:decluttering-card
-        template: room_state
-        variables:
-          - orientation: vertical
-          - room: office
+      - !include ../../cards/office_curtains_button.yaml

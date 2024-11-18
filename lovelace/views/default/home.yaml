@@ -4,25 +4,25 @@ icon: "mdi:home"
 type: custom:grid-layout
 layout:
   place-items: stretch stretch
-  grid-template-columns: calc(33.3% - 40px) calc(33.3% - 40px) 33.3% 80px
+  grid-template-columns: 80px calc(33.3% - 40px) calc(33.3% - 40px) 33.3%
   grid-template-rows: auto
   grid-template-areas: |
     "header header header header"
-    "left   middle right  sidebar"
+    "sidebar left middle right"
   mediaquery:
     "(max-width: 800px)":
-      grid-template-columns: calc(100% - 80px) 80px
+      grid-template-columns: calc(100% - 60px) 60px
       grid-template-areas: |
         "header header"
         "left sidebar"
-        "middle sidebar"
+        "middle middle"
         "right right"
     "(max-width: 1200px)":
-      grid-template-columns: calc(50% - 40px) calc(50% - 40px) 80px
+      grid-template-columns: 80px calc(50% - 40px) calc(50% - 40px)
       grid-template-areas: |
         "header header header"
-        "left   middle sidebar"
-        "right  right  sidebar"
+        "sidebar left middle"
+        "sidebar right right"
 cards:
   - type: conditional
     view_layout:
@@ -46,7 +46,12 @@ cards:
       - !include ../../cards/media_players/active_media_player_controls.yaml
 
       - !include ../../cards/conditional_timers.yaml
-      - !include ../../cards/laundry.yaml
+
+      - type: conditional
+        conditions:
+          - entity: binary_sensor.laundry
+            state: "on"
+        card: !include ../../cards/laundry.yaml
 
       - !include ../../cards/gdq/compact_overview.yaml
 
@@ -60,27 +65,27 @@ cards:
     view_layout:
       grid-area: middle
     cards:
-      - !include ../../cards/vacuum.yaml
-
-      - type: conditional
-        conditions:
-          - entity: binary_sensor.octoprint_printing
-            state: "on"
-        card: !include ../../cards/3d_printer/preview.yaml
-
       - type: conditional
         conditions:
           - entity: binary_sensor.martin_next_scheduled_destination_leave_soon
             state: "on"
         card: !include /config/lovelace/cards/transport/commute.yaml
 
-      - !include ../../cards/low_battery.yaml
+      - !include ../../cards/weather/weather.yaml
 
   - type: vertical-stack
     view_layout:
       grid-area: right
     cards:
-      - !include ../../cards/weather/weather.yaml
+      - type: conditional
+        conditions:
+          - entity: binary_sensor.octoprint_printing
+            state: "on"
+        card: !include ../../cards/3d_printer/preview.yaml
+
+      - !include ../../cards/vacuum.yaml
+
+      - !include ../../cards/low_battery.yaml
 
   - type: vertical-stack
     view_layout:

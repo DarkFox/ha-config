@@ -16,25 +16,25 @@ badges:
     color: amber
 layout:
   place-items: stretch stretch
-  grid-template-columns: calc(33.3% - 40px) calc(33.3% - 40px) 33.3% 80px
+  grid-template-columns: 80px calc(33.3% - 40px) calc(33.3% - 40px) 33.3%
   grid-template-rows: auto
   grid-template-areas: |
     "header header header header"
-    "left   middle right  sidebar"
+    "sidebar left middle right"
   mediaquery:
     "(max-width: 800px)":
-      grid-template-columns: calc(100% - 80px) 80px
+      grid-template-columns: calc(100% - 60px) 60px
       grid-template-areas: |
         "header header"
         "left sidebar"
-        "middle sidebar"
+        "middle middle"
         "right right"
     "(max-width: 1200px)":
-      grid-template-columns: calc(50% - 40px) calc(50% - 40px) 80px
+      grid-template-columns: 80px calc(50% - 40px) calc(50% - 40px)
       grid-template-areas: |
         "header header header"
-        "left   middle sidebar"
-        "right  right  sidebar"
+        "sidebar left middle"
+        "sidebar right right"
 cards:
   - type: vertical-stack
     view_layout:
@@ -59,6 +59,10 @@ cards:
           - rum: kokken
           - icon: mdi:food-fork-drink
 
+      - !include ../../cards/fridge.yaml
+
+      - !include ../../cards/kitchen_timers.yaml
+
       - type: custom:decluttering-card
         template: light_groups
         variables:
@@ -68,9 +72,7 @@ cards:
     view_layout:
       grid-area: middle
     cards:
-      - !include ../../cards/fridge.yaml
-
-      - !include ../../cards/kitchen_timers.yaml
+      - !include ../../cards/kettle.yaml
 
   - type: vertical-stack
     view_layout:
@@ -81,28 +83,6 @@ cards:
         camera_image: camera.kokken_tablet_kamera
         show_state: false
         show_name: false
-
-      - type: horizontal-stack
-        cards:
-          - type: "custom:button-card"
-            entity: switch.mikroovn
-            name: Mikroovn
-            color: auto
-            tap_action:
-              action: toggle
-            hold_action:
-              action: more-info
-
-          - type: "custom:button-card"
-            entity: light.kitchen_tablet
-            name: Tablet
-            color: auto
-            tap_action:
-              action: toggle
-            hold_action:
-              action: more-info
-
-      - !include ../../cards/kettle.yaml
 
       - type: custom:mini-media-player
         artwork: cover
@@ -130,8 +110,22 @@ cards:
         variables:
           - rum: kokken
 
-      - type: custom:decluttering-card
-        template: room_state
-        variables:
-          - orientation: vertical
-          - room: kitchen
+      - type: "custom:button-card"
+        entity: switch.mikroovn
+        show_name: false
+        size: 40px
+        color: auto
+        tap_action:
+          action: toggle
+        hold_action:
+          action: more-info
+
+      - type: "custom:button-card"
+        entity: light.kitchen_tablet
+        show_name: false
+        size: 40px
+        color: auto
+        tap_action:
+          action: toggle
+        hold_action:
+          action: more-info

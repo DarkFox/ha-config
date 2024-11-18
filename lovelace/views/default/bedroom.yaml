@@ -16,25 +16,25 @@ badges:
     color: amber
 layout:
   place-items: stretch stretch
-  grid-template-columns: calc(33.3% - 40px) calc(33.3% - 40px) 33.3% 80px
+  grid-template-columns: 80px calc(33.3% - 40px) calc(33.3% - 40px) 33.3%
   grid-template-rows: auto
   grid-template-areas: |
     "header header header header"
-    "left   middle right  sidebar"
+    "sidebar left middle right"
   mediaquery:
     "(max-width: 800px)":
-      grid-template-columns: calc(100% - 80px) 80px
+      grid-template-columns: calc(100% - 60px) 60px
       grid-template-areas: |
         "header header"
         "left sidebar"
-        "middle sidebar"
+        "middle middle"
         "right right"
     "(max-width: 1200px)":
-      grid-template-columns: calc(50% - 40px) calc(50% - 40px) 80px
+      grid-template-columns: 80px calc(50% - 40px) calc(50% - 40px)
       grid-template-areas: |
         "header header header"
-        "left   middle sidebar"
-        "right  right  sidebar"
+        "sidebar left middle"
+        "sidebar right right"
 cards:
   - type: vertical-stack
     view_layout:
@@ -77,41 +77,10 @@ cards:
           - input_select.sleep_as_android_state
           - counter.snooze_counter
 
-      - type: entities
-        state_color: true
-        entities:
-          - entity: switch.bedroom_curtain_automations
-            name: Auto Gardin
-          - entity: cover.sovevaerelse_gardin
-            type: "custom:slider-entity-row"
-          - entity: cover.sovevaerelse_gardin_dor
-            type: "custom:slider-entity-row"
-            name: Dør
-          - entity: cover.sovevaerelse_gardin_vindue
-            type: "custom:slider-entity-row"
-            name: Vindue
-
   - type: vertical-stack
     view_layout:
       grid-area: right
     cards:
-      - type: grid
-        columns: 3
-        square: false
-        cards:
-          - type: button
-            entity: climate.aircondition
-            name: A/C
-          - type: button
-            entity: fan.sovevaerelse_blaeser
-            name: Blæser
-          - type: button
-            entity: switch.sovevaerelse_tv
-          - type: button
-            entity: light.bedroom_tablet
-          - type: button
-            entity: light.bedroom_tablet_screensaver
-
       - type: custom:mini-media-player
         artwork: cover
         entity: media_player.sovevaerelse_tv
@@ -144,8 +113,28 @@ cards:
         variables:
           - rum: sovevaerelse
 
-      - type: custom:decluttering-card
-        template: room_state
-        variables:
-          - orientation: vertical
-          - room: bedroom
+      - !include ../../cards/bedroom_curtains_button.yaml
+
+      - type: custom:button-card
+        entity: climate.aircondition
+        show_name: false
+        size: 40px
+        icon: mdi:air-conditioner
+      - type: custom:button-card
+        entity: fan.sovevaerelse_blaeser
+        show_name: false
+        size: 40px
+      - type: custom:button-card
+        entity: switch.sovevaerelse_tv
+        show_name: false
+        size: 40px
+      - type: custom:button-card
+        entity: light.bedroom_tablet
+        show_name: false
+        size: 40px
+        icon: mdi:tablet-dashboard
+      - type: custom:button-card
+        entity: light.bedroom_tablet_screensaver
+        show_name: false
+        size: 40px
+        icon: mdi:sleep

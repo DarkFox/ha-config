@@ -16,25 +16,25 @@ badges:
     color: amber
 layout:
   place-items: stretch stretch
-  grid-template-columns: calc(33.3% - 40px) calc(33.3% - 40px) 33.3% 80px
+  grid-template-columns: 80px calc(33.3% - 40px) calc(33.3% - 40px) 33.3%
   grid-template-rows: auto
   grid-template-areas: |
     "header header header header"
-    "left   middle right  sidebar"
+    "sidebar left middle right"
   mediaquery:
     "(max-width: 800px)":
-      grid-template-columns: calc(100% - 80px) 80px
+      grid-template-columns: calc(100% - 60px) 60px
       grid-template-areas: |
         "header header"
         "left sidebar"
-        "middle sidebar"
+        "middle middle"
         "right right"
     "(max-width: 1200px)":
-      grid-template-columns: calc(50% - 40px) calc(50% - 40px) 80px
+      grid-template-columns: 80px calc(50% - 40px) calc(50% - 40px)
       grid-template-areas: |
         "header header header"
-        "left   middle sidebar"
-        "right  right  sidebar"
+        "sidebar left middle"
+        "sidebar right right"
 cards:
   - type: vertical-stack
     view_layout:
@@ -59,6 +59,8 @@ cards:
           - rum: badevaerelse
           - icon: mdi:shower
 
+      - !include ../../cards/laundry.yaml
+
       - type: custom:decluttering-card
         template: light_groups
         variables:
@@ -67,28 +69,6 @@ cards:
   - type: vertical-stack
     view_layout:
       grid-area: middle
-    cards:
-      - !include ../../cards/laundry.yaml
-
-      - type: horizontal-stack
-        cards:
-          - type: "custom:button-card"
-            entity: light.bathroom_tablet
-            name: Tablet
-            color: auto
-            tap_action:
-              action: toggle
-            hold_action:
-              action: more-info
-
-          - type: "custom:button-card"
-            color_type: blank-card
-
-          - !include ../../cards/bathroom_occupied.yaml
-
-  - type: vertical-stack
-    view_layout:
-      grid-area: right
     cards:
       - type: custom:decluttering-card
         template: thermal_comfort
@@ -112,8 +92,13 @@ cards:
         variables:
           - rum: badevaerelse
 
-      - type: custom:decluttering-card
-        template: room_state
-        variables:
-          - orientation: vertical
-          - room: bathroom
+      - type: "custom:button-card"
+        entity: light.bathroom_tablet
+        name: Tablet
+        color: auto
+        tap_action:
+          action: toggle
+        hold_action:
+          action: more-info
+
+      - !include ../../cards/bathroom_occupied.yaml
