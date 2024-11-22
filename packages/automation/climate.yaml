@@ -137,120 +137,141 @@ sensor:
     duration:
       days: 7
 
-  - platform: template
-    sensors:
-      bathroom_max_temp:
-        value_template: "26"
-      bathroom_min_temp:
-        value_template: >
-          {%- set target = states('input_number.target_temperature')|int -%}
-          {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
+template:
+  - sensor:
+      - name: Bathroom Max Temp
+        unique_id: 25b964e9-4274-441a-ba2a-9962b5a82252
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: "26"
+      - name: Bathroom Min Temp
+        unique_id: 9922173d-731b-4647-bbb4-dab5b708a2a9
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >
+          {%- set target = states('input_number.target_temperature')|int(19) -%}
+          {%- set thermostats_on = is_state('binary_sensor.thermostats_on', 'on') -%}
           {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
-          {%- set active = is_state('binary_sensor.bathroom_activity', 'on') -%}
-          {% if on %}
-            {{ target + 2 }}
-          {% elif extended %}
-            {{ target - 5 }}
-          {% else %}
-            15
-          {% endif %}
-
-      office_max_temp:
-        value_template: "26"
-      office_min_temp:
-        value_template: >
-          {%- set target = states('input_number.target_temperature')|int -%}
-          {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
           {%- set summer = is_state('sensor.season', 'summer') -%}
-          {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
-          {%- set active = is_state('binary_sensor.office_activity', 'on')
-              or is_state('binary_sensor.martin_pc_activity', 'on')
-              or is_state('binary_sensor.vagtskema_wfh', 'on') -%}
-          {% if on %}
-            {% if active %}
-              {{ target }}
-            {% else %}
-              {{ target- 2 }}
-            {% endif %}
-          {% elif extended %}
-            {{ target - 5 }}
-          {% else %}
-            15
-          {% endif %}
-
-      living_room_max_temp:
-        value_template: "26"
-      living_room_min_temp:
-        value_template: >
-          {%- set target = states('input_number.target_temperature')|int -%}
-          {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
-          {%- set summer = is_state('sensor.season', 'summer') -%}
-          {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
-          {%- set active = is_state('binary_sensor.living_room_activity', 'on') -%}
-          {% if on %}
-            {% if active %}
-              {{ target }}
-            {% else %}
-              {{ target - 2 }}
-            {% endif %}
-          {% elif extended %}
-            {{ target -5 }}
-          {% else %}
-            15
-          {% endif %}
-
-      workshop_max_temp:
-        value_template: "26"
-      workshop_min_temp:
-        value_template: >
-          {%- set target = states('input_number.target_temperature')|int -%}
-          {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
-          {%- set summer = is_state('sensor.season', 'summer') -%}
-          {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
-          {%- set active = is_state('binary_sensor.workshop_activity', 'on') -%}
-          {% if on %}
-            {% if active %}
-              {{ target }}
-            {% else %}
-              {{ target - 2 }}
-            {% endif %}
-          {% elif extended %}
-            {{ target - 5 }}
-          {% else %}
-            15
-          {% endif %}
-
-      bedroom_max_temp:
-        value_template: >
-          {%- set target = states('input_number.target_temperature')|int -%}
           {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
           {%- set sleeping = is_state('input_select.sleep_state', 'sleeping') -%}
-          {% if sleeping %}
-            {{ target }}
-          {% elif night %}
-            {{ target - 3 }}
-          {% else %}
-            26
-          {% endif %}
-      bedroom_min_temp:
-        value_template: >
-          {%- set target = states('input_number.target_temperature')|int -%}
-          {%- set on = is_state('binary_sensor.thermostats_on', 'on') -%}
-          {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
-          {%- set summer = is_state('sensor.season', 'summer') -%}
-          {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
-          {%- set active = is_state('binary_sensor.bedroom_activity', 'on') -%}
-          {% if on %}
-            {% if summer or night or not active %}
-              {{ target - 4 }}
-            {% else %}
-              {{ target }}
-            {% endif %}
-          {% elif extended %}
+          {%- set active = is_state('binary_sensor.bathroom_activity', 'on') -%}
+          {%- if thermostats_on %}
+            {{ target + 2 }}
+          {%- elif extended %}
             {{ target - 5 }}
-          {% else %}
+          {%- else %}
             15
-          {% endif %}
+          {%- endif %}
+
+      - name: Office Max Temp
+        unique_id: beac3cfe-ae20-4c3c-aeea-c62aaab0aeff
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: "26"
+      - name: Office Min Temp
+        unique_id: ccffa886-44a3-4230-b9e2-96a4e08be426
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >
+          {%- set target = states('input_number.target_temperature')|int(19) -%}
+          {%- set thermostats_on = is_state('binary_sensor.thermostats_on', 'on') -%}
+          {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
+          {%- set summer = is_state('sensor.season', 'summer') -%}
+          {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
+          {%- set sleeping = is_state('input_select.sleep_state', 'sleeping') -%}
+          {%- set active = is_state('binary_sensor.office_activity', 'on')
+                          or is_state('binary_sensor.martin_pc_activity', 'on')
+                          or is_state('binary_sensor.vagtskema_wfh', 'on') -%}
+          {%- if thermostats_on %}
+            {{ target if active else target - 2 }}
+          {%- elif extended %}
+            {{ target - 5 }}
+          {%- else %}
+            15
+          {%- endif %}
+
+      - name: Living Room Max Temp
+        unique_id: 6bab8a01-e798-42a2-8952-c59426717d0d
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: "26"
+      - name: Living Room Min Temp
+        unique_id: 32f90697-d9d0-4db5-afd8-740680806c4c
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >
+          {%- set target = states('input_number.target_temperature')|int(19) -%}
+          {%- set thermostats_on = is_state('binary_sensor.thermostats_on', 'on') -%}
+          {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
+          {%- set summer = is_state('sensor.season', 'summer') -%}
+          {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
+          {%- set sleeping = is_state('input_select.sleep_state', 'sleeping') -%}
+          {%- set active = is_state('binary_sensor.living_room_activity', 'on') -%}
+          {%- if thermostats_on %}
+            {{ target if active else target - 2 }}
+          {%- elif extended %}
+            {{ target - 5 }}
+          {%- else %}
+            15
+          {%- endif %}
+
+      - name: Workshop Max Temp
+        unique_id: d649bee4-dff5-4ed4-b189-7972049714c1
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: "26"
+      - name: Workshop Min Temp
+        unique_id: d66fb3aa-797a-49c5-bf0e-9792cd65cfbe
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >
+          {%- set target = states('input_number.target_temperature')|int(19) -%}
+          {%- set thermostats_on = is_state('binary_sensor.thermostats_on', 'on') -%}
+          {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
+          {%- set summer = is_state('sensor.season', 'summer') -%}
+          {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
+          {%- set sleeping = is_state('input_select.sleep_state', 'sleeping') -%}
+          {%- set active = is_state('binary_sensor.workshop_activity', 'on') -%}
+          {%- if thermostats_on %}
+            {{ target if active else target - 2 }}
+          {%- elif extended %}
+            {{ target - 5 }}
+          {%- else %}
+            15
+          {%- endif %}
+
+      - name: Bedroom Max Temp
+        unique_id: 470d236b-4f51-42c7-af39-51a219387249
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >
+          {%- if sleeping %}
+            {{ target }}
+          {%- elif night %}
+            {{ target - 3 }}
+          {%- else %}
+            26
+          {%- endif %}
+      - name: Bedroom Min Temp
+        unique_id: 32a288a3-de4b-4c2c-8ff3-b8e1723553f9
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >
+          {%- set target = states('input_number.target_temperature')|int(19) -%}
+          {%- set thermostats_on = is_state('binary_sensor.thermostats_on', 'on') -%}
+          {%- set extended = is_state('binary_sensor.martin_presence_extended', 'on') -%}
+          {%- set summer = is_state('sensor.season', 'summer') -%}
+          {%- set night = is_state('binary_sensor.thermostats_night_mode', 'on') -%}
+          {%- set sleeping = is_state('input_select.sleep_state', 'sleeping') -%}
+          {%- set active = is_state('binary_sensor.bedroom_activity', 'on') -%}
+          {%- if thermostats_on %}
+            {{ 17 if summer or night or not active else target }}
+          {%- elif extended %}
+            {{ target - 5 }}
+          {%- else %}
+            15
+          {%- endif %}
 
 automation:
   # Restart Tado stick if temperature changes don't take.
