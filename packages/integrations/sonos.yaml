@@ -26,22 +26,52 @@ script:
     mode: parallel
     fields:
       entity_id:
-        description: Media Player that will be joined or unjoined
+        description: Media Players that will be joined or unjoined
         example: media_player.stue
+        selector:
+          entity:
+            domain: media_player
       leader_entity_id:
         description: Media Player that the entity will be joined to (optional, current group leader if not given)
         example: media_player.stue
+        selector:
+          entity:
+            domain: media_player
+      group_entity_id:
+        description: Group of media players to join to leader (optional)
+        example: group.sonos
+        selector:
+          entity:
+            domain: group
     variables:
       group_leader_entity: "{{ leader_entity_id or states('sensor.sonos_group_leader') }}"
+      existing_group_members: "{{ (state_attr(group_leader_entity, 'group_members') or []) | list }}"
+      new_members: >-
+        {% if group_entity_id %}
+          {{ state_attr(group_entity_id, 'entity_id') | list }}
+        {% elif entity_id is list %}
+          {{ entity_id }}
+        {% else %}
+          {{ [entity_id] }}
+        {% endif %}
+      group_members: "{{ (existing_group_members + new_members) | unique | list }}"
     sequence:
       - choose:
           - conditions:
               - condition: template
-                value_template: "{{ (state_attr(entity_id, 'group_members')|length) > 1 }}"
+                value_template: >-
+                  {{
+                    (group_entity_id and group_members == existing_group_members) or
+                    (entity_id in existing_group_members and group_members|length > 1)
+                  }}
             sequence:
               - action: media_player.unjoin
                 target:
-                  entity_id: "{{ entity_id }}"
+                  entity_id: >-
+                    {{
+                      (group_members | reject('eq', group_leader_entity) | list)
+                      if group_entity_id else entity_id
+                    }}
           - conditions:
               - condition: template
                 value_template: "{{ not not group_leader_entity }}"
@@ -50,8 +80,7 @@ script:
                 target:
                   entity_id: "{{ group_leader_entity }}"
                 data:
-                  group_members: >-
-                    {{ [entity_id] + state_attr(group_leader_entity, 'group_members') }}
+                  group_members: "{{ group_members }}"
 
 automation:
   - id: adjust_speaker_group_volume
