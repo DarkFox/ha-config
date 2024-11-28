@@ -158,30 +158,22 @@ script:
 
   morning_briefing:
     sequence:
-      # Attempt to get a clothing recommendation from gpt, to be added to the templated briefing. If it fails, use the default
-      - action: script.gpt_clothes_recommendation
-        response_variable: clothes_recommendation_response
-        continue_on_error: true
       - variables:
           clothes_recommendation: |
-            {% if clothes_recommendation_response is defined and 'recommendation' in clothes_recommendation_response %}
-              {{ clothes_recommendation_response.recommendation }}
-            {% else %}
-              {% set temp = states('sensor.ude_temperatur')|int -%}
-              Der kunne ikke genereres en anbefaling til tøjvalg i dag, men baseret på temperaturen vil jeg anbefale {% if temp < 5 -%}
-                varmt tøj, da det er koldt udenfor.
-              {% elif temp < 10 -%}
-                en varm trøje, da det er køligt udenfor.
-              {% elif temp < 15 -%}
-                en let jakke, da det er mildt udenfor.
-              {% elif temp < 20 -%}
-                en t-shirt, da det er lunt udenfor.
-              {% elif temp < 25 -%}
-                en t-shirt, da det er varmt udenfor.
-              {% else -%}
-                let tøj, da det er meget varmt udenfor.
-              {% endif -%}
-            {% endif %}
+            {% set temp = states('sensor.ude_temperatur')|int -%}
+            Bseret på temperaturen vil jeg anbefale {% if temp < 5 -%}
+              varmt tøj, da det er koldt udenfor.
+            {% elif temp < 10 -%}
+              en varm trøje, da det er køligt udenfor.
+            {% elif temp < 15 -%}
+              en let jakke, da det er mildt udenfor.
+            {% elif temp < 20 -%}
+              en t-shirt, da det er lunt udenfor.
+            {% elif temp < 25 -%}
+              en t-shirt, da det er varmt udenfor.
+            {% else -%}
+              let tøj, da det er meget varmt udenfor.
+            {% endif -%}
           briefing: |
             {% from 'utils.jinja' import remove_double_spaces %}
             {{ state_attr('sensor.morning_briefing', 'briefing') }}
