@@ -13,6 +13,7 @@ template:
         unique_id: 18c78472-47ac-4083-8d25-b0da47aea354
         state: >-
           {% set p = {
+            7: "Skylle",
             11: "Hygiejne Plus 59'",
             13: "Blandet & Farver 59'",
           } %}
@@ -59,7 +60,7 @@ template:
           {% if states('sensor.wash_cycle_remaining_time') not in ['unavailable', 'unknown'] %}
             {{ as_datetime(as_timestamp(now())|int + states('sensor.wash_cycle_remaining_time')|int*60) }}
           {% else %}
-            unknown
+            {{ None }}
           {% endif %}
         device_class: timestamp
       - name: dryer_temp_delta
@@ -112,7 +113,12 @@ automation:
       - condition: state
         entity_id: sensor.washing_machine
         state: "Running"
+      - condition: numeric_state
+        entity_id: sensor.wash_cycle_remaining_time
+        above: 5
     actions:
+      - delay:
+          seconds: 10
       - action: script.notify_everywhere
         data:
           message: "Vaskemaskine startet. Færdig ca. kl. {{ states('sensor.vaskemaskine_faerdig') | as_timestamp | timestamp_custom('%H:%M') }}"
@@ -123,7 +129,7 @@ automation:
     triggers:
       - trigger: numeric_state
         entity_id: sensor.wash_cycle_remaining_time
-        below: 11
+        below: 6
     conditions:
       - condition: state
         entity_id: sensor.washing_machine
@@ -131,7 +137,7 @@ automation:
     actions:
       - action: script.notify_everywhere
         data:
-          message: "Vaskemaskine færdig om 10 minutter."
+          message: "Vaskemaskine færdig om 5 minutter."
 
   - id: washing_machine_finished
     alias: Washing Machine Finished
