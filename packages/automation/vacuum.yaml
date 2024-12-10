@@ -79,9 +79,14 @@ input_number:
 
 template:
   - sensor:
-      - name: Vaccum Area Cleaned Since Last Empty
+      - name: Vacuum Area Cleaned Since Last Empty
         unique_id: a826e687-2c46-42d0-8d7f-3f4ab7e44e8d
-        state: "{{ ((states('sensor.valetudo_roborocks5_total_statistics_area')|float/10000) - (states('input_text.vacuum_last_empty')|float)) | round(1) }}"
+        state: >-
+          {{
+            ((states('sensor.valetudo_roborocks5_total_statistics_area')|float/10000)
+            - (states('input_text.vacuum_last_empty')|float))
+            | round(1)
+          }}
         unit_of_measurement: "m2"
 
       - name: Vacuum Current Room
@@ -129,7 +134,7 @@ template:
     sensor:
       - name: Vacuum Errors
         unique_id: 8a645f9a-8dcb-43ee-a1d3-c0c400ff1583
-        state: "{{ state_attr('sensor.vacuum_errors', 'errors') | default([]) | length }}"
+        state: "{{ (state_attr('sensor.vacuum_errors', 'errors') or []) | length }}"
         unit_of_measurement: "errors"
         attributes:
           errors: >-
