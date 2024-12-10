@@ -163,12 +163,7 @@ automation:
                           state: on
                           brightness: 64
                           effect: "None"
-                        light.sovevaerelse_loft_segment_1:
-                          state: on
-                          brightness: 12
-                          hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
-                          effect: "Solid"
-                        light.sovevaerelse_loft_segment_2:
+                        light.sovevaerelse_loft:
                           state: on
                           brightness: 12
                           hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
@@ -199,6 +194,19 @@ automation:
                 value_template: "{{ profile == 'Ambient' }}"
             sequence:
               - parallel:
+                  - action: number.set_value
+                    data:
+                      entity_id: number.sovevaerelse_loft_speed
+                      value: 1
+                  - action: number.set_value
+                    data:
+                      entity_id: number.sovevaerelse_loft_intensity
+                      value: 100
+                  - action: select.select_option
+                    data:
+                      entity_id: select.sovevaerelse_loft_color_palette
+                      option: "* Colors 1&2"
+
                   - action: script.difficult_light
                     data:
                       entity_id: light.sovevaerelse_gulv
@@ -215,16 +223,11 @@ automation:
                           state: off
                         light.seng_spots_under:
                           state: off
-                        light.sovevaerelse_loft_segment_1:
+                        light.sovevaerelse_loft:
                           state: on
-                          brightness: 8
+                          brightness: 6
                           hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
-                          effect: "Solid"
-                        light.sovevaerelse_loft_segment_2:
-                          state: on
-                          brightness: 8
-                          hs_color: "{{ state_attr('sensor.theme', 'primary_color_12v') }}"
-                          effect: "Solid"
+                          effect: "Noise2D"
                         light.sovevaerelse_reol_spots:
                           state: on
                           brightness: 32
@@ -263,6 +266,19 @@ automation:
                 value_template: "{{ profile == 'Night' }}"
             sequence:
               - parallel:
+                  - action: number.set_value
+                    data:
+                      entity_id: number.sovevaerelse_loft_speed
+                      value: 1
+                  - action: number.set_value
+                    data:
+                      entity_id: number.sovevaerelse_loft_intensity
+                      value: 100
+                  - action: select.select_option
+                    data:
+                      entity_id: select.sovevaerelse_loft_color_palette
+                      option: "* Colors 1&2"
+
                   - action: scene.apply
                     data:
                       transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
@@ -297,14 +313,11 @@ automation:
                           effect: "Solid Pattern"
                         select.sovevaerelse_loft_preset:
                           state: Night
-                        light.sovevaerelse_loft_segment_1:
+                        light.sovevaerelse_loft:
                           state: on
                           brightness: 5
                           rgb_color: [255, 0, 0]
-                        light.sovevaerelse_loft_segment_2:
-                          state: on
-                          brightness: 5
-                          rgb_color: [255, 0, 0]
+                          effect: "Noise2D"
 
                   - action: light.turn_on
                     target:
