@@ -1,0 +1,26 @@
+rest_command:
+  wled_send_colors:
+    url: "http://{{ host or states('sensor.' + entity_id | replace('light.', '') + '_ip') }}/json"
+    method: POST
+    headers:
+      accept: "application/json, text/html"
+      content_type: "application/json; charset=utf-8"
+    payload: >-
+      {
+        "seg":[
+          {
+            "col":[
+              [
+                {{ state_attr(entity_id, "rgb_color")[0] }},
+                {{ state_attr(entity_id, "rgb_color")[1] }},
+                {{ state_attr(entity_id, "rgb_color")[2] }}
+              ],
+              [
+                {{ state_attr(entity_id + "_2nd_color", "rgb_color")[0] }},
+                {{ state_attr(entity_id + "_2nd_color", "rgb_color")[1] }},
+                {{ state_attr(entity_id + "_2nd_color", "rgb_color")[2] }}
+              ]
+            ]
+          }
+        ]
+      }
