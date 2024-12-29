@@ -1,4 +1,6 @@
 import aiohttp
+from datetime import datetime
+from datetime import timezone
 from bs4 import BeautifulSoup
 
 base_url = "https://tracker.gamesdonequick.com"
@@ -40,6 +42,8 @@ async def gdq_event_runs_uri(uri):
 
 
 async def get_gdq_event_info():
+    next_event = None
+
     async with aiohttp.ClientSession() as session:
         async with session.get(base_url + "/tracker/events/") as response:
             response.raise_for_status()
@@ -58,14 +62,30 @@ async def get_gdq_event_info():
                 href = gdq_event["href"]
                 runs_uri = gdq_event_runs_uri(href)
                 if runs_uri:
-                    return {
-                        "name": gdq_event.text,
-                        "url": base_url + href,
-                        "id": href.split("/")[-1],
-                        "runs_uri": runs_uri,
-                    }
+                    runs = get_runs(runs_uri)
 
-    return None
+                    if runs:
+                        # fmt: 2025-02-06T13:40:00-05:00
+                        start_time = runs[0]["Start Time"]
+                        end_time = runs[-1]["Start Time"]
+
+                        parsed_end_time = datetime.strptime(
+                            end_time, "%Y-%m-%dT%H:%M:%S%z"
+                        )
+
+                        if datetime.now(timezone.utc) > parsed_end_time:
+                            break
+
+                        next_event = {
+                            "name": gdq_event.text,
+                            "url": base_url + href,
+                            "id": href.split("/")[-1],
+                            "runs_uri": runs_uri,
+                            "start_time": start_time,
+                            "end_time": end_time,
+                        }
+
+    return next_event
 
 
 @service
@@ -78,6 +98,7 @@ async def get_gdq_event():
         "name": None,
         "url": None,
         "id": None,
+        "runs_uri": None,
         "start_date": None,
         "end_date": None
     }
@@ -85,14 +106,7 @@ async def get_gdq_event():
     gdq_event = get_gdq_event_info()
 
     if gdq_event:
-        runs = get_runs(gdq_event["runs_uri"])
-
-        if runs:
-            data["name"] = gdq_event["name"]
-            data["url"] = gdq_event["url"]
-            data["id"] = gdq_event["id"]
-            data["start_time"] = runs[0]["Start Time"]
-            data["end_time"] = runs[-1]["Start Time"]
+        data = gdq_event
 
     event.fire("gdq_event", event=data)
     return data
