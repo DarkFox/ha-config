@@ -83,7 +83,7 @@
         "location": {{ (event.get('location', '') or '') | to_json }},
         "description": {{ (event.get('description', '') or '') | to_json }},
         "all_day": {{ 'true' if duration >= 86400 and start.strftime('%H:%M:%S') == '00:00:00' and end.strftime('%H:%M:%S') == '00:00:00' else 'false' }},
-        "multi_day": {{ 'true' if duration > 86400 else 'false' }},
+        "multi_day": {{ 'true' if start.strftime('%Y-%m-%d') != end.strftime('%Y-%m-%d') else 'false' }},
         "current": {{ 'true' if start <= now() and end >= now() else 'false' }},
         {% for attr in bool_attrs -%}
         "{{ attr }}": {{ 'true' if bool(event_match_any(event, bool_attrs[attr]), false) else 'false' }},
