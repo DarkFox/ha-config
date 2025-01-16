@@ -12,8 +12,35 @@ automation:
         entity_id: input_boolean.doorphone_ringing
         to: "on"
     actions:
-      - action: script.turn_on
-        entity_id: script.alert_lights
+      - parallel:
+          - action: script.notify_everywhere
+            data:
+              message: "Dørtelefonen Ringer!"
+              data:
+                inline_keyboard: >-
+                  Svar Dør:/unlock_front_door
+          - action: script.turn_on
+            entity_id: script.alert_lights
+
+  - alias: Telegram Unlock Front Door
+    initial_state: true
+    triggers:
+      - trigger: event
+        event_type: telegram_callback
+        event_data:
+          command: "/unlock_front_door"
+      - trigger: event
+        event_type: telegram_command
+        event_data:
+          command: "/unlock_front_door"
+    actions:
+      - parallel:
+          - action: notify.telegram_darkfox
+            data:
+              message: "Døråbner Aktiveret!"
+          - action: button.press
+            target:
+              entity_id: button.dortelefon_open_door
 
   - alias: Answering Door
     initial_state: true
@@ -127,9 +154,6 @@ script:
             sequence:
               - action: script.turn_on
                 entity_id: script.pause_all_media
-      - action: script.notify_everywhere
-        data:
-          message: "Dørtelefonen Ringer!"
 
   alert_lights_restore:
     sequence:
