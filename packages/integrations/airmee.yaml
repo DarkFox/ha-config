@@ -1,0 +1,199 @@
+input_text:
+  airmee_code:
+
+script:
+  get_airmee_tracking:
+    fields:
+      tracking_code:
+        selector:
+          text:
+    variables:
+      phone_number_hash: !secret airmee_phone_number_hash
+    sequence:
+      - parallel:
+          - sequence:
+              - action: shell_command.curl
+                response_variable: airmee_tracking_response
+                data:
+                  url: >-
+                    https://api.airmee.com/track/track_by_url?tracking_url={{ tracking_code }}&phone_number_hash={{ phone_number_hash }}
+              - variables:
+                  tracking_data: >-
+                    {{ airmee_tracking_response.stdout | from_json }}
+              - event: airmee_tracking_data
+                event_data:
+                  tracking_data: "{{ tracking_data }}"
+          - sequence:
+              - action: shell_command.curl
+                response_variable: airmee_courier_location_response
+                data:
+                  url: >-
+                    https://api.airmee.com/track/courier_location?tracking_url={{ tracking_code }}&phone_number_hash={{ phone_number_hash }}
+              - variables:
+                  courier_location: "{{ airmee_courier_location_response.stdout | from_json }}"
+              - alias: "choose alias (name)"
+                choose:
+                  - conditions:
+                      - alias: "Has location"
+                        condition: template
+                        value_template: "{{  courier_location.details | length > 0 }}"
+                    sequence:
+                      - variables:
+                          timestamp: "{{ courier_location.details[0].courier_locations[0].courier_location.timestamp | as_datetime }}"
+                          latitude: "{{ courier_location.details[0].courier_locations[0].courier_location.latitude }}"
+                          longitude: "{{ courier_location.details[0].courier_locations[0].courier_location.longitude }}"
+                      - event: airmee_courier_location_data
+                        event_data:
+                          courier_location: "{{ courier_location }}"
+                      - action: mqtt.publish
+                        data:
+                          topic: "airmee/courier_location_active"
+                          retain: True
+                          payload: "online"
+                      - action: mqtt.publish
+                        data:
+                          topic: "airmee/courier_location"
+                          retain: True
+                          payload: >-
+                            {{
+                              {
+                                "timestamp": timestamp,
+                                "latitude": latitude,
+                                "longitude": longitude
+                              } | to_json
+                            }}
+                default:
+                  - action: mqtt.publish
+                    data:
+                      topic: "airmee/courier_location_active"
+                      retain: True
+                      payload: "offline"
+
+mqtt:
+  - device_tracker:
+      name: Airmee Courier Location
+      json_attributes_topic: "airmee/courier_location"
+      availability:
+        topic: "airmee/courier_location_active"
+
+template:
+  - trigger:
+      trigger: event
+      event_type: airmee_tracking_data
+    sensor:
+      - name: Airmee Tracking
+        unique_id: 3450f03d-fd35-43e1-9001-31c5a2fb13e5
+        state: >-
+          {{ trigger.event.data.tracking_data.order_details[0].new_timeline[-1].courier_status }}
+        attributes:
+          order_details: >-
+            {{ trigger.event.data.tracking_data.order_details }}
+      - name: Airmee Dropoff ETA
+        unique_id: 7eb3dc7d-5b70-41b2-85d7-49d117518577
+        state: >-
+          {{ trigger.event.data.tracking_data.order_details[0].dropoff_eta | as_datetime }}
+        device_class: timestamp
+  - trigger:
+      trigger: event
+      event_type: airmee_courier_location_data
+    sensor:
+      - name: Airmee Courier Location
+        state: >-
+          {{ trigger.event.data.courier_location.details[0].courier_locations[0].courier_location.timestamp | as_datetime }}
+        device_class: timestamp
+        attributes:
+          latitude: "{{ trigger.event.data.courier_location.details[0].courier_locations[0].courier_location.latitude }}"
+          longitude: "{{ trigger.event.data.courier_location.details[0].courier_locations[0].courier_location.longitude }}"
+          details: >-
+            {{ trigger.event.data.courier_location.details }}
+  - sensor:
+      - name: "Airmee Courier Distance to Home"
+        unique_id: 248f409c-e9bd-4cdf-867b-af9521cb190e
+        state: "{{ distance('device_tracker.airmee_courier_location', 'zone.home') }}"
+        device_class: distance
+        unit_of_measurement: km
+      - name: "Airmee Tracking URL"
+        unique_id: 45dbaf23-c51f-48cb-86c0-09a07097563f
+        state: "https://tracking.airmee.com/#/track/{{ states('input_text.airmee_code') }}"
+        icon: mdi:web
+
+automation:
+  - alias: Airmee Tracking
+    id: 2f38d3c7-6973-480b-a33b-5299667c550c
+    initial_state: true
+    mode: single
+    triggers:
+      - trigger: time_pattern
+        hours: "*"
+        minutes: "*"
+        seconds: "0"
+    conditions:
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: input_text.airmee_code
+            state: ""
+          - condition: state
+            entity_id: sensor.airmee_tracking
+            state: "DROPOFF_CONFIRMED"
+    actions:
+      - action: script.get_airmee_tracking
+        data:
+          tracking_code: "{{ states('input_text.airmee_code') }}"
+
+  - alias: Airmee Courier Close
+    id: 960d4a70-4b56-4bbf-a353-d71985e28ff5
+    mode: single
+    triggers:
+      - trigger: numeric_state
+        entity_id: sensor.airmee_courier_distance_to_home
+        below: 0.5
+      - trigger: state
+        entity_id: sensor.airmee_tracking
+        to: "ON_WAY_TO_DROPOFF"
+    conditions:
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: input_text.airmee_code
+            state: ""
+          - condition: state
+            entity_id: sensor.airmee_tracking
+            state: "DROPOFF_CONFIRMED"
+    actions:
+      - parallel:
+          - action: automation.turn_on
+            data:
+              entity_id: automation.delivery_unlock_front_door
+          - action: script.notify_everywhere
+            data:
+              message: "Airmee bud nærmer sig. Automatisk gadedør-oplåsning slået til."
+      # 1 hour cooldown
+      - delay:
+          hours: 1
+
+  - alias: Airmee Tracking Toggle
+    id: 84fd41b3-89c0-4b15-9461-a88f4e0a8f53
+    initial_state: true
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: input_text.airmee_code
+    actions:
+      - alias: "Airmee Code Present"
+        choose:
+          - conditions:
+              condition: template
+              value_template: "{{ states('input_text.airmee_code') != '' }}"
+            sequence:
+              - action: automation.turn_on
+                data:
+                  entity_id:
+                    - automation.airmee_tracking
+                    - automation.airmee_courier_close
+        default:
+          - action: automation.turn_off
+            data:
+              entity_id:
+                - automation.airmee_tracking
+                - automation.airmee_courier_close
