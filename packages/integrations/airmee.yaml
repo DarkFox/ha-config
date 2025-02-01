@@ -1,5 +1,6 @@
 input_text:
   airmee_code:
+  airmee_phone_number_hash:
 
 script:
   get_airmee_tracking:
@@ -7,8 +8,9 @@ script:
       tracking_code:
         selector:
           text:
-    variables:
-      phone_number_hash: !secret airmee_phone_number_hash
+      phone_number_hash:
+        selector:
+          text:
     sequence:
       - parallel:
           - sequence:
@@ -93,6 +95,16 @@ template:
         state: >-
           {{ trigger.event.data.tracking_data.order_details[0].dropoff_eta | as_datetime }}
         device_class: timestamp
+      - name: Airmee Dropoff Earliest
+        unique_id: df661e2e-d8b1-4ea8-9eed-baadc73ca9a9
+        state: >-
+          {{ trigger.event.data.tracking_data.order_details[0].dropoff_earliest_time | as_datetime }}
+        device_class: timestamp
+      - name: Airmee Dropoff Latest
+        unique_id: bd1b1cc2-dadf-4507-acd9-1298ed88544b
+        state: >-
+          {{ trigger.event.data.tracking_data.order_details[0].dropoff_latest_time | as_datetime }}
+        device_class: timestamp
   - trigger:
       trigger: event
       event_type: airmee_courier_location_data
@@ -118,9 +130,36 @@ template:
         icon: mdi:web
 
 automation:
-  - alias: Airmee Tracking
+  - alias: Airmee Tracking Slow
+    id: 77061068-2db4-417c-abdb-ac4393dc20bb
+    mode: single
+    triggers:
+      - trigger: time_pattern
+        hours: "*"
+        minutes: "/5"
+        seconds: "0"
+    conditions:
+      - condition: state
+        entity_id: sensor.airmee_tracking
+        state: "UNASSIGNED"
+      - condition: not
+        conditions:
+          - condition: or
+            conditions:
+              - condition: state
+                entity_id: input_text.airmee_code
+                state: ""
+              - condition: state
+                entity_id: input_text.airmee_phone_number_hash
+                state: ""
+    actions:
+      - action: script.get_airmee_tracking
+        data:
+          tracking_code: "{{ states('input_text.airmee_code') }}"
+          phone_number_hash: "{{ states('input_text.airmee_phone_number_hash') }}"
+
+  - alias: Airmee Tracking Fast
     id: 2f38d3c7-6973-480b-a33b-5299667c550c
-    initial_state: true
     mode: single
     triggers:
       - trigger: time_pattern
@@ -130,16 +169,25 @@ automation:
     conditions:
       - condition: not
         conditions:
-          - condition: state
-            entity_id: input_text.airmee_code
-            state: ""
-          - condition: state
-            entity_id: sensor.airmee_tracking
-            state: "DROPOFF_CONFIRMED"
+          - condition: or
+            conditions:
+              - condition: state
+                entity_id: input_text.airmee_code
+                state: ""
+              - condition: state
+                entity_id: input_text.airmee_phone_number_hash
+                state: ""
+              - condition: state
+                entity_id: sensor.airmee_tracking
+                state: "UNASSIGNED"
+              - condition: state
+                entity_id: sensor.airmee_tracking
+                state: "DROPOFF_CONFIRMED"
     actions:
       - action: script.get_airmee_tracking
         data:
           tracking_code: "{{ states('input_text.airmee_code') }}"
+          phone_number_hash: "{{ states('input_text.airmee_phone_number_hash') }}"
 
   - alias: Airmee Courier Close
     id: 960d4a70-4b56-4bbf-a353-d71985e28ff5
@@ -178,22 +226,28 @@ automation:
     mode: single
     triggers:
       - trigger: state
-        entity_id: input_text.airmee_code
+        entity_id:
+          - input_text.airmee_code
+          - input_text.airmee_phone_number_hash
     actions:
       - alias: "Airmee Code Present"
         choose:
           - conditions:
               condition: template
-              value_template: "{{ states('input_text.airmee_code') != '' }}"
+              value_template: >-
+                {{
+                  states('input_text.airmee_code') != ''
+                  and states('input_text.airmee_phone_number_hash') != ''
+                }}
             sequence:
               - action: automation.turn_on
                 data:
                   entity_id:
-                    - automation.airmee_tracking
+                    - automation.airmee_tracking_slow
                     - automation.airmee_courier_close
         default:
           - action: automation.turn_off
             data:
               entity_id:
-                - automation.airmee_tracking
+                - automation.airmee_tracking_slow
                 - automation.airmee_courier_close
