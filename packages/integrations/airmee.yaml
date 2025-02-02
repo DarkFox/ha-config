@@ -128,6 +128,14 @@ template:
         unique_id: 45dbaf23-c51f-48cb-86c0-09a07097563f
         state: "https://tracking.airmee.com/#/track/{{ states('input_text.airmee_code') }}"
         icon: mdi:web
+  - binary_sensor:
+      - name: "Airmee Within Delivery Window"
+        unique_id: b7daa272-981c-4d83-916b-96f28a07d036
+        state: >-
+          {% set now = now() %}
+          {% set dropoff_earliest = states('sensor.airmee_dropoff_earliest') | as_datetime %}
+          {% set dropoff_latest = states('sensor.airmee_dropoff_latest') | as_datetime %}
+          {{ dropoff_earliest < now < dropoff_latest }}
 
 automation:
   - alias: Airmee Tracking Slow
@@ -140,8 +148,8 @@ automation:
         seconds: "0"
     conditions:
       - condition: state
-        entity_id: sensor.airmee_tracking
-        state: "UNASSIGNED"
+        entity_id: binary_sensor.airmee_within_delivery_window
+        state: "off"
       - condition: not
         conditions:
           - condition: or
@@ -167,6 +175,9 @@ automation:
         minutes: "*"
         seconds: "0"
     conditions:
+      - condition: state
+        entity_id: binary_sensor.airmee_within_delivery_window
+        state: "on"
       - condition: not
         conditions:
           - condition: or
