@@ -74,6 +74,14 @@ template:
             {% else %}
               unknown
             {% endif %}
+          icon: >-
+            {% if state_attr('sensor.next_travel_event', 'bil') %}
+              mdi:car
+            {% elif state_attr('sensor.next_travel_event', 'transit') %}
+              mdi:train
+            {% else %}
+              mdi:map-marker
+            {% endif %}
 
       - name: Google Maps Embed Key
         unique_id: f740d25c-edb4-4414-8b24-68e86211d7b9
@@ -163,6 +171,12 @@ template:
           {% else %}
             -1
           {%- endif -%}
+
+      - name: Next Scheduled Leave At Relative
+        unique_id: 0c934c8f-8606-46cf-aaaa-8834458578ae
+        state: >-
+          {% from 'easy_time.jinja' import custom_relative_time %}
+          {{ custom_relative_time('sensor.next_scheduled_leave_at', 'day, hour, minute') }}
 
   - binary_sensor:
       - name: Martin Next Scheduled Destination Active
