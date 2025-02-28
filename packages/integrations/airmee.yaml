@@ -129,6 +129,10 @@ template:
         state: "https://tracking.airmee.com/#/track/{{ states('input_text.airmee_code') }}"
         icon: mdi:web
   - binary_sensor:
+      - name: "Airmee Active"
+        unique_id: 401f988c-d917-41c2-bfa2-a9cb30a056ff
+        state: >-
+          {{ states('input_text.airmee_code') != '' and states('input_text.airmee_phone_number_hash') != '' }}
       - name: "Airmee Within Delivery Window"
         unique_id: b7daa272-981c-4d83-916b-96f28a07d036
         state: >-
@@ -146,20 +150,16 @@ automation:
         hours: "*"
         minutes: "/5"
         seconds: "0"
+      - trigger: state
+        entity_id: binary_sensor.airmee_active
+        to: "on"
     conditions:
       - condition: state
         entity_id: binary_sensor.airmee_within_delivery_window
         state: "off"
-      - condition: not
-        conditions:
-          - condition: or
-            conditions:
-              - condition: state
-                entity_id: input_text.airmee_code
-                state: ""
-              - condition: state
-                entity_id: input_text.airmee_phone_number_hash
-                state: ""
+      - condition: state
+        entity_id: binary_sensor.airmee_active
+        state: "on"
     actions:
       - action: script.get_airmee_tracking
         data:
@@ -178,16 +178,13 @@ automation:
       - condition: state
         entity_id: binary_sensor.airmee_within_delivery_window
         state: "on"
+      - condition: state
+        entity_id: binary_sensor.airmee_active
+        state: "on"
       - condition: not
         conditions:
           - condition: or
             conditions:
-              - condition: state
-                entity_id: input_text.airmee_code
-                state: ""
-              - condition: state
-                entity_id: input_text.airmee_phone_number_hash
-                state: ""
               - condition: state
                 entity_id: sensor.airmee_tracking
                 state: "UNASSIGNED"
@@ -214,14 +211,17 @@ automation:
       - condition: state
         entity_id: automation.delivery_unlock_front_door
         state: "off"
+      - condition: state
+        entity_id: binary_sensor.airmee_active
+        state: "on"
       - condition: not
         conditions:
           - condition: state
-            entity_id: input_text.airmee_code
-            state: ""
-          - condition: state
             entity_id: sensor.airmee_tracking
             state: "DROPOFF_CONFIRMED"
+          - condition: state
+            entity_id: sensor.airmee_tracking
+            state: "UNASSIGNED"
     actions:
       - parallel:
           - action: automation.turn_on
@@ -237,19 +237,18 @@ automation:
     mode: single
     triggers:
       - trigger: state
-        entity_id:
-          - input_text.airmee_code
-          - input_text.airmee_phone_number_hash
+        entity_id: binary_sensor.airmee_active
+    condition:
+      - condition: state
+        entity_id: binary_sensor.airmee_active
+        state: "on"
     actions:
       - alias: "Airmee Code Present"
         choose:
           - conditions:
-              condition: template
-              value_template: >-
-                {{
-                  states('input_text.airmee_code') != ''
-                  and states('input_text.airmee_phone_number_hash') != ''
-                }}
+              - condition: state
+                entity_id: binary_sensor.airmee_active
+                state: "on"
             sequence:
               - action: automation.turn_on
                 data:
