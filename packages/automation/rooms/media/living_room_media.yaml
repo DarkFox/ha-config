@@ -6,6 +6,37 @@ input_select:
       - up
       - down
 
+switch:
+  - platform: template
+    switches:
+      stue_tv_active:
+        value_template: >-
+          {{
+            is_state('switch.stue_tv_afbryder', 'on')
+            and is_state('switch.sync_box_power', 'on')
+            and is_state('media_player.stue_tv', 'on')
+          }}
+        turn_on:
+          - action: switch.turn_on
+            target:
+              entity_id: switch.stue_tv_afbryder
+          - action: switch.turn_on
+            target:
+              entity_id: switch.sync_box_power
+          - wait_template: "{{ not is_state('media_player.stue_tv', 'unavailable') }}"
+            timeout: "00:00:10"
+            continue_on_timeout: true
+          - action: media_player.turn_on
+            target:
+              entity_id: media_player.stue_tv
+        turn_off:
+          - action: media_player.turn_off
+            target:
+              entity_id: media_player.stue_tv
+          - action: switch.turn_off
+            target:
+              entity_id: switch.sync_box_power
+
 binary_sensor:
   - platform: template
     sensors:
