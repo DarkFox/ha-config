@@ -80,7 +80,12 @@ template:
           icon: "{{ 'mdi:washing-machine' if this.state == 'on' else 'mdi:washing-machine-off' }}"
       - name: Tørretumbler
         unique_id: 7e13ec58-a50b-41fb-a78c-16491cd17fb9
-        state: "{{ states('sensor.dryer_temp_delta')|int(0) > 10 and states('sensor.pow_k_l2_power')|int(0) > 900 }}"
+        state: >-
+          {{
+            is_state('binary_sensor.torretumbler_dor', 'on')
+            and states('sensor.dryer_temp_delta')|int(0) > 10
+            and states('sensor.pow_k_l2_power')|int(0) > 900
+          }}
         device_class: running
         attributes:
           icon: "{{ 'mdi:tumble-dryer' if this.state == 'on' else 'mdi:tumble-dryer-off' }}"
