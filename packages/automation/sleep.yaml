@@ -36,7 +36,10 @@ template:
           {% endif %}
         attributes:
           event: >-
-            {% set next_wake_events = state_attr('sensor.upcoming_events', 'events')|selectattr('all_day', 'false')|selectattr('wake', 'true')|list %}
+            {% set next_wake_events = state_attr('sensor.upcoming_events', 'events')
+              | selectattr('all_day', 'false')
+              | selectattr('wake', 'true')
+              | list %}
             {{ next_wake_events|first if next_wake_events|length > 0 else {} }}
           calendar: >-
             {% set event = state_attr('sensor.next_wake_event', 'event') or {} %}
