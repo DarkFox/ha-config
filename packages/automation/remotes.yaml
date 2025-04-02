@@ -243,6 +243,7 @@ automation:
               'kontor_tryk',
               'badevaerelse_tryk',
               'badevaerelse_yderside_tryk',
+              'sovevaerelse_tryk',
               'altan_tryk'
             ]
           }}
@@ -253,9 +254,12 @@ automation:
         kontor_tryk: office
         badevaerelse_tryk: bathroom
         badevaerelse_yderside_tryk: bathroom
+        sovevaerelse_tryk: bedroom
         altan_tryk: balcony
+      button_event: "{{ trigger.event.data.event }}"
+      room: "{{ room_remote_mapping[trigger.event.data.id] }}"
     actions:
-      - alias: "Guest more or regular"
+      - alias: "Guest mode or regular"
         choose:
           - conditions:
               - condition: state
@@ -267,54 +271,54 @@ automation:
                   - alias: "On button click/hold"
                     conditions:
                       - condition: template
-                        value_template: "{{ trigger.event.data.event in [ 1002, 1003 ] }}"
+                        value_template: "{{ button_event in [ 1002, 1003 ] }}"
                     sequence:
                       - action: script.remote_switch_on
                         data:
-                          room: "{{ room_remote_mapping[trigger.event.data.id] }}"
+                          room: "{{ room }}"
                   - alias: "Off button click/hold"
                     conditions:
                       - condition: template
-                        value_template: "{{ trigger.event.data.event in [ 2002, 2003 ] }}"
+                        value_template: "{{ button_event in [ 2002, 2003 ] }}"
                     sequence:
                       - action: script.remote_switch_off
                         data:
-                          room: "{{ room_remote_mapping[trigger.event.data.id] }}"
+                          room: "{{ room }}"
         default:
           - alias: "Button action"
             choose:
               - alias: "On button click"
                 conditions:
                   - condition: template
-                    value_template: "{{ trigger.event.data.event == 1002 }}"
+                    value_template: "{{ button_event == 1002 }}"
                 sequence:
                   - action: script.remote_switch_on
                     data:
-                      room: "{{ room_remote_mapping[trigger.event.data.id] }}"
+                      room: "{{ room }}"
               - alias: "Off button click"
                 conditions:
                   - condition: template
-                    value_template: "{{ trigger.event.data.event == 2002 }}"
+                    value_template: "{{ button_event == 2002 }}"
                 sequence:
                   - action: script.remote_switch_off
                     data:
-                      room: "{{ room_remote_mapping[trigger.event.data.id] }}"
+                      room: "{{ room }}"
               - alias: "On button hold"
                 conditions:
                   - condition: template
-                    value_template: "{{ trigger.event.data.event == 1003 }}"
+                    value_template: "{{ button_event == 1003 }}"
                 sequence:
                   - action: script.toggle_activity_override
                     data:
-                      room: "{{ room_remote_mapping[trigger.event.data.id] }}"
+                      room: "{{ room }}"
               - alias: "Off button hold"
                 conditions:
                   - condition: template
-                    value_template: "{{ trigger.event.data.event == 2003 }}"
+                    value_template: "{{ button_event == 2003 }}"
                 sequence:
                   - action: script.toggle_separate_light_profile
                     data:
-                      room: "{{ room_remote_mapping[trigger.event.data.id] }}"
+                      room: "{{ room }}"
 
   # gang_fjernbetjening #
   - alias: hallway_dimmer_on
