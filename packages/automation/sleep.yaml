@@ -760,51 +760,6 @@ automation:
           profile: Night
           transition_time: 600.0
 
-  - alias: alarm_action_media
-    id: alarm_action_media
-    initial_state: true
-    triggers:
-      trigger: state
-      entity_id: input_select.sleep_state
-      to: "alarm"
-    actions:
-      - action: media_player.unjoin
-        target:
-          entity_id:
-            - media_player.sovevaerelse
-            - media_player.badevaerelse
-            - media_player.kokken
-            - media_player.kontor
-            - media_player.stue
-            - media_player.roam
-      - action: media_player.volume_set
-        data:
-          entity_id: "media_player.sovevaerelse"
-          volume_level: 0.2
-      - action: script.mass_playlist
-        data:
-          entity_id: media_player.sovevaerelse_mass
-          repeat: "all"
-          playlist:
-            # - "{{ states('sensor.podcast_radioavisen') }}"
-            # - DR P3
-            - "SomaFM: Groove Salad"
-      - action: media_player.volume_set
-        data:
-          entity_id: "media_player.sovevaerelse_mass"
-          volume_level: 0.2
-      - delay:
-          minutes: 10
-      - condition: state
-        entity_id: input_select.sleep_state
-        state:
-          - "alarm"
-          - "snoozing"
-      - action: media_player.volume_set
-        data:
-          entity_id: "media_player.sovevaerelse"
-          volume_level: 0.30
-
   - alias: alarm_action
     id: alarm_action
     initial_state: true
@@ -845,28 +800,48 @@ automation:
                 entity_id: sun.sun
                 state: "above_horizon"
             sequence:
-              - action: cover.set_cover_position
+              - action: cover.open_cover
+                data:
+                  entity_id: cover.sovevaerelse_gardin_dor
+              - wait_template: "{{ is_state('cover.sovevaerelse_gardin_dor', 'closing') or is_state('cover.sovevaerelse_gardin_dor', 'closed') }}"
+                timeout: "00:02:00"
+              - action: cover.close_cover
                 data:
                   entity_id: cover.sovevaerelse_gardin_vindue
-                  position: 25
-      - delay:
-          minutes: 5
-      - condition: state
-        entity_id: input_select.sleep_state
-        state:
-          - "alarm"
-          - "snoozing"
-          - "waking"
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: sun.sun
-                state: "above_horizon"
-            sequence:
-              - action: cover.set_cover_position
-                data:
-                  entity_id: cover.sovevaerelse_gardin_vindue
-                  position: 20
+
+  - alias: snooze_action_media
+    id: f025618f-e3ae-428e-b22a-7df121b56a44
+    initial_state: true
+    triggers:
+      trigger: state
+      entity_id: input_select.sleep_state
+      to: "snooze"
+    actions:
+      - action: media_player.unjoin
+        target:
+          entity_id:
+            - media_player.sovevaerelse
+            - media_player.badevaerelse
+            - media_player.kokken
+            - media_player.kontor
+            - media_player.stue
+            - media_player.roam
+      - action: media_player.volume_set
+        data:
+          entity_id: "media_player.sovevaerelse"
+          volume_level: 0.2
+      - action: script.mass_playlist
+        data:
+          entity_id: media_player.sovevaerelse_mass
+          repeat: "all"
+          playlist:
+            # - "{{ states('sensor.podcast_radioavisen') }}"
+            # - DR P3
+            - "SomaFM: Groove Salad"
+      - action: media_player.volume_set
+        data:
+          entity_id: "media_player.sovevaerelse_mass"
+          volume_level: 0.2
       - delay:
           minutes: 10
       - condition: state
@@ -874,17 +849,10 @@ automation:
         state:
           - "alarm"
           - "snoozing"
-          - "waking"
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: sun.sun
-                state: "above_horizon"
-            sequence:
-              - action: cover.set_cover_position
-                data:
-                  entity_id: cover.sovevaerelse_gardin_vindue
-                  position: 15
+      - action: media_player.volume_set
+        data:
+          entity_id: "media_player.sovevaerelse"
+          volume_level: 0.30
 
   - alias: waking_action_media
     id: waking_action_media
