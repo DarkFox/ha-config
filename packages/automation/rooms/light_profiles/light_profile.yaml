@@ -384,42 +384,108 @@ script:
     icon: mdi:refresh
     sequence:
       - event: refresh_light_profile
+
+  toggle_room_light:
+    fields:
+      room:
+        description: "Room to toggle the light for"
+        example: "living_room"
+    sequence:
+      - event: set_light_profile
+        event_data:
+          room: "{{ room }}"
+          profile: >
+            {% if is_state('sensor.' + room + '_light_profile', 'Off') %}
+              Default
+            {% else %}
+              Off
+            {% endif %}
+
   dim_light_profile:
+    fields:
+      room:
+        description: "Room to turn lights down for"
+        example: "living_room"
     sequence:
-      event: decrease_light_profile
+      - event: decrease_light_profile
+        event_data:
+          room: "{{ room }}"
+
   brighten_light_profile:
+    fields:
+      room:
+        description: "Room to turn lights up for"
+        example: "living_room"
     sequence:
-      event: increase_light_profile
+      - event: increase_light_profile
+        event_data:
+          room: "{{ room }}"
+
   activate_bright_scene:
+    fields:
+      room:
+        description: "Room to turn lights up for"
+        example: "living_room"
     sequence:
       event: set_light_profile
       event_data:
         profile: Bright
+        room: "{{ room }}"
+
   activate_default_scene:
+    fields:
+      room:
+        description: "Room to turn lights up for"
+        example: "living_room"
     sequence:
       event: set_light_profile
       event_data:
         profile: Default
+        room: "{{ room }}"
+
   activate_dimmed_scene:
+    fields:
+      room:
+        description: "Room to turn lights up for"
+        example: "living_room"
     sequence:
       event: set_light_profile
       event_data:
         profile: Dimmed
+        room: "{{ room }}"
+
   activate_ambient_scene:
+    fields:
+      room:
+        description: "Room to turn lights up for"
+        example: "living_room"
     sequence:
       event: set_light_profile
       event_data:
         profile: Ambient
+        room: "{{ room }}"
+
   activate_night_scene:
+    fields:
+      room:
+        description: "Room to turn lights up for"
+        example: "living_room"
     sequence:
       event: set_light_profile
       event_data:
         profile: Night
+        room: "{{ room }}"
+
   activate_off_scene:
+    fields:
+      room:
+        description: "Room to turn lights up for"
+        example: "living_room"
     sequence:
       event: set_light_profile
       event_data:
         profile: "Off"
+        room: "{{ room }}"
 
   toggle_light_profile:
     description: Switch between light profiles. If the selected profile is already active, the light will be turned off.
@@ -530,7 +596,7 @@ script:
                 "state": "on",
                 "brightness": 128,
                 "color_temp_kelvin": 2325,
-                "effect": "None"
+                "effect": "off"
               }
             }
           }
