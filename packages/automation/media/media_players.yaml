@@ -67,15 +67,32 @@ script:
       entity_id:
         description: Media Player that will be played or paused
         example: media_player.stue
+    variables:
+      inputs:
+        media_player.stue: media_player.stue_shield
+        media_player.kontor: media_player.kontor_shield
     sequence:
       - choose:
           - conditions:
               - condition: template
                 value_template: "{{ state_attr(entity_id, 'source') == 'TV' }}"
             sequence:
-              - action: script.toggle_mute
-                data:
-                  entity_id: "{{ entity_id }}"
+              - choose:
+                  - conditions:
+                      - condition: template
+                        value_template: >-
+                          {{
+                            entity_id in inputs.keys() and
+                            states(inputs[entity_id]) in ['playing', 'paused']
+                          }}
+                    sequence:
+                      - action: media_player.media_play_pause
+                        target:
+                          entity_id: "{{ inputs[entity_id] }}"
+                default:
+                  - action: script.toggle_mute
+                    data:
+                      entity_id: "{{ entity_id }}"
         default:
           - action: media_player.media_play_pause
             target:
@@ -111,7 +128,7 @@ script:
       media_player_presets:
         stue:
           low: 0.10
-          medium: 0.3
+          medium: 0.4
           high: 0.6
         kokken:
           low: 0.15
