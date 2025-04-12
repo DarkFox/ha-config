@@ -62,7 +62,7 @@ script:
 
   play_pause_mute:
     mode: parallel
-    description: Play or pause media, if source is TV, mute or unmute
+    description: Play or pause media, if source is TV, check if input can be paused, otherwise mute or unmute
     fields:
       entity_id:
         description: Media Player that will be played or paused
@@ -95,6 +95,66 @@ script:
                       entity_id: "{{ entity_id }}"
         default:
           - action: media_player.media_play_pause
+            target:
+              entity_id: "{{ entity_id }}"
+
+  speaker_next:
+    mode: parallel
+    description: Next track on speaker, if source is TV, send next to input if possible.
+    fields:
+      entity_id:
+        description: Media Player to send next track to
+        example: media_player.stue
+    variables:
+      inputs:
+        media_player.stue: media_player.stue_shield
+        media_player.kontor: media_player.kontor_shield
+    sequence:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{
+                    state_attr(entity_id, 'source') == 'TV' and
+                    entity_id in inputs.keys() and
+                    states(inputs[entity_id]) in ['playing', 'paused']
+                  }}
+            sequence:
+              - action: media_player.media_next_track
+                target:
+                  entity_id: "{{ inputs[entity_id] }}"
+        default:
+          - action: media_player.media_next_track
+            target:
+              entity_id: "{{ entity_id }}"
+
+  speaker_prev:
+    mode: parallel
+    description: Previous track on speaker, if source is TV, send previous to input if possible.
+    fields:
+      entity_id:
+        description: Media Player to send previous track to
+        example: media_player.stue
+    variables:
+      inputs:
+        media_player.stue: media_player.stue_shield
+        media_player.kontor: media_player.kontor_shield
+    sequence:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{
+                    state_attr(entity_id, 'source') == 'TV' and
+                    entity_id in inputs.keys() and
+                    states(inputs[entity_id]) in ['playing', 'paused']
+                  }}
+            sequence:
+              - action: media_player.media_previous_track
+                target:
+                  entity_id: "{{ inputs[entity_id] }}"
+        default:
+          - action: media_player.media_previous_track
             target:
               entity_id: "{{ entity_id }}"
 
@@ -172,6 +232,53 @@ script:
                     entity_id: "media_player.{{ room }}"
                   data:
                     volume_level: "{{ media_player_presets[room][preset] }}"
+
+  room_media_shortcut:
+    fields:
+      room:
+        description: Room to trigger the shortcut in
+        example: stue
+      shortcut_no:
+        description: Number of the shortcut to trigger
+        example: "1"
+        # On symfonisk gen2:
+        # 1 = 1 dot press
+        # 2 = 1 dot press 2x
+        # 3 = 1 dot hold
+        # 4 = 2 dot press
+        # 5 = 2 dot press 2x
+        # 6 = 2 dot hold
+    sequence:
+      - alias: "Choose room"
+        choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ room == 'stue' }}"
+            sequence:
+              - alias: "Choose shortcut"
+                choose:
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ (shortcut_no | int(0)) == 1 }}" # 1 dot press
+                    sequence:
+                      - action: script.shield_tv_play
+                        data:
+                          entity_id: "media_player.stue_shield_adb"
+                          url: https://www.youtube.com/playlist?list=WL
+                          activity: >-
+                            com.teamsmart.videomanager.tv/com.liskovsoft.smartyoutubetv2.tv.ui.main.SplashActivity
+                          press_enter: "yes"
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ (shortcut_no | int(0)) == 2 }}" # 1 dot press 2x
+                    sequence:
+                      - action: script.shield_tv_play
+                        data:
+                          entity_id: "media_player.stue_shield_adb"
+                          url: https://www.youtube.com/feed/subscriptions
+                          activity: >-
+                            com.teamsmart.videomanager.tv/com.liskovsoft.smartyoutubetv2.tv.ui.main.SplashActivity
+                          press_enter: "yes"
 
   morning_briefing:
     sequence:
