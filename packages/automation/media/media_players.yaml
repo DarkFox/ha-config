@@ -199,7 +199,7 @@ script:
           medium: 0.3
           high: 0.7
         sovevaerelse:
-          low: 0.15
+          low: 0.1
           medium: 0.3
           high: 0.6
         badevaerelse:
@@ -279,6 +279,54 @@ script:
                           activity: >-
                             com.teamsmart.videomanager.tv/com.liskovsoft.smartyoutubetv2.tv.ui.main.SplashActivity
                           press_enter: "yes"
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ (shortcut_no | int(0)) == 4 }}" # 2 dot press
+                    sequence:
+                      - action: script.play_somafm_poptron
+                        data:
+                          entity_id: media_player.sovevaerelse_mass
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ (shortcut_no | int(0)) == 5 }}" # 2 dot press 2x
+                    sequence:
+                      - action: script.play_somafm_groove_salad
+                        data:
+                          entity_id: media_player.sovevaerelse_mass
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ (shortcut_no | int(0)) == 6 }}" # 2 dot hold
+                    sequence:
+                      - action: script.play_dr_p3
+                        data:
+                          entity_id: media_player.sovevaerelse_mass
+          - conditions:
+              - condition: template
+                value_template: "{{ room == 'sovevaerelse' }}"
+            sequence:
+              - alias: "Choose shortcut"
+                choose:
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ (shortcut_no | int(0)) == 4 }}" # 2 dot press
+                    sequence:
+                      - action: script.play_somafm_poptron
+                        data:
+                          entity_id: media_player.sovevaerelse_mass
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ (shortcut_no | int(0)) == 5 }}" # 2 dot press 2x
+                    sequence:
+                      - action: script.play_somafm_groove_salad
+                        data:
+                          entity_id: media_player.sovevaerelse_mass
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ (shortcut_no | int(0)) == 6 }}" # 2 dot hold
+                    sequence:
+                      - action: script.play_dr_p3
+                        data:
+                          entity_id: media_player.sovevaerelse_mass
 
   morning_briefing:
     sequence:
@@ -383,7 +431,7 @@ script:
       - action: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
-          repeat: "{{ repeat | default('off') }}"
+          repeat_mode: "{{ repeat | default('off') }}"
           volume_level: "{{ volume_level | default(0.5) }}"
           shuffle: false
           playlist: >-
@@ -404,7 +452,7 @@ script:
           entity:
             filter:
               - integration: mass
-      repeat:
+      repeat_mode:
         description: Repeat mode
         example: "(off|one|all)"
         selector:
@@ -413,7 +461,7 @@ script:
               - "off"
               - "one"
               - "all"
-      shuffle:
+      shuffle_mode:
         description: Shuffle mode
         example: "false"
       playlist:
@@ -446,17 +494,17 @@ script:
         target:
           entity_id: "{{ entity_id }}"
         data:
-          volume_level: "{{ volume_level | default(0.5) }}"
+          volume_level: "{{ volume_level | default(state_attr(entity_id, 'volume_level')) }}"
       - action: media_player.repeat_set
         target:
           entity_id: "{{ entity_id }}"
         data:
-          repeat: "{{ repeat | default('off') }}"
+          repeat: "{{ repeat_mode | default('off') }}"
       - action: media_player.shuffle_set
         target:
           entity_id: "{{ entity_id }}"
         data:
-          shuffle: "{{ shuffle | default(false) }}"
+          shuffle: "{{ shuffle_mode | default(false) }}"
       - action: music_assistant.play_media
         target:
           entity_id: "{{ entity_id }}"
@@ -541,7 +589,7 @@ script:
       - action: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
-          shuffle: true
+          shuffle_mode: true
           playlist:
             - library://playlist/13
 
@@ -552,7 +600,7 @@ script:
       - action: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
-          shuffle: true
+          shuffle_mode: true
           playlist:
             - library://playlist/8
 
@@ -563,7 +611,7 @@ script:
       - action: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
-          shuffle: true
+          shuffle_mode: true
           playlist:
             - library://playlist/16
 
@@ -574,7 +622,7 @@ script:
       - action: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
-          shuffle: true
+          shuffle_mode: true
           playlist:
             - library://playlist/62
 
@@ -585,7 +633,7 @@ script:
       - action: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
-          shuffle: true
+          shuffle_mode: true
           playlist:
             - library://playlist/54
 
@@ -630,7 +678,7 @@ script:
       - action: script.mass_playlist
         data:
           entity_id: "{{ entity_id }}"
-          shuffle: true
+          shuffle_mode: true
           playlist: "{{ playlist }}"
 
   playlist_play_media:
