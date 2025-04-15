@@ -19,7 +19,7 @@ script:
   sleep_as_android_start_tracking:
     alias: "Sleep As Android Start Tracking"
     sequence:
-      - action: notify.mobile_app_sovevaerelse_tablet
+      - action: notify.mobile_app_darkphone
         data:
           message: "command_broadcast_intent"
           data:
@@ -31,7 +31,7 @@ script:
   sleep_as_android_stop_tracking:
     alias: "Sleep As Android Stop Tracking"
     sequence:
-      - action: notify.mobile_app_sovevaerelse_tablet
+      - action: notify.mobile_app_darkphone
         data:
           message: "command_broadcast_intent"
           data:
@@ -43,7 +43,7 @@ script:
   sleep_as_android_pause_tracking:
     alias: "Sleep As Android Pause Tracking"
     sequence:
-      - action: notify.mobile_app_sovevaerelse_tablet
+      - action: notify.mobile_app_darkphone
         data:
           message: "command_broadcast_intent"
           data:
@@ -55,7 +55,7 @@ script:
   sleep_as_android_snooze_alarm:
     alias: "Sleep As Android Snooze Alarm"
     sequence:
-      - action: notify.mobile_app_sovevaerelse_tablet
+      - action: notify.mobile_app_darkphone
         data:
           message: "command_broadcast_intent"
           data:
@@ -68,7 +68,7 @@ script:
   sleep_as_android_dismiss_alarm:
     alias: "Sleep As Android Dismiss Alarm"
     sequence:
-      - action: notify.mobile_app_sovevaerelse_tablet
+      - action: notify.mobile_app_darkphone
         data:
           message: "command_broadcast_intent"
           data:
@@ -80,7 +80,7 @@ script:
   sleep_as_android_set_alarm:
     alias: "Set Sleep As Android Alarm (args: [message], timehour, timemin)"
     sequence:
-      - action: notify.mobile_app_sovevaerelse_tablet
+      - action: notify.mobile_app_darkphone
         data:
           message: "command_activity"
           data:
@@ -93,7 +93,7 @@ script:
   sleep_as_android_start_lullaby:
     alias: "Sleep As Android Start Lullaby"
     sequence:
-      - action: notify.mobile_app_sovevaerelse_tablet
+      - action: notify.mobile_app_darkphone
         data:
           message: "command_broadcast_intent"
           data:
@@ -106,7 +106,7 @@ script:
   sleep_as_android_stop_lullaby:
     alias: "Sleep As Android Stop Lullaby"
     sequence:
-      - action: notify.mobile_app_sovevaerelse_tablet
+      - action: notify.mobile_app_darkphone
         data:
           message: "command_broadcast_intent"
           data:
@@ -201,6 +201,7 @@ automation:
   # Fires when we detect laughter.
 
   - alias: Sleep as Android MQTT event
+    id: 5cb9a551-a39e-462b-9a7f-ebc36711173d
     initial_state: True
     triggers:
       - trigger: mqtt
@@ -218,7 +219,31 @@ automation:
       #       payload: "{{ trigger.payload_json }}"
       #     title: "Sleep As Android MQTT Event"
 
+  - alias: Sleep as Android Webhook event
+    id: 7984e11c-2846-4faa-aed7-ee439127b9fd
+    initial_state: True
+    triggers:
+      - trigger: webhook
+        webhook_id: !secret sleep_as_android_webhook
+        local_only: false
+        allowed_methods:
+          - GET
+          - POST
+    actions:
+      - event: sleep_as_android
+        event_data:
+          event: "{{ trigger.json.event }}"
+          value1: "{{ trigger.json.value1 if 'value1' in trigger.json }}"
+          value2: "{{ trigger.json.value2 if 'value2' in trigger.json }}"
+          value3: "{{ trigger.json.value3 if 'value3' in trigger.json }}"
+      - action: script.debug_notification
+        data:
+          message: >-
+            payload: "{{ trigger.json }}"
+          title: "Sleep As Android Webhook Event"
+
   - alias: sleep_as_android_state_bedtime
+    id: 101fbdda-3b78-42ea-aa9d-9e8e41200e07
     initial_state: true
     triggers:
       - trigger: event
@@ -241,6 +266,7 @@ automation:
         option: bedtime
 
   - alias: sleep_as_android_state_sleeping
+    id: fc21b034-8ae6-4492-bd54-049929dcb983
     initial_state: true
     triggers:
       - trigger: event
@@ -267,6 +293,7 @@ automation:
           option: sleeping
 
   - alias: sleep_as_android_state_sleeping_cancelled
+    id: 39894ea0-3b35-4ba8-8f0a-1e4cf745d525
     initial_state: true
     triggers:
       trigger: event
@@ -294,6 +321,7 @@ automation:
           option: bedtime
 
   - alias: sleep_as_android_state_paused
+    id: c26bb668-9674-4a71-9936-08689fd67fb1
     initial_state: true
     triggers:
       - trigger: event
@@ -311,6 +339,7 @@ automation:
         option: paused
 
   - alias: sleep_as_android_state_smart_wake
+    id: 83b0f739-65dc-4750-95ec-65b17f0b867c
     initial_state: true
     triggers:
       trigger: event
@@ -333,6 +362,7 @@ automation:
           option: smart wake
 
   - alias: sleep_as_android_state_alarm
+    id: 89bc0e9f-aea6-4f3b-a356-03053b387578
     initial_state: true
     triggers:
       trigger: event
@@ -358,6 +388,7 @@ automation:
           option: alarm
 
   - alias: sleep_as_android_state_snoozing
+    id: ca190425-e85b-4f14-b4ec-8bb7d0063f55
     initial_state: true
     triggers:
       trigger: event
@@ -375,6 +406,7 @@ automation:
           option: snoozing
 
   - alias: sleep_as_android_state_awake
+    id: 2777f4fa-1631-46d6-9755-a0515e33da0f
     initial_state: true
     triggers:
       - trigger: event
@@ -409,6 +441,7 @@ automation:
 
   # Snooze Counter
   - alias: sleep_as_android_reset_snooze_counter
+    id: 899e638d-4471-4168-94ee-8a9e51885a1e
     initial_state: true
     triggers:
       - trigger: event
@@ -421,6 +454,7 @@ automation:
           entity_id: counter.snooze_counter
 
   - alias: sleep_as_android_snoozing
+    id: 247c8b50-72be-467b-95bf-73ebebaaa4ab
     initial_state: true
     triggers:
       - trigger: event
