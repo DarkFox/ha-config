@@ -1036,11 +1036,10 @@ automation:
   - alias: Turn on tablet extra dim on sleep
     id: 10d61b0d-3f8e-40ea-8393-6058c79b189c
     triggers:
-      - trigger: state
-        entity_id: input_select.sleep_state
-        to:
-          - "in bed"
-          - "sleeping"
+      - trigger: event
+        event_type: sleep_as_android
+        event_data:
+          event: sleep_tracking_started
     actions:
       - action: script.trigger_tasker_task
         data:
@@ -1051,9 +1050,10 @@ automation:
   - alias: Turn off tablet extra dim on waking
     id: 1e67b4e2-cae9-4942-b465-41381052fc4b
     triggers:
-      - trigger: state
-        entity_id: input_select.sleep_state
-        to: "waking"
+      - trigger: event
+        event_type: sleep_as_android
+        event_data:
+          event: sleep_tracking_stopped
     actions:
       - action: script.trigger_tasker_task
         data:
@@ -1064,10 +1064,6 @@ automation:
   - id: turn_off_fan_on_sleep
     alias: turn_off_fan_on_sleep
     triggers:
-      - trigger: event
-        event_type: sleep_as_android
-        event_data:
-          event: light_sleep
       - trigger: event
         event_type: sleep_as_android
         event_data:
@@ -1085,6 +1081,7 @@ automation:
   - id: notify_phone_not_charging_on_sleep
     alias: Notify phone not charging on sleep
     initial_state: true
+    mode: single
     triggers:
       - trigger: state
         entity_id: input_select.sleep_state
@@ -1100,9 +1097,11 @@ automation:
         for:
           seconds: 10
     conditions:
-      - condition: state
-        entity_id: input_select.sleep_state
-        state: "sleeping"
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: input_select.sleep_state
+            state: "sleeping"
       - condition: state
         entity_id: sensor.darkphone_charger_type
         state: "none"
@@ -1110,8 +1109,10 @@ automation:
         entity_id: binary_sensor.darkphone_interactive
         state: "off"
     actions:
-      - action: script.voice_broadcast
+      - action: script.darkphone_tts
         data:
-          entity_id: media_player.sovevaerelse
-          volume_level: 0.2
           message: "Din telefon lader ikke. Husk at sætte den i laderen."
+          severity: 3
+      # cooldown
+      - delay:
+          minutes: 5
