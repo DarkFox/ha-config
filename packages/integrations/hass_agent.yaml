@@ -1,35 +1,35 @@
 template:
   - binary_sensor:
-      - name: Martin PC
+      - name: Rook PC
         unique_id: 98bac15b-619e-4626-be93-d4f61f3cb7d2
         state: >-
-          {{ states('sensor.martin_pc_satellite_lastsystemstatechange') in [
+          {{ states('sensor.rook_pc_satellite_lastsystemstatechange') in [
             'ApplicationStarted',
             'SessionUnlock',
           ] }}
 
-      - name: Martin PC Unlocked
+      - name: Rook PC Unlocked
         unique_id: cd94651a-2680-4521-b072-30d0080d158a
-        state: "{{ is_state('sensor.martin_pc_sessionstate', 'Unlocked') }}"
+        state: "{{ is_state('sensor.rook_pc_sessionstate', 'Unlocked') }}"
 
-      - name: Martin PC Activity
+      - name: Rook PC Activity
         unique_id: 63675f4b-e97e-42be-b8dc-aa237bfe616f
         state: >-
           {{
-            not is_state('sensor.martin_pc_lastactive', 'unavailable')
-            and not is_state('sensor.martin_pc_lastactive', 'unknown')
-            and as_timestamp(now()) - (as_timestamp(states('sensor.martin_pc_lastactive'))|int) < 300
+            not is_state('sensor.rook_pc_lastactive', 'unavailable')
+            and not is_state('sensor.rook_pc_lastactive', 'unknown')
+            and as_timestamp(now()) - (as_timestamp(states('sensor.rook_pc_lastactive'))|int) < 300
           }}
 
   - trigger:
       trigger: event
       event_type: state_changed
       event_data:
-        entity_id: sensor.martin_pc_lastactive
+        entity_id: sensor.rook_pc_lastactive
     binary_sensor:
-      - name: Martin PC Activity Ping
+      - name: Rook PC Activity Ping
         unique_id: ae7fe058-b8de-4613-927b-b801a1320e9a
-        state: "{{ (states('sensor.martin_pc_lastactive') | as_timestamp) - (now() | as_timestamp) | int < 15 }}"
+        state: "{{ (states('sensor.rook_pc_lastactive') | as_timestamp) - (now() | as_timestamp) | int < 15 }}"
         device_class: motion
         auto_off: 1
 
@@ -43,8 +43,8 @@ automation:
       - alias: "Refresh HASS.agent Satellite"
         action: switch.turn_on
         target:
-          entity_id: switch.martin_pc_satellite_publishallsensors
+          entity_id: switch.rook_pc_satellite_publishallsensors
       - alias: "Refresh HASS.agent"
         action: button.press
         target:
-          entity_id: button.martin_pc_publishallsensors
+          entity_id: button.rook_pc_publishallsensors

@@ -87,10 +87,10 @@ template:
         unique_id: f740d25c-edb4-4414-8b24-68e86211d7b9
         state: !secret google_maps_embed_key
 
-      - name: Martin Location URL Encoded
+      - name: Rook Location URL Encoded
         unique_id: dba11ecf-6f4a-4859-8292-9a2e19d5f52a
         state: >-
-          {% set person = 'person.martin' %}
+          {% set person = 'person.rook' %}
           {{ state_attr(person, 'latitude') }}%2C{{ state_attr(person, 'longitude') }}
 
       - name: Destination URL Encoded
@@ -102,9 +102,9 @@ template:
       - name: Commute Status Car
         unique_id: 5a3e3797-bbe0-4f6a-b5fa-54c452cafe32
         state: >-
-          {%- if states('sensor.martin_til_destination_bil')|int(0) > 45 -%}
+          {%- if states('sensor.rook_til_destination_bil')|int(0) > 45 -%}
             bad
-          {%- elif states('sensor.martin_til_destination_bil')|int(0) > 25 -%}
+          {%- elif states('sensor.rook_til_destination_bil')|int(0) > 25 -%}
             ok
           {%- else -%}
             good
@@ -137,7 +137,7 @@ template:
             good
           {%- endif -%}
 
-      - name: Martin Next Scheduled At
+      - name: Rook Next Scheduled At
         unique_id: bcfd62ed-d849-41ec-ad23-7506219345a6
         device_class: timestamp
         state: >-
@@ -150,7 +150,7 @@ template:
         device_class: timestamp
         state: >-
           {% set driving = is_state_attr('sensor.upcoming_travel_location', 'mode', 'driving') %}
-          {% set travel_time_sensor = 'sensor.martin_til_destination_bil' if driving else 'sensor.martin_til_destination_transit' %}
+          {% set travel_time_sensor = 'sensor.rook_til_destination_bil' if driving else 'sensor.rook_til_destination_transit' %}
           {% set padding = 15 if driving else 5 %}
           {{
             ((
@@ -179,16 +179,16 @@ template:
           {{ custom_relative_time('sensor.next_scheduled_leave_at', 'day, hour, minute') }}
 
   - binary_sensor:
-      - name: Martin Next Scheduled Destination Active
+      - name: Rook Next Scheduled Destination Active
         unique_id: 78ffca90-7a32-4764-932a-46ff4fb01548
         state: >-
-          {%- set martin_next_scheduled_at = strptime(states('sensor.next_travel_event'), '%Y-%m-%dT%H:%M:%S%z', '-1') -%}
-          {%- if martin_next_scheduled_at != '-1' -%}
-            {{ martin_next_scheduled_at - timedelta(hours=12) < now() }}
+          {%- set rook_next_scheduled_at = strptime(states('sensor.next_travel_event'), '%Y-%m-%dT%H:%M:%S%z', '-1') -%}
+          {%- if rook_next_scheduled_at != '-1' -%}
+            {{ rook_next_scheduled_at - timedelta(hours=12) < now() }}
           {%- else -%}
             False
           {%- endif -%}
-      - name: Martin Next Scheduled Destination Leave Soon
+      - name: Rook Next Scheduled Destination Leave Soon
         unique_id: 9c450aa1-aaeb-49dd-9c2c-cb713fcb70b8
         state: >-
           {%- set time_to_leave_next_scheduled = strptime(states('sensor.next_scheduled_leave_at'), '%Y-%m-%dT%H:%M:%S%z', '-1') -%}
@@ -197,7 +197,7 @@ template:
           {%- else -%}
             False
           {%- endif -%}
-      - name: Martin Next Scheduled Destination Time To Leave
+      - name: Rook Next Scheduled Destination Time To Leave
         unique_id: 54cf1638-433c-44a6-8319-dd77c3511071
         state: >-
           {%- set time_to_leave_next_scheduled = strptime(states('sensor.next_scheduled_leave_at'), '%Y-%m-%dT%H:%M:%S%z', '-1') -%}
@@ -232,7 +232,7 @@ automation:
         minutes: "/5"
     conditions:
       - condition: state
-        entity_id: binary_sensor.martin_next_scheduled_destination_leave_soon
+        entity_id: binary_sensor.rook_next_scheduled_destination_leave_soon
         state: "on"
     actions:
       - choose:
@@ -241,13 +241,13 @@ automation:
             sequence:
               - action: homeassistant.update_entity
                 target:
-                  entity_id: sensor.martin_til_destination_bil
+                  entity_id: sensor.rook_til_destination_bil
           - conditions: |-
               {{ is_state_attr('sensor.upcoming_travel_location', 'mode', 'transit') }}
             sequence:
               - action: homeassistant.update_entity
                 target:
-                  entity_id: sensor.martin_til_destination_transit
+                  entity_id: sensor.rook_til_destination_transit
 
   - alias: "Next destination - Update sensors slowly 12 hours before or when destination changes"
     id: f4eb3d8f-daf0-487b-91d0-d0f8d89d6fa7
@@ -258,10 +258,10 @@ automation:
       - trigger: state
         entity_id:
           - sensor.upcoming_travel_location
-          - binary_sensor.martin_next_scheduled_destination_active
+          - binary_sensor.rook_next_scheduled_destination_active
     conditions:
       - condition: state
-        entity_id: binary_sensor.martin_next_scheduled_destination_active
+        entity_id: binary_sensor.rook_next_scheduled_destination_active
         state: "on"
     actions:
       - choose:
@@ -270,13 +270,13 @@ automation:
             sequence:
               - action: homeassistant.update_entity
                 target:
-                  entity_id: sensor.martin_til_destination_bil
+                  entity_id: sensor.rook_til_destination_bil
           - conditions: |-
               {{ is_state_attr('sensor.upcoming_travel_location', 'mode', 'transit') }}
             sequence:
               - action: homeassistant.update_entity
                 target:
-                  entity_id: sensor.martin_til_destination_transit
+                  entity_id: sensor.rook_til_destination_transit
 
   - id: time_to_leave_notification
     alias: time_to_leave_notification
@@ -307,7 +307,7 @@ automation:
     conditions:
       - alias: "If at home"
         condition: state
-        entity_id: person.martin
+        entity_id: person.rook
         state: "home"
       - alias: "Not from unavailable/unknown"
         condition: template

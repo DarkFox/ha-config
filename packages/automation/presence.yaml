@@ -1,6 +1,6 @@
 input_select:
-  martin_state:
-    name: Martin State
+  rook_state:
+    name: Rook State
     options:
       - home_soon
       - just_arrived
@@ -11,84 +11,75 @@ input_select:
       - away_long
 
 input_datetime:
-  martin_state_changed:
-    name: Martin State Changed
+  rook_state_changed:
+    name: Rook State Changed
     has_date: true
     has_time: true
 
-template:
-  - sensor:
-      - name: "Martin State Changed Minutes Ago"
-        state: "{{ (as_timestamp(now()) - as_timestamp(states('input_datetime.martin_state_changed'))) / 60 }}"
-        unit_of_measurement: "min"
-        icon: mdi:clock-time-eight-outline
-
 sensor:
-  - platform: template
-    sensors:
-      martin_to_home_dir_of_travel:
-        friendly_name: "Direction of Travel to Home"
-        value_template: "{{ states('sensor.home_martin_direction_of_travel') }}"
-      martin_to_home_distance_change:
-        friendly_name: "Distance change to Home"
-        value_template: "{{ state_attr('sensor.proximity_martin_to_home_stats', 'change') }}"
-        unit_of_measurement: "m"
+  - platform: derivative
+    name: rook_to_home_distance_change_derivative
+    source: sensor.rook_to_home_distance_change
 
   - platform: derivative
-    name: martin_to_home_distance_change_derivative
-    source: sensor.martin_to_home_distance_change
-
-  - platform: derivative
-    name: martin_to_home_proximity_derivative
-    source: sensor.home_martin_distance
+    name: rook_to_home_proximity_derivative
+    source: sensor.home_rook_distance
 
   - platform: statistics
-    name: proximity_martin_to_home_stats
-    entity_id: sensor.home_martin_distance
+    name: proximity_rook_to_home_stats
+    entity_id: sensor.home_rook_distance
     state_characteristic: mean
     sampling_size: 20
     max_age:
       minutes: 5
 
-binary_sensor:
-  - platform: template
-    sensors:
-      martin_home_soon:
-        friendly_name: "Martin Home Soon"
-        value_template: >
+template:
+  - sensor:
+      - name: "Rook State Changed Minutes Ago"
+        unique_id: a06425ef-57a5-4aa9-8a5c-3fc3abd1ffe4
+        state: "{{ (as_timestamp(now()) - as_timestamp(states('input_datetime.rook_state_changed'))) / 60 }}"
+        unit_of_measurement: "min"
+        icon: mdi:clock-time-eight-outline
+
+  - binary_sensor:
+      - name: "Rook Home Soon"
+        unique_id: 58b169a0-521e-496b-9303-7f47f900a12e
+        state: >-
           {{
-            states('sensor.home_martin_distance')|float < 1500
+            states('sensor.home_rook_distance')|float < 1500
             or
             (
-              states('sensor.home_martin_distance')|float < 10000
+              states('sensor.home_rook_distance')|float < 10000
               and
-              (states('sensor.martin_to_home_distance_change')|float(0.0) * 4) + states('sensor.home_martin_distance')|float < 0
+              (states('sensor.rook_to_home_distance_change')|float(0.0) * 4) + states('sensor.home_rook_distance')|float < 0
             )
           }}
-
-      martin_presence:
-        friendly_name: "Martin Presence"
         device_class: presence
-        value_template: >-
+
+      - name: "Rook Presence"
+        unique_id: 74b85fc6-4373-4a4a-b343-7cff902bcde0
+        state: >-
           {{ 
-            is_state('person.martin', 'home')
+            is_state('person.rook', 'home')
             or is_state('device_tracker.darkphone', 'home')
-            or ((is_state('binary_sensor.activity_last10', 'on') and states('sensor.home_martin_distance')|int < 2000 ))
+            or ((is_state('binary_sensor.activity_last10', 'on') and states('sensor.home_rook_distance')|int < 2000 ))
             or (states('input_select.sleep_state') in ['in bed', 'sleeping', 'paused', 'alarm', 'waking'] and is_state('input_select.latest_motion', 'Bedroom'))
           }}
-
-      martin_presence_delayed:
-        friendly_name: "Martin Presence - Delayed"
         device_class: presence
-        value_template: >-
-          {{ is_state('binary_sensor.martin_presence', 'on') }}
+
+      - name: "Rook Presence - Delayed"
+        unique_id: 6fe61172-a212-4b87-b574-dacade157167
+        state: >-
+          {{ is_state('binary_sensor.rook_presence', 'on') }}
+        device_class: presence
         delay_off:
           minutes: 10
-      martin_presence_extended:
-        friendly_name: "Martin Presence - Extended Away"
+
+      - name: "Rook Presence - Extended"
+        unique_id: 53c16165-7436-4bcf-8dbe-178d768963df
+        state: >-
+          {{ is_state('binary_sensor.rook_presence', 'on') }}
         device_class: presence
-        value_template: >-
-          {{ is_state('binary_sensor.martin_presence', 'on') }}
         delay_off:
           hours: 24
 
@@ -97,39 +88,39 @@ automation:
   - alias: presence notification
     triggers:
       - trigger: state
-        entity_id: binary_sensor.martin_presence
+        entity_id: binary_sensor.rook_presence
         from: "on"
         to: "off"
       - trigger: state
-        entity_id: binary_sensor.martin_presence
+        entity_id: binary_sensor.rook_presence
         from: "off"
         to: "on"
     actions:
       - action: script.debug_notification
         data:
-          message: "Presence: {{ states('binary_sensor.martin_presence') }}"
+          message: "Presence: {{ states('binary_sensor.rook_presence') }}"
           title: "Presence"
 
   - alias: home soon notification
     triggers:
       - trigger: state
-        entity_id: binary_sensor.martin_home_soon
+        entity_id: binary_sensor.rook_home_soon
         from: "on"
         to: "off"
       - trigger: state
-        entity_id: binary_sensor.martin_home_soon
+        entity_id: binary_sensor.rook_home_soon
         from: "off"
         to: "on"
     actions:
       - action: script.debug_notification
         data:
-          message: "Home Soon: {{ states('binary_sensor.martin_home_soon') }}"
+          message: "Home Soon: {{ states('binary_sensor.rook_home_soon') }}"
           title: "Home Soon"
 
   # Status State Machine
   #
   # Definitions:
-  # home_soon: Arriving home soon (Triggered by binary_sensor.martin_home_soon)
+  # home_soon: Arriving home soon (Triggered by binary_sensor.rook_home_soon)
   # just_arrived: Just walked in the door (Triggered by binary_sensor.hoveddor)
   # home: Home for more than 5 minutes (Triggered by being in state 'just_arrived' for more than 5 minutes)
   # leaving: On the way out the door (Triggered by button press, voice command, or the car starting while at home)
@@ -139,15 +130,15 @@ automation:
   #
   # Use events to trigger transitions, to simplify the state machine automation
 
-  - alias: Martin State Machine
-    id: martin_state_machine
+  - alias: Rook State Machine
+    id: rook_state_machine
     initial_state: true
     mode: queued
     triggers:
       - trigger: event
-        event_type: martin_state_change
+        event_type: rook_state_change
     variables:
-      current_state: "{{ states('input_select.martin_state') }}"
+      current_state: "{{ states('input_select.rook_state') }}"
       new_state: "{{ trigger.event.data.state }}"
       allowed_transitions:
         home_soon:
@@ -183,12 +174,12 @@ automation:
             sequence:
               - action: input_datetime.set_datetime
                 target:
-                  entity_id: input_datetime.martin_state_changed
+                  entity_id: input_datetime.rook_state_changed
                 data:
                   timestamp: "{{ now().isoformat() }}"
               - action: input_select.select_option
                 target:
-                  entity_id: input_select.martin_state
+                  entity_id: input_select.rook_state
                 data:
                   option: "{{ new_state }}"
           - conditions:
@@ -198,63 +189,63 @@ automation:
               - action: script.debug_notification
                 data:
                   message: "Invalid state transition from {{ current_state }} to {{ new_state }}"
-                  title: "Martin State: Invalid State Transition"
+                  title: "Rook State: Invalid State Transition"
 
   # State Machine Triggers #
 
   # Time based triggers
-  - alias: Martin State Machine - Trigger Home
+  - alias: Rook State Machine - Trigger Home
     triggers:
       - trigger: numeric_state
-        entity_id: sensor.martin_state_changed_minutes_ago
+        entity_id: sensor.rook_state_changed_minutes_ago
         above: 5
     conditions:
       - condition: state
-        entity_id: input_select.martin_state
+        entity_id: input_select.rook_state
         state: "just_arrived"
     actions:
-      - event: martin_state_change
+      - event: rook_state_change
         event_data:
           state: home
 
-  - alias: Martin State Machine - Trigger Just Left
+  - alias: Rook State Machine - Trigger Just Left
     triggers:
       - trigger: numeric_state
-        entity_id: sensor.martin_state_changed_minutes_ago
+        entity_id: sensor.rook_state_changed_minutes_ago
         above: 5
     conditions:
       - condition: state
-        entity_id: input_select.martin_state
+        entity_id: input_select.rook_state
         state: "leaving"
     actions:
-      - event: martin_state_change
+      - event: rook_state_change
         event_data:
           state: just_left
 
-  - alias: Martin State Machine - Trigger Away
+  - alias: Rook State Machine - Trigger Away
     triggers:
       - trigger: numeric_state
-        entity_id: sensor.martin_state_changed_minutes_ago
+        entity_id: sensor.rook_state_changed_minutes_ago
         above: 30
     conditions:
       - condition: state
-        entity_id: input_select.martin_state
+        entity_id: input_select.rook_state
         state: "just_left"
     actions:
-      - event: martin_state_change
+      - event: rook_state_change
         event_data:
           state: away
 
-  - alias: Martin State Machine - Trigger Away Long
+  - alias: Rook State Machine - Trigger Away Long
     triggers:
       - trigger: numeric_state
-        entity_id: sensor.martin_state_changed_minutes_ago
+        entity_id: sensor.rook_state_changed_minutes_ago
         above: 1080
     conditions:
       - condition: state
-        entity_id: input_select.martin_state
+        entity_id: input_select.rook_state
         state: "away"
     actions:
-      - event: martin_state_change
+      - event: rook_state_change
         event_data:
           state: away_long

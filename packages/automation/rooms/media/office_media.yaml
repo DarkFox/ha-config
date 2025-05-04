@@ -1,18 +1,18 @@
 switch:
   - platform: template
     switches:
-      martin_pc:
-        friendly_name: Martin PC
+      rook_pc:
+        friendly_name: Rook PC
         icon_template: mdi:desktop-classic
-        value_template: "{{ is_state('device_tracker.martin_pc', 'home') }}"
+        value_template: "{{ is_state('device_tracker.rook_pc', 'home') }}"
         turn_on:
           action: button.press
           target:
-            entity_id: button.martin_pc_wol
+            entity_id: button.rook_pc_wol
         turn_off:
           action: button.press
           target:
-            entity_id: button.martin_pc_shutdown
+            entity_id: button.rook_pc_shutdown
       kontor_soundbar_pc_output:
         friendly_name: Kontor Soundbar PC Output
         icon_template: mdi:soundbar
@@ -103,8 +103,8 @@ automation:
       value_template: >-
         {{
           is_state('sensor.office_room_state', 'active')
-          or is_state('binary_sensor.martin_pc_activity', 'on')
-          or is_state('switch.martin_pc', 'on')
+          or is_state('binary_sensor.rook_pc_activity', 'on')
+          or is_state('switch.rook_pc', 'on')
         }}
     actions:
       action: switch.turn_on
@@ -118,8 +118,8 @@ automation:
         value_template: >-
           {{
             is_state('sensor.office_room_state', 'off') 
-            and is_state('binary_sensor.martin_pc_activity', 'off')
-            and is_state('switch.martin_pc', 'off')
+            and is_state('binary_sensor.rook_pc_activity', 'off')
+            and is_state('switch.rook_pc', 'off')
           }}
         for:
           minutes: 5
@@ -140,7 +140,7 @@ automation:
       value_template: >-
         {{
           states('sensor.pc_afbryder_forbrug')|float > 0.03
-          or is_state('binary_sensor.martin_pc_activity', 'on')
+          or is_state('binary_sensor.rook_pc_activity', 'on')
           or is_state('binary_sensor.vagtskema_wfh', 'on')
         }}
     actions:
@@ -156,7 +156,7 @@ automation:
           {{
             is_state('switch.pc_afbryder', 'off')
             and states('sensor.pc_afbryder_forbrug')|float < 0.02
-            and is_state('binary_sensor.martin_pc_activity', 'off')
+            and is_state('binary_sensor.rook_pc_activity', 'off')
             and is_state('binary_sensor.vagtskema_wfh', 'off')
             and is_state('binary_sensor.quest_in_use_delayed', 'off')
           }}
@@ -172,7 +172,7 @@ automation:
     initial_state: true
     triggers:
       - trigger: numeric_state
-        entity_id: sensor.martin_pc_martin_pc_printers_npid634ed_hpcolorlaserjetm255dw
+        entity_id: sensor.rook_pc_rook_pc_printers_npid634ed_hpcolorlaserjetm255dw
         above: 0
     conditions:
       - condition: state
@@ -225,7 +225,7 @@ automation:
     actions:
       - action: button.press
         target:
-          entity_id: button.martin_pc_mute_tv
+          entity_id: button.rook_pc_mute_tv
 
   - alias: Unute PC TV line in on Office TV on
     id: unute_pc_tv_line_in_on_office_tv_on
@@ -237,14 +237,14 @@ automation:
     actions:
       - action: button.press
         target:
-          entity_id: button.martin_pc_unmute_tv
+          entity_id: button.rook_pc_unmute_tv
 
   - alias: Switch Office TV speaker output to internal when PC off
     id: switch_office_tv_speaker_output_to_internal_when_pc_off
     initial_state: true
     triggers:
       - trigger: state
-        entity_id: switch.martin_pc
+        entity_id: switch.rook_pc
         to: "off"
       - trigger: state
         entity_id: media_player.kontor_tv
@@ -254,7 +254,7 @@ automation:
         entity_id: media_player.kontor_tv
         state: "on"
       - condition: state
-        entity_id: switch.martin_pc
+        entity_id: switch.rook_pc
         state: "off"
     actions:
       - action: webostv.select_sound_output
@@ -267,7 +267,7 @@ automation:
     initial_state: true
     triggers:
       - trigger: state
-        entity_id: switch.martin_pc
+        entity_id: switch.rook_pc
         to: "on"
       - trigger: state
         entity_id: media_player.kontor_tv
@@ -277,7 +277,7 @@ automation:
         entity_id: media_player.kontor_tv
         state: "on"
       - condition: state
-        entity_id: switch.martin_pc
+        entity_id: switch.rook_pc
         state: "on"
     actions:
       - action: webostv.select_sound_output
