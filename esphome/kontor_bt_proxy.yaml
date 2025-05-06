@@ -1,35 +1,25 @@
 substitutions:
+  room: Kontor
   devicename: kontor_bt_proxy
   upper_devicename: Kontor Bluetooth Proxy
 
-esphome:
-  name: ${devicename}
-  
 esp32:
   board: esp-wrover-kit
+  framework:
+    type: esp-idf
+    version: recommended
 
-wifi:
-  ssid: !secret main_wifi_ssid
-  password: !secret main_wifi_pass
+esphome:
+  name: ${devicename}
 
-# Enable logging
-logger:
-
-# Enable Home Assistant API
-api:
-  encryption:
-    key: !secret encryption_key
-
-ota:
-  platform: esphome
-  password: !secret ota_pass
+packages:
+  base: !include packages/base.yaml
+  btle_trackers: !include packages/btle_trackers.yaml
 
 status_led:
   pin:
     number: GPIO2
     inverted: true
-
-esp32_ble_tracker:
 
 bluetooth_proxy:
   active: true

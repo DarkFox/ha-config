@@ -1,4 +1,5 @@
 substitutions:
+  room: Gang
   devicename: gang_bt_proxy
   upper_devicename: Gang Bluetooth Proxy
 
@@ -11,45 +12,14 @@ esp32:
 esphome:
   name: ${devicename}
 
-wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_pass
-
-# Enable logging
-logger:
-  # level: VERY_VERBOSE
-
-# Enable Home Assistant API
-api:
-  encryption:
-    key: !secret encryption_key
-
-ota:
-  platform: esphome
-  password: !secret ota_pass
+packages:
+  base: !include packages/base.yaml
+  btle_trackers: !include packages/btle_trackers.yaml
 
 status_led:
   pin:
     number: GPIO2
     inverted: true
 
-esp32_ble_tracker:
-
 bluetooth_proxy:
   active: true
-
-binary_sensor:
-  - platform: ble_presence
-    name: "Gang BLE Presence Darkphone"
-    ibeacon_uuid: !secret darkphone_btle_uuid
-  - platform: ble_presence
-    name: "Gang BLE Presence DarkWatch"
-    ibeacon_uuid: !secret darkwatch_btle_uuid
-
-sensor:
-  - platform: ble_rssi
-    name: "Gang BLE Darkphone RSSI value"
-    ibeacon_uuid: !secret darkphone_btle_uuid
-  - platform: ble_rssi
-    name: "Gang BLE DarkWatch RSSI value"
-    ibeacon_uuid: !secret darkwatch_btle_uuid
