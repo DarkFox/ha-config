@@ -1,5 +1,5 @@
 blueprint:
-  name: "Valetudo: Clean Rooms"
+  name: 'Valetudo: Clean Rooms'
   description: Starts selected room cleaning using Valetudo
   source_url: https://github.com/mundschenk-at/ha-valetudo-blueprints/blob/main/yaml/script/valetudo-clean-rooms.yaml
   domain: script
@@ -8,13 +8,12 @@ blueprint:
   input:
     send_robot_command:
       name: Send Vacuum Command
-      description:
-        The "send vacuum command" script (taking an MQTT topic and payload
+      description: The "send vacuum command" script (taking an MQTT topic and payload
         as parameters).
       selector:
         entity:
           domain:
-            - script
+          - script
           multiple: false
     robot_map_segments:
       name: Robot Map Segments
@@ -22,40 +21,36 @@ blueprint:
       selector:
         entity:
           domain:
-            - sensor
+          - sensor
           integration: mqtt
           multiple: false
 variables:
   segments_entity: !input robot_map_segments
-  segment_id:
-    "{% set ns = namespace(segments2id=[]) %} {% for attr in states[segments_entity].attributes
+  segment_id: "{% set ns = namespace(segments2id=[]) %} {% for attr in states[segments_entity].attributes
     -%}\n  {% if is_number( attr ) %}\n     {% set ns.segments2id = ns.segments2id
     + [ '\"'~states[segments_entity].attributes[attr]~'\":\"'~attr~'\"' ] %}\n  {%-
     endif %}\n{%- endfor %} {{('{'~ns.segments2id|join(',')~'}')|from_json}}"
-  segment_name:
-    "{% set ns = namespace(id2segments=[]) %} {% for attr in states[segments_entity].attributes
+  segment_name: "{% set ns = namespace(id2segments=[]) %} {% for attr in states[segments_entity].attributes
     -%}\n  {% if is_number( attr ) %}\n       {% set ns.id2segments = ns.id2segments
     + [ '\"'~attr~'\":\"'~states[segments_entity].attributes[attr]~'\"' ] %}\n  {%-
     endif %}\n{%- endfor %} {{('{'~ns.id2segments|join(',')~'}')|from_json}}"
 sequence:
-  - action: !input send_robot_command
-    data:
-      mqtt_topic: OperationModeControlCapability/preset/set
-      mqtt_payload: "{{mode|default('vacuum')}}"
-  - action: !input send_robot_command
-    data:
-      mqtt_topic: MapSegmentationCapability/clean/set
-      mqtt_payload:
-        "{%- set ns = namespace(ids=[]) %} {% for room in ( segments|default('')|string
-        ).split(',')|map('trim') -%}\n  {% if segment_id[room] is defined and is_number(
-        segment_id[room] ) -%}\n      {% set ns.ids = ns.ids + [segment_id[room]] %}\n
-        \ {%- endif %}\n{%- endfor %} {%- set payload = {\"segment_ids\": ns.ids, \"iterations\":
-        iterations|default(1)|int, \"customOrder\": custom_order|default(true)} %} {{payload|to_json}}"
+- service: !input send_robot_command
+  data:
+    mqtt_topic: OperationModeControlCapability/preset/set
+    mqtt_payload: '{{mode|default(''vacuum'')}}'
+- service: !input send_robot_command
+  data:
+    mqtt_topic: MapSegmentationCapability/clean/set
+    mqtt_payload: "{%- set ns = namespace(ids=[]) %} {% for room in ( segments|default('')|string
+      ).split(',')|map('trim') -%}\n  {% if segment_id[room] is defined and is_number(
+      segment_id[room] ) -%}\n      {% set ns.ids = ns.ids + [segment_id[room]] %}\n
+      \ {%- endif %}\n{%- endfor %} {%- set payload = {\"segment_ids\": ns.ids, \"iterations\":
+      iterations|default(1)|int, \"customOrder\": custom_order|default(true)} %} {{payload|to_json}}"
 fields:
   segments:
     name: Rooms
-    description:
-      The names of the rooms to be cleaned (separated by commas). Unknown
+    description: The names of the rooms to be cleaned (separated by commas). Unknown
       rooms will be ignored.
     required: true
     example: Bathroom, Kitchen
@@ -70,12 +65,12 @@ fields:
     selector:
       select:
         options:
-          - label: Vacuum
-            value: vacuum
-          - label: Mop
-            value: mop
-          - label: Vacuum & Mop
-            value: vacuum_and_mop
+        - label: Vacuum
+          value: vacuum
+        - label: Mop
+          value: mop
+        - label: Vacuum & Mop
+          value: vacuum_and_mop
   iterations:
     name: Iterations
     description: The number of cleaning iterations per room.
