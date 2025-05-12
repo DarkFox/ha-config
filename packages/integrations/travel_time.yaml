@@ -55,6 +55,10 @@ template:
             {% set event = state_attr('sensor.next_travel_event', 'event') or {} %}
             {{ event.get('summary', none) }}
 
+  - trigger:
+      - trigger: event
+        event_type: upcoming_travel_destination_coordinates
+    sensor:
       - name: Upcoming Travel Location
         unique_id: ae8f41c7-775d-4b95-bb88-ed7b2865b9fb
         state: >-
@@ -82,7 +86,26 @@ template:
             {% else %}
               mdi:map-marker
             {% endif %}
+          osm_data: >
+            {% if trigger.event.data.destination is defined %}
+              {{ trigger.event.data.destination }}
+            {% else %}
+              unknown
+            {% endif %}
+          latitude: >
+            {% if trigger.event.data.destination is defined and trigger.event.data.destination.geoCoordinate is defined %}
+              {{ trigger.event.data.destination.geoCoordinate.latitude }}
+            {% else %}
+              none
+            {% endif %}
+          longitude: >
+            {% if trigger.event.data.destination is defined and trigger.event.data.destination.geoCoordinate is defined %}
+              {{ trigger.event.data.destination.geoCoordinate.longitude }}
+            {% else %}
+              none
+            {% endif %}
 
+  - sensor:
       - name: Google Maps Embed Key
         unique_id: f740d25c-edb4-4414-8b24-68e86211d7b9
         state: !secret google_maps_embed_key
@@ -102,9 +125,9 @@ template:
       - name: Commute Status Car
         unique_id: 5a3e3797-bbe0-4f6a-b5fa-54c452cafe32
         state: >-
-          {%- if states('sensor.rook_til_destination_bil')|int(0) > 45 -%}
+          {%- if states('sensor.bil_destination_duration_in_traffic')|int(0) > 45 -%}
             bad
-          {%- elif states('sensor.rook_til_destination_bil')|int(0) > 25 -%}
+          {%- elif states('sensor.bil_destination_duration_in_traffic')|int(0) > 25 -%}
             ok
           {%- else -%}
             good
@@ -150,7 +173,7 @@ template:
         device_class: timestamp
         state: >-
           {% set driving = is_state_attr('sensor.upcoming_travel_location', 'mode', 'driving') %}
-          {% set travel_time_sensor = 'sensor.rook_til_destination_bil' if driving else 'sensor.rook_til_destination_transit' %}
+          {% set travel_time_sensor = 'sensor.bil_destination_duration_in_traffic' if driving else 'sensor.rook_til_destination_transit' %}
           {% set padding = 15 if driving else 5 %}
           {{
             ((
@@ -224,6 +247,25 @@ sensor:
     sender: S-tog
 
 automation:
+  - alias: "Get upcoming travel destionation coordinates"
+    id: 29f91918-2f1c-4968-a147-2de8df7555f4
+    initial_state: true
+    triggers:
+      - trigger: state
+        entity_id: sensor.next_travel_event
+    actions:
+      - action: script.osm_geocoding_lookup
+        response_variable: geocoded_data
+        data:
+          query: "{{ state_attr('sensor.next_travel_event', 'location') }}"
+      - variables:
+          destination: >-
+            {%- from 'osm.jinja' import geocodejson_to_vw -%}
+            {{ geocodejson_to_vw(geocoded_data.location, name) if geocoded_data.get('location', None) else {} }}
+      - event: upcoming_travel_destination_coordinates
+        event_data:
+          destination: "{{ destination }}"
+
   - alias: "Next destination - Update sensors with high frequency when close to leave time"
     id: e342768f-0119-453a-8301-201282f58103
     initial_state: true
@@ -241,7 +283,7 @@ automation:
             sequence:
               - action: homeassistant.update_entity
                 target:
-                  entity_id: sensor.rook_til_destination_bil
+                  entity_id: sensor.bil_destination_duration_in_traffic
           - conditions: |-
               {{ is_state_attr('sensor.upcoming_travel_location', 'mode', 'transit') }}
             sequence:
@@ -270,7 +312,7 @@ automation:
             sequence:
               - action: homeassistant.update_entity
                 target:
-                  entity_id: sensor.rook_til_destination_bil
+                  entity_id: sensor.bil_destination_duration_in_traffic
           - conditions: |-
               {{ is_state_attr('sensor.upcoming_travel_location', 'mode', 'transit') }}
             sequence:
