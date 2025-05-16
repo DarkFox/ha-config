@@ -78,32 +78,25 @@ script:
         description: Source entity for destination
         example: zone.home
         required: true
+    variables:
+      query: "{{ states(entity_id) }}"
+      start_time: >-
+        {{
+          state_attr(entity_id, 'start_time')
+          or state_attr(entity_id, 'start')
+          or none
+        }}
+      latitude: "{{ state_attr(entity_id, 'latitude') or None }}"
+      longitude: "{{ state_attr(entity_id, 'longitude') or None }}"
+      address: "{{ state_attr(entity_id, 'address') or None }}"
+      location_name: "{{ state_attr(entity_id, 'location_name') or None }}"
     sequence:
       - choose:
           - alias: Entity without coordinates
             conditions:
               - condition: template
-                value_template: "{{ not state_attr(entity_id, 'latitude') }}"
+                value_template: "{{ not latitude or not longitude }}"
             sequence:
-              - variables:
-                  query: "{{ states(entity_id) }}"
-                  start_time: >-
-                    {{
-                      state_attr(entity_id, 'start_time')
-                      or state_attr(entity_id, 'start')
-                      or none
-                    }}
-                  name: >-
-                    {{
-                      (start_time|as_datetime|as_local).strftime('%H:%M')~':' if start_time
-                      else ''
-                    }}
-                    {{
-                      state_attr(entity_id, 'summary')
-                      or state_attr(entity_id, 'name')
-                      or state_attr(entity_id, 'friendly_name')
-                      or none
-                    }}
               - action: script.osm_geocoding_lookup
                 response_variable: geocoded_data
                 data:
@@ -111,20 +104,55 @@ script:
               - variables:
                   destination: >-
                     {%- from 'osm.jinja' import geocodejson_to_vw -%}
-                    {{ geocodejson_to_vw(geocoded_data.location, name) if geocoded_data.get('location', None) else {} }}
+                    {{ geocodejson_to_vw(geocoded_data.location) if geocoded_data.get('location', None) else {} }}
+              - variables:
+                  latitude: "{{ destination.geoCoordinate.latitude }}"
+                  longitude: "{{ destination.geoCoordinate.longitude }}"
+                  location_name: "{{ destination.name }}"
+                  address: "{{ destination.address }}"
+          - alias: Entity without address but with coordinates
+            conditions:
               - condition: template
-                value_template: "{{ bool(destination.get('geoCoordinate', {}).get('latitude', False)) }}"
-              - action: script.id_3_pro_send_destinations
+                value_template: "{{ not address and latitude != None and longitude != None }}"
+            sequence:
+              - action: script.osm_reverse_lookup
+                response_variable: geocoded_data
                 data:
-                  destinations: "{{ destination }}"
-        default:
-          - action: script.id_3_pro_send_destinations
-            data:
-              destinations:
-                - name: "{{ state_attr(entity_id, 'friendly_name') }}"
-                  geoCoordinate:
-                    latitude: "{{ state_attr(entity_id, 'latitude') }}"
-                    longitude: "{{ state_attr(entity_id, 'longitude') }}"
+                  latitude: "{{ latitude }}"
+                  longitude: "{{ longitude }}"
+              - variables:
+                  destination: >-
+                    {%- from 'osm.jinja' import geocodejson_to_vw -%}
+                    {{ geocodejson_to_vw(geocoded_data.location) if geocoded_data.get('location', None) else {} }}
+              - variables:
+                  latitude: "{{ destination.geoCoordinate.latitude if destination.get('geoCoordinate', None) else latitude }}"
+                  longitude: "{{ destination.geoCoordinate.longitude if destination.get('geoCoordinate', None) else longitude }}"
+                  location_name: "{{ destination.name if destination.get('name', None) else location_name }}"
+                  address: "{{ destination.address if destination.get('address', None) else address }}"
+      - condition: template
+        value_template: "{{ latitude != None and longitude != None }}"
+      - variables:
+          name: >-
+            {{
+              (start_time|as_datetime|as_local).strftime('%H:%M')~':' if start_time
+              else ''
+            }}
+            {{
+              state_attr(entity_id, 'summary')
+              or state_attr(entity_id, 'name')
+              or state_attr(entity_id, 'location_name')
+              or location_name
+              or state_attr(entity_id, 'friendly_name')
+              or None
+            }}
+      - action: script.id_3_pro_send_destinations
+        data:
+          destinations:
+            - name: "{{ name }}"
+              address: "{{ address }}"
+              geoCoordinate:
+                latitude: "{{ latitude }}"
+                longitude: "{{ longitude }}"
 
   send_home_destination:
     alias: Send home destination to car

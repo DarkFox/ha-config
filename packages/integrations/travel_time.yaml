@@ -104,6 +104,18 @@ template:
             {% else %}
               none
             {% endif %}
+          location_name: >
+            {% if trigger.event.data.destination is defined and trigger.event.data.destination.name is defined %}
+              {{ trigger.event.data.destination.name }}
+            {% else %}
+              none
+            {% endif %}
+          address: >
+            {% if trigger.event.data.destination is defined and trigger.event.data.destination.address is defined %}
+              {{ trigger.event.data.destination.address }}
+            {% else %}
+              none
+            {% endif %}
 
   - sensor:
       - name: Google Maps Embed Key
@@ -253,6 +265,8 @@ automation:
     triggers:
       - trigger: state
         entity_id: sensor.next_travel_event
+        for:
+          seconds: 10
     actions:
       - action: script.osm_geocoding_lookup
         response_variable: geocoded_data

@@ -12,6 +12,20 @@ template:
             {% set old_results = state_attr('sensor.osm_geocoding_cache', 'entries') or {} %}
             {{ dict(old_results, **{ query: result}) }}
 
+  - trigger:
+      trigger: event
+      event_type: osm_reverse_new_entry
+    sensor:
+      - name: OSM Reverse Geocoding Cache
+        state: "{{ as_timestamp(now()) | timestamp_custom('%H:%M:%S %d %b %Y', true) }}"
+        attributes:
+          entries: >
+            {% set latitude = trigger.event.data.latitude %}
+            {% set longitude = trigger.event.data.longitude %}
+            {% set result = trigger.event.data.result | first or None %}
+            {% set old_results = state_attr('sensor.osm_reverse_geocoding_cache', 'entries') or {} %}
+            {{ dict(old_results, **{ latitude|string + ',' + longitude|string: result}) }}
+
 script:
   osm_geocoding_lookup:
     fields:
@@ -67,5 +81,70 @@ script:
       - variables:
           result: >-
             {{ { 'location': state_attr('sensor.osm_geocoding_cache', 'entries').get(query, {}) } if state_attr('sensor.osm_geocoding_cache', 'entries') is defined else {} }}
+      - stop: Return result
+        response_variable: result
+
+  osm_reverse_lookup:
+    fields:
+      latitude:
+        description: Latitude of the location
+        example: "55.123456"
+        required: true
+        selector:
+          text:
+      longitude:
+        description: Longitude of the location
+        example: "12.123456"
+        required: true
+        selector:
+          text:
+      force_lookup:
+        description: Look up the address even if already cached
+        example: "true"
+        selector:
+          boolean:
+    sequence:
+      - choose:
+          # Check if the result is cached
+          - conditions:
+              - condition: or
+                conditions:
+                  - condition: template
+                    value_template: "{{ (force_lookup|bool(false)) }}"
+                  - condition: template
+                    value_template: >-
+                      {{
+                        true if not state_attr('sensor.osm_reverse_geocoding_cache', 'entries') 
+                          or latitude|string + ',' + longitude|string not in state_attr('sensor.osm_reverse_geocoding_cache', 'entries')
+                        else false
+                      }}
+            sequence:
+              - action: shell_command.curl
+                response_variable: response
+                data:
+                  url: >-
+                    https://nominatim.openstreetmap.org/reverse?format=geocodejson&addressdetails=1&lat={{ latitude }}&lon={{ longitude }}
+                  method: get
+              - variables:
+                  result: "{{ response.get('stdout', '{}') | from_json }}"
+                  features: "{{ result.get('features', []) }}"
+              - event: osm_reverse_new_entry
+                event_data:
+                  latitude: "{{ latitude }}"
+                  longitude: "{{ longitude }}"
+                  result: "{{ features }}"
+              - wait_template: >-
+                  {{
+                    true if has_value('sensor.osm_reverse_geocoding_cache')
+                      and state_attr('sensor.osm_reverse_geocoding_cache', 'entries') is defined
+                      and latitude|string + ',' + longitude|string in state_attr('sensor.osm_reverse_geocoding_cache', 'entries')
+                    else false
+                  }}
+                timeout:
+                  seconds: 10
+                continue_on_timeout: false
+      - variables:
+          result: >-
+            {{ { 'location': state_attr('sensor.osm_reverse_geocoding_cache', 'entries').get(latitude|string + ',' + longitude|string, {}) } if state_attr('sensor.osm_reverse_geocoding_cache', 'entries') is defined else {} }}
       - stop: Return result
         response_variable: result
