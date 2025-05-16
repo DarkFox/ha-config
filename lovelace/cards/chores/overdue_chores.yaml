@@ -1,0 +1,260 @@
+type: grid
+square: false
+columns: 1
+cards:
+  - type: custom:auto-entities
+    card:
+      square: false
+      type: grid
+      columns: 1
+    card_param: cards
+    filter:
+      template: >-
+        {%- set ns = namespace(Kid_name='', 
+          Kid_name_normalize='',
+          pref_column_count='',
+          pref_use_overdue_grouping='',
+          pref_exclude_approved='',
+          pref_exclude_label_list=[],
+          overdue_buttons=[], 
+          am_buttons=[],
+          pm_buttons=[],
+          weekly_buttons=[],
+          other_buttons=[],
+          complete_buttons=[],
+          today_00='',
+          today_12='',
+          today_24='',
+          next_week_00='',
+          points_label='', 
+          points_icon='',
+          label_button_groups=[],
+          all_label_buttons=[],
+          temp_label_button_group=[],
+          all_chore_labels=[],
+          group_cards=[],
+
+
+          CHORES='',OVERDUE='', THIS_MORNING='', TODAY='', BONUS='', 
+          STREAK='', STATUS='', DUE='', MULTI_APPROVE_MARK='',
+          SHARED_MARK='', PENDING='', CLAIMED='', APPROVED='',
+          NO_DUE_DATE='', DAILY='', WEEKLY='', DUE_THIS_WEEK=''
+        ) -%}  
+
+        {#-- ************* Set Translatable Text ************* --#}  
+
+        {%- set ns.CHORES = "Opgaver" -%} 
+
+        {%- set ns.OVERDUE = "Forfalden" -%} 
+
+        {%- set ns.THIS_MORNING = "Gøres Denne Morgen" -%} 
+
+        {%- set ns.TODAY = "Gøres I Dag" -%}
+
+        {%- set ns.DUE_THIS_WEEK = "Skal udføres denne uge" -%} 
+
+        {%- set ns.BONUS = "Senere & Bonus" -%} 
+
+        {%- set ns.STREAK = "Stime" -%}
+
+        {%- set ns.STATUS = "Status" -%}
+
+        {%- set ns.DUE = "Due" -%}
+
+        {%- set ns.MULTI_APPROVE_MARK = "F" -%}
+
+        {%- set ns.SHARED_MARK = "D" -%}
+
+        {%- set ns.PENDING = "Undervejs" -%}
+
+        {%- set ns.CLAIMED = "Anmodet" -%}
+
+        {%- set ns.APPROVED = "Godkendt" -%}
+
+        {%- set ns.NO_DUE_DATE = "Ingen Forfaldsdato" -%}  
+
+        {%- set ns.DAILY = "Daglig" -%}
+
+        {%- set ns.WEEKLY = "Ugentlig" -%}        
+
+        {#-- ************* End Translatable Text ************* --#}
+
+        {#-- ************* Set Preferences ************* --#} 
+
+        {%- set ns.pref_column_count = 2 -%}
+
+        {%- set ns.pref_use_overdue_grouping = true -%}
+
+        {%- set ns.pref_exclude_approved = true -%}
+
+        {%- set ns.pref_exclude_label_list = [ "Example_label_1",
+        "Example_label_2" ] -%}     
+
+        {#-- ************* End Preferences ************* --#}
+
+        {#-- Set Kid_name and normalize --#}  
+
+        {%- set ns.Kid_name = 'Rook' -%}
+
+        {%- set ns.Kid_name_normalize = ns.Kid_name | slugify() -%}
+
+        {#-- Point Labels --#}   {%- set points_sensor = 'sensor.kc_' ~
+        ns.Kid_name_normalize ~ '_points' -%} {%- set ns.points_label =
+        state_attr(points_sensor, 'unit_of_measurement') -%} {%- set
+        ns.points_icon = state_attr(points_sensor, 'icon') -%}        
+
+        {#-- Build a list of button entities for this kid --#} {%- set prefix =
+        'button\\.kc_' ~ (ns.Kid_name_normalize) ~ '_chore_claim_' -%}     {%-
+        set buttons = states.button | selectattr('entity_id', 'match', '^' ~
+        prefix) | list -%} 
+
+        {#-- Get timestamps for Today Processing --#}    {%- set ns.today_00 =
+        as_timestamp(now().replace(hour=0, minute=0, second=0, microsecond=0))
+        -%}   {%- set ns.today_12 = ns.today_00 + (12 * 60 * 60) -%}  {%- set
+        ns.today_24 = ns.today_00 + (24 * 60 * 60) -%}
+
+        {#-- Get timestamp for the next Monday (day 0) at 12 AM for Weekly
+        Processing--#}  {%- set week_start = 0 -%}  {%- set
+        days_until_week_start = 7 if now().weekday() == week_start else (7 -
+        now().weekday()) % 7 -%}  {%- set ns.week_start_00 = as_timestamp((now()
+        + timedelta(days=days_until_week_start)).replace(hour=0, minute=0,
+        second=0, microsecond=0)) -%}
+
+        {%- for button in buttons -%}
+          {%- set chore_sensor_id = button.entity_id | regex_replace('^button\\.kc_', 'sensor.kc_') | regex_replace('_chore_claim_', '_chore_status_') -%}
+          {%- set sensor_state = states(chore_sensor_id) -%}
+          {%- set due_date_str = state_attr(chore_sensor_id, 'due_date') -%}
+          {%- set recurring = state_attr(chore_sensor_id, 'recurring_frequency') -%}
+          {%- set chore_labels = state_attr(chore_sensor_id, 'labels') -%}
+          {%- if not (chore_labels | select('in', ns.pref_exclude_label_list) | list | count > 0) -%}
+            {%- if sensor_state == 'overdue' and ns.pref_use_overdue_grouping -%}
+              {%- set ns.overdue_buttons = ns.overdue_buttons + [button] -%}
+            {%- elif sensor_state == 'approved' and state_attr(chore_sensor_id,'allow_multiple_claims_per_day') == false and ns.pref_exclude_approved -%}
+              {#-- Do nothing --#}
+            {%- else -%}
+              {%- set ns.other_buttons = ns.other_buttons + [button] -%}
+            {%- endif -%}
+          {%- endif -%}
+        {%- endfor -%}
+
+        {#-- Build the button groups --#}  {%- set button_groups = [
+            {'name': "!!!!!!!!!!! " ~ ns.OVERDUE ~ " !!!!!!!!!!!", 'buttons': ns.overdue_buttons, 'icon': 'mdi:alert-octagon'},
+        ] -%}
+
+        {#-- Loop through the button groups and create all claim buttons --#}
+        {%- for group in button_groups -%}
+          {%- set ns.group_cards = [] -%}
+          {%- if group.buttons | length > 0 -%}
+            {%- set heading_card =
+              {
+                'type': 'heading',
+                'icon': group.icon,
+                'heading': group.name,
+                'heading_style': 'title',
+              }
+            -%}
+            {{- heading_card -}},         
+
+            {%- for button in group.buttons -%}
+              {%- set chore_sensor_id = button.entity_id | regex_replace('^button\\.kc_', 'sensor.kc_') | regex_replace('_chore_claim_', '_chore_status_') -%}
+              {%- set streak_chore_sensor_id = chore_sensor_id | regex_replace('_status_', '_streak_') -%}
+              {%- set primary = state_attr(chore_sensor_id, 'chore_name') ~ (' (' ~ ns.SHARED_MARK ~ ')' if state_attr(chore_sensor_id, 'shared_chore') else '')  -%}
+              {%- if button.state not in ['unknown', 'unavailable', 'error'] -%}
+                {%- set ts_diff = (now().timestamp() - as_timestamp(button.state)) | float(0) -%}
+                {%- set last_update = (
+                    '%.0f minutes ago' % (ts_diff / 60)
+                    if ts_diff < 3600 else
+                    '%.0f hours ago' % (ts_diff / 3600)
+                    if ts_diff < 86400 else
+                    '%.0f days ago' % (ts_diff / 86400)
+                  ) -%}
+              {%- else -%}
+                {%- set last_update = '' -%}
+              {%- endif -%}
+              {%- set due_date_str = state_attr(chore_sensor_id, 'due_date') | string -%}
+              {%- set due_date = as_datetime(due_date_str).astimezone(now().tzinfo) if due_date_str not in ['None', 'unknown', 'unavailable'] else None -%}
+              {%- set recurring = state_attr(chore_sensor_id, 'recurring_frequency') -%}
+              {%- set today = now().astimezone(now().tzinfo).date() -%}          
+              {%- set due_date_short = 
+                  ns.DAILY if recurring == 'daily' and not due_date else 
+                  ns.WEEKLY if recurring == 'weekly' and not due_date else
+                  ns.NO_DUE_DATE if not due_date else 
+                  (due_date.strftime('%-I:%M %p') if due_date.date() == today else as_timestamp(due_date) | timestamp_custom('%a %b %-d', true)) 
+              -%}
+
+                  
+              {%- set multi_approve = state_attr(chore_sensor_id, 'allow_multiple_claims_per_day') -%}
+              {%- set chore_state = states(chore_sensor_id) -%}
+              {%- set state_map = {
+                  'pending': ns.PENDING,
+                  'claimed': ns.CLAIMED,
+                  'approved': ns.APPROVED,
+                  'overdue': ns.OVERDUE
+              } -%}
+              {%- set chore_state_display = (state_map[chore_state] if chore_state in state_map else chore_state) ~ ' (' ~ ns.MULTI_APPROVE_MARK ~ ')' if multi_approve == true else (state_map[chore_state] if chore_state in state_map else chore_state) -%}
+              {%- set points = state_attr(chore_sensor_id, 'default_points') | string -%}
+              {%- set global_chore_state = state_attr(chore_sensor_id, 'global_state') -%}
+              {%- set multi_approve = state_attr(chore_sensor_id, 'allow_multiple_claims_per_day') -%}
+              {%- set streak = state_attr(chore_sensor_id, 'chore_current_streak') | string -%}              
+              {%- set secondary_options = 'Points: ' + points + '\n' + 'Streak: ' + streak + '\n' + 'Last: ' + last_update  + '\n \n' + 'Status: ' + chore_state + '\n' + 'Due: ' + due_date_short -%}
+              {%- set secondary = ns.points_label ~ ': ' + points + '\n' + ns.STREAK + ': ' + streak + '\n \n' + ns.STATUS + ': ' + chore_state_display + '\n' + ns.DUE + ': ' + due_date_short -%}
+              {%- set icon_color = (
+                    'blue' if chore_state == 'approved' and multi_approve == true else
+                    'green' if chore_state == 'approved' else
+                    'yellow' if chore_state == 'partial' else
+                    'orange' if chore_state == 'claimed' else
+                    'red' if chore_state == 'overdue' else
+                    'purple' if '_in_part' in global_chore_state else
+                    'grey'
+                  ) -%}
+              {%- set badge_color = (
+                    'blue' if chore_state == 'approved' and multi_approve == true else
+                    'green' if chore_state == 'approved' else
+                    'green' if chore_state == 'partial' else
+                    'green' if chore_state == 'claimed' else
+                    'red' if chore_state == 'overdue' else
+                    'purple' if '_in_part' in global_chore_state else
+                    'grey'
+                  ) -%}
+              {%- set badge_icon = (
+                    'mdi:check-bold' if chore_state == 'approved' else
+                    'mdi:check-bold' if chore_state == 'partial' else
+                    'mdi:check-bold' if chore_state == 'claimed' else
+                    'mdi:exclamation-thick' if chore_state == 'overdue' else
+                    'mdi:account-group' if '_in_part' in global_chore_state else
+                    ''
+                  ) -%}
+              {#-- Add chore card to the group_cards list --#}
+              {%- set ns.group_cards = ns.group_cards + [{
+                  'type': 'custom:mushroom-template-card',
+                  'entity': button.entity_id,
+                  'primary': primary,
+                  'multiline_secondary': 'false',
+                  'secondary': secondary,
+                  'layout': 'horizontal',
+                  'icon': button.attributes.icon,
+                  'icon_color': icon_color,
+                  'badge_icon': badge_icon,
+                  'badge_color': badge_color,
+                  'tap_action': {
+                    'action': 'toggle'
+                  },
+                  'hold_action': {
+                    'action': 'more-info'
+                  }
+              }] -%}
+            {%- endfor -%}
+            {#-- Display the grid card for this group so column count can be adjusted --#}
+              {{
+                {
+                  'type': 'grid',
+                  'columns': ns.pref_column_count,
+                  'square': false,
+                  'cards': ns.group_cards
+                }
+              }},
+          {%- endif -%}
+        {%- endfor -%}
+grid_options:
+  columns: 24
+  rows: auto
