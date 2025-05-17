@@ -836,7 +836,7 @@ automation:
           repeat_mode: "all"
           playlist:
             # - "{{ states('sensor.podcast_radioavisen') }}"
-            # - DR P3
+            # - DR P4
             - "SomaFM: Groove Salad"
       - action: media_player.volume_set
         data:
@@ -867,9 +867,8 @@ automation:
           entity_id: media_player.sovevaerelse_mass
           repeat_mode: "all"
           playlist:
-            # - "{{ states('sensor.podcast_radioavisen') }}"
-            # - DR P3
-            - "SomaFM: PopTron"
+            - "{{ states('sensor.podcast_radioavisen') }}"
+            - DR P4
       - wait_template: "{{ is_state('media_player.sovevaerelse', 'playing') }}"
         timeout: "00:00:30"
       - action: media_player.volume_set
@@ -918,38 +917,37 @@ automation:
     actions:
       - action: media_player.join
         target:
-          entity_id: media_player.sovevaerelse
+          entity_id: media_player.badevaerelse
         data:
           group_members: >-
             [
-              "media_player.badevaerelse"
+              "media_player.sovevaerelse"
               {{ ', "media_player.kokken"' if is_state('input_boolean.guests', 'off') }}
               {{ ', "media_player.roam"' if is_state('input_boolean.guests', 'off') and not is_state('media_player.roam', 'unavailable') }}
             ]
       - action: script.mass_briefing_playlist
         data:
-          entity_id: media_player.sovevaerelse_mass
+          entity_id: media_player.badevaerelse_mass
           volume_level: 0.5
           playlist:
             - "{{ states('sensor.podcast_radioavisen') }}"
             - "{{ states('sensor.podcast_dw_news_brief') }}"
             - "{{ states('sensor.podcast_daily_tech_headlines') }}"
             - "{{ states('sensor.podcast_daily_tech_news_show') }}"
-            # - DR P3
-            - "SomaFM: PopTron"
+            - DR P4
       - wait_template: "{{ is_state('media_player.badevaerelse', 'playing') }}"
         timeout: "00:00:30"
       - action: media_player.volume_set
         data:
           entity_id: >-
-            ["media_player.sovevaerelse", "media_player.badevaerelse" {{ ', "media_player.kokken"' if is_state('input_boolean.guests', 'off') }}]
+            ["media_player.badevaerelse", "media_player.sovevaerelse" {{ ', "media_player.kokken"' if is_state('input_boolean.guests', 'off') }}]
           volume_level: 0.5
       - delay:
           minutes: 2
       - action: media_player.volume_set
         data:
           entity_id: >-
-            ["media_player.sovevaerelse", "media_player.badevaerelse" {{ ', "media_player.kokken"' if is_state('input_boolean.guests', 'off') }}]
+            ["media_player.badevaerelse", "media_player.sovevaerelse" {{ ', "media_player.kokken"' if is_state('input_boolean.guests', 'off') }}]
           volume_level: 0.6
 
   - alias: awake_action
