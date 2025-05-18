@@ -82,17 +82,17 @@ template:
         unique_id: 7e13ec58-a50b-41fb-a78c-16491cd17fb9
         state: >-
           {{
-            is_state('binary_sensor.torretumbler_dor', 'off')
+            is_state('binary_sensor.torretumbler_dor_abner', 'off')
             and states('sensor.dryer_temp_delta')|int(0) > 10
             and states('sensor.pow_k_l2_power')|int(0) > 900
           }}
         device_class: running
         attributes:
           icon: "{{ 'mdi:tumble-dryer' if this.state == 'on' else 'mdi:tumble-dryer-off' }}"
-          door_closed: "{{ is_state('binary_sensor.torretumbler_dor', 'off') }}"
+          door_closed: "{{ is_state('binary_sensor.torretumbler_dor_abner', 'off') }}"
           temp_delta_high: "{{ states('sensor.dryer_temp_delta')|int(0) > 10 }}"
           power_high: "{{ states('sensor.pow_k_l2_power')|int(0) > 900 }}"
-          door: "{{ states('binary_sensor.torretumbler_dor') }}"
+          door: "{{ states('binary_sensor.torretumbler_dor_abner') }}"
           temperature: "{{ states('sensor.torretumbler_temperatur') }}"
           temperature_derivative: "{{ states('sensor.sensor_torretumbler_temperatur_derivative') }}"
           delta: "{{ states('sensor.dryer_temp_delta') }}"
@@ -169,7 +169,7 @@ automation:
     initial_state: true
     triggers:
       - trigger: state
-        entity_id: binary_sensor.vaskemaskine_dor
+        entity_id: binary_sensor.vaskemaskine_dor_abner
         to: "on"
     conditions:
       - condition: state
@@ -243,7 +243,7 @@ automation:
     initial_state: true
     triggers:
       - trigger: state
-        entity_id: binary_sensor.torretumbler_dor
+        entity_id: binary_sensor.torretumbler_dor_abner
         to: "on"
     conditions:
       - condition: state
