@@ -625,7 +625,7 @@ automation:
         event_data:
           room: bedroom
           profile: Ambient
-          transition_time: 300.0
+          transition_time: 300
 
   - alias: in_bed_action
     id: in_bed_action
@@ -751,14 +751,67 @@ automation:
       entity_id: input_select.sleep_state
       to: "smart wake"
     actions:
-      - action: switch.turn_off
-        target:
-          entity_id: switch.dorklokke_forstyr_ikke
       - event: set_light_profile
         event_data:
           room: bedroom
           profile: Night
-          transition_time: 600.0
+          transition_time: 300
+      - action: switch.turn_off
+        target:
+          entity_id: switch.dorklokke_forstyr_ikke
+
+  - alias: Smart Wake Media Action
+    id: 6fabaa3a-aac3-4b0d-b4aa-76890922f4f0
+    initial_state: true
+    triggers:
+      trigger: state
+      entity_id: input_select.sleep_state
+      to: "smart wake"
+    actions:
+      - action: media_player.unjoin
+        target:
+          entity_id:
+            - media_player.sovevaerelse
+            - media_player.badevaerelse
+            - media_player.kokken
+            - media_player.kontor
+            - media_player.stue
+            - media_player.roam
+      - action: media_player.volume_set
+        data:
+          entity_id:
+            - media_player.sovevaerelse
+          volume_level: 0.01
+      - delay:
+          seconds: 1
+      - action: script.mass_playlist
+        data:
+          entity_id: media_player.sovevaerelse_mass
+          repeat_mode: "all"
+          playlist:
+            # - "{{ states('sensor.podcast_radioavisen') }}"
+            - "I Love Chillhop"
+
+  - alias: Smart Wake Action Delayed
+    id: 84d6b64e-0e23-4a77-baf9-dfc7cfe9d100
+    initial_state: true
+    triggers:
+      trigger: state
+      entity_id: input_select.sleep_state
+      to: "smart wake"
+      for:
+        minutes: 30
+    actions:
+      - event: set_light_profile
+        event_data:
+          room: bedroom
+          profile: Ambient
+          transition_time: 300
+      - action: media_player.volume_set
+        data:
+          entity_id:
+            - media_player.sovevaerelse
+          volume_level: 0.02
 
   - alias: alarm_action
     id: alarm_action
@@ -768,11 +821,6 @@ automation:
       entity_id: input_select.sleep_state
       to: "alarm"
     actions:
-      - action: input_text.set_value
-        target:
-          entity_id: input_text.last_wake_up_time
-        data:
-          value: "{{ now().isoformat() }}"
       - action: switch.turn_off
         target:
           entity_id: switch.dorklokke_forstyr_ikke
@@ -780,7 +828,7 @@ automation:
         event_data:
           room: bedroom
           profile: Ambient
-          transition_time: 300.0
+          transition_time: 300
       - delay:
           minutes: 5
       - condition: state
@@ -793,21 +841,16 @@ automation:
         event_data:
           room: bedroom
           profile: Dimmed
-          transition_time: 300.0
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: sun.sun
-                state: "above_horizon"
-            sequence:
-              - action: cover.open_cover
-                data:
-                  entity_id: cover.sovevaerelse_gardin_dor
-              - wait_template: "{{ is_state('cover.sovevaerelse_gardin_dor', 'closing') or is_state('cover.sovevaerelse_gardin_dor', 'closed') }}"
-                timeout: "00:02:00"
-              - action: cover.close_cover
-                data:
-                  entity_id: cover.sovevaerelse_gardin_vindue
+          transition_time: 300
+      - condition: state
+        entity_id: sun.sun
+        state: "above_horizon"
+      - action: cover.open_cover
+        data:
+          entity_id: cover.sovevaerelse_gardin_dor
+      - action: cover.close_cover
+        data:
+          entity_id: cover.sovevaerelse_gardin_vindue
 
   - alias: snooze_action_media
     id: f025618f-e3ae-428e-b22a-7df121b56a44
@@ -828,20 +871,18 @@ automation:
             - media_player.roam
       - action: media_player.volume_set
         data:
-          entity_id: "media_player.sovevaerelse"
+          entity_id:
+            - "media_player.sovevaerelse"
           volume_level: 0.2
+      - delay:
+          seconds: 1
       - action: script.mass_playlist
         data:
           entity_id: media_player.sovevaerelse_mass
           repeat_mode: "all"
           playlist:
             # - "{{ states('sensor.podcast_radioavisen') }}"
-            # - DR P4
-            - "SomaFM: Groove Salad"
-      - action: media_player.volume_set
-        data:
-          entity_id: "media_player.sovevaerelse_mass"
-          volume_level: 0.2
+            - "Chillhop Radio"
       - delay:
           minutes: 10
       - condition: state
@@ -852,7 +893,7 @@ automation:
       - action: media_player.volume_set
         data:
           entity_id: "media_player.sovevaerelse"
-          volume_level: 0.30
+          volume_level: 0.3
 
   - alias: waking_action_media
     id: waking_action_media
@@ -868,13 +909,12 @@ automation:
           repeat_mode: "all"
           playlist:
             - "{{ states('sensor.podcast_radioavisen') }}"
-            - DR P4
-      - wait_template: "{{ is_state('media_player.sovevaerelse', 'playing') }}"
-        timeout: "00:00:30"
+            - "I Love Chillhop"
       - action: media_player.volume_set
         data:
-          entity_id: "media_player.sovevaerelse"
-          volume_level: 0.30
+          entity_id:
+            - "media_player.sovevaerelse"
+          volume_level: 0.3
 
   - alias: waking_action
     id: waking_action
@@ -885,6 +925,11 @@ automation:
       to: "waking"
     actions:
       - parallel:
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.last_wake_up_time
+            data:
+              value: "{{ now().isoformat() }}"
           - event: set_light_profile
             event_data:
               room: bedroom
@@ -934,7 +979,7 @@ automation:
             - "{{ states('sensor.podcast_dw_news_brief') }}"
             - "{{ states('sensor.podcast_daily_tech_headlines') }}"
             - "{{ states('sensor.podcast_daily_tech_news_show') }}"
-            - DR P4
+            - "I Love Chillhop"
       - wait_template: "{{ is_state('media_player.badevaerelse', 'playing') }}"
         timeout: "00:00:30"
       - action: media_player.volume_set
