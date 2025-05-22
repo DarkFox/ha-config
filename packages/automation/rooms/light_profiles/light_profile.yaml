@@ -870,14 +870,15 @@ automation:
       - choose:
           - conditions:
               - condition: template
-                value_template: "{{ transition_time }}"
+                value_template: "{{ transition_time != '' }}"
             sequence:
               - action: input_number.set_value
                 data:
                   entity_id: "input_number.scene_transition_time"
                   value: "{{ transition_time|float(0.5) }}"
-              - delay:
-                  seconds: 1
+              - wait_template: "{{ is_state('input_number.scene_transition_time', transition_time|float(0.5)) }}"
+                timeout: 00:00:05
+                continue_on_timeout: true
 
       - action: input_select.select_option
         data:
@@ -887,7 +888,7 @@ automation:
       - choose:
           - conditions:
               - condition: template
-                value_template: "{{ transition_time }}"
+                value_template: "{{ transition_time != '' }}"
             sequence:
               - delay:
                   seconds: 2
