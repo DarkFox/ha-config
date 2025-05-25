@@ -1,0 +1,101 @@
+automation:
+  - alias: Notify Rook about overdue chores
+    id: 663a693f-d58b-4f0c-9340-6c8961e0c76f
+    description: Notify Rook about chores that are overdue and have the Notify label
+    triggers:
+      - trigger: template
+        value_template: >-
+          {{ expand(states.sensor) 
+            | selectattr('entity_id', 'match', '^sensor\\.kc_rook_chore_status_.*')
+            | selectattr('state', 'equalto', 'overdue')
+            | selectattr('attributes.labels', 'search', 'Notify')
+            | list
+            | count > 0 }}
+        for:
+          seconds: 1
+    variables:
+      chore_entity_ids: >-
+        {{ expand(states.sensor) 
+          | selectattr('entity_id', 'match', '^sensor\\.kc_rook_chore_status_.*') 
+          | selectattr('state', 'equalto', 'overdue') 
+          | selectattr('attributes.labels', 'search', 'Notify') 
+          | map(attribute='entity_id') 
+          | list }}
+    actions:
+      - action: notify.mobile_app_darkphone
+        data:
+          title: Opgaver forfaldne
+          message: >-
+            Følgende opgaver er forfaldne:
+            {% for chore_entity_id in chore_entity_ids %}
+              {%- set sensor = states[chore_entity_id] %}
+              - {{ sensor.attributes.chore_name }}
+            {% endfor %}
+          data:
+            tag: "kc_rook_overdue_chores_notification"
+            channel: "Overdue Chores"
+            importance: high
+            clickAction: >-
+              {% set ns = namespace(has_health_chores=false) %}
+              {% for chore_entity_id in chore_entity_ids %}
+                {%- set sensor = states[chore_entity_id] %}
+                {% if 'Helbred' in sensor.attributes.labels %}
+                  {% set ns.has_health_chores = true %}
+                {% endif %}
+              {% endfor %}
+              {% if ns.has_health_chores %}
+                /dashboard-health/symptomer
+              {% else %}
+                /dashboard-pligter/Rook
+              {% endif %}
+
+  - alias: Notify Rook about critical overdue chores
+    id: 601e476d-eabd-4300-960d-80fd307f1c86
+    description: Notify Rook about critical chores that are overdue every 5 minutes
+    triggers:
+      - trigger: time_pattern
+        minutes: "/5"
+    conditions:
+      - condition: template
+        value_template: >-
+          {{ expand(states.sensor) 
+            | selectattr('entity_id', 'match', '^sensor\\.kc_rook_chore_status_.*')
+            | selectattr('state', 'equalto', 'overdue')
+            | selectattr('attributes.labels', 'search', 'Critical Notify')
+            | list
+            | count > 0 }}
+    variables:
+      chore_entity_ids: >-
+        {{ expand(states.sensor) 
+          | selectattr('entity_id', 'match', '^sensor\\.kc_rook_chore_status_.*') 
+          | selectattr('state', 'equalto', 'overdue') 
+          | selectattr('attributes.labels', 'search', 'Critical Notify') 
+          | map(attribute='entity_id') 
+          | list }}
+    actions:
+      - action: notify.mobile_app_darkphone
+        data:
+          title: Opgaver forfaldne
+          message: >-
+            Følgende kritiske opgaver er forfaldne:
+            {% for chore_entity_id in chore_entity_ids %}
+              {%- set sensor = states[chore_entity_id] -%}
+              - {{ sensor.attributes.chore_name }}
+            {% endfor %}
+          data:
+            tag: "kc_rook_critical_overdue_chores_notification"
+            channel: "Critical Overdue Chores"
+            importance: high
+            clickAction: >-
+              {% set ns = namespace(has_health_chores=false) %}
+              {% for chore_entity_id in chore_entity_ids %}
+                {%- set sensor = states[chore_entity_id] %}
+                {% if 'Helbred' in sensor.attributes.labels %}
+                  {% set ns.has_health_chores = true %}
+                {% endif %}
+              {% endfor %}
+              {% if ns.has_health_chores %}
+                /dashboard-health/symptomer
+              {% else %}
+                /dashboard-pligter/Rook
+              {% endif %}
