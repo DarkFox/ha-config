@@ -1,3 +1,20 @@
+group:
+  # Devices to turn off when away
+  away_power_saving_devices:
+    name: Away Power Saving Devices
+    entities:
+      - switch.stue_tv_afbryder
+      - switch.printer_afbryder
+      - switch.pc_tilbehor_afbryder
+      - switch.sovevarelse_blaser
+      - switch.stue_blaser
+
+  # Devices to automatically turn back on when home
+  home_power_saving_devices:
+    name: Home Power Saving Devices
+    entities:
+      - switch.stue_tv_afbryder
+
 input_select:
   rook_state:
     name: Rook State
@@ -116,6 +133,30 @@ automation:
         data:
           message: "Home Soon: {{ states('binary_sensor.rook_home_soon') }}"
           title: "Home Soon"
+
+  - alias: Turn off away power saving devices
+    id: 533afc86-936c-45bc-92eb-dbb2e2a3a66e
+    initial_state: true
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.rook_presence_delayed
+        to: "off"
+    actions:
+      - action: homeassistant.turn_off
+        target:
+          entity_id: group.away_power_saving_devices
+
+  - alias: Turn on home power saving devices
+    id: bfa2d56c-21c2-4d9f-9dfb-abe37e55e8d1
+    initial_state: true
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.rook_presence
+        to: "on"
+    actions:
+      - action: homeassistant.turn_on
+        target:
+          entity_id: group.home_power_saving_devices
 
   # Status State Machine
   #
