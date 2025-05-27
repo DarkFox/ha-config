@@ -275,14 +275,9 @@ automation:
         event_data:
           event: time_to_bed_alarm_alert
     conditions:
-      condition: and
-      conditions:
-        - condition: state
-          entity_id: binary_sensor.bedtime
-          state: "on"
-        - condition: state
-          entity_id: input_select.sleep_as_android_state
-          state: "awake"
+      - condition: state
+        entity_id: input_select.sleep_as_android_state
+        state: "awake"
     actions:
       action: input_select.select_option
       data:
@@ -301,15 +296,6 @@ automation:
         event_type: sleep_as_android
         event_data:
           event: sleep_tracking_resumed
-    conditions:
-      - condition: or
-        conditions:
-          - condition: state
-            entity_id: input_select.sleep_as_android_state
-            state: bedtime
-          - condition: state
-            entity_id: input_select.sleep_as_android_state
-            state: paused
     actions:
       - action: input_select.select_option
         data:
@@ -324,25 +310,32 @@ automation:
       event_type: sleep_as_android
       event_data:
         event: sleep_tracking_stopped
-    conditions:
-      condition: and
-      conditions:
-        - condition: time
-          after: "18:00:00"
-          before: "04:00:00"
-        - condition: or
-          conditions:
-            - condition: state
-              entity_id: input_select.sleep_as_android_state
-              state: sleeping
-            - condition: state
-              entity_id: input_select.sleep_as_android_state
-              state: paused
     actions:
-      - action: input_select.select_option
-        data:
-          entity_id: input_select.sleep_as_android_state
-          option: bedtime
+      - choose:
+          - conditions:
+              condition: and
+              conditions:
+                - condition: time
+                  after: "20:00:00"
+                  before: "04:00:00"
+                - condition: or
+                  conditions:
+                    - condition: state
+                      entity_id: input_select.sleep_as_android_state
+                      state: sleeping
+                    - condition: state
+                      entity_id: input_select.sleep_as_android_state
+                      state: paused
+            sequence:
+              - action: input_select.select_option
+                data:
+                  entity_id: input_select.sleep_as_android_state
+                  option: bedtime
+        default:
+          - action: input_select.select_option
+            data:
+              entity_id: input_select.sleep_as_android_state
+              option: awake
 
   - alias: sleep_as_android_state_paused
     id: c26bb668-9674-4a71-9936-08689fd67fb1
@@ -352,10 +345,6 @@ automation:
         event_type: sleep_as_android
         event_data:
           event: sleep_tracking_paused
-    conditions:
-      - condition: state
-        entity_id: input_select.sleep_as_android_state
-        state: sleeping
     actions:
       action: input_select.select_option
       data:
@@ -370,15 +359,6 @@ automation:
       event_type: sleep_as_android
       event_data:
         event: smart_period
-    conditions:
-      - condition: or
-        conditions:
-          - condition: state
-            entity_id: input_select.sleep_as_android_state
-            state: sleeping
-          - condition: state
-            entity_id: input_select.sleep_as_android_state
-            state: paused
     actions:
       - action: input_select.select_option
         data:
@@ -393,18 +373,6 @@ automation:
       event_type: sleep_as_android
       event_data:
         event: alarm_alert_start
-    conditions:
-      - condition: or
-        conditions:
-          - condition: state
-            entity_id: input_select.sleep_as_android_state
-            state: sleeping
-          - condition: state
-            entity_id: input_select.sleep_as_android_state
-            state: paused
-          - condition: state
-            entity_id: input_select.sleep_as_android_state
-            state: smart wake
     actions:
       - action: input_select.select_option
         data:
@@ -419,10 +387,6 @@ automation:
       event_type: sleep_as_android
       event_data:
         event: alarm_snooze_clicked
-    conditions:
-      - condition: state
-        entity_id: input_select.sleep_as_android_state
-        state: alarm
     actions:
       - action: input_select.select_option
         data:
@@ -449,18 +413,6 @@ automation:
         event_type: sleep_as_android
         event_data:
           event: sleep_tracking_stopped
-    conditions:
-      condition: or
-      conditions:
-        - condition: state
-          entity_id: input_select.sleep_as_android_state
-          state: paused
-        - condition: state
-          entity_id: input_select.sleep_as_android_state
-          state: alarm
-        - condition: state
-          entity_id: input_select.sleep_as_android_state
-          state: snoozing
     actions:
       - action: input_select.select_option
         data:
