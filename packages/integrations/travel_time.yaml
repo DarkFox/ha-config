@@ -137,7 +137,7 @@ template:
       - name: Commute Status Car
         unique_id: 5a3e3797-bbe0-4f6a-b5fa-54c452cafe32
         state: >-
-          {%- if states('sensor.bil_destination_duration_in_traffic')|int(0) > 45 -%}
+          {%- if not has_value('sensor.bil_destination_duration_in_traffic') or states('sensor.bil_destination_duration_in_traffic')|int(0) > 45 -%}
             bad
           {%- elif states('sensor.bil_destination_duration_in_traffic')|int(0) > 25 -%}
             ok
@@ -192,7 +192,7 @@ template:
               strptime(state_attr('sensor.next_travel_event', 'start'), '%Y-%m-%d %H:%M:%S')
               - timedelta(minutes=states(travel_time_sensor)|int+padding)
             )|as_local).isoformat()
-            if state_attr('sensor.next_travel_event', 'location') else ''
+            if has_value(travel_time_sensor) and state_attr('sensor.next_travel_event', 'location') else None
           }}
 
       - name: Next Scheduled Leave In
@@ -200,18 +200,19 @@ template:
         device_class: duration
         unit_of_measurement: min
         state: >-
-          {%- set timestamp = states('sensor.next_scheduled_leave_at')|as_timestamp(-1) -%}
-          {%- if timestamp != -1 -%}
-            {{ (((states('sensor.next_scheduled_leave_at')|as_timestamp) - (now()|as_timestamp))/60)|int }}
-          {% else %}
-            -1
-          {%- endif -%}
+          {{
+            (((states('sensor.next_scheduled_leave_at')|as_timestamp) - (now()|as_timestamp))/60)|int
+            if has_value('sensor.next_scheduled_leave_at') else None
+          }}
 
       - name: Next Scheduled Leave At Relative
         unique_id: 0c934c8f-8606-46cf-aaaa-8834458578ae
         state: >-
           {% from 'easy_time.jinja' import custom_relative_time %}
-          {{ custom_relative_time('sensor.next_scheduled_leave_at', 'day, hour, minute') }}
+          {{
+            custom_relative_time('sensor.next_scheduled_leave_at', 'day, hour, minute')
+            if has_value('sensor.next_scheduled_leave_at') else None
+          }}
 
   - binary_sensor:
       - name: Rook Next Scheduled Destination Active
