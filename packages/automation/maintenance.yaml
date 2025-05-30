@@ -67,13 +67,15 @@ automation:
     triggers:
       trigger: numeric_state
       entity_id: sensor.system_monitor_memory_use_percent
-      above: 85
+      above: 90
+      for:
+        seconds: 30
     variables:
       memory_use: "{{ states('sensor.system_monitor_memory_use_percent') }}"
     actions:
       - action: homeassistant.update_entity
         entity_id: sensor.add_ons_stats
-      - delay: 1
+      - delay: 2
       - action: notify.telegram_darkfox
         data:
           message: |
@@ -97,13 +99,15 @@ automation:
     triggers:
       trigger: numeric_state
       entity_id: sensor.processor_use
-      above: 65
+      above: 80
+      for:
+        seconds: 30
     variables:
       cpu_use: "{{ states('sensor.processor_use') }}"
     actions:
       - action: homeassistant.update_entity
         entity_id: sensor.add_ons_stats
-      - delay: 1
+      - delay: 2
       - action: notify.telegram_darkfox
         data:
           message: |
