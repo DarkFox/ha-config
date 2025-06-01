@@ -402,21 +402,29 @@ automation:
       - action: script.turn_on
         target:
           entity_id: >-
-            {% if (states('sensor.living_room_selected_light_profile')|lower) not in ['night', 'off'] and is_state('binary_sensor.stue_tilstedevarelse_spisebord', 'on') %}
-              script.dining_table_lights_active
+            {%- set profile = states('sensor.living_room_selected_light_profile') -%}
+            {% 
+              if profile != 'Off'
+              and (
+                is_state('binary_sensor.stue_tilstedevarelse_spisebord', 'on')
+              )
+            %}
+              {%- set profiles = state_attr('input_select.light_profile', 'options') -%}
+              script.dining_table_lights_{{ (profiles[profiles.index(profile)-1] or 'Bright')|lower }}
             {% else %}
               script.dining_table_lights_{{ (states('sensor.living_room_active_light_profile')|lower) }}
             {% endif %}
 
   - alias: activate_light_profile_living_room_bar
     id: activate_light_profile_living_room_bar
-    mode: restart
+    mode: queued
     initial_state: true
     triggers:
       - trigger: state
-        entity_id: sensor.living_room_active_light_profile
-      - trigger: state
-        entity_id: input_boolean.bar_open
+        entity_id:
+          - sensor.living_room_active_light_profile
+          - sensor.living_room_selected_light_profile
+          - input_boolean.bar_open
       - trigger: state
         entity_id: binary_sensor.stue_tilstedevarelse_bar
         to: "on"
@@ -431,14 +439,16 @@ automation:
       - action: script.turn_on
         target:
           entity_id: >-
+            {%- set profile = states('sensor.living_room_selected_light_profile') -%}
             {% 
-              if (states('sensor.living_room_selected_light_profile')|lower) not in ['night', 'off']
+              if profile != 'Off'
               and (
                 is_state('binary_sensor.stue_tilstedevarelse_bar', 'on')
                 or is_state('input_boolean.bar_open', 'on')
               )
             %}
-              script.bar_lights_open
+              {%- set profiles = state_attr('input_select.light_profile', 'options') -%}
+              script.bar_lights_{{ (profiles[profiles.index(profile)-1] or 'Bright')|lower }}
             {% else %}
               script.bar_lights_{{ (states('sensor.living_room_active_light_profile')|lower) }}
             {% endif %}
@@ -514,8 +524,8 @@ script:
             light.spisebord:
               state: off
 
-  bar_lights_open:
-    alias: "Bar Lights Open"
+  bar_lights_bright:
+    alias: "Bar Lights Bright"
     sequence:
       - action: script.turn_on
         target:
@@ -652,7 +662,8 @@ script:
               state: on
               brightness: 32
             light.bar_skuffer:
-              state: off
+              state: on
+              brightness: 32
 
   bar_lights_ambient:
     alias: "Bar Lights Ambient"
@@ -666,7 +677,7 @@ script:
             entities:
               light.bar:
                 state: on
-                brightness: 8
+                brightness: 32
                 hs_color: "{{ state_attr('sensor.theme', 'secondary_color') }}"
                 effect: "Solid"
               light.barbord:
@@ -680,17 +691,22 @@ script:
           transition: "{{ (states('input_number.scene_transition_time') | float or 0.5) }}"
           entities:
             light.barskab_under:
-              state: off
+              state: on
+              brightness: 8
             light.barskab_over:
-              state: off
+              state: on
+              brightness: 8
             light.bar_hylde_spots:
-              state: off
+              state: on
+              brightness: 8
             light.bar_spots:
               state: off
             light.bar_uplight:
-              state: off
+              state: on
+              brightness: 8
             light.bar_skuffer:
-              state: off
+              state: on
+              brightness: 8
 
   bar_lights_night:
     alias: "Bar Lights Night"
