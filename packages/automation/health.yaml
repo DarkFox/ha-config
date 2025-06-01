@@ -17,3 +17,28 @@ script:
           - action: script.set_volume_preset
             data:
               preset: low
+
+automation:
+  - alias: Claim weight chore on weight update
+    id: ca020a4b-bbe0-4e8f-869e-ba2dfacd67d5
+    initial_state: true
+    triggers:
+      - trigger: state
+        entity_id: sensor.withings_weight
+    actions:
+      - action: kidschores.claim_chore
+        data:
+          kid_name: "Rook"
+          chore_name: "Vægt"
+
+  - alias: Claim blood pressure chore on BP update
+    id: ab734918-2f34-4e43-b48c-55e383d58855
+    initial_state: true
+    triggers:
+      - trigger: state
+        entity_id: sensor.darkphone_systolic_blood_pressure
+    actions:
+      - action: kidschores.claim_chore
+        data:
+          kid_name: "Rook"
+          chore_name: "Blodtryk"
