@@ -1,6 +1,5 @@
 input_text:
-  airmee_code:
-  airmee_phone_number_hash:
+  airmee_url:
 
 script:
   get_airmee_tracking:
@@ -38,7 +37,12 @@ script:
                   - conditions:
                       - alias: "Has location"
                         condition: template
-                        value_template: "{{  courier_location.details | length > 0 }}"
+                        value_template: >-
+                          {{
+                            courier_location.details | length > 0
+                            and 'courier_locations' in courier_location.details
+                            and courier_location.details.courier_locations | length > 0
+                          }}
                     sequence:
                       - variables:
                           timestamp: "{{ courier_location.details[0].courier_locations[0].courier_location.timestamp | as_datetime }}"
@@ -90,6 +94,8 @@ template:
         attributes:
           order_details: >-
             {{ trigger.event.data.tracking_data.order_details }}
+          timeline: >-
+            {{ trigger.event.data.tracking_data.order_details[0].new_timeline }}
       - name: Airmee Dropoff ETA
         unique_id: 7eb3dc7d-5b70-41b2-85d7-49d117518577
         state: >-
@@ -105,6 +111,7 @@ template:
         state: >-
           {{ trigger.event.data.tracking_data.order_details[0].dropoff_latest_time | as_datetime }}
         device_class: timestamp
+
   - trigger:
       trigger: event
       event_type: airmee_courier_location_data
@@ -118,7 +125,25 @@ template:
           longitude: "{{ trigger.event.data.courier_location.details[0].courier_locations[0].courier_location.longitude }}"
           details: >-
             {{ trigger.event.data.courier_location.details }}
+
   - sensor:
+      - name: "Airmee URL"
+        unique_id: f0f4e7a8-2601-4fc0-bfba-898244a1611b
+        state: "{{ states('input_text.airmee_url') }}"
+        attributes:
+          params: >-
+            {% set url = states('input_text.airmee_url') %}
+            {% if url %}
+              {% set url_params = url.split('?')[1].split('&') %}
+              {% set ns = namespace(params={}) %}
+              {% for param in url_params %}
+                {% set param = param.split('=') %}
+                {% set ns.params = dict(ns.params, **{param[0]: param[1]}) %}
+              {% endfor %}
+              {{ ns.params }}
+            {% else %}
+              {{ None }}
+            {% endif %}
       - name: "Airmee Courier Distance to Home"
         unique_id: 248f409c-e9bd-4cdf-867b-af9521cb190e
         state: "{{ distance('device_tracker.airmee_courier_location', 'zone.home') }}"
@@ -126,13 +151,14 @@ template:
         unit_of_measurement: km
       - name: "Airmee Tracking URL"
         unique_id: 45dbaf23-c51f-48cb-86c0-09a07097563f
-        state: "https://tracking.airmee.com/#/track/{{ states('input_text.airmee_code') }}"
+        state: "https://tracking.airmee.com/#/track/{{ state_attr('sensor.airmee_url', 'params')['tracking_url'] }}"
         icon: mdi:web
+
   - binary_sensor:
       - name: "Airmee Active"
         unique_id: 401f988c-d917-41c2-bfa2-a9cb30a056ff
         state: >-
-          {{ states('input_text.airmee_code') != '' and states('input_text.airmee_phone_number_hash') != '' }}
+          {{ states('sensor.airmee_url') != '' }}
       - name: "Airmee Within Delivery Window"
         unique_id: b7daa272-981c-4d83-916b-96f28a07d036
         state: >-
@@ -148,7 +174,7 @@ automation:
     triggers:
       - trigger: time_pattern
         hours: "*"
-        minutes: "/5"
+        minutes: "/15"
         seconds: "0"
       - trigger: state
         entity_id: binary_sensor.airmee_active
@@ -163,8 +189,8 @@ automation:
     actions:
       - action: script.get_airmee_tracking
         data:
-          tracking_code: "{{ states('input_text.airmee_code') }}"
-          phone_number_hash: "{{ states('input_text.airmee_phone_number_hash') }}"
+          tracking_code: "{{ state_attr('sensor.airmee_url', 'params')['tracking_url'] }}"
+          phone_number_hash: "{{ state_attr('sensor.airmee_url', 'params')['phone_number_hash'] }}"
 
   - alias: Airmee Tracking Fast
     id: 2f38d3c7-6973-480b-a33b-5299667c550c
@@ -194,8 +220,8 @@ automation:
     actions:
       - action: script.get_airmee_tracking
         data:
-          tracking_code: "{{ states('input_text.airmee_code') }}"
-          phone_number_hash: "{{ states('input_text.airmee_phone_number_hash') }}"
+          tracking_code: "{{ state_attr('sensor.airmee_url', 'params')['tracking_url'] }}"
+          phone_number_hash: "{{ state_attr('sensor.airmee_url', 'params')['phone_number_hash'] }}"
 
   - alias: Airmee Courier Close
     id: 960d4a70-4b56-4bbf-a353-d71985e28ff5
