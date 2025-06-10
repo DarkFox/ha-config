@@ -111,6 +111,13 @@ template:
             {{ state_translated('device_tracker.id_3_pro_tracker') }}
           {% endif %}
 
+      - name: Parking Last Captured
+        unique_id: 1fc2d775-dc79-48c6-9fd1-cdde49dfc312
+        icon: mdi:clock-time-eight-outline
+        device_class: timestamp
+        state: >-
+          {{ state_attr('device_tracker.id_3_pro_tracker', 'last_captured') }}
+
       - name: Parking Clock
         unique_id: 1b039e84-9fbe-46f5-9ff9-f34ac68a34f7
         icon: mdi:parking
@@ -164,7 +171,7 @@ template:
   - trigger:
       - trigger: state
         entity_id:
-          - device_tracker.id_3_pro_tracker
+          - sensor.parking_last_captured
           - input_datetime.parking_timer
         not_to:
           - "unknown"
@@ -175,7 +182,7 @@ template:
         icon: mdi:clock-time-eight-outline
         device_class: timestamp
         state: >-
-          {% set parked = state_attr('device_tracker.id_3_pro_tracker', 'last_captured') | as_datetime | as_local %}
+          {% set parked = states('sensor.parking_last_captured') | as_datetime | as_local %}
           {% set seconds_past = (parked.minute % 15) * 60 + parked.second %}
           {% set seconds_until_next_quarter = (15 * 60) - seconds_past %}
           {% set next_quarter_timestamp = as_timestamp(parked) + seconds_until_next_quarter %}
@@ -230,7 +237,7 @@ automation:
         entity_id: sensor.parking_duration_limit
         above: 0
       - variables:
-          parked_time: "{{ as_timestamp(state_attr('device_tracker.id_3_pro_tracker', 'last_captured')) | timestamp_custom('%H:%M') }}"
+          parked_time: "{{ as_timestamp(states('sensor.parking_last_captured')) | timestamp_custom('%H:%M') }}"
           parkeringsskive: "{{ as_timestamp(states('sensor.parkeringsskive')) | timestamp_custom('%H:%M') }}"
           parking_limit: "{{ as_timestamp(states('sensor.parking_limit')) | timestamp_custom('%H:%M') }}"
           parking_alarm: "{{ as_timestamp(states('sensor.parking_alarm')) | timestamp_custom('%H:%M') }}"
