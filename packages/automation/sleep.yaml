@@ -1098,10 +1098,70 @@ automation:
         event_data:
           event: rem
     actions:
-      - alias: "turn off fan"
+      - alias: "turn off fans"
         action: fan.turn_off
         target:
-          entity_id: fan.sovevaerelse_blaeser
+          entity_id:
+            - fan.sovevaerelse_blaeser
+            - fan.altandor_blaeser
+
+  - alias: Turn on fans in the morning if it's too warm
+    id: 27c977e6-9811-40dd-b11c-10d1447c2833
+    initial_state: true
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id:
+          - input_select.sleep_state
+          - sensor.sovevaerelse_summer_simmer_perception
+    conditions:
+      - condition: or
+        conditions:
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: input_select.sleep_state
+                state:
+                  - "smart wake"
+                  - "alarm"
+                  - "snoozing"
+                  - "waking"
+              - condition: state
+                entity_id: sensor.sovevaerelse_summer_simmer_perception
+                state:
+                  - slightly_warm
+                  - increasing_discomfort
+                  - extremely_warm
+          - condition: and
+            conditions:
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: input_select.sleep_state
+                    state: "awake"
+              - condition: state
+                entity_id: sensor.sovevaerelse_summer_simmer_perception
+                state:
+                  - danger_of_heatstroke
+                  - extreme_danger_of_heatstroke
+                  - circulatory_collapse_imminent
+    actions:
+      - action: fan.turn_on
+        data:
+          entity_id:
+            - fan.sovevaerelse_blaeser
+      - condition: and
+        conditions:
+          - condition: state
+            entity_id: binary_sensor.sovevarelse_altandor
+            state: "on"
+          - condition: state
+            entity_id: fan.altandor_blaeser
+            state: "off"
+      - action: fan.turn_on
+        data:
+          entity_id:
+            - fan.altandor_blaeser
 
   - id: notify_phone_not_charging_on_sleep
     alias: Notify phone not charging on sleep
