@@ -58,13 +58,6 @@ input_select:
       - Party
       - New Years
 
-mqtt:
-  light:
-    - name: apartment light level
-      command_topic: "virtual/apartment-light-level/set"
-      brightness_command_topic: "virtual/apartment-light-level/brightness/set"
-      retain: true
-
 light:
   - platform: template
     lights:
@@ -791,40 +784,6 @@ automation:
         entity_id: input_select.theme
     actions:
       - event: refresh_light_profile
-
-  - alias: Apartment light level initializer
-    id: apartment_light_level_initializer
-    initial_state: true
-    triggers:
-      trigger: homeassistant
-      event: start
-    actions:
-      - action: light.turn_on
-        data:
-          entity_id: light.apartment_light_level
-          brightness: 127
-      - delay:
-          seconds: 2
-      - event: refresh_light_profile
-
-  - alias: Apartment light level setter
-    id: apartment_light_level_setter
-    initial_state: true
-    triggers:
-      - trigger: numeric_state
-        entity_id: light.apartment_light_level
-        value_template: "{{ state.attributes.brightness }}"
-        below: 120
-      - trigger: numeric_state
-        entity_id: light.apartment_light_level
-        value_template: "{{ state.attributes.brightness }}"
-        above: 135
-    actions:
-      - event: "{{ 'decrease' if states.light.apartment_light_level.attributes.brightness | int < 120 else 'increase' }}_light_profile"
-      - action: light.turn_on
-        data:
-          entity_id: light.apartment_light_level
-          brightness: 127
 
   # Room States and light profile #
   # bathroom
