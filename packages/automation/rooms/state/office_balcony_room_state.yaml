@@ -1,0 +1,79 @@
+group:
+  office_balcony_activity_entities:
+    name: Office Balcony Activity Entities
+    entities:
+      - binary_sensor.office_balcony_door_activity
+
+  office_balcony_motion_entities:
+    name: Office Balcony Motion Entities
+    entities:
+      - binary_sensor.kontor_altan
+
+  office_balcony_extra_entities:
+    name: Office Balcony Extra Entities
+    entities:
+      - binary_sensor.kontor_altandor
+
+template:
+  - sensor:
+      - name: "Office Balcony Activity State"
+        unique_id: 310b72c3-7f47-4d5c-baa6-28b5f8351e31
+        state: >-
+          {%- from 'room_state.jinja' import room_activity_state -%}
+          {{ room_activity_state('office_balcony') }}
+
+      - name: "Office Balcony Room State"
+        unique_id: 03587891-72a8-491e-b766-fdee34658b7e
+        state: >-
+          {%- from 'room_state.jinja' import room_state -%}
+          {{ room_state('office_balcony') }}
+
+  - binary_sensor:
+      - name: "Office Balcony Activity"
+        unique_id: d18ca76c-12b4-4ae6-bb5a-4f5f041bb338
+        state: >-
+          {%- from 'room_state.jinja' import room_activity -%}
+          {{ room_activity('office_balcony', is_state('binary_sensor.kontor_altandor', 'off')) }}
+
+      - name: "Office Balcony Active"
+        unique_id: 89301600-f6cc-4ef8-bcb0-c36a67aa207d
+        state: >
+          {{ is_state('binary_sensor.office_balcony_activity', 'on') }}
+        delay_off:
+          minutes: 2
+
+      - name: "Office Balcony Inactive"
+        unique_id: 5852a2df-bfa2-4b41-b904-69fcffe83ced
+        state: >-
+          {{ is_state('binary_sensor.office_balcony_activity', 'on') }}
+        delay_off:
+          minutes: 4
+
+input_boolean:
+  office_balcony_activity_override:
+    icon: mdi:checkbox-multiple-marked
+    name: Office Balcony Activity Override
+
+input_select:
+  office_balcony_room_state:
+    name: Office Balcony State
+    options:
+      - active
+      - inactive
+      - "off"
+
+light:
+  - platform: template
+    lights:
+      office_balcony_activity_override:
+        friendly_name: Light Office Balcony Activity Override
+        icon_template: mdi:checkbox-multiple-marked
+        value_template: "{{ is_state('input_boolean.office_balcony_activity_override', 'on') }}"
+        turn_on:
+          action: input_boolean.turn_on
+          data:
+            entity_id: input_boolean.office_balcony_activity_override
+        turn_off:
+          action: input_boolean.turn_off
+          data:
+            entity_id: input_boolean.office_balcony_activity_override

@@ -1,15 +1,15 @@
 sensor:
   - platform: statistics
-    name: "Average Balcony Brightness"
-    unique_id: 9faa21bc-f2ea-4e73-a9bf-914260fcaab9
+    name: "Average Living Room Balcony Brightness"
+    unique_id: b8118d7f-3bf8-401a-95e5-7c83cec80e15
     entity_id: sensor.altan_lysstyrke
     state_characteristic: average_linear
     sampling_size: 5
 
   - platform: statistics
-    name: "Average Small Balcony Brightness"
-    unique_id: 4217d377-2a47-4042-857e-7b10a6a1a549
-    entity_id: sensor.lille_altan_lysstyrke
+    name: "Average Office Balcony Brightness"
+    unique_id: 71598d44-7d37-4ef5-a58b-8db2846a5a5c
+    entity_id: sensor.kontor_altan_belysningsstyrke
     state_characteristic: average_linear
     sampling_size: 5
 
@@ -142,7 +142,7 @@ sensor:
     unique_id: 0815e86a-8caa-4600-bacb-630f0c51a8d9
     entity_ids:
       - sensor.altan_temperatur
-      - sensor.lille_altan_temperatur
+      - sensor.kontor_altan_temperatur
 
   - platform: derivative
     source: sensor.badevaerelse_humidity
@@ -327,13 +327,33 @@ template:
           {%- set humidity = states('sensor.vaerksted_luftfugtighed')|float(0.0) -%}
           {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
 
+      - name: Altan Temperatur Føles Som
+        unique_id: f3bc969e-1e63-43be-9530-084992430c38
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        state: >
+          {%- set temp = states('sensor.altan_temperatur')|float(0.0) -%}
+          {%- set humidity = states('sensor.altan_luftfugtighed')|float(0.0) -%}
+          {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
+
+      - name: Kontor Altan Temperatur Føles Som
+        unique_id: f2539a79-6ccd-48b3-a7cf-1687f5421552
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        state: >
+          {%- set temp = states('sensor.kontor_altan_temperatur')|float(0.0) -%}
+          {%- set humidity = states('sensor.kontor_altan_luftfugtighed')|float(0.0) -%}
+          {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
+
       - name: Udenfor Temperatur Føles Som
         unique_id: 9bc20377-90b8-4ae0-98e8-e2e918739bad
         device_class: temperature
         state_class: measurement
         unit_of_measurement: "°C"
         state: >
-          {%- set temp = states('sensor.altan_temperatur')|float(0.0) -%}
+          {%- set temp = states('sensor.min_ude_temperatur')|float(0.0) -%}
           {%- set humidity = states('sensor.humidity')|float(0.0) -%}
           {{(0.567 * temp + 0.393 * (humidity/ 100 * 6.105 * e ** (17.27 * temp / (237.7 + temp ) )) + 3.94) | round(2) }}
 
@@ -367,3 +387,11 @@ thermal_comfort:
         unique_id: 368ec6eb-ee4e-48c2-a625-55ce84a46fe8
         temperature_sensor: sensor.mean_inde_temperatur
         humidity_sensor: sensor.mean_inde_luftfugtighed
+      - name: Altan
+        unique_id: 1b24eb15-cff0-4c4a-a124-45a060900328
+        temperature_sensor: sensor.altan_temperatur
+        humidity_sensor: sensor.altan_luftfugtighed
+      - name: Kontor Altan
+        unique_id: 20443aea-2726-4c9f-bec0-484c94f8515b
+        temperature_sensor: sensor.kontor_altan_temperatur
+        humidity_sensor: sensor.kontor_altan_luftfugtighed
