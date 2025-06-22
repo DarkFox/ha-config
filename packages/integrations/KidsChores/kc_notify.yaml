@@ -2,26 +2,27 @@ automation:
   - alias: Notify Rook about overdue chores
     id: 663a693f-d58b-4f0c-9340-6c8961e0c76f
     description: Notify Rook about chores that are overdue and have the Notify label
-    triggers:
-      - trigger: template
-        value_template: >-
-          {{ expand(states.sensor) 
-            | selectattr('entity_id', 'match', '^sensor\\.kc_rook_chore_status_.*')
-            | selectattr('state', 'equalto', 'overdue')
-            | selectattr('attributes.labels', 'search', 'Notify')
-            | list
-            | count > 0 }}
-        for:
-          seconds: 1
+    initial_state: true
+    mode: restart
+    trigger:
+      - trigger: state
+        entity_id: sensor.rook_chores_overdue
+        attribute: chores
+    condition:
+      - condition: numeric_state
+        entity_id: sensor.rook_chores_overdue
+        above: 0
     variables:
       chore_entity_ids: >-
-        {{ expand(states.sensor) 
-          | selectattr('entity_id', 'match', '^sensor\\.kc_rook_chore_status_.*') 
-          | selectattr('state', 'equalto', 'overdue') 
+        {{ state_attr('sensor.rook_chores_overdue', 'chores')
+          | expand
           | selectattr('attributes.labels', 'search', 'Notify') 
           | map(attribute='entity_id') 
           | list }}
     actions:
+      - condition: template
+        value_template: >-
+          {{ chore_entity_ids | length > 0 }}
       - action: notify.mobile_app_darkphone
         data:
           title: Opgaver forfaldne
@@ -52,27 +53,29 @@ automation:
   - alias: Notify Rook about critical overdue chores
     id: 601e476d-eabd-4300-960d-80fd307f1c86
     description: Notify Rook about critical chores that are overdue every 5 minutes
-    triggers:
+    initial_state: true
+    mode: restart
+    trigger:
+      - trigger: state
+        entity_id: sensor.rook_chores_overdue
+        attribute: chores
       - trigger: time_pattern
         minutes: "/5"
-    conditions:
-      - condition: template
-        value_template: >-
-          {{ expand(states.sensor) 
-            | selectattr('entity_id', 'match', '^sensor\\.kc_rook_chore_status_.*')
-            | selectattr('state', 'equalto', 'overdue')
-            | selectattr('attributes.labels', 'search', 'Critical Notify')
-            | list
-            | count > 0 }}
+    condition:
+      - condition: numeric_state
+        entity_id: sensor.rook_chores_overdue
+        above: 0
     variables:
       chore_entity_ids: >-
-        {{ expand(states.sensor) 
-          | selectattr('entity_id', 'match', '^sensor\\.kc_rook_chore_status_.*') 
-          | selectattr('state', 'equalto', 'overdue') 
+        {{ state_attr('sensor.rook_chores_overdue', 'chores')
+          | expand
           | selectattr('attributes.labels', 'search', 'Critical Notify') 
           | map(attribute='entity_id') 
           | list }}
     actions:
+      - condition: template
+        value_template: >-
+          {{ chore_entity_ids | length > 0 }}
       - action: notify.mobile_app_darkphone
         data:
           title: Opgaver forfaldne

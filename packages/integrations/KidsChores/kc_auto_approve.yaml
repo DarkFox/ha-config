@@ -2,35 +2,29 @@ automation:
   - alias: Auto approve all chores for Rook
     id: bf25eccf-deca-4c0c-8931-6fe727034ab5
     description: Automatically presses the correct approval button for claimed chores.
+    initial_state: true
+    mode: queued
     trigger:
-      - trigger: template
-        value_template: >-
-          {{ expand(states.sensor) 
-            | selectattr('entity_id', 'match', '^sensor\\.kc_rook_chore_status_.*') 
-            | selectattr('state', 'equalto', 'claimed') 
-            | list 
-            | count > 0 }}
-        for:
-          seconds: 5
+      - trigger: state
+        entity_id: sensor.rook_chores_claimed
+        attribute: chores
+    condition:
+      - condition: numeric_state
+        entity_id: sensor.rook_chores_claimed
+        above: 0
+    variables:
+      approval_buttons: >-
+        {{ 
+          state_attr('sensor.rook_chores_claimed', 'chores')
+          | map('regex_replace',
+                '^sensor\\.kc_([a-zA-Z0-9_]+)_chore_status_',
+                'button.kc_\\1_chore_approval_')
+          | list
+        }}
     action:
-      - variables:
-          approval_button: >-
-            {% set sensor = expand(states.sensor) 
-                            | selectattr('entity_id', 'match', '^sensor\\.kc_rook_chore_status_.*') 
-                            | selectattr('state', 'equalto', 'claimed') 
-                            | map(attribute='entity_id') 
-                            | first %}
-            {% if sensor %}
-              {{ sensor | regex_replace('^sensor\\.kc_([a-zA-Z0-9_]+)_chore_status_', 'button.kc_\\1_chore_approval_') }}
-            {% else %}
-              none
-            {% endif %}
-      - choose:
-          - conditions:
-              - condition: template
-                value_template: "{{ approval_button != 'none' }}"
-            sequence:
-              - action: button.press
-                target:
-                  entity_id: "{{ approval_button }}"
-    mode: single
+      - repeat:
+          for_each: "{{ approval_buttons }}"
+          sequence:
+            - action: button.press
+              target:
+                entity_id: "{{ repeat.item }}"

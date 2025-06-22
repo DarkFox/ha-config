@@ -1,0 +1,75 @@
+template:
+  - sensor:
+      - name: Rook Chores Status
+        unique_id: c44d2a64-617c-4087-89a1-757c0cd5d3ec
+        state: "{{ (state_attr('sensor.rook_chores_status', 'chores') or {}) | list | length }}"
+        attributes:
+          chores: >-
+            {%
+              set rook_chore_status_entities = integration_entities('kidschores')
+              | expand
+              | selectattr('entity_id', 'match', '^sensor\\.kc_rook_chore_status_.*') 
+              | map(attribute='entity_id') 
+              | list
+            %}
+            {% set ns = namespace(chores={}) %}
+            {% for entity_id in rook_chore_status_entities %}
+              {% set ns.chores = dict(ns.chores, **{entity_id:states(entity_id)}) %}
+            {% endfor %}
+            {{ ns.chores }}
+
+      - name: Rook Chores Pending
+        unique_id: fcf71ae7-ba22-4db5-8a0e-91b80485fbd0
+        state: "{{ (state_attr('sensor.rook_chores_pending', 'chores') or []) | length }}"
+        attributes:
+          chores: >-
+            {%- set all = state_attr('sensor.rook_chores_status','chores') or {} -%}
+            {%- set ns = namespace(chores=[]) -%}
+            {%- for key, val in all.items() -%}
+              {%- if val == 'pending' -%}
+                {%- set ns.chores = ns.chores + [key] -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {{ ns.chores }}
+
+      - name: Rook Chores Overdue
+        unique_id: 0752464e-38ac-4abe-9054-104f4af1bd8a
+        state: "{{ (state_attr('sensor.rook_chores_overdue', 'chores') or []) | length }}"
+        attributes:
+          chores: >-
+            {%- set all = state_attr('sensor.rook_chores_status','chores') or {} -%}
+            {%- set ns = namespace(chores=[]) -%}
+            {%- for key, val in all.items() -%}
+              {%- if val == 'overdue' -%}
+                {%- set ns.chores = ns.chores + [key] -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {{ ns.chores }}
+
+      - name: Rook Chores Claimed
+        unique_id: 5822f694-8932-442b-a0ae-2f547a710f96
+        state: "{{ (state_attr('sensor.rook_chores_claimed', 'chores') or []) | length }}"
+        attributes:
+          chores: >-
+            {%- set all = state_attr('sensor.rook_chores_status','chores') or {} -%}
+            {%- set ns = namespace(chores=[]) -%}
+            {%- for key, val in all.items() -%}
+              {%- if val == 'claimed' -%}
+                {%- set ns.chores = ns.chores + [key] -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {{ ns.chores }}
+
+      - name: Rook Chores Approved
+        unique_id: 18ea28e6-4dde-473c-9529-faf816adbbf7
+        state: "{{ (state_attr('sensor.rook_chores_approved', 'chores') or []) | length }}"
+        attributes:
+          chores: >-
+            {%- set all = state_attr('sensor.rook_chores_status','chores') or {} -%}
+            {%- set ns = namespace(chores=[]) -%}
+            {%- for key, val in all.items() -%}
+              {%- if val == 'approved' -%}
+                {%- set ns.chores = ns.chores + [key] -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {{ ns.chores }}
