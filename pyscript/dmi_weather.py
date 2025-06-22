@@ -104,27 +104,4 @@ async def get_dmi_severe_weather_warnings(location_id=None):
             response.raise_for_status()
             result = response.json()
 
-            data = {
-                'name': result.get('name', ''),
-                'area': result.get('area', ''),
-                'day0': result.get('day0', ''),
-                'day1': result.get('day1', ''),
-                'day2': result.get('day2', ''),
-                'day3': result.get('day3', ''),
-                'day4': result.get('day4', ''),
-                'day5': result.get('day5', ''),
-                'vandstand': result.get('vandstand', ''),
-                'favorite': result.get("favorite", ""),
-                'warnings': result.get("warnings", []),
-                'location_warnings': result.get("locationWarnings", []),
-                'actual_warnings': result.get("actualWarnings", []),
-                'fiveday_warnings': result.get("fivedayWarnings", []),
-            }
-
-            for key, value in data.items():
-                if value == 'none' or value == '':
-                    data[key] = None
-
-            data['raw'] = result
-
-            event.fire('dmi_severe_weather_warnings', severe_weather_warnings=data)
+            event.fire('dmi_severe_weather_warnings', severe_weather_warnings=result)

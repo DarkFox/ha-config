@@ -1,90 +1,3 @@
-mqtt:
-  sensor:
-    - name: "DMI Aktuelle Varsler"
-      state_topic: "dmi_current_warnings/state"
-      json_attributes_topic: "dmi_current_warnings/attributes"
-
-    - name: "DMI Kommende Varsler"
-      state_topic: "dmi_future_warnings/state"
-      json_attributes_topic: "dmi_future_warnings/attributes"
-
-binary_sensor:
-  - platform: template
-    sensors:
-      show_weather_warnings:
-        value_template: "{{ not is_state('sensor.dmi_aktuelle_varsler', '0') }}"
-  - platform: template
-    sensors:
-      show_coming_weather_warnings:
-        value_template: "{{ not is_state('sensor.dmi_kommende_varsler', '0') }}"
-
-sensor:
-  - platform: template
-    sensors:
-      dmi_aktuel_varsel:
-        friendly_name: "DMI Aktuel Varsel"
-        value_template: >-
-          {{ state_attr('sensor.dmi_aktuel_varsel', 'raw')['warningTitle'] if state_attr('sensor.dmi_aktuel_varsel', 'raw') }}
-        attribute_templates:
-          raw: >-
-            {% set actualWarnings = state_attr('sensor.dmi_warnings_specific_raw', 'actualWarnings') %}
-            {% if actualWarnings and actualWarnings|length > 0 %}
-              {{ actualWarnings[0]|tojson }}
-            {% else %}
-              {}
-            {% endif %}
-          text: >-
-            {{ state_attr('sensor.dmi_aktuel_varsel', 'raw')['warningText'] if state_attr('sensor.dmi_aktuel_varsel', 'raw') }}
-          additional_text: >-
-            {{ state_attr('sensor.dmi_aktuel_varsel', 'raw')['additionalText'] if state_attr('sensor.dmi_aktuel_varsel', 'raw') }}
-          valid_from: >-
-            {{ state_attr('sensor.dmi_aktuel_varsel', 'raw')['validFromText'] if state_attr('sensor.dmi_aktuel_varsel', 'raw') }}
-          valid_to: >-
-            {{ state_attr('sensor.dmi_aktuel_varsel', 'raw')['validToText'] if state_attr('sensor.dmi_aktuel_varsel', 'raw') }}
-          issued_at: >-
-            {{ state_attr('sensor.dmi_aktuel_varsel', 'raw')['issuedAtText'] if state_attr('sensor.dmi_aktuel_varsel', 'raw') }}
-          category: >-
-            {{ state_attr('sensor.dmi_aktuel_varsel', 'raw')['formattedCategory'] if state_attr('sensor.dmi_aktuel_varsel', 'raw') }}
-          valid_from_timestamp: >-
-            {{ state_attr('sensor.dmi_aktuel_varsel', 'raw')['validFrom'] if state_attr('sensor.dmi_aktuel_varsel', 'raw') }}
-          valid_to_timestamp: >-
-            {{ state_attr('sensor.dmi_aktuel_varsel', 'raw')['validTo'] if state_attr('sensor.dmi_aktuel_varsel', 'raw') }}
-          entity_picture: >-
-            {{ '/local/downloads/dmi_warning_icons/'+state_attr('sensor.dmi_aktuel_varsel', 'raw')['icon'] if state_attr('sensor.dmi_aktuel_varsel', 'raw') }}
-
-  - platform: rest
-    name: dmi_warnings_raw
-    # https://dmi.dk/dmidk_byvejrWS/rest/texts/varsler/geonameid/[ID from dmi.dk location weather URL]
-    resource: !secret dmi_warnings_url
-    headers:
-      User-Agent: !secret user_agent
-    scan_interval: 900
-    force_update: True
-    value_template: "{{ 0 if value_json.warnings|length < 1 else value_json.warnings[0].time }}"
-    json_attributes:
-      - warnings
-      - day0
-      - day1
-      - day2
-      - day3
-      - day4
-      - day5
-      - vandstand
-      - favorite
-
-  - platform: rest
-    name: dmi_warnings_specific_raw
-    resource: !secret dmi_warnings_url
-    headers:
-      User-Agent: !secret user_agent
-    scan_interval: 31536000
-    force_update: True
-    value_template: "{{ 0 if value_json.warnings|length < 1 else value_json.warnings[0].time }}"
-    json_attributes:
-      - locationWarnings
-      - actualWarnings
-      - fivedayWarnings
-
 template:
   - trigger:
       - trigger: event
@@ -110,24 +23,101 @@ template:
     sensor:
       - name: "DMI Vejr Varsler"
         unique_id: 1aa440ad-8c2e-41a3-8a07-aa554553e19e
-        state: "{{ trigger.event.data.severe_weather_warnings.get('warnings', []) | length }}"
+        state: "{{ trigger.event.data.severe_weather_warnings.get('locationWarnings', []) | length }}"
         unit_of_measurement: "varsler"
         attributes:
           name: "{{ trigger.event.data.severe_weather_warnings.get('name') }}"
           area: "{{ trigger.event.data.severe_weather_warnings.get('area') }}"
-          day0: "{{ trigger.event.data.severe_weather_warnings.get('day0') }}"
-          day1: "{{ trigger.event.data.severe_weather_warnings.get('day1') }}"
-          day2: "{{ trigger.event.data.severe_weather_warnings.get('day2') }}"
-          day3: "{{ trigger.event.data.severe_weather_warnings.get('day3') }}"
-          day4: "{{ trigger.event.data.severe_weather_warnings.get('day4') }}"
-          day5: "{{ trigger.event.data.severe_weather_warnings.get('day5') }}"
+          day0_icon: "{{ trigger.event.data.severe_weather_warnings.get('day0') }}"
+          day1_icon: "{{ trigger.event.data.severe_weather_warnings.get('day1') }}"
+          day2_icon: "{{ trigger.event.data.severe_weather_warnings.get('day2') }}"
+          day3_icon: "{{ trigger.event.data.severe_weather_warnings.get('day3') }}"
+          day4_icon: "{{ trigger.event.data.severe_weather_warnings.get('day4') }}"
+          day5_icon: "{{ trigger.event.data.severe_weather_warnings.get('day5') }}"
           vandstand: "{{ trigger.event.data.severe_weather_warnings.get('vandstand') }}"
-          favorite: "{{ trigger.event.data.severe_weather_warnings.get('favorite') }}"
-          warnings: "{{ trigger.event.data.severe_weather_warnings.get('warnings', []) }}"
+          icon_file: "{{ trigger.event.data.severe_weather_warnings.get('favorite') }}"
+          hourly_warnings: "{{ trigger.event.data.severe_weather_warnings.get('warnings', []) }}"
           location_warnings: "{{ trigger.event.data.severe_weather_warnings.get('locationWarnings', []) }}"
           actual_warnings: "{{ trigger.event.data.severe_weather_warnings.get('actualWarnings', []) }}"
           fiveday_warnings: "{{ trigger.event.data.severe_weather_warnings.get('fivedayWarnings', []) }}"
-          raw: "{{ trigger.event.data.severe_weather_warnings.get('raw') }}"
+          raw: "{{ trigger.event.data.severe_weather_warnings }}"
+
+      - name: "DMI Aktuelle Varsler"
+        unique_id: 2b3c4d5e-6f7a-8b9c-d0e1-f2g3h4i5j6k7
+        state: "{{ trigger.event.data.severe_weather_warnings.get('actualWarnings', []) | length }}"
+        unit_of_measurement: "varsler"
+        attributes:
+          warnings: "{{ trigger.event.data.severe_weather_warnings.get('actualWarnings', []) }}"
+
+      - name: "DMI Kommende Varsler"
+        unique_id: 3c4d5e6f-7a8b-9c0d-e1f2-g3h4i5j6k7l8
+        state: "{{ trigger.event.data.severe_weather_warnings.get('fivedayWarnings', []) | length }}"
+        unit_of_measurement: "varsler"
+        attributes:
+          warnings: "{{ trigger.event.data.severe_weather_warnings.get('fivedayWarnings', []) }}"
+
+      - name: "DMI Aktuel Varsel"
+        unique_id: 1a2b3c4d-5e6f-7a8b-9c0d-e1f2g3h4i5j6
+        state: >-
+          {{
+            trigger.event.data.severe_weather_warnings.get('actualWarnings', [{}])[0].get('warningTitle', None)
+          }}
+        attributes:
+          raw: >-
+            {{
+              trigger.event.data.severe_weather_warnings.get('actualWarnings', [None])[0]
+            }}
+          text: >-
+            {{
+              trigger.event.data.severe_weather_warnings.get('actualWarnings', [{}])[0].get('warningText', None)
+            }}
+          additional_text: >-
+            {{
+              trigger.event.data.severe_weather_warnings.get('actualWarnings', [{}])[0].get('additionalText', None)
+            }}
+          valid_from: >-
+            {{
+              trigger.event.data.severe_weather_warnings.get('actualWarnings', [{}])[0].get('validFromText', None)
+            }}
+          valid_to: >-
+            {{
+              trigger.event.data.severe_weather_warnings.get('actualWarnings', [{}])[0].get('validToText', None)
+            }}
+          issued_at: >-
+            {{
+              trigger.event.data.severe_weather_warnings.get('actualWarnings', [{}])[0].get('issuedAtText', None)
+            }}
+          category: >-
+            {{
+              trigger.event.data.severe_weather_warnings.get('actualWarnings', [{}])[0].get('formattedCategory', None)
+            }}
+          valid_from_timestamp: >-
+            {{
+              trigger.event.data.severe_weather_warnings.get('actualWarnings', [{}])[0].get('validFrom', None)
+            }}
+          valid_to_timestamp: >-
+            {{
+              trigger.event.data.severe_weather_warnings.get('actualWarnings', [{}])[0].get('validTo', None)
+            }}
+          icon_file: >-
+            {{
+              trigger.event.data.severe_weather_warnings.get('actualWarnings', [{}])[0].get('icon', None)
+            }}
+          entity_picture: >-
+            {{
+              '/local/downloads/dmi_warning_icons/' + trigger.event.data.severe_weather_warnings.get('actualWarnings', [])[0].icon
+              if trigger.event.data.severe_weather_warnings.get('actualWarnings', []) | length > 0 else None
+            }}
+
+    binary_sensor:
+      - name: Show DMI Weather Warnings
+        unique_id: 4d5e6f7a-8b9c-0d1e-2f3g-4h5i6j7k8l9m
+        state: "{{ not is_state('sensor.dmi_aktuelle_varsler', '0') }}"
+        device_class: problem
+      - name: Show DMI Coming Weather Warnings
+        unique_id: 5e6f7a8b-9c0d-1e2f-3g4h-5i6j7k8l9m0n
+        state: "{{ not is_state('sensor.dmi_kommende_varsler', '0') }}"
+        device_class: problem
 
   - sensor:
       - name: "DMI Vejr TTS"
@@ -173,116 +163,18 @@ automation:
           data:
             location_id: !secret dmi_location_id
 
-  - alias: severe_weather_warning
-    id: cb4cc6ee-fc71-437d-a4f3-3959c5877a80
+  - alias: download_dmi_warning_icon
+    id: 6f7e8d9a-0b1c-2d3e-4f5g-6h7i8j9k0l1m
     initial_state: true
-    mode: queued
-    triggers:
-      trigger: template
-      value_template: "{{ (state_attr('sensor.dmi_aktuel_varsel', 'category') | int(0)) > 1 }}"
-    actions:
-      - action: script.notify_darkphone
-        data:
-          title: "Vejr Varsel: {{ states('sensor.dmi_aktuel_varsel') }}"
-          message: "{{ state_attr('sensor.dmi_aktuel_varsel', 'text') }}"
-
-  - alias: update_dmi_warning_specific_sensor
-    id: c75043e8-57d4-4d32-8d11-c631bce1b275
-    initial_state: true
-    mode: queued
+    mode: single
     triggers:
       - trigger: state
-        entity_id: sensor.dmi_warnings_raw
-      - trigger: state
-        entity_id: binary_sensor.home_assistant_loaded
-        to: "on"
-    conditions:
-      - condition: template
-        value_template: "{{ states.sensor.dmi_warnings_raw.attributes.warnings|length > 0 }}"
+        entity_id: sensor.dmi_aktuel_varsel
+        attribute: icon_file
+        not_to: ""
     actions:
-      - action: homeassistant.update_entity
-        data:
-          entity_id: sensor.dmi_warnings_specific_raw
-
-  - alias: update_dmi_warning_sensor
-    id: 989cb761-3943-44b6-8af3-302b51cd8b41
-    initial_state: true
-    mode: queued
-    triggers:
-      - trigger: state
-        entity_id: sensor.dmi_warnings_raw
-      - trigger: state
-        entity_id: binary_sensor.home_assistant_loaded
-        to: "on"
-    actions:
-      - delay:
-          seconds: 5
-
-      - variables:
-          actualWarnings: >-
-            {% set actualWarnings = state_attr('sensor.dmi_warnings_specific_raw', 'actualWarnings') %}
-            {% if actualWarnings and actualWarnings|length > 0 %}
-              {{ actualWarnings|tojson }}
-            {% else %}
-              []
-            {% endif %}
-          fivedayWarnings: >-
-            {% set fivedayWarnings = state_attr('sensor.dmi_warnings_specific_raw', 'fivedayWarnings') %}
-            {% if fivedayWarnings and fivedayWarnings|length > 0 %}
-              {{ fivedayWarnings|tojson }}
-            {% else %}
-              []
-            {% endif %}
-
-      - action: mqtt.publish
-        data:
-          topic: "dmi_current_warnings/state"
-          retain: True
-          payload: >-
-            {{ actualWarnings | length }}
-
-      - action: mqtt.publish
-        data:
-          topic: "dmi_current_warnings/attributes"
-          retain: True
-          payload: >-
-            {% if actualWarnings|length < 1 %}
-              {}
-            {% else %}
-              {
-              {% for warning in actualWarnings %}
-                "{{ warning.issuedAtText }} {{warning.warningTitle}}": {{ warning | string | replace("'", '"') }}{%- if not loop.last %},{%- endif %}
-              {% endfor %}
-              }
-            {% endif %}
-
-      - action: mqtt.publish
-        data:
-          topic: "dmi_future_warnings/state"
-          retain: True
-          payload: >-
-            {{ fivedayWarnings|length }}
-
-      - action: mqtt.publish
-        data:
-          topic: "dmi_future_warnings/attributes"
-          retain: True
-          payload: >-
-            {% if fivedayWarnings|length < 1 %}
-              {}
-            {% else %}
-              {
-              {% for warning in fivedayWarnings %}
-                "{{ warning.issuedAtText }} {{warning.warningTitle}}": {{ warning | string | replace("'", '"') }}{%- if not loop.last %},{%- endif %}
-              {% endfor %}
-              }
-            {% endif %}
-
-      - condition: template
-        value_template: "{{ actualWarnings|length > 0 }}"
-
       - action: downloader.download_file
         data:
-          url: "https://www.dmi.dk/fileadmin/assets/Varselsikoner/{{ actualWarnings[0].icon }}"
+          url: "https://www.dmi.dk/fileadmin/assets/Varselsikoner/{{ state_attr('sensor.dmi_aktuel_varsel', 'icon_file') }}"
           subdir: dmi_warning_icons
           overwrite: true
