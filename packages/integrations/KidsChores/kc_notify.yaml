@@ -6,38 +6,39 @@ automation:
     mode: restart
     trigger:
       - trigger: state
-        entity_id: sensor.rook_chores_overdue
+        entity_id: sensor.rook_chores_overdue_notify
         attribute: chores
+        for:
+          seconds: 5
     condition:
       - condition: numeric_state
-        entity_id: sensor.rook_chores_overdue
+        entity_id: sensor.rook_chores_overdue_notify
         above: 0
     variables:
       chore_sensors: >-
-        {{ state_attr('sensor.rook_chores_overdue', 'chores')
-          | expand
-          | selectattr('attributes.labels', 'search', 'Notify') 
-          | map(attribute='entity_id') 
-          | list }}
+        {{ state_attr('sensor.rook_chores_overdue_notify', 'chores') }}
     actions:
       - condition: template
-        value_template: >-
-          {{ chore_sensors | length > 0 }}
+        value_template: "{{ chore_sensors | length > 0 }}"
       - action: notify.mobile_app_darkphone
         data:
           title: Opgaver forfaldne
           message: >-
             Følgende opgaver er forfaldne:
-            {% for sensor in chore_sensors %}
+            {% for entity_id in chore_sensors %}
+              {% set sensor = states[entity_id] %}
               - {{ sensor.attributes.chore_name }}
             {% endfor %}
           data:
             tag: "kc_rook_overdue_chores_notification"
             channel: "Overdue Chores"
             importance: high
+            ttl: 0
+            priority: high
             clickAction: >-
               {% set ns = namespace(has_health_chores=false) %}
-              {% for sensor in chore_sensors %}
+              {% for entity_id in chore_sensors %}
+                {% set sensor = states[entity_id] -%}
                 {% if 'Helbred' in sensor.attributes.labels %}
                   {% set ns.has_health_chores = true %}
                 {% endif %}
@@ -55,45 +56,97 @@ automation:
     mode: restart
     trigger:
       - trigger: state
-        entity_id: sensor.rook_chores_overdue
+        entity_id: sensor.rook_chores_overdue_critical_notify
         attribute: chores
+        for:
+          seconds: 5
       - trigger: time_pattern
         minutes: "/5"
     condition:
       - condition: numeric_state
-        entity_id: sensor.rook_chores_overdue
+        entity_id: sensor.rook_chores_overdue_critical_notify
         above: 0
     variables:
       chore_sensors: >-
-        {{ state_attr('sensor.rook_chores_overdue', 'chores')
-          | expand
-          | selectattr('attributes.labels', 'search', 'Critical Notify') 
-          | list }}
+        {{ state_attr('sensor.rook_chores_overdue_critical_notify', 'chores') }}
+      uri: >-
+        {% set ns = namespace(has_health_chores=false) %}
+        {% for entity_id in chore_sensors %}
+          {% set sensor = states[entity_id] %}
+          {% if 'Helbred' in sensor.attributes.labels %}
+            {% set ns.has_health_chores = true %}
+          {% endif %}
+        {% endfor %}
+        {% if ns.has_health_chores %}
+          /dashboard-health/symptomer
+        {% else %}
+          /dashboard-pligter/Rook
+        {% endif %}
     actions:
+      - variables:
+          # Context is not available until the actions are executed.
+          # It cannot be set in the automation variables section.
+          action_open: >-
+            {{ 'CRITICAL_CHORE_NOTIFICATION_OPEN.' ~ context.id }}
+          action_skip: >-
+            {{ 'CRITICAL_CHORE_NOTIFICATION_SKIP.' ~ context.id }}
+          action_snooze: >-
+            {{ 'CRITICAL_CHORE_NOTIFICATION_SNOOZE.' ~ context.id }}
       - condition: template
-        value_template: >-
-          {{ chore_sensors | length > 0 }}
+        value_template: "{{ chore_sensors | length > 0 }}"
       - action: notify.mobile_app_darkphone
         data:
           title: Opgaver forfaldne
           message: >-
             Følgende kritiske opgaver er forfaldne:
-            {% for sensor in chore_sensors %}
+            {% for entity_id in chore_sensors %}
+              {% set sensor = states[entity_id] -%}
               - {{ sensor.attributes.chore_name }}
             {% endfor %}
           data:
             tag: "kc_rook_critical_overdue_chores_notification"
             channel: "Critical Overdue Chores"
             importance: high
-            clickAction: >-
-              {% set ns = namespace(has_health_chores=false) %}
-              {% for sensor in chore_sensors %}
-                {% if 'Helbred' in sensor.attributes.labels %}
-                  {% set ns.has_health_chores = true %}
-                {% endif %}
-              {% endfor %}
-              {% if ns.has_health_chores %}
-                /dashboard-health/symptomer
-              {% else %}
-                /dashboard-pligter/Rook
-              {% endif %}
+            ttl: 0
+            priority: high
+            actions:
+              - action: "{{ action_open }}"
+                title: "Åbn"
+                uri: "{{ uri }}"
+              - action: "{{ action_skip }}"
+                title: "Spring over"
+              - action: "{{ action_snooze }}"
+                title: "+30 min"
+            clickAction: "{{ uri }}"
+      - alias: "Wait for a response"
+        wait_for_trigger:
+          - trigger: event
+            event_type: mobile_app_notification_action
+            event_data:
+              action: "{{ action_skip }}"
+          - trigger: event
+            event_type: mobile_app_notification_action
+            event_data:
+              action: "{{ action_snooze }}"
+      - alias: "Perform the action"
+        choose:
+          - conditions: "{{ wait.trigger.event.data.action == action_skip }}"
+            sequence:
+              - repeat:
+                  for_each: "{{ chore_sensors }}"
+                  sequence:
+                    - action: kidschores.skip_chore_due_date
+                      data:
+                        chore_name: "{{ states[repeat.item].attributes.chore_name }}"
+          - conditions: "{{ wait.trigger.event.data.action == action_snooze }}"
+            sequence:
+              - variables:
+                  new_due_date: >-
+                    {{ (now() + timedelta(minutes=30)).strftime('%Y-%m-%dT%H:%M:%S') }}
+              - repeat:
+                  for_each: "{{ chore_sensors }}"
+                  sequence:
+                    - action: kidschores.set_chore_due_date
+                      data:
+                        chore_name: "{{ states[repeat.item].attributes.chore_name }}"
+                        due_date: "{{ new_due_date }}"

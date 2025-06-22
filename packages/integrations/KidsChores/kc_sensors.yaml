@@ -73,3 +73,25 @@ template:
               {%- endif -%}
             {%- endfor -%}
             {{ ns.chores }}
+
+      - name: Rook Chores Overdue Notify
+        unique_id: 633e080e-68b8-449c-b81b-8568f49e7afc
+        state: "{{ (state_attr('sensor.rook_chores_overdue_notify', 'chores') or []) | length }}"
+        attributes:
+          chores: >-
+            {{ state_attr('sensor.rook_chores_overdue', 'chores')
+              | expand
+              | selectattr('attributes.labels', 'search', 'Chore Regular Notify') 
+              | map(attribute='entity_id') 
+              | list }}
+
+      - name: Rook Chores Overdue Critical Notify
+        unique_id: 8c39868a-0d08-48cd-9d96-f84f4396c609
+        state: "{{ (state_attr('sensor.rook_chores_overdue_critical_notify', 'chores') or []) | length }}"
+        attributes:
+          chores: >-
+            {{ state_attr('sensor.rook_chores_overdue', 'chores')
+              | expand
+              | selectattr('attributes.labels', 'search', 'Chore Critical Notify') 
+              | map(attribute='entity_id') 
+              | list }}
