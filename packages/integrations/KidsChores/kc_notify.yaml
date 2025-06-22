@@ -13,7 +13,7 @@ automation:
         entity_id: sensor.rook_chores_overdue
         above: 0
     variables:
-      chore_entity_ids: >-
+      chore_sensors: >-
         {{ state_attr('sensor.rook_chores_overdue', 'chores')
           | expand
           | selectattr('attributes.labels', 'search', 'Notify') 
@@ -22,14 +22,13 @@ automation:
     actions:
       - condition: template
         value_template: >-
-          {{ chore_entity_ids | length > 0 }}
+          {{ chore_sensors | length > 0 }}
       - action: notify.mobile_app_darkphone
         data:
           title: Opgaver forfaldne
           message: >-
             Følgende opgaver er forfaldne:
-            {% for chore_entity_id in chore_entity_ids %}
-              {%- set sensor = states[chore_entity_id] %}
+            {% for sensor in chore_sensors %}
               - {{ sensor.attributes.chore_name }}
             {% endfor %}
           data:
@@ -38,8 +37,7 @@ automation:
             importance: high
             clickAction: >-
               {% set ns = namespace(has_health_chores=false) %}
-              {% for chore_entity_id in chore_entity_ids %}
-                {%- set sensor = states[chore_entity_id] %}
+              {% for sensor in chore_sensors %}
                 {% if 'Helbred' in sensor.attributes.labels %}
                   {% set ns.has_health_chores = true %}
                 {% endif %}
@@ -66,23 +64,21 @@ automation:
         entity_id: sensor.rook_chores_overdue
         above: 0
     variables:
-      chore_entity_ids: >-
+      chore_sensors: >-
         {{ state_attr('sensor.rook_chores_overdue', 'chores')
           | expand
           | selectattr('attributes.labels', 'search', 'Critical Notify') 
-          | map(attribute='entity_id') 
           | list }}
     actions:
       - condition: template
         value_template: >-
-          {{ chore_entity_ids | length > 0 }}
+          {{ chore_sensors | length > 0 }}
       - action: notify.mobile_app_darkphone
         data:
           title: Opgaver forfaldne
           message: >-
             Følgende kritiske opgaver er forfaldne:
-            {% for chore_entity_id in chore_entity_ids %}
-              {%- set sensor = states[chore_entity_id] -%}
+            {% for sensor in chore_sensors %}
               - {{ sensor.attributes.chore_name }}
             {% endfor %}
           data:
@@ -91,8 +87,7 @@ automation:
             importance: high
             clickAction: >-
               {% set ns = namespace(has_health_chores=false) %}
-              {% for chore_entity_id in chore_entity_ids %}
-                {%- set sensor = states[chore_entity_id] %}
+              {% for sensor in chore_sensors %}
                 {% if 'Helbred' in sensor.attributes.labels %}
                   {% set ns.has_health_chores = true %}
                 {% endif %}
