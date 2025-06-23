@@ -1103,7 +1103,6 @@ automation:
         target:
           entity_id:
             - fan.sovevaerelse_blaeser
-            - fan.altandor_blaeser
 
   - alias: Turn on fans in the morning if it's too warm
     id: 27c977e6-9811-40dd-b11c-10d1447c2833
@@ -1150,18 +1149,12 @@ automation:
         data:
           entity_id:
             - fan.sovevaerelse_blaeser
-      - condition: and
-        conditions:
-          - condition: state
-            entity_id: binary_sensor.sovevarelse_altandor
-            state: "on"
-          - condition: state
-            entity_id: fan.altandor_blaeser
-            state: "off"
-      - action: fan.turn_on
+      - action: climate.set_temperature
         data:
-          entity_id:
-            - fan.altandor_blaeser
+          temperature: 20
+          hvac_mode: cool
+        target:
+          entity_id: climate.aircondition
 
   - id: notify_phone_not_charging_on_sleep
     alias: Notify phone not charging on sleep

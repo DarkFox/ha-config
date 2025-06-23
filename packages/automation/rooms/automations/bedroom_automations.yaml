@@ -32,43 +32,6 @@ binary_sensor:
         value_template: "{{ is_state('input_boolean.bedroom_door_activity', 'on') }}"
 
 automation:
-  - alias: Open door curtain when fan is on if curtains are closed
-    id: 3b92ff78-c979-47c7-96f7-578c63382b9e
-    initial_state: true
-    triggers:
-      - trigger: state
-        entity_id:
-          - binary_sensor.bedroom_balcony_fan
-          - fan.altandor_blaeser
-    condition:
-      - condition: template
-        alias: "Either curtain is closed"
-        value_template: >-
-          {{
-            is_state('cover.sovevaerelse_gardin_dor', 'closed')
-            or is_state('cover.sovevaerelse_gardin_vindue', 'closed')
-          }}
-    action:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: fan.altandor_blaeser
-                state: "on"
-              - condition: state
-                entity_id: binary_sensor.sovevarelse_altandor
-                state: "on"
-            sequence:
-              - action: cover.open_cover
-                target:
-                  entity_id: cover.sovevaerelse_gardin_dor
-              - action: "cover.close_cover"
-                target:
-                  entity_id: cover.sovevaerelse_gardin_vindue
-        default:
-          - action: cover.close_cover
-            target:
-              entity_id: cover.sovevaerelse_gardin
-
   - id: bedroom_curtains_close_at_sundown
     alias: bedroom_curtains_close_at_sundown
     triggers:
