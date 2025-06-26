@@ -10,4 +10,32 @@ climate:
     controller_data: remote.sovevarelse_ir_remote
     temperature_sensor: sensor.sovevaerelse_temperatur
     humidity_sensor: sensor.sovevaerelse_luftfugtighed
-    # power_sensor: binary_sensor.ac_power
+    power_sensor: binary_sensor.aircondition_power
+    power_sensor_restore_state: true
+
+template:
+  - binary_sensor:
+      - name: Aircondition Power
+        state: >-
+          {{ states('sensor.aircondition_afbryder_forbrug') | float > 0.1 }}
+
+automation:
+  - alias: Ensure AC power on when ac climate started
+    id: 2a88ce77-de4b-4454-9e57-b69ac7deba33
+    initial_state: true
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: climate.aircondition
+        not_to: "off"
+    conditions:
+      - condition: state
+        entity_id: switch.aircondition_afbryder
+        state: "off"
+    actions:
+      - action: switch.turn_on
+        entity_id: switch.aircondition_afbryder
+      - delay:
+          seconds: 5
+      - action: climate.turn_on
+        entity_id: climate.aircondition
