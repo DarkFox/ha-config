@@ -88,7 +88,7 @@ async def get_gdq_event_info():
     return next_event
 
 
-@service
+@service  # noqa: F821
 async def get_gdq_event():
     """yaml
     name: Get GDQ Event
@@ -108,20 +108,20 @@ async def get_gdq_event():
     if gdq_event:
         data = gdq_event
 
-    event.fire("gdq_event", event=data)
+    event.fire("gdq_event", event=data)  # noqa: F821
     return data
 
 
-@service
+@service  # noqa: F821  # noqa: F821
 async def gdq_get_donation_stats():
     """yaml
     name: Get GDQ Donation Stats
-    description: Get the current donation stats from the Games Done Quick tracker. Fires 'gdq_donation_stats' event with the stats.
+    description: Get the current donation stats from the GDQ tracker.
     """
-    if not sensor.gdq_event:
+    if not sensor.gdq_event:  # noqa: F821
         return None
 
-    url = f"{base_url}/tracker/event/{sensor.gdq_event.id}"
+    url = f"{base_url}/tracker/event/{sensor.gdq_event.id}"  # noqa: F821
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
@@ -158,20 +158,22 @@ async def gdq_get_donation_stats():
                         median.replace("$", "").replace(",", "")
                     )
 
-            event.fire("gdq_donation_stats", stats=donation_stats)
+            event.fire(  # noqa: F821
+                "gdq_donation_stats", stats=donation_stats
+            )  # Longer comment to avoid formatter collapsing this line
             return total
 
 
-@service
+@service  # noqa: F821
 async def gdq_get_bids():
     """yaml
     name: Get GDQ Bids
-    description: Get the current bids from the Games Done Quick tracker. Fires 'gdq_bids' event with the bids.
+    description: Get the current bids from the GDQ tracker.
     """
-    if not sensor.gdq_event:
+    if not sensor.gdq_event:  # noqa: F821
         return None
 
-    url = f"{base_url}/tracker/bids/{sensor.gdq_event.id}"
+    url = f"{base_url}/tracker/bids/{sensor.gdq_event.id}"  # noqa: F821
 
     def get_full_url(uri):
         return base_url + uri
@@ -266,9 +268,9 @@ async def gdq_get_bids():
             bid_rows = soup.select("div.container-fluid > table > tr.small")
 
             if not bid_rows:
-                event.fire("gdq_bids", bids=[])
+                event.fire("gdq_bids", bids=[])  # noqa: F821
                 return None
 
             bids = [parse_bid_row(r, all_soup=soup) for r in bid_rows]
 
-            event.fire("gdq_bids", bids=bids)
+            event.fire("gdq_bids", bids=bids)  # noqa: F821

@@ -19,7 +19,7 @@ async def get_first_element_not_in(element, needles):
     return {}
 
 
-@service
+@service  # noqa: F821
 async def get_dmi_weather_report(location_id=None):
     """yaml
     name: Get DMI Weather Report
@@ -80,10 +80,10 @@ async def get_dmi_weather_report(location_id=None):
                 'content': content,
             }
 
-            event.fire('dmi_weather_report', weather_report=data)
+            event.fire("dmi_weather_report", weather_report=data)  # noqa: F821
 
 
-@service
+@service  # noqa: F821
 async def get_dmi_severe_weather_warnings(location_id=None):
     """yaml
     name: Get DMI Severe Weather Warnings
@@ -104,4 +104,6 @@ async def get_dmi_severe_weather_warnings(location_id=None):
             response.raise_for_status()
             result = response.json()
 
-            event.fire('dmi_severe_weather_warnings', severe_weather_warnings=result)
+            event.fire(  # noqa: F821
+                "dmi_severe_weather_warnings", severe_weather_warnings=result
+            )

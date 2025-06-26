@@ -12,19 +12,20 @@ async def find_duplicate_filenames(folder_path):
 
     # Filter out filenames that do not have duplicates
     duplicates = {
-        filename: paths for filename, paths in filename_dict.items() if len(paths) > 1
+        filename: paths
+        for filename, paths in filename_dict.items() if len(paths) > 1
     }
 
     return duplicates
 
 
-@service
+@service  # noqa: F821
 async def find_duplicate_package_names():
     """yaml
     name: Find Duplicate Package Names
-    description: Find duplicate filenames in the config folder and fire an event with the results.
+    description: Find duplicate filenames in the config folder.
     """
     folder_path = "/config/packages"
     duplicates = find_duplicate_filenames(folder_path)
 
-    event.fire("duplicate_package_names", duplicates=duplicates)
+    event.fire("duplicate_package_names", duplicates=duplicates)  # noqa: F821
