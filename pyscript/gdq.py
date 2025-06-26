@@ -2,6 +2,10 @@ import aiohttp
 from datetime import datetime
 from datetime import timezone
 from bs4 import BeautifulSoup
+from bs4 import XMLParsedAsHTMLWarning
+import warnings
+
+warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
 
 base_url = "https://tracker.gamesdonequick.com"
 
