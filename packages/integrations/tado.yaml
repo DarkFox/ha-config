@@ -1,24 +1,6 @@
 input_boolean:
   restart_tado:
 
-binary_sensor:
-  - platform: template
-    sensors:
-      tado_hub_crashed:
-        friendly_name: "Tadu Hub Crashed"
-        value_template: >
-          {{
-            is_state('binary_sensor.tado_bridge_connection_state', 'off')
-            or is_state('device_tracker.tado', 'not_home')
-            or is_state('switch.tado', 'off')
-            or not state_attr('device_tracker.tado', 'ip') or state_attr('device_tracker.tado', 'ip').split('.')[0] == '169'
-            or is_state('climate.badevaerelse', 'unknown') or is_state('climate.badevaerelse', 'unavailable')
-            or is_state('climate.vaerksted', 'unknown') or is_state('climate.vaerksted', 'unavailable')
-            or is_state('climate.sovevaerelse', 'unknown') or is_state('climate.sovevaerelse', 'unavailable')
-            or is_state('climate.kontor', 'unknown') or is_state('climate.kontor', 'unavailable')
-            or is_state('climate.stue', 'unknown') or is_state('climate.stue', 'unavailable')
-          }}
-
 automation:
   - id: restart_tado
     alias: Restart Tado
@@ -32,7 +14,7 @@ automation:
         entity_id: binary_sensor.tado_hub_crashed
         state: "on"
         for:
-          minutes: 2
+          minutes: 15
     actions:
       - action: switch.turn_off
         data:
@@ -61,101 +43,101 @@ script:
           entity_id: "{{ entity }}"
           temperature: "{{ state_attr(entity, 'temperature')|float - 1.0 }}"
 
-sensor:
-  - platform: template
-    sensors:
-      stue_thermostat_current_temperature:
-        friendly_name: "Stue Termostat Temperatur"
-        unit_of_measurement: "°C"
-        value_template: "{{ state_attr('climate.stue', 'current_temperature') }}"
-      stue_thermostat_current_humidity:
-        friendly_name: "Stue Luftfugtighed"
-        unit_of_measurement: "%"
-        value_template: "{{ state_attr('climate.stue', 'current_humidity') }}"
-      stue_thermostat_current_action:
-        friendly_name: "Stue Nuværende Tilstand"
-        value_template: "{{ state_attr('climate.stue', 'hvac_action') }}"
-      stue_thermostat_set_temperature:
-        friendly_name: "Stue Sat Temperatur"
-        unit_of_measurement: "°C"
-        value_template: "{{ state_attr('climate.stue', 'temperature') }}"
+template:
+  - binary_sensor:
+      - name: Tado Hub Crashed
+        unique_id: e2b7786f-294e-4b9f-a6cf-6f772a4857c5
+        state: >
+          {{
+            is_state('binary_sensor.tado_bridge_connection_state', 'off')
+            or is_state('switch.tado', 'off')
+            or not state_attr('device_tracker.tado', 'ip') or state_attr('device_tracker.tado', 'ip').split('.')[0] == '169'
+            or is_state('climate.badevaerelse', 'unknown') or is_state('climate.badevaerelse', 'unavailable')
+            or is_state('climate.vaerksted', 'unknown') or is_state('climate.vaerksted', 'unavailable')
+            or is_state('climate.sovevaerelse', 'unknown') or is_state('climate.sovevaerelse', 'unavailable')
+            or is_state('climate.kontor', 'unknown') or is_state('climate.kontor', 'unavailable')
+            or is_state('climate.stue', 'unknown') or is_state('climate.stue', 'unavailable')
+          }}
+        attributes:
+          crash_indicators: >-
+            {{
+              {
+                'binary_sensor.tado_bridge_connection_state': states('binary_sensor.tado_bridge_connection_state'),
+                'switch.tado': states('switch.tado'),
+                'device_tracker.tado': state_attr('device_tracker.tado', 'ip'),
+                'climate.badevaerelse': states('climate.badevaerelse'),
+                'climate.vaerksted': states('climate.vaerksted'),
+                'climate.sovevaerelse': states('climate.sovevaerelse'),
+                'climate.kontor': states('climate.kontor'),
+                'climate.stue': states('climate.stue')
+              }
+            }}
 
-      kontor_thermostat_current_temperature:
-        friendly_name: "Kontor Termostat Temperatur"
+  - sensor:
+      - name: "Stue Temperaturindstilling"
+        unique_id: fa532e4c-cc7a-4b10-8c8b-66be0215beac
+        state: "{{ state_attr('climate.stue', 'temperature') }}"
         unit_of_measurement: "°C"
-        value_template: "{{ state_attr('climate.kontor', 'current_temperature') }}"
-      kontor_thermostat_current_humidity:
-        friendly_name: "Kontor Luftfugtighed"
-        unit_of_measurement: "%"
-        value_template: "{{ state_attr('climate.kontor', 'current_humidity') }}"
-      kontor_thermostat_current_action:
-        friendly_name: "Kontor Nuværende Tilstand"
-        value_template: "{{ state_attr('climate.kontor', 'hvac_action') }}"
-      kontor_thermostat_set_temperature:
-        friendly_name: "Kontor Sat Temperatur"
+        state_class: measurement
+        device_class: temperature
+      - name: "Kontor Temperaturindstilling"
+        unique_id: 76588ee6-6ec2-43d8-acd7-770352a88135
+        state: "{{ state_attr('climate.kontor', 'temperature') }}"
         unit_of_measurement: "°C"
-        value_template: "{{ state_attr('climate.kontor', 'temperature') }}"
+        state_class: measurement
+        device_class: temperature
+      - name: "Soveværelse Temperaturindstilling"
+        unique_id: 42654680-17fd-4739-92c1-a0164eea2b7e
+        state: "{{ state_attr('climate.sovevaerelse', 'temperature') }}"
+        unit_of_measurement: "°C"
+        state_class: measurement
+        device_class: temperature
+      - name: "Værksted Temperaturindstilling"
+        unique_id: 620b8877-a6e2-46a5-a8f1-03e08800d3af
+        state: "{{ state_attr('climate.vaerksted', 'temperature') }}"
+        unit_of_measurement: "°C"
+        state_class: measurement
+        device_class: temperature
+      - name: "Badeværelse Temperaturindstilling"
+        unique_id: a4388d2e-596f-4abc-9096-49dc87ccf2e9
+        state: "{{ state_attr('climate.badevaerelse', 'temperature') }}"
+        unit_of_measurement: "°C"
+        state_class: measurement
+        device_class: temperature
 
-      sovevaerelse_thermostat_current_temperature:
-        friendly_name: "Sovevaerelse Termostat Temperatur"
-        unit_of_measurement: "°C"
-        value_template: "{{ state_attr('climate.sovevaerelse', 'current_temperature') }}"
-      sovevaerelse_thermostat_current_humidity:
-        friendly_name: "Sovevaerelse Luftfugtighed"
-        unit_of_measurement: "%"
-        value_template: "{{ state_attr('climate.sovevaerelse', 'current_humidity') }}"
-      sovevaerelse_thermostat_current_action:
-        friendly_name: "Sovevaerelse Nuværende Tilstand"
-        value_template: "{{ state_attr('climate.sovevaerelse', 'hvac_action') }}"
-      sovevaerelse_thermostat_set_temperature:
-        friendly_name: "Sovevaerelse Sat Temperatur"
-        unit_of_measurement: "°C"
-        value_template: "{{ state_attr('climate.sovevaerelse', 'temperature') }}"
+      - name: Stue Termostat Nuværende Tilstand
+        unique_id: 5f1572a0-542e-4d74-bc43-01a00881c7e9
+        state: "{{ state_attr('climate.stue', 'hvac_action') }}"
+      - name: Kontor Termostat Nuværende Tilstand
+        unique_id: d770d389-a84c-49b8-b791-d81533b7a54f
+        state: "{{ state_attr('climate.kontor', 'hvac_action') }}"
+      - name: Soveværelse Termostat Nuværende Tilstand
+        unique_id: 86c9cb00-bdca-4424-9005-a870b5447c31
+        state: "{{ state_attr('climate.sovevaerelse', 'hvac_action') }}"
+      - name: Værksted Termostat Nuværende Tilstand
+        unique_id: 64442b26-82d1-48ea-ac2b-7a57a203fae3
+        state: "{{ state_attr('climate.vaerksted', 'hvac_action') }}"
+      - name: Badeværelse Termostat Nuværende Tilstand
+        unique_id: 8a924d6d-58e3-42fa-b795-d804b585f27a
+        state: "{{ state_attr('climate.badevaerelse', 'hvac_action') }}"
 
-      vaerksted_thermostat_current_temperature:
-        friendly_name: "vaerksted Termostat Temperatur"
-        unit_of_measurement: "°C"
-        value_template: "{{ state_attr('climate.vaerksted', 'current_temperature') }}"
-      vaerksted_thermostat_current_humidity:
-        friendly_name: "vaerksted Luftfugtighed"
-        unit_of_measurement: "%"
-        value_template: "{{ state_attr('climate.vaerksted', 'current_humidity') }}"
-      vaerksted_thermostat_current_action:
-        friendly_name: "vaerksted Nuværende Tilstand"
-        value_template: "{{ state_attr('climate.vaerksted', 'hvac_action') }}"
-      vaerksted_thermostat_set_temperature:
-        friendly_name: "vaerksted Sat Temperatur"
-        unit_of_measurement: "°C"
-        value_template: "{{ state_attr('climate.vaerksted', 'temperature') }}"
-
-      badevaerelse_thermostat_current_temperature:
-        friendly_name: "Badevaerelse Termostat Temperatur"
-        unit_of_measurement: "°C"
-        value_template: "{{ state_attr('climate.badevaerelse', 'current_temperature') }}"
-      badevaerelse_thermostat_current_humidity:
-        friendly_name: "Badevaerelse Luftfugtighed"
-        unit_of_measurement: "%"
-        value_template: "{{ state_attr('climate.badevaerelse', 'current_humidity') }}"
-      badevaerelse_thermostat_current_action:
-        friendly_name: "Badevaerelse Nuværende Tilstand"
-        value_template: "{{ state_attr('climate.badevaerelse', 'hvac_action') }}"
-      badevaerelse_thermostat_set_temperature:
-        friendly_name: "Badevaerelse Sat Temperatur"
-        unit_of_measurement: "°C"
-        value_template: "{{ state_attr('climate.badevaerelse', 'temperature') }}"
-
-      stue_thermostat_heating:
-        friendly_name: "Stue Termostat Varmer"
-        value_template: "{{ '1' if is_state('sensor.stue_thermostat_current_action', 'heating') else '0' }}"
-      kontor_thermostat_heating:
-        friendly_name: "Kontor Termostat Varmer"
-        value_template: "{{ '1' if is_state('sensor.kontor_thermostat_current_action', 'heating') else '0' }}"
-      sovevaerelse_thermostat_heating:
-        friendly_name: "Soveværelse Termostat Varmer"
-        value_template: "{{ '1' if is_state('sensor.sovevaerelse_thermostat_current_action', 'heating') else '0' }}"
-      vaerksted_thermostat_heating:
-        friendly_name: "Værksted Termostat Varmer"
-        value_template: "{{ '1' if is_state('sensor.vaerksted_thermostat_current_action', 'heating') else '0' }}"
-      badevaerelse_thermostat_heating:
-        friendly_name: "Badeværelse Termostat Varmer"
-        value_template: "{{ '1' if is_state('sensor.badevaerelse_thermostat_current_action', 'heating') else '0' }}"
+      - name: Stue Termostat Varmer
+        unique_id: 006b4ab9-3b4f-4fc5-82e9-00c6c676a160
+        state: "{{ '1' if is_state('sensor.stue_termostat_nuvaerende_tilstand', 'heating') else '0' }}"
+        state_class: measurement
+      - name: Kontor Termostat Varmer
+        unique_id: acabe0fa-0828-4c4a-9b01-a192f62180f2
+        state: "{{ '1' if is_state('sensor.kontor_termostat_nuvaerende_tilstand', 'heating') else '0' }}"
+        state_class: measurement
+      - name: Soveværelse Termostat Varmer
+        unique_id: 17ca242d-f348-4f1c-a336-45b528e6bb96
+        state: "{{ '1' if is_state('sensor.sovevaerelse_termostat_nuvaerende_tilstand', 'heating') else '0' }}"
+        state_class: measurement
+      - name: Værksted Termostat Varmer
+        unique_id: 3c7f2eaa-3a1b-4cf9-9f5b-5ce0b937a302
+        state: "{{ '1' if is_state('sensor.vaerksted_termostat_nuvaerende_tilstand', 'heating') else '0' }}"
+        state_class: measurement
+      - name: Badeværelse Termostat Varmer
+        unique_id: ddfd196a-a965-409c-8d7c-212b4c1ee9f4
+        state: "{{ '1' if is_state('sensor.badevaerelse_termostat_nuvaerende_tilstand', 'heating') else '0' }}"
+        state_class: measurement
