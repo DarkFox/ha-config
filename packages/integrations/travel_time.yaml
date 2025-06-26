@@ -1,12 +1,3 @@
-homeassistant:
-  customize:
-    sensor.s_train_c_status:
-      friendly_name: S-Tog Linje C Status
-      entity_picture: !secret s_tog_icon_url
-    sensor.s_train_message:
-      friendly_name: S-Tog Driftbesked
-      icon: mdi:train
-
 template:
   - sensor:
       - name: Next Travel Event
@@ -145,17 +136,6 @@ template:
             good
           {%- endif -%}
 
-      - name: Commute Status Transit
-        unique_id: 2a130ba4-a9cf-4912-befa-f493c66a8982
-        state: >-
-          {%- if states('sensor.precip_today')|int(0) > 5 or states('sensor.s_train_c_status') != 'Til tiden' -%}
-            bad
-          {%- elif states('sensor.precip_today')|int(0) > 1 or states('sensor.s_train_message') != '' -%}
-            ok
-          {%- else -%}
-            good
-          {%- endif -%}
-
       - name: Commute Status Bike
         unique_id: 64dae5bd-189c-42a2-adbd-8e54f3a18d28
         state: >-
@@ -242,22 +222,6 @@ template:
           {%- else -%}
             False
           {%- endif -%}
-
-      - name: S-Train Message Present
-        unique_id: 7a00508c-c7f5-4877-9bc9-0565ea46f54c
-        device_class: problem
-        state: >-
-          {{ (states('sensor.s_train_message') | regex_match('.*(\sC(\W|$)|alle|Alle).*')) or not is_state('sensor.s_train_c_status', 'Til tiden') }}
-      - name: S-Train Message About C
-        unique_id: 46ee6a50-42a1-464a-aee0-df42dbfcf983
-        device_class: problem
-        state: >-
-          {{ (states('sensor.s_train_message') | default('') | regex_match('.*(\sC(\W|$)|alle|Alle).*')) }}
-
-sensor:
-  - platform: dsb_trafikinfo
-    name: DSB Trafikinfo
-    sender: S-tog
 
 automation:
   - alias: "Get upcoming travel destionation coordinates"

@@ -32,34 +32,6 @@ cards:
                   else
                     return "#7DB362AA";
                 ]]]
-      - type: "custom:button-card"
-        entity: input_select.preferred_commute
-        icon: mdi:train
-        show_name: false
-        size: 30px
-        tap_action:
-          action: call-service
-          service: input_select.select_option
-          service_data:
-            entity_id: input_select.preferred_commute
-            option: transit
-        color_type: card
-        color: "var(--primary-background-color)"
-        state:
-          - value: "transit"
-            # color: inherit
-            color: "var(--secondary-background-color)"
-        styles:
-          icon:
-            - color: >
-                [[[
-                  if (states['sensor.commute_status_transit'].state == 'bad')
-                    return "#FF0000AA";
-                  else if (states['sensor.commute_status_transit'].state == 'ok')
-                    return '#FFB300AA';
-                  else
-                    return "#7DB362AA";
-                ]]]
 
       - type: "custom:button-card"
         entity: input_select.preferred_commute
@@ -113,17 +85,6 @@ cards:
           type: iframe
           url: "${'https://www.google.com/maps/embed/v1/directions?origin='+ORIGIN+'&destination='+DESTINATION+'&mode='+MODE+'&avoid=ferries&language=da&key='+KEY}"
           aspect_ratio: 75%
-
-      transit:
-        type: vertical-stack
-        cards:
-          - !include ../weather/simple_weather.yaml
-
-          - type: conditional
-            conditions:
-              - entity: binary_sensor.s_train_message_present
-                state: "on"
-            card: !include /config/lovelace/cards/s_train_status.yaml
 
       bike:
         type: horizontal-stack
