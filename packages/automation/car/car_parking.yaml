@@ -122,7 +122,13 @@ template:
         unique_id: 1b039e84-9fbe-46f5-9ff9-f34ac68a34f7
         icon: mdi:parking
         state: >-
-          {{ states('sensor.parkeringsskive') | as_timestamp | timestamp_custom('%H:%M') }}
+          {{
+            states('sensor.parkeringsskive')
+              | as_timestamp
+              | timestamp_custom('%H:%M')
+            if has_value('sensor.parkeringsskive')
+            else None
+          }}
 
       - name: Parking Duration Limit
         unique_id: 6eab91a5-6fe1-47fa-ac76-2f000ce2e39b
@@ -141,7 +147,14 @@ template:
         device_class: timestamp
         state: >-
           {% if is_state('binary_sensor.parking_limit', 'on') %}
-            {{ (as_timestamp(states('sensor.parkeringsskive')) + states('sensor.parking_duration_limit')|int) | as_datetime }}
+            {{
+              (
+                as_timestamp(states('sensor.parkeringsskive'))
+                + states('sensor.parking_duration_limit')|int
+              ) | as_datetime
+              if has_value('sensor.parkeringsskive')
+              else None
+            }}
           {% endif %}
 
       - name: Parking Limit Clock
@@ -237,10 +250,34 @@ automation:
         entity_id: sensor.parking_duration_limit
         above: 0
       - variables:
-          parked_time: "{{ as_timestamp(states('sensor.parking_last_captured')) | timestamp_custom('%H:%M') }}"
-          parkeringsskive: "{{ as_timestamp(states('sensor.parkeringsskive')) | timestamp_custom('%H:%M') }}"
-          parking_limit: "{{ as_timestamp(states('sensor.parking_limit')) | timestamp_custom('%H:%M') }}"
-          parking_alarm: "{{ as_timestamp(states('sensor.parking_alarm')) | timestamp_custom('%H:%M') }}"
+          parked_time: >-
+            {{
+              as_timestamp(states('sensor.parking_last_captured'))
+              | timestamp_custom('%H:%M')
+              if has_value('sensor.parking_last_captured')
+              else None
+            }}
+          parkeringsskive: >-
+            {{
+              as_timestamp(states('sensor.parkeringsskive'))
+              | timestamp_custom('%H:%M')
+              if has_value('sensor.parkeringsskive')
+              else None
+            }}
+          parking_limit: >-
+            {{
+              as_timestamp(states('sensor.parking_limit'))
+              | timestamp_custom('%H:%M')
+              if has_value('sensor.parking_limit')
+              else None
+            }}
+          parking_alarm: >-
+            {{
+              as_timestamp(states('sensor.parking_alarm'))
+              | timestamp_custom('%H:%M')
+              if has_value('sensor.parking_alarm')
+              else None
+            }}
       - action: script.android_set_alarm
         data:
           action: notify.mobile_app_darkphone

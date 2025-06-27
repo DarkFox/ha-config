@@ -52,9 +52,14 @@ template:
       - name: GDQ Event Active
         unique_id: 0546ee5c-bc1b-4a64-a272-b2cf535f9363
         state: >-
-          {% set start_time = state_attr('sensor.gdq_event', 'start_time') | as_datetime %}
-          {% set end_time = state_attr('sensor.gdq_event', 'end_time') | as_datetime %}
-          {{ 'on' if start_time <= now() <= end_time else 'off' }}
+          {%- from 'utils.jinja' import attr_has_value -%}
+          {% if has_value('sensor.gdq_event') and attr_has_value('sensor.gdq_event', 'start_time') %}
+            {% set start_time = state_attr('sensor.gdq_event', 'start_time') | as_datetime %}
+            {% set end_time = state_attr('sensor.gdq_event', 'end_time') | as_datetime %}
+            {{ 'on' if start_time <= now() <= end_time else 'off' }}
+          {% else %}
+            {{ None }}
+          {% endif %}
 
   - trigger:
       trigger: event

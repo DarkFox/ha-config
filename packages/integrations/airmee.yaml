@@ -151,7 +151,8 @@ template:
         unit_of_measurement: km
       - name: "Airmee Tracking URL"
         unique_id: 45dbaf23-c51f-48cb-86c0-09a07097563f
-        state: "https://tracking.airmee.com/#/track/{{ state_attr('sensor.airmee_url', 'params')['tracking_url'] }}"
+        state: >-
+          https://tracking.airmee.com/#/track/{{ state_attr('sensor.airmee_url', 'params').get('tracking_url', '') }}
         icon: mdi:web
 
   - binary_sensor:
@@ -162,10 +163,15 @@ template:
       - name: "Airmee Within Delivery Window"
         unique_id: b7daa272-981c-4d83-916b-96f28a07d036
         state: >-
-          {% set now = now() %}
-          {% set dropoff_earliest = states('sensor.airmee_dropoff_earliest') | as_datetime %}
-          {% set dropoff_latest = states('sensor.airmee_dropoff_latest') | as_datetime %}
-          {{ dropoff_earliest < now < dropoff_latest }}
+          {% if has_value(states('sensor.airmee_dropoff_earliest'))
+              and has_value(states('sensor.airmee_dropoff_latest')) %}
+            {% set now = now() %}
+            {% set dropoff_earliest = states('sensor.airmee_dropoff_earliest') | as_datetime %}
+            {% set dropoff_latest = states('sensor.airmee_dropoff_latest') | as_datetime %}
+            {{ dropoff_earliest < now < dropoff_latest }}
+          {% else %}
+            false
+          {% endif %}
 
 automation:
   - alias: Airmee Tracking Slow
@@ -191,8 +197,8 @@ automation:
     actions:
       - action: script.get_airmee_tracking
         data:
-          tracking_code: "{{ state_attr('sensor.airmee_url', 'params')['tracking_url'] }}"
-          phone_number_hash: "{{ state_attr('sensor.airmee_url', 'params')['phone_number_hash'] }}"
+          tracking_code: "{{ state_attr('sensor.airmee_url', 'params').get('tracking_url', '') }}"
+          phone_number_hash: "{{ state_attr('sensor.airmee_url', 'params').get('phone_number_hash', '') }}"
 
   - alias: Airmee Tracking Fast
     id: 2f38d3c7-6973-480b-a33b-5299667c550c
@@ -222,8 +228,8 @@ automation:
     actions:
       - action: script.get_airmee_tracking
         data:
-          tracking_code: "{{ state_attr('sensor.airmee_url', 'params')['tracking_url'] }}"
-          phone_number_hash: "{{ state_attr('sensor.airmee_url', 'params')['phone_number_hash'] }}"
+          tracking_code: "{{ state_attr('sensor.airmee_url', 'params').get('tracking_url', '') }}"
+          phone_number_hash: "{{ state_attr('sensor.airmee_url', 'params').get('phone_number_hash', '') }}"
 
   - alias: Airmee Courier Close
     id: 960d4a70-4b56-4bbf-a353-d71985e28ff5
