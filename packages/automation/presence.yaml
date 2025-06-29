@@ -165,9 +165,13 @@ automation:
         entity_id: binary_sensor.rook_presence
         to: "on"
     actions:
-      - action: homeassistant.turn_on
-        target:
-          entity_id: group.home_power_saving_devices
+      - repeat:
+          for_each: "{{ state_attr('group.home_power_saving_devices', 'entity_id') | list }}"
+          sequence:
+            - action: homeassistant.turn_on
+              continue_on_error: true
+              target:
+                entity_id: "{{ repeat.item }}"
 
   # Status State Machine
   #
