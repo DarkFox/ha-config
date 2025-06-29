@@ -3,11 +3,12 @@ group:
   away_power_saving_devices:
     name: Away Power Saving Devices
     entities:
-      - switch.stue_tv_afbryder
-      - switch.printer_afbryder
+      - climate.aircondition
+      - fan.sovevaerelse_blaeser
       - switch.pc_tilbehor_afbryder
-      - switch.sovevarelse_blaser
+      - switch.printer_afbryder
       - switch.stue_blaser
+      - switch.stue_tv_afbryder
 
   # Devices to automatically turn back on when home
   home_power_saving_devices:
@@ -143,10 +144,18 @@ automation:
       - trigger: state
         entity_id: binary_sensor.rook_presence_delayed
         to: "off"
+    conditions:
+      - condition: state
+        entity_id: input_boolean.guests
+        state: "off"
     actions:
-      - action: homeassistant.turn_off
-        target:
-          entity_id: group.away_power_saving_devices
+      - repeat:
+          for_each: "{{ state_attr('group.away_power_saving_devices', 'entity_id') | list }}"
+          sequence:
+            - action: homeassistant.turn_off
+              continue_on_error: true
+              target:
+                entity_id: "{{ repeat.item }}"
 
   - alias: Turn on home power saving devices
     id: bfa2d56c-21c2-4d9f-9dfb-abe37e55e8d1
