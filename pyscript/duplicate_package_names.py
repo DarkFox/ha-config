@@ -7,6 +7,13 @@ async def find_duplicate_filenames(folder_path):
 
     for dirpath, dirnames, filenames in os.walk(folder_path):
         for filename in filenames:
+            # Ignore hidden files and directories
+            if (
+                filename.startswith('.')
+                or os.sep+"." in dirpath
+            ):
+                continue
+
             full_path = os.path.join(dirpath, filename)
             filename_dict[filename].append(full_path)
 
