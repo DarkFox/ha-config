@@ -219,3 +219,26 @@
     {%- endfor -%}
     {{ ns.ret }}
 {%- endmacro -%}
+
+{%- macro stats_trending_up(entity_id, short_entity_id=none, long_entity_id=none) -%}
+    {#-
+    This macro checks if a sensor's value is trending up based on its history.
+    If only the entity ID is provided, {entity_id}_7d and {entity_id}_30d
+    are used for short and long names respectively.
+
+    Parameters:
+    - entity_id: The entity ID of the sensor.
+    - short_entity_id: Optional short name for the sensor.
+    - long_entity_id: Optional long name for the sensor.
+
+    Usage:
+    {{ stats_trending_up('sensor.temperature') }}
+    -#}
+    {%- set entity = entity_id.split('.')[1] -%}
+    {%- set short_entity_id = short_entity_id or 'sensor.' ~ entity ~ '_7d' -%}
+    {%- set long_entity_id = long_entity_id or 'sensor.' ~ entity ~ '_30d' -%}
+
+    {%- set short_value = states(short_entity_id) | float(0) -%}
+    {%- set long_value = states(long_entity_id) | float(0) -%}
+    {{ true if short_value > long_value else false }}
+{%- endmacro -%}
