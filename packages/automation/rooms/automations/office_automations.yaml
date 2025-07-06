@@ -8,13 +8,17 @@ switch:
     switches:
       office_curtain_automations:
         friendly_name: Kontor Gardiner Automatisering
-        icon_template: mdi:blinds
+        icon_template: "{{ state_attr('binary_sensor.office_blinds_auto_open', 'icon') }}"
         value_template: "{{ is_state('automation.kontor_gardiner_automatisering', 'on') }}"
         turn_on:
-          action: automation.turn_on
-          target:
-            entity_id:
-              - automation.kontor_gardiner_automatisering
+          - action: automation.turn_on
+            target:
+              entity_id:
+                - automation.kontor_gardiner_automatisering
+          - action: automation.trigger
+            target:
+              entity_id:
+                - automation.kontor_gardiner_automatisering
         turn_off:
           action: automation.turn_off
           target:
