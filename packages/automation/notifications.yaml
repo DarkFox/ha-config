@@ -18,6 +18,7 @@ template:
             {%- endif -%}
 
 script:
+  #region Notify Everywhere
   notify_everywhere:
     alias: Send notification everywhere
     mode: queued
@@ -57,7 +58,7 @@ script:
       - parallel:
           - action: notify.telegram_darkfox
             data:
-              title: "{{ message_title if message_title is defined and message_title else None }}"
+              title: "{{ message_title if message_title is defined and message_title }}"
               message: "{{ message_text }}"
               data: "{{ data if data is defined and data else {} }}"
           - action: script.popup_notification
@@ -78,18 +79,19 @@ script:
           - action: notify.stue_tv
             data:
               message: |
-                {{ message_title if message_title is defined and message_title else '' }}
+                {{ message_title if message_title is defined and message_title }}
                 {{ message_text }}
           - action: notify.kontor_tv
             data:
               message: |
-                {{ message_title if message_title is defined and message_title else '' }}
+                {{ message_title if message_title is defined and message_title }}
                 {{ message_text }}
           - action: notify.rook_pc
             data:
               title: "{{ message_title if message_title is defined and message_title }}"
               message: "{{ message_text }}"
-
+  #endregion
+  #region Notify Darkphone
   notify_darkphone:
     alias: Send notification to Darkphone TTS and Telegram
     mode: queued
@@ -137,7 +139,8 @@ script:
               title: "{{ message_title if message_title is defined and message_title }}"
               message: "{{ message }}"
               data: "{{ data if data is defined and data else {} }}"
-
+  #endregion
+  #region Darkphone TTS
   darkphone_tts:
     alias: Read message on Darkphone if headset connected (Low priority messages are not read)
     mode: queued
@@ -192,7 +195,8 @@ script:
             tts_text: "{{ message_title + ' - ' if message_title is defined and message_title }}{{ message }}"
             ttl: 0
             priority: high
-
+  #endregion
+  #region Voice Broadcast
   voice_broadcast:
     alias: Broadcast message on all speakers if home
     mode: queued
@@ -262,6 +266,7 @@ script:
           {{ none }}
         {% endif %}
     sequence:
+      - condition: "{{ severity > 0 }}"
       - condition: state
         entity_id: binary_sensor.rook_presence
         state: "on"
@@ -277,7 +282,8 @@ script:
             {%- else -%}
               {{ message }}
             {%- endif -%}
-
+  #endregion
+  #region Popup Notification
   popup_notification:
     alias: Popup Notification using Browser Mod
     mode: queued
@@ -303,7 +309,7 @@ script:
             <div style="font-size: 32pt; line-height: 32pt; font-weight: bold; text-align: center; padding: 24pt 0 20pt;">
               {{ message }}
             </div>
-
+  #endregion
 automation:
   - alias: Cold water leak warning
     id: cold_water_leak_warning
