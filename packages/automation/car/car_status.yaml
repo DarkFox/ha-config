@@ -14,37 +14,50 @@ template:
         unit_of_measurement: km
 
   - binary_sensor:
+      - name: "Car at destination"
+        unique_id: 02d2ad65-faa4-40a9-9db6-14923247252c
+        state: >-
+          {% set d = states('sensor.bil_destination_distance') %}
+          {{ d is number and d | float(1000) < 1 }}
+
+      - name: "Leave for drive within 5 min"
+        unique_id: 022c6936-34f9-48ba-ac32-38ad68edd3b1
+        state: >-
+          {% set leave_sensor = 'sensor.next_scheduled_leave_at' %}
+          {% set leave = as_local(states(leave_sensor) | as_datetime(none))
+                          if has_value(leave_sensor) else none %}
+          {% if leave %}
+            {% set mins = (leave - now()).total_seconds() / 60 %}
+            {{ mins <= 5 and not is_state('binary_sensor.car_at_destination', 'on') }}
+          {% else %}
+            false
+          {% endif %}
+
+      - name: "Driving event ends in 5 min"
+        unique_id: d81b7af7-2992-4434-95b1-06cd89f9d7a5
+        state: >-
+          {% set events = state_attr('sensor.current_event', 'events') %}
+          {% set driving = events | selectattr('bil', 'eq', true) | list if events else [] %}
+          {% if driving | length > 0 %}
+            {% set e = driving[-1] %}
+            {% if e.end %}
+              {% set end = as_local(e.end | as_datetime(none)) %}
+              {% set mins = (end - now()).total_seconds() / 60 %}
+              {{ mins <= 5 }}
+            {% else %}
+              false
+            {% endif %}
+          {% else %}
+            false
+          {% endif %}
+
       - name: "Upcoming drive"
         unique_id: 2f27b7a3-22d3-44e7-871f-bac1b42b3568
         state: >-
-          {% set next_driving = is_state_attr('sensor.upcoming_travel_location', 'mode', 'driving') %}
-          {% set current_driving_events = state_attr('sensor.current_event', 'events')
-                                          | selectattr('bil', 'eq', true) | list  %}
-          {% set current_driving_event = current_driving_events | last if current_driving_events else none %}
-          {% if next_driving or current_driving_event %}
-            {% set start_time_str = states('sensor.next_scheduled_leave_at') if has_value('sensor.next_scheduled_leave_at') %}
-            {% set start_time = (start_time_str|as_datetime|as_local) if start_time_str %}
-            {% set end_time_str = current_driving_event.get('end', none) if current_driving_event %}
-            {% set end_time = (end_time_str|as_datetime|as_local) if end_time_str %}
-            {% set dest_distance = states('sensor.bil_destination_distance') %}
-            {% if start_time and end_time %}
-              {% set min_time = min(start_time, end_time) %}
-              {{ min_time - timedelta(minutes=5) < now() }}
-            {% elif end_time and end_time - timedelta(minutes=5) < now() %}
-              True
-            {% elif start_time and start_time - timedelta(minutes=5) < now() %}
-              {# if the car is closer than 1km to the destination we assume we're already there #}
-              {% if dest_distance and dest_distance|float < 1.0 %}
-                True
-              {% else %}
-                False
-              {% endif %}
-            {% else %}
-              False
-            {% endif %}
-          {% else %}
-            False
-          {% endif %}
+          {{
+            is_state('binary_sensor.leave_for_drive_within_5_min', 'on')
+            or is_state('binary_sensor.driving_event_ends_in_5_min', 'on')
+          }}
 
 automation:
   - id: alert_car_unlocked
