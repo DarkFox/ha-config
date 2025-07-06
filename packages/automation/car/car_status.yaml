@@ -2,7 +2,14 @@ template:
   - sensor:
       - name: "Car Distance to Rook"
         unique_id: c09db247-de53-4550-b417-442d7996e1f2
-        state: "{{ distance('device_tracker.id_3_pro_tracker', 'person.rook') }}"
+        # Car only reports location while parked
+        # If car is active (driving), we assume distance is 0
+        state: >-
+          {%- if is_state('binary_sensor.id_3_pro_car_is_active', 'on') -%}
+            0.0
+          {%- else -%}
+            {{ distance('device_tracker.id_3_pro_tracker', 'person.rook') }}
+          {%- endif -%}
         device_class: distance
         unit_of_measurement: km
 
