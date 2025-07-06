@@ -9,19 +9,17 @@ switch:
       office_curtain_automations:
         friendly_name: Kontor Gardiner Automatisering
         icon_template: mdi:blinds
-        value_template: "{{ is_state('automation.office_blinds_open_at_sunup', 'on') or is_state('automation.office_blinds_close_at_sundown', 'on') }}"
+        value_template: "{{ is_state('automation.kontor_gardiner_automatisering', 'on') }}"
         turn_on:
           action: automation.turn_on
           target:
             entity_id:
-              - automation.office_blinds_open_at_sunup
-              - automation.office_blinds_close_at_sundown
+              - automation.kontor_gardiner_automatisering
         turn_off:
           action: automation.turn_off
           target:
             entity_id:
-              - automation.office_blinds_open_at_sunup
-              - automation.office_blinds_close_at_sundown
+              - automation.kontor_gardiner_automatisering
 
 binary_sensor:
   - platform: template
@@ -33,47 +31,47 @@ binary_sensor:
           seconds: 30
         value_template: "{{ is_state('input_boolean.office_door_activity', 'on') }}"
 
-automation:
-  - id: office_blinds_open_at_sunup
-    alias: office_blinds_open_at_sunup
-    triggers:
-      - trigger: state
-        entity_id: sun.sun
-        to: above_horizon
-      - trigger: state
-        entity_id: binary_sensor.rook_presence
-        to: "on"
-    conditions:
-      - condition: state
-        entity_id: sun.sun
-        state: above_horizon
-      - condition: state
-        entity_id: binary_sensor.rook_presence
-        state: "on"
-    actions:
-      - action: cover.open_cover
-        entity_id:
-          - cover.kontor_rullegardin
-          - cover.kontor_altandor_gardin
+template:
+  - binary_sensor:
+      - name: "Office Blinds Auto Open"
+        unique_id: 254b3f93-7c22-46b6-973b-3e73ba5ba953
+        device_class: opening
+        state: >-
+          {% set sun_up  = is_state('sun.sun', 'above_horizon') %}
+          {% set summer  = is_state('sensor.season', 'summer') %}
+          {% set azimuth = states('sensor.sun_azimuth')|float(0) %}
+          {% set bright  = states('sensor.average_office_balcony_brightness')|float(0) %}
+          {{ 
+              ( sun_up and ((not summer) or (azimuth > 120)) )
+              or
+              ( not sun_up and bright > 5 )
+          }}
+        attributes:
+          icon: >-
+            {{
+              'mdi:blinds' if is_state('binary_sensor.office_blinds_auto_open', 'on')
+              else 'mdi:roller-shade-closed'
+            }}
 
-  - id: office_blinds_close_at_sundown
-    alias: office_blinds_close_at_sundown
+automation:
+  - alias: Kontor Gardiner Automatisering
+    id: 202e827a-1c17-4941-b4ea-86598ef1a8d0
+    mode: single
     triggers:
       - trigger: state
-        entity_id: sun.sun
-        to: below_horizon
-      - trigger: numeric_state
-        entity_id: sensor.average_office_balcony_brightness
-        below: 5
-    conditions:
-      - condition: state
-        entity_id: sun.sun
-        state: below_horizon
-      - condition: numeric_state
-        entity_id: sensor.average_office_balcony_brightness
-        below: 5
+        entity_id: binary_sensor.office_blinds_auto_open
+        for:
+          minutes: 2
     actions:
-      - action: cover.close_cover
+      - action: >-
+          {% set open = states('binary_sensor.office_blinds_auto_open') %}
+          {% if open == 'on' %}
+            cover.open_cover
+          {% elif open == 'off' %}
+            cover.close_cover
+          {% else %}
+            cover.stop_cover {# if the state is unknown do a no-op #}
+          {% endif %}
         entity_id:
           - cover.kontor_rullegardin
           - cover.kontor_altandor_gardin

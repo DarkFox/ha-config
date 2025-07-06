@@ -11,19 +11,17 @@ switch:
       living_room_curtain_automations:
         friendly_name: Stue Gardiner Automatisering
         icon_template: mdi:curtains
-        value_template: "{{ is_state('automation.living_room_curtains_open', 'on') or is_state('automation.living_room_curtains_close', 'on') }}"
+        value_template: "{{ is_state('automation.stue_gardiner_automatisering', 'on') }}"
         turn_on:
           action: automation.turn_on
           target:
             entity_id:
-              - automation.living_room_curtains_open
-              - automation.living_room_curtains_close
+              - automation.stue_gardiner_automatisering
         turn_off:
           action: automation.turn_off
           target:
             entity_id:
-              - automation.living_room_curtains_open
-              - automation.living_room_curtains_close
+              - automation.stue_gardiner_automatisering
 
 binary_sensor:
   - platform: template
@@ -34,6 +32,40 @@ binary_sensor:
         delay_off:
           seconds: 30
         value_template: "{{ is_state('input_boolean.living_room_door_activity', 'on') }}"
+template:
+  - binary_sensor:
+      - name: "Living Room Curtains Auto Open"
+        unique_id: a2adc8ab-a57b-4efb-86cf-25129566fd00
+        device_class: opening
+        state: >-
+          {# ---------------- constants ---------------- #}
+          {% set HIT_START   = 160  %}   {# ≈ 10° east of due south #}
+          {% set HIT_END     = 340  %}   {# ≈ north-north-west     #}
+          {% set BRIGHT_MAX  = 3000 %}   {# lux that means “direct sun” #}
+          {% set BRIGHT_MIN  = 5    %}   {# lux that means “it is light enough to open before sunrise” #}
+
+          {# ---------------- sensor look-ups ---------------- #}
+          {% set sun_up   = is_state('sun.sun', 'above_horizon') %}
+          {% set summer   = is_state('sensor.season', 'summer') %}
+          {% set azimuth  = states('sensor.sun_azimuth')|float(0) %}
+          {% set bright   = states('sensor.average_living_room_balcony_brightness')|float(0) %}
+
+          {# ---------------- does the sun hit the glass? ---------------- #}
+          {% set sun_hits_by_angle   = HIT_START <= azimuth <= HIT_END %}
+          {% set sun_hits_by_bright  = bright > BRIGHT_MAX %}
+          {% set sun_hits            = summer and (sun_hits_by_angle or sun_hits_by_bright) %}
+
+          {# ---------------- final decision ---------------- #}
+          {{ 
+            (sun_up and not sun_hits)
+            or (not sun_up and bright > BRIGHT_MIN)
+          }}
+        attributes:
+          icon: >-
+            {{
+              'mdi:curtains' if is_state('binary_sensor.living_room_blinds_auto_open', 'on')
+              else 'mdi:curtains-closed'
+            }}"
 
 automation:
   - id: close_bar_after_no_activity
@@ -53,63 +85,26 @@ automation:
         target:
           entity_id: input_boolean.bar_open
 
-  - id: living_room_curtains_open
-    alias: living_room_curtains_open
+  - alias: Stue Gardiner Automatisering
+    id: 22f774d8-6463-4115-84b0-2f5529326a79
+    mode: single
     triggers:
       - trigger: state
-        entity_id: sun.sun
-        to: above_horizon
-      - trigger: state
-        entity_id: binary_sensor.rook_presence_delayed
-        to: "on"
-    conditions:
-      - condition: state
-        entity_id: sun.sun
-        state: above_horizon
-      - condition: state
-        entity_id: binary_sensor.rook_presence_delayed
-        state: "on"
+        entity_id: binary_sensor.living_room_curtains_auto_open
+        for:
+          minutes: 2
     actions:
-      - action: cover.open_cover
-        entity_id: cover.stue_gardin
-
-  - id: living_room_curtains_close
-    alias: living_room_curtains_close
-    triggers:
-      - trigger: state
-        entity_id: sun.sun
-        to: below_horizon
-      - trigger: numeric_state
-        entity_id: sensor.average_living_room_balcony_brightness
-        below: 5
-      - trigger: state
-        entity_id: binary_sensor.rook_presence_delayed
-        to: "off"
-      - trigger: numeric_state
-        entity_id: sensor.average_living_room_balcony_brightness
-        above: 3000
-    conditions:
-      - condition: or
-        conditions:
-          - condition: and
-            conditions:
-              - condition: state
-                entity_id: sun.sun
-                state: below_horizon
-              - condition: numeric_state
-                entity_id: sensor.average_living_room_balcony_brightness
-                below: 5
-          - condition: and
-            conditions:
-              - condition: state
-                entity_id: binary_sensor.rook_presence_delayed
-                state: "off"
-              - condition: numeric_state
-                entity_id: sensor.average_living_room_balcony_brightness
-                above: 3000
-    actions:
-      - action: cover.close_cover
-        entity_id: cover.stue_gardin
+      - action: >-
+          {% set open = states('binary_sensor.living_room_curtains_auto_open') %}
+          {% if open == 'on' %}
+            cover.open_cover
+          {% elif open == 'off' %}
+            cover.close_cover
+          {% else %}
+            cover.stop_cover {# if the state is unknown do a no-op #}
+          {% endif %}
+        entity_id:
+          - cover.stue_gardin
 
   - alias: living_room_curtains_open_balcony_door
     id: 2c0834d8-a4b9-43b3-b085-05565890e98f

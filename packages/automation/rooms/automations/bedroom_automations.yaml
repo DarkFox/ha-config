@@ -9,17 +9,17 @@ switch:
       bedroom_curtain_automations:
         friendly_name: Soveværelse Gardiner Automatisering
         icon_template: mdi:curtains
-        value_template: "{{ is_state('automation.bedroom_curtains_close_at_sundown', 'on') }}"
+        value_template: "{{ is_state('automation.sovevaerelse_gardiner_automatisering', 'on') }}"
         turn_on:
           action: automation.turn_on
           target:
             entity_id:
-              - automation.bedroom_curtains_close_at_sundown
+              - automation.sovevaerelse_gardiner_automatisering
         turn_off:
           action: automation.turn_off
           target:
             entity_id:
-              - automation.bedroom_curtains_close_at_sundown
+              - automation.sovevaerelse_gardiner_automatisering
 
 binary_sensor:
   - platform: template
@@ -31,26 +31,50 @@ binary_sensor:
           seconds: 30
         value_template: "{{ is_state('input_boolean.bedroom_door_activity', 'on') }}"
 
+template:
+  - binary_sensor:
+      - name: "Bedroom Curtains Auto Open"
+        unique_id: 6dcf6972-b850-42d8-b4b0-07428dfef76b
+        device_class: opening
+        state: >-
+          {% set sun_up  = is_state('sun.sun', 'above_horizon') %}
+          {% set summer  = is_state('sensor.season', 'summer') %}
+          {% set azimuth = states('sensor.sun_azimuth')|float(0) %}
+          {% set bright  = states('sensor.average_office_balcony_brightness')|float(0) %}
+          {% set awake = is_state('input_select.sleep_state', 'awake') %}
+          {{ 
+              ( sun_up and awake and ((not summer) or (azimuth > 120)) )
+              or
+              ( not sun_up and bright > 5 and awake)
+          }}
+        attributes:
+          icon: >-
+            {{
+              'mdi:curtains' if is_state('binary_sensor.bedroom_blinds_auto_open', 'on')
+              else 'mdi:curtains-closed'
+            }}
+
 automation:
-  - id: bedroom_curtains_close_at_sundown
-    alias: bedroom_curtains_close_at_sundown
+  - alias: Soveværelse Gardiner Automatisering
+    id: 21deeaa0-0cb8-44eb-95e5-ebc3ab3223bd
+    mode: single
     triggers:
       - trigger: state
-        entity_id: sun.sun
-        to: below_horizon
-      - trigger: numeric_state
-        entity_id: sensor.average_office_balcony_brightness
-        below: 5
-    conditions:
-      - condition: state
-        entity_id: sun.sun
-        state: below_horizon
-      - condition: numeric_state
-        entity_id: sensor.average_office_balcony_brightness
-        below: 5
+        entity_id: binary_sensor.bedroom_curtains_auto_open
+        for:
+          minutes: 2
     actions:
-      - action: cover.close_cover
-        entity_id: cover.sovevaerelse_gardin
+      - action: >-
+          {% set open = states('binary_sensor.bedroom_curtains_auto_open') %}
+          {% if open == 'on' %}
+            cover.open_cover
+          {% elif open == 'off' %}
+            cover.close_cover
+          {% else %}
+            cover.stop_cover {# if the state is unknown do a no-op #}
+          {% endif %}
+        entity_id:
+          - cover.sovevaerelse_gardin
 
   - id: bedroom_balcony_door_open_reminder
     alias: bedroom_balcony_door_open_reminder
