@@ -302,12 +302,25 @@ automation:
         below: 5
     variables:
       game: "{{ state_attr('sensor.gdq_next_watch_run', 'next_run').summary }}"
-      category: "{{ (state_attr('sensor.gdq_next_watch_run', 'next_run').description.split('\n')|first|default('unknown - unknown')).split(' — ')|first }}"
+      category: >-
+        {{
+          (
+            state_attr('sensor.gdq_next_watch_run', 'next_run').description.split('\n')
+            |first|default('unknown - unknown')
+          ).split(' — ')|first
+        }}
       time: >-
         {% from 'easy_time.jinja' import custom_relative_time %}
-        {{ custom_relative_time(state_attr('sensor.gdq_next_watch_run', 'next_run').get('start', ''), 'day, hour, minute') }}
+        {{ custom_relative_time(
+          state_attr('sensor.gdq_next_watch_run', 'next_run').get('start', ''),
+          'day, hour, minute'
+        ) }}
       playing_gdq: >-
-        {% set tvs = ['media_player.stue_shield_adb', 'media_player.kontor_shield_adb', 'media_player.sovevaerelse_chromecast'] %}
+        {% set tvs = [
+          'media_player.stue_shield_adb',
+          'media_player.kontor_shield_adb',
+          'media_player.sovevaerelse_chromecast'
+        ] %}
         {% for tv in tvs %}
           {% set app_id = state_attr(tv, 'app_id') | lower %}
           {% if 's0und' in app_id or 'twitch' in app_id %}
