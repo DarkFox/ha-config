@@ -11,6 +11,9 @@ automation:
         entity_id: sensor.upcoming_travel_location
         attribute: mode
         state: "driving"
+      - condition: state
+        entity_id: binary_sensor.car_at_destination
+        state: "off"
     actions:
       - action: script.send_entity_destination_to_car
         data:
@@ -27,6 +30,11 @@ automation:
       - condition: numeric_state
         entity_id: sensor.next_scheduled_leave_in
         above: 60
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: device_tracker.id_3_pro_tracker
+            state: "home"
     actions:
       - action: script.send_home_destination
         data:
