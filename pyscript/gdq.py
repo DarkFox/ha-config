@@ -175,6 +175,7 @@ async def gdq_get_bids():
     description: Get the current bids from the GDQ tracker.
     """
     if not sensor.gdq_event:  # noqa: F821
+        event.fire("gdq_bids", bids=[])  # noqa: F821
         return None
 
     url = f"{base_url}/tracker/bids/{sensor.gdq_event.id}"  # noqa: F821
@@ -269,7 +270,7 @@ async def gdq_get_bids():
             response.raise_for_status()
             soup = BeautifulSoup(response.read(), "html.parser")
 
-            bid_rows = soup.select("div.container-fluid > table > tr.small")
+            bid_rows = soup.select("div.container-fluid table tr.small")
 
             if not bid_rows:
                 event.fire("gdq_bids", bids=[])  # noqa: F821
