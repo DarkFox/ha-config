@@ -194,21 +194,6 @@ async def gdq_get_bids():
 
         return float(amount[1:])
 
-    def format_currency(amount):
-        # Split the number into integer and decimal parts
-        integer_part, decimal_part = f"{amount:.2f}".split(".")
-
-        # Reverse the integer part and group by thousands
-        integer_part = integer_part[::-1]
-        grouped_integer = ".".join(
-            [integer_part[i: i + 3] for i in range(0, len(integer_part), 3)]
-        )
-
-        # Reverse back and combine with the decimal part
-        formatted_amount = f"{grouped_integer[::-1]},{decimal_part}"
-
-        return formatted_amount
-
     def parse_text(text) -> str:
         return text.strip()
 
@@ -294,12 +279,11 @@ async def get_gdq_milestones():
 
     url = f"{base_url}/tracker/milestones/{sensor.gdq_event.id}"  # noqa: F821
 
-    # Get the total donation amount to calculate milestone percentages
-    donation_stats = await gdq_get_donation_stats()  # noqa: F821
-    total = donation_stats.get("total", 0.0)
+    def get_donation_total():
+        if not sensor.gdq_donation_total:  # noqa: F821
+            return 0.0
 
-    def get_full_url(uri):
-        return base_url + uri
+        return float(sensor.gdq_donation_total)  # noqa: F821
 
     def string_to_slug(text):
         text = re.sub(r'\W+', ' ', text)
@@ -315,21 +299,6 @@ async def get_gdq_milestones():
 
         return float(amount[1:])
 
-    def format_currency(amount):
-        # Split the number into integer and decimal parts
-        integer_part, decimal_part = f"{amount:.2f}".split(".")
-
-        # Reverse the integer part and group by thousands
-        integer_part = integer_part[::-1]
-        grouped_integer = ".".join(
-            [integer_part[i: i + 3] for i in range(0, len(integer_part), 3)]
-        )
-
-        # Reverse back and combine with the decimal part
-        formatted_amount = f"{grouped_integer[::-1]},{decimal_part}"
-
-        return formatted_amount
-
     def calc_percent(amount, goal):
         if goal == 0:
             return 0.0
@@ -339,21 +308,21 @@ async def get_gdq_milestones():
     def parse_text(text) -> str:
         return text.strip()
 
-    def parse_milestone_row(row, donation_total=0.0):
+    def parse_milestone_row(row, amount=0.0):
         columns = row.select("td")
         milestone = {
             "id": string_to_slug(columns[0].text),
             "name": parse_text(columns[0].text),
             "run": None,
             "description": parse_text(columns[2].text),
-            "amount": donation_total,
+            "amount": amount,
             "goal": parse_amount(columns[3].text),
             "percent": 0.0,
         }
 
-        if " - " in columns[0].text:
-            milestone["run"] = columns[0].text.split(" - ")[0].strip()
-            milestone["name"] = columns[0].text.replace(
+        if " - " in milestone["name"]:
+            milestone["run"] = milestone["name"].split(" - ")[0]
+            milestone["name"] = milestone["name"].replace(
                 milestone["run"] + " - ", ""
             )
 
@@ -362,6 +331,8 @@ async def get_gdq_milestones():
         )
 
         return milestone
+
+    donation_total = get_donation_total()
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
@@ -374,7 +345,7 @@ async def get_gdq_milestones():
                 event.fire("gdq_milestones", milestones=[])  # noqa: F821
 
             milestones = [
-                parse_milestone_row(r, donation_total=total)
+                parse_milestone_row(r, donation_total)
                 for r in milestone_rows
             ]
 

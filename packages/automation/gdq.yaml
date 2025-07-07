@@ -119,11 +119,12 @@ template:
         attributes:
           last_updated: "{{ now().isoformat() }}"
           milestones: >-
+            {% from 'utils.jinja' import sort_list_by_attr %}
             {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
             {% set game_milestones = trigger.event.data.milestones | selectattr('run', 'in', games) | list %}
             {% set non_game_milestones = trigger.event.data.milestones | selectattr('run', 'none') | list %}
             {% set current_milestones = game_milestones + non_game_milestones %}
-            {{ sort_list_by_attr(bid_wars, 'run', games, True) }}
+            {{ sort_list_by_attr(current_milestones, 'run', games, True) }}
 
   - trigger:
       trigger: event
@@ -269,8 +270,12 @@ automation:
           - "off"
         for:
           minutes: 1
+    condition:
+      - condition: template
+        value_template: >-
+          {{ not is_state('group.gdq_automations', states('binary_sensor.gdq_event_active')) }}
     actions:
-      - action: "group.turn_{{ states('binary_sensor.gdq_event_active') }}"
+      - action: "homeassistant.turn_{{ states('binary_sensor.gdq_event_active') }}"
         target:
           entity_id: group.gdq_automations
 
@@ -360,6 +365,9 @@ automation:
         minutes: "/1"
         seconds: "0"
     actions:
+      - action: script.run_pyscript
+        data:
+          action: pyscript.gdq_get_donation_stats
       - parallel:
           - action: script.run_pyscript
             data:
@@ -367,7 +375,6 @@ automation:
           - action: script.run_pyscript
             data:
               action: pyscript.gdq_get_milestones
-          # Donation stats is called by milestones so we don't need to call it separately
 
   - alias: "Refresh GDQ Runs Regex"
     id: refresh_gdq_runs_regex
