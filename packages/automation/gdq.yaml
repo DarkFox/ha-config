@@ -1,7 +1,12 @@
-input_boolean:
-  gdq_enable:
-    name: "Enable GDQ"
-    icon: mdi:gamepad-right
+group:
+  gdq_automations:
+    name: "GDQ Automations"
+    all: true
+    entities:
+      - automation.notify_gdq_run_coming_up
+      - automation.fast_update_gdq
+      - automation.refresh_gdq_bids
+      - automation.update_gdq_calendar
 
 template:
   - trigger:
@@ -241,31 +246,12 @@ automation:
         to:
           - "on"
           - "off"
+        for:
+          minutes: 1
     actions:
-      - action: "input_boolean.turn_{{ states('binary_sensor.gdq_event_active') }}"
-        target:
-          entity_id: input_boolean.gdq_enable
-
-  - alias: "Turn on GDQ"
-    id: turn_on_gdq
-    initial_state: true
-    triggers:
-      - trigger: state
-        entity_id: input_boolean.gdq_enable
-        to:
-          - "on"
-          - "off"
-    actions:
-      - action: "homeassistant.turn_{{ states('input_boolean.gdq_enable') }}"
+      - action: "group.turn_{{ states('binary_sensor.gdq_event_active') }}"
         target:
           entity_id: group.gdq_automations
-      - condition: state
-        entity_id: input_boolean.gdq_enable
-        state: "on"
-      - action: automation.trigger
-        target:
-          entity_id:
-            - automation.refresh_gdq_runs_regex
 
   - alias: "Slow update GDQ"
     id: dc222bee-ba1b-49b4-80cf-7dee61761268
@@ -368,6 +354,9 @@ automation:
     triggers:
       - trigger: state
         entity_id: todo.gdq_runs
+      - trigger: state
+        entity_id: group.gdq_automations
+        to: "on"
     actions:
       - action: todo.get_items
         data:
@@ -424,12 +413,3 @@ automation:
       - event: gdq_calendar_updated
         event_data:
           events: "{{ agenda_events }}"
-
-group:
-  gdq_automations:
-    name: "GDQ Automations"
-    entities:
-      - automation.notify_gdq_run_coming_up
-      - automation.fast_update_gdq
-      - automation.refresh_gdq_bids
-      - automation.update_gdq_calendar
