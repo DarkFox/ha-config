@@ -5,7 +5,7 @@ group:
     entities:
       - automation.notify_gdq_run_coming_up
       - automation.fast_update_gdq
-      - automation.refresh_gdq_bids
+      - automation.refresh_gdq_tracker
       - automation.update_gdq_calendar
 
 template:
@@ -103,6 +103,27 @@ template:
             {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
             {% set bid_wars = trigger.event.data.bids | selectattr('options', 'defined') | selectattr('run', 'in', games) | list %}
             {{ sort_list_by_attr(bid_wars, 'run', games) }}
+
+  - trigger:
+      trigger: event
+      event_type: gdq_milestones
+    sensor:
+      - name: GDQ Milestones
+        unique_id: 2d6248da-86dc-4640-a0a5-d5ffadb20927
+        state: >-
+          {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
+          {% set game_milestones = trigger.event.data.milestones | selectattr('run', 'in', games) | list %}
+          {% set non_game_milestones = trigger.event.data.milestones | selectattr('run', 'none') | list %}
+          {% set current_milestones = game_milestones + non_game_milestones %}
+          {{ current_milestones| list | length }}
+        attributes:
+          last_updated: "{{ now().isoformat() }}"
+          milestones: >-
+            {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
+            {% set game_milestones = trigger.event.data.milestones | selectattr('run', 'in', games) | list %}
+            {% set non_game_milestones = trigger.event.data.milestones | selectattr('run', 'none') | list %}
+            {% set current_milestones = game_milestones + non_game_milestones %}
+            {{ sort_list_by_attr(bid_wars, 'run', games, True) }}
 
   - trigger:
       trigger: event
@@ -234,7 +255,7 @@ script:
       - action: automation.trigger
         target:
           entity_id:
-            - automation.refresh_gdq_bids
+            - automation.refresh_gdq_tracker
 
 automation:
   - alias: "Toggle GDQ on event state"
@@ -330,8 +351,8 @@ automation:
               language: da-DK
               offset: -900
 
-  - alias: "Refresh GDQ Bids"
-    id: refresh_gdq_bids
+  - alias: "Refresh GDQ Tracker"
+    id: refresh_gdq_tracker
     mode: single
     triggers:
       - trigger: time_pattern
@@ -345,7 +366,8 @@ automation:
               action: pyscript.gdq_get_bids
           - action: script.run_pyscript
             data:
-              action: pyscript.gdq_get_donation_stats
+              action: pyscript.gdq_get_milestones
+          # Donation stats is called by milestones so we don't need to call it separately
 
   - alias: "Refresh GDQ Runs Regex"
     id: refresh_gdq_runs_regex
