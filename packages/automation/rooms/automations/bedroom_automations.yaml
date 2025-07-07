@@ -41,15 +41,25 @@ template:
         unique_id: 6dcf6972-b850-42d8-b4b0-07428dfef76b
         device_class: opening
         state: >-
+          {# ---------------- constants ---------------- #}
+          {% set HIT_END     = 120  %}   {# ≈ Morning sun hits #}
+          {% set BRIGHT_MIN  = 10   %}   {# lux that means “it is light enough to open before sunrise” #}
+
+          {# ---------------- sensor look-ups ---------------- #}
           {% set sun_up  = is_state('sun.sun', 'above_horizon') %}
           {% set summer  = is_state('sensor.season', 'summer') %}
           {% set azimuth = states('sensor.sun_azimuth')|float(0) %}
           {% set bright  = states('sensor.average_office_balcony_brightness')|float(0) %}
           {% set awake = is_state('input_select.sleep_state', 'awake') %}
+
+          {# ---------------- does the sun hit the glass? ---------------- #}
+          {% set sun_hits_by_azimuth = azimuth < HIT_END %}
+          {% set sun_hits = summer and sun_hits_by_azimuth %}
+
+          {# ---------------- final decision ---------------- #}
           {{ 
-              ( sun_up and awake and ((not summer) or (azimuth > 120)) )
-              or
-              ( not sun_up and bright > 5 and awake)
+              (sun_up and awake and not sun_hits)
+              or (not sun_up and bright > BRIGHT_MIN and awake)
           }}
         attributes:
           icon: >-
