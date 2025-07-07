@@ -294,6 +294,10 @@ async def get_gdq_milestones():
 
     url = f"{base_url}/tracker/milestones/{sensor.gdq_event.id}"  # noqa: F821
 
+    # Get the total donation amount to calculate milestone percentages
+    donation_stats = await gdq_get_donation_stats()  # noqa: F821
+    total = donation_stats.get("total", 0.0)
+
     def get_full_url(uri):
         return base_url + uri
 
@@ -342,23 +346,20 @@ async def get_gdq_milestones():
             "name": parse_text(columns[0].text),
             "run": None,
             "description": parse_text(columns[2].text),
-            "amount": 0.0,
-            "goal": "0,00",
+            "amount": donation_total,
+            "goal": parse_amount(columns[3].text),
             "percent": 0.0,
         }
 
         if " - " in columns[0].text:
             milestone["run"] = columns[0].text.split(" - ")[0].strip()
-
-        amount = parse_amount(columns[3].text)
-        if amount:
-            milestone["amount"] = amount
-            milestone["goal"] = format_currency(amount)
-
-        if donation_total > 0:
-            milestone["percent"] = calc_percent(
-                amount, donation_total
+            milestone["name"] = columns[0].text.replace(
+                milestone["run"] + " - ", ""
             )
+
+        milestone["percent"] = calc_percent(
+            milestone["amount"], milestone["goal"]
+        )
 
         return milestone
 
@@ -371,9 +372,6 @@ async def get_gdq_milestones():
 
             if not milestone_rows:
                 event.fire("gdq_milestones", milestones=[])  # noqa: F821
-
-            donation_stats = await gdq_get_donation_stats()  # noqa: F821
-            total = donation_stats.get("total", 0.0)
 
             milestones = [
                 parse_milestone_row(r, donation_total=total)
