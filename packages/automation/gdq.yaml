@@ -65,6 +65,22 @@ template:
             {{ None }}
           {% endif %}
 
+      - name: GDQ Currently Streaming Watchlist Game
+        unique_id: 6e4d4629-f87b-4397-956b-2fc8ad3519bb
+        icon: mdi:gamepad-right
+        state: >-
+          {% if is_state('sensor.gamesdonequick', 'streaming') %}
+            {% set streaming_game = state_attr('sensor.gamesdonequick', 'game') %}
+            {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
+            {% if streaming_game in games %}
+              on
+            {% else %}
+              off
+            {% endif %}
+          {% else %}
+            off
+          {% endif %}
+
   - trigger:
       trigger: event
       event_type: gdq_donation_stats
