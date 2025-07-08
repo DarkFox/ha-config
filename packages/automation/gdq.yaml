@@ -320,14 +320,9 @@ automation:
         entity_id: sensor.gdq_next_watch_run
         below: 5
     variables:
-      game: "{{ state_attr('sensor.gdq_next_watch_run', 'next_run').summary }}"
-      category: >-
-        {{
-          (
-            state_attr('sensor.gdq_next_watch_run', 'next_run').description.split('\n')
-            |first|default('unknown - unknown')
-          ).split(' — ')|first
-        }}
+      release_year: "{{ state_attr('sensor.gdq_next_watch_run', 'next_run').release_year }}"
+      game: "{{ state_attr('sensor.gdq_next_watch_run', 'next_run').summary | replace(' ('+(release_year|string)+')', '') }}"
+      runner: "{{ state_attr('sensor.gdq_next_watch_run', 'next_run').runner }}"
       time: >-
         {% from 'easy_time.jinja' import custom_relative_time %}
         {{ custom_relative_time(
@@ -355,7 +350,7 @@ automation:
             - tts: "Næste GDQ spil: "
               language: da-DK
               offset: -500
-            - tts: "{{ game }} — {{ category }},"
+            - tts: "{{ game }} — Run by {{ runner }},"
               language: en-US
               voice: SteffanNeural
               offset: -900
