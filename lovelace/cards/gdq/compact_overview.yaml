@@ -3,7 +3,32 @@ conditions:
   - entity: group.gdq_automations
     state: "on"
 card:
-  type: horizontal-stack
+  type: vertical-stack
   cards:
-    - !include on_deck_compact.yaml
-    - !include next_to_watch_compact.yaml
+    - type: conditional
+      conditions:
+        - entity: sensor.gamesdonequick
+          state: "streaming"
+      card:
+        type: custom:html-card
+        content: >-
+          <a
+            href="https://twitch.tv/gamesdonequick"
+            target="_blank"
+            style="
+              display: block;
+              width: 100%;
+              margin: 0;
+              padding: 0;
+              text-align: center;
+              text-decoration: none;
+              font-size: 1.2em;
+              color: var(--primary-text-color);
+            "
+          >
+            Currently streaming: <span style="font-weight: bold">[[ sensor.gamesdonequick.attributes.game ]]</span>
+          </a>
+    - type: horizontal-stack
+      cards:
+        - !include on_deck_compact.yaml
+        - !include next_to_watch_compact.yaml
