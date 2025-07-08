@@ -4,7 +4,6 @@ group:
     all: true
     entities:
       - automation.notify_gdq_run_coming_up
-      - automation.fast_update_gdq
       - automation.refresh_gdq_tracker
       - automation.update_gdq_calendar
 
@@ -243,20 +242,27 @@ template:
             {% endif %}
 
 script:
-  refresh_gdq_agenda:
-    alias: Refresh GDQ Agenda
+  refresh_gdq_data:
+    alias: "Refresh GDQ Data"
     icon: mdi:calendar-refresh
     sequence:
+      - parallel:
+          - action: automation.trigger
+            target:
+              entity_id: automation.update_gdq_calendar
+          - action: script.run_pyscript
+            data:
+              action: pyscript.gdq_get_donation_stats
+      - parallel:
+          - action: script.run_pyscript
+            data:
+              action: pyscript.gdq_get_bids
+          - action: script.run_pyscript
+            data:
+              action: pyscript.gdq_get_milestones
       - action: homeassistant.update_entity
         target:
-          entity_id:
-            - calendar.gdq_schedule
-      - delay:
-          seconds: 5
-      - action: automation.trigger
-        target:
-          entity_id:
-            - automation.refresh_gdq_tracker
+          entity_id: sensor.gamesdonequick
 
 automation:
   - alias: "Toggle GDQ on event state"
@@ -288,17 +294,18 @@ automation:
         minutes: "0"
         seconds: "0"
     actions:
-      - parallel:
-          - action: pyscript.get_gdq_event
-          - action: script.refresh_gdq_agenda
+      - action: pyscript.get_gdq_event
 
-  - alias: "Fast update GDQ"
-    id: 57c88a86-3264-4163-b3ca-3839707bbf05
+  - alias: "Refresh GDQ Tracker"
+    id: refresh_gdq_tracker
+    mode: single
     triggers:
       - trigger: time_pattern
-        minutes: "/5"
+        hours: "*"
+        minutes: "/1"
+        seconds: "0"
     actions:
-      - action: script.refresh_gdq_agenda
+      - action: script.refresh_gdq_data
 
   - alias: "Notify GDQ Run Coming Up"
     id: notify_gdq_run_coming_up
@@ -356,29 +363,6 @@ automation:
               language: da-DK
               offset: -900
 
-  - alias: "Refresh GDQ Tracker"
-    id: refresh_gdq_tracker
-    mode: single
-    triggers:
-      - trigger: time_pattern
-        hours: "*"
-        minutes: "/1"
-        seconds: "0"
-    actions:
-      - action: script.run_pyscript
-        data:
-          action: pyscript.gdq_get_donation_stats
-      - parallel:
-          - action: script.run_pyscript
-            data:
-              action: pyscript.gdq_get_bids
-          - action: script.run_pyscript
-            data:
-              action: pyscript.gdq_get_milestones
-          - action: homeassistant.update_entity
-            target:
-              entity_id: sensor.gamesdonequick
-
   - alias: "Refresh GDQ Runs Regex"
     id: refresh_gdq_runs_regex
     initial_state: true
@@ -399,18 +383,11 @@ automation:
       - event: gdq_runs_updated
         event_data:
           todo_items: "{{ todo_items }}"
-      - delay:
-          seconds: 5
-      - action: script.refresh_gdq_agenda
 
   - id: update_gdq_calendar
     alias: Update GDQ Calendar
-    mode: restart
+    mode: single
     triggers:
-      - trigger: time_pattern
-        hours: "*"
-        minutes: "/1"
-        seconds: "0"
       - trigger: state
         entity_id: calendar.gdq_schedule
       - trigger: state
