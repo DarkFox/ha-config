@@ -18,12 +18,33 @@ template:
         attributes:
           regex: >-
             {% from 'utils.jinja' import regex_escape %}
-            {% set runs = trigger.event.data.todo_items.get("todo.gdq_runs", {}).get("items", []) | map(attribute='summary') | list %}
-            {% set ns = namespace(escaped_runs=[]) %}
-            {% for run in runs %}
-              {% set ns.escaped_runs = ns.escaped_runs + [regex_escape(run)] %}
-            {% endfor %}
-            .*({{ ns.escaped_runs | join('|') }}).*
+            {% set todo_items = trigger.event.data.todo_items
+                                .get('todo.gdq_runs', {})
+                                .get('items', []) %}
+            {% set todo_terms = todo_items | map(attribute='summary') | list %}
+
+            {% if not todo_terms %}
+              {{ None }}
+            {% else %}
+              {% set ns = namespace(escaped=[]) %}
+              {% for term in todo_terms %}
+                {% set ns.escaped = ns.escaped + [regex_escape(term)] %}
+              {% endfor %}
+
+              {% set calendar     = state_attr('binary_sensor.gdq_calendar', 'events') or [] %}
+              {% set runner_regex = '.*(' ~ ns.escaped | join('|') ~ ').*' %}
+              {% set matched_runs = calendar
+                                    | selectattr('runner', 'match', runner_regex)
+                                    | map(attribute='summary')
+                                    | list %}
+
+              {% for game in matched_runs %}
+                {% set ns.escaped = ns.escaped + [regex_escape(game)] %}
+              {% endfor %}
+
+              {% set uniq = ns.escaped | unique | list %}
+              {{ '.*(' ~ uniq | join('|') ~ ').*' }}
+            {% endif %}
 
   - trigger:
       trigger: event
