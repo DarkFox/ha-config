@@ -216,39 +216,19 @@ template:
             {% set current = current_runs | first if current_runs else none %}
             {{ (current or state_attr('binary_sensor.gdq_calendar', 'next')) }}
           on_deck_formatted_time: >-
-            {% from 'datediff.jinja' import relative_start_end_time %}
-            {% set event = state_attr('sensor.gdq_on_deck', 'on_deck') %}
-            {% if event %}
-              {{ relative_start_end_time(event.start, event.end, est='~') }}
-            {% else %}
-              Ingen lige nu
-            {% endif %}
+            {% from 'gdq.jinja' import friendly_time %}
+            {{ friendly_time(state_attr('sensor.gdq_on_deck', 'on_deck'), False, 'Ingen lige nu') }}
           on_deck_compact_time: >-
-            {% from 'datediff.jinja' import relative_start_end_time %}
-            {% set event = state_attr('sensor.gdq_on_deck', 'on_deck') %}
-            {% if event %}
-              {{ relative_start_end_time(event.start, event.end, '', ' <> ', '', '', est='~') }}
-            {% else %}
-              Ingen kommende
-            {% endif %}
+            {% from 'gdq.jinja' import friendly_time %}
+            {{ friendly_time(state_attr('sensor.gdq_on_deck', 'on_deck'), True, 'Ingen lige nu') }}
           up_next: >-
             {{ state_attr('binary_sensor.gdq_calendar', 'next') }}
           up_next_formatted_time: >-
-            {% from 'datediff.jinja' import relative_start_end_time %}
-            {% set event = state_attr('binary_sensor.gdq_calendar', 'next') %}
-            {% if event %}
-              {{ relative_start_end_time(event.start, event.end, est='~') }}
-            {% else %}
-              Ingen kommende
-            {% endif %}
+            {% from 'gdq.jinja' import friendly_time %}
+            {{ friendly_time(state_attr('binary_sensor.gdq_calendar', 'next')) }}
           up_next_compact_time: >-
-            {% from 'datediff.jinja' import relative_start_end_time %}
-            {% set event = state_attr('binary_sensor.gdq_calendar', 'next') %}
-            {% if event %}
-              {{ relative_start_end_time(event.start, event.end, '', ' <> ', '', '', est='~') }}
-            {% else %}
-              Ingen kommende
-            {% endif %}
+            {% from 'gdq.jinja' import friendly_time %}
+            {{ friendly_time(state_attr('binary_sensor.gdq_calendar', 'next'), True) }}
 
       - name: GDQ Next Watch Run
         unique_id: 2d756300-cc24-45f6-be99-faef83cf5034
@@ -262,21 +242,11 @@ template:
             {% set time = now().strftime('%Y-%m-%d %H:%M:%S') %}
             {{ (state_attr('binary_sensor.gdq_calendar_watch_runs', 'next') or {} ) }}
           formatted_time: >-
-            {% from 'datediff.jinja' import relative_start_end_time %}
-            {% set event = state_attr('binary_sensor.gdq_calendar_watch_runs', 'next') %}
-            {% if event %}
-              {{ relative_start_end_time(event.start, event.end, est='~') }}
-            {% else %}
-              Ingen kommende
-            {% endif %}
+            {% from 'gdq.jinja' import friendly_time %}
+            {{ friendly_time(state_attr('binary_sensor.gdq_calendar_watch_runs', 'next')) }}
           compact_time: >-
-            {% from 'datediff.jinja' import relative_start_end_time %}
-            {% set event = state_attr('binary_sensor.gdq_calendar_watch_runs', 'next') %}
-            {% if event %}
-              {{ relative_start_end_time(event.start, event.end, '', ' <> ', '', '', est='~') }}
-            {% else %}
-              Ingen kommende
-            {% endif %}
+            {% from 'gdq.jinja' import friendly_time %}
+            {{ friendly_time(state_attr('binary_sensor.gdq_calendar_watch_runs', 'next'), True) }}
 
 script:
   refresh_gdq_data:

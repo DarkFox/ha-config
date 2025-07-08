@@ -1,0 +1,11 @@
+{% macro friendly_time(event, compact=False, fallback=False) %}
+    {%- from 'datediff.jinja' import relative_start_end_time -%}
+    {%- if not event %}{{ fallback or 'Ingen kommende' }}
+    {%- else %}
+        {%- if compact %}
+            {{ relative_start_end_time(event.start, event.end,  '', ' <> ', '', '', est='~') }}
+        {%- else %}
+            {{ relative_start_end_time(event.start, event.end,  est='~') }}
+        {%- endif %}
+    {%- endif %}
+{% endmacro %}
