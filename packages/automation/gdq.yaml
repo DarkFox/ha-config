@@ -398,6 +398,13 @@ automation:
       regexes: "{{ states.sensor.calendar_regexes.attributes }}"
       bool_attrs:
         watch: "{{ [(state_attr('sensor.gdq_runs_regex', 'regex') or '')] }}"
+      attrs:
+        category: "(.+) — .+ — .+"
+        platform: ".+ — (.+) — .+"
+        release_year: ".+ — .+ — (.+)"
+        runner: "Run by (.+)"
+        host: "Hosted by (.+)"
+        commentators: "Commentary by (.+)"
     actions:
       - action: homeassistant.update_entity
         target:
@@ -416,7 +423,7 @@ automation:
             {% from 'agenda.jinja' import agenda_event %}
             {% set ns = namespace(ret=[]) %}
             {% for event in all_events['calendar.gdq_schedule'].events | sort(attribute='start') | list -%}
-              {% set ns.ret = ns.ret + [agenda_event("GDQ Kalender", dict(event, location=none), regexes, bool_attrs)|from_json] %}
+              {% set ns.ret = ns.ret + [agenda_event("GDQ Kalender", dict(event, location=none), regexes, bool_attrs, attrs)|from_json] %}
             {%- endfor -%}
             {{ ns.ret }}
       - event: gdq_calendar_updated
