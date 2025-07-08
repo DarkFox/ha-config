@@ -76,20 +76,83 @@ script:
               message_title: "{{ message_title if message_title is defined and message_title }}"
               message: "{{ message_text }}"
               severity: "{{ severity | default(1) | int }}"
-          - action: notify.stue_tv
+          - action: script.notify_webos_tv
             data:
+              entity_id: media_player.stue_tv
               message: |
                 {{ message_title if message_title is defined and message_title }}
                 {{ message_text }}
-          - action: notify.kontor_tv
+          - action: script.notify_webos_tv
             data:
+              entity_id: notify.kontor_tv
               message: |
                 {{ message_title if message_title is defined and message_title }}
                 {{ message_text }}
-          - action: notify.rook_pc
+          - action: script.notify_rook_pc
             data:
               title: "{{ message_title if message_title is defined and message_title }}"
               message: "{{ message_text }}"
+  #endregion
+  #region Notify WebOS TV
+  notify_webos_tv:
+    alias: Send notification to WebOS TV
+    mode: queued
+    fields:
+      entity_id:
+        description: "WebOS TV Entity"
+        example: "media_player.webos_tv"
+        selector:
+          entity:
+            filter:
+              domain: media_player
+              integration: webostv
+      message:
+        description: The message to send
+        example: "Hello, this is a test"
+        selector:
+          text:
+      data:
+        description: Additional data to send with the message
+        example: "{'icon': '/home/homeassistant/images/doorbell.png'}"
+        selector:
+          object:
+    sequence:
+      - condition: template
+        value_template: "{{ entity_id is defined and entity_id and is_state(entity_id, 'on') }}"
+      - action: "{{ entity_id | replace('media_player.', 'notify.') }}"
+        data:
+          message: "{{ message }}"
+          data: "{{ data if data is defined and data else {} }}"
+  #endregion
+  #region Notify Rook PC
+  notify_rook_pc:
+    alias: Send notification to Rook PC
+    mode: queued
+    fields:
+      title:
+        description: The title of the message
+        example: "Warning"
+        selector:
+          text:
+      message:
+        description: The message to send
+        example: "Hello, this is a test"
+        selector:
+          text:
+      data:
+        description: Additional data to send with the message
+        example: "{'inline_keyboard': {'text': 'Click me', 'url': 'https://www.home-assistant.io'}}"
+        selector:
+          object:
+    sequence:
+      - condition: state
+        entity_id: binary_sensor.rook_pc_activity
+        state: "on"
+      - action: notify.rook_pc
+        data:
+          title: "{{ title if title is defined and title }}"
+          message: "{{ message }}"
+          data: "{{ data if data is defined and data else {} }}"
   #endregion
   #region Notify Darkphone
   notify_darkphone:
