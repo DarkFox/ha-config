@@ -312,6 +312,10 @@ cards:
                 ]
               },
             },
+            "tap_action": {
+              "action": "url",
+              "url_path": bid.link
+            },
           }] %}
         {% endfor %}
 
@@ -378,11 +382,11 @@ cards:
           {% for option in bid.options %}
             {% set slug = slugify(option.name) %}
             {% set ns.options = ns.options + ['"'+slug+' '+slug+'"'] %}
-            {% set ns.custom_fields = dict(ns.custom_fields, **{
+            {% set ns.custom_fields = ns.custom_fields | combine({
               slug+'_bar': ' ',
               slug: option.name +" - $"+format_number(option.amount, 2, true),
             }) %}
-            {% set ns.custom_fields_styles = dict(ns.custom_fields_styles, **{
+            {% set ns.custom_fields_styles = ns.custom_fields_styles | combine({
               slug: [
                 {"width": (option.percent if option.percent < 100 else 100)|string + "%"},
                 {"height": "1.4em"},
