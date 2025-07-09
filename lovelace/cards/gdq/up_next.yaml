@@ -1,14 +1,15 @@
 type: custom:button-card
 entity: sensor.gdq_on_deck
-state_display: >-
-  [[[ 
-    return entity.attributes.up_next.description
-    ? '<br />'+entity.attributes.up_next.description.split("\n").join("<br />")
-    : ''
-  ]]]
+name: "Up Next"
+state_display: "[[[ return entity.attributes.up_next.summary ]]]"
 label: "[[[ return entity.attributes.up_next_formatted_time ]]]"
-name: "[[[ return entity.attributes.up_next.summary ]]]"
-layout: name_state
+custom_fields:
+  category: "[[[ return '💯 '+entity.attributes.up_next.category ]]]"
+  pl_yr: "[[[ return entity.attributes.up_next.platform+' - '+entity.attributes.up_next.release_year ]]]"
+  runner: "[[[ return entity.attributes.up_next.runner + ' 🏃‍♀️' ]]]"
+  commentators: "[[[ return '👥 '+entity.attributes.up_next.commentators ]]]"
+  host: "[[[ return entity.attributes.up_next.host+' 🎙️' ]]]"
+layout: icon_name
 icon: mdi:gamepad-right
 show_state: true
 show_name: true
@@ -16,9 +17,18 @@ show_label: true
 size: 10%
 tap_action:
   action: url
-  url_path: "https://gamesdonequick.com/schedule/48"
+  url_path: "https://gamesdonequick.com/schedule/"
 styles:
+  grid:
+    - grid-template-areas: |
+        "i n n"
+        "s s pl_yr"
+        "category category runner"
+        "commentators commentators host"
+        "l l l"
   icon:
+    - width: 3em
+    - margin-right: 10px
     - color: >-
         [[[
           if (entity.attributes.up_next.watch) return 'var(--success-color)';
@@ -30,34 +40,62 @@ styles:
           if (entity.attributes.up_next.watch) return '0px 0px 5px 5px var(--success-color)';
           else return null;
         ]]]
-card_mod:
-  style:
-    .: |
-      #name::first-line {
-        font-size: 1.2em;
-        font-weight: bold;
-        line-height: 1.6em;
-        vertical-align: top;
-      }
-      #name {
-        font-size: 0.8em;
-        margin-bottom: 5px;
-        height: 6.6em;
-      }
-      #icon {
-        float: left;
-        margin-right: 10px;
-      }
-      #img-cell {
-        margin-bottom: 10px;
-      }
-      #img-cell::after {
-        display: block;
-        float: right;
-        margin-right: auto;
-        content: "Up next";
-        font-size: 2em;
-      }
-      #label {
-        font-weight: bold;
-      }
+  name:
+    - font-size: 2em
+    - margin-right: auto
+  state:
+    - text-align: left
+    - margin-left: 0.4em
+    - margin-right: auto
+    - vertical-align: top
+    - line-height: 1.6em
+    - font-size: 1.2em
+    - font-weight: bold
+    - color: >-
+        [[[
+          if (entity.attributes.up_next.watch_game) return 'var(--success-color)';
+          else return 'inherit';
+        ]]]
+  label:
+    - font-weight: bold
+    - margin-top: 0.5em
+  custom_fields:
+    pl_yr:
+      - text-align: right
+      - margin-right: 0.4em
+    category:
+      - text-align: left
+      - margin-left: 0.2em
+      - font-size: 0.8em
+      - color: >-
+          [[[
+            if (entity.attributes.up_next.watch_category) return 'var(--success-color)';
+            else return 'inherit';
+          ]]]
+    runner:
+      - text-align: right
+      - margin-right: 0.2em
+      - font-size: 0.8em
+      - color: >-
+          [[[
+            if (entity.attributes.up_next.watch_runner) return 'var(--success-color)';
+            else return 'inherit';
+          ]]]
+    commentators:
+      - text-align: left
+      - margin-left: 0.2em
+      - font-size: 0.8em
+      - color: >-
+          [[[
+            if (entity.attributes.up_next.watch_commentators) return 'var(--success-color)';
+            else return 'inherit';
+          ]]]
+    host:
+      - font-size: 0.8em
+      - text-align: right
+      - margin-right: 0.2em
+      - color: >-
+          [[[
+            if (entity.attributes.up_next.watch_host) return 'var(--success-color)';
+            else return 'inherit';
+          ]]]

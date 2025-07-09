@@ -1,37 +1,82 @@
 type: custom:button-card
 entity: sensor.gdq_next_watch_run
-state_display: >-
-  [[[ return entity.attributes.next_run.description ? entity.attributes.next_run.description.split("\n")[0] : '' ]]]
-label: "[[[ return entity.attributes.formatted_time ]]]"
-name: "[[[ return entity.attributes.next_run.summary ]]]"
-layout: vertical
+name: "Next to Watch"
+state_display: "[[[ return entity.attributes.next_run.summary ]]]"
+label: "[[[ return entity.attributes.compact_time ]]]"
+custom_fields:
+  category: "[[[ return '💯 '+entity.attributes.next_run.category ]]]"
+  runner: "[[[ return entity.attributes.next_run.runner + ' 🏃‍♀️' ]]]"
+  commentators: "[[[ return '👥 '+entity.attributes.next_run.commentators ]]]"
+  host: "[[[ return entity.attributes.next_run.host+' 🎙️' ]]]"
+layout: icon_name
 show_state: true
 show_name: true
 show_label: true
 size: 10%
 tap_action:
   action: url
-  url_path: "https://gamesdonequick.com/schedule/48"
+  url_path: "https://gamesdonequick.com/schedule/"
 styles:
+  grid:
+    - grid-template-areas: |
+        "i n n"
+        "s s s"
+        "category category runner"
+        "commentators commentators host"
+        "l l l"
   icon:
     - color: var(--success-color)
-card_mod:
-  style:
-    .: |
-      #name {
-        font-weight: bold;
-      }
-      #icon {
-        float: left;
-        margin-right: 10px;
-      }
-      #img-cell::after {
-        display: block;
-        float: right;
-        margin-right: auto;
-        content: "Next to watch";
-        font-size: 1.5em;
-      }
-      #label {
-        font-weight: bold;
-      }
+    - width: 1.8em
+    - margin-right: 10px
+  name:
+    - margin-right: auto
+  state:
+    - font-weight: bold
+    - color: >-
+        [[[
+          if (entity.attributes.next_run.watch_game) return 'var(--success-color)';
+          else return 'inherit';
+        ]]]
+  label:
+    - font-size: 0.9em
+    - font-weight: bold
+  custom_fields:
+    pl_yr:
+      - text-align: right
+      - margin-right: 0.1em
+    category:
+      - text-align: left
+      - margin-left: 0.1em
+      - font-size: 0.75em
+      - color: >-
+          [[[
+            if (entity.attributes.next_run.watch_category) return 'var(--success-color)';
+            else return 'inherit';
+          ]]]
+    runner:
+      - text-align: right
+      - margin-right: 0.1em
+      - font-size: 0.75em
+      - color: >-
+          [[[
+            if (entity.attributes.next_run.watch_runner) return 'var(--success-color)';
+            else return 'inherit';
+          ]]]
+    commentators:
+      - text-align: left
+      - margin-left: 0.1em
+      - font-size: 0.75em
+      - color: >-
+          [[[
+            if (entity.attributes.next_run.watch_commentators) return 'var(--success-color)';
+            else return 'inherit';
+          ]]]
+    host:
+      - font-size: 0.75em
+      - text-align: right
+      - margin-right: 0.1em
+      - color: >-
+          [[[
+            if (entity.attributes.next_run.watch_host) return 'var(--success-color)';
+            else return 'inherit';
+          ]]]

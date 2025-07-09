@@ -1,16 +1,16 @@
 type: custom:button-card
 entity: sensor.gdq_on_deck
-state_display: >-
-  [[[ 
-    return entity.attributes.on_deck.description
-    ? '<br />'+entity.attributes.on_deck.description.split("\n").join("<br />")
-    : ''
-  ]]]
+name: "On Deck"
+state_display: "[[[ return entity.attributes.on_deck.summary ]]]"
 label: "[[[ return entity.attributes.on_deck_formatted_time ]]]"
-name: "[[[ return entity.attributes.on_deck.summary ]]]"
 custom_fields:
+  category: "[[[ return '💯 '+entity.attributes.on_deck.category ]]]"
+  pl_yr: "[[[ return entity.attributes.on_deck.platform+' - '+entity.attributes.on_deck.release_year ]]]"
+  runner: "[[[ return entity.attributes.on_deck.runner + ' 🏃‍♀️' ]]]"
+  commentators: "[[[ return '👥 '+entity.attributes.on_deck.commentators ]]]"
+  host: "[[[ return entity.attributes.on_deck.host+' 🎙️' ]]]"
   progress_pct: " "
-layout: name_state
+layout: icon_name
 icon: mdi:gamepad-right
 show_state: true
 show_name: true
@@ -21,8 +21,87 @@ tap_action:
   url_path: "https://www.twitch.tv/gamesdonequick"
 styles:
   grid:
-    - grid-template-areas: '"i" "n" "l" "progress_pct"'
+    - grid-template-areas: |
+        "i n n"
+        "s s pl_yr"
+        "category category runner"
+        "commentators commentators host"
+        "l l l"
+        "progress_pct progress_pct progress_pct"
+  icon:
+    - width: 3em
+    - margin-right: 10px
+    - color: >-
+        [[[
+          if (entity.attributes.on_deck.watch) return 'var(--success-color)';
+          else return 'var(--primary-text-color)';
+        ]]]
+  card:
+    - box-shadow: >-
+        [[[
+          if (entity.attributes.on_deck.watch) return '0px 0px 5px 5px var(--success-color)';
+          else return null;
+        ]]]
+  name:
+    - font-size: 2em
+    - margin-right: auto
+  state:
+    - text-align: left
+    - margin-left: 0.4em
+    - margin-right: auto
+    - vertical-align: top
+    - line-height: 1.6em
+    - font-size: 1.2em
+    - font-weight: bold
+    - color: >-
+        [[[
+          if (entity.attributes.on_deck.watch_game) return 'var(--success-color)';
+          else return 'inherit';
+        ]]]
+  label:
+    - font-weight: bold
+    - margin-top: 0.5em
   custom_fields:
+    pl_yr:
+      - text-align: right
+      - margin-right: 0.4em
+    category:
+      - text-align: left
+      - margin-left: 0.2em
+      - font-size: 0.8em
+      - color: >-
+          [[[
+            if (entity.attributes.on_deck.watch_category) return 'var(--success-color)';
+            else return 'inherit';
+          ]]]
+    runner:
+      - text-align: right
+      - margin-right: 0.2em
+      - font-size: 0.8em
+      - color: >-
+          [[[
+            if (entity.attributes.on_deck.watch_runner) return 'var(--success-color)';
+            else return 'inherit';
+          ]]]
+    commentators:
+      - text-align: left
+      - margin-left: 0.2em
+      - font-size: 0.8em
+      - color: >-
+          [[[
+            if (entity.attributes.on_deck.watch_commentators) return 'var(--success-color)';
+            else return 'inherit';
+          ]]]
+    host:
+      - font-size: 0.8em
+      - text-align: right
+      - margin-right: 0.2em
+      - color: >-
+          [[[
+            if (entity.attributes.on_deck.watch_host) return 'var(--success-color)';
+            else return 'inherit';
+          ]]]
+
     progress_pct:
       - height: 0.5em
       - margin: 0 auto calc(-4% - 0.7em) 0
@@ -40,46 +119,3 @@ styles:
             if (entity.attributes.on_deck.watch) return 'var(--success-color)';
             else return 'var(--blue-color)';
           ]]]
-  icon:
-    - color: >-
-        [[[
-          if (entity.attributes.on_deck.watch) return 'var(--success-color)';
-          else return 'var(--primary-text-color)';
-        ]]]
-  card:
-    - box-shadow: >-
-        [[[
-          if (entity.attributes.on_deck.watch) return '0px 0px 5px 5px var(--success-color)';
-          else return null;
-        ]]]
-card_mod:
-  style:
-    .: |
-      #name::first-line {
-        font-size: 1.2em;
-        font-weight: bold;
-        line-height: 1.6em;
-        vertical-align: top;
-      }
-      #name {
-        font-size: 0.8em;
-        margin-bottom: 5px;
-        height: 6.6em;
-      }
-      #icon {
-        float: left;
-        margin-right: 10px;
-      }
-      #img-cell {
-        margin-bottom: 10px;
-      }
-      #img-cell::after {
-        display: block;
-        float: right;
-        margin-right: auto;
-        content: "On deck";
-        font-size: 2em;
-      }
-      #label {
-        font-weight: bold;
-      }
