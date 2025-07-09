@@ -38,36 +38,64 @@ binary_sensor:
         value_template: "{{ is_state('input_boolean.living_room_door_activity', 'on') }}"
 template:
   - binary_sensor:
+      - name: "Sun Angle Hitting Living Room Windows"
+        unique_id: 91863ab7-b365-41ca-9d7e-edccccd2cc2f
+        icon: >-
+          {% set sun_hits = is_state('binary_sensor.sun_angle_hitting_living_room_windows', 'on') %}
+          {% if sun_hits %}
+            mdi:sun-angle
+          {% else %}
+            mdi:sun-angle-outline
+          {% endif %}
+        device_class: problem
+        state: >-
+          {# ---------------- constants ---------------- #}
+          {% set HIT_START   = 160  %}   {# ≈ 10° east of due south #}
+          {% set HIT_END     = 320  %}   {# ≈ north-north-west     #}
+          {% set ELEV_ABOVE  = 42   %}   {# Elevation above which the sun is shaded from the glass by the balcony above #}
+          {% set azimuth  = states('sensor.sun_azimuth')|float(0) %}
+          {% set elevation = states('sensor.sun_elevation')|float(0) %}
+          {% set sun_hits_by_azimuth   = HIT_START <= azimuth <= HIT_END %}
+          {% set sun_hits_by_elevation = elevation <= ELEV_ABOVE %}
+          {% set sun_hits              = sun_hits_by_azimuth and sun_hits_by_elevation %}
+          {{ sun_hits }}
+
+      - name: "Sun Brightness Hitting Living Room Windows"
+        unique_id: 707d20a6-653f-466e-ac9e-2e1715eb297a
+        icon: >-
+          {% set sun_hits = is_state('binary_sensor.sun_brightness_hitting_living_room_windows', 'on') %}
+          {% if sun_hits %}
+            mdi:brightness-7
+          {% else %}
+            mdi:brightness-5
+          {% endif %}
+        device_class: problem
+        state: >-
+          {% set BRIGHT_MAX  = 3000 %}
+          {% set sun_hits_window = is_state('binary_sensor.sun_angle_hitting_living_room_windows', 'on') %}
+          {% set bright = states('sensor.average_living_room_balcony_brightness')|float(0) %}
+          {{ sun_hits_window and bright > BRIGHT_MAX }}
+
+      - name: "Living Room Sunset"
+        unique_id: f6affb57-bca3-4c38-a09e-497c5cf4b96e
+        icon: mdi:weather-sunset-down
+        state: >-
+          {% set BRIGHT_MIN = 10 %}
+          {% set sun_down = is_state('sun.sun', 'below_horizon') %}
+          {% set sun_setting = is_state_attr('sun.sun', 'rising', false) %}
+          {% set bright = states('sensor.average_living_room_balcony_brightness')|float(0) %}
+          {{ sun_down and sun_setting and bright > BRIGHT_MIN }}
+
       - name: "Living Room Curtains Auto Open"
         unique_id: a2adc8ab-a57b-4efb-86cf-25129566fd00
         device_class: opening
         state: >-
-          {# ---------------- constants ---------------- #}
-          {% set HIT_START   = 160  %}   {# ≈ 10° east of due south #}
-          {% set HIT_END     = 340  %}   {# ≈ north-north-west     #}
-          {% set ELEV_ABOVE  = 42   %}   {# Elevation above which the sun is shaded from the glass by the balcony above #}
-          {% set BRIGHT_MAX  = 3000 %}   {# lux that means “direct sun” #}
-          {% set BRIGHT_MIN  = 10   %}   {# lux that means “it is light enough to open before sunrise” #}
-
-          {# ---------------- sensor look-ups ---------------- #}
-          {% set sun_up   = is_state('sun.sun', 'above_horizon') %}
-          {% set summer   = is_state('sensor.season', 'summer') %}
-          {% set azimuth  = states('sensor.sun_azimuth')|float(0) %}
-          {% set elevation = states('sensor.sun_elevation')|float(0) %}
-          {% set bright   = states('sensor.average_living_room_balcony_brightness')|float(0) %}
-
-          {# ---------------- does the sun hit the glass? ---------------- #}
-          {% set sun_hits_by_azimuth   = HIT_START <= azimuth <= HIT_END %}
-          {% set sun_hits_by_elevation = elevation <= ELEV_ABOVE %}
-          {% set sun_hits_by_angle     = sun_hits_by_azimuth and sun_hits_by_elevation %}
-          {% set sun_hits_by_bright    = bright > BRIGHT_MAX %}
-          {% set sun_hits              = summer and sun_hits_by_angle and sun_hits_by_bright %}
-
-          {# ---------------- final decision ---------------- #}
-          {{ 
-            (sun_up and not sun_hits)
-            or (not sun_up and bright > BRIGHT_MIN)
-          }}
+          {% set sun_up = is_state('sun.sun', 'above_horizon') %}
+          {% set summer = is_state('sensor.season', 'summer') %}
+          {% set sunset = is_state('binary_sensor.living_room_sunset', 'on') %}
+          {% set bright_sun_hits = is_state('binary_sensor.sun_brightness_hitting_living_room_windows', 'on') %}
+          {% set sun_hits = summer and bright_sun_hits %}
+          {{ (sun_up and not sun_hits) or sunset }}
         attributes:
           icon: >-
             {{

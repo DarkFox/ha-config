@@ -41,6 +41,7 @@ sensor:
         value_template: |
           {% set forecast = state_attr('weather.forecast_home', 'forecast') %}
           {{ forecast[0].precipitation if forecast and forecast|length > 0 else '0' }}
+
       sun_elevation:
         friendly_name: "Sol Højde"
         unit_of_measurement: "°"
@@ -70,6 +71,12 @@ template:
           min_temperature: "{{ trigger.event.data.forecast[:16] | map(attribute='temperature') | list | min }}"
           max_temperature: "{{ trigger.event.data.forecast[:16] | map(attribute='temperature') | list | max }}"
           forecast: "{{ trigger.event.data.forecast }}"
+
+  - binary_sensor:
+      - name: Sun Rising
+        unique_id: 7e6bd3e5-9661-4166-be40-7600f3402e8b
+        icon: mdi:weather-sunset-up
+        state: "{{ is_state_attr('sun.sun', 'rising', true) }}"
 
   - sensor:
       - name: Discomfort Index
