@@ -313,6 +313,7 @@ async def get_gdq_milestones():
         milestone = {
             "id": string_to_slug(columns[0].text),
             "name": parse_text(columns[0].text),
+            "link": url,
             "run": None,
             "description": parse_text(columns[2].text),
             "amount": amount,
