@@ -663,9 +663,9 @@ script:
           {% endfor %}
           {% if preset_select_entity.entity_id and preset in state_attr(preset_select_entity.entity_id, 'options') %}
             {% if preset_select_entity.entity_id in ns.ret.keys()|list %}
-              {% set ns.ret = dict(ns.ret, **{preset_select_entity.entity_id: (ns.ret[preset_select_entity.entity_id]+[entity])}) %}
+              {% set ns.ret = ns.ret | combine({preset_select_entity.entity_id: (ns.ret[preset_select_entity.entity_id]+[entity])}) %}
             {% else %}
-              {% set ns.ret = dict(ns.ret, **{preset_select_entity.entity_id: [entity]}) %}
+              {% set ns.ret = ns.ret | combine({preset_select_entity.entity_id: [entity]}) %}
             {% endif %}
           {% endif %}
         {% endfor %}

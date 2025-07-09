@@ -10,7 +10,7 @@ template:
             {% set query = trigger.event.data.query %}
             {% set result = trigger.event.data.result | first or None %}
             {% set old_results = state_attr('sensor.osm_geocoding_cache', 'entries') or {} %}
-            {{ dict(old_results, **{ query: result}) }}
+            {{ old_results | combine({ query: result}) }}
 
   - trigger:
       trigger: event
@@ -24,7 +24,7 @@ template:
             {% set longitude = trigger.event.data.longitude %}
             {% set result = trigger.event.data.result | first or None %}
             {% set old_results = state_attr('sensor.osm_reverse_geocoding_cache', 'entries') or {} %}
-            {{ dict(old_results, **{ latitude|string + ',' + longitude|string: result}) }}
+            {{ old_results | combine({ latitude|string + ',' + longitude|string: result}) }}
 
 script:
   osm_geocoding_lookup:

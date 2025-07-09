@@ -231,8 +231,8 @@ script:
                   "tts": segment.segment,
                   "language": segment.language
                 } %}
-                {% set output = dict(output, **({"voice": "SteffanNeural"} if segment.language == 'en-US' else {})) %}
-                {% set output = dict(output, **({"offset": -900} if not loop.first else {})) %}
+                {% set output = output | combine({"voice": "SteffanNeural"} if segment.language == 'en-US' else {}) %}
+                {% set output = output | combine({"offset": -900} if not loop.first else {}) %}
                 {% set ns.ret = ns.ret + [output] %}
               {% endfor %}
 
