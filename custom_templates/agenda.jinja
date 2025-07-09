@@ -31,18 +31,21 @@
         regex_dict (str | dict): Either a string with the regex to match against, or a dictionary with the following keys:
             - regex (str): The regex to match against.
             - negate (bool): If true, the function will return true if the regex does not match.
+            - fields (list): A list of fields to check in the event. If not provided, it will check 'summary', 'description', and 'location'.
     -#}
-    {% set ns = namespace(regex=regex_dict, negate=false) %}
+    {% set ns = namespace(match=false, regex=regex_dict, negate=false, fields=['summary', 'description', 'location']) %}
     {%- if regex_dict is mapping -%}
         {%- set ns.regex = regex_dict.get('regex', '') -%}
         {%- set ns.negate = bool(regex_dict.get('negate', false), false) -%}
+        {%- set ns.fields = regex_dict.get('fields', ns.fields) -%}
     {%- endif -%}
-    {%- set match = (
-        event.get('summary', '')|regex_findall(ns.regex, true) |length > 0 or
-        event.get('description', '')|regex_findall(ns.regex, true) |length > 0 or
-        event.get('location', '')|regex_findall(ns.regex, true) |length > 0
-    ) -%}
-    {{ ns.negate != match }}
+    {%- for field in ns.fields -%}
+        {%- if event.get(field, '')|regex_findall(ns.regex, true) |length > 0 -%}
+            {%- set ns.match = true -%}
+            {%- break -%}
+        {%- endif -%}
+    {%- endfor -%}
+    {{ ns.match != ns.negate }}
 {%- endmacro -%}
 
 {%- macro event_match_any(event, regexes) -%}
@@ -72,25 +75,50 @@
 {% endmacro  %}
 
 {% macro agenda_event(calendar, event, regexes, bool_attrs={}, attrs={}) -%}
+    {#----------- 1. Time handling --------------------#}
     {%- set start = (event.get('start', '') or '') | as_datetime | as_local -%}
     {%- set end = (event.get('end', '') or '') | as_datetime | as_local -%}
     {%- set duration = (end - start).total_seconds() -%}
+
+    {#----------- 2. Build extra text attributes ------------------#}
+    {%- set ns = namespace(extracted = {}) -%}
+    {%- for attr, pattern in attrs.items() -%}
+        {%- set value = first_non_empty_string(
+                        (event.get('description','') or '')
+                        | regex_findall(pattern, true)) -%}
+        {%- if value %}
+            {%- set ns.extracted = ns.extracted | combine({attr: value}) -%}
+        {%- endif -%}
+    {%- endfor -%}
+
+    {#----------- 3. Merge with event for bool checks -------------#}
+    {%- set event_ext = event | combine(ns.extracted) -%}
+
+    {#----------- 4. Render JSON ----------------------------------#}
     {
         "calendar": "{{ calendar }}",
         "start": "{{ start.strftime('%Y-%m-%d %H:%M:%S') }}",
-        "end": "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
-        "duration": {{ (end - start).total_seconds() }},
-        "location": {{ (event.get('location', '') or '') | to_json }},
-        "description": {{ (event.get('description', '') or '') | to_json }},
-        "all_day": {{ 'true' if duration >= 86400 and start.strftime('%H:%M:%S') == '00:00:00' and end.strftime('%H:%M:%S') == '00:00:00' else 'false' }},
-        "multi_day": {{ 'true' if start.strftime('%Y-%m-%d') != end.strftime('%Y-%m-%d') else 'false' }},
-        "current": {{ 'true' if start <= now() and end >= now() else 'false' }},
-        {% for attr in bool_attrs -%}
-        "{{ attr }}": {{ 'true' if bool(event_match_any(event, bool_attrs[attr]), false) else 'false' }},
+        "end":   "{{ end.strftime('%Y-%m-%d %H:%M:%S') }}",
+        "duration": {{ duration }},
+        "location":    {{ (event.get('location','')    or '') | to_json }},
+        "description": {{ (event.get('description','') or '') | to_json }},
+        "all_day":   {{ 'true' if duration >= 86400
+                            and start.strftime('%H:%M:%S') == '00:00:00'
+                            and end.strftime('%H:%M:%S') == '00:00:00' else 'false' }},
+        "multi_day": {{ 'true' if start.strftime('%Y-%m-%d')
+                                != end.strftime('%Y-%m-%d') else 'false' }},
+        "current":   {{ 'true' if start <= now() and end >= now() else 'false' }},
+
+        {#------ Boolean attrs ----------------------#}
+        {% for attr, patterns in bool_attrs.items() -%}
+        "{{ attr }}": {{ 'true' if bool(event_match_any(event_ext, patterns), false) else 'false' }},
         {% endfor -%}
-        {% for attr in attrs -%}
-        "{{ attr }}": {{ first_non_empty_string((event.get('description', '') or '') | regex_findall(attrs[attr], true)) | to_json }},
+
+        {#------ Text attrs -------------------------#}
+        {% for attr, value in ns.extracted.items() -%}
+        "{{ attr }}": {{ value | to_json }},
         {% endfor -%}
+
         "summary": {{ work_event_summary(event, regexes, calendar) | to_json }}
     }
 {% endmacro -%}
@@ -99,7 +127,7 @@
     {%- set ns = namespace(ret=[]) -%}
     {%- for event in all_events[calendar_entity].events | sort(attribute='start') | list -%}
         {%- set event = preprocessor(event) | from_json if preprocessor else event -%}
-        {%- set ns.ret = ns.ret + [dict(event, **agenda_event(calendar_name, event, regexes, bool_attrs, attrs)|from_json)] -%}
+        {%- set ns.ret = ns.ret + [event | combine(agenda_event(calendar_name, event, regexes, bool_attrs, attrs)|from_json)] -%}
     {%- endfor -%}
     {{ ns.ret }}
 {%- endmacro -%}
