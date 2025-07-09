@@ -1,3 +1,5 @@
+{% from 'utils.jinja' import regex_escape %}
+
 {% macro friendly_time(event, compact=False, fallback=False) %}
     {%- from 'datediff.jinja' import relative_start_end_time -%}
     {%- if not event %}{{ fallback or 'Ingen kommende' }}
@@ -8,4 +10,42 @@
             {{ relative_start_end_time(event.start, event.end,  est='~') }}
         {%- endif %}
     {%- endif %}
+{% endmacro %}
+
+{% macro get_todo_list_items(entity, todo_items) %}
+    {% set todo_items = todo_items.event.data.todo_items if 'event' in todo_items else todo_items %}
+    {% set todo_items = todo_items.get(entity, {}).get('items', []) %}
+    {{ todo_items | map(attribute='summary') | list | unique | list | to_json }}
+{% endmacro %}
+
+{% macro regex_from_list(terms=[]) %}
+    {%- if not terms -%}
+        xxxxxunknownxxxxx
+    {%- else -%}
+        {%- set ns = namespace(escaped=[]) -%}
+        {%- for term in terms -%}
+            {%- set ns.escaped = ns.escaped + [regex_escape(term)] -%}
+        {%- endfor -%}
+        {%- set uniq = ns.escaped | unique | list -%}
+        {{ '.*(' ~ uniq | join('|') ~ ').*' }}
+    {%- endif -%}
+{% endmacro %}
+
+{% macro games_from_list(field, terms=[], games_events=[]) %}
+    {%- set regex = regex_from_list(terms) -%}
+    {%- set matched_games = games_events
+                        | selectattr(field, 'match', regex)
+                        | map(attribute='summary')
+                        | list %}
+    {%- if not matched_games -%}
+        []
+    {%- else -%}
+        {{ matched_games|to_json }}
+    {%- endif -%}
+{% endmacro %}
+
+
+{% macro games_regex_from_list(field, terms=[], games_events=[]) %}
+    {%- set games = games_from_list(field, terms, games_events)|from_json -%}
+    {{ regex_from_list(games) if games else 'xxxxxunknownxxxxx' }}
 {% endmacro %}

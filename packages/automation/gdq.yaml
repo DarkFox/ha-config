@@ -4,47 +4,176 @@ group:
     all: true
     entities:
       - automation.notify_gdq_run_coming_up
+      - automation.watchlisted_gdq_game_now_streaming
       - automation.refresh_gdq_tracker
       - automation.update_gdq_calendar
+
+  gdq_watchlists:
+    name: GDQ Watchlists
+    entities: &watchlist_entities
+      - todo.gdq_runs
+      - todo.gdq_games
+      - todo.gdq_runners
+      - todo.gdq_commentators
+      - todo.gdq_hosts
+      - todo.gdq_categories
 
 template:
   - trigger:
       trigger: event
       event_type: gdq_runs_updated
+      event_data:
+        watchlist: "todo.gdq_games"
     sensor:
+      - name: GDQ Games Watchlist
+        unique_id: 66b9fd22-7f37-4803-88ad-bfa26d943eaf
+        state: >-
+          {% from 'gdq.jinja' import get_todo_list_items %}
+          {{ get_todo_list_items('todo.gdq_games', trigger)|from_json| length }}
+        attributes:
+          items: >-
+            {% from 'gdq.jinja' import get_todo_list_items %}
+            {{ get_todo_list_items('todo.gdq_games', trigger)|from_json }}
+          regex: >-
+            {% from 'gdq.jinja' import get_todo_list_items, regex_from_list %}
+            {% set todo_terms = get_todo_list_items('todo.gdq_games', trigger)|from_json %}
+            {{ regex_from_list(todo_terms) }}
+
+  - trigger:
+      trigger: event
+      event_type: gdq_runs_updated
+      event_data:
+        watchlist: "todo.gdq_runners"
+    sensor:
+      - name: GDQ Runners Watchlist
+        unique_id: 79b7daec-a26a-4bb8-8eeb-1df150ef8c36
+        state: >-
+          {% from 'gdq.jinja' import get_todo_list_items %}
+          {{ get_todo_list_items('todo.gdq_runners', trigger)|from_json| length }}
+        attributes:
+          items: >-
+            {% from 'gdq.jinja' import get_todo_list_items %}
+            {{ get_todo_list_items('todo.gdq_runners', trigger)|from_json }}
+          regex: >-
+            {% from 'gdq.jinja' import get_todo_list_items, regex_from_list %}
+            {% set todo_terms = get_todo_list_items('todo.gdq_runners', trigger)|from_json %}
+            {{ regex_from_list(todo_terms) }}
+          games: >-
+            {% from 'gdq.jinja' import get_todo_list_items, games_from_list %}
+            {% set todo_terms = get_todo_list_items('todo.gdq_runners', trigger)|from_json %}
+            {% set events     = state_attr('binary_sensor.gdq_calendar', 'events') or [] %}
+            {{ games_from_list('runner', todo_terms, events) }}
+          games_regex: >-
+            {% from 'gdq.jinja' import get_todo_list_items, games_regex_from_list %}
+            {% set todo_terms = get_todo_list_items('todo.gdq_runners', trigger)|from_json %}
+            {% set events     = state_attr('binary_sensor.gdq_calendar', 'events') or [] %}
+            {{ games_regex_from_list('runner', todo_terms, events) }}
+
+  - trigger:
+      trigger: event
+      event_type: gdq_runs_updated
+      event_data:
+        watchlist: "todo.gdq_commentators"
+    sensor:
+      - name: GDQ Commentators Watchlist
+        unique_id: 5b7d63c0-f773-445e-b56a-e9aebc57de58
+        state: >-
+          {% from 'gdq.jinja' import get_todo_list_items %}
+          {{ get_todo_list_items('todo.gdq_commentators', trigger)|from_json| length }}
+        attributes:
+          items: >-
+            {% from 'gdq.jinja' import get_todo_list_items %}
+            {{ get_todo_list_items('todo.gdq_commentators', trigger)|from_json }}
+          regex: >-
+            {% from 'gdq.jinja' import get_todo_list_items, regex_from_list %}
+            {% set todo_terms = get_todo_list_items('todo.gdq_commentators', trigger)|from_json %}
+            {{ regex_from_list(todo_terms) }}
+          games: >-
+            {% from 'gdq.jinja' import get_todo_list_items, games_from_list %}
+            {% set todo_terms = get_todo_list_items('todo.gdq_commentators', trigger)|from_json %}
+            {% set events     = state_attr('binary_sensor.gdq_calendar', 'events') or [] %}
+            {{ games_from_list('commentators', todo_terms, events) }}
+          games_regex: >-
+            {% from 'gdq.jinja' import get_todo_list_items, games_regex_from_list %}
+            {% set todo_terms = get_todo_list_items('todo.gdq_commentators', trigger)|from_json %}
+            {% set events     = state_attr('binary_sensor.gdq_calendar', 'events') or [] %}
+            {{ games_regex_from_list('commentators', todo_terms, events) }}
+
+  - trigger:
+      trigger: event
+      event_type: gdq_runs_updated
+      event_data:
+        watchlist: "todo.gdq_hosts"
+    sensor:
+      - name: GDQ Hosts Watchlist
+        unique_id: c8f60f98-b850-4f7e-91e2-139c46a4057c
+        state: >-
+          {% from 'gdq.jinja' import get_todo_list_items %}
+          {{ get_todo_list_items('todo.gdq_hosts', trigger)|from_json| length }}
+        attributes:
+          items: >-
+            {% from 'gdq.jinja' import get_todo_list_items %}
+            {{ get_todo_list_items('todo.gdq_hosts', trigger)|from_json }}
+          regex: >-
+            {% from 'gdq.jinja' import get_todo_list_items, regex_from_list %}
+            {% set todo_terms = get_todo_list_items('todo.gdq_hosts', trigger)|from_json %}
+            {{ regex_from_list(todo_terms) }}
+          games: >-
+            {% from 'gdq.jinja' import get_todo_list_items, games_from_list %}
+            {% set todo_terms = get_todo_list_items('todo.gdq_hosts', trigger)|from_json %}
+            {% set events     = state_attr('binary_sensor.gdq_calendar', 'events') or [] %}
+            {{ games_from_list('host', todo_terms, events) }}
+          games_regex: >-
+            {% from 'gdq.jinja' import get_todo_list_items, games_regex_from_list %}
+            {% set todo_terms = get_todo_list_items('todo.gdq_hosts', trigger)|from_json %}
+            {% set events     = state_attr('binary_sensor.gdq_calendar', 'events') or [] %}
+            {{ games_regex_from_list('host', todo_terms, events) }}
+
+  - trigger:
+      trigger: event
+      event_type: gdq_runs_updated
+      event_data:
+        watchlist: "todo.gdq_categories"
+    sensor:
+      - name: GDQ Categories Watchlist
+        unique_id: 05776a71-be3c-4cb4-80e2-fbc3418803ec
+        state: >-
+          {% from 'gdq.jinja' import get_todo_list_items %}
+          {{ get_todo_list_items('todo.gdq_categories', trigger)|from_json| length }}
+        attributes:
+          items: >-
+            {% from 'gdq.jinja' import get_todo_list_items %}
+            {{ get_todo_list_items('todo.gdq_categories', trigger)|from_json }}
+          regex: >-
+            {% from 'gdq.jinja' import get_todo_list_items, regex_from_list %}
+            {% set todo_terms = get_todo_list_items('todo.gdq_categories', trigger)|from_json %}
+            {{ regex_from_list(todo_terms) }}
+          games: >-
+            {% from 'gdq.jinja' import get_todo_list_items, games_from_list %}
+            {% set todo_terms = get_todo_list_items('todo.gdq_categories', trigger)|from_json %}
+            {% set events     = state_attr('binary_sensor.gdq_calendar', 'events') or [] %}
+            {{ games_from_list('category', todo_terms, events) }}
+          games_regex: >-
+            {% from 'gdq.jinja' import get_todo_list_items, games_regex_from_list %}
+            {% set todo_terms = get_todo_list_items('todo.gdq_categories', trigger)|from_json %}
+            {% set events     = state_attr('binary_sensor.gdq_calendar', 'events') or [] %}
+            {{ games_regex_from_list('category', todo_terms, events) }}
+
+  - sensor:
       - name: GDQ Runs Regex
         unique_id: 94acaf70-d3d2-4af1-9730-806adddeb712
-        state: "{{ trigger.event.data.todo_items.get('todo.gdq_runs', {}).get('items', []) | length }}"
+        state: "{{ (state_attr('sensor.gdq_runs_regex', 'games') or []) | length }}"
         attributes:
+          games: >-
+            {% set games_games = state_attr('sensor.gdq_games_watchlist', 'items') or [] %}
+            {% set runners_games = state_attr('sensor.gdq_runners_watchlist', 'games') or [] %}
+            {% set commentators_games = state_attr('sensor.gdq_commentators_watchlist', 'games') or [] %}
+            {% set hosts_games = state_attr('sensor.gdq_hosts_watchlist', 'games') or [] %}
+            {% set categories_games = state_attr('sensor.gdq_categories_watchlist', 'games') or [] %}
+            {{ (games_games + runners_games + commentators_games + hosts_games + categories_games) | unique | list }}
           regex: >-
-            {% from 'utils.jinja' import regex_escape %}
-            {% set todo_items = trigger.event.data.todo_items
-                                .get('todo.gdq_runs', {})
-                                .get('items', []) %}
-            {% set todo_terms = todo_items | map(attribute='summary') | list %}
-
-            {% if not todo_terms %}
-              {{ None }}
-            {% else %}
-              {% set ns = namespace(escaped=[]) %}
-              {% for term in todo_terms %}
-                {% set ns.escaped = ns.escaped + [regex_escape(term)] %}
-              {% endfor %}
-
-              {% set calendar     = state_attr('binary_sensor.gdq_calendar', 'events') or [] %}
-              {% set runner_regex = '.*(' ~ ns.escaped | join('|') ~ ').*' %}
-              {% set matched_runs = calendar
-                                    | selectattr('runner', 'match', runner_regex)
-                                    | map(attribute='summary')
-                                    | list %}
-
-              {% for game in matched_runs %}
-                {% set ns.escaped = ns.escaped + [regex_escape(game)] %}
-              {% endfor %}
-
-              {% set uniq = ns.escaped | unique | list %}
-              {{ '.*(' ~ uniq | join('|') ~ ').*' }}
-            {% endif %}
+            {% from 'gdq.jinja' import regex_from_list %}
+            {{ regex_from_list(state_attr('sensor.gdq_runs_regex', 'games') or []) }}
 
   - trigger:
       trigger: event
@@ -92,7 +221,7 @@ template:
         state: >-
           {% if is_state('sensor.gamesdonequick', 'streaming') %}
             {% set streaming_game = state_attr('sensor.gamesdonequick', 'game') %}
-            {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
+            {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | selectattr('watch') | map(attribute='summary') | list %}
             {% if streaming_game in games %}
               on
             {% else %}
@@ -101,6 +230,24 @@ template:
           {% else %}
             off
           {% endif %}
+
+      - name: TV Currently streaming GDQ
+        unique_id: 51a6eeaa-f5ff-484a-abbb-8f07c53dab7e
+        icon: mdi:television
+        state: >-
+          {% set tvs = [
+            'media_player.stue_shield_adb',
+            'media_player.kontor_shield_adb',
+            'media_player.sovevaerelse_chromecast'
+          ] %}
+          {% for tv in tvs %}
+            {% if is_state(tv, 'playing') and (state_attr(tv, 'app_id') | lower) in ['s0und', 'twitch'] %}
+              on
+              {% break %}
+            {% endif %}
+          {% else %}
+            off
+          {% endfor %}
 
   - trigger:
       trigger: event
@@ -336,19 +483,7 @@ automation:
           state_attr('sensor.gdq_next_watch_run', 'next_run').get('start', ''),
           'day, hour, minute'
         ) }}
-      playing_gdq: >-
-        {% set tvs = [
-          'media_player.stue_shield_adb',
-          'media_player.kontor_shield_adb',
-          'media_player.sovevaerelse_chromecast'
-        ] %}
-        {% for tv in tvs %}
-          {% set app_id = state_attr(tv, 'app_id') | lower %}
-          {% if 's0und' in app_id or 'twitch' in app_id %}
-            True
-            {% break %}
-          {% endif %}
-        {% endfor %}
+      playing_gdq: "{{ is_state('binary_sensor.tv_currently_streaming_gdq', 'on') }}"
     actions:
       - action: script.notify_everywhere
         data:
@@ -365,26 +500,61 @@ automation:
               language: da-DK
               offset: -900
 
+  - alias: "Watchlisted GDQ game now streaming"
+    id: e8acab09-6c30-4d0c-9c1a-3301013a34c6
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.gdq_currently_streaming_watchlist_game
+        to: "on"
+    variables:
+      game: "{{ state_attr('sensor.gamesdonequick', 'game') }}"
+      runner: >-
+        {% set run = state_attr('binary_sensor.gdq_calendar', 'events')
+                    | selectattr('summary', 'eq', game) | list | first %}
+        {% if run %}
+          {{ run.runner }}
+        {% else %}
+          {{ None }}
+        {% endif %}
+      playing_gdq: "{{ is_state('binary_sensor.tv_currently_streaming_gdq', 'on') }}"
+    actions:
+      - action: script.notify_everywhere
+        data:
+          severity: "{{ 0 if playing_gdq else 1 }}"
+          message:
+            - tts: "GDQ streamer nu: "
+              language: da-DK
+              offset: -500
+            - tts: "{{ game }} — Run by {{ runner }},"
+              language: en-US
+              voice: SteffanNeural
+              offset: -900
+
   - alias: "Refresh GDQ Runs Regex"
     id: refresh_gdq_runs_regex
     initial_state: true
     mode: restart
     triggers:
       - trigger: state
-        entity_id: todo.gdq_runs
+        entity_id: *watchlist_entities
       - trigger: state
         entity_id: group.gdq_automations
         to: "on"
     actions:
-      - action: todo.get_items
-        data:
-          status: needs_action
-        target:
-          entity_id: todo.gdq_runs
-        response_variable: todo_items
-      - event: gdq_runs_updated
-        event_data:
-          todo_items: "{{ todo_items }}"
+      - repeat:
+          for_each: *watchlist_entities
+          sequence:
+            - action: todo.get_items
+              data:
+                status: needs_action
+              target:
+                entity_id: "{{ repeat.item }}"
+              response_variable: todo_items
+            - event: gdq_runs_updated
+              event_data:
+                watchlist: "{{ repeat.item }}"
+                todo_items: "{{ todo_items }}"
 
   - id: update_gdq_calendar
     alias: Update GDQ Calendar
@@ -408,24 +578,34 @@ automation:
       bool_attrs:
         watch: >-
           {{ [{
-              'regex': (state_attr('sensor.gdq_runs_regex', 'regex') or 'xxxxxxxx'),
-              'fields': ['summary']
-            }] }}
+            'regex': (state_attr('sensor.gdq_runs_regex', 'regex') or 'xxxxxxxx'),
+            'fields': ['summary']
+          }] }}
+        watch_game: >-
+          {{ [{
+            'regex': (state_attr('sensor.gdq_games_watchlist', 'regex') or 'xxxxxxxx'),
+            'fields': ['summary']
+          }] }}
         watch_runner: >-
           {{ [{
-              'regex': (state_attr('sensor.gdq_runs_regex', 'regex') or 'xxxxxxxx'),
-              'fields': ['runner']
-            }] }}
+            'regex': (state_attr('sensor.gdq_runners_watchlist', 'regex') or 'xxxxxxxx'),
+            'fields': ['runner']
+          }] }}
         watch_host: >-
           {{ [{
-              'regex': (state_attr('sensor.gdq_runs_regex', 'regex') or 'xxxxxxxx'),
-              'fields': ['host']
-            }] }}
+            'regex': (state_attr('sensor.gdq_hosts_watchlist', 'regex') or 'xxxxxxxx'),
+            'fields': ['host']
+          }] }}
         watch_commentators: >-
           {{ [{
-              'regex': (state_attr('sensor.gdq_runs_regex', 'regex') or 'xxxxxxxx'),
-              'fields': ['commentators']
-            }] }}
+            'regex': (state_attr('sensor.gdq_commentators_watchlist', 'regex') or 'xxxxxxxx'),
+            'fields': ['commentators']
+          }] }}
+        watch_category: >-
+          {{ [{
+            'regex': (state_attr('sensor.gdq_categories_watchlist', 'regex') or 'xxxxxxxx'),
+            'fields': ['category']
+          }] }}
     actions:
       - action: homeassistant.update_entity
         target:
