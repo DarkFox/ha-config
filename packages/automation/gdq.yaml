@@ -254,6 +254,9 @@ script:
     icon: mdi:calendar-refresh
     sequence:
       - parallel:
+          - action: homeassistant.update_entity
+            target:
+              entity_id: sensor.gamesdonequick
           - action: automation.trigger
             target:
               entity_id: automation.update_gdq_calendar
@@ -267,9 +270,6 @@ script:
           - action: script.run_pyscript
             data:
               action: pyscript.gdq_get_milestones
-      - action: homeassistant.update_entity
-        target:
-          entity_id: sensor.gamesdonequick
 
 automation:
   - alias: "Toggle GDQ on event state"
@@ -398,8 +398,6 @@ automation:
     variables:
       days: 10
       regexes: "{{ states.sensor.calendar_regexes.attributes }}"
-      bool_attrs:
-        watch: "{{ [(state_attr('sensor.gdq_runs_regex', 'regex') or '')] }}"
       attrs:
         category: "(.+) — .+ — .+"
         platform: ".+ — (.+) — .+"
@@ -407,6 +405,27 @@ automation:
         runner: "Run by (.+)"
         host: "Hosted by (.+)"
         commentators: "Commentary by (.+)"
+      bool_attrs:
+        watch: >-
+          {{ [{
+              'regex': (state_attr('sensor.gdq_runs_regex', 'regex') or 'xxxxxxxx'),
+              'fields': ['summary']
+            }] }}
+        watch_runner: >-
+          {{ [{
+              'regex': (state_attr('sensor.gdq_runs_regex', 'regex') or 'xxxxxxxx'),
+              'fields': ['runner']
+            }] }}
+        watch_host: >-
+          {{ [{
+              'regex': (state_attr('sensor.gdq_runs_regex', 'regex') or 'xxxxxxxx'),
+              'fields': ['host']
+            }] }}
+        watch_commentators: >-
+          {{ [{
+              'regex': (state_attr('sensor.gdq_runs_regex', 'regex') or 'xxxxxxxx'),
+              'fields': ['commentators']
+            }] }}
     actions:
       - action: homeassistant.update_entity
         target:
