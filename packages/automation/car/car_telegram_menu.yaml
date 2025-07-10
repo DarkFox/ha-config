@@ -16,13 +16,13 @@ automation:
         data:
           message: >
             {% if is_state('sensor.id_3_pro_charging_state', 'charging') -%}
-              Opladning startet. Bilen lader op til {{ states('sensor.id_3_pro_target_state_of_charge') }}%.
+              Opladning startet. Bilen lader op til {{ states('number.id_3_pro_charging_target_level')|int }}%.
               Færdig ca. {{ states('sensor.id_3_pro_charging_complete_at') }}
             {%- else -%}
-              Oplading afsluttet. Bilen er ladt op til {{ states('sensor.id_3_pro_state_of_charge') }}%.
+              Oplading afsluttet. Bilen er ladt op til {{ states('sensor.id_3_pro_soc_primary')|int }}%.
             {%- endif %}
             {%- if states('sensor.id_3_pro_remaining_climatisation_time')|int > 0 -%}
-              Klimatiserer bilen til {{ states('sensor.id_3_pro_target_temperature') }}°. {{ states('sensor.id_3_pro_remaining_climatisation_time') }} minutter tilbage.
+              Klimatiserer bilen til {{ state_attr('climate.id_3_pro_start_stop_climatization', 'temperature')|int }}°. {{ states('sensor.id_3_pro_remaining_climatisation_time') }} minutter tilbage.
             {%- else -%}
               Klimatisering afsluttet.
             {%- endif -%}
@@ -46,7 +46,7 @@ automation:
         event_data:
           command: "/car_climatisation"
     variables:
-      temp: "{{ states('sensor.id_3_pro_target_temperature')|int }}"
+      temp: "{{ state_attr('climate.id_3_pro_start_stop_climatization', 'temperature')|int }}"
     actions:
       - action: notify.telegram_darkfox
         data:
@@ -70,9 +70,9 @@ automation:
         event_data:
           command: "/car_climatisation_set"
     actions:
-      - action: number.set_value
+      - action: climate.set_temperature
         target:
-          entity_id: number.id_3_pro_target_climate_temperature
+          entity_id: climate.id_3_pro_start_stop_climatization
         data:
           temperature: "{{ trigger.event.data['args'][0] }}"
       - action: notify.telegram_darkfox

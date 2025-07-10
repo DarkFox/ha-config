@@ -1,9 +1,13 @@
 type: "custom:button-card"
 name: >
   [[[
-    return states['sensor.bil_placering'].state + (states['binary_sensor.id_3_pro_klimatisering'].state == 'on' ? ' - ' + states['sensor.id_3_pro_remaining_climatisation_time'].state + ' min' : '');
+    return states['sensor.bil_placering'].state
+          + (
+            states['binary_sensor.id_3_pro_klimatisering'].state == 'on' ? ' - ' 
+            + states['sensor.id_3_pro_remaining_climatisation_time'].state + ' min' : ''
+          );
   ]]]
-entity: sensor.id_3_pro_state_of_charge
+entity: sensor.id_3_pro_soc_primary
 double_tap_action:
   action: fire-dom-event
   browser_mod:
@@ -33,17 +37,21 @@ show_state: true
 show_name: true
 show_units: false
 show_label: true
+state_display: >
+  [[[
+    return Math.round( states['sensor.id_3_pro_soc_primary'].state);
+  ]]]
 label: >
   [[[
     if (states['sensor.id_3_pro_charging_state'].state == 'charging')
-      return 'Lader: ' + states['sensor.id_3_pro_charge_power'].state + ' kW - ' + states['sensor.id_3_pro_charging_time_remaining'].state;
+      return 'Lader: ' + states['sensor.id_3_pro_charging_power'].state + ' kW - ' + states['sensor.id_3_pro_charging_time_remaining'].state;
     else
       return '&nbsp;';
   ]]]
 custom_fields:
   unit: >
     [[[
-      return '/ ' + states['sensor.id_3_pro_target_state_of_charge'].state + ' % (' + states['sensor.id_3_pro_range'].state + ' km)';
+      return '/ ' + Math.round(states['number.id_3_pro_charging_target_level'].state) + ' % (' + Math.round(states['sensor.id_3_pro_range_primary'].state) + ' km)';
     ]]]
 styles:
   card:

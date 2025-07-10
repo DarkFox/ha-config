@@ -12,8 +12,8 @@ template:
         icon: mdi:parking
         state: >-
           {% from 'geofence.jinja' import point_in_polygon %}
-          {% set lat = state_attr('device_tracker.id_3_pro_tracker', 'latitude') %}
-          {% set lon = state_attr('device_tracker.id_3_pro_tracker', 'longitude') %}
+          {% set lat = state_attr('device_tracker.id_3_pro_position', 'latitude') %}
+          {% set lon = state_attr('device_tracker.id_3_pro_position', 'longitude') %}
 
           {% set parking_lots = {
             'RSH Parkering': [
@@ -103,20 +103,21 @@ template:
         unique_id: 1d0ac9cc-40e7-4154-95ec-45f163e4b7b5
         icon: mdi:car
         state: >-
-          {% if is_state('binary_sensor.id_3_pro_car_is_active', 'on') %}
+          {% if states('sensor.id_3_pro_vehicle_state') in ['ignition_on', 'driving'] %}
             Kører
           {% elif has_value('sensor.parking_lot') and not is_state('sensor.parking_lot', '') %}
             {{ states('sensor.parking_lot') }}
           {% else %}
-            {{ state_translated('device_tracker.id_3_pro_tracker') }}
+            {{ state_translated('device_tracker.id_3_pro_position') }}
           {% endif %}
 
       - name: Parking Last Captured
         unique_id: 1fc2d775-dc79-48c6-9fd1-cdde49dfc312
         icon: mdi:clock-time-eight-outline
         device_class: timestamp
+        # Last captured not yet implemented in carconnectivity
         state: >-
-          {{ state_attr('device_tracker.id_3_pro_tracker', 'last_captured') }}
+          {{ state_attr('device_tracker.id_3_pro_position', 'last_captured') }}
 
       - name: Parking Clock
         unique_id: 1b039e84-9fbe-46f5-9ff9-f34ac68a34f7

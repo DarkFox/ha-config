@@ -1,58 +1,3 @@
-switch:
-  - platform: template
-    switches:
-      id_3_pro_charging:
-        friendly_name: ID.3 Pro Charging
-        unique_id: 8aad7bcf-89a3-48d9-88ea-2b8609617a50
-        value_template: >-
-          {{ 
-            not is_state('sensor.id_3_pro_charging_mode', 'off')
-            and not is_state('sensor.id_3_pro_plug_connection_state', 'disconnected')
-          }}
-        icon_template: "{{ 'mdi:battery-charging' if not is_state('sensor.id_3_pro_charging_mode', 'off') else 'mdi:battery' }}"
-        turn_on:
-          action: volkswagen_we_connect_id.volkswagen_id_start_stop_charging
-          data:
-            vin: !secret vw_vin
-            start_stop: "start"
-        turn_off:
-          action: volkswagen_we_connect_id.volkswagen_id_start_stop_charging
-          data:
-            vin: !secret vw_vin
-            start_stop: "stop"
-
-      id_3_pro_climatisation:
-        friendly_name: ID.3 Pro Climatisation
-        unique_id: 89f42f3d-9563-474f-ac2e-933c3076723f
-        value_template: "{{ is_state('binary_sensor.id_3_pro_klimatisering', 'on') }}"
-        icon_template: "{{ 'mdi:hvac' if is_state('binary_sensor.id_3_pro_klimatisering', 'on') else 'mdi:hvac-off' }}"
-        turn_on:
-          action: volkswagen_we_connect_id.volkswagen_id_set_climatisation
-          data:
-            vin: !secret vw_vin
-            start_stop: "start"
-        turn_off:
-          action: volkswagen_we_connect_id.volkswagen_id_set_climatisation
-          data:
-            vin: !secret vw_vin
-            start_stop: "stop"
-
-      id_3_pro_reduced_ac_charging_speed:
-        friendly_name: ID.3 Pro Reduced AC Charging Speed
-        unique_id: a563afd5-760e-400f-9f5d-ee2c0b11c4f5
-        value_template: "{{ is_state('sensor.id_3_pro_max_charge_current_ac', 'reduced') }}"
-        icon_template: mdi:flash
-        turn_on:
-          action: volkswagen_we_connect_id.volkswagen_id_set_ac_charge_speed
-          data:
-            vin: !secret vw_vin
-            maximum_reduced: "reduced"
-        turn_off:
-          action: volkswagen_we_connect_id.volkswagen_id_set_ac_charge_speed
-          data:
-            vin: !secret vw_vin
-            maximum_reduced: "maximum"
-
 script:
   id_3_pro_send_destinations:
     alias: ID.3 Pro Send Destinations
@@ -78,34 +23,26 @@ script:
         selector:
           object:
     sequence:
-      - variables:
-          destinations: "{{ destinations if destinations is list else [destinations] }}"
-      - action: volkswagen_we_connect_id.volkswagen_id_send_destinations
-        data:
-          vin: !secret vw_vin
-          destinations: "{{ destinations }}"
-      - event: id_3_pro_destinations_sent
-        event_data:
-          destinations: "{{ destinations }}"
+      - delay:
+          seconds: 1
+      # ---- Send destinations feature not yet ported to carconnectivity ----
+      # - variables:
+      #     destinations: "{{ destinations if destinations is list else [destinations] }}"
+      # - action: volkswagen_we_connect_id.volkswagen_id_send_destinations
+      #   data:
+      #     vin: !secret vw_vin
+      #     destinations: "{{ destinations }}"
+      # - event: id_3_pro_destinations_sent
+      #   event_data:
+      #     destinations: "{{ destinations }}"
 
 template:
   - binary_sensor:
-      - name: ID.3 Pro Locked
-        unique_id: 7471c9be-140d-4103-bcbc-5e54fbff0f6c
-        state: >-
-          {{
-            is_state('sensor.id_3_pro_door_front_left_lock_status', 'unlocked')
-            or is_state('sensor.id_3_pro_door_front_right_lock_status', 'unlocked')
-            or is_state('sensor.id_3_pro_door_rear_left_lock_status', 'unlocked')
-            or is_state('sensor.id_3_pro_door_rear_right_lock_status', 'unlocked')
-            or is_state('sensor.id_3_pro_trunk_lock_status', 'unlocked')
-          }}
-        device_class: lock
       - name: "ID.3 Pro Klimatisering"
         unique_id: 3d153849-757e-4062-96b8-54aba1bfa44d
-        state: "{{ states('sensor.id_3_pro_remaining_climatisation_time') | int > 0 }}"
+        state: "{{ is_state('climate.id_3_pro_start_stop_climatization', 'auto') }}"
         attributes:
-          icon: "{{ 'mdi:hvac' if is_state('binary_sensor.id_3_pro_klimatisering', 'on') else 'mdi:hvac-off' }}"
+          icon: "{{ 'mdi:hvac' if is_state('climate.id_3_pro_start_stop_climatization', 'auto') else 'mdi:hvac-off' }}"
       - name: ID.3 Pro Is Charging
         unique_id: e06d2312-821d-4bb9-8f66-78efa1bd6164
         state: "{{ is_state('sensor.id_3_pro_charging_state', 'charging') }}"
@@ -113,6 +50,13 @@ template:
           icon: "{{ 'mdi:battery-charging' if not is_state('sensor.id_3_pro_charging_state', 'charging') else 'mdi:battery' }}"
 
   - sensor:
+      - name: "ID.3 Pro Remaining Climatisation Time"
+        unique_id: 0f4fbe08-72d5-4944-b00b-cf0e67e3ccf4
+        icon: mdi:clock-end
+        unit_of_measurement: "min"
+        device_class: duration
+        state: "{{ states('sensor.id_3_pro_climatization_estimated_date_reached') | as_timestamp | int - as_timestamp(now()) | int }}"
+
       - name: "ID.3 Pro Charging Time Remaining"
         unique_id: e9a7814e-c7d9-4fac-a56d-70b73b895dde
         state: "{{ (timedelta(minutes=states('sensor.id_3_pro_remaining_charging_time')|int)|string)[:-3] }}"
@@ -157,9 +101,9 @@ automation:
         entity_id: sensor.darkphone_last_notification
         state: "com.volkswagen.weconnect"
     actions:
-      - action: homeassistant.update_entity
+      - action: button.press
         target:
-          entity_id: sensor.id_3_pro_charging_mode
+          entity_id: button.id_3_pro_wakeup
 
   - alias: "ID.3 Pro Notify destinations sent"
     id: 5b33950a-780e-4708-94b5-9276239e4a80

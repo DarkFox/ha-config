@@ -30,7 +30,7 @@ cards:
       - type: horizontal-stack
         cards:
           - type: gauge
-            entity: sensor.id_3_pro_state_of_charge
+            entity: sensor.id_3_pro_soc_primary
             min: 0
             max: 100
             severity:
@@ -39,7 +39,7 @@ cards:
               red: 0
             name: Batteri
           - type: gauge
-            entity: sensor.id_3_pro_charge_power
+            entity: sensor.id_3_pro_charging_power
             max: 100
             name: Batterieffekt
             severity:
@@ -49,7 +49,7 @@ cards:
             needle: true
             min: 0
           - type: entity
-            entity: sensor.id_3_pro_range
+            entity: sensor.id_3_pro_total_range
             name: Rækkevidde
             icon: mdi:road
             unit: Km
@@ -59,15 +59,15 @@ cards:
         columns: 3
         cards:
           - type: button
-            entity: switch.id_3_pro_charging
+            entity: switch.id_3_pro_start_stop_charging
             name: Opladning
             tap_action:
               action: toggle
           - type: button
-            entity: switch.id_3_pro_reduced_ac_charging_speed
+            entity: number.id_3_pro_charging_maximum_current
             name: Reduceret AC
             tap_action:
-              action: toggle
+              action: more-info
           - type: button
             entity: input_boolean.car_delayed_charging
             name: Forsinket Opladning
@@ -84,13 +84,13 @@ cards:
 
       - type: entities
         entities:
-          - entity: number.id_3_pro_target_state_of_charge
+          - entity: number.id_3_pro_charging_target_level
             type: custom:slider-entity-row
             full_row: true
 
       - type: conditional
         conditions:
-          - entity: switch.id_3_pro_charging
+          - entity: switch.id_3_pro_start_stop_charging
             state: "on"
         card:
           type: glance
@@ -100,7 +100,7 @@ cards:
           state_color: true
           columns: 3
           entities:
-            - entity: sensor.id_3_pro_charge_type
+            - entity: sensor.id_3_pro_charging_type
               name: Opl. Type
             - entity: sensor.id_3_pro_charging_time_remaining
               name: Opl. Tid Tilbage
@@ -109,9 +109,11 @@ cards:
 
       - type: entities
         entities:
-          - entity: switch.id_3_pro_climatisation
+          - entity: climate.id_3_pro_start_stop_climatization
             name: Klimatisering
-          - entity: number.id_3_pro_target_climate_temperature
+            tap_action:
+              action: toggle
+          - entity: climate.id_3_pro_start_stop_climatization
             type: custom:slider-entity-row
             full_row: true
           - entity: input_boolean.car_keep_climatising
@@ -159,17 +161,17 @@ cards:
           show:
             legend_value: true
         series:
-          - entity: sensor.id_3_pro_target_state_of_charge
+          - entity: number.id_3_pro_charging_target_level
             yaxis_id: pct
             color: lightblue
             name: Max
             type: area
             opacity: 0.2
-          - entity: sensor.id_3_pro_state_of_charge
+          - entity: sensor.id_3_pro_soc_primary
             yaxis_id: pct
             color: green
             name: SoC
-          - entity: sensor.id_3_pro_charge_power
+          - entity: sensor.id_3_pro_charging_power
             yaxis_id: kw
             color: DarkOrange
             name: kW
@@ -185,20 +187,20 @@ cards:
         state_color: true
         columns: 4
         entities:
-          - entity: binary_sensor.id_3_pro_car_is_online
-            name: Online
-          - entity: binary_sensor.id_3_pro_car_is_active
-            name: Tænding
+          - entity: sensor.id_3_pro_connection_state
+            name: Forbindelse
+          - entity: sensor.id_3_pro_vehicle_state
+            name: Tilstand
 
           - entity: binary_sensor.id_3_pro_is_charging
             name: Oplader
-          - entity: sensor.id_3_pro_plug_lock_state
+          - entity: binary_sensor.id_3_pro_charging_connector_lock_state
             name: Stik Lås
 
       - type: conditional
         conditions:
-          - entity: binary_sensor.id_3_pro_car_is_active
-            state: "off"
+          - entity: sensor.id_3_pro_vehicle_state
+            state: "parked"
         card:
           type: glance
           show_name: true
@@ -228,7 +230,7 @@ cards:
         card:
           type: map
           entities:
-            - entity: device_tracker.id_3_pro_tracker
+            - entity: device_tracker.id_3_pro_position
           hours_to_show: 6
           dark_mode: "True"
 
@@ -239,5 +241,5 @@ cards:
         card:
           type: map
           entities:
-            - entity: device_tracker.id_3_pro_tracker
+            - entity: device_tracker.id_3_pro_position
           hours_to_show: 6

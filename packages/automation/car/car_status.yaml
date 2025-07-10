@@ -5,10 +5,10 @@ template:
         # Car only reports location while parked
         # If car is active (driving), we assume distance is 0
         state: >-
-          {%- if is_state('binary_sensor.id_3_pro_car_is_active', 'on') -%}
+          {% if states('sensor.id_3_pro_vehicle_state') in ['ignition_on', 'driving'] %}
             0.0
           {%- else -%}
-            {{ distance('device_tracker.id_3_pro_tracker', 'person.rook') }}
+            {{ distance('device_tracker.id_3_pro_position', 'person.rook') }}
           {%- endif -%}
         device_class: distance
         unit_of_measurement: km
@@ -59,49 +59,49 @@ template:
             or is_state('binary_sensor.driving_event_ends_in_5_min', 'on')
           }}
 
-automation:
-  - id: alert_car_unlocked
-    alias: Alert car unlocked
-    triggers:
-      - trigger: numeric_state
-        entity_id: sensor.car_distance_to_rook
-        above: 0.1
-        for:
-          seconds: 30
-      - trigger: state
-        entity_id: binary_sensor.id_3_pro_locked
-        to: "on"
-        for:
-          minutes: 5
-    conditions:
-      - alias: "Car unlocked"
-        condition: state
-        entity_id: binary_sensor.id_3_pro_locked
-        state: "on"
-      - alias: "Car parked"
-        condition: state
-        entity_id: binary_sensor.id_3_pro_car_is_active
-        state: "off"
-    actions:
-      - action: automation.turn_on
-        target:
-          entity_id: automation.notify_car_locked
-      - action: script.notify_everywhere
-        data:
-          message: Bilen er ikke låst!
-          severity: 2
+# automation:
+#   - id: alert_car_unlocked
+#     alias: Alert car unlocked
+#     triggers:
+#       - trigger: numeric_state
+#         entity_id: sensor.car_distance_to_rook
+#         above: 0.1
+#         for:
+#           seconds: 30
+#       - trigger: state
+#         entity_id: binary_sensor.id_3_pro_locked
+#         to: "on"
+#         for:
+#           minutes: 5
+#     conditions:
+#       - alias: "Car unlocked"
+#         condition: state
+#         entity_id: binary_sensor.id_3_pro_locked
+#         state: "on"
+#       - alias: "Car parked"
+#         condition: state
+#         entity_id: sensor.id_3_pro_vehicle_state
+#         state: "parked"
+#     actions:
+#       - action: automation.turn_on
+#         target:
+#           entity_id: automation.notify_car_locked
+#       - action: script.notify_everywhere
+#         data:
+#           message: Bilen er ikke låst!
+#           severity: 2
 
-  - id: notify_car_locked
-    alias: Notify car locked
-    triggers:
-      - trigger: state
-        entity_id: binary_sensor.id_3_pro_locked
-        to: "off"
-    actions:
-      - action: script.notify_everywhere
-        data:
-          message: Bilen er låst.
-          severity: 1
-      - action: automation.turn_off
-        target:
-          entity_id: automation.alert_car_unlocked
+#   - id: notify_car_locked
+#     alias: Notify car locked
+#     triggers:
+#       - trigger: state
+#         entity_id: binary_sensor.id_3_pro_locked
+#         to: "off"
+#     actions:
+#       - action: script.notify_everywhere
+#         data:
+#           message: Bilen er låst.
+#           severity: 1
+#       - action: automation.turn_off
+#         target:
+#           entity_id: automation.alert_car_unlocked

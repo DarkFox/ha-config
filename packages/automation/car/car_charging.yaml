@@ -58,7 +58,7 @@ automation:
       - parallel:
           - action: switch.turn_off
             target:
-              entity_id: switch.id_3_pro_charging
+              entity_id: switch.id_3_pro_start_stop_charging
           - action: script.notify_darkphone
             data:
               message: "Opladning er bliver stoppet. Den starter igen kl. {{ (states('input_datetime.car_start_charging_at') or '').split(':')[0:-1] | join(':') }}."
@@ -80,7 +80,7 @@ automation:
               entity_id: input_boolean.car_delayed_charging
           - action: switch.turn_on
             target:
-              entity_id: switch.id_3_pro_charging
+              entity_id: switch.id_3_pro_start_stop_charging
           - action: script.notify_darkphone
             data:
               message: "Forsinket opladningstidspunkt er nået. Genstarter opladning."
@@ -89,9 +89,9 @@ automation:
     alias: Set Car Charging Started Time
     triggers:
       - trigger: state
-        entity_id: sensor.id_3_pro_plug_connection_state
-        from: "disconnected"
-        to: "connected"
+        entity_id: sensor.id_3_pro_charging_connector_state
+        from: "off"
+        to: "on"
     actions:
       - alias: "Set Car Charging Started to now"
         action: input_text.set_value
@@ -104,7 +104,7 @@ automation:
     alias: Set Car Charging Type
     triggers:
       - trigger: state
-        entity_id: sensor.id_3_pro_charge_type
+        entity_id: sensor.id_3_pro_charging_type
         from: "invalid"
         to:
           - ac
@@ -121,8 +121,8 @@ automation:
     alias: Clear Car Charging Started Time
     triggers:
       - trigger: state
-        entity_id: sensor.id_3_pro_plug_connection_state
-        to: "disconnected"
+        entity_id: sensor.id_3_pro_charging_connector_state
+        to: "off"
     actions:
       - alias: "Clear charge type"
         action: input_text.set_value
@@ -156,7 +156,7 @@ automation:
       - action: script.notify_darkphone
         data:
           message: >
-            Bilen lader op fra {{ states('sensor.id_3_pro_state_of_charge') }}% til {{ states('sensor.id_3_pro_target_state_of_charge') }}%.
+            Bilen lader op fra {{ states('sensor.id_3_pro_soc_primary')|int }}% til {{ states('number.id_3_pro_charging_target_level')|int }}%.
 
             Færdig ca. kl. {{ states('sensor.id_3_pro_charging_complete_at')|as_timestamp|timestamp_custom('%H:%M', True) }}.
 
@@ -175,7 +175,7 @@ automation:
       - action: script.notify_darkphone
         data:
           message: >-
-            Bilen er ladt op til {{ states('sensor.id_3_pro_state_of_charge') }}/{{ states('sensor.id_3_pro_target_state_of_charge') }}%.
+            Bilen er ladt op til {{ states('sensor.id_3_pro_soc_primary')|int }} af {{ states('number.id_3_pro_charging_target_level')|int }}%.
             Færdig om {{ states('sensor.id_3_pro_remaining_charging_time') }} minutter.
 
   - alias: notify_car_charged
@@ -194,4 +194,4 @@ automation:
     actions:
       - action: script.notify_darkphone
         data:
-          message: "Oplading afsluttet. Bilen er ladt op til {{ states('sensor.id_3_pro_state_of_charge') }}%."
+          message: "Oplading afsluttet. Bilen er ladt op til {{ states('sensor.id_3_pro_soc_primary')|int }}%."
