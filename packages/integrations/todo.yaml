@@ -1,43 +1,41 @@
-empty_todo_list:
-  alias: Empty Todo List
-  description: The todo list does not have a native clear function, so we need to remove each item one by one
-  fields:
-    entity_id:
-      description: The entity ID of the todo list to clear
-      example: todo.shopping_list
-  sequence:
-    - action: todo.get_items
-      response_variable: todo_items
-      target:
-        entity_id: "{{ entity_id }}"
-    - repeat:
-        for_each: "{{ todo_items[entity_id] }}"
-        sequence:
-          - action: todo.remove_item
-            target:
-              entity_id: "{{ entity_id }}"
-            data:
-              item: "{{ repeat.item.uid }}"
+script:
+  empty_todo_list:
+    alias: Empty Todo List
+    description: The todo list does not have a native clear function, so we need to remove each item one by one
+    fields:
+      entity_id:
+        description: The entity ID of the todo list to clear
+        example: todo.shopping_list
+    sequence:
+      - action: todo.get_items
+        response_variable: todo_items
+        target:
+          entity_id: "{{ entity_id }}"
+      - repeat:
+          for_each: "{{ (todo_items.values() | first).get('items', []) }}"
+          sequence:
+            - action: todo.remove_item
+              target:
+                entity_id: "{{ entity_id }}"
+              data:
+                item: "{{ repeat.item.uid }}"
 
-populate_todo_list:
-  alias: Populate Todo List
-  description: The todo list only takes one item at a time. This takes a list of items and adds them one by one
-  fields:
-    entity_id:
-      description: The entity ID of the todo list to populate
-      example: todo.shopping_list
-    items:
-      description: The list of items to add to the todo list
-      example: '["Bread", "Milk", "Eggs"]'
-  sequence:
-    - repeat:
-        for_each: "{{ items }}"
-        sequence:
-          - condition:
-              condition: template
-              value_template: "{{ repeat.item is string and repeat.item | length > 0 }}"
-          - action: todo.add_item
-            target:
-              entity_id: "{{ entity_id }}"
-            data:
-              item: "{{ repeat.item }}"
+  populate_todo_list:
+    alias: Populate Todo List
+    description: The todo list only takes one item at a time. This takes a list of items and adds them one by one
+    fields:
+      entity_id:
+        description: The entity ID of the todo list to populate
+        example: todo.shopping_list
+      items:
+        description: The list of items to add to the todo list
+        example: '["Bread", "Milk", "Eggs"]'
+    sequence:
+      - repeat:
+          for_each: "{{ items | reject('undefined') | reject('equalto', false) | reject('equalto', '') | list }}"
+          sequence:
+            - action: todo.add_item
+              target:
+                entity_id: "{{ entity_id }}"
+              data:
+                item: "{{ repeat.item }}"
