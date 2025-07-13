@@ -257,7 +257,7 @@ cards:
     filter:
       template: |
         {% from 'utils.jinja' import slugify, format_number, sort_list_by_attr %}
-        {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='game') | list %}
+        {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
         {% set ns = namespace(
           ret=[],
           options=[],
@@ -269,7 +269,7 @@ cards:
           {% set ns.ret = ns.ret + [{
             "type": "custom:button-card",
             "name": bid.name,
-            "label": bid.run or '',
+            "label": bid.run+': '+bid.description if bid.run else bid.description,
             "icon": ("mdi:bullseye" if bid.amount < bid.goal else "mdi:bullseye-arrow"),
             "state_display": "$"+ format_number(bid.goal, 2, true),
             "custom_fields": {
@@ -283,7 +283,7 @@ cards:
                 {"background-color": "var(--input-fill-color)"}
               ],
               "grid": [
-                {"grid-template-areas": '"i s" "i n" "i l" "percent percent"'},
+                {"grid-template-areas": '"i s" "i n" "percent percent" "l l"'},
               ],
               "icon": [
                 {"color": ("var(--label-badge-yellow)" if bid.percent < 100 else "var(--label-badge-green)")}
@@ -293,6 +293,9 @@ cards:
                 {"white-space": "normal"}
               ],
               "label": [
+                {"margin-top": "1em"},
+                {"margin-left": "0.2em"},
+                {"margin-right": "0.2em"},
                 {"text-overflow": "unset"},
                 {"white-space": "normal"}
               ],
@@ -442,7 +445,7 @@ cards:
         {% endfor %}
 
         {{ 
-          sort_list_by_attr(ns.ret, 'label', games, True) if ns.ret | length > 0 else [{
+          sort_list_by_attr(ns.ret, 'run', games, True) if ns.ret | length > 0 else [{
             "type": "custom:button-card",
             "name": "No challenges or bid wars right now",
           }]

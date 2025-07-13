@@ -312,20 +312,20 @@ template:
       - name: GDQ Bids
         unique_id: 38be3c41-5735-4e7d-9f77-7d134a119bd4
         state: >-
-          {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='game') | list %}
-          {{ trigger.event.data.bids | selectattr('run', 'in', games) | list | length }}
+          {% set runs = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
+          {{ trigger.event.data.bids | selectattr('run', 'in', runs) | list | length }}
         attributes:
           last_updated: "{{ now().isoformat() }}"
           challenges: >-
             {% from 'utils.jinja' import sort_list_by_attr %}
-            {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='game') | list %}
-            {% set challenges = trigger.event.data.bids | selectattr('goal', 'defined') | selectattr('run', 'in', games) | list %}
-            {{ sort_list_by_attr(challenges, 'run', games) }}
+            {% set runs = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
+            {% set challenges = trigger.event.data.bids | selectattr('goal', 'defined') | selectattr('run', 'in', runs) | list %}
+            {{ sort_list_by_attr(challenges, 'run', runs) }}
           bid_wars: >-
             {% from 'utils.jinja' import sort_list_by_attr %}
-            {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='game') | list %}
-            {% set bid_wars = trigger.event.data.bids | selectattr('options', 'defined') | selectattr('run', 'in', games) | list %}
-            {{ sort_list_by_attr(bid_wars, 'run', games) }}
+            {% set runs = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
+            {% set bid_wars = trigger.event.data.bids | selectattr('options', 'defined') | selectattr('run', 'in', runs) | list %}
+            {{ sort_list_by_attr(bid_wars, 'run', runs) }}
 
   - trigger:
       trigger: event
@@ -339,20 +339,60 @@ template:
           {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='game') | list %}
           {% set games_regex = regex_from_list(games) %}
           {% set game_milestones = trigger.event.data.milestones | selectattr('name', 'match', games_regex) | list %}
-          {% set non_game_milestones = trigger.event.data.milestones | rejectattr('name', 'match', games_regex) | selectattr('percent', 'lt', 110.0) | list %}
+          {% set non_game_milestones = trigger.event.data.milestones | rejectattr('name', 'match', games_regex) | selectattr('percent', 'lt', 101) | list %}
           {% set current_milestones = game_milestones + non_game_milestones %}
           {{ current_milestones | length }}
         attributes:
           last_updated: "{{ now().isoformat() }}"
           milestones: >-
             {% from 'utils.jinja' import sort_list_by_attr %}
-            {% from 'gdq.jinja' import regex_from_list %}
-            {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='game') | list %}
-            {% set games_regex = regex_from_list(games) %}
-            {% set game_milestones = trigger.event.data.milestones | selectattr('name', 'match', games_regex) | list %}
-            {% set non_game_milestones = trigger.event.data.milestones | rejectattr('name', 'match', games_regex) | selectattr('percent', 'lt', 110.0) | list %}
-            {% set current_milestones = game_milestones + non_game_milestones %}
-            {{ current_milestones }}
+
+            {# ──────────────────────────────────────────────
+              1. Build   game → summary   lookup table
+              ────────────────────────────────────────────── #}
+            {% set events  = state_attr('binary_sensor.gdq_calendar', 'events') | default([], true) %}
+            {% set lookup  = namespace(map={}) %}
+            {% for ev in events %}
+              {% if ev.game is defined and ev.summary is defined %}
+                {# Store game names in lower-case so matching is case-insensitive #}
+                {% set lookup.map = lookup.map | combine({ (ev.game | lower): ev.summary }) %}
+              {% endif %}
+            {% endfor %}
+
+            {# ──────────────────────────────────────────────
+              2.  Walk through the milestones once
+                  - decide whether it is a game milestone
+                  - copy + enrich if needed
+                  - decide if it should be kept
+              ────────────────────────────────────────────── #}
+            {% set milestones = trigger.event.data.milestones | default([], true) | list %}
+            {% set ns = namespace(result=[]) %}
+
+            {% for ms in milestones %}
+              {# Find first game title that appears anywhere in the milestone name #}
+              {% set name_l = ms.name | lower %}
+              {% set mg = namespace(matched_game = none) %}
+              {% for g in lookup.map.keys() %}
+                {% if g in name_l %}
+                  {% set mg.matched_game = g %}
+                  {% break %}            {# we've found a match; no need to check further #}
+                {% endif %}
+              {% endfor %}
+
+              {# ── Build the milestone object we'll keep ── #}
+              {% if mg.matched_game %}
+                  {# It's a game milestone: inject run = summary #}
+                  {% set enriched = ms | combine({'run': lookup.map[mg.matched_game]}) %}
+                  {% set ns.result = ns.result + [enriched] %}
+              {% else %}
+                  {# Non-game milestone: keep only if percent < 101 #}
+                  {% if ms.percent is not defined or ms.percent < 101 %}
+                    {% set ns.result = ns.result + [ms] %}
+                  {% endif %}
+              {% endif %}
+            {% endfor %}
+
+            {{ ns.result }}
 
   - trigger:
       trigger: event
