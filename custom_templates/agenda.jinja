@@ -22,6 +22,37 @@
     {%- endif -%}
 {%- endmacro -%}
 
+{%- macro event_get_attr(event, regex_dict) -%}
+    {#-
+    Returns the first non-empty string from the event attributes that matches the regex provided in regex_dict.
+    Args:
+        event (dict): The event to check.
+        regex_dict (str | dict): Either a string with the regex to match against, or a dictionary with the following keys:
+            - regex (str): The regex to match against.
+            - fields (list): A list of fields to check in the event. If not provided, it will only check 'description'
+    Returns:
+        str: The first non-empty string that matches the regex.
+    -#}
+    {% set ns = namespace(
+        value='',
+        regex=regex_dict,
+        fields=['description']
+    ) %}
+    {%- if regex_dict is mapping -%}
+        {%- set ns.regex = regex_dict.get('regex', '') -%}
+        {%- set ns.fields = regex_dict.get('fields', ns.fields) -%}
+    {%- endif -%}
+    {%- for field in ns.fields -%}
+        {%- set value = first_non_empty_string(
+                        (event.get(field,'') or '')
+                        | regex_findall(ns.regex, true)) -%}
+        {%- if value is string and value != '' -%}
+            {%- set ns.value = value -%}
+            {%- break -%}
+        {%- endif -%}
+    {%- endfor -%}
+    {{ ns.value }}
+{%- endmacro -%}
 
 {%- macro event_match(event, regex_dict) -%}
     {#-
@@ -33,7 +64,12 @@
             - negate (bool): If true, the function will return true if the regex does not match.
             - fields (list): A list of fields to check in the event. If not provided, it will check 'summary', 'description', and 'location'.
     -#}
-    {% set ns = namespace(match=false, regex=regex_dict, negate=false, fields=['summary', 'description', 'location']) %}
+    {% set ns = namespace(
+        match=false,
+        regex=regex_dict,
+        negate=false,
+        fields=['summary', 'description', 'location']
+    ) %}
     {%- if regex_dict is mapping -%}
         {%- set ns.regex = regex_dict.get('regex', '') -%}
         {%- set ns.negate = bool(regex_dict.get('negate', false), false) -%}
@@ -83,10 +119,7 @@
     {#----------- 2. Build extra text attributes ------------------#}
     {%- set ns = namespace(extracted = {}) -%}
     {%- for attr, pattern in attrs.items() -%}
-        {%- set value = first_non_empty_string(
-                        (event.get('description','') or '')
-                        | regex_findall(pattern, true)) -%}
-        {%- set ns.extracted = ns.extracted | combine({attr: value}) -%}
+        {%- set ns.extracted = ns.extracted | combine({attr: event_get_attr(event, pattern)}) -%}
     {%- endfor -%}
 
     {#----------- 3. Merge with event for bool checks -------------#}

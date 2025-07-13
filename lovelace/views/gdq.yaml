@@ -257,7 +257,7 @@ cards:
     filter:
       template: |
         {% from 'utils.jinja' import slugify, format_number, sort_list_by_attr %}
-        {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
+        {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='game') | list %}
         {% set ns = namespace(
           ret=[],
           options=[],
@@ -271,7 +271,7 @@ cards:
             "name": bid.name,
             "label": bid.run or '',
             "icon": ("mdi:bullseye" if bid.amount < bid.goal else "mdi:bullseye-arrow"),
-            "state_display": "$"+ format_number(bid.amount, 2, true) +" / $"+ format_number(bid.goal, 2, true),
+            "state_display": "$"+ format_number(bid.goal, 2, true),
             "custom_fields": {
               "percent": format_number(bid.percent, 1, true) + "%"
             },

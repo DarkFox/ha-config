@@ -166,7 +166,7 @@ template:
         watchlist: "todo.gdq_tags"
     sensor:
       - name: GDQ Tags Watchlist
-        unique_id: 05776a71-be3c-4cb4-80e2-fbc3418803ec
+        unique_id: 04d213d5-6705-467c-8bcc-00343cae4208
         state: >-
           {% from 'gdq.jinja' import get_todo_list_items %}
           {{ get_todo_list_items('todo.gdq_tags', trigger)|from_json| length }}
@@ -261,7 +261,7 @@ template:
         state: >-
           {% if is_state('sensor.gamesdonequick', 'streaming') %}
             {% set streaming_game = state_attr('sensor.gamesdonequick', 'game') %}
-            {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | selectattr('watch') | map(attribute='summary') | list %}
+            {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | selectattr('watch') | map(attribute='game') | list %}
             {% if streaming_game in games %}
               on
             {% else %}
@@ -312,18 +312,18 @@ template:
       - name: GDQ Bids
         unique_id: 38be3c41-5735-4e7d-9f77-7d134a119bd4
         state: >-
-          {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
+          {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='game') | list %}
           {{ trigger.event.data.bids | selectattr('run', 'in', games) | list | length }}
         attributes:
           last_updated: "{{ now().isoformat() }}"
           challenges: >-
             {% from 'utils.jinja' import sort_list_by_attr %}
-            {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
+            {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='game') | list %}
             {% set challenges = trigger.event.data.bids | selectattr('goal', 'defined') | selectattr('run', 'in', games) | list %}
             {{ sort_list_by_attr(challenges, 'run', games) }}
           bid_wars: >-
             {% from 'utils.jinja' import sort_list_by_attr %}
-            {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
+            {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='game') | list %}
             {% set bid_wars = trigger.event.data.bids | selectattr('options', 'defined') | selectattr('run', 'in', games) | list %}
             {{ sort_list_by_attr(bid_wars, 'run', games) }}
 
@@ -334,20 +334,25 @@ template:
       - name: GDQ Milestones
         unique_id: 2d6248da-86dc-4640-a0a5-d5ffadb20927
         state: >-
-          {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
-          {% set game_milestones = trigger.event.data.milestones | selectattr('run', 'in', games) | list %}
-          {% set non_game_milestones = trigger.event.data.milestones | selectattr('run', 'none') | list %}
+          {% from 'utils.jinja' import sort_list_by_attr %}
+          {% from 'gdq.jinja' import regex_from_list %}
+          {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='game') | list %}
+          {% set games_regex = regex_from_list(games) %}
+          {% set game_milestones = trigger.event.data.milestones | selectattr('name', 'match', games_regex) | list %}
+          {% set non_game_milestones = trigger.event.data.milestones | rejectattr('name', 'match', games_regex) | selectattr('percent', 'lt', 110.0) | list %}
           {% set current_milestones = game_milestones + non_game_milestones %}
-          {{ current_milestones| list | length }}
+          {{ current_milestones | length }}
         attributes:
           last_updated: "{{ now().isoformat() }}"
           milestones: >-
             {% from 'utils.jinja' import sort_list_by_attr %}
-            {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='summary') | list %}
-            {% set game_milestones = trigger.event.data.milestones | selectattr('run', 'in', games) | list %}
-            {% set non_game_milestones = trigger.event.data.milestones | selectattr('run', 'none') | list %}
+            {% from 'gdq.jinja' import regex_from_list %}
+            {% set games = state_attr('binary_sensor.gdq_calendar', 'events') | map(attribute='game') | list %}
+            {% set games_regex = regex_from_list(games) %}
+            {% set game_milestones = trigger.event.data.milestones | selectattr('name', 'match', games_regex) | list %}
+            {% set non_game_milestones = trigger.event.data.milestones | rejectattr('name', 'match', games_regex) | selectattr('percent', 'lt', 110.0) | list %}
             {% set current_milestones = game_milestones + non_game_milestones %}
-            {{ sort_list_by_attr(current_milestones, 'run', games, True) }}
+            {{ current_milestones }}
 
   - trigger:
       trigger: event
@@ -450,13 +455,6 @@ script:
           - action: script.run_pyscript
             data:
               action: pyscript.gdq_get_donation_stats
-      - parallel:
-          - action: script.run_pyscript
-            data:
-              action: pyscript.gdq_get_bids
-          - action: script.run_pyscript
-            data:
-              action: pyscript.gdq_get_milestones
 
 automation:
   - alias: "Toggle GDQ on event state"
@@ -596,6 +594,28 @@ automation:
                 watchlist: "{{ repeat.item }}"
                 todo_items: "{{ todo_items }}"
 
+  - alias: "Update GDQ Bids After Calendar Update"
+    id: 680e332d-e89a-4170-b2b3-e997cbd830d3
+    mode: single
+    triggers:
+      - trigger: event
+        event_type: gdq_calendar_updated
+    actions:
+      - action: script.run_pyscript
+        data:
+          action: pyscript.gdq_get_bids
+
+  - alias: "Update GDQ Milestones After Donation Stats"
+    id: bc6dbbf8-d7fd-44d6-921d-9e31b0564302
+    mode: single
+    triggers:
+      - trigger: event
+        event_type: gdq_donation_stats
+    actions:
+      - action: script.run_pyscript
+        data:
+          action: pyscript.gdq_get_milestones
+
   - id: update_gdq_calendar
     alias: Update GDQ Calendar
     mode: single
@@ -609,6 +629,16 @@ automation:
       days: 10
       regexes: "{{ states.sensor.calendar_regexes.attributes }}"
       attrs:
+        # Remove the "BONUS GAME X - " prefix from the game name if it exists.
+        # Example with separator: "BONUS GAME 4 - Mario Kart World"
+        # Example without separator: "Super Mario Odyssey"
+        game: >-
+          {{ 
+            {
+              'regex': '^(?:BONUS GAME \d+ - )?(.+)$',
+              'fields': ['summary']
+            }
+          }}
         category: "(.+) — .+ — .+"
         platform: ".+ — (.+) — .+"
         release_year: ".+ — .+ — (.+)"

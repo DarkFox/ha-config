@@ -268,7 +268,7 @@ async def gdq_get_bids():
 
 
 @service  # noqa: F821
-async def get_gdq_milestones():
+async def gdq_get_milestones():
     """yaml
     name: Get GDQ Milestones
     description: Get the current milestones from the GDQ tracker.
@@ -314,18 +314,11 @@ async def get_gdq_milestones():
             "id": string_to_slug(columns[0].text),
             "name": parse_text(columns[0].text),
             "link": url,
-            "run": None,
             "description": parse_text(columns[2].text),
             "amount": amount,
             "goal": parse_amount(columns[3].text),
             "percent": 0.0,
         }
-
-        if " - " in milestone["name"]:
-            milestone["run"] = milestone["name"].split(" - ")[0]
-            milestone["name"] = milestone["name"].replace(
-                milestone["run"] + " - ", ""
-            )
 
         milestone["percent"] = calc_percent(
             milestone["amount"], milestone["goal"]
