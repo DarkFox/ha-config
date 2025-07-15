@@ -36,8 +36,37 @@ script:
       - repeat:
           for_each: "{{ items | reject('undefined') | reject('equalto', false) | reject('equalto', '') | list }}"
           sequence:
-            - action: todo.add_item
-              target:
-                entity_id: "{{ entity_id }}"
-              data:
-                item: "{{ repeat.item }}"
+            - variables:
+                task: >-
+                  {{
+                    repeat.item if repeat.item is mapping
+                    else {"item": repeat.item|string|trim}
+                  }}
+            - choose:
+                - conditions: "{{ task.due_date | default(None) is not none }}"
+                  sequence:
+                    - action: todo.add_item
+                      target:
+                        entity_id: "{{ entity_id }}"
+                      data:
+                        item: "{{ task.item }}"
+                        description: "{{ task.description | default(None) }}"
+                        due_date: "{{ task.due_date | default(None) }}"
+
+                - conditions: "{{ task.due_datedatetime | default(None) is not none }}"
+                  sequence:
+                    - action: todo.add_item
+                      target:
+                        entity_id: "{{ entity_id }}"
+                      data:
+                        item: "{{ task.item }}"
+                        description: "{{ task.description | default(None) }}"
+                        due_datetime: "{{ task.due_datetime | default(None) }}"
+
+              default:
+                - action: todo.add_item
+                  target:
+                    entity_id: "{{ entity_id }}"
+                  data:
+                    item: "{{ task.item }}"
+                    description: "{{ task.description | default(None) }}"

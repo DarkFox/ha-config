@@ -126,3 +126,11 @@
         {{ started_str }}{{ startsFormatted.replace('-','') }}{{ ends_str }}{{ endsFormatted }}{{ est }}
     {%- endif -%}
 {%- endmacro -%}
+
+{%- macro cal_days_since(entity_id) -%}
+    {%- if has_value(entity_id) -%}
+        {%- set today = as_local(as_datetime(states('sensor.date'))).date() -%}
+        {%- set last = as_local(as_datetime(states(entity_id))).date() -%}
+        {{ (today - last).days }}
+    {%- endif -%}
+{%- endmacro -%}
