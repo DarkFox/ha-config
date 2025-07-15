@@ -1,3 +1,8 @@
+homeassistant:
+  customize:
+    climate.id_3_pro_start_stop_climatization:
+      optimistic: true
+
 script:
   id_3_pro_send_destinations:
     alias: ID.3 Pro Send Destinations
@@ -36,13 +41,90 @@ script:
       #   event_data:
       #     destinations: "{{ destinations }}"
 
+switch:
+  - platform: template
+    switches:
+      id_3_pro_climatisation:
+        friendly_name: ID.3 Pro Climatisation
+        unique_id: 89f42f3d-9563-474f-ac2e-933c3076723f
+        value_template: "{{ is_state('climate.id_3_pro_start_stop_climatization', 'on') }}"
+        icon_template: "{{ 'mdi:hvac' if is_state('climate.id_3_pro_start_stop_climatization', 'auto') else 'mdi:hvac-off' }}"
+        turn_on:
+          action: climate.set_hvac_mode
+          target:
+            entity_id: climate.id_3_pro_start_stop_climatization
+          data:
+            hvac_mode: auto
+        turn_off:
+          action: climate.set_hvac_mode
+          target:
+            entity_id: climate.id_3_pro_start_stop_climatization
+          data:
+            hvac_mode: "off"
+
 template:
+  - trigger:
+      - trigger: event
+        event_type: call_service
+        event_data:
+          domain: climate
+          service: set_hvac_mode
+          service_data:
+            entity_id: climate.id_3_pro_start_stop_climatization
+      - trigger: state
+        entity_id:
+          - climate.id_3_pro_start_stop_climatization
+          - binary_sensor.id_3_pro_connection_available
+    binary_sensor:
+      - name: "ID.3 Pro Climatisation Change Requested"
+        unique_id: d439488a-a255-462b-9859-fdc1232679ed
+        device_class: running
+        state: >-
+          {% if trigger.event is defined
+                and is_state('binary_sensor.id_3_pro_connection_available', 'on') %}
+            {{ not is_state('climate.id_3_pro_start_stop_climatization', trigger.event.data.get('hvac_mode')) }}
+          {% else %}
+            false
+          {% endif %}
+
+  - trigger:
+      - trigger: event
+        event_type: call_service
+        event_data:
+          domain: switch
+          service_data:
+            entity_id: switch.id_3_pro_start_stop_charging
+      - trigger: state
+        entity_id:
+          - switch.id_3_pro_start_stop_charging
+          - sensor.id_3_pro_charging_connector_state
+          - binary_sensor.id_3_pro_connection_available
+    binary_sensor:
+      - name: "ID.3 Pro Charging Change Requested"
+        unique_id: 0c1f8b2d-4a5e-4f6b-9c7d-8f1e2c3d4e5f
+        device_class: running
+        state: >-
+          {% if trigger.event is defined
+                and trigger.event.data.service in ['turn_on', 'turn_off']
+                and is_state('binary_sensor.id_3_pro_connection_available', 'on')
+                and is_state('sensor.id_3_pro_charging_connector_state', 'connected') %}
+            {{ not is_state('switch.id_3_pro_start_stop_charging', trigger.event.data.service|replace('turn_', '')) }}
+          {% else %}
+            false
+          {% endif %}
+
   - binary_sensor:
+      - name: "ID.3 Pro Connection Available"
+        unique_id: 447b80f0-fe0d-4ebd-ac53-d8a2f3f019cb
+        device_class: connectivity
+        state: "{{ states('sensor.id_3_pro_connection_state') in ['online', 'reachable'] }}"
+
       - name: "ID.3 Pro Klimatisering"
         unique_id: 3d153849-757e-4062-96b8-54aba1bfa44d
         state: "{{ is_state('climate.id_3_pro_start_stop_climatization', 'auto') }}"
         attributes:
           icon: "{{ 'mdi:hvac' if is_state('climate.id_3_pro_start_stop_climatization', 'auto') else 'mdi:hvac-off' }}"
+
       - name: ID.3 Pro Is Charging
         unique_id: e06d2312-821d-4bb9-8f66-78efa1bd6164
         state: "{{ is_state('sensor.id_3_pro_charging_state', 'charging') }}"
@@ -55,7 +137,10 @@ template:
         icon: mdi:clock-end
         unit_of_measurement: "min"
         device_class: duration
-        state: "{{ states('sensor.id_3_pro_climatization_estimated_date_reached') | as_timestamp | int - as_timestamp(now()) | int }}"
+        state: >-
+          {%- set time = states('sensor.time') -%}
+          {%- set remaining = states('sensor.id_3_pro_climatization_estimated_date_reached') | as_timestamp | int - as_timestamp(now()) | int -%}
+          {{ (remaining / 60)|int if remaining > 0 else 0 }}
 
       - name: "ID.3 Pro Charging Time Remaining"
         unique_id: e9a7814e-c7d9-4fac-a56d-70b73b895dde
@@ -101,6 +186,32 @@ automation:
         entity_id: sensor.darkphone_last_notification
         state: "com.volkswagen.weconnect"
     actions:
+      - action: button.press
+        target:
+          entity_id: button.id_3_pro_wakeup
+
+  - alias: "ID.3 Force Update During Climatisation Request"
+    id: 6045309c-38ec-4bd9-828b-c812ff88b32e
+    initial_state: false
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id:
+          - binary_sensor.id_3_pro_climatisation_change_requested
+          - binary_sensor.id_3_pro_charging_change_requested
+        to: "on"
+    conditions:
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: binary_sensor.id_3_pro_climatisation_change_requested
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.id_3_pro_charging_change_requested
+            state: "on"
+    action:
+      - delay:
+          seconds: 10
       - action: button.press
         target:
           entity_id: button.id_3_pro_wakeup
