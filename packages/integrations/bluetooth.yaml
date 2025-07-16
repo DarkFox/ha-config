@@ -1,0 +1,18 @@
+template:
+  - triggers:
+      - trigger: "event"
+        event_type: "android.intent_received"
+        event_data:
+          android.bluetooth.device.extra.DEVICE: "XX:XX:XX:XX:54:F6"
+          intent: "android.bluetooth.device.action.BATTERY_LEVEL_CHANGED"
+    conditions:
+      - condition: "template"
+        value_template: >-
+          {{ trigger.event['data']['android.bluetooth.device.extra.BATTERY_LEVEL'] != '-1' }}
+    sensor:
+      - name: "Darkphones Battery Level"
+        unique_id: ca26e13e-8c56-4f7b-bdf3-c794ca6045bd
+        device_class: "battery"
+        unit_of_measurement: "%"
+        state_class: "measurement"
+        state: "{{ trigger.event['data']['android.bluetooth.device.extra.BATTERY_LEVEL'] }}"
