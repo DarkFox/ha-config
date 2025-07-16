@@ -128,9 +128,9 @@ template:
       - name: Commute Status Car
         unique_id: 5a3e3797-bbe0-4f6a-b5fa-54c452cafe32
         state: >-
-          {%- if not has_value('sensor.bil_destination_duration_in_traffic') or states('sensor.bil_destination_duration_in_traffic')|int(0) > 45 -%}
+          {%- if not has_value('sensor.rook_destination_duration_in_traffic') or states('sensor.rook_destination_duration_in_traffic')|int(0) > 45 -%}
             bad
-          {%- elif states('sensor.bil_destination_duration_in_traffic')|int(0) > 25 -%}
+          {%- elif states('sensor.rook_destination_duration_in_traffic')|int(0) > 25 -%}
             ok
           {%- else -%}
             good
@@ -165,7 +165,7 @@ template:
         device_class: timestamp
         state: >-
           {% set driving = is_state_attr('sensor.upcoming_travel_location', 'mode', 'driving') %}
-          {% set travel_time_sensor = 'sensor.bil_destination_duration_in_traffic' if driving else 'sensor.rook_til_destination_transit' %}
+          {% set travel_time_sensor = 'sensor.rook_destination_duration_in_traffic' if driving else 'sensor.rook_til_destination_transit' %}
           {% set padding = 15 if driving else 5 %}
           {{
             ((
@@ -262,7 +262,7 @@ automation:
             sequence:
               - action: homeassistant.update_entity
                 target:
-                  entity_id: sensor.bil_destination_duration_in_traffic
+                  entity_id: sensor.rook_destination_duration_in_traffic
           - conditions: |-
               {{ is_state_attr('sensor.upcoming_travel_location', 'mode', 'transit') }}
             sequence:
@@ -291,7 +291,7 @@ automation:
             sequence:
               - action: homeassistant.update_entity
                 target:
-                  entity_id: sensor.bil_destination_duration_in_traffic
+                  entity_id: sensor.rook_destination_duration_in_traffic
           - conditions: |-
               {{ is_state_attr('sensor.upcoming_travel_location', 'mode', 'transit') }}
             sequence:
