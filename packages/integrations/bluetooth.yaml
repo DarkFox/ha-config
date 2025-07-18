@@ -1,3 +1,11 @@
+homeassistant:
+  customize:
+    defaults.bt_battery: &sensor_battery
+      device_class: battery
+      state_class: measurement
+      unit_of_measurement: "%"
+      state: "{{ trigger.event['data']['android.bluetooth.device.extra.BATTERY_LEVEL'] }}"
+
 template:
   - triggers:
       - trigger: "event"
@@ -5,14 +13,47 @@ template:
         event_data:
           android.bluetooth.device.extra.DEVICE: "XX:XX:XX:XX:54:F6"
           intent: "android.bluetooth.device.action.BATTERY_LEVEL_CHANGED"
-    conditions:
+    conditions: &cond_battery_lvl
       - condition: "template"
         value_template: >-
           {{ trigger.event['data']['android.bluetooth.device.extra.BATTERY_LEVEL'] != '-1' }}
     sensor:
       - name: "Darkphones Battery Level"
         unique_id: ca26e13e-8c56-4f7b-bdf3-c794ca6045bd
-        device_class: "battery"
-        unit_of_measurement: "%"
-        state_class: "measurement"
-        state: "{{ trigger.event['data']['android.bluetooth.device.extra.BATTERY_LEVEL'] }}"
+        <<: *sensor_battery
+
+  - triggers:
+      - trigger: "event"
+        event_type: "android.intent_received"
+        event_data:
+          android.bluetooth.device.extra.DEVICE: "XX:XX:XX:XX:CE:EB"
+          intent: "android.bluetooth.device.action.BATTERY_LEVEL_CHANGED"
+    conditions: *cond_battery_lvl
+    sensor:
+      - name: "MusiCozy Battery Level"
+        unique_id: 4de18750-a4a9-447a-90ef-b34af246516a
+        <<: *sensor_battery
+
+  - triggers:
+      - trigger: "event"
+        event_type: "android.intent_received"
+        event_data:
+          android.bluetooth.device.extra.DEVICE: "XX:XX:XX:XX:26:2E"
+          intent: "android.bluetooth.device.action.BATTERY_LEVEL_CHANGED"
+    conditions: *cond_battery_lvl
+    sensor:
+      - name: "DarkBuds Battery Level"
+        unique_id: 2a6d1d46-430d-43de-a930-56118fb7e856
+        <<: *sensor_battery
+
+  - triggers:
+      - trigger: "event"
+        event_type: "android.intent_received"
+        event_data:
+          android.bluetooth.device.extra.DEVICE: "XX:XX:XX:XX:0E:83"
+          intent: "android.bluetooth.device.action.BATTERY_LEVEL_CHANGED"
+    conditions: *cond_battery_lvl
+    sensor:
+      - name: "DarkSound Battery Level"
+        unique_id: 7799cae4-0e55-4086-94ac-6e88c3f48e03
+        <<: *sensor_battery
