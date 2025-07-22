@@ -144,22 +144,15 @@ template:
 
       - name: "ID.3 Pro Charging Time Remaining"
         unique_id: e9a7814e-c7d9-4fac-a56d-70b73b895dde
-        state: "{{ (timedelta(minutes=states('sensor.id_3_pro_remaining_charging_time')|int)|string)[:-3] }}"
-        attributes:
-          icon: mdi:clock-end
-
-      - name: ID.3 Pro Charging Complete At
-        unique_id: 385fb3fc-61bf-41a8-a7c0-3249fc16fd7c
+        icon: mdi:clock-end
+        unit_of_measurement: "min"
+        device_class: duration
         state: >-
-          {%- if is_state('binary_sensor.id_3_pro_is_charging', 'on') -%}
-            {%- set end_time = (states('sensor.id_3_pro_remaining_charging_time')|int*60) + (as_timestamp(now())|int) -%}
-            {{ end_time | timestamp_local }}
-          {%- else -%}
-            unknown
-          {%- endif -%}
-        attributes:
-          icon: mdi:clock-end
-        device_class: timestamp
+          {%- set time = states('sensor.time') -%}
+          {% set est_chrg = states('sensor.id_3_pro_charging_estimated_date_reached')|as_timestamp %}
+          {% set now = now()|as_timestamp %}
+          {% set remaining = (est_chrg - now)|int %}
+          {{ (remaining / 60)|int if remaining > 0 else 0 }}
 
   - trigger:
       - trigger: event
