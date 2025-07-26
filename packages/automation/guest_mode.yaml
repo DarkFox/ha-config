@@ -4,44 +4,60 @@ input_boolean:
     icon: mdi:account-multiple
 
 automation:
-  - id: guest_mode_on
-    alias: Guest Mode On
+  - alias: Guests Event
+    id: d1738a9b-6825-4159-8dcc-dabb41464335
+    initial_state: true
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.guests_event
+        to:
+          - "on"
+          - "off"
+    actions:
+      - action: "input_boolean.turn_{{ trigger.to_state.state }}"
+        target:
+          entity_id: input_boolean.guests
+
+  - alias: Guests Mode On
+    id: 934d6298-ba45-4126-bd6c-65f85c928192
     initial_state: true
     triggers:
       - trigger: state
         entity_id: input_boolean.guests
         to: "on"
     actions:
-      - action: input_boolean.turn_on
-        target:
-          entity_id:
-            - input_boolean.bathroom_separate_light_profile
-            - input_boolean.bathroom_activity_override
-            - input_boolean.bedroom_separate_light_profile
-            - input_boolean.office_separate_light_profile
-            - input_boolean.workshop_separate_light_profile
-      - action: input_boolean.turn_off
-        target:
-          entity_id:
-            - switch.living_room_curtain_automations
+      - parallel:
+          - action: homeassistant.turn_on
+            target:
+              entity_id:
+                - input_boolean.bathroom_separate_light_profile
+                - input_boolean.bathroom_activity_override
+                - input_boolean.bedroom_separate_light_profile
+                - input_boolean.office_separate_light_profile
+                - input_boolean.workshop_separate_light_profile
+          - action: homeassistant.turn_off
+            target:
+              entity_id:
+                - switch.living_room_curtain_automations
 
-  - id: guest_mode_off
-    alias: Guest Mode Off
+  - alias: Guests Mode Off
+    id: 31e7c655-2b98-440d-9f0e-22121ebf901f
     initial_state: true
     triggers:
       - trigger: state
         entity_id: input_boolean.guests
         to: "off"
     actions:
-      - action: input_boolean.turn_off
-        target:
-          entity_id:
-            - input_boolean.bathroom_separate_light_profile
-            - input_boolean.bathroom_activity_override
-            - input_boolean.bedroom_separate_light_profile
-            - input_boolean.office_separate_light_profile
-            - input_boolean.workshop_separate_light_profile
-      - action: input_boolean.turn_on
-        target:
-          entity_id:
-            - switch.living_room_curtain_automations
+      - parallel:
+          - action: homeassistant.turn_off
+            target:
+              entity_id:
+                - input_boolean.bathroom_separate_light_profile
+                - input_boolean.bathroom_activity_override
+                - input_boolean.bedroom_separate_light_profile
+                - input_boolean.office_separate_light_profile
+                - input_boolean.workshop_separate_light_profile
+          - action: homeassistant.turn_on
+            target:
+              entity_id:
+                - switch.living_room_curtain_automations

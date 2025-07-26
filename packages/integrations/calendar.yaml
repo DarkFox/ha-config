@@ -371,6 +371,21 @@ template:
             {%- set time = trigger.event.data.get('time') -%}
             {{ agenda(events, time) | from_json }}
 
+      - name: Guests Event
+        unique_id: 0a831926-75a2-485f-89e7-f5c6f0256d60
+        device_class: presence
+        state: >-
+          {%- set current = state_attr('binary_sensor.personlig_kalender', 'current') -%}
+          {%- set ns = namespace(ret=false) -%}
+
+          {%- if current and current is list -%}
+            {%- for event in current if 'guests' in event and event.guests -%}
+              {%- set ns.ret = true -%}
+              {%- break -%}
+            {%- endfor -%}
+          {%- endif -%}
+          {{ ns.ret }}
+
   - sensor:
       - name: Calendar Regexes
         unique_id: 27781f7b-68e2-4792-b662-12e48fb6ae62
@@ -390,6 +405,7 @@ template:
           transit: >-
             \b(?:tog|rail|bus)\b|(?:[#([](?:tog|rail|bus)[)\]])
           routine: "(Opstartstid|Frokost|Aftensmad|Drift statusmøde|Overleveringsmøde|Tavlemøde)"
+          guests: "#(?:guests|gæster)"
 
       - name: Full Agenda
         unique_id: 8abe262f-996a-46c0-bcba-c531dfa3580b
@@ -587,6 +603,7 @@ automation:
         travel: "{{ [regexes.transit, regexes.bil] }}"
         bil: "{{ [regexes.bil] }}"
         transit: "{{ [regexes.transit] }}"
+        guests: "{{ [regexes.guests] }}"
         wake: "{{ [{'negate': true, 'regex': '.*(#nowake).*'}] }}"
         routine: "{{ [regexes.routine] }}"
     actions:
