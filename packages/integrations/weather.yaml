@@ -71,6 +71,18 @@ template:
           min_temperature: "{{ trigger.event.data.forecast[:16] | map(attribute='temperature') | list | min }}"
           max_temperature: "{{ trigger.event.data.forecast[:16] | map(attribute='temperature') | list | max }}"
           forecast: "{{ trigger.event.data.forecast }}"
+      - name: Max UV Index
+        unique_id: 04883d49-b98e-40fe-8b9d-ac1a395eb2b6
+        state: "{{ trigger.event.data.forecast[:16] | map(attribute='uv_index') | list | max }}"
+        icon: mdi:weather-sunny-alert
+        attributes:
+          peak_time: >-
+            {% set peak = trigger.event.data.forecast[:16] | max(attribute='uv_index') %}
+            {% if peak %}
+              {{ peak.datetime|as_timestamp | timestamp_custom('%H:%M', true) }}
+            {% else %}
+              {{ None }}
+            {% endif %}
 
   - binary_sensor:
       - name: Sun Rising
