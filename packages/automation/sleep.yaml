@@ -21,6 +21,11 @@ input_select:
       - snoozing
       - waking
 
+input_boolean:
+  strict_bedtime:
+    name: Strict Bedtime
+    icon: mdi:bed-clock
+
 template:
   - sensor:
       - name: Next Wake Event
@@ -607,6 +612,50 @@ automation:
   # ACTIONS START HERE #
   ######################
 
+  - alias: winddown_action
+    id: 32b08820-d50d-4a06-a0a6-7678e16a0112
+    initial_state: true
+    triggers:
+      trigger: numeric_state
+      entity_id: sensor.minutes_to_bedtime
+      below: 31
+    conditions:
+      - condition: state
+        entity_id: input_select.sleep_state
+        state: awake
+    actions:
+      - action: notify.telegram_darkfox
+        data:
+          message: >-
+            Det er snart sengetid!
+            Du har {{ states('sensor.minutes_to_bedtime') }} minutter til at afslutte hvad du laver.
+            Alarmen ringer kl. {{ states('sensor.wake_up_time_clock') }}.
+
+  - alias: winddown_action_2
+    id: 27d962dd-56b7-4bc6-a857-c562a6eaca63
+    initial_state: true
+    triggers:
+      trigger: numeric_state
+      entity_id: sensor.minutes_to_bedtime
+      below: 16
+    conditions:
+      - condition: state
+        entity_id: input_select.sleep_state
+        state: awake
+    actions:
+      - parallel:
+          - action: script.notify_text
+            data:
+              message_title: Det er snart sengetid!
+              message: >-
+                Du har kun {{ states('sensor.minutes_to_bedtime') }} minutter til at afslutte hvad du laver.
+                Alarmen ringer kl. {{ states('sensor.wake_up_time_clock') }}.
+          - event: set_light_profile
+            event_data:
+              room: bedroom
+              profile: Ambient
+              transition_time: 900
+
   - alias: bedtime_action
     id: bedtime_action
     initial_state: true
@@ -615,14 +664,107 @@ automation:
       entity_id: input_select.sleep_state
       to: "bedtime"
     actions:
-      - action: notify.telegram_darkfox
+      - action: script.notify_text
         data:
-          message: "Sengetid! Alarm kl. {{ states('sensor.wake_up_time_clock') }}"
+          message_title: Sengetid!
+          message: >-
+            Tid til at gå i gang med sengetidsrutinen!
+            Alarm kl. {{ states('sensor.wake_up_time_clock') }}
       - event: set_light_profile
         event_data:
           room: bedroom
           profile: Ambient
           transition_time: 300
+
+  - alias: past_bedtime_action
+    id: 4c56b511-63c9-4ee3-b1e9-3ceddebd6995
+    initial_state: true
+    triggers:
+      trigger: numeric_state
+      entity_id: sensor.minutes_to_bedtime
+      below: -15
+    conditions:
+      - condition: state
+        entity_id: input_select.sleep_state
+        state: bedtime
+      - condition: state
+        entity_id: binary_sensor.kitchen_active
+        state: "off"
+      - condition: state
+        entity_id: binary_sensor.bathroom_active
+        state: "off"
+      - condition: state
+        entity_id: binary_sensor.sovevarelse_active
+        state: "off"
+    actions:
+      - action: script.notify_text
+        data:
+          message_title: Du er for sent i seng!
+          message: >-
+            Du er for sent i seng, det er nu {{ states('sensor.minutes_to_bedtime') }} minutter siden du skulle være gået i gang med sengetidsrutinen.
+            Alarmen ringer kl. {{ states('sensor.wake_up_time_clock') }}.
+      - event: set_light_profile
+        event_data:
+          room: bedroom
+          profile: Night
+          transition_time: 120
+      - action: script.pause_all_media
+      - condition: state
+        entity_id: input_boolean.strict_bedtime
+        state: "on"
+      - action: script.notify_text
+        data:
+          message_title: Streng Sengetid
+          message: >-
+            Streng sengetid er slået til, enheder slukkes automatisk om 15 minutter.
+
+  - alias: way_past_bedtime_action
+    id: 63924853-ef16-4329-9706-da461362527d
+    initial_state: true
+    triggers:
+      trigger: numeric_state
+      entity_id: sensor.minutes_to_bedtime
+      below: -30
+    conditions:
+      - condition: state
+        entity_id: input_select.sleep_state
+        state: bedtime
+      - condition: state
+        entity_id: binary_sensor.kitchen_active
+        state: "off"
+      - condition: state
+        entity_id: binary_sensor.bathroom_active
+        state: "off"
+      - condition: state
+        entity_id: binary_sensor.sovevarelse_active
+        state: "off"
+    actions:
+      - parallel:
+          - action: script.notify_text
+            data:
+              message_title: Du er meget for sent i seng!
+              message: >-
+                Du er meget for sent i seng, det er nu {{ states('sensor.minutes_to_bedtime') }} minutter siden du skulle være gået i gang med sengetidsrutinen.
+                Alarmen ringer kl. {{ states('sensor.wake_up_time_clock') }}.
+          - event: set_light_profile
+            event_data:
+              room: bedroom
+              profile: Night
+              transition_time: 120
+          - action: script.pause_all_media
+          - condition: state
+            entity_id: input_boolean.strict_bedtime
+            state: "on"
+          - action: script.notify_text
+            data:
+              message_title: Streng Sengetid
+              message: >-
+                Streng sengetid er slået til, enheder slukkes automatisk.
+          - action: home_assistant.turn_off
+            target:
+              entity_id:
+                - switch.stue_tv
+                - switch.rook_pc
 
   - alias: in_bed_action
     id: in_bed_action
