@@ -52,7 +52,7 @@ template:
           {# ---------------- constants ---------------- #}
           {% set HIT_START   = 160  %}   {# ≈ 10° east of due south #}
           {% set HIT_END     = 320  %}   {# ≈ north-north-west     #}
-          {% set ELEV_ABOVE  = 42   %}   {# Elevation above which the sun is shaded from the glass by the balcony above #}
+          {% set ELEV_ABOVE  = 30   %}   {# Elevation above which the sun is shaded from the glass by the balcony above #}
           {% set azimuth  = states('sensor.sun_azimuth')|float(0) %}
           {% set elevation = states('sensor.sun_elevation')|float(0) %}
           {% set sun_hits_by_azimuth   = HIT_START <= azimuth <= HIT_END %}
@@ -71,32 +71,39 @@ template:
           {% endif %}
         device_class: problem
         state: >-
-          {% set BRIGHT_MAX  = 5000 %}
+          {% set BRIGHT_MAX  = 4500 %}
           {% set sun_hits_window = is_state('binary_sensor.sun_angle_hitting_living_room_windows', 'on') %}
           {% set bright = states('sensor.average_living_room_balcony_brightness')|float(0) %}
           {{ sun_hits_window and bright > BRIGHT_MAX }}
 
-      - name: "Living Room Sunset"
-        unique_id: f6affb57-bca3-4c38-a09e-497c5cf4b96e
-        icon: mdi:weather-sunset-down
+      - name: "Balcony Temperature High"
+        unique_id: d0f6e368-815c-402d-80ca-291cdd73b205
+        icon: mdi:thermometer
+        device_class: heat
+        state: >-
+          {% set balcony_temp = states('sensor.altan_temperatur')|float(0) %}
+          {{ balcony_temp > 25 }}
+
+      - name: "Living Room Night"
+        unique_id: bd5d0692-7039-48e3-bd44-79c9361331d3
+        icon: mdi:weather-night
         device_class: problem
         state: >-
-          {% set BRIGHT_MIN = 10 %}
+          {% set BRIGHT_MIN = 20 %}
           {% set sun_down = is_state('sun.sun', 'below_horizon') %}
-          {% set sun_setting = is_state_attr('sun.sun', 'rising', false) %}
           {% set bright = states('sensor.average_living_room_balcony_brightness')|float(0) %}
-          {{ sun_down and sun_setting and bright > BRIGHT_MIN }}
+          {{ sun_down and bright < BRIGHT_MIN }}
 
       - name: "Living Room Curtains Auto Open"
         unique_id: a2adc8ab-a57b-4efb-86cf-25129566fd00
         device_class: opening
         state: >-
-          {% set sun_up = is_state('sun.sun', 'above_horizon') %}
           {% set summer = is_state('sensor.season', 'summer') %}
-          {% set sunset = is_state('binary_sensor.living_room_sunset', 'on') %}
+          {% set night = is_state('binary_sensor.living_room_night', 'on') %}
           {% set bright_sun_hits = is_state('binary_sensor.sun_brightness_hitting_living_room_windows', 'on') %}
+          {% set temperature_high = is_state('binary_sensor.balcony_temperature_high', 'on') %}
           {% set sun_hits = summer and bright_sun_hits %}
-          {{ (sun_up and not sun_hits) or sunset }}
+          {{ not sun_hits and not temperature_high and not night }}
         attributes:
           icon: >-
             {{
