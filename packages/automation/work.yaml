@@ -136,6 +136,36 @@ template:
             or is_state('binary_sensor.vagtskema_wfh', 'on')
           }}
 
+script:
+  ignore_incorrect_puzzel_state:
+    alias: Ignorer forkert Puzzel status
+    sequence:
+      - action: automation.turn_off
+        target:
+          entity_id: automation.puzzel_robot
+      - action: automation.turn_on
+        target:
+          entity_id: automation.reset_ignore_incorrect_puzzel_state
+
+  reset_ignore_incorrect_puzzel_state:
+    alias: Nulstil Ignorer forkert Puzzel status
+    sequence:
+      - action: automation.turn_on
+        target:
+          entity_id: automation.puzzel_robot
+      - action: automation.turn_off
+        target:
+          entity_id: automation.reset_ignore_incorrect_puzzel_state
+
+  leave_work_early:
+    alias: Tag hjem tidligt
+    sequence:
+      - action: script.ignore_incorrect_puzzel_state
+      - action: script.puzzel_log_off
+      - action: switch.turn_on
+        target:
+          entity_id: switch.id_3_pro_climatisation
+
 automation:
   - alias: Puzzel Robot
     id: c3d79ebf-18c1-4e2a-8776-a7fdddf87de1
@@ -231,12 +261,7 @@ automation:
         event_data:
           command: "/puzzel_ignore_incorrect"
     actions:
-      - action: automation.turn_off
-        target:
-          entity_id: automation.puzzel_robot
-      - action: automation.turn_on
-        target:
-          entity_id: automation.reset_ignore_incorrect_puzzel_state
+      - action: script.ignore_incorrect_puzzel_state
       - action: telegram_bot.answer_callback_query
         data:
           callback_query_id: "{{ trigger.event.data.id }}"
@@ -251,12 +276,7 @@ automation:
           - "unknown"
           - "unavailable"
     actions:
-      - action: automation.turn_on
-        target:
-          entity_id: automation.puzzel_robot
-      - action: automation.turn_off
-        target:
-          entity_id: automation.reset_ignore_incorrect_puzzel_state
+      - action: script.reset_ignore_incorrect_puzzel_state
 
   - id: set_work_phone_modes
     initial_state: true
