@@ -18,9 +18,59 @@ template:
             {%- endif -%}
 
 script:
-  #region Notify Everywhere
+  #region Notify Collections
   notify_everywhere:
     alias: Send notification everywhere
+    mode: queued
+    fields:
+      message_title:
+        description: The title of the message
+        example: "Warning"
+        selector:
+          text:
+      message:
+        description: The message to send (Can be a chime_tts segments list)
+        example: "Hello, this is a test"
+        selector:
+          text:
+      severity:
+        description: The severity of the message (0=low_priority, 1=info, 2=warning, 3=critical) (default=1)
+        example: "2"
+        selector:
+          number:
+            min: -1
+            max: 3
+            step: 1
+      data:
+        description: Additional data to send with the message
+        example: "{'inline_keyboard': {'text': 'Click me', 'url': 'https://www.home-assistant.io'}}"
+        selector:
+          object:
+    sequence:
+      - variables:
+          # If the message is a chime_tts segments list, extract the tts attribute of each segment
+          message_text: |
+            {%- if message is list and message[0] is mapping and message | selectattr('tts', 'defined') | list | length > 0 -%}
+              {{ message | map(attribute='tts') | map('trim') | list | join(' ') }}
+            {%- else -%}
+              {{ message }}
+            {%- endif -%}
+      - parallel:
+          - action: script.notify_text
+            data:
+              message_title: "{{ message_title if message_title is defined and message_title }}"
+              message: "{{ message_text }}"
+              severity: "{{ severity | default(1) | int }}"
+              data: "{{ data if data is defined and data else {} }}"
+          - action: script.notify_tts
+            data:
+              message_title: "{{ message_title if message_title is defined and message_title }}"
+              message: "{{ message }}"
+              severity: "{{ severity | default(1) | int }}"
+              data: "{{ data if data is defined and data else {} }}"
+
+  notify_text:
+    alias: Send text notifications to all devices
     mode: queued
     fields:
       message_title:
@@ -61,17 +111,11 @@ script:
               title: "{{ message_title if message_title is defined and message_title }}"
               message: "{{ message_text }}"
               data: "{{ data if data is defined and data else {} }}"
-          - action: script.popup_notification
+          - action: notify.mobile_app_quest
             data:
-              message_title: "{{ message_title if message_title is defined and message_title }}"
+              title: "{{ message_title if message_title is defined and message_title }}"
               message: "{{ message_text }}"
-              severity: "{{ severity | default(1) | int }}"
-          - action: script.voice_broadcast
-            data:
-              message_title: "{{ message_title if message_title is defined and message_title }}"
-              message: "{{ message }}"
-              severity: "{{ severity | default(1) | int }}"
-          - action: script.darkphone_tts
+          - action: script.popup_notification
             data:
               message_title: "{{ message_title if message_title is defined and message_title }}"
               message: "{{ message_text }}"
@@ -92,6 +136,60 @@ script:
             data:
               title: "{{ message_title if message_title is defined and message_title }}"
               message: "{{ message_text }}"
+
+  notify_tts:
+    alias: Send TTS notification to all speakers and Darkphone
+    mode: queued
+    fields:
+      message_title:
+        description: The title of the message
+        example: "Warning"
+        selector:
+          text:
+      message:
+        description: The message to send (Can be a chime_tts segments list)
+        example: "Hello, this is a test"
+        selector:
+          text:
+      severity:
+        description: The severity of the message (0=low_priority, 1=info, 2=warning, 3=critical) (default=1)
+        example: "2"
+        selector:
+          number:
+            min: -1
+            max: 3
+            step: 1
+      data:
+        description: Additional data to send with the message
+        example: "{'inline_keyboard': {'text': 'Click me', 'url': 'https://www.home-assistant.io'}}"
+        selector:
+          object:
+    sequence:
+      - variables:
+          # If the message is a chime_tts segments list, extract the tts attribute of each segment
+          message_text: |
+            {%- if message is list and message[0] is mapping and message | selectattr('tts', 'defined') | list | length > 0 -%}
+              {{ message | map(attribute='tts') | map('trim') | list | join(' ') }}
+            {%- else -%}
+              {{ message }}
+            {%- endif -%}
+      - parallel:
+          - action: script.voice_broadcast
+            data:
+              message_title: "{{ message_title if message_title is defined and message_title }}"
+              message: "{{ message }}"
+              severity: "{{ severity | default(1) | int }}"
+          - action: script.darkphone_tts
+            data:
+              message_title: "{{ message_title if message_title is defined and message_title }}"
+              message: "{{ message_text }}"
+              severity: "{{ severity | default(1) | int }}"
+          - action: script.quest_tts
+            data:
+              message_title: "{{ message_title if message_title is defined and message_title }}"
+              message: "{{ message_text }}"
+              severity: "{{ severity | default(1) | int }}"
+
   #endregion
   #region Notify WebOS TV
   notify_webos_tv:
@@ -251,6 +349,56 @@ script:
             entity_id: binary_sensor.darkphone_android_auto
             state: "on"
       - action: notify.mobile_app_darkphone
+        data:
+          message: "TTS"
+          data:
+            media_stream: "{{ media_stream }}"
+            tts_text: "{{ message_title + ' - ' if message_title is defined and message_title }}{{ message }}"
+            ttl: 0
+            priority: high
+  #endregion
+  #region Quest TTS
+  quest_tts:
+    alias: Read message on Quest if headset connected (Low priority messages are not read)
+    mode: queued
+    fields:
+      message_title:
+        description: The title of the message
+        example: "Warning"
+        selector:
+          text:
+      message:
+        description: The message to read
+        example: "Hello, this is a test"
+        selector:
+          text:
+      severity:
+        description: The severity of the message (0=low_priority, 1=info, 2=warning, 3=critical) (default=1)
+        example: "2"
+        selector:
+          number:
+            min: -1
+            max: 3
+            step: 1
+    sequence:
+      - variables:
+          severity: "{{ severity | default(1) | int }}"
+          media_stream: >
+            {% if severity == 3 %}
+              alarm_stream_max
+            {% else %}
+              system_stream
+            {% endif %}
+      - condition: template
+        value_template: "{{ severity > 0 }}"
+      - condition: or
+        conditions:
+          - condition: template
+            value_template: "{{ severity == 3 }}"
+          - condition: state
+            entity_id: binary_sensor.quest_in_use
+            state: "on"
+      - action: notify.mobile_app_quest
         data:
           message: "TTS"
           data:
