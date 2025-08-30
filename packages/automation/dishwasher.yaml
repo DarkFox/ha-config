@@ -30,28 +30,10 @@ automation:
     initial_state: true
     triggers:
       trigger: state
-      entity_id:
-        - sensor.opvaskemaskine_operationstate
+      entity_id: sensor.opvaskemaskine_operationstate
       to: "BSH.Common.EnumType.OperationState.End"
     actions:
       - action: kidschores.set_chore_due_date
         data:
           chore_name: "Tøm opvaskemaskine"
           due_date: "{{ (now() + timedelta(seconds=2)).strftime('%Y-%m-%dT%H:%M:%S') }}"
-
-  - alias: Dishwasher door close claim empty
-    id: 7f8b646a-d1b3-4d5b-b70e-f8892d4d4af4
-    initial_state: true
-    triggers:
-      trigger: state
-      entity_id: binary_sensor.opvaskemaskine_doorstate
-      to: "off"
-    conditions:
-      condition: state
-      entity_id: sensor.kc_rook_chore_status_tom_opvaskemaskine
-      state: "overdue"
-    actions:
-      - action: kidschores.claim_chore
-        data:
-          kid_name: "Rook"
-          chore_name: "Tøm opvaskemaskine"
