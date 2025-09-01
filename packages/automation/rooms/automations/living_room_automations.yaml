@@ -76,14 +76,6 @@ template:
           {% set bright = states('sensor.average_living_room_balcony_brightness')|float(0) %}
           {{ sun_hits_window and bright > BRIGHT_MAX }}
 
-      - name: "Balcony Temperature High"
-        unique_id: d0f6e368-815c-402d-80ca-291cdd73b205
-        icon: mdi:thermometer
-        device_class: heat
-        state: >-
-          {% set balcony_temp = states('sensor.altan_temperatur')|float(0) %}
-          {{ balcony_temp > 25 }}
-
       - name: "Living Room Night"
         unique_id: bd5d0692-7039-48e3-bd44-79c9361331d3
         icon: mdi:weather-night
@@ -101,9 +93,8 @@ template:
           {% set summer = is_state('sensor.season', 'summer') %}
           {% set night = is_state('binary_sensor.living_room_night', 'on') %}
           {% set bright_sun_hits = is_state('binary_sensor.sun_brightness_hitting_living_room_windows', 'on') %}
-          {% set temperature_high = is_state('binary_sensor.balcony_temperature_high', 'on') %}
           {% set sun_hits = summer and bright_sun_hits %}
-          {{ not sun_hits and not temperature_high and not night }}
+          {{ not sun_hits and not night }}
         attributes:
           icon: >-
             {{
