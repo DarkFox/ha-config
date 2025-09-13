@@ -165,7 +165,7 @@ template:
         device_class: timestamp
         state: >-
           {% set driving = is_state_attr('sensor.upcoming_travel_location', 'mode', 'driving') %}
-          {% set travel_time_sensor = 'sensor.rook_destination_duration_in_traffic' if driving else 'sensor.rook_til_destination_transit' %}
+          {% set travel_time_sensor = 'sensor.rook_destination_duration_in_traffic' if driving else 'sensor.rook_destination_transit_duration' %}
           {% set padding = 15 if driving else 5 %}
           {{
             ((
@@ -268,14 +268,14 @@ automation:
             sequence:
               - action: homeassistant.update_entity
                 target:
-                  entity_id: sensor.rook_til_destination_transit
+                  entity_id: sensor.rook_destination_transit_duration
 
   - alias: "Next destination - Update sensors slowly 12 hours before or when destination changes"
     id: f4eb3d8f-daf0-487b-91d0-d0f8d89d6fa7
     initial_state: true
     triggers:
       - trigger: time_pattern
-        minutes: "/20"
+        minutes: "/45"
       - trigger: state
         entity_id:
           - sensor.upcoming_travel_location
@@ -297,7 +297,7 @@ automation:
             sequence:
               - action: homeassistant.update_entity
                 target:
-                  entity_id: sensor.rook_til_destination_transit
+                  entity_id: sensor.rook_destination_transit_duration
 
   - id: time_to_leave_notification
     alias: time_to_leave_notification
