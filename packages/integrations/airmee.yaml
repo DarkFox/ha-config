@@ -163,8 +163,8 @@ template:
       - name: "Airmee Within Delivery Window"
         unique_id: b7daa272-981c-4d83-916b-96f28a07d036
         state: >-
-          {% if has_value(states('sensor.airmee_dropoff_earliest'))
-              and has_value(states('sensor.airmee_dropoff_latest')) %}
+          {% if has_value('sensor.airmee_dropoff_earliest')
+              and has_value('sensor.airmee_dropoff_latest') %}
             {% set now = now() %}
             {% set dropoff_earliest = states('sensor.airmee_dropoff_earliest') | as_datetime %}
             {% set dropoff_latest = states('sensor.airmee_dropoff_latest') | as_datetime %}
@@ -172,6 +172,16 @@ template:
           {% else %}
             false
           {% endif %}
+      - name: "Airmee Courier Close"
+        unique_id: 93183823-7f30-4c3c-b9fd-6f8afe945fe7
+        state: >-
+          {{
+            is_state('binary_sensor.airmee_active', 'on')
+            and (
+              states('sensor.airmee_courier_distance_to_home') | float(99) < 0.5
+              or is_state('sensor.airmee_tracking', 'ON_WAY_TO_DROPOFF')
+            )
+          }}
 
 automation:
   - alias: Airmee Tracking Slow
@@ -235,27 +245,13 @@ automation:
     id: 960d4a70-4b56-4bbf-a353-d71985e28ff5
     mode: single
     triggers:
-      - trigger: numeric_state
-        entity_id: sensor.airmee_courier_distance_to_home
-        below: 0.5
       - trigger: state
-        entity_id: sensor.airmee_tracking
-        to: "ON_WAY_TO_DROPOFF"
+        entity_id: binary_sensor.airmee_courier_close
+        to: "on"
     conditions:
       - condition: state
         entity_id: automation.delivery_unlock_front_door
         state: "off"
-      - condition: state
-        entity_id: binary_sensor.airmee_active
-        state: "on"
-      - condition: not
-        conditions:
-          - condition: state
-            entity_id: sensor.airmee_tracking
-            state: "DROPOFF_CONFIRMED"
-          - condition: state
-            entity_id: sensor.airmee_tracking
-            state: "UNASSIGNED"
     actions:
       - parallel:
           - action: automation.turn_on
