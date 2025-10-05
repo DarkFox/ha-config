@@ -54,21 +54,21 @@ template:
                 {%- for i in range(p|length) %}
                   {
                     "start": "{{ p[i]["hour"] }}",
-                    "end": "{{ ((p[i]["hour"]|as_timestamp)+3600)|as_datetime|as_local }}",
+                    "end": "{{ ((p[i]["hour"]|as_timestamp)+900)|as_datetime|as_local }}",
                     "value": {{ p[i]['price'] }}
                   },
                 {%- endfor -%}
                 {%- for i in range(rt|length) %}
                   {
                     "start": "{{ rt[i]["hour"] }}",
-                    "end": "{{ ((rt[i]["hour"]|as_timestamp)+3600)|as_datetime|as_local }}",
+                    "end": "{{ ((rt[i]["hour"]|as_timestamp)+900)|as_datetime|as_local }}",
                     "value": {{ rt[i]['price'] }}
                   },
                 {%- endfor -%}
                 {%- for i in range(f|length) %}
                   {
                     "start": "{{ f[i]["hour"] }}",
-                    "end": "{{ ((f[i]["hour"]|as_timestamp)+3600)|as_datetime|as_local }}",
+                    "end": "{{ ((f[i]["hour"]|as_timestamp)+900)|as_datetime|as_local }}",
                     "value": {{ f[i]['price'] }}
                   },
                 {%- endfor -%}
@@ -80,4 +80,35 @@ template:
               unknown
             {%- else -%}
               [{% for x in (p|list) %}{{ x.value }},{% endfor %}]
+            {%- endif -%}
+
+          # Data for ha-price-timeline-card
+          data: >-
+            {%- set energyPriceSensor = "sensor.energi_data_service" -%}
+            {%- set p = state_attr(energyPriceSensor, 'raw_today') or [] -%}
+            {%- set rt = state_attr(energyPriceSensor, 'raw_tomorrow') or [] -%}
+            {%- set f = state_attr(energyPriceSensor, 'forecast') or [] -%}
+            {%- if (p|length + rt|length + f|length) == 0 -%}
+              unknown
+            {%- else -%}
+              [
+                {%- for i in range(p|length) %}
+                  {
+                    "start_time": "{{ p[i]["hour"] }}",
+                    "price_per_kwh": {{ p[i]['price'] }}
+                  },
+                {%- endfor -%}
+                {%- for i in range(rt|length) %}
+                  {
+                    "start_time": "{{ rt[i]["hour"] }}",
+                    "price_per_kwh": {{ rt[i]['price'] }}
+                  },
+                {%- endfor -%}
+                {%- for i in range(f|length) %}
+                  {
+                    "start_time": "{{ f[i]["hour"] }}",
+                    "price_per_kwh": {{ f[i]['price'] }}
+                  },
+                {%- endfor -%}
+              ]
             {%- endif -%}
