@@ -1,0 +1,190 @@
+automation:
+  - alias: Sync Work Schedule to Personal Calendar
+    description: "Automatically sync work schedule from work calendar to personal calendar every sunday evening."
+    id: 150c1ace-7884-4f82-a3ca-71bdf2b1011c
+    initial_state: true
+    triggers:
+      - trigger: time
+        at: "20:00:00"
+        weekday:
+          - sun
+    actions:
+      - action: script.add_work_schedule_to_personal_calendar
+
+script:
+  add_work_schedule_to_personal_calendar:
+    alias: "Sync Work Schedule to Personal Calendar"
+    description: "Fetch work schedule from work calendar and add to personal calendar, avoiding duplicates."
+    fields:
+      from_date:
+        description: "Start date for the work schedule sync (YYYY-MM-DD) - Defaults to start of next week"
+        example: "2024-07-01"
+      to_date:
+        description: "End date for the work schedule sync (YYYY-MM-DD) - Defaults to 4 weeks from start date"
+        example: "2024-07-31"
+    variables:
+      work_schedule_entity: "calendar.vagtplan"
+      personal_calendar_entity: "calendar.calendar"
+      # Default to start of next week and 4 weeks later if not provided
+      from_date: >-
+        {{ 
+          from_date if from_date else
+          (now().date() + timedelta(days=(7 - now().weekday()))).strftime('%Y-%m-%d')
+        }}
+      to_date: >-
+        {{ 
+          to_date if to_date else
+          (from_date|as_datetime + timedelta(days=27)).strftime('%Y-%m-%d')
+        }}
+      work_schedule: []
+    sequence:
+      - action: calendar.get_events
+        target:
+          entity_id: "{{ personal_calendar_entity }}"
+        data:
+          start_date_time: "{{ from_date }}T00:00:00"
+          end_date_time: "{{ to_date }}T23:59:59"
+        response_variable: personal_calendar_response
+      - variables:
+          personal_calendar_events: >-
+            {{
+              personal_calendar_response.get(personal_calendar_entity, {}).get('events', [])
+            }}
+          personal_calendar_personal_events: >-
+            {{
+              personal_calendar_events
+              | rejectattr('description', 'search', '#autoWorkEvent')
+              | list
+            }}
+          personal_calendar_work_events: >-
+            {{
+              personal_calendar_events
+              | selectattr('description', 'search', '#autoWorkEvent')
+              | selectattr('description', 'search', '#vagtplan')
+              | list
+            }}
+          from_date: >-
+            {% if personal_calendar_work_events %}
+              {% set last_event = personal_calendar_work_events | sort(attribute='end') | last %}
+              {% set last_end = as_datetime(last_event.end) %}
+              {{ (last_end + timedelta(days=1)).date().strftime('%Y-%m-%d') }}
+            {% else %}
+              {{ from_date }}
+            {% endif %}
+
+      - action: calendar.get_events
+        target:
+          entity_id: "{{ work_schedule_entity }}"
+        data:
+          start_date_time: "{{ from_date }}T00:00:00"
+          end_date_time: "{{ to_date }}T23:59:59"
+        response_variable: work_calendar_response
+
+      - variables:
+          schedule_calendar_events: >-
+            {{
+              work_calendar_response.get(work_schedule_entity, {}).get('events', [])
+              | rejectattr('summary', 'match', '(FRI|Fri|Ferie|Afspadsering|Sygdom)')
+              | list
+            }}
+          work_schedule: >-
+            {% set ns = namespace(events=[]) %}
+            {% for event in schedule_calendar_events %}
+              {% set start = as_datetime(event.start) %}
+              {% set end = as_datetime(event.end) %}
+              {% if '+RV' in event.summary %}
+                {% set shift_end_time = event.summary.split('+RV')[0].strip().split('-')[1].strip() %}
+                {% set split_datetime = start.replace(hour=shift_end_time|int(0)) %}
+                {% set ns.events = ns.events + [{
+                  'summary': 'Arbejde: Herlev',
+                  'location': 'Borgmester Ib Juuls Vej 56, 2730 Herlev, Denmark',
+                  'description': (event.description|default('')) ~ '\n\n#bil  #onsite #dfsh #vagtskema #autoWorkEvent',
+                  'start': (start | string),
+                  'end': (split_datetime | string)
+                }] %}
+                {% set ns.events = ns.events + [{
+                  'summary': 'Arbejde: Rådighedsvagt',
+                  'description': (event.description|default('')) ~ '\n\n#oncall #nowake #vagtskema #autoWorkEvent',
+                  'start': (split_datetime | string),
+                  'end': (end | string)
+                }] %}
+              {% elif event.summary | regex_match('RVDøgn|RV\d{1,2}-\d{1,2} - IT') %}
+                {% set ns.events = ns.events + [{
+                  'summary': 'Arbejde: Rådighedsvagt',
+                  'description': (event.description|default('')) ~ '\n\n#oncall #nowake #vagtskema #autoWorkEvent',
+                  'start': (start | string),
+                  'end': (end | string)
+                }] %}
+              {% elif event.summary | regex_match('\d{1,2}-\d{1,2} - IT') %}
+                {% set ns.events = ns.events + [{
+                  'summary': 'Arbejde: Herlev',
+                  'location': 'Borgmester Ib Juuls Vej 56, 2730 Herlev, Denmark',
+                  'description': (event.description|default('')) ~ '\n\n#bil #onsite #dfsh #vagtskema #autoWorkEvent',
+                  'start': (start | string),
+                  'end': (end | string)
+                }] %}
+              {% else %}
+                {% set ns.events = ns.events + [{
+                  'summary': 'Arbejde: ' ~ event.summary,
+                  'description': (event.description|default('')) ~ '\n\n#vagtskema #autoWorkEvent',
+                  'start': (start | string),
+                  'end': (end | string)
+                }] %}
+              {% endif %}
+            {% endfor %}
+
+            {% for event in ns.events | selectattr('description', 'search', '#onsite') %}
+              {% set start_dt = as_datetime(event.start) - timedelta(minutes=30) %}
+              {% set end_dt = as_datetime(event.start) %}
+              {% set ns.events = ns.events + [{
+                'summary': 'Arbejde: Kørsel til arbejde',
+                'description': '#routine #commute #autoWorkEvent',
+                'start': (start_dt | string),
+                'end': (end_dt | string)
+              }] %}
+            {% endfor %}
+
+            {{ ns.events | sort(attribute='start') }}
+
+      - repeat:
+          for_each: "{{ work_schedule }}"
+          sequence:
+            - action: calendar.create_event
+              target:
+                entity_id: "{{ personal_calendar_entity }}"
+              data:
+                summary: "{{ repeat.item.summary }}"
+                location: "{{ repeat.item.location | default('') }}"
+                description: "{{ repeat.item.description }}"
+                start_date_time: "{{ repeat.item.start }}"
+                end_date_time: "{{ repeat.item.end }}"
+
+            - variables:
+                conflicting_events: >-
+                  {% set s = repeat.item.start | as_datetime %}
+                  {% set e = repeat.item.end   | as_datetime %}
+                  {% set ns = namespace(conflicts = []) %}
+
+                  {% for ev in personal_calendar_personal_events %}
+                    {% set evs = ev.start | as_datetime %}
+                    {% set eve = ev.end   | as_datetime %}
+                    {% if evs < e and eve > s %}
+                      {% set ns.conflicts = ns.conflicts + [ev] %}
+                    {% endif %}
+                  {% endfor %}
+
+                  {{ ns.conflicts }}
+
+            - condition: template
+              value_template: "{{ conflicting_events | length > 0 }}"
+
+            - action: persistent_notification.create
+              data:
+                title: "Work Schedule Conflict Detected"
+                message: >-
+                  A work schedule event "{{ repeat.item.summary }}" from
+                  {{ (repeat.item.start | as_datetime | as_local).strftime('%Y-%m-%d %H:%M') }} to {{ (repeat.item.end | as_datetime | as_local).strftime('%Y-%m-%d %H:%M') }} conflicts with these personal events:
+                  {% for event in conflicting_events %}
+                    - "{{ event.summary }}" from {{ (event.start | as_datetime | as_local).strftime('%Y-%m-%d %H:%M') }} to {{ (event.end | as_datetime | as_local).strftime('%Y-%m-%d %H:%M') }}
+                  {% endfor %}
+                  Please review your calendar.
