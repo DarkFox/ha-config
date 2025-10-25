@@ -139,8 +139,13 @@ template:
         device_class: duration
         state: >-
           {%- set time = states('sensor.time') -%}
-          {%- set remaining = states('sensor.id_3_pro_climatization_estimated_date_reached') | as_timestamp | int - as_timestamp(now()) | int -%}
-          {{ (remaining / 60)|int if remaining > 0 else 0 }}
+          {%- set estimated_date_reached states('sensor.id_3_pro_climatization_estimated_date_reached') -%}
+          {% if estimated_date_reached %}
+            {%- set remaining = estimated_date_reached | as_timestamp | int - as_timestamp(now()) | int -%}
+            {{ (remaining / 60)|int if remaining > 0 else 0 }}
+          {% else %}
+            {{ none }}
+          {% endif %}
 
       - name: "ID.3 Pro Charging Time Remaining"
         unique_id: e9a7814e-c7d9-4fac-a56d-70b73b895dde
@@ -149,10 +154,13 @@ template:
         device_class: duration
         state: >-
           {%- set time = states('sensor.time') -%}
-          {% set est_chrg = states('sensor.id_3_pro_charging_estimated_date_reached')|as_timestamp %}
-          {% set now = now()|as_timestamp %}
-          {% set remaining = (est_chrg - now)|int %}
-          {{ (remaining / 60)|int if remaining > 0 else 0 }}
+          {% set estimated_date_reached = states('sensor.id_3_pro_charging_estimated_date_reached') %}
+          {% if estimated_date_reached %}
+            {%- set remaining = estimated_date_reached | as_timestamp | int - as_timestamp(now()) | int -%}
+            {{ (remaining / 60)|int if remaining > 0 else 0 }}
+          {% else %}
+            {{ none }}
+          {% endif %}
 
   - trigger:
       - trigger: event

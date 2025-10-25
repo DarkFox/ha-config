@@ -39,9 +39,9 @@ script:
                         condition: template
                         value_template: >-
                           {{
-                            courier_location.details | length > 0
+                            courier_location.details | default([]) | length > 0
                             and 'courier_locations' in courier_location.details[0]
-                            and courier_location.details[0].courier_locations | length > 0
+                            and courier_location.details[0].courier_locations | default([]) | length > 0
                           }}
                     sequence:
                       - variables:
@@ -90,31 +90,31 @@ template:
       - name: Airmee Tracking
         unique_id: 3450f03d-fd35-43e1-9001-31c5a2fb13e5
         state: >-
-          {% set order_details = trigger.event.data.tracking_data.order_details[0] | default({}) %}
+          {% set order_details = trigger.event.data..get('tracking_data',{}).get('order_details', []) | first | default({}) %}
           {{ order_details.new_timeline[-1].courier_status
-            if order_details.new_timeline is defined and order_details.new_timeline | length > 0 else None }}
+            if order_details.new_timeline is defined and order_details.new_timeline|length > 0 else None }}
         attributes:
           order_details: >-
-            {{ trigger.event.data.tracking_data.order_details }}
+            {{ trigger.event.data..get('tracking_data',{}).get('order_details', []) }}
           timeline: >-
-            {% set order_details = trigger.event.data.tracking_data.order_details[0] | default({}) %}
-            {{ order_details.new_timeline if order_details.new_timeline is defined else None }}
+            {% set order_details = trigger.event.data..get('tracking_data',{}).get('order_details', []) | first | default({}) %}
+            {{ order_details.get('new_timeline') }}
       - name: Airmee Dropoff ETA
         unique_id: 7eb3dc7d-5b70-41b2-85d7-49d117518577
         state: >-
-          {% set order_details = trigger.event.data.tracking_data.order_details[0] | default({}) %}
+          {% set order_details = trigger.event.data..get('tracking_data',{}).get('order_details', []) | first | default({}) %}
           {{ order_details.dropoff_eta | as_datetime if order_details.dropoff_eta is defined else None }}
         device_class: timestamp
       - name: Airmee Dropoff Earliest
         unique_id: df661e2e-d8b1-4ea8-9eed-baadc73ca9a9
         state: >-
-          {% set order_details = trigger.event.data.tracking_data.order_details[0] | default({}) %}
+          {% set order_details = trigger.event.data..get('tracking_data',{}).get('order_details', []) | first | default({}) %}
           {{ order_details.dropoff_earliest_time | as_datetime if order_details.dropoff_earliest_time is defined else None }}
         device_class: timestamp
       - name: Airmee Dropoff Latest
         unique_id: bd1b1cc2-dadf-4507-acd9-1298ed88544b
         state: >-
-          {% set order_details = trigger.event.data.tracking_data.order_details[0] | default({}) %}
+          {% set order_details = trigger.event.data..get('tracking_data',{}).get('order_details', []) | first | default({}) %}
           {{ order_details.dropoff_latest_time | as_datetime if order_details.dropoff_latest_time is defined else None }}
         device_class: timestamp
 
@@ -124,22 +124,19 @@ template:
     sensor:
       - name: Airmee Courier Location
         state: >-
-          {% set details = trigger.event.data.get('courier_location', {}).get('details', [])[0] | default({}) %}
-          {% set first_courier_location = details.get('courier_locations', [])[0] | default({}) %}
-          {% set courier_location =  | default({}) %}
+          {% set details = trigger.event.data.get('courier_location', {}).get('details', []) | first | default({}) %}
+          {% set first_courier_location = details.get('courier_locations', []) | first | default({}) %}
           {% set location_timestamp = first_courier_location.get('courier_location', {}).get('timestamp', None) %}
           {{ location_timestamp | as_datetime if location_timestamp else None }}
         device_class: timestamp
         attributes:
           latitude: >-
-            {% set details = trigger.event.data.get('courier_location', {}).get('details', [])[0] | default({}) %}
-            {% set first_courier_location = details.get('courier_locations', [])[0] | default({}) %}
-            {% set courier_location =  | default({}) %}
+            {% set details = trigger.event.data.get('courier_location', {}).get('details', []) | first | default({}) %}
+            {% set first_courier_location = details.get('courier_locations', []) | first | default({}) %}
             {{ first_courier_location.get('courier_location', {}).get('latitude', None) }}
           longitude: >-
-            {% set details = trigger.event.data.get('courier_location', {}).get('details', [])[0] | default({}) %}
-            {% set first_courier_location = details.get('courier_locations', [])[0] | default({}) %}
-            {% set courier_location =  | default({}) %}
+            {% set details = trigger.event.data.get('courier_location', {}).get('details', []) | first | default({}) %}
+            {% set first_courier_location = details.get('courier_locations', []) | first | default({}) %}
             {{ first_courier_location.get('courier_location', {}).get('longitude', None) }}
           details: >-
             {{ trigger.event.data.get('courier_location', {}).get('details', []) }}

@@ -7,8 +7,10 @@ template:
         state: >-
           {% if states('sensor.id_3_pro_vehicle_state') in ['ignition_on', 'driving'] %}
             0.0
-          {%- else -%}
+          {%- elif has_value('device_tracker.id_3_pro_position') and has_value('person.rook') -%}
             {{ distance('device_tracker.id_3_pro_position', 'person.rook') }}
+          {%- else -%}
+            {{ none }}
           {%- endif -%}
         device_class: distance
         unit_of_measurement: km

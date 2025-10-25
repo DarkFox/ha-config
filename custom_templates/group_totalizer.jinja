@@ -1,15 +1,15 @@
 {%- macro group_total(group_entity) -%}
-    {%- set group_entities = state_attr(group_entity, 'entity_id') -%}
+    {%- set group_entities = state_attr(group_entity, 'entity_id')|default([]) -%}
     {%- set ns = namespace({'total': 0}) -%}
     {%- for entity in group_entities -%}
-        {%- set value = states(entity) | int -%}
+        {%- set value = states(entity) | int(0) -%}
         {%- set ns.total = ns.total + value -%}
     {%- endfor -%}
     {{ ns.total }}
 {%- endmacro -%}
 
 {%- macro group_max_possible(group_entity, default_max=10) -%}
-    {%- set group_entities = state_attr(group_entity, 'entity_id') -%}
+    {%- set group_entities = state_attr(group_entity, 'entity_id')|default([]) -%}
     {%- set ns = namespace({'max': 0}) -%}
     {%- for entity in group_entities -%}
         {%- set max_value = state_attr(entity, 'max') | int(default_max) -%}
@@ -19,15 +19,15 @@
 {%- endmacro -%}
 
 {%- macro gropu_entity_count(group_entity) -%}
-    {%- set group_entities = state_attr(group_entity, 'entity_id') -%}
+    {%- set group_entities = state_attr(group_entity, 'entity_id')|default([]) -%}
     {{ group_entities | length }}
 {%- endmacro -%}
 
 {%- macro group_totalizer(group_entity, default_max=10) -%}
-    {%- set total = group_total(group_entity) | int -%}
-    {%- set max_possible = group_max_possible(group_entity, default_max) | int -%}
+    {%- set total = group_total(group_entity) | int(0) -%}
+    {%- set max_possible = group_max_possible(group_entity, default_max) | int(0) -%}
     {%- if max_possible > 0 -%}
-        {{ (total / max_possible * 100) | round(1) | int }}
+        {{ (total / max_possible * 100) | round(1) | int(0) }}
     {%- else -%}
         0
     {%- endif -%}
