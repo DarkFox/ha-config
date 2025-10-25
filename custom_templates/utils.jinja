@@ -242,3 +242,20 @@
     {%- set long_value = states(long_entity_id) | float(0) -%}
     {{ true if short_value > long_value else false }}
 {%- endmacro -%}
+
+{%- macro md2_escape(value='') -%}
+    {#-
+    This macro escapes special Markdown characters in a string.
+    Parameters:
+    - value: The string to escape.
+    Usage:
+    {{ md2_escape('Hello *World*!') }}  # Output: 'Hello \*World\*!'
+    -#}
+    {#- from Telegram docs: characters '_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!' must be escaped with the preceding character '\'. -#}
+    {%- set special_chars = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!'] -%}
+    {%- set ns = namespace(escaped_value = value) -%}
+    {%- for char in special_chars -%}
+        {%- set ns.escaped_value = ns.escaped_value | replace(char, '\\' ~ char) -%}
+    {%- endfor -%}
+    {{ ns.escaped_value }}
+{%- endmacro -%}
