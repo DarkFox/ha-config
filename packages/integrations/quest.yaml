@@ -1,13 +1,24 @@
 template:
   - binary_sensor:
       - name: Quest In Use Delayed
+        unique_id: cbc142d8-2500-4fe7-ac68-b4332f220312
         state: "{{ is_state('binary_sensor.quest_in_use', 'on') }}"
         icon: mdi:virtual-reality
         delay_off:
           seconds: 30
 
+      # Steam VR running sensor in HASS.Agent
+      # Sensor setup: ProcessActive - vrserver
+      - name: Rook-PC Steam VR
+        unique_id: 40d907d5-33c7-4dd2-8459-81ab7f043818
+        state: "{{ states('sensor.rook_pc_steam_vr_processes')|int(0) > 0 }}"
+        icon: mdi:virtual-reality
+        delay_off:
+          seconds: 30
+
       - name: Quest Virtual Desktop In Use
-        state: "{{ is_state('binary_sensor.quest_in_use', 'on') and is_state('binary_sensor.rook_pc_steamvr', 'on') }}"
+        unique_id: 543bdd83-9f94-411f-8068-8f4f50f47ca3
+        state: "{{ is_state('binary_sensor.quest_in_use', 'on') and is_state('binary_sensor.rook_pc_steam_vr', 'on') }}"
         icon: mdi:virtual-reality
         delay_off:
           seconds: 30

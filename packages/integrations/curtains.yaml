@@ -128,7 +128,8 @@ cover:
       stue_gardin:
         friendly_name: "Stue Gardin"
         device_class: curtain
-        position_template: "{{ states('sensor.stue_gardin_position') }}"
+        position_template: "{{ states('sensor.stue_gardin_position') | int(0) }}"
+        value_template: "{{ states('sensor.stue_gardin_value') | default('none') }}"
         open_cover:
           action: script.stue_gardin
           data:
@@ -164,8 +165,8 @@ cover:
       sovevaerelse_gardin:
         friendly_name: "Soveværelse Gardin"
         device_class: curtain
-        position_template: "{{ states('sensor.sovevaerelse_gardin_position') }}"
-        value_template: "{{ states('sensor.sovevaerelse_gardin_value') }}"
+        position_template: "{{ states('sensor.sovevaerelse_gardin_position') | int(0) }}"
+        value_template: "{{ states('sensor.sovevaerelse_gardin_value') | default('none') }}"
         open_cover:
           action: script.sovevaerelse_gardin
           data:
@@ -186,7 +187,11 @@ cover:
       kontor_gardin:
         friendly_name: "Kontor Gardin"
         device_class: shade
-        position_template: "{{ (state_attr('cover.kontor_rullegardin', 'current_position')|int(0)) + (state_attr('cover.kontor_altandor_gardin', 'current_position')|int(0)) }}"
+        position_template: >-
+          {{
+            (state_attr('cover.kontor_rullegardin', 'current_position')|int(0))
+            + (state_attr('cover.kontor_altandor_gardin', 'current_position')|int(0))
+          }}
         value_template: |
           {% set states = [states('cover.kontor_rullegardin'), states('cover.kontor_altandor_gardin')] %}
           {% set dor_position = state_attr('cover.kontor_altandor_gardin', 'current_position')|int(0) %}
@@ -238,10 +243,25 @@ template:
   - sensor:
       - name: Stue Gardin Højre Position
         unique_id: 3f3e72ce-d54c-498b-9867-1445a23a2059
-        state: "{{ state_attr('cover.stue_gardin_hojre', 'current_position') }}"
+        state: "{{ state_attr('cover.stue_gardin_hojre', 'current_position')|int(0) }}"
       - name: Stue Gardin Venstre Position
         unique_id: 5101a4eb-8e2b-4f60-b435-2df4e5a30916
-        state: "{{ state_attr('cover.stue_gardin_venstre', 'current_position') }}"
+        state: "{{ state_attr('cover.stue_gardin_venstre', 'current_position')|int(0) }}"
+      - name: Stue Gardin Value
+        unique_id: 8e6166bc-da2e-4b80-a7d5-c35c2bedf3bc
+        state: >-
+          {% set states = [states('cover.stue_gardin_hojre'), states('cover.stue_gardin_venstre')] %}
+          {% set dor_position = state_attr('cover.stue_gardin_venstre', 'current_position')|int(0) %}
+          {% set vindue_position = state_attr('cover.stue_gardin_hojre', 'current_position')|int(0) %}
+          {% if 'closing' in states %}
+            closing
+          {% elif 'opening' in states %}
+            opening
+          {% elif dor_position == 0 and vindue_position == 0 %}
+            closed
+          {% else %}
+            open
+          {% endif %}
 
       - name: Soveværelse Gardin Vindue Position
         unique_id: a4403b53-6e2c-4cce-9d59-25a48d1b9ff6
@@ -250,7 +270,7 @@ template:
           {{ map_clamp_input(state_attr('cover.sovevaerelse_gardin_vindue', 'current_position'), 45, 100, 0, 100)|int(0) }}
       - name: Soveværelse Gardin Dør Position
         unique_id: 3dd8363c-068b-4dcf-8b6a-6ecb43a9f931
-        state: "{{ state_attr('cover.sovevaerelse_gardin_dor', 'current_position') }}"
+        state: "{{ state_attr('cover.sovevaerelse_gardin_dor', 'current_position')|int(0) }}"
       - name: Soveværelse Gardin Value
         unique_id: e2f5eeac-5e1a-4eaf-a70b-b7ceee75bfa7
         state: >-

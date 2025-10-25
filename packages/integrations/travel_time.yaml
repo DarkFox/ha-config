@@ -9,7 +9,7 @@ template:
           {% if start %}
             {{ as_timestamp(start) | timestamp_local('unavailable') }}
           {% else %}
-            unknown
+            {{ none }}
           {% endif %}
         attributes:
           event: >-
@@ -158,8 +158,9 @@ template:
         state: >-
           {{
             (strptime(state_attr('sensor.next_travel_event', 'start'), '%Y-%m-%d %H:%M:%S')|as_local).isoformat()
-            if state_attr('sensor.next_travel_event', 'location') else ''
+            if state_attr('sensor.next_travel_event', 'location') else none
           }}
+
       - name: Next Scheduled Leave At
         unique_id: 7ce36e9c-2d32-49de-9ab7-d5df86b28aae
         device_class: timestamp

@@ -16,7 +16,7 @@ sensor:
           {%- endif -%}
       chime_path:
         value_template: >-
-          {{ states('input_text.notification_sound').split(': ')[1] }}
+          {{ states('input_text.notification_sound').split(': ')[1] if has_value('input_text.notification_sound') }}
 
 command_line:
   - sensor:
@@ -269,6 +269,9 @@ automation:
               {% set ns.ret = ns.ret + [title+': '+file] %}
             {%- endfor -%}
             {{ ns.ret }}
+      - condition: template
+        value_template: >
+          {{ saved_option in state_attr('input_select.notification_sound', 'options') }}
       - action: input_select.select_option
         data_template:
           entity_id: input_select.notification_sound

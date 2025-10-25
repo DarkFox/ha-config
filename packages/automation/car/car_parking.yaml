@@ -147,39 +147,47 @@ template:
         unique_id: 18ed291c-f453-49c3-b763-68a8bbbeeb8e
         device_class: timestamp
         state: >-
-          {% if is_state('binary_sensor.parking_limit', 'on') %}
+          {% if is_state('binary_sensor.parking_limit', 'on')
+              and has_value('sensor.parkeringsskive')
+              and has_value('sensor.parking_duration_limit') %}
             {{
               (
                 as_timestamp(states('sensor.parkeringsskive'))
                 + states('sensor.parking_duration_limit')|int
               ) | as_datetime
-              if has_value('sensor.parkeringsskive')
-              else None
             }}
+          {% else %}
+            {{ none }}
           {% endif %}
 
       - name: Parking Limit Clock
         unique_id: 141f07b0-4205-40bf-9ede-99956e72ea15
         icon: mdi:timer
         state: >-
-          {% if is_state('binary_sensor.parking_limit', 'on') %}
+          {% if is_state('binary_sensor.parking_limit', 'on') and has_value('sensor.parking_limit') %}
             {{ states('sensor.parking_limit') | as_timestamp | timestamp_custom('%H:%M') }}
+          {% else %}
+            {{ none }}
           {% endif %}
 
       - name: Parking Alarm
         unique_id: 5675dfe4-8ef6-4673-a0fd-dab9242b230f
         device_class: timestamp
         state: >-
-          {% if is_state('binary_sensor.parking_limit', 'on') %}
+          {% if is_state('binary_sensor.parking_limit', 'on') and has_value('sensor.parking_limit') %}
             {{ (as_timestamp(states('sensor.parking_limit')) - (15 * 60)) | as_datetime }}
+          {% else %}
+            {{ none }}
           {% endif %}
 
       - name: Parking Alarm Clock
         unique_id: 86007395-04ff-46c1-ad1a-ab3c94dd24ba
         icon: mdi:alarm
         state: >-
-          {% if is_state('binary_sensor.parking_limit', 'on') %}
+          {% if is_state('binary_sensor.parking_limit', 'on') and has_value('sensor.parking_alarm') %}
             {{ states('sensor.parking_alarm') | as_timestamp | timestamp_custom('%H:%M') }}
+          {% else %}
+            {{ none }}
           {% endif %}
 
   - trigger:

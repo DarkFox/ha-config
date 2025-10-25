@@ -42,16 +42,26 @@
 
 shell_command:
   curl: >-
-    curl {{ args|default('-sS') }} {{ '-L' if follow_redirects is defined and follow_redirects }} {{ '-X ' ~ method|default('get')|upper if not ((follow_redirects is defined and follow_redirects) and method|upper == 'POST') }} {%- for k in headers %} -H "{{ k }}: {{ headers[k] }}"{% endfor %} 
+    {% set args = args if args is defined else '-sS' %}
+    {% set follow_redirects = follow_redirects if follow_redirects is defined else true %}
+    {% set method = method if method is defined else 'get' %}
+    {% set headers = headers if headers is defined else {} %}
+    {% set payload = payload if payload is defined else none %}
+    {% set payload_string = payload_string if payload_string is defined else none %}
+    {% set cookie_file = cookie_file if cookie_file is defined else none %}
+    {% set output_file = output_file if output_file is defined else none %}
+    {% set stream = stream if stream is defined else '/dev/null' %}
+
+    curl {{ args }} {{ '-L' if follow_redirects }} {{ '-X ' ~ method|upper if not ((follow_redirects) and method|upper == 'POST') }} {%- for k in headers %} -H "{{ k }}: {{ headers[k] }}"{% endfor %} 
     {{- (' -d \'' ~ payload_string ~ '\'') if payload_string }} 
-    {%- if payload is defined and payload and "Content-Type" in headers and headers["Content-Type"] == "application/x-www-form-urlencoded" %} 
+    {%- if payload and "Content-Type" in headers and headers["Content-Type"] == "application/x-www-form-urlencoded" %} 
       {%- for p in payload %} 
         {{- (' --data-urlencode \'' ~ p ~ '=' ~ payload[p] ~ '\'') }} 
       {%- endfor %} 
-    {%- elif payload is defined and payload %} 
+    {%- elif payload %} 
       {{- (' -d \'' ~ payload|tojson ~ '\'') }} 
     {%- endif %} 
     {{- (' -b \'' ~ cookie_file ~ '\'') if cookie_file }} 
     {{- (' -c \'' ~ cookie_file ~ '\'') if cookie_file }} 
     {{- (' -o \'' ~ output_file ~ '\'') if output_file }} 
-    {{- ' ' ~ url|trim|to_json }} > {{ stream|default('/dev/null') }}
+    {{- ' ' ~ url|trim|to_json }} > {{ stream }}
