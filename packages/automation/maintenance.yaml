@@ -254,3 +254,27 @@ automation:
                   - {{ entity }}
                 {%- endfor %}
             {% endfor %}
+
+  - alias: Stop VSCode on High CPU Usage
+    id: 88bf09b4-14b0-4d72-bfaf-0d9e2a54d182
+    initial_state: true
+    mode: single
+    triggers:
+      - trigger: numeric_state
+        entity_id:
+          - sensor.visual_studio_code_cpu_percent
+        above: 50
+        for:
+          hours: 0
+          minutes: 15
+          seconds: 0
+    actions:
+      - action: notify.telegram_darkfox
+        data:
+          title: CPU Hog Detected
+          message: VSCode is using too much CPU, stopping it in 2 minutes
+      - delay:
+          minutes: 2
+      - action: hassio.addon_stop
+        data:
+          addon: a0d7b954_vscode
