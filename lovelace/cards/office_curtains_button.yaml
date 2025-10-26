@@ -29,6 +29,8 @@ hold_action:
             show_buttons_control: true
 
           - type: grid
+            columns: 4
+            square: false
             cards:
               - type: custom:button-card
                 entity: switch.office_curtain_automations
@@ -36,3 +38,111 @@ hold_action:
                 # template: compact
                 tap_action:
                   action: toggle
+
+              # Policy output
+              - type: custom:button-card
+                entity: binary_sensor.office_blinds_auto_open
+                name: Auto Open (policy)
+                show_state: true
+                color: var(--label-badge-green)
+                state:
+                  - value: "on"
+                    color: var(--label-badge-green)
+                  - value: "off"
+                    color: var(--label-badge-red)
+
+              # Gate: allowed time window (daylight or bright pre-dawn)
+              - type: custom:button-card
+                entity: binary_sensor.office_blinds_open_time_window
+                name: Åben tidsvindue
+                show_state: true
+                color: var(--label-badge-green)
+                state:
+                  - value: "on"
+                    color: var(--label-badge-green)
+                  - value: "off"
+                    color: var(--label-badge-red)
+
+              # Glare detector (closes when ON)
+              - type: custom:button-card
+                entity: binary_sensor.office_glare_now
+                name: Blænding nu
+                show_state: true
+                color: var(--label-badge-green)
+                state:
+                  - value: "on"
+                    color: var(--label-badge-red)
+                  - value: "off"
+                    color: var(--label-badge-green)
+
+              # --- Sun / season helpers ---
+
+              - type: custom:button-card
+                entity: binary_sensor.daylight
+                name: Dagslys
+                show_state: true
+                color: var(--label-badge-green)
+                state:
+                  - value: "on"
+                    color: var(--label-badge-green)
+                  - value: "off"
+                    color: var(--label-badge-red)
+
+              - type: custom:button-card
+                entity: sensor.better_season
+                name: Sæson (bedre)
+                show_state: true
+
+              - type: custom:button-card
+                entity: binary_sensor.heat_avoidance_season
+                name: Varme-sæson
+                show_state: true
+                color: var(--label-badge-green)
+                state:
+                  - value: "on"
+                    color: var(--label-badge-red)
+                  - value: "off"
+                    color: var(--label-badge-green)
+
+              - type: custom:button-card
+                entity: sun.sun
+                name: Sol
+                show_state: true
+                color: var(--label-badge-green)
+                state:
+                  - value: "above_horizon"
+                    color: var(--label-badge-red)
+
+              # --- Geometry / brightness ---
+
+              - type: custom:button-card
+                entity: sensor.sun_elevation
+                name: Elevation
+                show_state: true
+                color: var(--label-badge-green)
+                state:
+                  # low-angle range used in glare logic (≈ -3°..25°)
+                  - operator: "<="
+                    value: 25
+                    color: var(--label-badge-red)
+
+              - type: custom:button-card
+                entity: sensor.sun_azimuth
+                name: Azimut
+                show_state: true
+                color: var(--label-badge-green)
+
+              - type: custom:button-card
+                entity: sensor.average_office_balcony_brightness
+                name: Gns. lysstyrke
+                show_state: true
+                color: var(--label-badge-green)
+                state:
+                  # pre-dawn open threshold (~30 lux)
+                  - operator: "<"
+                    value: 30
+                    color: var(--label-badge-red)
+                  # glare ON thresholds (evening lower than daytime); show worst-case (≈3800/4200)
+                  - operator: ">"
+                    value: 3800
+                    color: var(--label-badge-red)

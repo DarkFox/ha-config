@@ -29,6 +29,8 @@ hold_action:
             show_buttons_control: true
 
           - type: grid
+            columns: 4
+            square: false
             cards:
               - type: custom:button-card
                 entity: switch.bedroom_curtain_automations
@@ -36,3 +38,61 @@ hold_action:
                 # template: compact
                 tap_action:
                   action: toggle
+
+              # Policy output
+              - type: custom:button-card
+                entity: binary_sensor.bedroom_curtains_auto_open
+                name: Auto Open (policy)
+                show_state: true
+                color: var(--label-badge-green)
+                state:
+                  - value: "on"
+                    color: var(--label-badge-green)
+                  - value: "off"
+                    color: var(--label-badge-red)
+
+              # Awake state (blocks opening when not awake)
+              - type: custom:button-card
+                entity: input_select.sleep_state
+                name: Søvntilstand
+                show_state: true
+                color: var(--label-badge-green)
+                state:
+                  - value: "awake"
+                    color: var(--label-badge-green)
+                  - operator: "!="
+                    value: "awake"
+                    color: var(--label-badge-red)
+
+              # --- Light / sun helpers ---
+
+              - type: custom:button-card
+                entity: binary_sensor.daylight
+                name: Dagslys
+                show_state: true
+                color: var(--label-badge-green)
+                state:
+                  - value: "on"
+                    color: var(--label-badge-green)
+                  - value: "off"
+                    color: var(--label-badge-red)
+
+              - type: custom:button-card
+                entity: sun.sun
+                name: Sol
+                show_state: true
+                color: var(--label-badge-green)
+                state:
+                  - value: "above_horizon"
+                    color: var(--label-badge-red)
+
+              - type: custom:button-card
+                entity: sensor.average_office_balcony_brightness
+                name: Gns. lysstyrke
+                show_state: true
+                color: var(--label-badge-green)
+                state:
+                  # pre-dawn open threshold (~25 lux)
+                  - operator: "<"
+                    value: 25
+                    color: var(--label-badge-red)
