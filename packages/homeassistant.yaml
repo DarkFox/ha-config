@@ -232,6 +232,31 @@ template:
           {%- set memory_stats = state_attr('sensor.add_ons_stats', 'addon_stats').get('memory', {}) -%}
 
   - binary_sensor:
+      - name: "Daylight"
+        unique_id: 81dee898-97aa-49e8-8d7c-7f490a63b7b1
+        icon: mdi:white-balance-sunny
+        state: >-
+          {{ states('sensor.sun_elevation')|float(0) > -4 }}
+
+      - name: "Sunset Grace Active"
+        unique_id: 248e3608-19f4-490a-957e-095b282ce999
+        icon: mdi:weather-sunset
+        state: >-
+          {% set GRACE_MIN = 30 %}
+          {% set sun_state = states('sun.sun') %}
+          {% if sun_state == 'below_horizon' %}
+            {{ (as_timestamp(now()) - as_timestamp(states.sun.sun.last_changed)) < (GRACE_MIN * 60) }}
+          {% else %}
+            false
+          {% endif %}
+
+      - name: "Heat Avoidance Season"
+        unique_id: 1184e5a4-a142-456f-8302-05b49644c37a
+        icon: mdi:thermometer-chevron-up
+        state: >-
+          {% set bs = states('sensor.better_season') %}
+          {{ bs in ['late_spring','summer','early_autumn'] }}
+
       - name: Workday
         unique_id: d582050d-a8d2-4e21-8cb1-b4f8fd1e4445
         state: >-

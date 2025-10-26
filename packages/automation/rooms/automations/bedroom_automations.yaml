@@ -41,26 +41,12 @@ template:
         unique_id: 6dcf6972-b850-42d8-b4b0-07428dfef76b
         device_class: opening
         state: >-
-          {# ---------------- constants ---------------- #}
-          {% set HIT_END     = 120  %}   {# ≈ Morning sun hits #}
-          {% set BRIGHT_MIN  = 20   %}   {# lux that means “it is light enough to open before sunrise” #}
-
-          {# ---------------- sensor look-ups ---------------- #}
-          {% set sun_up  = is_state('sun.sun', 'above_horizon') %}
-          {% set summer  = is_state('sensor.season', 'summer') %}
-          {% set azimuth = states('sensor.sun_azimuth')|float(0) %}
-          {% set bright  = states('sensor.average_office_balcony_brightness')|float(0) %}
-          {% set awake = is_state('input_select.sleep_state', 'awake') %}
-
-          {# ---------------- does the sun hit the glass? ---------------- #}
-          {% set sun_hits_by_azimuth = azimuth < HIT_END %}
-          {% set sun_hits = summer and sun_hits_by_azimuth %}
-
-          {# ---------------- final decision ---------------- #}
-          {{ 
-              (sun_up and awake and not sun_hits)
-              or (not sun_up and bright > BRIGHT_MIN and awake)
-          }}
+          {% set BRIGHT_PREOPEN = 25 %}  {# allow pre-dawn opening if it's bright enough #}
+          {% set daylight = is_state('binary_sensor.daylight','on') %}
+          {% set sun_up   = is_state('sun.sun','above_horizon') %}
+          {% set bright   = states('sensor.average_office_balcony_brightness')|float(0) %}
+          {% set awake    = is_state('input_select.sleep_state','awake') %}
+          {{ awake and (daylight or (not sun_up and bright > BRIGHT_PREOPEN)) }}
         attributes:
           icon: >-
             {{
@@ -75,8 +61,12 @@ automation:
     triggers:
       - trigger: state
         entity_id: binary_sensor.bedroom_curtains_auto_open
-        for:
-          minutes: 2
+        to: "on"
+        for: "00:02:00"
+      - trigger: state
+        entity_id: binary_sensor.bedroom_curtains_auto_open
+        to: "off"
+        for: "00:02:00"
     actions:
       - action: >-
           {% set open = states('binary_sensor.bedroom_curtains_auto_open') %}
@@ -84,12 +74,11 @@ automation:
             cover.open_cover
           {% elif open == 'off' %}
             cover.close_cover
-          {% else %}
-            cover.stop_cover {# if the state is unknown do a no-op #}
           {% endif %}
         target:
           entity_id:
             - cover.sovevaerelse_gardin
+      - delay: "00:02:00"
 
   - id: bedroom_balcony_door_open_reminder
     alias: bedroom_balcony_door_open_reminder

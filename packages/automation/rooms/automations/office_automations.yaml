@@ -37,29 +37,54 @@ binary_sensor:
 
 template:
   - binary_sensor:
+      - name: "Office Blinds Open Time Window"
+        unique_id: a2df346f-583a-4acf-aa75-f7baf45daf3a
+        icon: mdi:window-open-variant
+        state: >-
+          {% set BRIGHT_PREOPEN = 30 %}
+          {% set daylight = is_state('binary_sensor.daylight','on') %}
+          {% set sun_up   = is_state('sun.sun','above_horizon') %}
+          {% set bright   = states('sensor.average_office_balcony_brightness')|float(0) %}
+          {{ daylight or (not sun_up and bright > BRIGHT_PREOPEN) }}
+
+      - name: "Office Glare Now"
+        unique_id: 0a1dfb48-9cc5-40b8-9054-00c1b551571e
+        icon: mdi:weather-sunny-alert
+        device_class: problem
+        state: >-
+          {% set daylight   = is_state('binary_sensor.daylight','on') %}
+          {% set elevation  = states('sensor.sun_elevation')|float(0) %}
+          {% set bright     = states('sensor.average_office_balcony_brightness')|float(0) %}
+          {% set was_on     = is_state('binary_sensor.office_glare_now','on') %}
+
+          {# Treat low sun as more likely to cause reflections #}
+          {% set LOW_ELEV = -3 %}
+          {% set HIGH_ELEV = 25 %}
+          {% set low_angle = LOW_ELEV <= elevation <= HIGH_ELEV %}
+
+          {# Slightly easier to trigger within evening hours #}
+          {% set hhmm = now().strftime('%H:%M') %}
+          {% set evening = '16:00' <= hhmm <= '20:30' %}
+
+          {# Hysteresis thresholds (lux) #}
+          {% set ON_MAIN  = 4200 %}
+          {% set OFF_MAIN = 3600 %}
+          {% set ON_EVE   = 3800 %}
+          {% set OFF_EVE  = 3300 %}
+          {% set on_th  = ON_EVE  if evening else ON_MAIN %}
+          {% set off_th = OFF_EVE if evening else OFF_MAIN %}
+
+          {% set bright_trigger = (bright > on_th) or (was_on and bright > off_th) %}
+
+          {{ daylight and low_angle and bright_trigger }}
+
       - name: "Office Blinds Auto Open"
         unique_id: 254b3f93-7c22-46b6-973b-3e73ba5ba953
         device_class: opening
         state: >-
-          {# ---------------- constants ---------------- #}
-          {% set HIT_END     = 120  %}   {# ≈ Morning sun hits #}
-          {% set BRIGHT_MIN  = 20   %}   {# lux that means “it is light enough to open before sunrise” #}
-
-          {# ---------------- sensor look-ups ---------------- #}
-          {% set sun_up  = is_state('sun.sun', 'above_horizon') %}
-          {% set summer  = is_state('sensor.season', 'summer') %}
-          {% set azimuth = states('sensor.sun_azimuth')|float(0) %}
-          {% set bright  = states('sensor.average_office_balcony_brightness')|float(0) %}
-
-          {# ---------------- does the sun hit the glass? ---------------- #}
-          {% set sun_hits_by_azimuth = azimuth < HIT_END %}
-          {% set sun_hits = summer and sun_hits_by_azimuth %}
-
-          {# ---------------- final decision ---------------- #}
-          {{ 
-              (sun_up and not sun_hits)
-              or (not sun_up and bright > BRIGHT_MIN)
-          }}
+          {% set windowok = is_state('binary_sensor.office_blinds_open_time_window','on') %}
+          {% set glare    = is_state('binary_sensor.office_glare_now','on') %}
+          {{ windowok and (not glare) }}
         attributes:
           icon: >-
             {{
@@ -74,8 +99,12 @@ automation:
     triggers:
       - trigger: state
         entity_id: binary_sensor.office_blinds_auto_open
-        for:
-          minutes: 2
+        to: "on"
+        for: "00:02:00"
+      - trigger: state
+        entity_id: binary_sensor.office_blinds_auto_open
+        to: "off"
+        for: "00:03:00"
     actions:
       - action: >-
           {% set open = states('binary_sensor.office_blinds_auto_open') %}
@@ -83,13 +112,12 @@ automation:
             cover.open_cover
           {% elif open == 'off' %}
             cover.close_cover
-          {% else %}
-            cover.stop_cover {# if the state is unknown do a no-op #}
           {% endif %}
         target:
           entity_id:
             - cover.kontor_rullegardin
             - cover.kontor_altandor_gardin
+      - delay: "00:03:00"
 
   - id: office_balcony_door_open_reminder
     alias: office_balcony_door_open_reminder
