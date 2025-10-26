@@ -32,12 +32,91 @@ hold_action:
             columns: 4
             square: false
             cards:
+              # Master enable for automations (as you had)
               - type: custom:button-card
                 entity: switch.living_room_curtain_automations
                 name: Auto
                 show_state: true
-                tap_action:
-                  action: toggle
+                tap_action: { action: toggle }
+
+              # Policy output
+              - type: custom:button-card
+                entity: binary_sensor.living_room_curtains_auto_open
+                name: Auto Open (policy)
+                show_state: true
+                color: var(--label-badge-green)
+                state:
+                  - value: "on"
+                    color: var(--label-badge-green)
+                  - value: "off"
+                    color: var(--label-badge-red)
+
+              # Gate: allowed time window (daylight or sunset grace)
+              - type: custom:button-card
+                entity: binary_sensor.living_room_curtain_open_time_window
+                name: Åben tidsvindue
+                show_state: true
+                color: var(--label-badge-green)
+                state:
+                  - value: "on"
+                    color: var(--label-badge-green)
+                  - value: "off"
+                    color: var(--label-badge-red)
+
+              # Night detection
+              - type: custom:button-card
+                entity: binary_sensor.living_room_night
+                name: Nat
+                show_state: true
+                color: var(--label-badge-green)
+                state:
+                  - value: "on"
+                    color: var(--label-badge-red)
+                  - value: "off"
+                    color: var(--label-badge-green)
+
+              # --- Sun/season helpers ---
+
+              - type: custom:button-card
+                entity: binary_sensor.daylight
+                name: Dagslys
+                show_state: true
+                color: var(--label-badge-green)
+                state:
+                  - value: "on"
+                    color: var(--label-badge-green)
+                  - value: "off"
+                    color: var(--label-badge-red)
+
+              - type: custom:button-card
+                entity: binary_sensor.sunset_grace_active
+                name: Solnedgangs-grace
+                show_state: true
+                color: var(--label-badge-green)
+                state:
+                  - value: "on"
+                    color: var(--label-badge-green)
+                  - value: "off"
+                    color: var(--label-badge-red)
+
+              - type: custom:button-card
+                entity: binary_sensor.heat_avoidance_season
+                name: Varme-sæson
+                show_state: true
+                color: var(--label-badge-green)
+                state:
+                  - value: "on"
+                    color: var(--label-badge-red) # red = heat avoidance active
+                  - value: "off"
+                    color: var(--label-badge-green)
+
+              - type: custom:button-card
+                entity: sensor.better_season
+                state_display: "[[[ return entity.attributes['translation']; ]]]"
+                name: Sæson
+                show_state: true
+
+              # --- Sun geometry / brightness ---
 
               - type: custom:button-card
                 entity: binary_sensor.sun_angle_hitting_living_room_windows
@@ -62,21 +141,12 @@ hold_action:
                     color: var(--label-badge-green)
 
               - type: custom:button-card
-                entity: binary_sensor.living_room_night
-                name: Nat
-                show_state: true
-                color: var(--label-badge-green)
-                state:
-                  - value: "on"
-                    color: var(--label-badge-red)
-                  - value: "off"
-                    color: var(--label-badge-green)
-
-              - type: custom:button-card
                 entity: sensor.sun_azimuth
+                name: Azimut
                 show_state: true
                 color: var(--label-badge-green)
                 state:
+                  # HIT_START = 160 → red when within hit range; green outside
                   - operator: ">="
                     value: 160
                     color: var(--label-badge-red)
@@ -86,9 +156,11 @@ hold_action:
 
               - type: custom:button-card
                 entity: sensor.sun_elevation
+                name: Elevation
                 show_state: true
                 color: var(--label-badge-green)
                 state:
+                  # ELEV_ABOVE = 30; angle sensor turns ON when elevation <= 30
                   - operator: "<="
                     value: 30
                     color: var(--label-badge-red)
@@ -99,9 +171,11 @@ hold_action:
                 show_state: true
                 color: var(--label-badge-green)
                 state:
+                  # BRIGHT_MIN = 30 → dark/night
                   - operator: "<"
                     value: 30
                     color: var(--label-badge-red)
+                  # BRIGHT_CLOSE = 4500 → very bright (glare territory)
                   - operator: ">"
                     value: 4500
                     color: var(--label-badge-red)
@@ -113,13 +187,4 @@ hold_action:
                 color: var(--label-badge-green)
                 state:
                   - value: "above_horizon"
-                    color: var(--label-badge-red)
-
-              - type: custom:button-card
-                entity: sensor.season
-                name: Sæson
-                show_state: true
-                color: var(--label-badge-green)
-                state:
-                  - value: "summer"
                     color: var(--label-badge-red)
