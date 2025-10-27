@@ -47,6 +47,15 @@ template:
             {% endfor %}
 
             {{ ns.ret }}
+  - binary_sensor:
+      - name: "VSCode In Use"
+        state: >-
+          {{ (
+            states.sensor
+            | selectattr('entity_id', 'contains', '_browser_path')
+            | selectattr('state', 'eq', '/a0d7b954_vscode/ingress')
+            | first | default(none)
+          ) is not none }}
 
 automation:
   - alias: Notify HA Shutdown
@@ -275,6 +284,25 @@ automation:
           message: VSCode is using too much CPU, stopping it in 2 minutes
       - delay:
           minutes: 2
+      - action: hassio.addon_stop
+        data:
+          addon: a0d7b954_vscode
+
+  - alias: Stop VSCode if unused
+    id: 27640fb5-b4a0-4268-adab-fe0d95f8e933
+    initial_state: true
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.vscode_in_use
+        to: "off"
+        for:
+          hours: 1
+    actions:
+      - action: notify.telegram_darkfox
+        data:
+          title: Stopping VSCode
+          message: VSCode has not been used for 1 hour, stopping it now.
       - action: hassio.addon_stop
         data:
           addon: a0d7b954_vscode
