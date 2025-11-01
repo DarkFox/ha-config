@@ -4,15 +4,30 @@ switch:
       rook_pc:
         friendly_name: Rook PC
         icon_template: mdi:desktop-classic
-        value_template: "{{ not is_state('sensor.rook_pc_satellite_rook_pc_satellite_lastboot', 'unavailable') }}"
+        value_template: "{{ states('sensor.pc_afbryder_forbrug') | float(0.0) > 0.01 }}"
         turn_on:
-          action: button.press
-          target:
-            entity_id: button.rook_pc_wol
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: switch.pc_afbryder
+                    state: "on"
+                  - condition: state
+                    entity_id: switch.rook_pc
+                    state: "off"
+                sequence:
+                  - action: switch.turn_off
+                    target:
+                      entity_id: switch.pc_afbryder
+                  - delay:
+                      seconds: 2
+          - action: switch.turn_on
+            target:
+              entity_id: switch.pc_afbryder
         turn_off:
           action: button.press
           target:
             entity_id: button.rook_pc_shutdown
+
       kontor_soundbar_pc_output:
         friendly_name: Kontor Soundbar PC Output
         icon_template: mdi:soundbar
