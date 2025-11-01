@@ -42,29 +42,16 @@
 
 shell_command:
   curl: >-
-    {% set args = args | default('-sS') %}
-    {% set follow_redirects = follow_redirects | default(true) %}
-    {% set method = method | default('get') %}
-    {% set headers = headers | default({}) %}
-    {% set payload = payload | default(none) %}
-    {% set payload_string = payload_string | default(none) %}
-    {% set cookie_file = cookie_file | default(none) %}
-    {% set output_file = output_file | default(none) %}
-    {% set stream = stream | default('/dev/null') %}
-
-    curl {{ args }}
-    {{ '-L' if follow_redirects }}
-    {{ '-X ' ~ method|upper if not ((follow_redirects) and method|upper == 'POST') }}
-    {%- for k in headers %} -H "{{ k }}: {{ headers[k] }}"{% endfor %} 
-    {{- (' -d \'' ~ payload_string ~ '\'') if payload_string }} 
-    {%- if payload and "Content-Type" in headers and headers["Content-Type"] == "application/x-www-form-urlencoded" %} 
+    curl {{ args|default('-sS') }} {{ '-L' if follow_redirects|default(none) and follow_redirects }} {{ '-X ' ~ method|default('get')|upper if not ((follow_redirects|default(none) and follow_redirects) and method|default('get')|upper == 'POST') }} {%- for k in headers|default({}) %} -H "{{ k }}: {{ headers[k] }}"{% endfor %} 
+    {{- (' -d \'' ~ payload_string ~ '\'') if payload_string|default(none) }} 
+    {%- if payload|default(none) and "Content-Type" in headers|default({}) and headers["Content-Type"] == "application/x-www-form-urlencoded" %} 
       {%- for p in payload %} 
         {{- (' --data-urlencode \'' ~ p ~ '=' ~ payload[p] ~ '\'') }} 
       {%- endfor %} 
-    {%- elif payload %} 
+    {%- elif payload|default(none) %} 
       {{- (' -d \'' ~ payload|tojson ~ '\'') }} 
     {%- endif %} 
-    {{- (' -b \'' ~ cookie_file ~ '\'') if cookie_file }} 
-    {{- (' -c \'' ~ cookie_file ~ '\'') if cookie_file }} 
-    {{- (' -o \'' ~ output_file ~ '\'') if output_file }} 
-    {{- ' ' ~ url|trim|to_json }} > {{ stream }}
+    {{- (' -b \'' ~ cookie_file ~ '\'') if cookie_file|default(none) }} 
+    {{- (' -c \'' ~ cookie_file ~ '\'') if cookie_file|default(none) }} 
+    {{- (' -o \'' ~ output_file ~ '\'') if output_file|default(none) }} 
+    {{- ' ' ~ url|trim|to_json }} > {{ stream|default('/dev/null') }}
