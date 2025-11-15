@@ -4,7 +4,7 @@ switch:
       rook_pc:
         friendly_name: Rook PC
         icon_template: mdi:desktop-classic
-        value_template: "{{ states('sensor.pc_afbryder_forbrug') | float(0.0) > 0.01 }}"
+        value_template: "{{ states('sensor.pc_afbryder_forbrug') | float(0.0) > 5.0 }}"
         turn_on:
           - choose:
               - conditions:
@@ -111,22 +111,6 @@ input_select:
       - down
 
 automation:
-  - alias: Office PC active trigger
-    id: 9f0915b1-24af-4406-b12e-5510d87377d2
-    initial_state: true
-    triggers:
-      trigger: template
-      value_template: >-
-        {{
-          is_state('sensor.office_room_state', 'active')
-          or is_state('binary_sensor.rook_pc_activity', 'on')
-          or is_state('switch.rook_pc', 'on')
-        }}
-    actions:
-      action: switch.turn_on
-      data:
-        entity_id: switch.pc_afbryder
-
   - alias: Office PC inactive trigger
     id: 1baf4ea3-3efd-4f60-90dc-50d2f65b24a9
     initial_state: true
@@ -157,7 +141,7 @@ automation:
       trigger: template
       value_template: >-
         {{
-          states('sensor.pc_afbryder_forbrug')|float > 0.03
+          is_state('switch.rook_pc', 'on')
           or is_state('binary_sensor.rook_pc_activity', 'on')
           or is_state('binary_sensor.vagtskema_wfh', 'on')
         }}
@@ -174,7 +158,6 @@ automation:
         value_template: >-
           {{
             is_state('switch.pc_afbryder', 'off')
-            and states('sensor.pc_afbryder_forbrug')|float < 0.02
             and is_state('binary_sensor.rook_pc_activity', 'off')
             and is_state('binary_sensor.vagtskema_wfh', 'off')
             and is_state('binary_sensor.quest_in_use_delayed', 'off')
