@@ -125,10 +125,12 @@ template:
 script:
   update_model_image:
     alias: Update 3D Printer model image file
+    variables:
+      octoprint_key: !secret octoprint_key
     sequence:
       - action: downloader.download_file
         data:
-          url: "http://192.168.42.210/plugin/prusaslicerthumbnails/thumbnail/{{ states('sensor.octoprint_print_file') | replace('.gcode', '.png') }}?{{ now()|as_timestamp|int }}"
+          url: "http://192.168.42.210/plugin/prusaslicerthumbnails/thumbnail/{{ states('sensor.octoprint_print_file') | replace('.gcode', '') | urlencode }}.png?{{ now()|as_timestamp|int }}&apikey={{ octoprint_key }}"
           subdir: 3d_printer
           filename: model.jpg # Yes, the URL says PNG, but the image is actually JPEG.
           overwrite: true
