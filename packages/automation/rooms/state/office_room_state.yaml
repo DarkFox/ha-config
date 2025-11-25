@@ -12,8 +12,7 @@ group:
     entities: &motion_entities
       - binary_sensor.kontor_motion
       - binary_sensor.kontor_gulv_bevagelse
-      - binary_sensor.rook_pc_activity
-      - binary_sensor.rook_pc_activity_ping
+      - binary_sensor.office_pc_activity
 
   office_extra_entities:
     name: Office Extra Entities
@@ -57,6 +56,17 @@ template:
           {{ room_state('office') }}
 
   - binary_sensor:
+      - name: "Office PC Activity"
+        unique_id: 019aba4d-97ba-71e8-910b-90aad15bd4d0
+        state: >
+          {{
+            is_state('binary_sensor.rook_presence_delayed', 'on')
+            and (
+              is_state('binary_sensor.rook_pc_activity', 'on')
+              or is_state('binary_sensor.rook_pc_activity_ping', 'on')
+            )
+          }}
+
       - name: "Office Activity"
         unique_id: 67937a59-deb8-4752-8ff0-627c43aec085
         state: >

@@ -110,6 +110,22 @@ input_select:
       - up
       - down
 
+script:
+  start_pc_for_remote:
+    alias: Start PC for Remote
+    sequence:
+      - condition: state
+        entity_id: switch.rook_pc
+        state: "off"
+      - action: switch.turn_on
+        target:
+          entity_id: switch.rook_pc
+      - wait_template: "{{ is_state('switch.pc_tilbehor_afbryder', 'on') }}"
+        timeout: "00:05:00"
+      - action: switch.turn_off
+        target:
+          entity_id: switch.pc_tilbehor_afbryder
+
 automation:
   - alias: Office PC inactive trigger
     id: 1baf4ea3-3efd-4f60-90dc-50d2f65b24a9
