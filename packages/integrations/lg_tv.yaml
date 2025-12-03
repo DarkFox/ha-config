@@ -1,0 +1,198 @@
+script:
+  lg_tv_picture_mode:
+    alias: LG TV Picture Mode
+    mode: single
+    icon: mdi:gamepad
+    fields:
+      entity_id:
+        name: entity_id
+        description: TV entity ID
+        required: true
+        selector:
+          entity:
+            filter:
+              - integration: webostv
+                domain: media_player
+      pictureMode:
+        name: pictureMode
+        description: Picture Mode of the TV
+        required: true
+        selector:
+          select:
+            options:
+              - label: Livagtig
+                value: vivid
+              - label: Standard
+                value: normal
+              - label: Eco (Bruger)
+                value: eco
+              - label: Biograf
+                value: cinema
+              - label: Sport
+                value: sports
+              - label: Spil
+                value: game
+              - label: HDR Effekt
+                value: hdrEffect
+              - label: Filmmaker
+                value: filmMaker
+              - label: Expert (Lyst rum)
+                value: expert1
+              - label: Expert (Mørkt rum)
+                value: expert2
+    sequence:
+      - action: webostv.command
+        data:
+          entity_id: "{{ entity_id }}"
+          command: system.notifications/createAlert
+          payload:
+            message: Setting Game Mode
+            modal: false
+            type: confirm
+            isSysReq: true
+            buttons:
+              - label: ok
+                focus: true
+                buttonType: ok
+                onClick: luna://com.webos.settingsservice/setSystemSettings
+                params:
+                  category: picture
+                  settings:
+                    pictureMode: "{{ pictureMode }}"
+      - delay:
+          milliseconds: 40
+      - action: webostv.button
+        data:
+          entity_id: "{{ entity_id }}"
+          button: ENTER
+
+  lg_tv_blue_light_filter:
+    alias: LG TV Blue Light Filter
+    mode: single
+    icon: mdi:lightbulb-on-outline
+    fields:
+      entity_id:
+        name: entity_id
+        description: TV entity ID
+        required: true
+        selector:
+          entity:
+            filter:
+              - integration: webostv
+                domain: media_player
+      eyeComfortMode:
+        name: eyeComfortMode
+        description: Eye Comfort Mode setting
+        required: true
+        selector:
+          boolean:
+    sequence:
+      - action: webostv.command
+        data:
+          entity_id: "{{ entity_id }}"
+          command: system.notifications/createAlert
+          payload:
+            message: Setting blue light
+            modal: false
+            type: confirm
+            isSysReq: true
+            buttons:
+              - label: ok
+                focus: true
+                buttonType: ok
+                onClick: luna://com.webos.settingsservice/setSystemSettings
+                params:
+                  category: picture
+                  settings:
+                    eyeComfortMode: "{{ 'on' if eyeComfortMode else 'off' }}"
+      - delay:
+          milliseconds: 40
+      - action: webostv.button
+        data:
+          entity_id: "{{ entity_id }}"
+          button: ENTER
+
+  lg_tv_brightness:
+    alias: LG TV Brightness
+    fields:
+      entity_id:
+        name: entity_id
+        description: TV entity ID
+        required: true
+        selector:
+          entity:
+            filter:
+              - integration: webostv
+                domain: media_player
+      brightness:
+        selector:
+          number:
+            min: 1
+            max: 100
+        name: brightness
+        description: Brightness, 0-100, 50 is default
+        default: 50
+        required: true
+    sequence:
+      - action: webostv.command
+        data:
+          entity_id: "{{ entity_id }}"
+          command: system.notifications/createAlert
+          payload:
+            message: "Setting brightness to {{ brightness }}"
+            modal: false
+            buttons:
+              - label: ok
+                focus: true
+                buttonType: ok
+                onClick: luna://com.webos.settingsservice/setSystemSettings
+                params:
+                  category: picture
+                  settings:
+                    brightness: "{{ brightness }}"
+            type: confirm
+            isSysReq: true
+      - delay:
+          milliseconds: 40
+      - action: webostv.button
+        data:
+          entity_id: "{{ entity_id }}"
+          button: ENTER
+
+  lg_tv_dark_mode:
+    alias: LG TV Dark Mode
+    mode: single
+    icon: mdi:weather-night
+    fields:
+      entity_id:
+        name: entity_id
+        description: TV entity ID
+        required: true
+        selector:
+          entity:
+            filter:
+              - integration: webostv
+                domain: media_player
+      darkMode:
+        name: darkMode
+        description: Dark Mode setting
+        required: true
+        selector:
+          boolean:
+    sequence:
+      - action: script.lg_tv_picture_mode
+        data:
+          entity_id: "{{ entity_id }}"
+          pictureMode: "{{ 'expert2' if darkMode else 'normal' }}"
+      - delay:
+          milliseconds: 50
+      - action: script.lg_tv_blue_light_filter
+        data:
+          entity_id: "{{ entity_id }}"
+          eyeComfortMode: "{{ darkMode }}"
+      - delay:
+          milliseconds: 50
+      - action: script.lg_tv_brightness
+        data:
+          entity_id: "{{ entity_id }}"
+          brightness: "{{ 30 if darkMode else 50 }}"
