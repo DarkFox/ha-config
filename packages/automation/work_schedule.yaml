@@ -60,17 +60,8 @@ script:
             {{
               personal_calendar_events
               | selectattr('description', 'search', '#autoWorkEvent')
-              | selectattr('description', 'search', '#vagtplan')
               | list
             }}
-          from_date: >-
-            {% if personal_calendar_work_events %}
-              {% set last_event = personal_calendar_work_events | sort(attribute='end') | last %}
-              {% set last_end = as_datetime(last_event.end) %}
-              {{ (last_end + timedelta(days=1)).date().strftime('%Y-%m-%d') }}
-            {% else %}
-              {{ from_date }}
-            {% endif %}
 
       - action: calendar.get_events
         target:
@@ -84,7 +75,7 @@ script:
           schedule_calendar_events: >-
             {{
               work_calendar_response.get(work_schedule_entity, {}).get('events', [])
-              | rejectattr('summary', 'match', '(FRI|Fri|Ferie|Afspadsering|Sygdom)')
+              | rejectattr('summary', 'match', '(.*)(Fravær|fravær|FRI|Fri|Ferie|Afspadsering|Sygdom)(.*)')
               | list
             }}
           work_schedule: >-
@@ -149,25 +140,15 @@ script:
       - repeat:
           for_each: "{{ work_schedule }}"
           sequence:
-            - action: calendar.create_event
-              target:
-                entity_id: "{{ personal_calendar_entity }}"
-              data:
-                summary: "{{ repeat.item.summary }}"
-                location: "{{ repeat.item.location | default('') }}"
-                description: "{{ repeat.item.description }}"
-                start_date_time: "{{ repeat.item.start }}"
-                end_date_time: "{{ repeat.item.end }}"
-
             - variables:
-                conflicting_events: >-
-                  {% set s = repeat.item.start | as_datetime %}
-                  {% set e = repeat.item.end   | as_datetime %}
+                conflicting_work_events: >-
+                  {% set s = repeat.item.start | as_datetime | as_local %}
+                  {% set e = repeat.item.end   | as_datetime | as_local %}
                   {% set ns = namespace(conflicts = []) %}
 
-                  {% for ev in personal_calendar_personal_events %}
-                    {% set evs = ev.start | as_datetime %}
-                    {% set eve = ev.end   | as_datetime %}
+                  {% for ev in personal_calendar_work_events %}
+                    {% set evs = ev.start | as_datetime | as_local %}
+                    {% set eve = ev.end   | as_datetime | as_local %}
                     {% if evs < e and eve > s %}
                       {% set ns.conflicts = ns.conflicts + [ev] %}
                     {% endif %}
@@ -175,16 +156,70 @@ script:
 
                   {{ ns.conflicts }}
 
-            - condition: template
-              value_template: "{{ conflicting_events | length > 0 }}"
+            - choose:
+                - alias: Conflicting work event found, but times are different
+                  conditions:
+                    - condition: template
+                      value_template: >
+                        {{
+                          conflicting_work_events | length > 0
+                          and
+                          conflicting_work_events |
+                          selectattr('summary', 'equalto', repeat.item.summary) |
+                          selectattr('start', 'equalto', repeat.item.start | replace(' ', 'T')) |
+                          selectattr('end', 'equalto', repeat.item.end | replace(' ', 'T')) |
+                          list | length == 0
+                        }}
+                  sequence:
+                    - action: persistent_notification.create
+                      data:
+                        title: "Work Schedule Update Detected"
+                        message: >-
+                          An existing work schedule event "{{ repeat.item.summary }}"
+                          on {{ (repeat.item.start | as_datetime | as_local).strftime('%Y-%m-%d %H:%M') }}
+                          to {{ (repeat.item.end | as_datetime | as_local).strftime('%Y-%m-%d %H:%M') }}
+                          has been updated in shift schedule. Please review your calendar.
+                - alias: No conflicting events, proceed to add
+                  conditions:
+                    - condition: template
+                      value_template: "{{ conflicting_work_events | length < 1 }}"
+                  sequence:
+                    - action: calendar.create_event
+                      target:
+                        entity_id: "{{ personal_calendar_entity }}"
+                      data:
+                        summary: "{{ repeat.item.summary }}"
+                        location: "{{ repeat.item.location | default('') }}"
+                        description: "{{ repeat.item.description }}"
+                        start_date_time: "{{ repeat.item.start }}"
+                        end_date_time: "{{ repeat.item.end }}"
 
-            - action: persistent_notification.create
-              data:
-                title: "Work Schedule Conflict Detected"
-                message: >-
-                  A work schedule event "{{ repeat.item.summary }}" from
-                  {{ (repeat.item.start | as_datetime | as_local).strftime('%Y-%m-%d %H:%M') }} to {{ (repeat.item.end | as_datetime | as_local).strftime('%Y-%m-%d %H:%M') }} conflicts with these personal events:
-                  {% for event in conflicting_events %}
-                    - "{{ event.summary }}" from {{ (event.start | as_datetime | as_local).strftime('%Y-%m-%d %H:%M') }} to {{ (event.end | as_datetime | as_local).strftime('%Y-%m-%d %H:%M') }}
-                  {% endfor %}
-                  Please review your calendar.
+                    - variables:
+                        conflicting_personal_events: >-
+                          {% set s = repeat.item.start | as_datetime | as_local %}
+                          {% set e = repeat.item.end   | as_datetime | as_local %}
+                          {% set ns = namespace(conflicts = []) %}
+
+                          {% for ev in personal_calendar_personal_events %}
+                            {% set evs = ev.start | as_datetime | as_local %}
+                            {% set eve = ev.end   | as_datetime | as_local %}
+                            {% if evs < e and eve > s %}
+                              {% set ns.conflicts = ns.conflicts + [ev] %}
+                            {% endif %}
+                          {% endfor %}
+
+                          {{ ns.conflicts }}
+
+                    - condition: template
+                      value_template: "{{ conflicting_personal_events | length > 0 }}"
+
+                    - action: persistent_notification.create
+                      data:
+                        title: "Work Schedule Conflict Detected"
+                        message: >-
+                          A work schedule event "{{ repeat.item.summary }}" from
+                          {{ (repeat.item.start | as_datetime | as_local).strftime('%Y-%m-%d %H:%M') }} to {{ (repeat.item.end | as_datetime | as_local).strftime('%Y-%m-%d %H:%M') }} conflicts with these personal events:
+                          {% for event in conflicting_personal_events %}
+                            - "{{ event.summary }}" from {{ (event.start | as_datetime | as_local).strftime('%Y-%m-%d %H:%M') }} to {{ (event.end | as_datetime | as_local).strftime('%Y-%m-%d %H:%M') }}
+                          {% endfor %}
+                          Please review your calendar.
