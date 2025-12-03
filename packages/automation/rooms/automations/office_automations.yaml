@@ -41,11 +41,11 @@ template:
         unique_id: a2df346f-583a-4acf-aa75-f7baf45daf3a
         icon: mdi:window-open-variant
         state: >-
-          {% set BRIGHT_PREOPEN = 30 %}
+          {% set BRIGHT_PREOPEN = 50 %}
           {% set daylight = is_state('binary_sensor.daylight','on') %}
           {% set sun_up   = is_state('sun.sun','above_horizon') %}
-          {% set bright   = states('sensor.average_office_balcony_brightness')|float(0) %}
-          {{ daylight or (not sun_up and bright > BRIGHT_PREOPEN) }}
+          {% set bright   = states('sensor.average_office_balcony_brightness')|float(0) > BRIGHT_PREOPEN %}
+          {{ daylight or (not sun_up and bright) }}
 
       - name: "Office Glare Now"
         unique_id: 0a1dfb48-9cc5-40b8-9054-00c1b551571e

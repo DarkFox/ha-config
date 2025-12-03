@@ -41,12 +41,12 @@ template:
         unique_id: 6dcf6972-b850-42d8-b4b0-07428dfef76b
         device_class: opening
         state: >-
-          {% set BRIGHT_PREOPEN = 25 %}  {# allow pre-dawn opening if it's bright enough #}
+          {% set BRIGHT_PREOPEN = 50 %}  {# allow pre-dawn opening if it's bright enough #}
           {% set daylight = is_state('binary_sensor.daylight','on') %}
           {% set sun_up   = is_state('sun.sun','above_horizon') %}
-          {% set bright   = states('sensor.average_office_balcony_brightness')|float(0) %}
+          {% set bright   = states('sensor.average_office_balcony_brightness')|float(0) > BRIGHT_PREOPEN %}
           {% set awake    = is_state('input_select.sleep_state','awake') %}
-          {{ awake and (daylight or (not sun_up and bright > BRIGHT_PREOPEN)) }}
+          {{ awake and (daylight or (not sun_up and bright)) }}
         attributes:
           icon: >-
             {{
