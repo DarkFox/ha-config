@@ -414,7 +414,9 @@ automation:
                     persistent: false
                     clickAction: noAction
                     notification_icon: mdi:phone-classic
-              - action: notify.telegram_darkfox
+              - action: notify.send_message
+                target:
+                  entity_id: notify.telegram_bot_rook
                 data:
                   message: |
                     Arbejdspkald fra {{ name }}
@@ -424,7 +426,9 @@ automation:
                     {{ 'Linje: ' + line if line != '' }}
 
         default:
-          - action: notify.telegram_darkfox
+          - action: notify.send_message
+            target:
+              entity_id: notify.telegram_bot_rook
             data:
               message: >-
                 Arbejdsopkald fra ukendt nummer: {{ trigger.to_state.attributes.formatted_phone }}
@@ -436,7 +440,9 @@ script:
       phone_number:
         description: "The phone number of the unknown caller"
     sequence:
-      - action: notify.telegram_darkfox
+      - action: notify.send_message
+        target:
+          entity_id: notify.telegram_bot_rook
         data:
           message: >-
             Arbejdsopkald fra ukendt nummer: {{ phone_number | string | regex_findall(find='..') | join(' ') }}
@@ -476,7 +482,9 @@ script:
             persistent: false
             clickAction: noAction
             notification_icon: mdi:phone-classic
-      - action: notify.telegram_darkfox
+      - action: notify.send_message
+        target:
+          entity_id: notify.telegram_bot_rook
         data:
           message: |
             Arbejdspkald fra {{ name }}

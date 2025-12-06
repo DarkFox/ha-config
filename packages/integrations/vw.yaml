@@ -228,7 +228,9 @@ automation:
       parts: "{{ destinations|length }}"
       final: "{{ destinations|last }}"
     actions:
-      - action: notify.telegram_darkfox
+      - action: notify.send_message
+        target:
+          entity_id: notify.telegram_bot_rook
         data:
           message: |
             {{ parts }} destination{{ 'er' if parts > 1 }} sendt til bilen:
@@ -237,7 +239,9 @@ automation:
               - {{ d.get('name', 'Destination') }}{{ ': '~address.values()|reverse|list|join(', ') if address }}
             {% endfor %}
       - delay: 0.5
-      - action: notify.telegram_darkfox
+      - action: notify.send_message
+        target:
+          entity_id: notify.telegram_bot_rook
         data:
           message: "Destination"
           data:

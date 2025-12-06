@@ -65,7 +65,9 @@ automation:
       trigger: homeassistant
       event: shutdown
     actions:
-      - action: notify.telegram_darkfox
+      - action: notify.send_message
+        target:
+          entity_id: notify.telegram_bot_rook
         data:
           message: "Home Assistant er ved at lukke ned!"
 
@@ -85,7 +87,9 @@ automation:
       - action: homeassistant.update_entity
         entity_id: sensor.add_ons_stats
       - delay: 2
-      - action: notify.telegram_darkfox
+      - action: notify.send_message
+        target:
+          entity_id: notify.telegram_bot_rook
         data:
           message: |
             Hukommelsesforbrug er højt! {{ memory_use }}%
@@ -117,7 +121,9 @@ automation:
       - action: homeassistant.update_entity
         entity_id: sensor.add_ons_stats
       - delay: 2
-      - action: notify.telegram_darkfox
+      - action: notify.send_message
+        target:
+          entity_id: notify.telegram_bot_rook
         data:
           message: |
             CPU forbrug er højt! {{ cpu_use }}%
@@ -147,7 +153,9 @@ automation:
       - condition: template
         value_template: "{{ not trigger.to_state.state == 'unknown' }}"
     actions:
-      - action: notify.telegram_darkfox
+      - action: notify.send_message
+        target:
+          entity_id: notify.telegram_bot_rook
         data:
           message: "Din eksterne IP har ændret sig fra {{ trigger.from_state.state }} til {{ trigger.to_state.state }}"
 
@@ -278,7 +286,9 @@ automation:
           minutes: 15
           seconds: 0
     actions:
-      - action: notify.telegram_darkfox
+      - action: notify.send_message
+        target:
+          entity_id: notify.telegram_bot_rook
         data:
           title: CPU Hog Detected
           message: VSCode is using too much CPU, stopping it in 2 minutes
@@ -299,7 +309,9 @@ automation:
         for:
           hours: 1
     actions:
-      - action: notify.telegram_darkfox
+      - action: notify.send_message
+        target:
+          entity_id: notify.telegram_bot_rook
         data:
           title: Stopping VSCode
           message: VSCode has not been used for 1 hour, stopping it now.
