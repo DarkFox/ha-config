@@ -14,6 +14,19 @@ group:
     entities:
       - binary_sensor.kontor_altandor
 
+input_boolean:
+  office_balcony_activity_override:
+    icon: mdi:checkbox-multiple-marked
+    name: Office Balcony Activity Override
+
+input_select:
+  office_balcony_room_state:
+    name: Office Balcony State
+    options:
+      - active
+      - inactive
+      - "off"
+
 template:
   - sensor:
       - name: "Office Balcony Activity State"
@@ -49,26 +62,12 @@ template:
         delay_off:
           minutes: 4
 
-input_boolean:
-  office_balcony_activity_override:
-    icon: mdi:checkbox-multiple-marked
-    name: Office Balcony Activity Override
-
-input_select:
-  office_balcony_room_state:
-    name: Office Balcony State
-    options:
-      - active
-      - inactive
-      - "off"
-
-light:
-  - platform: template
-    lights:
-      office_balcony_activity_override:
-        friendly_name: Light Office Balcony Activity Override
-        icon_template: mdi:checkbox-multiple-marked
-        value_template: "{{ is_state('input_boolean.office_balcony_activity_override', 'on') }}"
+  - light:
+      - default_entity_id: light.office_balcony_activity_override
+        unique_id: 019af535-8733-762e-9284-192d475e2d35
+        name: Light Office Balcony Activity Override
+        icon: mdi:checkbox-multiple-marked
+        state: "{{ is_state('input_boolean.office_balcony_activity_override', 'on') }}"
         turn_on:
           action: input_boolean.turn_on
           data:

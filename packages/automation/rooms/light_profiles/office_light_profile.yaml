@@ -369,6 +369,22 @@ automation:
     actions:
       - event: refresh_light_profile
 
+input_boolean:
+  office_separate_light_profile:
+    name: Office Separate Light Profile
+    icon: mdi:heart-broken
+
+input_select:
+  office_light_profile:
+    name: Office Light Profile
+    options:
+      - Bright
+      - Default
+      - Dimmed
+      - Ambient
+      - Night
+      - "Off"
+
 template:
   - sensor:
       - name: "Office Selected Light Profile"
@@ -408,29 +424,12 @@ template:
           {%- from 'light_profile.jinja' import room_active_light_profile -%}
           {{ room_active_light_profile('office') }}
 
-input_boolean:
-  office_separate_light_profile:
-    name: Office Separate Light Profile
-    icon: mdi:heart-broken
-
-input_select:
-  office_light_profile:
-    name: Office Light Profile
-    options:
-      - Bright
-      - Default
-      - Dimmed
-      - Ambient
-      - Night
-      - "Off"
-
-light:
-  - platform: template
-    lights:
-      office_separate_light_profile:
-        friendly_name: Light Office Separate Light Profile
-        icon_template: mdi:heart-broken
-        value_template: "{{ is_state('input_boolean.office_separate_light_profile', 'on') }}"
+  - light:
+      - default_entity_id: light.office_separate_light_profile
+        unique_id: 019af531-9599-7038-ae4f-006d763b8b0f
+        name: Light Office Separate Light Profile
+        icon: mdi:heart-broken
+        state: "{{ is_state('input_boolean.office_separate_light_profile', 'on') }}"
         turn_on:
           action: input_boolean.turn_on
           data:
@@ -440,10 +439,11 @@ light:
           data:
             entity_id: input_boolean.office_separate_light_profile
 
-      office_light_profile_bright:
-        friendly_name: Lyst
-        icon_template: "mdi:brightness-7"
-        value_template: "{{ is_state('sensor.office_selected_light_profile', 'Bright') }}"
+      - default_entity_id: light.office_light_profile_bright
+        unique_id: 019af531-95a5-77fe-95d4-d1cdf18f414f
+        name: Lyst
+        icon: "mdi:brightness-7"
+        state: "{{ is_state('sensor.office_selected_light_profile', 'Bright') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -452,10 +452,11 @@ light:
         turn_off:
           event: office_light_profile_off_null
 
-      office_light_profile_default:
-        friendly_name: Normal
-        icon_template: "mdi:brightness-5"
-        value_template: "{{ is_state('sensor.office_selected_light_profile', 'Default') }}"
+      - default_entity_id: light.office_light_profile_default
+        unique_id: 019af531-95e5-701f-915f-887ba8a88df5
+        name: Normal
+        icon: "mdi:brightness-5"
+        state: "{{ is_state('sensor.office_selected_light_profile', 'Default') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -464,10 +465,11 @@ light:
         turn_off:
           event: office_light_profile_off_null
 
-      office_light_profile_dimmed:
-        friendly_name: Dæmpet
-        icon_template: "mdi:brightness-6"
-        value_template: "{{ is_state('sensor.office_selected_light_profile', 'Dimmed') }}"
+      - default_entity_id: light.office_light_profile_dimmed
+        unique_id: 019af531-9601-76e2-9b62-7cf633f54080
+        name: Dæmpet
+        icon: "mdi:brightness-6"
+        state: "{{ is_state('sensor.office_selected_light_profile', 'Dimmed') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -476,10 +478,11 @@ light:
         turn_off:
           event: office_light_profile_off_null
 
-      office_light_profile_ambient:
-        friendly_name: Baggrund
-        icon_template: "mdi:brightness-4"
-        value_template: "{{ is_state('sensor.office_selected_light_profile', 'Ambient') }}"
+      - default_entity_id: light.office_light_profile_ambient
+        unique_id: 019af531-9610-757e-81ce-e7408f4339cd
+        name: Baggrund
+        icon: "mdi:brightness-4"
+        state: "{{ is_state('sensor.office_selected_light_profile', 'Ambient') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -488,10 +491,11 @@ light:
         turn_off:
           event: office_light_profile_off_null
 
-      office_light_profile_night:
-        friendly_name: Nat
-        icon_template: "mdi:brightness-3"
-        value_template: "{{ is_state('sensor.office_selected_light_profile', 'Night') }}"
+      - default_entity_id: light.office_light_profile_night
+        unique_id: 019af531-9623-76f7-9c04-db5a25a26777
+        name: Nat
+        icon: "mdi:brightness-3"
+        state: "{{ is_state('sensor.office_selected_light_profile', 'Night') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -500,10 +504,11 @@ light:
         turn_off:
           event: office_light_profile_off_null
 
-      office_light_profile_off:
-        friendly_name: "Slukket"
-        icon_template: "mdi:power"
-        value_template: "{{ is_state('sensor.office_selected_light_profile', 'Off') }}"
+      - default_entity_id: light.office_light_profile_off
+        unique_id: 019af531-9635-75ed-b4f5-2e79c970169c
+        name: "Slukket"
+        icon: "mdi:power"
+        state: "{{ is_state('sensor.office_selected_light_profile', 'Off') }}"
         turn_on:
           event: set_light_profile
           event_data:

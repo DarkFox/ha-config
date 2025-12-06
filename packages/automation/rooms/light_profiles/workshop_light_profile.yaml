@@ -129,6 +129,22 @@ automation:
                     light.vaerksted_lys:
                       state: off
 
+input_boolean:
+  workshop_separate_light_profile:
+    name: Workshop Separate Light Profile
+    icon: mdi:heart-broken
+
+input_select:
+  workshop_light_profile:
+    name: Workshop Light Profile
+    options:
+      - Bright
+      - Default
+      - Dimmed
+      - Ambient
+      - Night
+      - "Off"
+
 template:
   - sensor:
       - name: "Workshop Selected Light Profile"
@@ -161,29 +177,12 @@ template:
           {%- from 'light_profile.jinja' import room_active_light_profile -%}
           {{ room_active_light_profile('workshop') }}
 
-input_boolean:
-  workshop_separate_light_profile:
-    name: Workshop Separate Light Profile
-    icon: mdi:heart-broken
-
-input_select:
-  workshop_light_profile:
-    name: Workshop Light Profile
-    options:
-      - Bright
-      - Default
-      - Dimmed
-      - Ambient
-      - Night
-      - "Off"
-
-light:
-  - platform: template
-    lights:
-      workshop_separate_light_profile:
-        friendly_name: Light Workshop Separate Light Profile
-        icon_template: mdi:heart-broken
-        value_template: "{{ is_state('input_boolean.workshop_separate_light_profile', 'on') }}"
+  - light:
+      - default_entity_id: light.workshop_separate_light_profile
+        unique_id: 019af532-1132-7742-a302-9bba3c08bb6f
+        name: Light Workshop Separate Light Profile
+        icon: mdi:heart-broken
+        state: "{{ is_state('input_boolean.workshop_separate_light_profile', 'on') }}"
         turn_on:
           action: input_boolean.turn_on
           data:
@@ -193,10 +192,11 @@ light:
           data:
             entity_id: input_boolean.workshop_separate_light_profile
 
-      workshop_light_profile_bright:
-        friendly_name: Lyst
-        icon_template: "mdi:brightness-7"
-        value_template: "{{ is_state('sensor.workshop_selected_light_profile', 'Bright') }}"
+      - default_entity_id: light.workshop_light_profile_bright
+        unique_id: 019af532-1143-77fa-81c5-95220ba9b1d7
+        name: Lyst
+        icon: "mdi:brightness-7"
+        state: "{{ is_state('sensor.workshop_selected_light_profile', 'Bright') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -205,10 +205,11 @@ light:
         turn_off:
           event: workshop_light_profile_off_null
 
-      workshop_light_profile_default:
-        friendly_name: Normal
-        icon_template: "mdi:brightness-5"
-        value_template: "{{ is_state('sensor.workshop_selected_light_profile', 'Default') }}"
+      - default_entity_id: light.workshop_light_profile_default
+        unique_id: 019af532-1176-74ea-ae66-945f2e5efd4a
+        name: Normal
+        icon: "mdi:brightness-5"
+        state: "{{ is_state('sensor.workshop_selected_light_profile', 'Default') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -217,10 +218,11 @@ light:
         turn_off:
           event: workshop_light_profile_off_null
 
-      workshop_light_profile_dimmed:
-        friendly_name: Dæmpet
-        icon_template: "mdi:brightness-6"
-        value_template: "{{ is_state('sensor.workshop_selected_light_profile', 'Dimmed') }}"
+      - default_entity_id: light.workshop_light_profile_dimmed
+        unique_id: 019af532-11a0-75ff-a599-1995d1d05934
+        name: Dæmpet
+        icon: "mdi:brightness-6"
+        state: "{{ is_state('sensor.workshop_selected_light_profile', 'Dimmed') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -229,10 +231,11 @@ light:
         turn_off:
           event: workshop_light_profile_off_null
 
-      workshop_light_profile_ambient:
-        friendly_name: Baggrund
-        icon_template: "mdi:brightness-4"
-        value_template: "{{ is_state('sensor.workshop_selected_light_profile', 'Ambient') }}"
+      - default_entity_id: light.workshop_light_profile_ambient
+        unique_id: 019af532-11ab-7771-b3bb-31c48fa0a88e
+        name: Baggrund
+        icon: "mdi:brightness-4"
+        state: "{{ is_state('sensor.workshop_selected_light_profile', 'Ambient') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -241,10 +244,11 @@ light:
         turn_off:
           event: workshop_light_profile_off_null
 
-      workshop_light_profile_night:
-        friendly_name: Nat
-        icon_template: "mdi:brightness-3"
-        value_template: "{{ is_state('sensor.workshop_selected_light_profile', 'Night') }}"
+      - default_entity_id: light.workshop_light_profile_night
+        unique_id: 019af532-11bc-754f-b0c6-4bafe17bb432
+        name: Nat
+        icon: "mdi:brightness-3"
+        state: "{{ is_state('sensor.workshop_selected_light_profile', 'Night') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -253,10 +257,11 @@ light:
         turn_off:
           event: workshop_light_profile_off_null
 
-      workshop_light_profile_off:
-        friendly_name: "Slukket"
-        icon_template: "mdi:power"
-        value_template: "{{ is_state('sensor.workshop_selected_light_profile', 'Off') }}"
+      - default_entity_id: light.workshop_light_profile_off
+        unique_id: 019af532-11cd-738f-bd2a-5ca87fb1322a
+        name: "Slukket"
+        icon: "mdi:power"
+        state: "{{ is_state('sensor.workshop_selected_light_profile', 'Off') }}"
         turn_on:
           event: set_light_profile
           event_data:

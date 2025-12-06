@@ -30,6 +30,19 @@ automation:
         entity_id: input_select.latest_motion
         option: "Kitchen"
 
+input_boolean:
+  kitchen_activity_override:
+    icon: mdi:checkbox-multiple-marked
+    name: Kitchen Activity Override
+
+input_select:
+  kitchen_room_state:
+    name: Kitchen State
+    options:
+      - active
+      - inactive
+      - "off"
+
 template:
   - sensor:
       - name: "Kitchen Activity State"
@@ -70,26 +83,12 @@ template:
         state: >-
           {{ is_state('input_select.latest_motion', 'Kitchen')}}
 
-input_boolean:
-  kitchen_activity_override:
-    icon: mdi:checkbox-multiple-marked
-    name: Kitchen Activity Override
-
-input_select:
-  kitchen_room_state:
-    name: Kitchen State
-    options:
-      - active
-      - inactive
-      - "off"
-
-light:
-  - platform: template
-    lights:
-      kitchen_activity_override:
-        friendly_name: Light Kitchen Activity Override
-        icon_template: mdi:checkbox-multiple-marked
-        value_template: "{{ is_state('input_boolean.kitchen_activity_override', 'on') }}"
+  - light:
+      - default_entity_id: light.kitchen_activity_override
+        unique_id: 019af534-5639-72fb-8539-5e619d035bda
+        name: Light Kitchen Activity Override
+        icon: mdi:checkbox-multiple-marked
+        state: "{{ is_state('input_boolean.kitchen_activity_override', 'on') }}"
         turn_on:
           action: input_boolean.turn_on
           data:

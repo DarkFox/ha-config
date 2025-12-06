@@ -342,6 +342,22 @@ script:
             light.lysestager:
               state: off
 
+input_boolean:
+  hallway_separate_light_profile:
+    name: Hallway Separate Light Profile
+    icon: mdi:heart-broken
+
+input_select:
+  hallway_light_profile:
+    name: hallway Light Profile
+    options:
+      - Bright
+      - Default
+      - Dimmed
+      - Ambient
+      - Night
+      - "Off"
+
 template:
   - sensor:
       - name: "Hallway Selected Light Profile"
@@ -374,29 +390,12 @@ template:
           {%- from 'light_profile.jinja' import room_active_light_profile -%}
           {{ room_active_light_profile('hallway') }}
 
-input_boolean:
-  hallway_separate_light_profile:
-    name: Hallway Separate Light Profile
-    icon: mdi:heart-broken
-
-input_select:
-  hallway_light_profile:
-    name: hallway Light Profile
-    options:
-      - Bright
-      - Default
-      - Dimmed
-      - Ambient
-      - Night
-      - "Off"
-
-light:
-  - platform: template
-    lights:
-      hallway_separate_light_profile:
-        friendly_name: Light Hallway Separate Light Profile
-        icon_template: mdi:heart-broken
-        value_template: "{{ is_state('input_boolean.hallway_separate_light_profile', 'on') }}"
+  - light:
+      - default_entity_id: light.hallway_separate_light_profile
+        unique_id: 019af52e-9029-732b-bc30-000afec150f0
+        name: Light Hallway Separate Light Profile
+        icon: mdi:heart-broken
+        state: "{{ is_state('input_boolean.hallway_separate_light_profile', 'on') }}"
         turn_on:
           action: input_boolean.turn_on
           data:
@@ -406,10 +405,11 @@ light:
           data:
             entity_id: input_boolean.hallway_separate_light_profile
 
-      hallway_light_profile_bright:
-        friendly_name: Lyst
-        icon_template: "mdi:brightness-7"
-        value_template: "{{ is_state('sensor.hallway_selected_light_profile', 'Bright') }}"
+      - default_entity_id: light.hallway_light_profile_bright
+        unique_id: 019af52e-9058-732c-bc16-1b9c5828db81
+        name: Lyst
+        icon: "mdi:brightness-7"
+        state: "{{ is_state('sensor.hallway_selected_light_profile', 'Bright') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -418,10 +418,11 @@ light:
         turn_off:
           event: hallway_light_profile_off_null
 
-      hallway_light_profile_default:
-        friendly_name: Normal
-        icon_template: "mdi:brightness-5"
-        value_template: "{{ is_state('sensor.hallway_selected_light_profile', 'Default') }}"
+      - default_entity_id: light.hallway_light_profile_default
+        unique_id: 019af52e-90ac-74bc-88cb-a03cef858451
+        name: Normal
+        icon: "mdi:brightness-5"
+        state: "{{ is_state('sensor.hallway_selected_light_profile', 'Default') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -430,10 +431,11 @@ light:
         turn_off:
           event: hallway_light_profile_off_null
 
-      hallway_light_profile_dimmed:
-        friendly_name: Dæmpet
-        icon_template: "mdi:brightness-6"
-        value_template: "{{ is_state('sensor.hallway_selected_light_profile', 'Dimmed') }}"
+      - default_entity_id: light.hallway_light_profile_dimmed
+        unique_id: 019af52e-90d8-7174-ba56-914c87f6dce5
+        name: Dæmpet
+        icon: "mdi:brightness-6"
+        state: "{{ is_state('sensor.hallway_selected_light_profile', 'Dimmed') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -442,10 +444,11 @@ light:
         turn_off:
           event: hallway_light_profile_off_null
 
-      hallway_light_profile_ambient:
-        friendly_name: Baggrund
-        icon_template: "mdi:brightness-4"
-        value_template: "{{ is_state('sensor.hallway_selected_light_profile', 'Ambient') }}"
+      - default_entity_id: light.hallway_light_profile_ambient
+        unique_id: 019af52e-911e-7436-9d05-ae46c1367903
+        name: Baggrund
+        icon: "mdi:brightness-4"
+        state: "{{ is_state('sensor.hallway_selected_light_profile', 'Ambient') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -454,10 +457,11 @@ light:
         turn_off:
           event: hallway_light_profile_off_null
 
-      hallway_light_profile_night:
-        friendly_name: Nat
-        icon_template: "mdi:brightness-3"
-        value_template: "{{ is_state('sensor.hallway_selected_light_profile', 'Night') }}"
+      - default_entity_id: light.hallway_light_profile_night
+        unique_id: 019af52e-913b-71be-8179-5b129644c2c3
+        name: Nat
+        icon: "mdi:brightness-3"
+        state: "{{ is_state('sensor.hallway_selected_light_profile', 'Night') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -466,10 +470,11 @@ light:
         turn_off:
           event: hallway_light_profile_off_null
 
-      hallway_light_profile_off:
-        friendly_name: "Slukket"
-        icon_template: "mdi:power"
-        value_template: "{{ is_state('sensor.hallway_selected_light_profile', 'Off') }}"
+      - default_entity_id: light.hallway_light_profile_off
+        unique_id: 019af52e-9174-7368-92b3-a857f2082067
+        name: "Slukket"
+        icon: "mdi:power"
+        state: "{{ is_state('sensor.hallway_selected_light_profile', 'Off') }}"
         turn_on:
           event: set_light_profile
           event_data:

@@ -762,6 +762,22 @@ script:
             light.barbord:
               state: off
 
+input_boolean:
+  living_room_separate_light_profile:
+    name: Living Room Separate Light Profile
+    icon: mdi:heart-broken
+
+input_select:
+  living_room_light_profile:
+    name: living room Light Profile
+    options:
+      - Bright
+      - Default
+      - Dimmed
+      - Ambient
+      - Night
+      - "Off"
+
 template:
   - sensor:
       - name: "Living Room Selected Light Profile"
@@ -800,29 +816,12 @@ template:
           {%- from 'light_profile.jinja' import room_active_light_profile -%}
           {{ room_active_light_profile('living_room') }}
 
-input_boolean:
-  living_room_separate_light_profile:
-    name: Living Room Separate Light Profile
-    icon: mdi:heart-broken
-
-input_select:
-  living_room_light_profile:
-    name: living room Light Profile
-    options:
-      - Bright
-      - Default
-      - Dimmed
-      - Ambient
-      - Night
-      - "Off"
-
-light:
-  - platform: template
-    lights:
-      living_room_separate_light_profile:
-        friendly_name: Light Living Room Separate Light Profile
-        icon_template: mdi:heart-broken
-        value_template: "{{ is_state('input_boolean.living_room_separate_light_profile', 'on') }}"
+  - light:
+      - default_entity_id: light.living_room_separate_light_profile
+        unique_id: 019af530-6526-732a-b013-92a005b1e465
+        name: Light Living Room Separate Light Profile
+        icon: mdi:heart-broken
+        state: "{{ is_state('input_boolean.living_room_separate_light_profile', 'on') }}"
         turn_on:
           action: input_boolean.turn_on
           data:
@@ -832,10 +831,11 @@ light:
           data:
             entity_id: input_boolean.living_room_separate_light_profile
 
-      living_room_light_profile_bright:
-        friendly_name: Lyst
-        icon_template: "mdi:brightness-7"
-        value_template: "{{ is_state('sensor.living_room_selected_light_profile', 'Bright') }}"
+      - default_entity_id: light.living_room_light_profile_bright
+        unique_id: 019af530-6562-749b-8d9f-172b84a51da2
+        name: Lyst
+        icon: "mdi:brightness-7"
+        state: "{{ is_state('sensor.living_room_selected_light_profile', 'Bright') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -844,10 +844,11 @@ light:
         turn_off:
           event: living_room_light_profile_off_null
 
-      living_room_light_profile_default:
-        friendly_name: Normal
-        icon_template: "mdi:brightness-5"
-        value_template: "{{ is_state('sensor.living_room_selected_light_profile', 'Default') }}"
+      - default_entity_id: light.living_room_light_profile_default
+        unique_id: 019af530-6596-7168-a20b-a2ea5694de9a
+        name: Normal
+        icon: "mdi:brightness-5"
+        state: "{{ is_state('sensor.living_room_selected_light_profile', 'Default') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -856,10 +857,11 @@ light:
         turn_off:
           event: living_room_light_profile_off_null
 
-      living_room_light_profile_dimmed:
-        friendly_name: Dæmpet
-        icon_template: "mdi:brightness-6"
-        value_template: "{{ is_state('sensor.living_room_selected_light_profile', 'Dimmed') }}"
+      - default_entity_id: light.living_room_light_profile_dimmed
+        unique_id: 019af530-65af-70af-a37a-1b4dd7e59f00
+        name: Dæmpet
+        icon: "mdi:brightness-6"
+        state: "{{ is_state('sensor.living_room_selected_light_profile', 'Dimmed') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -868,10 +870,11 @@ light:
         turn_off:
           event: living_room_light_profile_off_null
 
-      living_room_light_profile_ambient:
-        friendly_name: Baggrund
-        icon_template: "mdi:brightness-4"
-        value_template: "{{ is_state('sensor.living_room_selected_light_profile', 'Ambient') }}"
+      - default_entity_id: light.living_room_light_profile_ambient
+        unique_id: 019af530-65bd-75ee-bff7-70a40144713b
+        name: Baggrund
+        icon: "mdi:brightness-4"
+        state: "{{ is_state('sensor.living_room_selected_light_profile', 'Ambient') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -880,10 +883,11 @@ light:
         turn_off:
           event: living_room_light_profile_off_null
 
-      living_room_light_profile_night:
-        friendly_name: Nat
-        icon_template: "mdi:brightness-3"
-        value_template: "{{ is_state('sensor.living_room_selected_light_profile', 'Night') }}"
+      - default_entity_id: light.living_room_light_profile_night
+        unique_id: 019af530-65ca-740a-b708-e84f013b88fe
+        name: Nat
+        icon: "mdi:brightness-3"
+        state: "{{ is_state('sensor.living_room_selected_light_profile', 'Night') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -892,10 +896,11 @@ light:
         turn_off:
           event: living_room_light_profile_off_null
 
-      living_room_light_profile_off:
-        friendly_name: "Slukket"
-        icon_template: "mdi:power"
-        value_template: "{{ is_state('sensor.living_room_selected_light_profile', 'Off') }}"
+      - default_entity_id: light.living_room_light_profile_off
+        unique_id: 019af530-65db-70f8-aabb-f7a6c89be775
+        name: "Slukket"
+        icon: "mdi:power"
+        state: "{{ is_state('sensor.living_room_selected_light_profile', 'Off') }}"
         turn_on:
           event: set_light_profile
           event_data:

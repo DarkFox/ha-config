@@ -31,6 +31,19 @@ automation:
         entity_id: input_select.latest_motion
         option: "Workshop"
 
+input_boolean:
+  workshop_activity_override:
+    icon: mdi:checkbox-multiple-marked
+    name: Workshop Activity Override
+
+input_select:
+  workshop_room_state:
+    name: Workshop State
+    options:
+      - active
+      - inactive
+      - "off"
+
 template:
   - sensor:
       - name: "Workshop Activity State"
@@ -71,26 +84,12 @@ template:
         state: >-
           {{ is_state('input_select.latest_motion', 'Workshop')}}
 
-input_boolean:
-  workshop_activity_override:
-    icon: mdi:checkbox-multiple-marked
-    name: Workshop Activity Override
-
-input_select:
-  workshop_room_state:
-    name: Workshop State
-    options:
-      - active
-      - inactive
-      - "off"
-
-light:
-  - platform: template
-    lights:
-      workshop_activity_override:
-        friendly_name: Light Workshop Activity Override
-        icon_template: mdi:checkbox-multiple-marked
-        value_template: "{{ is_state('input_boolean.workshop_activity_override', 'on') }}"
+  - light:
+      - default_entity_id: light.workshop_activity_override
+        unique_id: 019af536-4a79-73c9-a3b6-3f67e96de90e
+        name: Light Workshop Activity Override
+        icon: mdi:checkbox-multiple-marked
+        state: "{{ is_state('input_boolean.workshop_activity_override', 'on') }}"
         turn_on:
           action: input_boolean.turn_on
           data:

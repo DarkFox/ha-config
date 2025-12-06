@@ -18,6 +18,19 @@ group:
     entities:
       - lock.hoveddor_las
 
+input_boolean:
+  hallway_activity_override:
+    icon: mdi:checkbox-multiple-marked
+    name: Hallway Activity Override
+
+input_select:
+  hallway_room_state:
+    name: Hallway State
+    options:
+      - active
+      - inactive
+      - "off"
+
 template:
   - sensor:
       - name: "Hallway Activity State"
@@ -58,26 +71,12 @@ template:
         state: >-
           {{ is_state('lock.hoveddor_las', 'unlocked') }}
 
-input_boolean:
-  hallway_activity_override:
-    icon: mdi:checkbox-multiple-marked
-    name: Hallway Activity Override
-
-input_select:
-  hallway_room_state:
-    name: Hallway State
-    options:
-      - active
-      - inactive
-      - "off"
-
-light:
-  - platform: template
-    lights:
-      hallway_activity_override:
-        friendly_name: Light Hallway Activity Override
-        icon_template: mdi:checkbox-multiple-marked
-        value_template: "{{ is_state('input_boolean.hallway_activity_override', 'on') }}"
+  - light:
+      - default_entity_id: light.hallway_activity_override
+        unique_id: 019af534-0776-75fa-9707-09793e2939b0
+        name: Light Hallway Activity Override
+        icon: mdi:checkbox-multiple-marked
+        state: "{{ is_state('input_boolean.hallway_activity_override', 'on') }}"
         turn_on:
           action: input_boolean.turn_on
           data:

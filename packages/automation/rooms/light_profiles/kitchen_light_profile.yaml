@@ -195,6 +195,22 @@ automation:
                     light.kitchen_tablet:
                       state: off
 
+input_boolean:
+  kitchen_separate_light_profile:
+    name: Kitchen Separate Light Profile
+    icon: mdi:heart-broken
+
+input_select:
+  kitchen_light_profile:
+    name: kitchen Light Profile
+    options:
+      - Bright
+      - Default
+      - Dimmed
+      - Ambient
+      - Night
+      - "Off"
+
 template:
   - sensor:
       - name: "Kitchen Selected Light Profile"
@@ -227,29 +243,12 @@ template:
           {%- from 'light_profile.jinja' import room_active_light_profile -%}
           {{ room_active_light_profile('kitchen') }}
 
-input_boolean:
-  kitchen_separate_light_profile:
-    name: Kitchen Separate Light Profile
-    icon: mdi:heart-broken
-
-input_select:
-  kitchen_light_profile:
-    name: kitchen Light Profile
-    options:
-      - Bright
-      - Default
-      - Dimmed
-      - Ambient
-      - Night
-      - "Off"
-
-light:
-  - platform: template
-    lights:
-      kitchen_separate_light_profile:
-        friendly_name: Light Kitchen Separate Light Profile
-        icon_template: mdi:heart-broken
-        value_template: "{{ is_state('input_boolean.kitchen_separate_light_profile', 'on') }}"
+  - light:
+      - default_entity_id: light.kitchen_separate_light_profile
+        unique_id: 019af52f-22bc-70ff-8b5e-7702b5c1a9ce
+        name: Light Kitchen Separate Light Profile
+        icon: mdi:heart-broken
+        state: "{{ is_state('input_boolean.kitchen_separate_light_profile', 'on') }}"
         turn_on:
           action: input_boolean.turn_on
           data:
@@ -259,10 +258,11 @@ light:
           data:
             entity_id: input_boolean.kitchen_separate_light_profile
 
-      kitchen_light_profile_bright:
-        friendly_name: Lyst
-        icon_template: "mdi:brightness-7"
-        value_template: "{{ is_state('sensor.kitchen_selected_light_profile', 'Bright') }}"
+      - default_entity_id: light.kitchen_light_profile_bright
+        unique_id: 019af52f-22df-7079-bcf0-0d966e68c85b
+        name: Lyst
+        icon: "mdi:brightness-7"
+        state: "{{ is_state('sensor.kitchen_selected_light_profile', 'Bright') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -271,10 +271,11 @@ light:
         turn_off:
           event: kitchen_light_profile_off_null
 
-      kitchen_light_profile_default:
-        friendly_name: Normal
-        icon_template: "mdi:brightness-5"
-        value_template: "{{ is_state('sensor.kitchen_selected_light_profile', 'Default') }}"
+      - default_entity_id: light.kitchen_light_profile_default
+        unique_id: 019af52f-22ea-7789-886d-8c40e033f936
+        name: Normal
+        icon: "mdi:brightness-5"
+        state: "{{ is_state('sensor.kitchen_selected_light_profile', 'Default') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -283,10 +284,11 @@ light:
         turn_off:
           event: kitchen_light_profile_off_null
 
-      kitchen_light_profile_dimmed:
-        friendly_name: Dæmpet
-        icon_template: "mdi:brightness-6"
-        value_template: "{{ is_state('sensor.kitchen_selected_light_profile', 'Dimmed') }}"
+      - default_entity_id: light.kitchen_light_profile_dimmed
+        unique_id: 019af52f-233f-716d-97cf-f3df3ab1f7ce
+        name: Dæmpet
+        icon: "mdi:brightness-6"
+        state: "{{ is_state('sensor.kitchen_selected_light_profile', 'Dimmed') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -295,10 +297,11 @@ light:
         turn_off:
           event: kitchen_light_profile_off_null
 
-      kitchen_light_profile_ambient:
-        friendly_name: Baggrund
-        icon_template: "mdi:brightness-4"
-        value_template: "{{ is_state('sensor.kitchen_selected_light_profile', 'Ambient') }}"
+      - default_entity_id: light.kitchen_light_profile_ambient
+        unique_id: 019af52f-2360-7319-a8d3-7908d83c89e0
+        name: Baggrund
+        icon: "mdi:brightness-4"
+        state: "{{ is_state('sensor.kitchen_selected_light_profile', 'Ambient') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -307,10 +310,11 @@ light:
         turn_off:
           event: kitchen_light_profile_off_null
 
-      kitchen_light_profile_night:
-        friendly_name: Nat
-        icon_template: "mdi:brightness-3"
-        value_template: "{{ is_state('sensor.kitchen_selected_light_profile', 'Night') }}"
+      - default_entity_id: light.kitchen_light_profile_night
+        unique_id: 019af52f-2374-7640-bec7-5408e6680f50
+        name: Nat
+        icon: "mdi:brightness-3"
+        state: "{{ is_state('sensor.kitchen_selected_light_profile', 'Night') }}"
         turn_on:
           event: set_light_profile
           event_data:
@@ -319,10 +323,11 @@ light:
         turn_off:
           event: kitchen_light_profile_off_null
 
-      kitchen_light_profile_off:
-        friendly_name: "Slukket"
-        icon_template: "mdi:power"
-        value_template: "{{ is_state('sensor.kitchen_selected_light_profile', 'Off') }}"
+      - default_entity_id: light.kitchen_light_profile_off
+        unique_id: 019af52f-238d-71fa-9fe9-05671818ea63
+        name: "Slukket"
+        icon: "mdi:power"
+        state: "{{ is_state('sensor.kitchen_selected_light_profile', 'Off') }}"
         turn_on:
           event: set_light_profile
           event_data:

@@ -44,6 +44,19 @@ automation:
         entity_id: input_select.latest_motion
         option: "Living Room"
 
+input_boolean:
+  living_room_activity_override:
+    icon: mdi:checkbox-multiple-marked
+    name: Livingroom Activity Override
+
+input_select:
+  living_room_room_state:
+    name: Livingroom State
+    options:
+      - active
+      - inactive
+      - "off"
+
 template:
   - sensor:
       - name: "Living Room Activity State"
@@ -89,26 +102,12 @@ template:
         state: >-
           {{ states('media_player.stue_shield') in ['playing', 'paused'] }}
 
-input_boolean:
-  living_room_activity_override:
-    icon: mdi:checkbox-multiple-marked
-    name: Livingroom Activity Override
-
-input_select:
-  living_room_room_state:
-    name: Livingroom State
-    options:
-      - active
-      - inactive
-      - "off"
-
-light:
-  - platform: template
-    lights:
-      living_room_activity_override:
-        friendly_name: Light Living Room Activity Override
-        icon_template: mdi:checkbox-multiple-marked
-        value_template: "{{ is_state('input_boolean.living_room_activity_override', 'on') }}"
+  - light:
+      - default_entity_id: light.living_room_activity_override
+        unique_id: 019af534-aba8-72c7-bdeb-22caba428577
+        name: Light Living Room Activity Override
+        icon: mdi:checkbox-multiple-marked
+        state: "{{ is_state('input_boolean.living_room_activity_override', 'on') }}"
         turn_on:
           action: input_boolean.turn_on
           data:
