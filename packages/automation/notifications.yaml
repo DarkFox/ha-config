@@ -132,10 +132,10 @@ script:
               message: |
                 {{ message_title if message_title is defined and message_title }}
                 {{ message_text }}
-          - action: script.notify_rook_pc
-            data:
-              title: "{{ message_title if message_title is defined and message_title }}"
-              message: "{{ message_text }}"
+          # - action: script.notify_rook_pc
+          #   data:
+          #     title: "{{ message_title if message_title is defined and message_title }}"
+          #     message: "{{ message_text }}"
 
   notify_tts:
     alias: Send TTS notification to all speakers and Darkphone
@@ -223,35 +223,36 @@ script:
           data: "{{ data if data is defined and data else {} }}"
   #endregion
   #region Notify Rook PC
-  notify_rook_pc:
-    alias: Send notification to Rook PC
-    mode: queued
-    fields:
-      title:
-        description: The title of the message
-        example: "Warning"
-        selector:
-          text:
-      message:
-        description: The message to send
-        example: "Hello, this is a test"
-        selector:
-          text:
-      data:
-        description: Additional data to send with the message
-        example: "{'inline_keyboard': {'text': 'Click me', 'url': 'https://www.home-assistant.io'}}"
-        selector:
-          object:
-    sequence:
-      - condition: state
-        entity_id: binary_sensor.rook_pc_activity
-        state: "on"
-      - action: notify.rook_pc
-        data:
-          title: "{{ title if title is defined and title }}"
-          message: "{{ message }}"
-          data: "{{ data if data is defined and data else {} }}"
+  # notify_rook_pc:
+  #   alias: Send notification to Rook PC
+  #   mode: queued
+  #   fields:
+  #     title:
+  #       description: The title of the message
+  #       example: "Warning"
+  #       selector:
+  #         text:
+  #     message:
+  #       description: The message to send
+  #       example: "Hello, this is a test"
+  #       selector:
+  #         text:
+  #     data:
+  #       description: Additional data to send with the message
+  #       example: "{'inline_keyboard': {'text': 'Click me', 'url': 'https://www.home-assistant.io'}}"
+  #       selector:
+  #         object:
+  #   sequence:
+  #     - condition: state
+  #       entity_id: binary_sensor.rook_pc_activity
+  #       state: "on"
+  #     - action: notify.rook_pc
+  #       data:
+  #         title: "{{ title if title is defined and title }}"
+  #         message: "{{ message }}"
+  #         data: "{{ data if data is defined and data else {} }}"
   #endregion
+
   #region Notify Darkphone
   notify_darkphone:
     alias: Send notification to Darkphone TTS and Telegram
