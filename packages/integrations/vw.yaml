@@ -228,9 +228,7 @@ automation:
       parts: "{{ destinations|length }}"
       final: "{{ destinations|last }}"
     actions:
-      - action: notify.send_message
-        target:
-          entity_id: notify.telegram_bot_rook
+      - action: script.notify_darkphone
         data:
           message: |
             {{ parts }} destination{{ 'er' if parts > 1 }} sendt til bilen:
@@ -239,12 +237,7 @@ automation:
               - {{ d.get('name', 'Destination') }}{{ ': '~address.values()|reverse|list|join(', ') if address }}
             {% endfor %}
       - delay: 0.5
-      - action: notify.send_message
-        target:
-          entity_id: notify.telegram_bot_rook
+      - action: telegram_bot.send_location
         data:
-          message: "Destination"
-          data:
-            location:
-              latitude: "{{ final.get('geoCoordinate', {}).get('latitude') }}"
-              longitude: "{{ final.get('geoCoordinate', {}).get('longitude')}}"
+          latitude: "{{ final.get('geoCoordinate', {}).get('latitude') }}"
+          longitude: "{{ final.get('geoCoordinate', {}).get('longitude')}}"

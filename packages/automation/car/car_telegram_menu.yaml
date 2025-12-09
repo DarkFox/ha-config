@@ -12,9 +12,7 @@ automation:
         event_data:
           command: "/bil"
     actions:
-      - action: notify.send_message
-        target:
-          entity_id: notify.telegram_bot_rook
+      - action: script.notify_darkphone
         data:
           message: >
             {% if is_state('sensor.id_3_pro_charging_state', 'charging') -%}
@@ -28,14 +26,8 @@ automation:
             {%- else -%}
               Klimatisering afsluttet.
             {%- endif -%}
-      - action: notify.send_message
-        target:
-          entity_id: notify.telegram_bot_rook
-        data:
-          message: "Menu:"
-          data:
-            inline_keyboard:
-              - "Klimatisering:/car_climatisation, Opladning:/car_charging"
+          inline_keyboard:
+            - "Klimatisering:/car_climatisation, Opladning:/car_charging"
 
   - id: car_climatisation_menu
     initial_state: true
@@ -52,16 +44,13 @@ automation:
     variables:
       temp: "{{ state_attr('climate.id_3_pro_start_stop_climatization', 'temperature')|int }}"
     actions:
-      - action: notify.send_message
-        target:
-          entity_id: notify.telegram_bot_rook
+      - action: telegram_bot.send_message
         data:
           message: "Klimatisering Menu"
-          data:
-            inline_keyboard:
-              - "{{ 'Stop klimatisering:/car_climatisation_off' if states('sensor.id_3_pro_remaining_climatisation_time')|int > 0 else 'Klimatiser nu:/car_climatisation_on' }}"
-              - "{{ '[18°]' if temp == 18 else '18°' }}:/car_climatisation_set 18, {{ '[19°]' if temp == 19 else '19°' }}:/car_climatisation_set 19, {{ '[20°]' if temp == 20 else '20°' }}:/car_climatisation_set 20"
-              - "{{ '[21°]' if temp == 21 else '21°' }}:/car_climatisation_set 21, {{ '[22°]' if temp == 22 else '22°' }}:/car_climatisation_set 22, {{ '[23°]' if temp == 23 else '23°' }}:/car_climatisation_set 23"
+          inline_keyboard:
+            - "{{ 'Stop klimatisering:/car_climatisation_off' if states('sensor.id_3_pro_remaining_climatisation_time')|int > 0 else 'Klimatiser nu:/car_climatisation_on' }}"
+            - "{{ '[18°]' if temp == 18 else '18°' }}:/car_climatisation_set 18, {{ '[19°]' if temp == 19 else '19°' }}:/car_climatisation_set 19, {{ '[20°]' if temp == 20 else '20°' }}:/car_climatisation_set 20"
+            - "{{ '[21°]' if temp == 21 else '21°' }}:/car_climatisation_set 21, {{ '[22°]' if temp == 22 else '22°' }}:/car_climatisation_set 22, {{ '[23°]' if temp == 23 else '23°' }}:/car_climatisation_set 23"
 
   - id: car_climatisation_set
     initial_state: true
@@ -84,9 +73,7 @@ automation:
       - action: switch.turn_on
         target:
           entity_id: switch.id_3_pro_climatisation
-      - action: notify.send_message
-        target:
-          entity_id: notify.telegram_bot_rook
+      - action: script.notify_darkphone
         data:
           message: >-
             Temperatur sat til {{ trigger.event.data['args'][0] }}°.
@@ -138,15 +125,12 @@ automation:
         event_data:
           command: "/car_charging"
     actions:
-      - action: notify.send_message
-        target:
-          entity_id: notify.telegram_bot_rook
+      - action: telegram_bot.send_message
         data:
           message: "Opladning Menu"
-          data:
-            inline_keyboard:
-              - "{{ 'Stop opladning:/car_charging_off' if is_state('sensor.id_3_pro_charging_state', 'charging') else 'Start opladning:/car_charging_on' }}"
-              - "50%:/car_charging_set 50, 60%:/car_charging_set 60, 70%:/car_charging_set 70, 80%:/car_charging_set 80, 90%:/car_charging_set 90, 100%:/car_charging_set 100"
+          inline_keyboard:
+            - "{{ 'Stop opladning:/car_charging_off' if is_state('sensor.id_3_pro_charging_state', 'charging') else 'Start opladning:/car_charging_on' }}"
+            - "50%:/car_charging_set 50, 60%:/car_charging_set 60, 70%:/car_charging_set 70, 80%:/car_charging_set 80, 90%:/car_charging_set 90, 100%:/car_charging_set 100"
 
   - initial_state: true
     alias: Send destination til bil

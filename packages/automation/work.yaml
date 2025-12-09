@@ -217,13 +217,12 @@ automation:
               - action: script.notify_darkphone
                 data:
                   message: "Log på Puzzel?"
-                  data:
-                    inline_keyboard: >-
-                      {% set ns = namespace(ret=[]) %}
-                      {% for profile in state_attr('binary_sensor.puzzel_expected_state', 'any') | sort(attribute='name') %}
-                        {% set ns.ret = ns.ret + [profile.name + ':/puzzel_login '+(profile.id|string)] %}
-                      {% endfor %}
-                      {{ ns.ret + ['Ignorer:/puzzel_ignore_incorrect'] }}
+                  inline_keyboard: >-
+                    {% set ns = namespace(ret=[]) %}
+                    {% for profile in state_attr('binary_sensor.puzzel_expected_state', 'any') | sort(attribute='name') %}
+                      {% set ns.ret = ns.ret + [profile.name + ':/puzzel_login '+(profile.id|string)] %}
+                    {% endfor %}
+                    {{ ns.ret + ['Ignorer:/puzzel_ignore_incorrect'] }}
           - conditions:
               - condition: state
                 entity_id: binary_sensor.puzzel_status
@@ -235,9 +234,8 @@ automation:
               - action: script.notify_darkphone
                 data:
                   message: "Du er stadig logget på Puzzel"
-                  data:
-                    inline_keyboard: >-
-                      {{ ['Log af:/puzzel_log_off', 'Ignorer:/puzzel_ignore_incorrect'] }}
+                  inline_keyboard: >-
+                    {{ ['Log af:/puzzel_log_off', 'Ignorer:/puzzel_ignore_incorrect'] }}
           - conditions:
               - condition: state
                 entity_id: binary_sensor.puzzel_status

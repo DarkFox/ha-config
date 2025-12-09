@@ -630,9 +630,7 @@ automation:
         event_data:
           command: "/puzzel"
     actions:
-      - action: notify.send_message
-        target:
-          entity_id: notify.telegram_bot_rook
+      - action: script.notify_darkphone
         data:
           message: >-
             {% if is_state('sensor.puzzel_profil', 'Logget af') %}
@@ -641,21 +639,20 @@ automation:
               Logget på Puzzel - {{ states('sensor.puzzel_profil') }}. Status: {{ states('sensor.puzzel_state') }}
             {% endif %}
             Menu:
-          data:
-            inline_keyboard: >-
-              {% if is_state('sensor.puzzel_profil', 'Logget af') %}
-                {{ (
-                  state_attr('sensor.puzzel_ko', 'available_profiles')
-                  | map(attribute='name')
-                  | map('regex_replace', '\A(.*)\Z', '\\1:/puzzel_login \\1')
-                  | list
-                ) }}
-              {% else %}
-                {{ ['Log af:/puzzel_log_off']
-                + ['Skift kø:/puzzel_login']
-                + ['Ledig:/puzzel_pause off']
-                + ['Pause:/puzzel_pause on'] }}
-              {% endif %}
+          inline_keyboard: >-
+            {% if is_state('sensor.puzzel_profil', 'Logget af') %}
+              {{ (
+                state_attr('sensor.puzzel_ko', 'available_profiles')
+                | map(attribute='name')
+                | map('regex_replace', '\A(.*)\Z', '\\1:/puzzel_login \\1')
+                | list
+              ) }}
+            {% else %}
+              {{ ['Log af:/puzzel_log_off']
+              + ['Skift kø:/puzzel_login']
+              + ['Ledig:/puzzel_pause off']
+              + ['Pause:/puzzel_pause on'] }}
+            {% endif %}
 
   - id: telegram_bot_log_off_puzzel
     alias: "Telegram bot log off puzzel"
@@ -694,18 +691,15 @@ automation:
               - condition: template
                 value_template: "{{ not trigger.event.data['args'] }}"
             sequence:
-              - action: notify.send_message
-                target:
-                  entity_id: notify.telegram_bot_rook
+              - action: script.notify_darkphone
                 data:
                   message: "Log på Puzzel?"
-                  data:
-                    inline_keyboard: >-
-                      {% set ns = namespace(ret=[]) %}
-                      {% for profile in state_attr('sensor.puzzel_ko', 'available_profiles') | sort(attribute='name') %}
-                        {% set ns.ret = ns.ret + [profile.name + ':/puzzel_login '+(profile.id|string)] %}
-                      {% endfor %}
-                      {{ ns.ret }}
+                  inline_keyboard: >-
+                    {% set ns = namespace(ret=[]) %}
+                    {% for profile in state_attr('sensor.puzzel_ko', 'available_profiles') | sort(attribute='name') %}
+                      {% set ns.ret = ns.ret + [profile.name + ':/puzzel_login '+(profile.id|string)] %}
+                    {% endfor %}
+                    {{ ns.ret }}
         default:
           - variables:
               queue_id: "{{ trigger.event.data['args'][0]|int }}"

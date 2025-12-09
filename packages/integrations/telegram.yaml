@@ -11,33 +11,10 @@ automation:
       trigger: homeassistant
       event: start
     actions:
-      - action: notify.send_message
-        target:
-          entity_id: notify.telegram_bot_rook
+      - action: script.notify_darkphone
         data:
           message: "Home Assistant er genstartet!"
-          data:
-            keyboard:
-              - "/puzzel" # work.yaml
-              - "/bil" # car_telegram_menu.yaml
-              - "/destination" # car_telegram_menu.yaml
-
-  - alias: "Handle Telegram Message"
-    id: handle_telegram_message
-    initial_state: true
-    triggers:
-      - trigger: event
-        event_type: telegram_text
-        event_data:
-          chat_id: !secret telegram_darkfox_id
-    actions:
-      - action: conversation.process
-        data:
-          text: "{{ trigger.event.data.text }}"
-          language: "da"
-          agent_id: 4e0a875b09f8a19a405e1bf3e5c4adac
-        response_variable: agent
-      - action: telegram_bot.send_message
-        data:
-          target: "{{ trigger.event.data.chat_id }}"
-          message: "{{ agent.response.speech.plain.speech }}"
+          keyboard:
+            - "/puzzel" # work.yaml
+            - "/bil" # car_telegram_menu.yaml
+            # - "/destination" # car_telegram_menu.yaml

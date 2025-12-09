@@ -41,9 +41,9 @@ script:
             min: -1
             max: 3
             step: 1
-      data:
-        description: Additional data to send with the message
-        example: "{'inline_keyboard': {'text': 'Click me', 'url': 'https://www.home-assistant.io'}}"
+      inline_keyboard:
+        description: Inline keyboard to include with the message
+        example: "['Log af:/puzzel_log_off', 'Ignorer:/puzzel_ignore_incorrect']"
         selector:
           object:
     sequence:
@@ -61,13 +61,12 @@ script:
               message_title: "{{ message_title if message_title is defined and message_title }}"
               message: "{{ message_text }}"
               severity: "{{ severity | default(1) | int }}"
-              data: "{{ data if data is defined and data else {} }}"
+              inline_keyboard: "{{ inline_keyboard if inline_keyboard is defined and inline_keyboard else none }}"
           - action: script.notify_tts
             data:
               message_title: "{{ message_title if message_title is defined and message_title }}"
               message: "{{ message }}"
               severity: "{{ severity | default(1) | int }}"
-              data: "{{ data if data is defined and data else {} }}"
 
   notify_text:
     alias: Send text notifications to all devices
@@ -91,9 +90,14 @@ script:
             min: -1
             max: 3
             step: 1
-      data:
-        description: Additional data to send with the message
-        example: "{'inline_keyboard': {'text': 'Click me', 'url': 'https://www.home-assistant.io'}}"
+      inline_keyboard:
+        description: Inline keyboard to include with the message
+        example: "['Log af:/puzzel_log_off', 'Ignorer:/puzzel_ignore_incorrect']"
+        selector:
+          object:
+      keyboard:
+        description: Keyboard to include with the message
+        example: "[['Button 1:/command1', 'Button 2:/command2']]"
         selector:
           object:
     sequence:
@@ -106,13 +110,19 @@ script:
               {{ message }}
             {%- endif -%}
       - parallel:
-          - action: notify.send_message
-            target:
-              entity_id: notify.telegram_bot_rook
-            data:
-              title: "{{ message_title if message_title is defined and message_title }}"
-              message: "{{ message_text }}"
-              data: "{{ data if data is defined and data else {} }}"
+          - action: telegram_bot.send_message
+            data: >-
+              {% set ns = namespace(ret={"message": message_text}) %}
+              {% if message_title is defined and message_title %}
+                {% set ns.ret = ns.ret | combine({"title": message_title}) %}
+              {% endif %}
+              {% if inline_keyboard is defined and inline_keyboard %}
+                {% set ns.ret = ns.ret | combine({"inline_keyboard": inline_keyboard}) %}
+              {% endif %}
+              {% if keyboard is defined and keyboard %}
+                {% set ns.ret = ns.ret | combine({"keyboard": keyboard}) %}
+              {% endif %}
+              {{ ns.ret }}
           - action: notify.mobile_app_quest
             data:
               title: "{{ message_title if message_title is defined and message_title }}"
@@ -130,7 +140,7 @@ script:
                 {{ message_text }}
           - action: script.notify_webos_tv
             data:
-              entity_id: notify.kontor_tv
+              entity_id: media_player.kontor_tv
               message: |
                 {{ message_title if message_title is defined and message_title }}
                 {{ message_text }}
@@ -161,11 +171,6 @@ script:
             min: -1
             max: 3
             step: 1
-      data:
-        description: Additional data to send with the message
-        example: "{'inline_keyboard': {'text': 'Click me', 'url': 'https://www.home-assistant.io'}}"
-        selector:
-          object:
     sequence:
       - variables:
           # If the message is a chime_tts segments list, extract the tts attribute of each segment
@@ -278,19 +283,16 @@ script:
             min: -1
             max: 3
             step: 1
-      data:
-        description: Additional data to send with the message
-        example: "{'inline_keyboard': {'text': 'Click me', 'url': 'https://www.home-assistant.io'}}"
+      inline_keyboard:
+        description: Inline keyboard to include with the message
+        example: "['Log af:/puzzel_log_off', 'Ignorer:/puzzel_ignore_incorrect']"
         selector:
           object:
-    variables:
-      data: |
-        {% set input_data = data if data is defined and data else {} %}
-        {% if severity is defined and severity == 0 %}
-          {{ input_data | combine({ 'disable_notification': True}) }}
-        {% else %}
-          {{ input_data }}
-        {% endif %}
+      keyboard:
+        description: Keyboard to include with the message
+        example: "[['Button 1:/command1', 'Button 2:/command2']]"
+        selector:
+          object:
     sequence:
       - parallel:
           - action: script.darkphone_tts
@@ -298,13 +300,22 @@ script:
               message_title: "{{ message_title if message_title is defined and message_title }}"
               message: "{{ message }}"
               severity: "{{ severity | default(1) | int }}"
-          - action: notify.send_message
-            target:
-              entity_id: notify.telegram_bot_rook
-            data:
-              title: "{{ message_title if message_title is defined and message_title }}"
-              message: "{{ message }}"
-              data: "{{ data if data is defined and data else {} }}"
+          - action: telegram_bot.send_message
+            data: >-
+              {% set ns = namespace(ret={"message": message_text}) %}
+              {% if message_title is defined and message_title %}
+                {% set ns.ret = ns.ret | combine({"title": message_title}) %}
+              {% endif %}
+              {% if inline_keyboard is defined and inline_keyboard %}
+                {% set ns.ret = ns.ret | combine({"inline_keyboard": inline_keyboard}) %}
+              {% endif %}
+              {% if keyboard is defined and keyboard %}
+                {% set ns.ret = ns.ret | combine({"keyboard": keyboard}) %}
+              {% endif %}
+              {% if severity is defined and severity < 0 %}
+                {% set ns.ret = ns.ret | combine({"disable_notification": true}) %}
+              {% endif %}
+              {{ ns.ret }}
   #endregion
   #region Darkphone TTS
   darkphone_tts:
