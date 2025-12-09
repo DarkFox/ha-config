@@ -51,25 +51,38 @@ input_boolean:
   sovevaerelse_tv_night_mode_state:
   sovevaerelse_soundbar_night_mode_state:
 
-switch:
-  - platform: template
-    switches:
-      sovevaerelse_tv:
-        friendly_name: Soveværelse TV
-        icon_template: mdi:television
-        value_template: "{{ not is_state('media_player.sovevarelse_tv_dlna', 'unavailable') }}"
+template:
+  - binary_sensor:
+      - default_entity_id: binary_sensor.sovevaerelse_video_out
+        name: Soveværelse Video Out
+        unique_id: 019b0410-6833-70fd-aa1a-6a08cf28c9be
+        state: >-
+          {{
+            is_state('media_player.sovevaerelse_chromecast', 'playing')
+            or is_state('media_player.sovevaerelse_chromecast', 'paused')
+            or is_state('media_player.sovevaerelse_chromecast', 'idle')
+          }}
+  - switch:
+      - default_entity_id: switch.sovevaerelse_tv
+        unique_id: 019b0423-c75e-70d6-841f-01d1c5102bb0
+        name: Soveværelse TV
+        icon: mdi:television
+        state: "{{ not is_state('media_player.sovevarelse_tv_dlna', 'unavailable') }}"
         turn_on:
-          action: switch.turn_on
-          target:
-            entity_id: switch.sovevaerelse_tv_power
+          - action: switch.turn_on
+            target:
+              entity_id:
+                - switch.sovevaerelse_tv_power
         turn_off:
-          action: switch.turn_off
-          target:
-            entity_id: switch.sovevaerelse_tv_power
-      sovevaerelse_tv_night_mode:
-        friendly_name: Soveværelse TV Night Mode
-        icon_template: mdi:weather-night
-        value_template: "{{ is_state('input_boolean.sovevaerelse_tv_night_mode_state', 'on') }}"
+          - action: switch.turn_off
+            target:
+              entity_id:
+                - switch.sovevaerelse_tv_power
+      - default_entity_id: switch.sovevaerelse_tv_night_mode
+        unique_id: 019b0423-c76d-7170-98b0-6ed10b2cc55d
+        name: Soveværelse TV Night Mode
+        icon: mdi:weather-night
+        state: "{{ is_state('input_boolean.sovevaerelse_tv_night_mode_state', 'on') }}"
         turn_on:
           action: script.turn_on
           target:
@@ -78,10 +91,11 @@ switch:
           action: script.turn_on
           target:
             entity_id: script.sovevaerelse_tv_disable_night_mode
-      sovevaerelse_soundbar_night_mode:
-        friendly_name: Soveværelse Soundbar Night Mode
-        icon_template: mdi:weather-night-partly-cloudy
-        value_template: "{{ is_state('input_boolean.sovevaerelse_soundbar_night_mode_state', 'on') }}"
+      - default_entity_id: switch.sovevaerelse_soundbar_night_mode
+        unique_id: 019b0423-c791-761b-8771-4de544b159e0
+        name: Soveværelse Soundbar Night Mode
+        icon: mdi:weather-night-partly-cloudy
+        state: "{{ is_state('input_boolean.sovevaerelse_soundbar_night_mode_state', 'on') }}"
         turn_on:
           - action: songpal.set_sound_setting
             target:
@@ -102,18 +116,6 @@ switch:
           - action: input_boolean.turn_off
             target:
               entity_id: input_boolean.sovevaerelse_soundbar_night_mode_state
-
-binary_sensor:
-  - platform: template
-    sensors:
-      sovevaerelse_video_out:
-        value_template: >-
-          {{
-            is_state('media_player.sovevaerelse_chromecast', 'playing')
-            or is_state('media_player.sovevaerelse_chromecast', 'paused')
-            or is_state('media_player.sovevaerelse_chromecast', 'idle')
-          }}
-
 script:
   sovevaerelse_tv_enable_night_mode:
     sequence:

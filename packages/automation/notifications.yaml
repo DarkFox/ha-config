@@ -109,20 +109,24 @@ script:
             {%- else -%}
               {{ message }}
             {%- endif -%}
+          telegram_data: >-
+            {% set ns = namespace(ret={"message": message}) %}
+            {% if message_title is defined and message_title %}
+              {% set ns.ret = ns.ret | combine({"title": message_title}) %}
+            {% endif %}
+            {% if inline_keyboard is defined and inline_keyboard %}
+              {% set ns.ret = ns.ret | combine({"inline_keyboard": inline_keyboard}) %}
+            {% endif %}
+            {% if keyboard is defined and keyboard %}
+              {% set ns.ret = ns.ret | combine({"keyboard": keyboard}) %}
+            {% endif %}
+            {% if severity is defined and severity < 0 %}
+              {% set ns.ret = ns.ret | combine({"disable_notification": true}) %}
+            {% endif %}
+            {{ ns.ret }}
       - parallel:
           - action: telegram_bot.send_message
-            data: >-
-              {% set ns = namespace(ret={"message": message_text}) %}
-              {% if message_title is defined and message_title %}
-                {% set ns.ret = ns.ret | combine({"title": message_title}) %}
-              {% endif %}
-              {% if inline_keyboard is defined and inline_keyboard %}
-                {% set ns.ret = ns.ret | combine({"inline_keyboard": inline_keyboard}) %}
-              {% endif %}
-              {% if keyboard is defined and keyboard %}
-                {% set ns.ret = ns.ret | combine({"keyboard": keyboard}) %}
-              {% endif %}
-              {{ ns.ret }}
+            data: "{{ telegram_data or {} }}"
           - action: notify.mobile_app_quest
             data:
               title: "{{ message_title if message_title is defined and message_title }}"
@@ -293,6 +297,22 @@ script:
         example: "[['Button 1:/command1', 'Button 2:/command2']]"
         selector:
           object:
+    variables:
+      telegram_data: >-
+        {% set ns = namespace(ret={"message": message}) %}
+        {% if message_title is defined and message_title %}
+          {% set ns.ret = ns.ret | combine({"title": message_title}) %}
+        {% endif %}
+        {% if inline_keyboard is defined and inline_keyboard %}
+          {% set ns.ret = ns.ret | combine({"inline_keyboard": inline_keyboard}) %}
+        {% endif %}
+        {% if keyboard is defined and keyboard %}
+          {% set ns.ret = ns.ret | combine({"keyboard": keyboard}) %}
+        {% endif %}
+        {% if severity is defined and severity < 0 %}
+          {% set ns.ret = ns.ret | combine({"disable_notification": true}) %}
+        {% endif %}
+        {{ ns.ret }}
     sequence:
       - parallel:
           - action: script.darkphone_tts
@@ -301,21 +321,7 @@ script:
               message: "{{ message }}"
               severity: "{{ severity | default(1) | int }}"
           - action: telegram_bot.send_message
-            data: >-
-              {% set ns = namespace(ret={"message": message_text}) %}
-              {% if message_title is defined and message_title %}
-                {% set ns.ret = ns.ret | combine({"title": message_title}) %}
-              {% endif %}
-              {% if inline_keyboard is defined and inline_keyboard %}
-                {% set ns.ret = ns.ret | combine({"inline_keyboard": inline_keyboard}) %}
-              {% endif %}
-              {% if keyboard is defined and keyboard %}
-                {% set ns.ret = ns.ret | combine({"keyboard": keyboard}) %}
-              {% endif %}
-              {% if severity is defined and severity < 0 %}
-                {% set ns.ret = ns.ret | combine({"disable_notification": true}) %}
-              {% endif %}
-              {{ ns.ret }}
+            data: "{{ telegram_data or {} }}"
   #endregion
   #region Darkphone TTS
   darkphone_tts:

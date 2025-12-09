@@ -1,31 +1,39 @@
-switch:
-  - platform: template
-    switches:
-      stue_tv_active:
-        value_template: "{{ is_state('media_player.stue_tv', 'on') }}"
+template:
+  - switch:
+      - default_entity_id: switch.stue_tv_active
+        unique_id: 019b0426-5aaf-71eb-b8f6-f8a4b9cefc43
+        state: "{{ is_state('media_player.stue_tv', 'on') }}"
+        name: stue_tv_active
         turn_on:
           - action: switch.turn_on
             target:
-              entity_id: switch.stue_tv_afbryder
+              entity_id:
+                - switch.stue_tv_afbryder
           - action: switch.turn_on
             target:
-              entity_id: switch.sync_box_power
+              entity_id:
+                - switch.sync_box_power
           - wait_template: "{{ not is_state('media_player.stue_tv', 'unavailable') }}"
-            timeout: "00:00:10"
+            timeout: 0:00:10
             continue_on_timeout: true
           - action: media_player.turn_on
             target:
-              entity_id: media_player.stue_tv
+              entity_id:
+                - media_player.stue_tv
         turn_off:
           - action: media_player.turn_off
             target:
-              entity_id: media_player.stue_tv
+              entity_id:
+                - media_player.stue_tv
           - action: switch.turn_off
             target:
-              entity_id: switch.sync_box_power
-      stue_tv_dark_mode:
-        friendly_name: "Stue TV Dark Mode"
-        icon_template: mdi:weather-night
+              entity_id:
+                - switch.sync_box_power
+
+      - default_entity_id: switch.stue_tv_dark_mode
+        unique_id: 019b0427-57da-71cf-9607-6d1c3c39eee4
+        icon: mdi:weather-night
+        name: Stue TV Dark Mode
         turn_on:
           - action: script.lg_tv_dark_mode
             data:
@@ -37,11 +45,10 @@ switch:
               darkMode: false
               entity_id: media_player.stue_tv
 
-binary_sensor:
-  - platform: template
-    sensors:
-      living_room_video_out:
-        value_template: >-
+  - binary_sensor:
+      - default_entity_id: binary_sensor.living_room_video_out
+        name: Stue Video Out
+        state: >-
           {{
             (
               is_state('switch.sync_box_power', 'on')

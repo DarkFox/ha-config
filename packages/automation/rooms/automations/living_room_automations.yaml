@@ -5,13 +5,13 @@ input_boolean:
   bar_open:
     name: Bar Åben
 
-switch:
-  - platform: template
-    switches:
-      living_room_curtain_automations:
-        friendly_name: Stue Gardiner Automatisering
-        icon_template: "{{ state_attr('binary_sensor.living_room_curtains_auto_open', 'icon') | default('mdi:curtains-closed') }}"
-        value_template: "{{ is_state('automation.stue_gardiner_automatisering', 'on') }}"
+template:
+  - switch:
+      - default_entity_id: switch.living_room_curtain_automations
+        unique_id: 019b042e-391c-76ff-ad3b-c87b14c990dd
+        name: Stue Gardiner Automatisering
+        icon: "{{ state_attr('binary_sensor.living_room_curtains_auto_open', 'icon') | default(None) or 'mdi:curtains-closed' }}"
+        state: "{{ is_state('automation.stue_gardiner_automatisering', 'on') }}"
         turn_on:
           - action: automation.turn_on
             target:
@@ -27,18 +27,14 @@ switch:
             entity_id:
               - automation.stue_gardiner_automatisering
 
-binary_sensor:
-  - platform: template
-    sensors:
-      living_room_door_activity:
-        friendly_name: Stue Dør Aktivitet
-        device_class: motion
-        delay_off:
-          seconds: 30
-        value_template: "{{ is_state('input_boolean.living_room_door_activity', 'on') }}"
-
-template:
   - binary_sensor:
+      - default_entity_id: binary_sensor.living_room_door_activity
+        name: Stue Dør Aktivitet
+        unique_id: 019b0415-289d-771e-b3fc-9c5c7d5f2453
+        device_class: motion
+        delay_off: 0:00:30
+        state: "{{ is_state('input_boolean.living_room_door_activity', 'on') }}"
+
       - name: "Living Room Curtain Open Time Window"
         unique_id: 6ab0a5c6-9c71-4d3f-8d7e-8a8f83c5df10
         icon: mdi:window-open-variant

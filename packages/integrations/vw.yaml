@@ -41,14 +41,13 @@ script:
       #   event_data:
       #     destinations: "{{ destinations }}"
 
-switch:
-  - platform: template
-    switches:
-      id_3_pro_climatisation:
-        friendly_name: ID.3 Pro Climatisation
+template:
+  - switch:
+      - default_entity_id: switch.id_3_pro_climatisation
         unique_id: 89f42f3d-9563-474f-ac2e-933c3076723f
-        value_template: "{{ is_state('climate.id_3_pro_start_stop_climatization', 'on') }}"
-        icon_template: "{{ 'mdi:hvac' if is_state('climate.id_3_pro_start_stop_climatization', 'auto') else 'mdi:hvac-off' }}"
+        name: ID.3 Pro Climatisation
+        state: "{{ is_state('climate.id_3_pro_start_stop_climatization', 'on') }}"
+        icon: "{{ 'mdi:hvac' if is_state('climate.id_3_pro_start_stop_climatization', 'auto') else 'mdi:hvac-off' }}"
         turn_on:
           action: climate.set_hvac_mode
           target:
@@ -62,7 +61,6 @@ switch:
           data:
             hvac_mode: "off"
 
-template:
   - trigger:
       - trigger: event
         event_type: call_service

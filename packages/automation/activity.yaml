@@ -32,11 +32,10 @@ template:
             {%- endif -%}
             {{ ns.ret }}
 
-binary_sensor:
-  - platform: template
-    sensors:
-      activity:
-        value_template: >-
+  - binary_sensor:
+      - default_entity_id: binary_sensor.activity
+        unique_id: 019b0418-a280-733d-933a-87f2f30374a7
+        state: >-
           {{
             is_state('binary_sensor.living_room_activity', 'on')
             or is_state('binary_sensor.bedroom_activity', 'on')
@@ -44,19 +43,21 @@ binary_sensor:
             or is_state('binary_sensor.kitchen_activity', 'on')
             or is_state('binary_sensor.office_activity', 'on')
           }}
-        friendly_name: Activity
+        name: Activity
         device_class: motion
 
-      activity_last10:
-        value_template: "{{ is_state('binary_sensor.activity', 'on') }}"
-        friendly_name: Activity in Last 10 min
+      - default_entity_id: binary_sensor.activity_last10
+        unique_id: 019b0418-b5b3-701c-9712-7f392d667888
+        state: "{{ is_state('binary_sensor.activity', 'on') }}"
+        name: Activity in Last 10 min
         device_class: motion
         delay_off:
           minutes: 10
 
-      activity_last30:
-        value_template: "{{ is_state('binary_sensor.activity', 'on') }}"
-        friendly_name: Activity in Last 30 min
+      - default_entity_id: binary_sensor.activity_last30
+        unique_id: 019b0419-13b0-76df-9095-9181ab3ab7e9
+        state: "{{ is_state('binary_sensor.activity', 'on') }}"
+        name: Activity in Last 30 min
         device_class: motion
         delay_off:
           minutes: 30

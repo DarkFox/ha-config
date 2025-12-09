@@ -5,19 +5,19 @@ input_boolean:
   showering:
     name: Bruser
 
-binary_sensor:
-  - platform: template
-    sensors:
-      bathroom_door_activity:
-        friendly_name: Badeværelse Dør Aktivitet
+template:
+  - binary_sensor:
+      - default_entity_id: binary_sensor.bathroom_door_activity
+        name: Badeværelse Dør Aktivitet
+        unique_id: 019b0412-edbe-75fa-953e-85ba9d203d90
         device_class: motion
-        delay_off:
-          seconds: 30
-        value_template: "{{ is_state('input_boolean.bathroom_door_activity', 'on') }}"
-      bathroom_occupied:
-        friendly_name: Badeværelse Optaget
+        delay_off: 0:00:30
+        state: "{{ is_state('input_boolean.bathroom_door_activity', 'on') }}"
+      - default_entity_id: binary_sensor.bathroom_occupied
+        name: Badeværelse Optaget
+        unique_id: 019b0413-faa0-73f5-8f82-790a9191e229
         device_class: occupancy
-        value_template: "{{ is_state('binary_sensor.badevarelse_dor', 'off') and is_state('binary_sensor.badevarelse_las', 'off') }}"
+        state: "{{ is_state('binary_sensor.badevarelse_dor', 'off') and is_state('binary_sensor.badevarelse_las', 'off') }}"
 
 automation:
   - alias: bathroom_door_activity_on

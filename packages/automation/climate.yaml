@@ -5,46 +5,6 @@ input_number:
     step: 1
     unit_of_measurement: °C
 
-binary_sensor:
-  - platform: template
-    sensors:
-      thermostats_night_mode:
-        friendly_name: "Termostater Nattilstand"
-        value_template: >
-          {{
-            states('input_select.sleep_state') in ['bedtime', 'in bed', 'sleeping', 'paused']
-          }}
-
-      thermostats_on:
-        friendly_name: "Termostater Tændt"
-        value_template: >
-          {{ (is_state('binary_sensor.rook_presence_delayed', 'on') or is_state('binary_sensor.rook_home_soon', 'on')) }}
-
-      check_climate:
-        value_template: >
-          {{
-            (
-              is_state('climate.badevaerelse', 'off')
-              or states('sensor.bathroom_min_temp')|int(-1) == state_attr('climate.badevaerelse', 'temperature')|int(-1)
-            )
-            and (
-              is_state('climate.kontor', 'off')
-              or states('sensor.office_min_temp')|int(-1) == state_attr('climate.kontor', 'temperature')|int(-1)
-            )
-            and (
-              is_state('climate.stue', 'off')
-              or states('sensor.living_room_min_temp')|int(-1) == state_attr('climate.stue', 'temperature')|int(-1)
-            )
-            and (
-              is_state('climate.vaerksted', 'off')
-              or states('sensor.workshop_min_temp')|int(-1) == state_attr('climate.vaerksted', 'temperature')|int(-1)
-            )
-            and (
-              is_state('climate.sovevaerelse', 'off')
-              or states('sensor.bedroom_min_temp')|int(-1) == state_attr('climate.sovevaerelse', 'temperature')|int(-1)
-            )
-          }}
-
 sensor:
   - platform: history_stats
     name: Badeværelse Termostat Varme seneste 24 timer
@@ -228,6 +188,47 @@ sensor:
       days: 7
 
 template:
+  - binary_sensor:
+      - default_entity_id: binary_sensor.thermostats_night_mode
+        name: Termostater Nattilstand
+        unique_id: 019b040c-96db-73d1-8e27-4a68dd4f0590
+        state: >
+          {{
+            states('input_select.sleep_state') in ['bedtime', 'in bed', 'sleeping', 'paused']
+          }}
+      - default_entity_id: binary_sensor.thermostats_on
+        name: Termostater Tændt
+        unique_id: 019b040d-3cb5-729f-ad98-5f87f17a6747
+        state:
+          "{{ (is_state('binary_sensor.rook_presence_delayed', 'on') or is_state('binary_sensor.rook_home_soon',
+          'on')) }}"
+      - default_entity_id: binary_sensor.check_climate
+        name: Check Climate
+        unique_id: 019b040f-4fa7-711c-a0fd-06d3103ff8af
+        state: >
+          {{
+            (
+              is_state('climate.badevaerelse', 'off')
+              or states('sensor.bathroom_min_temp')|int(-1) == state_attr('climate.badevaerelse', 'temperature')|int(-1)
+            )
+            and (
+              is_state('climate.kontor', 'off')
+              or states('sensor.office_min_temp')|int(-1) == state_attr('climate.kontor', 'temperature')|int(-1)
+            )
+            and (
+              is_state('climate.stue', 'off')
+              or states('sensor.living_room_min_temp')|int(-1) == state_attr('climate.stue', 'temperature')|int(-1)
+            )
+            and (
+              is_state('climate.vaerksted', 'off')
+              or states('sensor.workshop_min_temp')|int(-1) == state_attr('climate.vaerksted', 'temperature')|int(-1)
+            )
+            and (
+              is_state('climate.sovevaerelse', 'off')
+              or states('sensor.bedroom_min_temp')|int(-1) == state_attr('climate.sovevaerelse', 'temperature')|int(-1)
+            )
+          }}
+
   - sensor:
       - name: Bathroom Max Temp
         unique_id: 25b964e9-4274-441a-ba2a-9962b5a82252

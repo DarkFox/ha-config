@@ -331,6 +331,62 @@ template:
               ]
             }}
 
+      - default_entity_id: sensor.energy_cost_hourly
+        unique_id: 019b041d-0cd2-7586-b940-4f28139b7254
+        name: "Elomkostning"
+        state: |
+          {% if states('sensor.pow_k_import_active') not in ['unavailable', 'unknown'] and states('sensor.energi_data_service') not in ['unavailable', 'unknown'] %}
+            {{ (((states('sensor.pow_k_import_active')|float)/1000) * (states('sensor.energi_data_service')|float)) | round(3) }}
+          {% else %}
+            unavailable
+          {% endif %}
+        unit_of_measurement: kr/t
+        device_class: monetary
+
+      - default_entity_id: sensor.energy_cost_this_hour
+        unique_id: 019b041d-0cee-70de-b0ac-da896a43d78c
+        name: "Elomkostning Denne Time"
+        # make sure none of these are unavailable or unknown
+        state: |
+          {% if states('sensor.energy_hourly') not in ['unavailable', 'unknown'] and states('sensor.energi_data_service') not in ['unavailable', 'unknown'] %}
+            {{ ((states('sensor.energy_hourly')|float) * (states('sensor.energi_data_service')|float)) | round(3) }}
+          {% else %}
+            0
+          {% endif %}
+        unit_of_measurement: kr
+        device_class: monetary
+
+      - default_entity_id: sensor.energy_last_hour
+        unique_id: 019b041d-0d07-72aa-9f83-bf108f4031fb
+        name: "Elforbrug Sidste Time"
+        state: "{{ state_attr('sensor.energy_hourly', 'last_period') }}"
+        unit_of_measurement: kWh
+        device_class: energy
+      - default_entity_id: sensor.energy_last_day
+        unique_id: 019b041d-0d0e-7753-8f21-fc97ccf786a9
+        name: "Elforbrug I Går"
+        state: "{{ state_attr('sensor.energy_daily', 'last_period') }}"
+        unit_of_measurement: kWh
+        device_class: energy
+      - default_entity_id: sensor.energy_last_month
+        unique_id: 019b041d-0d37-74dd-8336-721ec008b91f
+        name: "Elforbrug Sidste Måned"
+        state: "{{ state_attr('sensor.energy_monthly', 'last_period') }}"
+        unit_of_measurement: kWh
+        device_class: energy
+      - default_entity_id: sensor.energy_last_quarter
+        unique_id: 019b041d-0d5f-76a4-951f-8073434295cd
+        name: "Elforbrug Sidste Kvartal"
+        state: "{{ state_attr('sensor.energy_quarterly', 'last_period') }}"
+        unit_of_measurement: kWh
+        device_class: energy
+      - default_entity_id: sensor.energy_last_year
+        unique_id: 019b041d-0d8f-703b-bbd7-4e9559c2b05b
+        name: "Elforbrug Sidste År"
+        state: "{{ state_attr('sensor.energy_yearly', 'last_period') }}"
+        unit_of_measurement: kWh
+        device_class: energy
+
 sensor:
   - platform: integration
     source: sensor.pow_k_l1_power
@@ -350,54 +406,3 @@ sensor:
     unit_prefix: k
     round: 3
     method: left
-
-  - platform: template
-    sensors:
-      energy_cost_hourly:
-        friendly_name: "Elomkostning"
-        value_template: |
-          {% if states('sensor.pow_k_import_active') not in ['unavailable', 'unknown'] and states('sensor.energi_data_service') not in ['unavailable', 'unknown'] %}
-            {{ (((states('sensor.pow_k_import_active')|float)/1000) * (states('sensor.energi_data_service')|float)) | round(3) }}
-          {% else %}
-            unavailable
-          {% endif %}
-        unit_of_measurement: kr/t
-        device_class: monetary
-
-      energy_cost_this_hour:
-        friendly_name: "Elomkostning Denne Time"
-        # make sure none of these are unavailable or unknown
-        value_template: |
-          {% if states('sensor.energy_hourly') not in ['unavailable', 'unknown'] and states('sensor.energi_data_service') not in ['unavailable', 'unknown'] %}
-            {{ ((states('sensor.energy_hourly')|float) * (states('sensor.energi_data_service')|float)) | round(3) }}
-          {% else %}
-            0
-          {% endif %}
-        unit_of_measurement: kr
-        device_class: monetary
-
-      energy_last_hour:
-        friendly_name: "Elforbrug Sidste Time"
-        value_template: "{{ state_attr('sensor.energy_hourly', 'last_period') }}"
-        unit_of_measurement: kWh
-        device_class: energy
-      energy_last_day:
-        friendly_name: "Elforbrug I Går"
-        value_template: "{{ state_attr('sensor.energy_daily', 'last_period') }}"
-        unit_of_measurement: kWh
-        device_class: energy
-      energy_last_month:
-        friendly_name: "Elforbrug Sidste Måned"
-        value_template: "{{ state_attr('sensor.energy_monthly', 'last_period') }}"
-        unit_of_measurement: kWh
-        device_class: energy
-      energy_last_quarter:
-        friendly_name: "Elforbrug Sidste Kvartal"
-        value_template: "{{ state_attr('sensor.energy_quarterly', 'last_period') }}"
-        unit_of_measurement: kWh
-        device_class: energy
-      energy_last_year:
-        friendly_name: "Elforbrug Sidste År"
-        value_template: "{{ state_attr('sensor.energy_yearly', 'last_period') }}"
-        unit_of_measurement: kWh
-        device_class: energy

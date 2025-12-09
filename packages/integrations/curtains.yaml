@@ -122,14 +122,31 @@ script:
         data:
           position: "{{position}}"
 
-cover:
-  - platform: template
-    covers:
-      stue_gardin:
-        friendly_name: "Stue Gardin"
+sensor:
+  - platform: min_max
+    name: stue_gardin_position
+    round_digits: 0
+    type: mean
+    entity_ids:
+      - sensor.stue_gardin_hojre_position
+      - sensor.stue_gardin_venstre_position
+
+  - platform: min_max
+    name: sovevaerelse_gardin_position
+    round_digits: 0
+    type: mean
+    entity_ids:
+      - sensor.sovevaerelse_gardin_vindue_position
+      - sensor.sovevaerelse_gardin_dor_position
+
+template:
+  - cover:
+      - default_entity_id: cover.stue_gardin
+        unique_id: 019b0434-ab95-73a8-8289-049d9c05ba00
+        name: "Stue Gardin"
         device_class: curtain
-        position_template: "{{ states('sensor.stue_gardin_position') | int(0) }}"
-        value_template: "{{ states('sensor.stue_gardin_value') | default('none') }}"
+        position: "{{ states('sensor.stue_gardin_position') | int(0) }}"
+        state: "{{ states('sensor.stue_gardin_value') | default('none') or 'none' }}"
         open_cover:
           action: script.stue_gardin
           data:
@@ -162,11 +179,12 @@ cover:
           data:
             position: "{{ position }}"
 
-      sovevaerelse_gardin:
-        friendly_name: "Soveværelse Gardin"
+      - default_entity_id: cover.sovevaerelse_gardin
+        unique_id: 019b0434-abb3-71ff-9aca-033706ed0b2c
+        name: "Soveværelse Gardin"
         device_class: curtain
-        position_template: "{{ states('sensor.sovevaerelse_gardin_position') | int(0) }}"
-        value_template: "{{ states('sensor.sovevaerelse_gardin_value') | default('none') }}"
+        position: "{{ states('sensor.sovevaerelse_gardin_position') | int(0) }}"
+        state: "{{ states('sensor.sovevaerelse_gardin_value') | default('none') or 'none' }}"
         open_cover:
           action: script.sovevaerelse_gardin
           data:
@@ -184,15 +202,16 @@ cover:
           data:
             position: "{{ position }}"
 
-      kontor_gardin:
-        friendly_name: "Kontor Gardin"
+      - default_entity_id: cover.kontor_gardin
+        unique_id: 019b0434-abcf-709d-8e0e-855b81eddb25
+        name: "Kontor Gardin"
         device_class: shade
-        position_template: >-
+        position: >-
           {{
             (state_attr('cover.kontor_rullegardin', 'current_position')|int(0))
             + (state_attr('cover.kontor_altandor_gardin', 'current_position')|int(0))
           }}
-        value_template: |
+        state: |
           {% set states = [states('cover.kontor_rullegardin'), states('cover.kontor_altandor_gardin')] %}
           {% set dor_position = state_attr('cover.kontor_altandor_gardin', 'current_position')|int(0) %}
           {% set vindue_position = state_attr('cover.kontor_rullegardin', 'current_position')|int(0) %}
@@ -222,24 +241,6 @@ cover:
           data:
             position: "{{ position }}"
 
-sensor:
-  - platform: min_max
-    name: stue_gardin_position
-    round_digits: 0
-    type: mean
-    entity_ids:
-      - sensor.stue_gardin_hojre_position
-      - sensor.stue_gardin_venstre_position
-
-  - platform: min_max
-    name: sovevaerelse_gardin_position
-    round_digits: 0
-    type: mean
-    entity_ids:
-      - sensor.sovevaerelse_gardin_vindue_position
-      - sensor.sovevaerelse_gardin_dor_position
-
-template:
   - sensor:
       - name: Stue Gardin Højre Position
         unique_id: 3f3e72ce-d54c-498b-9867-1445a23a2059

@@ -3,13 +3,13 @@ input_boolean:
     initial: off
     name: Kontor Dør Aktivitet
 
-switch:
-  - platform: template
-    switches:
-      office_curtain_automations:
-        friendly_name: Kontor Gardiner Automatisering
-        icon_template: "{{ state_attr('binary_sensor.office_blinds_auto_open', 'icon') | default('mdi:curtains-closed') }}"
-        value_template: "{{ is_state('automation.kontor_gardiner_automatisering', 'on') }}"
+template:
+  - switch:
+      - default_entity_id: switch.office_curtain_automations
+        unique_id: 019b042f-4902-768b-b112-71fe6f441fed
+        name: Kontor Gardiner Automatisering
+        icon: "{{ state_attr('binary_sensor.office_blinds_auto_open', 'icon') | default(None) or 'mdi:curtains-closed' }}"
+        state: "{{ is_state('automation.kontor_gardiner_automatisering', 'on') }}"
         turn_on:
           - action: automation.turn_on
             target:
@@ -25,18 +25,14 @@ switch:
             entity_id:
               - automation.kontor_gardiner_automatisering
 
-binary_sensor:
-  - platform: template
-    sensors:
-      office_door_activity:
-        friendly_name: Kontor Dør Aktivitet
-        device_class: motion
-        delay_off:
-          seconds: 30
-        value_template: "{{ is_state('input_boolean.office_door_activity', 'on') }}"
-
-template:
   - binary_sensor:
+      - default_entity_id: binary_sensor.office_door_activity
+        name: Kontor Dør Aktivitet
+        unique_id: 019b0415-e3a2-7409-b57d-7943670aceae
+        device_class: motion
+        delay_off: 0:00:30
+        state: "{{ is_state('input_boolean.office_door_activity', 'on') }}"
+
       - name: "Office Blinds Open Time Window"
         unique_id: a2df346f-583a-4acf-aa75-f7baf45daf3a
         icon: mdi:window-open-variant
@@ -116,7 +112,7 @@ automation:
         target:
           entity_id:
             - cover.kontor_rullegardin
-            - cover.kontor_altandor_gardin
+            # - cover.kontor_altandor_gardin
       - delay: "00:03:00"
 
   - id: office_balcony_door_open_reminder

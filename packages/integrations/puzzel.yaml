@@ -123,21 +123,21 @@ template:
           state: "{{ states('sensor.puzzel_state') }}"
           nummer: "{{ states('sensor.puzzel_nummer') }}"
 
-switch:
-  - platform: template
-    switches:
-      puzzel:
-        friendly_name: "Puzzel"
-        value_template: "{{ is_state('binary_sensor.puzzel_status', 'on') }}"
+  - switch:
+      - default_entity_id: switch.puzzel
+        unique_id: 019b0430-e404-73fa-afb7-a6f63f5e6ac1
+        name: "Puzzel"
+        state: "{{ is_state('binary_sensor.puzzel_status', 'on') }}"
         turn_on:
           action: script.puzzel_log_on
           data:
             queue_id: "{{ state_attr('sensor.puzzel_ko', 'profile_id') }}"
         turn_off:
           action: script.puzzel_log_off
-      puzzel_pause:
-        friendly_name: "Puzzel Pause"
-        value_template: "{{ is_state('sensor.puzzel_state', 'Pause') }}"
+      - default_entity_id: switch.puzzel_pause
+        unique_id: 019b0430-e41f-75ab-bb8e-043fdc9fe1ee
+        name: "Puzzel Pause"
+        state: "{{ is_state('sensor.puzzel_state', 'Pause') }}"
         turn_on:
           action: script.puzzel_pause_on
         turn_off:

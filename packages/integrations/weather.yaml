@@ -1,63 +1,5 @@
 sun:
 
-sensor:
-  - platform: template
-    sensors:
-      translated_weather_title:
-        value_template: >-
-          {% set translations = {
-            "clear-night": "Klart, nat",
-            "cloudy": "Overskyet",
-            "exceptional": "Enest\u00e5ende",
-            "fog": "T\u00e5ge",
-            "hail": "Hagl",
-            "lightning": "Lyn",
-            "lightning-rainy": "Lyn, regnvejr",
-            "partlycloudy": "Delvist overskyet",
-            "pouring": "Regnvejr",
-            "rainy": "Regnfuldt",
-            "snowy": "Sne",
-            "snowy-rainy": "Sne, regn",
-            "sunny": "Solrig",
-            "windy": "Bl\u00e6sende",
-            "windy-variant": "Bl\u00e6sende"
-          } %}
-          {{ translations[states('weather.forecast_home')] }}
-
-      weather_card_name_text:
-        value_template: "{{ (state_attr('weather.forecast_home', 'precipitation')|replace('.',','))+' mm. ' if state_attr('weather.forecast_home', 'precipitation') }}"
-
-      wind_text:
-        friendly_name: Vind
-        value_template: >-
-          {{ states('sensor.beaufort_beskrivelse') }}
-          {{ '(' + states('sensor.beaufort_vindstod_beskrivelse') + ')' if states('sensor.beaufort_beskrivelse') != states('sensor.beaufort_vindstod_beskrivelse') }}
-          {{ 'fra '+states('sensor.vindretning') if states('sensor.beaufort')|int(0) > 1 }}
-
-      precip_today:
-        friendly_name: Nedbør
-        # TODO: Deprecated. Use action call to get forecast instead.
-        unit_of_measurement: mm
-        value_template: |
-          {% set forecast = state_attr('weather.forecast_home', 'forecast') %}
-          {{ forecast[0].precipitation if forecast and forecast|length > 0 else '0' }}
-
-      sun_elevation:
-        friendly_name: "Sol Højde"
-        unit_of_measurement: "°"
-        value_template: "{{ state_attr('sun.sun', 'elevation') }}"
-
-      sun_elevation_pct:
-        # Between 0-58 (Max possible at home location) to 0-100 (Cuts out negative elevation)
-        friendly_name: "Sol Elevation %"
-        unit_of_measurement: "%"
-        value_template: "{{ 0.0 if states('sensor.sun_elevation') | float < 0 else (states('sensor.sun_elevation') | float * 100 / 58.0) | round(2) }}"
-
-      sun_azimuth:
-        friendly_name: "Sol Retning"
-        unit_of_measurement: "°"
-        value_template: "{{ state_attr('sun.sun', 'azimuth') }}"
-
 template:
   - trigger:
       trigger: event
@@ -91,6 +33,70 @@ template:
         state: "{{ is_state_attr('sun.sun', 'rising', true) }}"
 
   - sensor:
+      - default_entity_id: sensor.translated_weather_title
+        unique_id: 019b041e-af22-768c-93cb-77c5e7e3d81d
+        name: "Vejr Titel"
+        state: >-
+          {% set translations = {
+            "clear-night": "Klart, nat",
+            "cloudy": "Overskyet",
+            "exceptional": "Enest\u00e5ende",
+            "fog": "T\u00e5ge",
+            "hail": "Hagl",
+            "lightning": "Lyn",
+            "lightning-rainy": "Lyn, regnvejr",
+            "partlycloudy": "Delvist overskyet",
+            "pouring": "Regnvejr",
+            "rainy": "Regnfuldt",
+            "snowy": "Sne",
+            "snowy-rainy": "Sne, regn",
+            "sunny": "Solrig",
+            "windy": "Bl\u00e6sende",
+            "windy-variant": "Bl\u00e6sende"
+          } %}
+          {{ translations[states('weather.forecast_home')] }}
+
+      - default_entity_id: sensor.weather_card_name_text
+        unique_id: 019b041e-af40-741b-a392-247ede89d561
+        name: Vejr Kort Navn
+        state: "{{ (state_attr('weather.forecast_home', 'precipitation')|replace('.',','))+' mm. ' if state_attr('weather.forecast_home', 'precipitation') }}"
+
+      - default_entity_id: sensor.wind_text
+        unique_id: 019b041e-af55-7569-995f-2233ac242951
+        name: Vind
+        state: >-
+          {{ states('sensor.beaufort_beskrivelse') }}
+          {{ '(' + states('sensor.beaufort_vindstod_beskrivelse') + ')' if states('sensor.beaufort_beskrivelse') != states('sensor.beaufort_vindstod_beskrivelse') }}
+          {{ 'fra '+states('sensor.vindretning') if states('sensor.beaufort')|int(0) > 1 }}
+
+      - default_entity_id: sensor.precip_today
+        unique_id: 019b041e-af65-7728-a120-77997a091859
+        name: Nedbør
+        # TODO: Deprecated. Use action call to get forecast instead.
+        unit_of_measurement: mm
+        state: |
+          {% set forecast = state_attr('weather.forecast_home', 'forecast') %}
+          {{ forecast[0].precipitation if forecast and forecast|length > 0 else '0' }}
+
+      - default_entity_id: sensor.sun_elevation
+        unique_id: 019b041e-af86-70d3-a4af-01a5a58db2a7
+        name: "Sol Højde"
+        unit_of_measurement: "°"
+        state: "{{ state_attr('sun.sun', 'elevation') }}"
+
+      - default_entity_id: sensor.sun_elevation_pct
+        unique_id: 019b041e-afa2-744a-9cb8-70bf6cf7cb55
+        # Between 0-58 (Max possible at home location) to 0-100 (Cuts out negative elevation)
+        name: "Sol Elevation %"
+        unit_of_measurement: "%"
+        state: "{{ 0.0 if states('sensor.sun_elevation') | float < 0 else (states('sensor.sun_elevation') | float * 100 / 58.0) | round(2) }}"
+
+      - default_entity_id: sensor.sun_azimuth
+        unique_id: 019b041e-afb5-7171-8ae2-7de0738d65a9
+        name: "Sol Retning"
+        unit_of_measurement: "°"
+        state: "{{ state_attr('sun.sun', 'azimuth') }}"
+
       - name: Discomfort Index
         unique_id: a78c6231-e0cf-4e81-85d8-4efbaa1acda4
         state: >-
