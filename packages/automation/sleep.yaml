@@ -752,19 +752,21 @@ automation:
               profile: Night
               transition_time: 120
           - action: script.pause_all_media
-          - condition: state
-            entity_id: input_boolean.strict_bedtime
-            state: "on"
-          - action: script.notify_text
-            data:
-              message_title: Streng Sengetid
-              message: >-
-                Streng sengetid er slået til, enheder slukkes automatisk.
-          - action: homeassistant.turn_off
-            target:
-              entity_id:
-                - switch.stue_tv_active
-                - switch.rook_pc
+          - sequence:
+              - condition: state
+                entity_id: input_boolean.strict_bedtime
+                state: "on"
+              - parallel:
+                  - action: script.notify_text
+                    data:
+                      message_title: Streng Sengetid
+                      message: >-
+                        Streng sengetid er slået til, enheder slukkes automatisk.
+                  - action: homeassistant.turn_off
+                    target:
+                      entity_id:
+                        - switch.stue_tv_active
+                        - switch.rook_pc
 
   - alias: in_bed_action
     id: in_bed_action
