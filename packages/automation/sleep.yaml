@@ -612,6 +612,31 @@ automation:
   # ACTIONS START HERE #
   ######################
 
+  - alias: evening_routine_start
+    id: 019b9d35-2a8f-7771-b070-8a48e40e2c33
+    initial_state: true
+    triggers:
+      trigger: numeric_state
+      entity_id: sensor.minutes_to_bedtime
+      below: 121
+    conditions:
+      - condition: state
+        entity_id: input_select.sleep_state
+        state: awake
+    actions:
+      - parallel:
+          - action: script.notify_darkphone
+            data:
+              message: >-
+                Der er 2 timer til sengetid.
+                Husk at begynde din aftenrutine for en bedre nattesøvn!
+          - action: humidifier.turn_on
+            target:
+              entity_id: humidifier.sovevaerelse_luftfugter
+          - action: automation.trigger
+            target:
+              entity_id: automation.populate_bedtime_routine
+
   - alias: winddown_action
     id: 32b08820-d50d-4a06-a0a6-7678e16a0112
     initial_state: true
