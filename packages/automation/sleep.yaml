@@ -1107,17 +1107,28 @@ automation:
       entity_id: input_select.sleep_state
       to: "awake"
       from: "waking"
+    variables:
+      rooms: >
+        [
+          "badevaerelse",
+          "sovevaerelse"
+          {{ ', "kokken", "stue", "kontor", "roam"' if is_state('input_boolean.guests', 'off') }}
+        ]
+      media_players: >
+        {% set ns = namespace(ret=[]) %}
+        {% set player_list = rooms | map('regex_replace', '(.*)', 'media_player.\\1') | list %}
+        {% for player in player_list %}
+          {% if has_value(player) and not is_state(player, 'unavailable') %}
+            {% set ns.ret = ns.ret + [player] %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.ret }}
     actions:
       - action: media_player.join
         target:
           entity_id: media_player.badevaerelse
         data:
-          group_members: >-
-            [
-              "media_player.sovevaerelse"
-              {{ ', "media_player.kokken"' if is_state('input_boolean.guests', 'off') }}
-              {{ ', "media_player.roam"' if is_state('input_boolean.guests', 'off') and not is_state('media_player.roam', 'unavailable') }}
-            ]
+          group_members: "{{ media_players | join(', ') }}"
       - action: script.mass_briefing_playlist
         data:
           entity_id: media_player.badevaerelse_mass
@@ -1130,18 +1141,20 @@ automation:
             - "I Love Chillhop"
       - wait_template: "{{ is_state('media_player.badevaerelse', 'playing') }}"
         timeout: "00:00:30"
-      - action: media_player.volume_set
-        data:
-          entity_id: >-
-            ["media_player.badevaerelse", "media_player.sovevaerelse" {{ ', "media_player.kokken"' if is_state('input_boolean.guests', 'off') }}]
-          volume_level: 0.5
+      - repeat:
+          for_each: "{{ rooms }}"
+          sequence:
+            - action: script.set_volume_preset
+              continue_on_error: true
+              data:
+                room: "{{ repeat.item }}"
+                preset: medium
       - delay:
           minutes: 2
-      - action: media_player.volume_set
+      - action: script.set_volume_preset
         data:
-          entity_id: >-
-            ["media_player.badevaerelse", "media_player.sovevaerelse" {{ ', "media_player.kokken"' if is_state('input_boolean.guests', 'off') }}]
-          volume_level: 0.6
+          room: badevaerelse
+          preset: high
 
   - alias: awake_action
     id: awake_action
@@ -1156,6 +1169,9 @@ automation:
           - action: switch.turn_off
             target:
               entity_id: switch.dorklokke_forstyr_ikke
+          - action: humidifier.turn_off
+            target:
+              entity_id: humidifier.sovevaerelse_luftfugter
           - action: script.turn_on
             target:
               entity_id: script.sleep_as_android_stop_tracking
